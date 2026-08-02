@@ -1,0 +1,36 @@
+{
+  "name": "Nûr Stüdyo Cloudflare WAF Security & Rate Limiting Rules",
+  "description": "Cloudflare WAF IP Rate Limiting + Hotlink Protection + Anti-Bot Rules",
+  "rules": [
+    {
+      "action": "rate_limit",
+      "action_parameters": {
+        "mode": "simulate",
+        "period": 60,
+        "requests_per_period": 30
+      },
+      "expression": "(http.request.uri.path contains \"/api/video/sign\")",
+      "description": "Rate limit R2 video presigned URL generation (Max 30 req/min per IP)"
+    },
+    {
+      "action": "rate_limit",
+      "action_parameters": {
+        "mode": "ban",
+        "period": 60,
+        "requests_per_period": 10
+      },
+      "expression": "(http.request.uri.path contains \"/api/payments/\")",
+      "description": "Rate limit Payment endpoints against brute-force (Max 10 req/min per IP)"
+    },
+    {
+      "action": "block",
+      "expression": "(http.referer not contains \"nurstudyo.com\" and http.referer not contains \"localhost\" and http.request.uri.path contains \"/videos/\")",
+      "description": "Hotlink Protection: Block direct hotlinking of R2 videos from external domains"
+    },
+    {
+      "action": "js_challenge",
+      "expression": "(cf.threat_score gt 30 or http.request.uri.path contains \"/admin\")",
+      "description": "JS Challenge for high threat score or admin secret path"
+    }
+  ]
+}

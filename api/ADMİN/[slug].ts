@@ -1,0 +1,81 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireAdmin } from "../../server/auth";
+import { rateLimit } from "../../server/rateLimit";
+import { requireAllowedOrigin } from "../../server/security";
+import { logAdminAction, banUserInSupabase, unbanUserInSupabase } from "../../server/supabase";
+
+/**
+ * ★ BİRLEŞİK ADMIN ROUTER — /api/admin/session | /api/admin/action
+ *   Vercel Hobby planı function limiti nedeniyle tek dosyada toplandı.
+ */
+
+const ALLOWED_ACTIONS = new Set([
+  "ban_user",
+  "unban_user",
+  "change_tier",
+  "change_jeton",
+  "toggle_module",
+  "create_module",
+  "push_config",
+]);
+
+function sessionHandler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader("Cache-Control", "no-store");
+  if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (!rateLimit(req, res, "admin:session", 60, 60_000)) return;
+
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+
+  return res.status(200).json({
+    ok: true,
+    admin: { id: admin.id, email: admin.email, name: admin.name, verified: admin.verified },
+  });
+}
+
+async function actionHandler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader("Cache-Control", "no-store");
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (!requireAllowedOrigin(req, res)) return;
+  if (!rateLimit(req, res, "admin:action", 30, 60_000)) return;
+
+  const admin = requireAdmin(req, res);
+  if (!admin) return;
+
+  const { action, target, reason } = req.body || {};
+
+  if (typeof action !== "string" || !ALLOWED_ACTIONS.has(action)) {
+    return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
+  }
+  if (target !== undefined && (typeof target !== "string" || target.length > 160)) {
+    return res.status(400).json({ ok: false, error: "Geçersiz hedef" });
+  }
+
+  if (action === "ban_user" && typeof target === "string") {
+    await banUserInSupabase({
+      email: target,
+      reason: typeof reason === "string" && reason.trim() ? reason.trim() : "Yasal ihlal / Sistem güvenlik uyarısı",
+      bannedBy: admin.email,
+    }).catch(() => undefined);
+  }
+  if (action === "unban_user" && typeof target === "string") {
+    await unbanUserInSupabase(target).catch(() => undefined);
+  }
+
+  await logAdminAction({ adminId: admin.id, adminEmail: admin.email, action, target }).catch(() => undefined);
+
+  return res.status(200).json({
+    ok: true,
+    admin: admin.email,
+    action,
+    target: target || "",
+    at: new Date().toISOString(),
+  });
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const route = String(req.query.slug ?? "");
+  if (route === "session") return sessionHandler(req, res);
+  if (route === "action") return actionHandler(req, res);
+  return res.status(404).json({ ok: false, error: "Not Found" });
+}

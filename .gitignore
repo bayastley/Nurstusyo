@@ -1,0 +1,37 @@
+# Bağımlılıklar
+node_modules/
+
+# Build çıktıları
+dist/
+dist-ssr/
+
+# GİZLİ ORTAM DEĞERLERİ — ASLA git'e girmemeli
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Sertifika / anahtar dosyaları
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+
+# Editör ve OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# Loglar
+logs/
+*.log
+npm-debug.log*

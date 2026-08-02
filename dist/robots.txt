@@ -1,0 +1,9 @@
+# NÛR STÜDYO — robots.txt
+User-agent: *
+Allow: /
+
+# API ve admin yolları indekslenmesin
+Disallow: /api/
+Disallow: /admin
+
+Sitemap: https://nurstudyo.com/sitemap.xml

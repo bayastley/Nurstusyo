@@ -1,0 +1,26 @@
+{
+  "name": "Nûr Stüdyo — İslamî Video Üretici",
+  "short_name": "NûrStüdyo",
+  "description": "1 dakikada profesyonel, telifsiz ve sinematik Kur'an videoları tasarlayın ve paylaşın.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d12",
+  "theme_color": "#d7aa52",
+  "lang": "tr",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
