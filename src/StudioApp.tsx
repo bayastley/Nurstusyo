@@ -517,7 +517,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const data = await response.json().catch(() => null) as {
           ok?: boolean;
           error?: string;
-          user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier };
+          user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier; isAdmin?: boolean };
           wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
         } | null;
         if (cancelled) return;
@@ -527,7 +527,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }
 
         const email = data.user.email.trim().toLowerCase();
-        const isKurucuAdmin = isAdminEmail(email);
+        // ★ Admin yetkisi: sunucu (NUR_ADMIN_EMAILS) VEYA istemci listesi — ikisinden biri yeter
+        const isKurucuAdmin = Boolean(data.user.isAdmin) || isAdminEmail(email);
         const newUser: User = {
           id: data.user.id,
           name: isKurucuAdmin ? "Ömer Kaya (Kurucu Admin)" : data.user.name || email.split("@")[0],
