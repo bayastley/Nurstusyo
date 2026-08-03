@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAdmin } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
-import { requireAllowedOrigin } from "../shared/security";
-import { logAdminAction, banUserInSupabase, unbanUserInSupabase } from "../shared/supabase";
+import { requireAdmin } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { requireAllowedOrigin } from "../_shared/security.ts";
+import { logAdminAction, banUserInSupabase, unbanUserInSupabase } from "../_shared/supabase.ts";
 
 const ALLOWED_ACTIONS = new Set([
   "ban_user",
