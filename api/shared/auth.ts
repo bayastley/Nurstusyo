@@ -113,7 +113,3 @@ export function isSecureRequest(req: VercelRequest): boolean {
   return origin.startsWith("https://");
 }
 
-// Vercel route olarak da derlensin diye zararsız varsayılan export
-export default function __shared_auth_noop() {
-  return null;
-}
