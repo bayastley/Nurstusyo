@@ -8,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   if (!rateLimit(req, res, "auth:me", 120, 60_000)) return;
 
+  try {
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum bulunamadı" });
   const dbUser = await getUser(user.id).catch(() => null);
@@ -30,4 +31,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     banned: Boolean(ban?.isBanned),
     banReason: ban?.reason || "",
   });
+  } catch (error) {
+    console.error("[Auth Me Error]", error);
+    return res.status(500).json({ ok: false, error: "Oturum kontrolü başarısız" });
+  }
 }
