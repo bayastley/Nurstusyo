@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { clearSessionCookie, isSecureRequest } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
-import { requireAllowedOrigin } from "../shared/security";
+import { clearSessionCookie, isSecureRequest } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { requireAllowedOrigin } from "../_shared/security.ts";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
