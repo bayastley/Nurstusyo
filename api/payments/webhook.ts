@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleWebhook } from "../../src/payments/webhook.server";
-import { rateLimit } from "../shared/rateLimit";
-import { getOrder, grantProductToUser } from "../shared/supabase";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { getOrder, grantProductToUser } from "../_shared/supabase.ts";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
