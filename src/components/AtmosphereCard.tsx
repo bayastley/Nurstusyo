@@ -69,14 +69,17 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({
   const [imgLoaded, setImgLoaded] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const [imgIdx, setImgIdx] = useState(0);
-  // ★ ÖNCE kendi CDN'in (R2), 404 dönerse otomatik Pexels'e düş
-  const [useR2Video, setUseR2Video] = useState(Boolean(clip.r2));
+  // ★ R2 yalnızca imzalı URL modu açıkken önceliklidir; kapalıyken Pexels
+  //   birincil kaynaktır — ölü/yanlış R2 domain'i medyayı bozamaz
+  const R2_LIVE =
+    ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_R2_SIGNED_URLS ?? "false") === "true";
+  const [useR2Video, setUseR2Video] = useState(R2_LIVE && Boolean(clip.r2));
   // ★ Video SADECE hover'da yüklenir — aynı anda onlarca R2 isteği gidip bağlantı resetlenmesin
   const [videoArmed, setVideoArmed] = useState(false);
   // ★ Resolved URL: LIVE modda backend'den gelen imzalı URL (10 dk geçerli),
   //   DEMO modda mevcut public URL. Cache dolu değilse Pexels public'e düşer.
-  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string>(clip.r2 ?? clip.src);
-  const [resolvedR2Poster, setResolvedR2Poster] = useState<string | undefined>(clip.r2Poster);
+  const [resolvedVideoUrl, setResolvedVideoUrl] = useState<string>(R2_LIVE ? (clip.r2 ?? clip.src) : clip.src);
+  const [resolvedR2Poster, setResolvedR2Poster] = useState<string | undefined>(R2_LIVE ? clip.r2Poster : undefined);
   const videoSrc = useR2Video && resolvedVideoUrl ? resolvedVideoUrl : clip.src;
 
   // ★ Video hover'da yüklenmeye başladığında imzalı URL'i çek (LIVE mode)
