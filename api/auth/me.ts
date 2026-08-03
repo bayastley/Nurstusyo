@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getSessionUser } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
-import { getUser, getWallet, getActiveBan } from "../shared/supabase";
+import { getSessionUser } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { getUser, getWallet, getActiveBan } from "../_shared/supabase.ts";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
