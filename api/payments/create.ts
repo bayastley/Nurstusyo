@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import { getProduct, validateCheckout } from "../../src/payments/pricing";
-import { requireAuth } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
-import { requireAllowedOrigin } from "../shared/security";
-import { createOrder } from "../shared/supabase";
+import { requireAuth } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { requireAllowedOrigin } from "../_shared/security.ts";
+import { createOrder } from "../_shared/supabase.ts";
 
 function normalizeIp(req: VercelRequest): string {
   const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
