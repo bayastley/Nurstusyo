@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAdmin } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
+import { requireAdmin } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
