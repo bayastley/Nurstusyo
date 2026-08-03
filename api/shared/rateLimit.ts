@@ -39,7 +39,3 @@ export function rateLimit(
   return true;
 }
 
-// Vercel route olarak da derlensin diye zararsız varsayılan export
-export default function __shared_rate_noop() {
-  return null;
-}
