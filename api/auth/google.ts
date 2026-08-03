@@ -116,7 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       wallet: wallet ? { subJeton: wallet.sub_jeton, purchasedJeton: wallet.purchased_jeton, total: wallet.sub_jeton + wallet.purchased_jeton } : null,
     });
   } catch (error) {
-    console.error("[Google Auth Error]", error);
-    return res.status(500).json({ ok: false, error: "Google girişi doğrulanamadı" });
+    // ★ Gerçek sebebi yanıtta göster: hangi env eksikse doğrudan görünür
+    const msg = error instanceof Error ? error.message : "Google girişi doğrulanamadı";
+    console.error("[Google Auth Error]", msg);
+    return res.status(500).json({ ok: false, error: msg });
   }
 }
