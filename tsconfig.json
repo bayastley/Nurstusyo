@@ -15,7 +15,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Path mapping — baseUrl kaldırıldı (TS 7.0'da kaldırılacak), paths tek başına yeterli */
+    /* Path mapping */
     "paths": {
       "@/*": ["./src/*"]
     },
