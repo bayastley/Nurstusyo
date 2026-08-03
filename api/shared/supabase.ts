@@ -276,7 +276,3 @@ export async function setWalletTotal(userId: string, total: number): Promise<DbW
   return rows[0] ?? null;
 }
 
-// Vercel route olarak da derlensin diye zararsız varsayılan export
-export default function __shared_supabase_noop() {
-  return null;
-}
