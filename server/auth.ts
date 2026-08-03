@@ -55,6 +55,9 @@ export function createSessionToken(user: Omit<AuthUser, "iat" | "exp">): string 
 
 export function verifySessionToken(token: string | undefined): AuthUser | null {
   if (!token || !token.includes(".")) return null;
+  // ★ Eksik NUR_SESSION_SECRET fonksiyonu çökertmesin: oturumu geçersiz say
+  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  if (!secret || secret.length < 20) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
   const expected = signPayload(payload);
