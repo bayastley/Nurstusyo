@@ -53,8 +53,9 @@ const SAFETY_MARGIN_MS = 60_000; // URL bitmeden 1 dk önce yenile
  * Kart yüklenirken await ile bunu çağır. Cache dolu ise anında döner.
  */
 export async function getVideoUrl(clip: Clip): Promise<string> {
-  // DEMO: eski davranış — tarayıcıda public URL kullan
-  if (!R2_SIGNED_URLS_LIVE) return clip.r2 ?? clip.src;
+  // DEMO: imzalı URL kapalıysa doğrudan Pexels kaynağı kullanılır;
+  // R2 adresi ancak signed mode açıkken devreye girer (ölü domain riski biter)
+  if (!R2_SIGNED_URLS_LIVE) return clip.src;
 
   // LIVE: cache'te geçerli URL var mı?
   const cached = urlCache.get(clip.id);
@@ -87,7 +88,7 @@ export async function getVideoUrl(clip: Clip): Promise<string> {
  * Bu sürümde backend response'unda posterUrl varsa cache'lenir.
  */
 export async function getPosterUrl(clip: Clip): Promise<string | undefined> {
-  if (!R2_SIGNED_URLS_LIVE) return clip.r2Poster ?? clip.poster;
+  if (!R2_SIGNED_URLS_LIVE) return clip.poster;
   const cached = urlCache.get(clip.id);
   if (cached && Date.now() < cached.expiresAt - SAFETY_MARGIN_MS) {
     return cached.posterUrl ?? clip.poster;
@@ -138,7 +139,7 @@ async function fetchSignedUrl(clip: Clip): Promise<CachedUrl | null> {
  * public URL fallback (arka planda imzalı URL fetch'i tetiklenir).
  */
 export function getVideoUrlSync(clip: Clip): string {
-  if (!R2_SIGNED_URLS_LIVE) return clip.r2 ?? clip.src;
+  if (!R2_SIGNED_URLS_LIVE) return clip.src;
   const cached = urlCache.get(clip.id);
   if (cached && Date.now() < cached.expiresAt - SAFETY_MARGIN_MS) return cached.url;
   // Arka planda al, bu render için Pexels fallback
@@ -147,7 +148,7 @@ export function getVideoUrlSync(clip: Clip): string {
 }
 
 export function getPosterUrlSync(clip: Clip): string | undefined {
-  if (!R2_SIGNED_URLS_LIVE) return clip.r2Poster ?? clip.poster;
+  if (!R2_SIGNED_URLS_LIVE) return clip.poster;
   const cached = urlCache.get(clip.id);
   if (cached?.posterUrl && Date.now() < cached.expiresAt - SAFETY_MARGIN_MS) return cached.posterUrl;
   void getPosterUrl(clip).catch(() => undefined);
