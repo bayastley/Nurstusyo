@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAuth } from "../shared/auth";
-import { rateLimit } from "../shared/rateLimit";
-import { requireAllowedOrigin } from "../shared/security";
-import { spendWallet } from "../shared/supabase";
+import { requireAuth } from "../_shared/auth.ts";
+import { rateLimit } from "../_shared/rateLimit.ts";
+import { requireAllowedOrigin } from "../_shared/security.ts";
+import { spendWallet } from "../_shared/supabase.ts";
 
 const MODE_COST: Record<string, number> = { short: 8, long: 15, full: 45 };
 const ALLOWED_MODES = new Set(Object.keys(MODE_COST));
