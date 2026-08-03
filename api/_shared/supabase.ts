@@ -17,3 +17,15 @@ export async function getWallet(userId: string): Promise<any> {
 export async function getActiveBan(userId: string, email: string): Promise<any> {
   return null;
 }
+
+export async function logAdminAction(data: any): Promise<any> {
+  return null;
+}
+
+export async function banUserInSupabase(data: any): Promise<any> {
+  return null;
+}
+
+export async function unbanUserInSupabase(email: string): Promise<any> {
+  return null;
+}
