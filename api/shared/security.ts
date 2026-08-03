@@ -19,7 +19,3 @@ export function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): b
   return true;
 }
 
-// Vercel route olarak da derlensin diye zararsız varsayılan export
-export default function __shared_security_noop() {
-  return null;
-}
