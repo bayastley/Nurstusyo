@@ -185,7 +185,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
     const email = String(verified.info.email || "").trim().toLowerCase();
     const isAdmin = adminEmails.includes(email);
-    const user = {
+    const user: {
+      id: string;
+      sub: string;
+      email: string;
+      name: string;
+      picture: string;
+      verified: boolean;
+      isAdmin: boolean;
+      tier: "free" | "pro" | "elit";
+    } = {
       id: `google-${verified.info.sub}`,
       sub: String(verified.info.sub),
       email,
@@ -206,7 +215,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user,
       isNewUser: synced.isNew,
       registerBonus: synced.isNew ? REGISTER_BONUS : 0,
-      wallet: {
+      // StudioApp ilk kayıt bonusunu ekranda bir kez ekliyor. Yeni kullanıcıda
+      // burada sıfır dönerek aynı 20 jetonun iki kez gösterilmesini önlüyoruz.
+      wallet: synced.isNew ? { subJeton: 0, purchasedJeton: 0, total: 0 } : {
         subJeton: synced.wallet.sub_jeton,
         purchasedJeton: synced.wallet.purchased_jeton,
         total: synced.wallet.sub_jeton + synced.wallet.purchased_jeton,
