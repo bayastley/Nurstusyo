@@ -1,119 +1,94 @@
-import React, { useState, useEffect } from "react";
-import { Sparkles, Gift, CheckCircle } from "lucide-react";
-import {
-  getHolyDayState,
-  claimHolyDayReward,
-  type HolyDayBannerState,
-} from "../services/holidayCalendar";
+import React, { useEffect, useState } from "react";
+import { Bell, CheckCircle, Gift, Sparkles, X } from "lucide-react";
 import { checkRateLimit } from "../rateLimiter";
+import { fetchRemoteConfig, getActiveAnnouncement, type Announcement } from "../services/adminSyncService";
+import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 
 interface AnnouncementBarProps {
-  notify: (msg: string) => void;
+  notify: (message: string) => void;
   onRewardClaimed?: (newJeton: number) => void;
   onTamperAttempt?: (reason: string) => void;
 }
 
-export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({
-  notify,
-  onRewardClaimed,
-  onTamperAttempt,
-}) => {
-  const [state, setState] = useState<HolyDayBannerState>(() => getHolyDayState());
+export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewardClaimed, onTamperAttempt }) => {
+  const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
+  const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
 
   useEffect(() => {
-    // 30 saniyede bir manevi takvimi canlı güncelle
-    const interval = window.setInterval(() => {
-      setState(getHolyDayState());
-    }, 30_000);
-    return () => window.clearInterval(interval);
+    let alive = true;
+    const refresh = async () => {
+      await fetchRemoteConfig();
+      if (alive) {
+        setHolyDay(getHolyDayState());
+        setAnnouncement(getActiveAnnouncement());
+      }
+    };
+    void refresh();
+    const interval = window.setInterval(refresh, 60_000);
+    return () => { alive = false; window.clearInterval(interval); };
   }, []);
 
-  const handleClaim = () => {
-    // 1. Rate limiter spam/bot koruması
-    const rl = checkRateLimit("general");
-    if (!rl.allowed) {
-      notify("⏱️ Lütfen butona bu kadar hızlı basmayınız!");
-      return;
-    }
-
-    if (!state.canClaim) {
-      if (state.isClaimed) {
-        notify("🚨 Güvenlik İhlali: Bu ödül bu kutsal gün için zaten alındı!");
-      }
-      return;
-    }
-
-    const result = claimHolyDayReward(state.eventKey, state.rewardAmount);
-
-    if (result.ok) {
-      notify(result.message);
-      if (onRewardClaimed) onRewardClaimed(result.newJeton);
-      setState(getHolyDayState());
-    } else {
-      notify(result.message);
-      if (result.message.includes("Güvenlik İhlali") && onTamperAttempt) {
-        onTamperAttempt(result.message);
-      }
-    }
+  const claim = () => {
+    const limit = checkRateLimit("general");
+    if (!limit.allowed) return notify("Lutfen butona bu kadar hizli basmayin");
+    if (!holyDay.canClaim) return;
+    const result = claimHolyDayReward(holyDay.eventKey, holyDay.rewardAmount);
+    notify(result.message);
+    if (result.ok) onRewardClaimed?.(result.newJeton);
+    else if (result.message.includes("Guvenlik")) onTamperAttempt?.(result.message);
+    setHolyDay(getHolyDayState());
   };
 
-  if (state.type === "none") return null;
+  const openAnnouncement = () => {
+    if (!announcement) return;
+    setDetailOpen(true);
+    setReadId(announcement.id);
+    localStorage.setItem("nur_read_announcement", announcement.id);
+  };
+
+  if (!announcement && holyDay.type === "none") return null;
+  const unread = Boolean(announcement && readId !== announcement.id);
 
   return (
-    <div
-      className="relative z-50 overflow-hidden border-b border-amber-400/30 px-3 py-2 text-center text-[11px] font-bold text-black select-none transition-all"
-      style={{
-        background:
-          state.type === "claim"
-            ? "linear-gradient(90deg, #f5dda6 0%, #d7aa52 35%, #ffffff 50%, #d7aa52 65%, #f5dda6 100%)"
-            : "linear-gradient(90deg, #1c1917 0%, #362810 50%, #1c1917 100%)",
-        color: state.type === "claim" ? "#0c0d12" : "#f5dda6",
-      }}
-    >
-      <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-2">
-        <span className="flex items-center gap-1">
-          <Sparkles size={13} className="animate-spin text-amber-300" />
-          <span className="text-[10px] font-black uppercase tracking-widest opacity-90">
-            {state.badgeText}
-          </span>
-        </span>
-
-        <span className="hidden sm:inline">•</span>
-
-        <span className="font-extrabold tracking-wide drop-shadow-sm">
-          {state.title}
-        </span>
-
-        {state.type === "claim" && (
-          <button
-            onClick={handleClaim}
-            disabled={state.isClaimed}
-            className={`ml-2 flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-black tracking-wider transition-all shadow-md active:scale-95 cursor-pointer ${
-              state.isClaimed
-                ? "bg-black/20 text-black/60 cursor-not-allowed"
-                : "bg-black text-amber-300 hover:bg-black/90 hover:scale-105"
-            }`}
-          >
-            {state.isClaimed ? (
-              <>
-                <CheckCircle size={12} className="text-emerald-400" />
-                <span>ÖDÜL ALINDI</span>
-              </>
-            ) : (
-              <>
-                <Gift size={12} className="animate-bounce text-amber-300" />
-                <span>[🎁 HEDİYENİ TIKLA AL]</span>
-              </>
-            )}
-          </button>
-        )}
-
-        {state.type === "notice" && (
-          <span className="ml-2 rounded-full bg-amber-500/20 border border-amber-400/40 px-2.5 py-0.5 text-[9px] font-black text-amber-300">
-            YARIN AKTİF OLACAK
-          </span>
-        )}
+    <>
+      <div className="relative z-50 border-b border-amber-400/25 bg-[#111014] px-3 py-2 text-[11px] text-amber-100">
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-2">
+          {announcement && (
+            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-400/10 px-3 py-1.5 font-black ${unread && announcement.blinking ? "animate-pulse" : ""}`}>
+              <Bell size={12} className={unread ? "text-amber-300" : "text-white/45"} />
+              {unread && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
+              <span>{announcement.title}</span>
+              <span className="max-w-[42vw] truncate font-medium text-white/60">{announcement.message}</span>
+            </button>
+          )}
+          {holyDay.type !== "none" && (
+            <div className="flex items-center gap-2">
+              <Sparkles size={12} className="text-amber-300" />
+              <b>{holyDay.title}</b>
+              {holyDay.type === "claim" && (
+                <button disabled={holyDay.isClaimed} onClick={claim} className="flex items-center gap-1 rounded-full bg-amber-300 px-3 py-1 font-black text-black disabled:opacity-45">
+                  {holyDay.isClaimed ? <CheckCircle size={11} /> : <Gift size={11} />}
+                  {holyDay.isClaimed ? "Odul alindi" : "Hediyeni al"}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {detailOpen && announcement && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onMouseDown={() => setDetailOpen(false)}>
+          <article className="glass relative w-full max-w-lg rounded-3xl border border-amber-400/30 p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+            <button onClick={() => setDetailOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>
+            <span className="mb-3 inline-flex rounded-full bg-amber-400/15 px-3 py-1 text-[9px] font-black uppercase text-amber-300">{announcement.kind}</span>
+            <h3 className="font-display text-xl font-black text-white">{announcement.title}</h3>
+            <p className="mt-2 text-sm font-semibold text-amber-100/80">{announcement.message}</p>
+            {announcement.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{announcement.detail}</p>}
+          </article>
+        </div>
+      )}
+    </>
   );
 };
