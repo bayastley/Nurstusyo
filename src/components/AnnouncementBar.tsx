@@ -3,6 +3,7 @@ import { Bell, CheckCircle, Gift, Sparkles, X } from "lucide-react";
 import { checkRateLimit } from "../rateLimiter";
 import type { Announcement } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
+import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
@@ -15,6 +16,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPanelOpen, setAdminPanelOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -30,6 +33,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     void refresh();
     const interval = window.setInterval(refresh, 60_000);
     return () => { alive = false; window.clearInterval(interval); };
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/admin/session", { cache: "no-store" })
+      .then((response) => setIsAdmin(response.ok))
+      .catch(() => setIsAdmin(false));
   }, []);
 
   useEffect(() => {
@@ -54,7 +63,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     localStorage.setItem("nur_read_announcement", announcement.id);
   };
 
-  if (!announcement && holyDay.type === "none") return null;
+  if (!announcement && holyDay.type === "none" && !isAdmin) return null;
   const unread = Boolean(announcement && readId !== announcement.id);
 
   return (
@@ -81,6 +90,11 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
               )}
             </div>
           )}
+          {isAdmin && (
+            <button onClick={() => setAdminPanelOpen(true)} className="flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300">
+              <Bell size={11} /> Duyuru ve Kilitlar
+            </button>
+          )}
         </div>
       </div>
 
@@ -94,6 +108,15 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
             {announcement.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{announcement.detail}</p>}
             {announcement.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">Okudum</button>}
           </article>
+        </div>
+      )}
+
+      {adminPanelOpen && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md" onMouseDown={() => setAdminPanelOpen(false)}>
+          <div className="glass relative max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl border border-amber-400/30 p-5" onMouseDown={(event) => event.stopPropagation()}>
+            <button onClick={() => setAdminPanelOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>
+            <AdminBroadcastPanel notify={notify} />
+          </div>
         </div>
       )}
     </>
