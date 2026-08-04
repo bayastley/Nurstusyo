@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Bell, CheckCircle, Gift, Sparkles, X } from "lucide-react";
 import { checkRateLimit } from "../rateLimiter";
-import { fetchRemoteConfig, getActiveAnnouncement, type Announcement } from "../services/adminSyncService";
+import type { Announcement } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 
 interface AnnouncementBarProps {
@@ -12,23 +12,29 @@ interface AnnouncementBarProps {
 
 export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewardClaimed, onTamperAttempt }) => {
   const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
-  const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
 
   useEffect(() => {
     let alive = true;
     const refresh = async () => {
-      await fetchRemoteConfig();
+      const response = await fetch("/api/config", { cache: "no-store" }).catch(() => null);
+      const data = response ? await response.json().catch(() => null) as { announcement?: any } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());
-        setAnnouncement(getActiveAnnouncement());
+        const item = data?.announcement;
+        setAnnouncement(item ? { id: item.id, title: item.title, message: item.message, detail: item.detail, kind: item.kind, active: item.active, blinking: item.blinking, startsAt: item.starts_at, endsAt: item.ends_at, updatedAt: item.updated_at, forceOpen: item.force_open, requireAck: item.require_ack } : null);
       }
     };
     void refresh();
     const interval = window.setInterval(refresh, 60_000);
     return () => { alive = false; window.clearInterval(interval); };
   }, []);
+
+  useEffect(() => {
+    if (announcement?.forceOpen && readId !== announcement.id) setDetailOpen(true);
+  }, [announcement, readId]);
 
   const claim = () => {
     const limit = checkRateLimit("general");
@@ -81,11 +87,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
       {detailOpen && announcement && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onMouseDown={() => setDetailOpen(false)}>
           <article className="glass relative w-full max-w-lg rounded-3xl border border-amber-400/30 p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
-            <button onClick={() => setDetailOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>
+            {!announcement.requireAck && <button onClick={() => setDetailOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>}
             <span className="mb-3 inline-flex rounded-full bg-amber-400/15 px-3 py-1 text-[9px] font-black uppercase text-amber-300">{announcement.kind}</span>
             <h3 className="font-display text-xl font-black text-white">{announcement.title}</h3>
             <p className="mt-2 text-sm font-semibold text-amber-100/80">{announcement.message}</p>
             {announcement.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{announcement.detail}</p>}
+            {announcement.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">Okudum</button>}
           </article>
         </div>
       )}
