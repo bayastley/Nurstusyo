@@ -59,6 +59,23 @@ function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
   return true;
 }
 
+function supabaseConfig() {
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) throw new Error("Supabase sunucu ayarları eksik");
+  return { url, key };
+}
+
+async function supabaseRows<T>(path: string): Promise<T[]> {
+  const { url, key } = supabaseConfig();
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` },
+    cache: "no-store",
+  });
+  if (!response.ok) throw new Error(await response.text());
+  return await response.json() as T[];
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
@@ -67,6 +84,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const user = getSessionUser(req);
     if (!user) return res.status(401).json({ ok: false, error: "Oturum bulunamadı" });
+
+    const [users, wallets] = await Promise.all([
+      supabaseRows<{ tier: "free" | "pro" | "elit"; is_admin: boolean }>(`nur_users?id=eq.${encodeURIComponent(user.id)}&select=tier,is_admin`),
+      supabaseRows<{ sub_jeton: number; purchased_jeton: number }>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton`),
+    ]);
+    const dbUser = users[0];
+    const wallet = wallets[0] ?? { sub_jeton: 0, purchased_jeton: 0 };
+
+    // Ban sorgusu hata verirse fail-open: kullanıcı yalnızca açık bir ban kaydı
+    // bulunduğunda engellenir.
+    let ban: { reason: string } | null = null;
+    try {
+      const bans = await supabaseRows<{ reason: string }>(`nur_ban_logs?or=(user_id.eq.${encodeURIComponent(user.id)},user_email.eq.${encodeURIComponent(user.email)})&unbanned=eq.false&order=created_at.desc&limit=1&select=reason`);
+      ban = bans[0] ?? null;
+    } catch {
+      ban = null;
+    }
 
     return res.status(200).json({
       ok: true,
@@ -77,12 +111,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         name: user.name,
         picture: user.picture || "",
         verified: user.verified,
-        isAdmin: user.isAdmin,
-        tier: user.isAdmin ? "elit" : user.tier || "free",
+        isAdmin: Boolean(user.isAdmin || dbUser?.is_admin),
+        tier: user.isAdmin || dbUser?.is_admin ? "elit" : dbUser?.tier || user.tier || "free",
       },
-      wallet: null,
-      banned: false,
-      banReason: "",
+      wallet: {
+        subJeton: wallet.sub_jeton,
+        purchasedJeton: wallet.purchased_jeton,
+        total: wallet.sub_jeton + wallet.purchased_jeton,
+      },
+      banned: Boolean(ban),
+      banReason: ban?.reason || "",
     });
   } catch (error) {
     console.error("[Auth Me Error]", error);
