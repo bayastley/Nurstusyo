@@ -48,6 +48,8 @@ export interface Announcement {
   startsAt: string;
   endsAt: string;
   updatedAt: string;
+  forceOpen?: boolean;
+  requireAck?: boolean;
 }
 
 export interface SystemConfig {
