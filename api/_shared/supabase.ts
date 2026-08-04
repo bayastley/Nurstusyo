@@ -1,31 +1,47 @@
-export async function getUser(id: string): Promise<any> {
+export async function getUser(_id: string): Promise<any> {
   return null;
 }
 
-export async function upsertUser(user: any): Promise<any> {
+export async function upsertUser(_user: any): Promise<any> {
   return null;
 }
 
-export async function ensureWallet(userId: string): Promise<any> {
+export async function ensureWallet(_userId: string): Promise<any> {
   return null;
 }
 
-export async function getWallet(userId: string): Promise<any> {
+export async function getWallet(_userId: string): Promise<any> {
   return null;
 }
 
-export async function getActiveBan(userId: string, email: string): Promise<any> {
+export async function getActiveBan(_userId: string, _email: string): Promise<any> {
   return null;
 }
 
-export async function logAdminAction(data: any): Promise<any> {
+export async function logAdminAction(_data: any): Promise<any> {
   return null;
 }
 
-export async function banUserInSupabase(data: any): Promise<any> {
+export async function banUserInSupabase(_data: any): Promise<any> {
   return null;
 }
 
-export async function unbanUserInSupabase(email: string): Promise<any> {
+export async function unbanUserInSupabase(_email: string): Promise<any> {
   return null;
+}
+
+export async function createOrder(_data: any): Promise<any> {
+  return null;
+}
+
+export async function getOrder(_orderId: string): Promise<any> {
+  return null;
+}
+
+export async function grantProductToUser(_data: any): Promise<any> {
+  return null;
+}
+
+export async function spendWallet(_userId: string, _cost: number): Promise<any> {
+  return { ok: false, error: "Wallet backend yapılandırılmadı", balance: 0 };
 }
