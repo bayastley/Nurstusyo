@@ -10,6 +10,7 @@ const ALLOWED_REDIRECT_URIS = new Set([
 const ALLOWED_ORIGINS = new Set([...ALLOWED_REDIRECT_URIS].map((uri) => new URL(uri).origin));
 const AUTH_HITS = new Map<string, number[]>();
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
+const REGISTER_BONUS = 20;
 
 function base64Url(value: Buffer | string): string {
   const buffer = Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
@@ -76,6 +77,58 @@ function userTier(existing: unknown, isAdmin: boolean): "free" | "pro" | "elit" 
   return existing === "pro" || existing === "elit" ? existing : "free";
 }
 
+function supabaseConfig() {
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) throw new Error("Supabase sunucu ayarları eksik");
+  return { url, key };
+}
+
+async function supabaseRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const { url, key } = supabaseConfig();
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      ...(init.headers || {}),
+    },
+  });
+  const text = await response.text();
+  if (!response.ok) throw new Error(text || `Supabase ${response.status}`);
+  return (text ? JSON.parse(text) : null) as T;
+}
+
+async function syncGoogleUser(user: { id: string; email: string; name: string; picture: string; tier: "free" | "pro" | "elit"; isAdmin: boolean }) {
+  const existing = await supabaseRequest<any[]>(`nur_users?id=eq.${encodeURIComponent(user.id)}&select=id,tier`);
+  const isNew = existing.length === 0;
+  const existingTier = existing[0]?.tier;
+  const tier = user.isAdmin ? "elit" : userTier(existingTier, false);
+
+  await supabaseRequest("nur_users?on_conflict=id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ id: user.id, email: user.email, name: user.name, picture: user.picture, tier, is_admin: user.isAdmin, updated_at: new Date().toISOString() }),
+  });
+
+  await supabaseRequest("nur_wallets?on_conflict=user_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=ignore-duplicates,return=minimal" },
+    body: JSON.stringify({ user_id: user.id }),
+  });
+
+  if (isNew) {
+    await supabaseRequest<Array<{ ok: boolean; balance: number; error: string | null }>>("rpc/nur_claim_reward", {
+      method: "POST",
+      body: JSON.stringify({ p_user_id: user.id, p_reward_key: "google_register_bonus_v1", p_amount: REGISTER_BONUS }),
+    });
+  }
+
+  const wallets = await supabaseRequest<Array<{ sub_jeton: number; purchased_jeton: number }>>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton`);
+  return { tier, isNew, wallet: wallets[0] ?? { sub_jeton: 0, purchased_jeton: 0 } };
+}
+
 async function verifyIdToken(idToken: string, clientId: string): Promise<{ ok: true; info: GoogleTokenInfo } | { ok: false; error: string }> {
   const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`, { cache: "no-store" });
   if (!response.ok) return { ok: false, error: "Google token doğrulaması başarısız" };
@@ -131,7 +184,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
     const email = String(verified.info.email || "").trim().toLowerCase();
-    const tier = userTier(null, adminEmails.includes(email));
+    const isAdmin = adminEmails.includes(email);
     const user = {
       id: `google-${verified.info.sub}`,
       sub: String(verified.info.sub),
@@ -139,16 +192,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       name: verified.info.name || email.split("@")[0] || "Google Kullanıcısı",
       picture: verified.info.picture || "",
       verified: true,
-      isAdmin: adminEmails.includes(email),
-      tier,
+      isAdmin,
+      tier: isAdmin ? "elit" as const : "free" as const,
     };
+
+    const synced = await syncGoogleUser(user);
+    user.tier = synced.tier;
 
     setSessionCookie(req, res, createSessionToken(user));
 
     return res.status(200).json({
       ok: true,
       user,
-      wallet: null,
+      isNewUser: synced.isNew,
+      registerBonus: synced.isNew ? REGISTER_BONUS : 0,
+      wallet: {
+        subJeton: synced.wallet.sub_jeton,
+        purchasedJeton: synced.wallet.purchased_jeton,
+        total: synced.wallet.sub_jeton + synced.wallet.purchased_jeton,
+      },
     });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Google girişi doğrulanamadı";
