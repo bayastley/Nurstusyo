@@ -2,10 +2,14 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { ALL_CLIPS, CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId } from "../../src/clips";
-import { QURAN_CLIPS } from "../../src/clips-r2";
 type Tier = "free" | "pro" | "elit";
+type CatId = typeof CATEGORY_IDS[number];
+const CATEGORY_IDS = [
+  "namaz", "musaf", "cicekler", "yildizlar", "deniz", "daglar", "gunbatimi", "gece", "selale", "orman", "col", "kar", "sehir", "cami", "desen", "gol", "bulut", "cennet", "ates", "cehennem", "hurma", "ari", "karinca",
+] as const;
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elit: 2 };
+const FREE_VIDEOS_PER_CATEGORY = 5;
+const CATEGORY_TIER: Partial<Record<CatId, Tier>> = {};
 const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
 const HITS = new Map<string, number[]>();
 
@@ -67,7 +71,7 @@ function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
 }
 
 function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
-  const catTier = (KATEGORI_TIER[cat] ?? "free") as Tier;
+  const catTier = CATEGORY_TIER[cat] ?? "free";
   if (catTier === "elit" && TIER_RANK[userTier] < TIER_RANK.elit) return false;
   if (TIER_RANK[userTier] < TIER_RANK[catTier]) return false;
   if (clipIndex >= FREE_VIDEOS_PER_CATEGORY) {
@@ -77,8 +81,7 @@ function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
   return true;
 }
 
-const ALLOWED_CATEGORIES = new Set<CatId>(CATEGORIES.map((category) => category.id));
-const KNOWN_MEDIA = [...ALL_CLIPS, ...QURAN_CLIPS] as Array<{ id?: string; cat?: string; pexelsId?: number }>;
+const ALLOWED_CATEGORIES = new Set<string>(CATEGORY_IDS);
 
 function isSafeCategory(value: unknown): value is CatId {
   return typeof value === "string" && ALLOWED_CATEGORIES.has(value as CatId);
@@ -94,12 +97,9 @@ function isSafeClipId(value: unknown): value is string {
   return typeof value === "string" && /^[a-zA-Z0-9_-]{2,80}$/.test(value);
 }
 
-function isKnownClip(cat: string, clipId: string | null, pexelsId: number | null): boolean {
-  return KNOWN_MEDIA.some((clip) => {
-    if (clip.cat !== cat) return false;
-    if (pexelsId !== null && clip.pexelsId === pexelsId) return true;
-    return Boolean(clipId && clip.id === clipId);
-  });
+function clipIndexFromId(cat: string, clipId: string | null): number {
+  const match = clipId?.match(new RegExp(`^${cat}-r(\\d+)$`));
+  return match ? Math.max(0, Number(match[1]) - 1) : 0;
 }
 
 function cleanPublicUrl(value: string): string {
@@ -125,11 +125,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const normalizedPexelsId = normalizePexelsId(pexelsId);
     const normalizedClipId = isSafeClipId(clipId) ? clipId : null;
     if (normalizedPexelsId === null && !normalizedClipId) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
-    if (!isKnownClip(cat, normalizedClipId, normalizedPexelsId)) return res.status(403).json({ ok: false, error: "Bu video kütüphanede kayıtlı değil" });
-
     const userTier: Tier = sessionUser.isAdmin ? "elit" : sessionUser.tier === "pro" || sessionUser.tier === "elit" ? sessionUser.tier : "free";
-    const clipIndex = KNOWN_MEDIA.findIndex((clip) => clip.cat === cat && ((normalizedPexelsId !== null && clip.pexelsId === normalizedPexelsId) || (normalizedClipId !== null && clip.id === normalizedClipId)));
-    if (clipIndex < 0 || !canAccessClip(userTier, cat, clipIndex)) return res.status(403).json({ ok: false, error: "Bu içerik için üyelik seviyeniz yetersiz" });
+    const clipIndex = clipIndexFromId(cat, normalizedClipId);
+    if (!canAccessClip(userTier, cat, clipIndex)) return res.status(403).json({ ok: false, error: "Bu içerik için üyelik seviyeniz yetersiz" });
 
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID || "";
     const bucketName = process.env.R2_BUCKET_NAME || "nurstudyo";
