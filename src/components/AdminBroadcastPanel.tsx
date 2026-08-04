@@ -1,12 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Bell, LockKeyhole, Save, Send } from "lucide-react";
-import {
-  getSystemConfig,
-  saveAnnouncement,
-  setFeatureLock,
-  type Announcement,
-  type FeatureLock,
-} from "../services/adminSyncService";
+import { type Announcement, type FeatureLock } from "../services/adminSyncService";
 
 interface AdminBroadcastPanelProps {
   notify: (message: string) => void;
@@ -33,7 +27,6 @@ const FEATURE_OPTIONS = [
 ] as const;
 
 export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify }) => {
-  const initial = useMemo(() => getSystemConfig(), []);
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [detail, setDetail] = useState("");
@@ -42,15 +35,18 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [startsAt, setStartsAt] = useState(() => new Date().toISOString().slice(0, 16));
   const [endsAt, setEndsAt] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16));
   const [featureId, setFeatureId] = useState<string>(FEATURE_OPTIONS[0][0]);
-  const [featureLock, setFeatureLockState] = useState<FeatureLock>(initial.featureLocks[FEATURE_OPTIONS[0][0]] ?? "free");
+  const [featureLock, setFeatureLockState] = useState<FeatureLock>("free");
+  const [forceOpen, setForceOpen] = useState(false);
+  const [requireAck, setRequireAck] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const publish = () => {
+  const publish = async () => {
     if (!title.trim() || !message.trim()) {
       notify("Duyuru basligi ve kisa mesaj gerekli");
       return;
     }
-    saveAnnouncement({
-      id: `announcement-${Date.now()}`,
+    setSaving(true);
+    const response = await fetch("/api/admin/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "publish_announcement", announcement: {
       title: title.trim(),
       message: message.trim(),
       detail: detail.trim(),
@@ -59,14 +55,16 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       blinking,
       startsAt: new Date(startsAt).toISOString(),
       endsAt: new Date(endsAt).toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-    notify("Duyuru kaydedildi. Bulut Sync ile herkese yayinlayin.");
+      forceOpen,
+      requireAck,
+    } }) });
+    setSaving(false);
+    notify(response.ok ? "Duyuru tüm kullanıcılara yayınlandı" : "Duyuru yayınlanamadı");
   };
 
-  const saveLock = () => {
-    setFeatureLock(featureId, featureLock);
-    notify("Ozellik kilidi kaydedildi. Bulut Sync ile herkese yayinlayin.");
+  const saveLock = async () => {
+    const response = await fetch("/api/admin/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "set_feature_lock", featureId, lockLevel: featureLock }) });
+    notify(response.ok ? "Kilit tüm kullanıcılara uygulandı" : "Kilit kaydedilemedi");
   };
 
   return (
@@ -80,24 +78,26 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           <div className="grid grid-cols-2 gap-2">
             <select value={kind} onChange={(event) => setKind(event.target.value as Announcement["kind"])} className="glass-soft rounded-xl px-3 py-2 text-xs text-white"><option value="update">Guncelleme</option><option value="info">Bilgi</option><option value="warning">Uyari</option></select>
             <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white"><input type="checkbox" checked={blinking} onChange={(event) => setBlinking(event.target.checked)} /> Yanip sonsun</label>
+            <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white"><input type="checkbox" checked={forceOpen} onChange={(event) => setForceOpen(event.target.checked)} /> Giriste ac</label>
+            <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white"><input type="checkbox" checked={requireAck} onChange={(event) => setRequireAck(event.target.checked)} /> Okudum zorunlu</label>
             <input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
             <input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
           </div>
-          <button onClick={publish} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Send size={13} /> Duyuruyu Kaydet</button>
+          <button disabled={saving} onClick={() => void publish()} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black disabled:opacity-50" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Send size={13} /> Duyuruyu Yayinla</button>
         </div>
       </section>
 
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Ozellik Kilitlari</h4>
         <div className="space-y-2">
-          <select value={featureId} onChange={(event) => { const id = event.target.value; setFeatureId(id); setFeatureLockState(getSystemConfig().featureLocks[id] ?? "free"); }} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
+          <select value={featureId} onChange={(event) => setFeatureId(event.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
             {FEATURE_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
           </select>
           <select value={featureLock} onChange={(event) => setFeatureLockState(event.target.value as FeatureLock)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
             {LOCK_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
-          <p className="rounded-xl bg-white/[.04] p-3 text-[10px] leading-relaxed text-white/45">Bu ayar Gist Bulut Sync ile yayinlandiginda tum kullanicilara aktarilir.</p>
-          <button onClick={saveLock} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black"><Save size={13} /> Kilidi Kaydet</button>
+          <p className="rounded-xl bg-white/[.04] p-3 text-[10px] leading-relaxed text-white/45">Bu ayar Supabase üzerinden tüm kullanıcılara uygulanır.</p>
+          <button onClick={() => void saveLock()} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black"><Save size={13} /> Kilidi Uygula</button>
         </div>
       </section>
     </div>
