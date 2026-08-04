@@ -4,7 +4,6 @@ import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
 import { randomClip, type Clip } from "../clips";
 import { T } from "../i18n";
-import { JETON } from "../tier";
 import type { ModalName, Output, SelectedAyah, Tier } from "../types";
 
 interface VideoPreviewSectionProps {
@@ -79,7 +78,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
-    activeOutput, fmtSize, shareOutput, user, setLoginTab, notify, t, handleGenerate,
+    activeOutput, fmtSize, shareOutput, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect,
   } = props;
   const [lowPower] = useState(lowPowerDevice);
