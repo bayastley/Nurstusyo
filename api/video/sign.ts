@@ -1,15 +1,70 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { ALL_CLIPS, CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId } from "../../src/clips";
 import { QURAN_CLIPS } from "../../src/clips-r2";
-import { requireAuth } from "../_shared/auth.ts";
-import { rateLimit } from "../_shared/rateLimit.ts";
-import { requireAllowedOrigin } from "../_shared/security.ts";
-import { getUser } from "../_shared/supabase.ts";
-
 type Tier = "free" | "pro" | "elit";
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elit: 2 };
+const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
+const HITS = new Map<string, number[]>();
+
+interface SessionUser {
+  id: string;
+  email: string;
+  verified: boolean;
+  isAdmin: boolean;
+  tier?: Tier;
+  exp: number;
+}
+
+function fromBase64Url(input: string): Buffer {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+  return Buffer.from(normalized + pad, "base64");
+}
+
+function base64Url(input: Buffer): string {
+  return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function getSessionUser(req: VercelRequest): SessionUser | null {
+  const cookie = String(req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
+  if (!cookie) return null;
+  const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
+  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  if (!payload || !signature || secret.length < 20) return null;
+  const expected = base64Url(crypto.createHmac("sha256", secret).update(payload).digest());
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
+  try {
+    const user = JSON.parse(fromBase64Url(payload).toString("utf8")) as SessionUser;
+    if (!user.id || !user.email || !user.verified || user.exp < Math.floor(Date.now() / 1000)) return null;
+    return user;
+  } catch {
+    return null;
+  }
+}
+
+function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+    return false;
+  }
+  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
+  const now = Date.now();
+  const hits = (HITS.get(ip) || []).filter((hit) => hit >= now - 60_000);
+  if (hits.length >= 120) {
+    res.setHeader("Retry-After", "60");
+    res.status(429).json({ ok: false, error: "İstek işlenemedi" });
+    return false;
+  }
+  hits.push(now);
+  HITS.set(ip, hits);
+  return true;
+}
 
 function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
   const catTier = (KATEGORI_TIER[cat] ?? "free") as Tier;
@@ -59,12 +114,11 @@ function cleanPublicUrl(value: string): string {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!requireAllowedOrigin(req, res)) return;
-  if (!rateLimit(req, res, "video:sign", 120, 60_000)) return;
+  if (!allowRequest(req, res)) return;
 
   try {
-    const sessionUser = requireAuth(req, res);
-    if (!sessionUser) return;
+    const sessionUser = getSessionUser(req);
+    if (!sessionUser) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
     const { clipId, pexelsId, cat } = req.body || {};
     if (!isSafeCategory(cat)) return res.status(400).json({ ok: false, error: "Geçersiz veya izinli olmayan kategori" });
 
@@ -73,8 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (normalizedPexelsId === null && !normalizedClipId) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
     if (!isKnownClip(cat, normalizedClipId, normalizedPexelsId)) return res.status(403).json({ ok: false, error: "Bu video kütüphanede kayıtlı değil" });
 
-    const dbUser = await getUser(sessionUser.id).catch(() => null);
-    const userTier: Tier = sessionUser.isAdmin || dbUser?.is_admin ? "elit" : dbUser?.tier === "pro" || dbUser?.tier === "elit" ? dbUser.tier : "free";
+    const userTier: Tier = sessionUser.isAdmin ? "elit" : sessionUser.tier === "pro" || sessionUser.tier === "elit" ? sessionUser.tier : "free";
     const clipIndex = KNOWN_MEDIA.findIndex((clip) => clip.cat === cat && ((normalizedPexelsId !== null && clip.pexelsId === normalizedPexelsId) || (normalizedClipId !== null && clip.id === normalizedClipId)));
     if (clipIndex < 0 || !canAccessClip(userTier, cat, clipIndex)) return res.status(403).json({ ok: false, error: "Bu içerik için üyelik seviyeniz yetersiz" });
 
