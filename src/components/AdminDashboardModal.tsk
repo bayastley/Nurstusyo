@@ -11,6 +11,7 @@ import {
   type ManagedUser, type DynamicModule, type SystemConfig, type BanLog,
 } from "../services/adminSyncService";
 import type { Tier } from "../types";
+import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 
 export type { ManagedUser };
 
@@ -41,7 +42,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "modules" | "sync" | "banLogs">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -52,8 +53,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const banLogs: BanLog[] = getBanLogs();
 
-  const handleBan = (email: string, reason: string) => {
-    if (!isAdminEmail(currentUserEmail) && !isAdminEmail("kayaom1233@gmail.com")) {
+  const handleBan = async (email: string, reason: string) => {
+    if (!await assertAdminAction("ban_user", email, reason)) return;
+    if (!isAdminEmail(currentUserEmail)) {
       notify("⛔ Sadece Kurucu Admin ban yetkisine sahiptir.");
       return;
     }
@@ -62,22 +64,27 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       return;
     }
     const finalReason = reason.trim() || "Yasal ihlal / Sistem güvenlik uyarısı";
+    const banState = await serverManage("ban_user", { email, reason: finalReason });
+    if (banState === "error") return;
     banUserInDb(email, finalReason, currentUserEmail, false);
     setSysConfig(getSystemConfig());
     onUpdateUser(email, "free", 0);
     setBanReasonInput("");
-    notify(`⛔ ${email} süresiz banlandı! Gerekçe: "${finalReason}"`);
+    notify(banState === "done" ? `⛔ ${email} DB'ye işlendi ve süresiz banlandı!` : `⛔ ${email} süresiz banlandı! (yerel kayıt)`);
   };
 
-  const handleUnban = (email: string) => {
-    if (!isAdminEmail(currentUserEmail) && !isAdminEmail("kayaom1233@gmail.com")) {
+  const handleUnban = async (email: string) => {
+    if (!await assertAdminAction("unban_user", email)) return;
+    if (!isAdminEmail(currentUserEmail)) {
       notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
       return;
     }
+    const unbanState = await serverManage("unban_user", { email });
+    if (unbanState === "error") return;
     unbanUserInDb(email);
     setSysConfig(getSystemConfig());
     onUpdateUser(email, "free", 20);
-    notify(`✅ ${email} hesabı üzerindeki ban kaldırıldı ve erişim açıldı.`);
+    notify(`✅ ${email} banı kaldırıldı${unbanState === "done" ? " ve DB'ye işlendi" : " (yerel kayıt)"}.`);
   };
 
   // New module creation form state
@@ -87,14 +94,57 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [newModIcon] = useState("Sparkles");
 
   // GitHub Sync State
-  const [ghToken, setGhToken] = useState<string>(sysConfig.githubToken || "");
+  const [ghToken, setGhToken] = useState<string>("");
   const [ghGistId, setGhGistId] = useState<string>(sysConfig.gistId || "");
   const [syncing, setSyncing] = useState(false);
 
   const users = sysConfig.users;
   const selectedUser = users.find((u) => u.email.toLowerCase() === selectedEmail.toLowerCase()) || users[0];
 
-  const handleTierChange = (email: string, newTier: Tier) => {
+  const assertAdminAction = async (action: string, target?: string, reason?: string): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, target, reason }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || !data?.ok) {
+        notify(data?.error || "Admin yetkisi doğrulanamadı");
+        return false;
+      }
+      return true;
+    } catch {
+      notify("Admin yetkisi için sunucuya ulaşılamadı");
+      return false;
+    }
+  };
+
+  // ★ Gerçek işlemi server üzerinden Supabase'e yazar.
+  //   503 = Supabase henüz bağlı değil → local fallback devam eder.
+  const serverManage = async (action: string, payload: Record<string, unknown>): Promise<"done" | "fallback" | "error"> => {
+    try {
+      const response = await fetch("/api/admin/manage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...payload }),
+      });
+      if (response.status === 503) return "fallback";
+      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (!response.ok || !data?.ok) {
+        notify(data?.error || "Yönetim işlemi tamamlanamadı");
+        return "error";
+      }
+      return "done";
+    } catch {
+      return "fallback";
+    }
+  };
+
+  const handleTierChange = async (email: string, newTier: Tier) => {
+    if (!await assertAdminAction("change_tier", email)) return;
+    const tierState = await serverManage("change_tier", { email, tier: newTier });
+    if (tierState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         return { ...u, tier: newTier, updatedAt: new Date().toISOString() };
@@ -112,7 +162,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleJetonChange = (email: string, delta: number) => {
+  const handleJetonChange = async (email: string, delta: number) => {
+    if (!await assertAdminAction("change_jeton", email)) return;
+    const targetUserNow = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const jetonState = await serverManage("change_jeton", {
+      email,
+      total: Math.max(0, (targetUserNow?.jeton ?? 0) + delta),
+    });
+    if (jetonState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         const nextJeton = Math.max(0, u.jeton + delta);
@@ -131,8 +188,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleDirectJetonSet = (email: string, exactAmount: number) => {
+  const handleDirectJetonSet = async (email: string, exactAmount: number) => {
+    if (!await assertAdminAction("change_jeton", email)) return;
     const safeAmount = Math.max(0, Math.floor(exactAmount));
+    const setState = await serverManage("change_jeton", { email, total: safeAmount });
+    if (setState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         return { ...u, jeton: safeAmount, updatedAt: new Date().toISOString() };
@@ -150,7 +210,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
-  const handleToggleModule = (modId: string) => {
+  const handleToggleModule = async (modId: string) => {
+    if (!await assertAdminAction("toggle_module", modId)) return;
     const updatedMods = sysConfig.modules.map((m) => {
       if (m.id === modId) return { ...m, active: !m.active };
       return m;
@@ -161,7 +222,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     notify("✨ Modül durumu güncellendi!");
   };
 
-  const handleCreateModule = () => {
+  const handleCreateModule = async () => {
+    if (!await assertAdminAction("create_module", newModTitle.trim())) return;
     if (!newModTitle.trim()) {
       notify("Lütfen modül başlığı giriniz.");
       return;
@@ -184,6 +246,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   const handlePushGist = async () => {
+    if (!await assertAdminAction("push_config", ghGistId.trim() || "new-gist")) return;
     if (!ghToken.trim()) {
       notify("Lütfen GitHub Personal Access Token giriniz.");
       return;
@@ -259,22 +322,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <UserCheck size={14} /> Kullanıcı & Jeton
           </button>
           <button
-            onClick={() => setActiveTab("modules")}
+            onClick={() => setActiveTab("broadcast")}
             className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
-              activeTab === "modules" ? "text-black font-black" : "text-white/60 hover:text-white"
+              activeTab === "broadcast" ? "text-black font-black" : "text-white/60 hover:text-white"
             }`}
-            style={activeTab === "modules" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+            style={activeTab === "broadcast" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <FolderPlus size={14} /> Modül & Fikir
-          </button>
-          <button
-            onClick={() => setActiveTab("sync")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
-              activeTab === "sync" ? "text-black font-black" : "text-white/60 hover:text-white"
-            }`}
-            style={activeTab === "sync" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-          >
-            <CloudUpload size={14} /> Bulut Sync
+            <Lightbulb size={14} /> Duyuru & Kilitlar
           </button>
           <button
             onClick={() => setActiveTab("banLogs")}
@@ -643,6 +697,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               </div>
             </div>
           )}
+
+          {activeTab === "broadcast" && <AdminBroadcastPanel notify={notify} />}
 
           {/* TAB 4: BAN & SİBER DENETİM LOGLARI */}
           {activeTab === "banLogs" && (
