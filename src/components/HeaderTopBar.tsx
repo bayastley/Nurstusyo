@@ -120,7 +120,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
 
       {/* HEADER */}
       <header className="glass sticky top-0 z-[80] border-x-0 border-t-0">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5">
+        <div className="relative mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex items-center gap-3" data-sidebar-trigger="true">
             <div className="relative">
               <button className="glass-soft rounded-lg p-2 text-white/70 hover:text-white" onClick={() => setMenuOpen((value) => !value)}>
@@ -296,7 +296,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          <div className="absolute left-[72px] flex items-center gap-2 cursor-pointer sm:left-[76px]" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             <img src="/logo.png" alt="Nûr Stüdyo Logo" className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
