@@ -42,7 +42,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "modules" | "sync">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -321,11 +321,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           >
             <UserCheck size={14} /> Kullanıcı & Jeton
           </button>
-          
-          
           <button
             onClick={() => setActiveTab("broadcast")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${activeTab === "broadcast" ? "text-black font-black" : "text-white/60 hover:text-white"}`}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "broadcast" ? "text-black font-black" : "text-white/60 hover:text-white"
+            }`}
             style={activeTab === "broadcast" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
             <Lightbulb size={14} /> Duyuru & Kilitlar
