@@ -11,6 +11,7 @@ import {
   type ManagedUser, type DynamicModule, type SystemConfig, type BanLog,
 } from "../services/adminSyncService";
 import type { Tier } from "../types";
+import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 
 export type { ManagedUser };
 
@@ -41,7 +42,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "modules" | "sync" | "banLogs">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "modules" | "sync" | "broadcast" | "banLogs">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -321,22 +322,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <UserCheck size={14} /> Kullanıcı & Jeton
           </button>
           <button
-            onClick={() => setActiveTab("modules")}
+            onClick={() => setActiveTab("broadcast")}
             className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
-              activeTab === "modules" ? "text-black font-black" : "text-white/60 hover:text-white"
+              activeTab === "broadcast" ? "text-black font-black" : "text-white/60 hover:text-white"
             }`}
-            style={activeTab === "modules" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+            style={activeTab === "broadcast" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <FolderPlus size={14} /> Modül & Fikir
-          </button>
-          <button
-            onClick={() => setActiveTab("sync")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
-              activeTab === "sync" ? "text-black font-black" : "text-white/60 hover:text-white"
-            }`}
-            style={activeTab === "sync" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-          >
-            <CloudUpload size={14} /> Bulut Sync
+            <Lightbulb size={14} /> Duyuru & Kilitlar
           </button>
           <button
             onClick={() => setActiveTab("banLogs")}
@@ -705,6 +697,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               </div>
             </div>
           )}
+
+          {activeTab === "broadcast" && <AdminBroadcastPanel notify={notify} />}
 
           {/* TAB 4: BAN & SİBER DENETİM LOGLARI */}
           {activeTab === "banLogs" && (
