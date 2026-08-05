@@ -1,21 +1,65 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import {
-  BookOpen, Building2, Cloud, CloudLightning, Droplets, Flame, Flower2, FolderUp, Footprints,
-  Landmark, Mountain, MoonStar, Palmtree, Sailboat, Shapes, Snowflake, Sparkles, Sun, Sunset, Tablet, TreePalm, Bug, Trees, Waves,
-  X, AlertTriangle, Ban,
+  BookOpen,
+  Building2,
+  Cloud,
+  CloudLightning,
+  Droplets,
+  Flame,
+  Flower2,
+  FolderUp,
+  Footprints,
+  Landmark,
+  Mountain,
+  MoonStar,
+  Palmtree,
+  Sailboat,
+  Shapes,
+  Snowflake,
+  Sparkles,
+  Sun,
+  Sunset,
+  Tablet,
+  TreePalm,
+  Bug,
+  Trees,
+  Waves,
+  X,
+  AlertTriangle,
+  Ban,
   type LucideIcon,
-} from "lucide-react";
+  } from "lucide-react";
 import { QURAN_CLIPS } from "./clips-r2";
 import {
-  ACTIVE_CATEGORIES, ALL_CLIPS, CATEGORIES, MOTION_CLIPS, TEMPLATE_CLIPS, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, CATEGORY_PALETTE, toHiRes, type CatId, type Clip,
-} from "./clips";
+  ACTIVE_CATEGORIES,
+  ALL_CLIPS,
+  CATEGORIES,
+  MOTION_CLIPS,
+  TEMPLATE_CLIPS,
+  KATEGORI_TIER,
+  FREE_VIDEOS_PER_CATEGORY,
+  CATEGORY_PALETTE,
+  toHiRes,
+  type CatId,
+  type Clip,
+  } from "./clips";
 import {
-  DAILY_AYAHS, genDesc, genTitle, HASHTAG_POOL, MEAL_FIXES, RECITERS,
-  reciterAudioUrl, SURAHS, THEMES, THEME_EMOJI, TURKISH_CITIES,
-  EXTRA_THEMES, THEME_TIER, THEME_EMOJI_EXTRA, RECITER_SES_TARZI, SES_TARZI_ORDER,
+  DAILY_AYAHS,
+  genDesc,
+  genTitle,
+  HASHTAG_POOL,
+  MEAL_FIXES,
+  SURAHS,
+  THEMES,
+  THEME_EMOJI,
+  TURKISH_CITIES,
+  EXTRA_THEMES,
+  THEME_TIER,
+  THEME_EMOJI_EXTRA,
 } from "./data";
 import { LANGS, MEAL_EDITIONS, T, type Lang } from "./i18n";
+import { RECITERS, reciterAudioUrl, RECITER_SES_TARZI, SES_TARZI_ORDER } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { HeaderTopBar } from "./components/HeaderTopBar";
 import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
