@@ -44,7 +44,8 @@ function isLowPowerDevice(): boolean {
 export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, onHover, onPick }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [nearViewport, setNearViewport] = useState(false);
+  // The card artwork must always render; only video playback is deferred.
+  const [nearViewport, setNearViewport] = useState(true);
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
@@ -75,7 +76,9 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
       return;
     }
     const observer = new IntersectionObserver(
-      ([entry]) => setNearViewport(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) setNearViewport(true);
+      },
       { rootMargin: lowPower ? "40px" : "160px" },
     );
     observer.observe(node);
