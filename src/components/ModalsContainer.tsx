@@ -853,18 +853,6 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 </div>
               )}
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setTosAccepted(true);
-                setTosOpen(false);
-              }}
-              className="mt-4 w-full rounded-xl py-3 text-[11px] font-black uppercase tracking-wider text-black shrink-0"
-              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-            >
-              Okudum, Kabul Ediyorum
-            </button>
           </div>
         </div>
       )}
