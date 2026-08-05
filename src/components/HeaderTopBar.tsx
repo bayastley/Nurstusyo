@@ -296,7 +296,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
           </div>
 
-          <div className="absolute left-[72px] flex items-center gap-2 cursor-pointer sm:left-[76px]" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          <div className="absolute left-[68px] flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             <img src="/logo.png" alt="Nûr Stüdyo Logo" className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
