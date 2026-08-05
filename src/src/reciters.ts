@@ -10,6 +10,7 @@ export interface Reciter {
   initial: string;
   country: string;
   surahPattern?: string;
+  requiredTier?: "free" | "pro" | "elit";
 }
 
 const low = "#10b981";
@@ -18,7 +19,7 @@ const mid = "#f59e0b";
 
 // Only verified EveryAyah directories are used. Full-surah sources declare surahPattern.
 export const RECITERS: Reciter[] = [
-  { id: "muhaisny", name: "Muhammed el-Muhaysini", path: "", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "MP3Quran tam sure kaydi. Tahmini dusuk risk; ticari kullanimdan once lisans kontrolu onerilir.", color: low, initial: "MM", country: "Suudi Arabistan", surahPattern: "https://server11.mp3quran.net/download/mhsny/{S}.mp3" },
+  { id: "muhaisny", name: "Muhammed el-Muhaysini", path: "", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "MP3Quran tam sure kaydi. Tahmini dusuk risk; ticari kullanimdan once lisans kontrolu onerilir.", color: low, initial: "MM", country: "Suudi Arabistan", surahPattern: "https://server11.mp3quran.net/download/mhsny/{S}.mp3", requiredTier: "elit" },
   { id: "sudais", name: "Abdurrahman es-Sudays", path: "Abdurrahmaan_As-Sudais_192kbps", makam: "Haram", risk: "low", telifRiski: 20, riskAciklamasi: "Tahmini dusuk risk; platform hak politikalari ayrica kontrol edilmelidir.", color: low, initial: "AS", country: "Suudi Arabistan" },
   { id: "shuraim", name: "Suud es-Sureym", path: "Saood_ash-Shuraym_128kbps", makam: "Haram", risk: "low", telifRiski: 15, riskAciklamasi: "Tahmini dusuk risk.", color: low, initial: "SS", country: "Suudi Arabistan" },
   { id: "maher", name: "Maher el-Muaiqly", path: "MaherAlMuaiqly128kbps", makam: "Haram", risk: "low", telifRiski: 15, riskAciklamasi: "Tahmini dusuk risk.", color: low, initial: "MM", country: "Suudi Arabistan" },
