@@ -44,8 +44,7 @@ function isLowPowerDevice(): boolean {
 export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, onHover, onPick }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  // The card artwork must always render; only video playback is deferred.
-  const [nearViewport, setNearViewport] = useState(true);
+  const [nearViewport, setNearViewport] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [videoFailed, setVideoFailed] = useState(false);
   const [posterLoaded, setPosterLoaded] = useState(false);
@@ -92,24 +91,27 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
     return () => { alive = false; };
   }, [clip, nearViewport]);
 
-  // Video bytes are requested only while a desktop user is actively previewing this card.
+  // Load only enough video data to show a real first frame when the card nears the viewport.
   useEffect(() => {
-    if (!nearViewport || !hovered || lowPower || clip.kind !== "vid") return;
+    if (!nearViewport || clip.kind !== "vid") return;
     let alive = true;
     getVideoUrl(clip).then((url) => { if (alive) setVideoUrl(url); }).catch(() => setVideoFailed(true));
     return () => { alive = false; };
-  }, [clip, hovered, lowPower, nearViewport]);
+  }, [clip, nearViewport]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (hovered && nearViewport && !lowPower) video.play().catch(() => undefined);
-    else {
+    if (hovered && nearViewport && !lowPower) {
+      video.play().catch(() => undefined);
+    } else if (!nearViewport) {
       video.pause();
       video.removeAttribute("src");
       video.load();
       setVideoUrl("");
       setVideoReady(false);
+    } else {
+      video.pause();
     }
   }, [hovered, lowPower, nearViewport]);
 
@@ -158,14 +160,15 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
         />
       )}
 
-      {nearViewport && hovered && !lowPower && clip.kind === "vid" && videoUrl && !videoFailed && (
+      {nearViewport && clip.kind === "vid" && videoUrl && !videoFailed && (
         <video
           ref={videoRef}
           src={videoUrl}
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
+          onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
           onError={() => setVideoFailed(true)}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-200 ${videoReady ? "opacity-100" : "opacity-0"}`}
