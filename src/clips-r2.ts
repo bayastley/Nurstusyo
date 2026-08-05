@@ -5,7 +5,7 @@
 // ════════════════════════════════════════════════════════
 
 // ★ R2 custom domain — Cloudflare R2 CORS policy bu domain ve localhost için açık olmalı
-const R2 = "https://nurstudyo.com";
+const R2 = "https://cdn.nurstudyo.com";
 
 /** Bir kategorinin pexelsId listesinden any[] üretir — URL'ler R2 kalıbından türer. */
 const mk = (cat: string, label: string, ids: number[]): any[] =>
