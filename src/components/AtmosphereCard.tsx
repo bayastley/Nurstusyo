@@ -102,7 +102,7 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (hovered && nearViewport && !lowPower) {
+    if (hovered && nearViewport) {
       video.play().catch(() => undefined);
     } else if (!nearViewport) {
       video.pause();
@@ -113,7 +113,7 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
     } else {
       video.pause();
     }
-  }, [hovered, lowPower, nearViewport]);
+  }, [hovered, nearViewport]);
 
   const enter = () => {
     setHovered(true);
