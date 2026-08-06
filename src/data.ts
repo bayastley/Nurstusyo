@@ -341,18 +341,21 @@ export const EXTRA_THEMES: Theme[] = [
   { id: "indigo-gecidi",  name: "İndigo Geçidi",   bg: "#0a0820", bg2: "#1e1652", acc: "#818cf8", acc2: "#c7d2fe", txt: "#f3f4f6" },
 ];
 
-/** 20 temanın tier dağılımı — 5 free + 10 pro + 5 elit */
+/**
+ * ★ Tema tier dağılımı — yarı yarıya FREE / PRO modeli.
+ *   Önce 5 free + 10 pro + 5 elit idi; Elit tamamen kaldırıldı,
+ *   temalar 10 FREE + 10 PRO olarak eşit paylaştırıldı.
+ */
 export const THEME_TIER: Record<string, "free" | "pro" | "elit"> = {
-  // FREE (5)
+  // FREE (10)
   "nur": "free", "emerald": "free", "sapphire": "free",
   "gece-yildizi": "free", "zumrut-vaha": "free",
+  "amethyst": "free", "sand": "free", "turkuaz-isik": "free",
+  "toz-pembe": "free", "orman-derinligi": "free",
   // PRO (10)
-  "amethyst": "pro", "ruby": "pro", "sand": "pro",
-  "yakut": "pro", "menekse-moru": "pro", "kum-vahasi": "pro",
-  "mercan-suyu": "pro", "gul-bahcesi": "pro", "lacivert-derin": "pro", "turkuaz-isik": "pro",
-  // ELIT (5)
-  "mucellit-siyah": "elit", "amber-atesi": "elit", "indigo-gecidi": "elit",
-  "toz-pembe": "elit", "orman-derinligi": "elit",
+  "ruby": "pro", "yakut": "pro", "menekse-moru": "pro", "kum-vahasi": "pro",
+  "mercan-suyu": "pro", "gul-bahcesi": "pro", "lacivert-derin": "pro",
+  "mucellit-siyah": "pro", "amber-atesi": "pro", "indigo-gecidi": "pro",
 };
 
 /** Yeni temaların emoji'leri (mevcut THEME_EMOJI'ye ek) */
