@@ -81,12 +81,15 @@ export const ACTIVE_CATEGORIES: CatId[] = [
  * - Not: "pro" kategori seviyesi artık yok — Pro yeni kategori açmaz, sadece ilk 5 kategoride video derinliğini (6-50) açar.
  */
 export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
-  // FREE kategoriler (5) — Pro bu kategorilerdeki 6-50 arası videoları açar
+  // ★ FREE kategoriler (8) — ilk izlenimde bolluk hissi için genişletildi.
+  //   Pro bu kategorilerdeki 11-50 arası videoları açar.
   namaz: "free", musaf: "free", cicekler: "free", yildizlar: "free", deniz: "free",
-  // ELİT'E ÖZEL AKTİF KATEGORİLER (+5) — Pro'ya dahi kapalı, sadece Elit girebilir
-  gunbatimi: "elit", gece: "elit", selale: "elit", orman: "elit", daglar: "elit",
+  gunbatimi: "free", gece: "free", orman: "free",
+  // ★ PRO'YA ÖZEL KATEGORİLER (4) — Pro almanın somut karşılığı (önceden hiç yoktu)
+  selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
+  // ELİT'E ÖZEL AKTİF KATEGORİLER — sadece Elit girebilir
+  cennet: "elit", col: "elit", cami: "elit",
   // ─── AŞAĞIDAKİLER LANSMANDA AKTİF DEĞİL (HARD_LOCKED_CATEGORIES ile tamamen tıklanamaz) ───
-  cennet: "elit", col: "elit", kar: "elit", sehir: "elit", cami: "elit",
   desen: "elit", gol: "elit", bulut: "elit", yuklenenler: "elit",
   ates: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
 };
@@ -101,8 +104,8 @@ export const HARD_LOCKED_CATEGORIES: CatId[] = [
   "cehennem", "hurma", "ari", "karinca",
 ];
 
-/** Her kategoride kaç video free/pro tier'ında aktif */
-export const FREE_VIDEOS_PER_CATEGORY = 5;
+/** Her kategoride kaç video free tier'ında aktif (5 → 10 genişletildi) */
+export const FREE_VIDEOS_PER_CATEGORY = 10;
 
 /**
  * Her kategori için generative kaleidoscope paleti.
