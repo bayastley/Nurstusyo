@@ -8,21 +8,39 @@ interface VideoClip {
   r2Poster?: string;
 }
 
-// R2 YAVAŞ! Direkt Pexels URL'lerini kullan, R2 CDN'yi bypass et
+// R2 CUSTOM DOMAIN (cdn.nurstudyo.com) - HIZLI & GİZLİ
+const R2_BASE = "https://cdn.nurstudyo.com";
+
 export async function getVideoUrl(clip: VideoClip): Promise<string> {
-  return clip.src;
+  // R2 custom domain kullan (hızlı & gizli)
+  if (clip.pexelsId && clip.cat) {
+    return `${R2_BASE}/videos/${clip.cat}/${clip.pexelsId}.mp4`;
+  }
+  return clip.r2 || clip.src;
 }
 
 export async function getPosterUrl(clip: VideoClip): Promise<string | undefined> {
-  return clip.poster;
+  // R2 custom domain kullan (hızlı & gizli)
+  if (clip.pexelsId && clip.cat) {
+    return `${R2_BASE}/posters/${clip.cat}/${clip.pexelsId}.jpg`;
+  }
+  return clip.r2Poster || clip.poster;
 }
 
 export function getVideoUrlSync(clip: VideoClip): string {
-  return clip.src;
+  // R2 custom domain kullan (hızlı & gizli)
+  if (clip.pexelsId && clip.cat) {
+    return `${R2_BASE}/videos/${clip.cat}/${clip.pexelsId}.mp4`;
+  }
+  return clip.r2 || clip.src;
 }
 
 export function getPosterUrlSync(clip: VideoClip): string | undefined {
-  return clip.poster;
+  // R2 custom domain kullan (hızlı & gizli)
+  if (clip.pexelsId && clip.cat) {
+    return `${R2_BASE}/posters/${clip.cat}/${clip.pexelsId}.jpg`;
+  }
+  return clip.r2Poster || clip.poster;
 }
 
 export function clearVideoUrlCache(): void {}
