@@ -1944,7 +1944,22 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           blob = await new Promise<Blob>((resolve) => {
             let settled = false;
             const finish = (fixed: Blob) => { if (!settled) { settled = true; resolve(fixed); } };
-            try { fixWebmDuration(blob, total * 1000, finish); window.setTimeout(() => finish(blob), 3500); } catch { finish(blob); }
+            try {
+              // TikTok/WhatsApp için duration metadata düzelt
+              fixWebmDuration(blob, Math.round(total * 1000), (fixedBlob) => {
+                // MP4 olarak da dene (daha iyi uyumluluk)
+                if (fixedBlob && fixedBlob.size > 0) {
+                  finish(fixedBlob);
+                } else {
+                  finish(blob);
+                }
+              });
+              // Fallback: 5 saniye içinde düzelmezse orijinali kullan
+              window.setTimeout(() => finish(blob), 5000);
+            } catch (err) {
+              console.error('fixWebmDuration hatası:', err);
+              finish(blob);
+            }
           });
         }
         const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
