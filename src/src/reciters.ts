@@ -65,3 +65,4 @@ export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
   abdulbasit_mujawwad: "yuksek", minshawi: "klasik", minshawi_mujawwad: "yuksek", tablawi: "yuksek",
   banna: "yuksek", sowaid: "klasik", parhizgar: "orta", shatri: "yuksek", akhdar: "icli",
 };
+s
