@@ -93,8 +93,19 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   };
 
   const saveLock = async () => {
-    const response = await fetch("/api/admin/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "set_feature_lock", featureId, lockLevel: featureLock }) });
-    notify(response.ok ? "Kilit tüm kullanıcılara uygulandı" : "Kilit kaydedilemedi");
+    let targetId = featureId;
+    if (lockType === "category" && selectedCategory) { targetId = selectedCategory; }
+    else if (lockType === "reciter" && selectedReciter) { targetId = selectedReciter; }
+    
+    const response = await fetch("/api/admin/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock, lockType: lockType === "all" ? "feature" : lockType }) });
+    
+    let msg = "Kilit kaydedilemedi";
+    if (response.ok) {
+      if (lockType === "category") { msg = "Kategori kilidi: " + selectedCategory; }
+      else if (lockType === "reciter") { msg = "Hoca kilidi: " + selectedReciter; }
+      else { msg = "Kilit uygulandi"; }
+    }
+    notify(msg);
   };
 
   return (
