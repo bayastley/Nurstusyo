@@ -26,6 +26,32 @@ const FEATURE_OPTIONS = [
   ["zip-upload", "ZIP ve Gorsel Yukleme"],
 ] as const;
 
+const CATEGORY_OPTIONS = [
+  ["namaz", "Namaz & Kabe"],
+  ["musaf", "Kur'an & Mushaf"],
+  ["cicekler", "Cicekler & Guller"],
+  ["yildizlar", "Yildizlar & Uzay"],
+  ["deniz", "Deniz & Dalgalar"],
+  ["daglar", "Daglar & Zirve"],
+  ["gunbatimi", "Gun Batimi"],
+  ["gece", "Gece & Ay"],
+  ["selale", "Selaleler"],
+  ["orman", "Orman & Yesil"],
+] as const;
+
+const RECITER_OPTIONS = [
+  ["sudais", "Abdurrahman es-Sudays"],
+  ["shuraim", "Suud es-Sureym"],
+  ["maher", "Maher el-Muaiqly"],
+  ["hudhaify", "Ali el-Hudeyfi"],
+  ["husary", "Mahmud Halil el-Husari"],
+  ["abdulbasit", "Abdulbasit Abdussamed"],
+  ["minshawi", "Muhammed Siddik el-Minsavi"],
+  ["alafasy", "Misari Resid el-Afasi"],
+  ["shatri", "Ebu Bekir es-Satiri"],
+  ["muhaisny", "Muhammed el-Muhaysini"],
+] as const;
+
 export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify }) => {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
@@ -39,6 +65,10 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [forceOpen, setForceOpen] = useState(false);
   const [requireAck, setRequireAck] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Kategori ve Hoca secimi icin
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedReciter, setSelectedReciter] = useState<string>("");
+  const [lockType, setLockType] = useState<"all" | "category" | "reciter">("all");
 
   const publish = async () => {
     if (!title.trim() || !message.trim()) {
@@ -90,9 +120,33 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Ozellik Kilitlari</h4>
         <div className="space-y-2">
-          <select value={featureId} onChange={(event) => setFeatureId(event.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
-            {FEATURE_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
-          </select>
+          {/* Kilit tipi secimi */}
+          <div className="grid grid-cols-3 gap-1">
+            <button onClick={() => setLockType("all")} className={`rounded-lg px-2 py-2 text-[10px] font-bold ${lockType === "all" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40" : "bg-white/5 text-white/60"}`}>Tum</button>
+            <button onClick={() => setLockType("category")} className={`rounded-lg px-2 py-2 text-[10px] font-bold ${lockType === "category" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40" : "bg-white/5 text-white/60"}`}>Kategori</button>
+            <button onClick={() => setLockType("reciter")} className={`rounded-lg px-2 py-2 text-[10px] font-bold ${lockType === "reciter" ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40" : "bg-white/5 text-white/60"}`}>Hoca</button>
+          </div>
+          {/* Kategori secimi */}
+          {lockType === "category" && (
+            <select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
+              <option value="">Kategori sec...</option>
+              {CATEGORY_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          )}
+          {/* Hoca secimi */}
+          {lockType === "reciter" && (
+            <select value={selectedReciter} onChange={(event) => setSelectedReciter(event.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
+              <option value="">Hoca sec...</option>
+              {RECITER_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          )}
+          {/* Ozellik secimi (tum seciliyken) */}
+          {lockType === "all" && (
+            <select value={featureId} onChange={(event) => setFeatureId(event.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
+              {FEATURE_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+            </select>
+          )}
+          {/* Kilit seviyesi */}
           <select value={featureLock} onChange={(event) => setFeatureLockState(event.target.value as FeatureLock)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
             {LOCK_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
