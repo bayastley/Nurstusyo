@@ -326,10 +326,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const mid = !low && (memory <= 6 || cores <= 6);
     return {
       low,
-      previewFps: low ? 24 : mid ? 30 : 30,
-      renderFps: low ? 30 : mid ? 45 : 60,
-      bitrateScale: low ? 0.48 : mid ? 0.72 : 1,
-      audioBitrate: low ? 160_000 : 256_000,
+      previewFps: mobile ? 20 : low ? 24 : mid ? 30 : 30, // Mobilde daha düşük FPS
+      renderFps: mobile ? 24 : low ? 30 : mid ? 45 : 60,
+      bitrateScale: mobile ? 0.35 : low ? 0.48 : mid ? 0.72 : 1, // Mobilde daha düşük bitrate
+      audioBitrate: mobile ? 128_000 : low ? 160_000 : 256_000,
     };
   }, []);
 
@@ -1261,17 +1261,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       }
       ctx.restore();
 
+      // Mobilde "lighter" efekti aşırı parlaklık yapıyor, normal kullan
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.globalCompositeOperation = "lighter";
+      if (!isMobile) ctx.globalCompositeOperation = "lighter"; // Mobilde flash yok
       for (let i = 0; i < petals; i++) {
         ctx.save();
         ctx.rotate((i / petals) * Math.PI * 2 + t * 0.08);
         const petalLen = baseR * (1 + Math.sin(t + i * 0.4) * 0.15);
         const petalWid = baseR * 0.38;
         const grad = ctx.createLinearGradient(0, 0, 0, -petalLen);
-        grad.addColorStop(0, acc + "cc");
-        grad.addColorStop(0.5, acc2 + "55");
+        grad.addColorStop(0, acc + "99"); // Mobilde daha az alpha
+        grad.addColorStop(0.5, acc2 + (isMobile ? "33" : "55"));
         grad.addColorStop(1, acc + "00");
         ctx.fillStyle = grad;
         ctx.beginPath();
@@ -1288,7 +1290,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const petalLen = baseR * 0.55 * (1 + Math.sin(t * 1.3 + i) * 0.1);
         const petalWid = baseR * 0.18;
         const grad = ctx.createLinearGradient(0, 0, 0, -petalLen);
-        grad.addColorStop(0, acc2 + "aa");
+        grad.addColorStop(0, acc2 + (isMobile ? "66" : "aa")); // Mobilde daha az alpha
         grad.addColorStop(1, acc2 + "00");
         ctx.fillStyle = grad;
         ctx.beginPath();
