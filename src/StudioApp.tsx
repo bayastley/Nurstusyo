@@ -258,7 +258,11 @@ async function fetchSurah(surah: number, edition: string) {
 }
 
 function pickMime() {
-  const choices = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+  // ★ WEBM ÖNCELİKLİ: Tarayıcının ürettiği MP4 "fragmented mp4" olduğu için
+  //   süre (duration) metadata'sı dosyaya yazılmaz. Android galeri / TikTok
+  //   bu dosyayı "1 saniye" olarak görür. WebM'de bu bilgi fix-webm-duration
+  //   ile sonradan doğru şekilde yazılabildiği için WebM tercih edilir.
+  const choices = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"];
   return choices.find((mime) => window.MediaRecorder?.isTypeSupported?.(mime)) ?? "";
 }
 
@@ -1422,7 +1426,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
               const currentAspect = aspectRef.current;
               // Güvenli dikey bant: yalnız meal varsa tam merkeze alınır,
               // Arapça+meal birlikteyse üst referans ve alt filigran arası kullanılır.
-              const safeTop = height * (onlyMeal ? 0.34 : 0.205);
+              const safeTop = height * (onlyMeal ? 0.34 : 0.163);
               const safeBottom = height * (onlyMeal ? 0.74 : 0.905);
               const safeH = safeBottom - safeTop;
               const arMaxW = width * 0.80;
@@ -1942,13 +1946,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         destination.stream.getTracks().forEach((track) => track.stop());
         if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
+        // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
+        //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
+        const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
         if (blob.type.includes("webm")) {
           blob = await new Promise<Blob>((resolve) => {
             let settled = false;
             const finish = (fixed: Blob) => { if (!settled) { settled = true; resolve(fixed); } };
             try {
-              // TikTok/WhatsApp için duration metadata düzelt
-              fixWebmDuration(blob, Math.round(total * 1000), (fixedBlob) => {
+              // TikTok/WhatsApp/Galeri için duration metadata düzelt
+              fixWebmDuration(blob, recordedMs, (fixedBlob) => {
                 // MP4 olarak da dene (daha iyi uyumluluk)
                 if (fixedBlob && fixedBlob.size > 0) {
                   finish(fixedBlob);
