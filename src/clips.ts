@@ -36,28 +36,29 @@ export const R2_BASE = "https://nurstudyo.com";
 export const CATEGORIES: Array<{ id: CatId; label: string }> = [
   // ── ★ EN ÜSTTE: Kullanıcının kendi yüklemeleri (V3 kilitli, admin hariç) ──
   { id: "yuklenenler", label: "📁 Yüklediklerim" },
-  // ── AKTİF (Free/Pro derinlik kademeli) — ilk 5 ──
+  // ── FREE (12) ──
   { id: "namaz",       label: "🕌 Namaz & Kâbe" },
   { id: "musaf",       label: "📖 Kur'an & Mushaf" },
   { id: "cicekler",    label: "🌸 Çiçekler & Güller" },
   { id: "yildizlar",   label: "✨ Yıldızlar & Uzay" },
   { id: "deniz",       label: "🌊 Deniz & Dalgalar" },
-  // ── AKTİF (Elit'e özel) — ikinci 5 ──
-  { id: "daglar",      label: "🏔️ Dağlar & Zirve" },
   { id: "gunbatimi",   label: "🌅 Gün Batımı" },
   { id: "gece",        label: "🌙 Gece & Ay" },
-  { id: "selale",      label: "💧 Şelaleler" },
   { id: "orman",       label: "🌲 Orman & Yeşil" },
-  // ── V2/V3 SERT KİLİTLİ (lansmanda pasif) — hepsi en altta, karışık değil ──
-  { id: "cennet",      label: "🌿 Cennet Bahçeleri" },
-  { id: "col",         label: "🔥 Çöl & Ateş" },
-  { id: "kar",         label: "❄️ Kar & Buz" },
-  { id: "sehir",       label: "🏙️ Medeniyet & Şehir" },
   { id: "cami",        label: "🕌 İslam Mimarisi" },
-  { id: "desen",       label: "🔷 Geometrik Desen" },
   { id: "gol",         label: "🏞️ Sakin Göl" },
   { id: "bulut",       label: "☁️ Bulutlar" },
+  { id: "desen",       label: "🔷 Geometrik Desen" },
+  // ── PRO (4) ──
+  { id: "selale",      label: "💧 Şelaleler" },
+  { id: "daglar",      label: "🏔️ Dağlar & Zirve" },
+  { id: "kar",         label: "❄️ Kar & Buz" },
+  { id: "sehir",       label: "🏙️ Medeniyet & Şehir" },
+  // ── ELİT (3 aktif) ──
+  { id: "cennet",      label: "🌿 Cennet Bahçeleri" },
+  { id: "col",         label: "🏜️ Çöl & Kum" },
   { id: "ates",        label: "🔥 Ateş & Alev" },
+  // ── HARD LOCKED (lansmanda kapalı) ──
   { id: "cehennem",    label: "⚡ Cehennem & Karanlık" },
   { id: "hurma",       label: "🌴 Hurma & Vaha" },
   { id: "ari",         label: "🐝 Arı & Bal" },
