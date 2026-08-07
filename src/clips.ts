@@ -36,47 +36,42 @@ export const R2_BASE = "https://nurstudyo.com";
 export const CATEGORIES: Array<{ id: CatId; label: string }> = [
   // ── ★ EN ÜSTTE: Kullanıcının kendi yüklemeleri (V3 kilitli, admin hariç) ──
   { id: "yuklenenler", label: "📁 Yüklediklerim" },
-  // ── FREE (12) ──
+  // ── AKTİF (Free/Pro derinlik kademeli) — ilk 5 ──
   { id: "namaz",       label: "🕌 Namaz & Kâbe" },
   { id: "musaf",       label: "📖 Kur'an & Mushaf" },
   { id: "cicekler",    label: "🌸 Çiçekler & Güller" },
   { id: "yildizlar",   label: "✨ Yıldızlar & Uzay" },
   { id: "deniz",       label: "🌊 Deniz & Dalgalar" },
+  // ── AKTİF (Elit'e özel) — ikinci 5 ──
+  { id: "daglar",      label: "🏔️ Dağlar & Zirve" },
   { id: "gunbatimi",   label: "🌅 Gün Batımı" },
   { id: "gece",        label: "🌙 Gece & Ay" },
-  { id: "orman",       label: "🌲 Orman & Yeşil" },
-  { id: "cami",        label: "🕌 İslam Mimarisi" },
-  { id: "gol",         label: "🏞️ Sakin Göl" },
-  { id: "bulut",       label: "☁️ Bulutlar" },
-  { id: "desen",       label: "🔷 Geometrik Desen" },
-  // ── PRO (4) ──
   { id: "selale",      label: "💧 Şelaleler" },
-  { id: "daglar",      label: "🏔️ Dağlar & Zirve" },
+  { id: "orman",       label: "🌲 Orman & Yeşil" },
+  // ── V2/V3 SERT KİLİTLİ (lansmanda pasif) — hepsi en altta, karışık değil ──
+  { id: "cennet",      label: "🌿 Cennet Bahçeleri" },
+  { id: "col",         label: "🔥 Çöl & Ateş" },
   { id: "kar",         label: "❄️ Kar & Buz" },
   { id: "sehir",       label: "🏙️ Medeniyet & Şehir" },
-  // ── ELİT (3 aktif) ──
-  { id: "cennet",      label: "🌿 Cennet Bahçeleri" },
-  { id: "col",         label: "🏜️ Çöl & Kum" },
+  { id: "cami",        label: "🕌 İslam Mimarisi" },
+  { id: "desen",       label: "🔷 Geometrik Desen" },
+  { id: "gol",         label: "🏞️ Sakin Göl" },
+  { id: "bulut",       label: "☁️ Bulutlar" },
   { id: "ates",        label: "🔥 Ateş & Alev" },
-  // ── HARD LOCKED (lansmanda kapalı) ──
   { id: "cehennem",    label: "⚡ Cehennem & Karanlık" },
   { id: "hurma",       label: "🌴 Hurma & Vaha" },
   { id: "ari",         label: "🐝 Arı & Bal" },
   { id: "karinca",     label: "🐜 Karınca & Mikro" },
 ];
 
-// ★ LANSMAN: 10 aktif kategori. İlk 5'i Free/Pro derinlik kademeli, ikinci 5'i tamamen Elit'e özel.
-// Bu 10'un dışındaki tüm kategoriler HARD_LOCKED_CATEGORIES ile V2/V3 olarak tamamen tıklanamaz kalır.
+// ★ LANSMAN: 19 aktif kategori (12 free + 4 pro + 3 elit). V2/V3'ten 4 kilit açıldı, 5'i kapalı.
 export const ACTIVE_CATEGORIES: CatId[] = [
-  // Free (8)
   "namaz", "musaf", "cicekler", "yildizlar", "deniz",
-  "gunbatimi", "gece", "orman",
-  // Pro (4)
-  "selale", "daglar", "kar", "sehir",
-  // Elit (3 aktif + 1 V2 açılacak)
-  "cennet", "col", "ates",
-  // ★ Free'ye 12 atmosfer: V2/V3 sert kilidi kaldırılan 4 kategori aktife alındı
-  "cami", "gol", "bulut", "desen",
+  "daglar", "gunbatimi", "gece", "selale", "orman",
+  // ★ Elit'e açılan kategoriler — şablon + hareketli, Elit dışına kilitli
+  "cennet", "col", "ates", "kar", "sehir",
+  // ★ YENİ AÇILAN 4 KİLİT (V2/V3'ten free'ye)
+  "cami", "desen", "gol", "bulut",
 ];
 
 /**
@@ -87,17 +82,17 @@ export const ACTIVE_CATEGORIES: CatId[] = [
  * - Not: "pro" kategori seviyesi artık yok — Pro yeni kategori açmaz, sadece ilk 5 kategoride video derinliğini (6-50) açar.
  */
 export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
-  // ★ FREE kategoriler (12) — 8 mevcut + 4 yeni V2 kilit açıldı
+  // ★ FREE kategoriler (12) — V2/V3'ten 4 kilit açılarak genişletildi
   namaz: "free", musaf: "free", cicekler: "free", yildizlar: "free", deniz: "free",
   gunbatimi: "free", gece: "free", orman: "free",
-  // V2 kilidi kaldırılan 4 kategori free'ye alındı
-  cami: "free", gol: "free", bulut: "free", desen: "free",
-  // ★ PRO'YA ÖZEL KATEGORİLER (4)
+  cami: "free", desen: "free", gol: "free", bulut: "free",
+  // ★ PRO'YA ÖZEL KATEGORİLER (4) — Pro almanın somut karşılığı
   selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
-  // ELİT'E ÖZEL AKTİF KATEGORİLER
+  // ELİT'E ÖZEL AKTİF KATEGORİLER — sadece Elit girebilir
   cennet: "elit", col: "elit", ates: "elit",
-  // ─── LANSMANDA AKTİF DEĞİL ───
-  yuklenenler: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
+  // ─── AŞAĞIDAKİLER LANSMANDA AKTİF DEĞİL (HARD_LOCKED ile tamamen tıklanamaz) ───
+  yuklenenler: "elit",
+  ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
 };
 
 /**
@@ -106,7 +101,6 @@ export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
  * tıklama/tuşlama olayları tier'dan bağımsız olarak TAMAMEN engellenir (pointer-events: none).
  */
 export const HARD_LOCKED_CATEGORIES: CatId[] = [
-  // cami, desen, gol, bulut V2 kilidi kaldırıldı → artık aktif free kategoriler
   "yuklenenler",
   "cehennem", "hurma", "ari", "karinca",
 ];
@@ -147,15 +141,15 @@ export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: strin
 };
 
 export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
-  // Ücretsiz (12)
+  // ★ KATEGORI_TIER ile birebir senkron — 12 Ücretsiz
   namaz:"Ücretsiz", musaf:"Ücretsiz", cicekler:"Ücretsiz", yildizlar:"Ücretsiz",
   deniz:"Ücretsiz", gunbatimi:"Ücretsiz", gece:"Ücretsiz", orman:"Ücretsiz",
-  cami:"Ücretsiz", gol:"Ücretsiz", bulut:"Ücretsiz", desen:"Ücretsiz",
-  // Pro (4)
+  cami:"Ücretsiz", desen:"Ücretsiz", gol:"Ücretsiz", bulut:"Ücretsiz",
+  // Pro'ya özel (4)
   selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
-  // Elit (3 aktif)
+  // Elit'e özel aktif (3)
   cennet:"Elit", col:"Elit", ates:"Elit",
-  // HARD_LOCKED — lansmanda aktif değil
+  // V2/V3 kapalı (5)
   yuklenenler:"V3", ari:"V2", cehennem:"V3", hurma:"V3", karinca:"V3",
 };
 
