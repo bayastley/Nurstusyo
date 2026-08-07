@@ -810,45 +810,123 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
             {/* Tab Contents */}
             <div className="flex-1 overflow-y-auto pr-1 text-[11px] leading-relaxed text-white/80 space-y-3 scrollbar-thin">
+
+              {/* ── KULLANIM ŞARTLARI ── */}
               {legalTab === "tos" && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-                    <p className="font-semibold text-white/95 leading-relaxed">
-                      "Nûr Stüdyo, kullanıcıların kendi cihazları üzerinden içerik üretmesini sağlayan sunucusuz (Serverless) bir video düzenleme ve otomasyon aracıdır. Platformda hazır olarak sunulan veya kullanıcılar tarafından sisteme yüklenen tüm ses, video, kâri tilavetleri, meal ve materyallerin kullanım, yayın ve sosyal mecralarda paylaşım sorumluluğu tamamen son kullanıcıya (içerik üreticisine) aittir. Nûr Stüdyo, üçüncü şahıslar veya kurumlar tarafından doğabilecek hiçbir telif, marka veya yayın ihlalinden hukuki ve cezai sorumluluk kabul etmez."
+                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Platform Tanımı ve Sorumluluk Sınırı</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Nûr Stüdyo (nurstudyo.com), İslami içerik üreticilerine yönelik yapay zeka destekli dijital video üretim platformudur. Platform; şahıs firması olarak kurulmuş olup yalnızca yazılım aracılık hizmeti sunmakta, herhangi bir medya içeriği telif hakkı iddiasında bulunmamaktadır.
                     </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">İçerik Sorumluluğu</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Platformda üretilen tüm ses, görüntü, metin ve video içeriklerin üçüncü taraflara (YouTube, TikTok, Instagram vb.) yayınlanmasından doğan her türlü telif, lisans ve yayın sorumluluğu münhasıran kullanıcıya aittir. Nûr Stüdyo bu kapsamda hiçbir hukuki ya da cezai sorumluluk kabul etmez.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hesap ve Erişim</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Platform hizmetlerinden yararlanmak için Google hesabı ile kimlik doğrulama zorunludur. Hesabın güvenliği kullanıcının sorumluluğundadır. Platform, herhangi bir zamanda hizmet koşullarına aykırı davranan hesapları askıya alma ya da kalıcı kapatma hakkını saklı tutar.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Hizmet Sürekliliği</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Nûr Stüdyo hizmet sürekliliğini garanti etmez. Teknik bakım, güncelleme veya beklenmedik kesintiler nedeniyle hizmet geçici olarak kullanılamaz duruma gelebilir. Bu tür durumlarda kullanıcı tazminat talebinde bulunamaz.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Uygulanacak Hukuk</p>
+                    <p className="text-white/90 leading-relaxed">
+                      İşbu koşullar Türk Hukuku'na tabidir. Uyuşmazlıklarda Türkiye Cumhuriyeti mahkemeleri yetkilidir.
+                    </p>
+                    <p className="text-[10px] text-white/40 pt-1">Son güncelleme: Ağustos 2026 · destek@nurstudyo.com</p>
                   </div>
-                  <p className="text-[10px] text-white/50">
-                    Bu platformu kullanarak üretilen içeriklerin YouTube, TikTok, Instagram ve diğer sosyal mecralardaki paylaşım ve lisanslama sorumluluğunu kabul etmiş olursunuz.
-                  </p>
                 </div>
               )}
 
+              {/* ── KVKK AYDINLATMA METNİ ── */}
               {legalTab === "kvkk" && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-                    <p className="font-semibold text-white/95 leading-relaxed">
-                      "6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) uyarınca, Nûr Stüdyo sunucusuz (Serverless) mimaride çalışmakta olup, ürettiğiniz medya verileri veya video içerikleri sunucularımızda saklanmaz. Oturum ve tercih verileriniz sadece kendi cihazınızın yerel depolama alanında (LocalStorage) şifreli olarak muhafaza edilir. Kişisel verileriniz üçüncü şahıslarla asla paylaşılmaz."
+                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Veri Sorumlusu</p>
+                    <p className="text-white/90 leading-relaxed">
+                      6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu, nurstudyo.com alan adı üzerinden hizmet veren şahıs firmasıdır. İletişim: destek@nurstudyo.com
                     </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">İşlenen Kişisel Veriler</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Google OAuth 2.0 aracılığıyla alınan; ad-soyad, e-posta adresi ve profil fotoğrafı. Kullanım tercihleri (tema, dil, jeton bakiyesi) yalnızca kullanıcının kendi cihazındaki şifreli yerel depolama alanında (LocalStorage) tutulmaktadır. Üretilen video ve ses içerikleri sunucularımızda saklanmamaktadır.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">İşleme Amaçları ve Hukuki Dayanağı</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Kişisel veriler; hesap doğrulama, hizmet sunumu ve fatura/ödeme süreçlerinin yürütülmesi amacıyla, KVKK m.5/2-c (sözleşmenin ifası) ve m.5/2-f (meşru menfaat) kapsamında işlenmektedir. Pazarlama veya profil oluşturma amacıyla herhangi bir veri işlenmemektedir.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Üçüncü Taraf Aktarımları</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Verileriniz; ödeme işlemleri için yetkili ödeme kuruluşları (PayTR, İyzico), kimlik doğrulama için Google LLC ve barındırma altyapısı için Cloudflare/Vercel ile paylaşılabilir. Bu kuruluşlar kendi gizlilik politikaları çerçevesinde veri işlemektedir.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Haklarınız (KVKK m.11)</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Kişisel verilerinize erişim, düzeltme, silme, işlemenin kısıtlanması ve itiraz haklarınız bulunmaktadır. Talepleriniz için destek@nurstudyo.com adresine e-posta gönderebilirsiniz. Talepler 30 gün içinde yanıtlanır.
+                    </p>
+                    <p className="text-[10px] text-white/40 pt-1">Son güncelleme: Ağustos 2026 · Kişisel Verileri Koruma Kurumu: kvkk.gov.tr</p>
                   </div>
                 </div>
               )}
 
+              {/* ── GİZLİLİK & ÇEREZ POLİTİKASI ── */}
               {legalTab === "gizlilik" && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-                    <p className="font-semibold text-white/95 leading-relaxed">
-                      "Nûr Stüdyo, kullanıcı deneyimini iyileştirmek, tema ve dil tercihlerinizi hatırlamak amacıyla zorunlu teknik çerezler ve yerel depolama (LocalStorage) teknolojileri kullanır. Pazarlama veya takip amaçlı üçüncü taraf çerezleri kullanılmamaktadır. Dilediğiniz zaman tarayıcı ayarlarınızdan çerezleri ve yerel verileri temizleyebilirsiniz."
+                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Toplanan Veriler</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Nûr Stüdyo, kullanıcı tercihlerini (tema, dil, ses ayarları) ve oturum bilgilerini yalnızca kullanıcının kendi cihazındaki şifreli LocalStorage alanında saklar. Sunucu taraflı kullanıcı davranış kaydı yapılmamaktadır.
                     </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Çerez Kullanımı</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Platform; teknik işlevsellik için zorunlu çerezler ve oturum belirteçleri kullanır. Reklamcılık, yeniden pazarlama veya kullanıcı takibine yönelik üçüncü taraf çerezleri kesinlikle kullanılmamaktadır. Crisp.chat canlı destek widget'ı, kullanıcı rızasına dayalı olarak teknik destek amacıyla çalışmaktadır.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Google OAuth</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Giriş işlemi Google'ın OAuth 2.0 altyapısı üzerinden gerçekleşir. Google'ın veri işleme uygulamaları için: policies.google.com/privacy
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Veri Saklama Süresi</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Hesap verileriniz aktif üyelik süresince saklanır. Hesabınızı silmeniz durumunda verileriniz 30 gün içinde sistemden kalıcı olarak temizlenir.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Çerezleri Yönetme</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Tarayıcı ayarlarından çerezleri ve yerel depolama verilerini istediğiniz zaman silebilirsiniz. Bu işlem oturum bilgilerinizin sıfırlanmasına neden olabilir.
+                    </p>
+                    <p className="text-[10px] text-white/40 pt-1">Son güncelleme: Ağustos 2026 · destek@nurstudyo.com</p>
                   </div>
                 </div>
               )}
 
+              {/* ── SATIN ALMA & İADE KOŞULLARI ── */}
               {legalTab === "iade" && (
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-                    <p className="font-semibold text-white/95 leading-relaxed">
-                      "Nûr Stüdyo üzerinden satın alınan dijital jeton paketleri ve üyelik üyelikleri anında teslim edilen dijital hizmet kapsamındadır. 6502 sayılı Tüketicinin Korunması Hakkında Kanun uyarınca, anında ifa edilen dijital içeriklerde cayma hakkı ve iade bulunmamaktadır. İşlem esnasında teknik bir aksaklık nedeniyle tanımlanmayan jetonlar için destek ekibimizle iletişime geçebilirsiniz."
+                  <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4 space-y-3">
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Dijital Hizmet Kapsamı</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Nûr Stüdyo üzerinden satın alınan jeton paketleri ve üyelik planları; anında teslim edilen dijital hizmet kapsamındadır. Ödeme tamamlandığında hizmet erişimi derhal aktive edilmektedir.
                     </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Cayma Hakkı</p>
+                    <p className="text-white/90 leading-relaxed">
+                      6502 sayılı Tüketicinin Korunması Hakkında Kanun'un 49. maddesi ve Mesafeli Sözleşmeler Yönetmeliği'nin 15/1-ğ bendi uyarınca; kullanıcının açık onayıyla satın alma anında ifası başlayan dijital içerik ve hizmetlerde <strong className="text-white">cayma hakkı kullanılamaz.</strong> Satın alma işlemi tamamlandığında bu şarta onay vermiş sayılırsınız.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Kullanılmamış Jeton Bakiyesi</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Hiç kullanılmamış jeton bakiyeleri için satın alma tarihinden itibaren <strong className="text-white">7 (yedi) gün içinde</strong> destek@nurstudyo.com adresine başvurulabilir. Değerlendirme sonucunda iade kararı platforma aittir. Kısmen kullanılmış paketler için iade yapılmamaktadır.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Teknik Hata Durumu</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Ödeme işlemi tamamlanmasına rağmen jeton veya üyelik hesabınıza tanımlanmamışsa, ödeme dekontunuzla birlikte destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenerek gerekli düzeltme yapılır.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Fiyatlandırma</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Tüm fiyatlar Türk Lirası (TL) cinsindendir ve KDV dahildir. Platform, fiyatları önceden bildirmeksizin güncelleme hakkını saklı tutar; ancak mevcut aktif abonelikler dönem sonuna kadar satın alınan fiyattan devam eder.
+                    </p>
+                    <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">Ödeme Güvenliği</p>
+                    <p className="text-white/90 leading-relaxed">
+                      Ödeme işlemleri; PCI DSS uyumlu PayTR ve/veya İyzico altyapısı üzerinden 256-bit SSL şifrelemesi ile gerçekleştirilmektedir. Kart bilgileriniz hiçbir şekilde platformumuzda saklanmamaktadır.
+                    </p>
+                    <p className="text-[10px] text-white/40 pt-1">Son güncelleme: Ağustos 2026 · destek@nurstudyo.com · Şikayet: tüketici.gov.tr</p>
                   </div>
                 </div>
               )}
