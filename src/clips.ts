@@ -67,10 +67,15 @@ export const CATEGORIES: Array<{ id: CatId; label: string }> = [
 // ★ LANSMAN: 10 aktif kategori. İlk 5'i Free/Pro derinlik kademeli, ikinci 5'i tamamen Elit'e özel.
 // Bu 10'un dışındaki tüm kategoriler HARD_LOCKED_CATEGORIES ile V2/V3 olarak tamamen tıklanamaz kalır.
 export const ACTIVE_CATEGORIES: CatId[] = [
+  // Free (8)
   "namaz", "musaf", "cicekler", "yildizlar", "deniz",
-  "daglar", "gunbatimi", "gece", "selale", "orman",
-  // ★ Elit'e açılan kategoriler — şablon + hareketli, Elit dışına kilitli
-  "cennet", "col", "ates", "kar", "sehir",
+  "gunbatimi", "gece", "orman",
+  // Pro (4)
+  "selale", "daglar", "kar", "sehir",
+  // Elit (3 aktif + 1 V2 açılacak)
+  "cennet", "col", "ates",
+  // ★ Free'ye 12 atmosfer: V2/V3 sert kilidi kaldırılan 4 kategori aktife alındı
+  "cami", "gol", "bulut", "desen",
 ];
 
 /**
@@ -81,17 +86,17 @@ export const ACTIVE_CATEGORIES: CatId[] = [
  * - Not: "pro" kategori seviyesi artık yok — Pro yeni kategori açmaz, sadece ilk 5 kategoride video derinliğini (6-50) açar.
  */
 export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
-  // ★ FREE kategoriler (8) — ilk izlenimde bolluk hissi için genişletildi.
-  //   Pro bu kategorilerdeki 11-50 arası videoları açar.
+  // ★ FREE kategoriler (12) — 8 mevcut + 4 yeni V2 kilit açıldı
   namaz: "free", musaf: "free", cicekler: "free", yildizlar: "free", deniz: "free",
   gunbatimi: "free", gece: "free", orman: "free",
-  // ★ PRO'YA ÖZEL KATEGORİLER (4) — Pro almanın somut karşılığı (önceden hiç yoktu)
+  // V2 kilidi kaldırılan 4 kategori free'ye alındı
+  cami: "free", gol: "free", bulut: "free", desen: "free",
+  // ★ PRO'YA ÖZEL KATEGORİLER (4)
   selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
-  // ELİT'E ÖZEL AKTİF KATEGORİLER — sadece Elit girebilir
-  cennet: "elit", col: "elit", cami: "elit",
-  // ─── AŞAĞIDAKİLER LANSMANDA AKTİF DEĞİL (HARD_LOCKED_CATEGORIES ile tamamen tıklanamaz) ───
-  desen: "elit", gol: "elit", bulut: "elit", yuklenenler: "elit",
-  ates: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
+  // ELİT'E ÖZEL AKTİF KATEGORİLER
+  cennet: "elit", col: "elit", ates: "elit",
+  // ─── LANSMANDA AKTİF DEĞİL ───
+  yuklenenler: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
 };
 
 /**
@@ -100,7 +105,8 @@ export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
  * tıklama/tuşlama olayları tier'dan bağımsız olarak TAMAMEN engellenir (pointer-events: none).
  */
 export const HARD_LOCKED_CATEGORIES: CatId[] = [
-  "cami", "desen", "gol", "bulut", "yuklenenler",
+  // cami, desen, gol, bulut V2 kilidi kaldırıldı → artık aktif free kategoriler
+  "yuklenenler",
   "cehennem", "hurma", "ari", "karinca",
 ];
 
@@ -140,17 +146,16 @@ export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: strin
 };
 
 export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
-  // ★ KATEGORI_TIER ile birebir senkron rozet etiketleri
-  // Ücretsiz (8) — her birinde ilk 10 video free, sonrası Pro
+  // Ücretsiz (12)
   namaz:"Ücretsiz", musaf:"Ücretsiz", cicekler:"Ücretsiz", yildizlar:"Ücretsiz",
   deniz:"Ücretsiz", gunbatimi:"Ücretsiz", gece:"Ücretsiz", orman:"Ücretsiz",
-  // Pro'ya özel (4)
+  cami:"Ücretsiz", gol:"Ücretsiz", bulut:"Ücretsiz", desen:"Ücretsiz",
+  // Pro (4)
   selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
-  // Elit'e özel aktif
+  // Elit (3 aktif)
   cennet:"Elit", col:"Elit", ates:"Elit",
-  // HARD_LOCKED_CATEGORIES — lansmanda hiç aktif değil, V2/V3 rozetiyle tamamen tıklanamaz
-  cami:"V3", desen:"V3", gol:"V3", bulut:"V3", yuklenenler:"V3",
-  ari:"V2", cehennem:"V3", hurma:"V3", karinca:"V3",
+  // HARD_LOCKED — lansmanda aktif değil
+  yuklenenler:"V3", ari:"V2", cehennem:"V3", hurma:"V3", karinca:"V3",
 };
 
 // Şablon görseller, dosyanın sonunda MOTION_CLIPS posterlarından türetilir (gerçek Pexels fotoğrafları).
