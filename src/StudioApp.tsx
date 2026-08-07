@@ -444,7 +444,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [aiTooltipHover, setAiTooltipHover] = useState(false);
 
   const [tier, setTier] = useState<Tier>(() => getCurrentTier());
-  const accessTier: Tier = isMasterSürüm ? "elit" : tier;
+  // ★ Misafir (giriş yapmamış) kullanıcı görsel olarak elit gibi görür — V2/V3 sert kilitler hariç.
+  //   Gerçek üretim anında handleGenerate içindeki isGuest değişkeni kontrol eder.
+  //   Bu sadece görsel kilit rozetleri için; filigran, üretim, jeton ayrıca korunuyor.
+  const accessTier: Tier = isMasterSürüm ? "elit" : !user ? "elit" : tier;
   const [premiumOpen, setPremiumOpen] = useState(false);
   const [premiumTab, setPremiumTab] = useState<"uyelik" | "jeton">("uyelik");
   const [fullUnlockConfirmOpen, setFullUnlockConfirmOpen] = useState(false);
@@ -1520,7 +1523,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
           // ★ Free ve Pro paketlerde sağ alt köşeye mecburi nurstudyo.com filigranı gömülür.
           //   Elit üye için (veya God Mode) hiçbir reklam / filigran basılmaz (%100 temiz, white-label).
-          if (accessTier === "free" || accessTier === "pro") {
+          //   Misafir kullanıcı (giriş yapmamış): accessTier görsel olarak "elit" ama filigran yine de basılır.
+          const realTierForWatermark = !user && !isMasterSürüm ? "free" : accessTier;
+          if (realTierForWatermark === "free" || realTierForWatermark === "pro") {
             ctx.save();
             ctx.font = `700 ${Math.round(height * 0.018)}px Inter,sans-serif`;
             ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
