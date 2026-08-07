@@ -119,16 +119,18 @@ export async function syncServerTime(force = false): Promise<TimeSync> {
     let serverMs: number | null = null;
     let source: TimeSync["source"] = "fallback";
 
-    serverMs = await fetchFromWorldTimeAPI();
-    if (serverMs) source = "worldtimeapi";
-    else {
-      serverMs = await fetchFromTimeAPI();
-      if (serverMs) source = "timeapi";
-      else {
-        serverMs = await fetchFromCloudflare();
-        if (serverMs) source = "cloudflare";
-      }
-    }
+    // Tüm kaynakları paralel dene — hangisi önce cevap verirse onu kullan.
+    // worldtimeapi Türkiye'de bazen ERR_CONNECTION_RESET veriyor,
+    // paralel fetch ile bekleme süresi minimuma iner.
+    const [r1, r2, r3] = await Promise.all([
+      fetchFromWorldTimeAPI(),
+      fetchFromTimeAPI(),
+      fetchFromCloudflare(),
+    ]);
+    serverMs = r1 ?? r2 ?? r3;
+    if (r1) source = "worldtimeapi";
+    else if (r2) source = "timeapi";
+    else if (r3) source = "cloudflare";
 
     // Hiçbir kaynak yanıt vermezse: son bilinen sync varsa onu koru; yoksa cihaz saatini
     // "güvensiz" olarak kabul edip tamper check devreye alınır.
