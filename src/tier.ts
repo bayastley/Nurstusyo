@@ -38,7 +38,9 @@ export const FEATURE_GATES: Record<FeatureKey, FeatureGate> = {
   atmos_video_pro: { kind: "tier", tier: "pro" }, atmos_video_elit: { kind: "tier", tier: "elit" },
   tema_pro: { kind: "tier", tier: "pro" }, tema_elit: { kind: "tier", tier: "elit" },
   mode_long: { kind: "tier", tier: "pro" }, mode_full: { kind: "tier", tier: "elit" },
-  aspect_1_1: { kind: "tier", tier: "pro" }, aspect_16_9: { kind: "tier", tier: "pro" },
+  // ★ 1:1 (Instagram kare) artık FREE — kullanıcı ücretsiz denemede iki format kullanabilsin.
+  //   16:9 (YouTube yatay) Pro'da kalır.
+  aspect_1_1: { kind: "tier", tier: "free" }, aspect_16_9: { kind: "tier", tier: "pro" },
   batch: { kind: "tier", tier: "elit" }, ai_search: { kind: "tier", tier: "elit" },
   refresh_text: { kind: "tier", tier: "pro" }, refresh_title: { kind: "tier", tier: "pro" },
   hashtag_add: { kind: "tier", tier: "elit" }, watermark_remove: { kind: "tier", tier: "pro" },
@@ -57,8 +59,16 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
+// ★ Hoca kilit yeniden düzenlendi:
+//   - Elit'tekiler free'ye taşındı (telif riski yüksek olması kilit gerekçesi değil)
+//   - Free'den 4 tanesine Elit kilidi verildi (premium his için)
+//   - Akıllı Al (AI arama) adı ve işlevi aynı, sadece erişim yeniden dengelendi
+
 export const FREE_RECITER_IDS = [
+  // Önceden free olanlar (9) aynen korundu
   "sudais", "shuraim", "hudhaify", "akhdar", "husary", "husary_teacher", "minshawi", "sowaid", "parhizgar",
+  // Önceden elit olan 6 hoca free'ye alındı
+  "muhaisny", "abdulbasit_mujawwad", "minshawi_mujawwad", "alafasy", "shatri", "qahtani",
 ] as const;
 
 export const PRO_RECITER_IDS = [
@@ -66,8 +76,11 @@ export const PRO_RECITER_IDS = [
   "husary_mujawwad", "abdulbasit", "tablawi", "banna", "jibreel",
 ] as const;
 
+// ★ Elit kilidi: Free listesinden 4 popüler hocaya taşındı (blur + Elit rozeti)
+//   alafasy, shatri, qahtani, muhaisny — bunlar zaten çok bilinen isimler,
+//   Elit'e koymak "özel" hissi verir.
 export const ELIT_RECITER_IDS = [
-  "muhaisny", "abdulbasit_mujawwad", "minshawi_mujawwad", "alafasy", "shatri", "qahtani",
+  "alafasy", "shatri", "qahtani", "muhaisny",
 ] as const;
 
 export function reciterRequiredTier(reciter: {
