@@ -65,10 +65,10 @@ export function featureLockLabel(key: FeatureKey): string {
 //   - Akıllı Al (AI arama) adı ve işlevi aynı, sadece erişim yeniden dengelendi
 
 export const FREE_RECITER_IDS = [
-  // Önceden free olanlar (9) aynen korundu
+  // Önceden free olanlar (9) + eskiden elit olup free'ye alınan 2 hoca
   "sudais", "shuraim", "hudhaify", "akhdar", "husary", "husary_teacher", "minshawi", "sowaid", "parhizgar",
-  // Önceden elit olan 6 hoca free'ye alındı
-  "muhaisny", "abdulbasit_mujawwad", "minshawi_mujawwad", "alafasy", "shatri", "qahtani",
+  "abdulbasit_mujawwad", "minshawi_mujawwad",
+  // NOT: alafasy, shatri, qahtani, muhaisny → ELIT_RECITER_IDS'de, burada YOK (önce elit kontrolü yapılır)
 ] as const;
 
 export const PRO_RECITER_IDS = [
