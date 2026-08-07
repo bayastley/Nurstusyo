@@ -140,14 +140,17 @@ export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: strin
 };
 
 export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
-  // Aktif 10 kategori — ilk 5 Ücretsiz (derinlik Pro ile açılır), ikinci 5 tamamen Elit'e özel
-  yuklenenler:"V3", namaz:"Ücretsiz", musaf:"Ücretsiz",
-  cicekler:"Ücretsiz", yildizlar:"Ücretsiz", deniz:"Ücretsiz",
-  daglar:"Elit", gunbatimi:"Elit", gece:"Elit", selale:"Elit", orman:"Elit",
-  // Aşağıdakiler HARD_LOCKED_CATEGORIES — lansmanda hiç aktif değil, V2/V3 rozetiyle tamamen tıklanamaz
-  cennet:"V2", col:"V2", kar:"V2", ates:"V2", ari:"V2",
-  sehir:"V3", cami:"V3", desen:"V3", gol:"V3", bulut:"V3",
-  cehennem:"V3", hurma:"V3", karinca:"V3",
+  // ★ KATEGORI_TIER ile birebir senkron rozet etiketleri
+  // Ücretsiz (8) — her birinde ilk 10 video free, sonrası Pro
+  namaz:"Ücretsiz", musaf:"Ücretsiz", cicekler:"Ücretsiz", yildizlar:"Ücretsiz",
+  deniz:"Ücretsiz", gunbatimi:"Ücretsiz", gece:"Ücretsiz", orman:"Ücretsiz",
+  // Pro'ya özel (4)
+  selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
+  // Elit'e özel aktif
+  cennet:"Elit", col:"Elit", ates:"Elit",
+  // HARD_LOCKED_CATEGORIES — lansmanda hiç aktif değil, V2/V3 rozetiyle tamamen tıklanamaz
+  cami:"V3", desen:"V3", gol:"V3", bulut:"V3", yuklenenler:"V3",
+  ari:"V2", cehennem:"V3", hurma:"V3", karinca:"V3",
 };
 
 // Şablon görseller, dosyanın sonunda MOTION_CLIPS posterlarından türetilir (gerçek Pexels fotoğrafları).
