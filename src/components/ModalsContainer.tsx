@@ -3,6 +3,7 @@ import {
   X, Hourglass, Shield, Search, FolderUp, Shuffle, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
   Image as ImageIcon, Film, Play,
 } from "lucide-react";
+import { LegalModal } from "./LegalModal";
 import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
 import { PremiumModal } from "./PremiumModal";
@@ -751,8 +752,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* LEGAL / TOS MODAL */}
-      {tosOpen && (
+      {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}
+      <LegalModal
+        tosOpen={tosOpen}
+        setTosOpen={setTosOpen}
+        legalTab={legalTab}
+        setLegalTab={setLegalTab}
+      />
+      {false && tosOpen && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md modal-in"
           onMouseDown={() => setTosOpen(false)}
