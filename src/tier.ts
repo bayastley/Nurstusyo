@@ -59,16 +59,16 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
-/**
- * ★ HOCA TIER DAGILIMI — guncel (telif riski yuksek olanlar free'ye alindi):
- *   Telif riski yuksek elit kilidi sacma bulundugu icin
- *   alafasy/shatri/qahtani/muhaisny free'ye cekildi.
- *   Yerlerine ayni tarzda 4 free hoca elite tasindi (blur efektli kilit).
- *   Isim "akilli" aynen korunuyor, tarz korunuyor.
- */
+// ★ Hoca kilit yeniden düzenlendi:
+//   - Elit'tekiler free'ye taşındı (telif riski yüksek olması kilit gerekçesi değil)
+//   - Free'den 4 tanesine Elit kilidi verildi (premium his için)
+//   - Akıllı Al (AI arama) adı ve işlevi aynı, sadece erişim yeniden dengelendi
+
 export const FREE_RECITER_IDS = [
-  "sudais", "shuraim", "hudhaify", "minshawi", "parhizgar",
-  "alafasy", "shatri", "qahtani", "muhaisny",
+  // Önceden free olanlar (9) + eskiden elit olup free'ye alınan 2 hoca
+  "sudais", "shuraim", "hudhaify", "akhdar", "husary", "husary_teacher", "minshawi", "sowaid", "parhizgar",
+  "abdulbasit_mujawwad", "minshawi_mujawwad",
+  // NOT: alafasy, shatri, qahtani, muhaisny → ELIT_RECITER_IDS'de, burada YOK (önce elit kontrolü yapılır)
 ] as const;
 
 export const PRO_RECITER_IDS = [
@@ -76,8 +76,11 @@ export const PRO_RECITER_IDS = [
   "husary_mujawwad", "abdulbasit", "tablawi", "banna", "jibreel",
 ] as const;
 
+// ★ Elit kilidi: Free listesinden 4 popüler hocaya taşındı (blur + Elit rozeti)
+//   alafasy, shatri, qahtani, muhaisny — bunlar zaten çok bilinen isimler,
+//   Elit'e koymak "özel" hissi verir.
 export const ELIT_RECITER_IDS = [
-  "abdulbasit_mujawwad", "minshawi_mujawwad", "akhdar", "husary", "husary_teacher", "sowaid",
+  "alafasy", "shatri", "qahtani", "muhaisny",
 ] as const;
 
 export function reciterRequiredTier(reciter: {
