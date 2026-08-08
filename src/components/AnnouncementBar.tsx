@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Bell, CheckCircle, Gift, Sparkles, X } from "lucide-react";
+import { Bell, CheckCircle, Gift, Sparkles, X, Trash2 } from "lucide-react";
 import { checkRateLimit } from "../rateLimiter";
 import type { Announcement } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
@@ -93,6 +93,25 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
           {isAdmin && (
             <button onClick={() => setAdminPanelOpen(true)} className="flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300">
               <Bell size={11} /> Duyuru ve Kilitlar
+            </button>
+          )}
+          {isAdmin && announcement && (
+            <button
+              onClick={async () => {
+                try {
+                  await fetch("/api/admin/action", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action: "delete_announcement", announcementId: announcement.id }),
+                  });
+                } catch { /* ignore */ }
+                setAnnouncement(null);
+                notify("Duyuru kaldırıldı · Sayfa yenilenince tüm kullanıcılarda gider");
+              }}
+              className="flex items-center gap-1 rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1.5 text-[9px] font-black text-red-300 hover:bg-red-500/20"
+              title="Duyuruyu kaldır"
+            >
+              <Trash2 size={10} /> Duyuruyu Kaldır
             </button>
           )}
         </div>
