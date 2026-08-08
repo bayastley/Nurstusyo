@@ -58,7 +58,40 @@ const RECITER_OPTIONS = [
   ["muhaisny", "Muhammed el-Muhaysini"],
 ] as const;
 
-function uid() { return `ann-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
+// Supabase'e direkt REST (service_role değil, anon key + bypass admin)
+function getSupabaseConfig() {
+  const url = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+  const key = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_SUPABASE_ANON_KEY ?? "";
+  return { url, key };
+}
+
+async function supabasePost(path: string, body: unknown): Promise<boolean> {
+  const { url, key } = getSupabaseConfig();
+  if (!url || !key) return false;
+  try {
+    const res = await fetch(`${url}/rest/v1/${path}`, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
+async function supabasePatch(path: string, body: unknown): Promise<boolean> {
+  const { url, key } = getSupabaseConfig();
+  if (!url || !key) return false;
+  try {
+    const res = await fetch(`${url}/rest/v1/${path}`, {
+      method: "PATCH",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
+function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
 
 export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify }) => {
   const [title, setTitle] = useState("");
@@ -75,9 +108,12 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [lockType, setLockType] = useState<"all" | "category" | "reciter">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedReciter, setSelectedReciter] = useState<string>("");
+  const [saving, setSaving] = useState(false);
 
-  const publish = () => {
+  const publish = async () => {
     if (!title.trim() || !message.trim()) { notify("Başlık ve kısa mesaj zorunlu"); return; }
+    setSaving(true);
+    // localStorage'a yaz (anında)
     const ann: Announcement = {
       id: uid(),
       title: title.trim(),
@@ -93,17 +129,30 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       requireAck,
     };
     saveAnnouncement(ann);
-    notify("✅ Duyuru yayınlandı · Sayfa yenilenince görünür");
+    // Supabase'e yaz (tüm kullanıcılara)
+    const ok = await supabasePost("nur_announcements?on_conflict=id", {
+      title: ann.title, message: ann.message, detail: ann.detail, kind: ann.kind,
+      active: true, blinking: ann.blinking, force_open: ann.forceOpen, require_ack: ann.requireAck,
+      starts_at: ann.startsAt, ends_at: ann.endsAt, created_by: "admin",
+    });
+    setSaving(false);
+    if (ok) {
+      notify("✅ Duyuru tüm kullanıcılara yayınlandı");
+    } else {
+      notify("✅ Duyuru bu cihazda yayınlandı (Supabase erişimi yok — admin girişi gerekli)");
+    }
     setTitle(""); setMessage(""); setDetail("");
   };
 
-  const clearAll = () => {
+  const clearAll = async () => {
+    // localStorage temizle
     const cfg = getSystemConfig();
     cfg.announcements = [];
     saveSystemConfig(cfg);
-    // Okundu işaretini de temizle
     try { localStorage.removeItem("nur_read_announcement"); } catch { /* ignore */ }
-    notify("🗑️ Tüm duyurular silindi · Sayfa yenilenince etkili olur");
+    // Supabase'den de kaldır
+    await supabasePatch("nur_announcements?active=eq.true", { active: false });
+    notify("🗑️ Tüm duyurular kaldırıldı · Sayfa yenilenince tümünde gider");
   };
 
   const applyLock = async () => {
@@ -111,30 +160,27 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     if (lockType === "category" && selectedCategory) targetId = selectedCategory;
     else if (lockType === "reciter" && selectedReciter) targetId = selectedReciter;
     if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
-    // Önce localStorage'a yaz (anında)
+    // localStorage'a yaz (anında)
     setFeatureLock(targetId, featureLock);
-    // Sonra Supabase API'ye de yaz (tüm kullanıcılara)
-    try {
-      const response = await fetch("/api/admin/action", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock }),
-      });
-      const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
-      if (response.ok) {
-        notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Tüm kullanıcılara uygulandı`);
-      } else {
-        notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Bu cihazda aktif (sunucu erişimi yok)`);
-      }
-    } catch {
-      const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
-      notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Bu cihazda aktif`);
+    // Supabase'e yaz (tüm kullanıcılara)
+    const ok = await supabasePost("nur_feature_locks?on_conflict=feature_id", {
+      feature_id: targetId,
+      lock_level: featureLock,
+      active: true,
+      updated_by: "admin",
+      updated_at: new Date().toISOString(),
+    });
+    const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
+    const label = labelMap[featureLock] ?? featureLock;
+    if (ok) {
+      notify(`✅ "${targetId}" → ${label} · Tüm kullanıcılara uygulandı`);
+    } else {
+      notify(`✅ "${targetId}" → ${label} · Bu cihazda aktif (Supabase için admin girişi yapın)`);
     }
   };
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      {/* DUYURU BÖLÜMÜ */}
       <section className="rounded-2xl border border-amber-400/25 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><Bell size={15} /> Canlı Duyuru</h4>
         <div className="space-y-2">
@@ -159,17 +205,15 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
             <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
           </div>
-          <button onClick={publish} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-            <Send size={13} /> Duyuruyu Yayınla
+          <button onClick={publish} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black disabled:opacity-50" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+            <Send size={13} /> {saving ? "Yayınlanıyor..." : "Duyuruyu Yayınla"}
           </button>
           <button onClick={clearAll} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/20">
-            <Trash2 size={13} /> Tüm Duyuruları Temizle
+            <Trash2 size={13} /> Tüm Duyuruları Kaldır
           </button>
-          <p className="text-[9px] text-white/30">Not: Duyurular yalnızca bu cihazda kaydedilir. Supabase bağlanınca tüm kullanıcılara yayılır.</p>
         </div>
       </section>
 
-      {/* KİLİT BÖLÜMÜ */}
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Özellik Kilitleri</h4>
         <div className="space-y-2">
@@ -180,7 +224,6 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
               </button>
             ))}
           </div>
-
           {lockType === "all" && (
             <select value={featureId} onChange={(e) => setFeatureId(e.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
               {FEATURE_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
@@ -198,21 +241,17 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
               {RECITER_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           )}
-
           <select value={featureLock} onChange={(e) => setFeatureLockState(e.target.value as FeatureLock)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
             {LOCK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-
           {featureLock === "maintenance" && (
             <div className="rounded-xl border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-[10px] text-yellow-300">
-              🔧 Bakımda seçildi → Kilidi Uygula'ya basınca seçilen hedef için "Bakımda" uyarısı gösterilir.
+              🔧 Bakımda seçildi → Uygulayınca seçilen hedefte sarı rozet çıkar.
             </div>
           )}
-
           <button onClick={applyLock} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black">
             <Save size={13} /> Kilidi Uygula
           </button>
-          <p className="text-[9px] text-white/30">Not: Kilit bu cihazda aktif olur. Supabase bağlanınca tüm kullanıcılara uygulanır.</p>
         </div>
       </section>
     </div>
