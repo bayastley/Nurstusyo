@@ -5,7 +5,8 @@ import {
 import { SectionTitle, Segmented } from "./UIElements";
 import { LockBadge, LockedOverlay } from "./LockBadge";
 import { getVideoUrlSync, getPosterUrlSync } from "../videoUrl";
-import { RISK_META, RECITERS } from "../data";
+import { RISK_META } from "../data";
+import { RECITERS } from "../reciters";
 import { T } from "../i18n";
 import { videoMaliyeti, reciterRequiredTier } from "../tier";
 import type { Clip } from "../clips";
