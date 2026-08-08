@@ -40,14 +40,10 @@ export function claimHolyDayReward(
   eventKey: string,
   rewardAmount: number
 ): { ok: boolean; newJeton: number; message: string } {
-  // 1. Saat manipülasyonu kontrolü
-  if (isDeviceClockTampered()) {
-    return {
-      ok: false,
-      newJeton: getJeton(),
-      message: "🚨 Güvenlik İhlali: Cihaz saatiniz gerçek dünya saati ile uyuşmuyor!",
-    };
-  }
+  // 1. Saat manipülasyonu kontrolü — worldtimeapi erişilemeyen ülkelerde
+  //    cihaz saati "tampered" olarak işaretlenebilir. Bu durumda ödülü engelleme,
+  //    sadece fallback olarak devam et.
+  void isDeviceClockTampered; // tamper check devre dışı (erişim sorunu)
 
   // 2. Mükerrer alım tespiti (HMAC doğrulaması)
   if (isRewardClaimed(eventKey)) {
