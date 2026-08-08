@@ -172,7 +172,8 @@ export const MOTION_CLIPS: Clip[] = [
 
 // ─── ŞABLON (HAREKETSİZ) GERÇEK FOTOĞRAFLAR ─────────────
 const TEMPLATES_PER_CATEGORY = 50;
-const hiResPoster = (poster: string) => poster;
+// hiResPoster artık kullanılmıyor (R2 posters kullanılıyor)
+void ((poster: string) => poster);
 export const toHiRes = (src: string) =>
   src.replace(/fit=crop&h=630&w=1200/, "fit=crop&h=1080&w=1920");
 
@@ -184,19 +185,22 @@ export const TEMPLATE_CLIPS: Clip[] = (() => {
     let n = 0;
     for (const motion of MOTION_CLIPS) {
       if (n >= TEMPLATES_PER_CATEGORY) break;
-      if (motion.cat !== category.id || !motion.poster) continue;
-      const m = motion.poster.match(/\/videos\/(\d+)\//);
-      if (!m) continue;
-      const pid = Number(m[1]);
+      if (motion.cat !== category.id || !motion.pexelsId) continue;
+      const pid = motion.pexelsId;
       if (seen.has(pid)) continue;
       seen.add(pid);
       n += 1;
+      // ★ Önce R2'deki poster jpg'yi kullan — Pexels'e bağımlılık yok, hızlı açılır
+      const r2PosterUrl = `${R2_BASE}/posters/${category.id}/${pid}.jpg`;
       out.push({
         id: `${category.id}-tpl-${n}`,
         label: motion.label,
         cat: category.id,
         kind: "img",
-        src: hiResPoster(motion.poster),
+        src: r2PosterUrl,
+        r2Poster: r2PosterUrl,
+        poster: motion.poster, // Pexels yedek (R2 açılmazsa)
+        pexelsId: pid,
       });
     }
   }
