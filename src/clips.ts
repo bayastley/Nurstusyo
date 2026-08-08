@@ -31,7 +31,8 @@ export interface Clip {
   r2Poster?: string;
 }
 
-export const R2_BASE = "https://nurstudyo.com";
+// ★ R2 custom domain — videoUrl.ts ile aynı olmalı
+export const R2_BASE = "https://cdn.nurstudyo.com";
 
 export const CATEGORIES: Array<{ id: CatId; label: string }> = [
   { id: "yuklenenler", label: "📁 Yüklediklerim" },
