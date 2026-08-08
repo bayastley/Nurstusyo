@@ -290,64 +290,33 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* LOGIN & REGISTER MODAL */}
       {modal === "login" && (
         <Modal
-          title={loginTab === "register" ? "✨ 20 HEDİYE JETON SİZİ BEKLİYOR" : t("loginTitle")}
-          sub={loginTab === "register" ? "Bu videoyu indirmek ve 20 hediye jetonunuzu kazanmak için lütfen 3 saniyede ücretsiz üye olun." : t("loginSubtitle")}
+          title="Nûr Stüdyo'ya Hoş Geldiniz"
+          sub="Telifsiz sinematik Kur'an videoları üretin ve paylaşın"
           onClose={() => { setModal(null); setLoginTab("login"); }}
           wide={false}
         >
-          <div className="mb-4 flex gap-2">
-            <button onClick={() => setLoginTab("login")} className={`flex-1 rounded-xl py-2.5 text-[11px] font-bold transition ${loginTab === "login" ? "text-black" : "glass-soft text-white/60 hover:text-white"}`} style={loginTab === "login" ? { background: "linear-gradient(135deg, var(--accent-2), var(--accent))" } : undefined}>{t("loginTab")}</button>
-            <button onClick={() => setLoginTab("register")} className={`flex-1 rounded-xl py-2.5 text-[11px] font-bold transition ${loginTab === "register" ? "text-black" : "glass-soft text-white/60 hover:text-white"}`} style={loginTab === "register" ? { background: "linear-gradient(135deg, var(--accent-2), var(--accent))" } : undefined}>{t("registerTab")}</button>
+          <div className="space-y-3 py-1">
+            {/* ★ TEK BUTON — Google ile giriş/kayıt (sistem kendisi ayırt eder) */}
+            <button
+              onClick={handleGoogleAuth}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-4 text-[13px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
+            >
+              <GoogleIcon size={20} />
+              Google ile Devam Et
+            </button>
+            <p className="text-center text-[9px] leading-relaxed text-white/40">
+              Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
+              Şifre gerekmez · Anında <b className="text-white/60">+20 jeton</b> hediye
+            </p>
+
+            {/* ★ MİSAFİR MODU */}
+            <button
+              onClick={handleGuestContinue}
+              className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
+            >
+              👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">(2 deneme videosu)</span>
+            </button>
           </div>
-          {loginTab === "login" && (
-            <div className="space-y-3">
-              {/* ★ ANA YOL — Google ile giriş */}
-              <button
-                onClick={handleGoogleAuth}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white py-3.5 text-[12px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
-              >
-                <GoogleIcon />
-                Google ile Giriş Yap
-              </button>
-              <p className="text-center text-[9px] leading-relaxed text-white/40">
-                Şifre gerekmez · Hesabın otomatik tanınır · Güncellemeler e-postana gelir
-              </p>
-
-              {/* ★ MİSAFİR MODU */}
-              <button
-                onClick={handleGuestContinue}
-                className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/75 transition hover:bg-white/10 hover:text-white"
-              >
-                👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">(2 deneme videosu)</span>
-              </button>
-            </div>
-          )}
-          {loginTab === "register" && (
-            <div className="space-y-3">
-              {/* ★ ANA YOL — Gmail hesabına bağlanarak kayıt */}
-              <button
-                onClick={handleGoogleAuth}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-white py-3.5 text-[12px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
-              >
-                <GoogleIcon />
-                Google (Gmail) ile Kayıt Ol
-              </button>
-              <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-2">
-                <p className="text-[9.5px] leading-relaxed text-emerald-200/90">
-                  ✓ Şifre oluşturmana gerek yok &nbsp;·&nbsp; ✓ Anında <b>+20 jeton</b> hediye
-                  <br />✓ Her cihazdan aynı hesaba giriş &nbsp;·&nbsp; ✓ Güncellemeler e-postana gelir
-                </p>
-              </div>
-
-              {/* ★ MİSAFİR MODU */}
-              <button
-                onClick={handleGuestContinue}
-                className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/75 transition hover:bg-white/10 hover:text-white"
-              >
-                👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">(2 deneme videosu)</span>
-              </button>
-            </div>
-          )}
           {loginTab === "verify" && (
             <div className="space-y-3">
               <p className="text-[11px] text-white/50">{t("codeSent")}: {sentCode}</p>
