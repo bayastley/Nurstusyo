@@ -1737,6 +1737,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
         const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
         let lastVisualIndex = 0;
+        // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
+        //   canvas draw'u bloke edip video donmasına yol açıyordu.
         const syncTimer = window.setInterval(() => {
           const elapsed = (performance.now() - startedAt) / 1000;
           const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
@@ -1750,7 +1752,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             verseIndexRef.current = idx;
             setVerseIndex(idx);
           }
-        }, 50);
+        }, 200);
         const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
         const userStop = () => { userStopped = true; finishRecording(); };
         stopGenerationRef.current = userStop; safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750); player.onended = finishRecording; recorder.start(); player.start(); await stopped;
