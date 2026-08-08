@@ -6,6 +6,7 @@ import {
   MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS,
 } from "./studio/studioConstants";
+import { useCanvasDraw } from "./studio/useCanvasDraw";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
   fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
@@ -999,7 +1000,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return video;
   }, []);
 
-  useEffect(() => {
+  useCanvasDraw({
+    canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
+    videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
+    showArapca, showSubMeal, accessTier, arabicFontCss, textSizeMul, shimmerCfg, cardBg, textOffset,
+    cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, user,
+  });
+
+  const _CANVAS_DRAW_MOVED_TO_HOOK = true; void _CANVAS_DRAW_MOVED_TO_HOOK;
+  if (false) useEffect(() => {
     let frame = 0, tick = 0, lastPreviewDraw = 0;
     // ★ Kelime bazlı sarma + aşırı uzun tek kelimeyi karakter bazında zorla kırma.
     //   Böylece Arapça metin hiçbir koşulda sağdan/soldan taşmaz.
