@@ -1,35 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fixWebmDuration from "fix-webm-duration";
+import { X, AlertTriangle, Ban, Sparkles, BookOpen } from "lucide-react";
 import {
-  BookOpen,
-  Building2,
-  Cloud,
-  CloudLightning,
-  Droplets,
-  Flame,
-  Flower2,
-  FolderUp,
-  Footprints,
-  Landmark,
-  Mountain,
-  MoonStar,
-  Palmtree,
-  Sailboat,
-  Shapes,
-  Snowflake,
-  Sparkles,
-  Sun,
-  Sunset,
-  Tablet,
-  TreePalm,
-  Bug,
-  Trees,
-  Waves,
-  X,
-  AlertTriangle,
-  Ban,
-  type LucideIcon,
-  } from "lucide-react";
+  CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
+  MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
+  ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS,
+} from "./studio/studioConstants";
+void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
+import {
+  fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
+  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah,
+} from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import {
   ACTIVE_CATEGORIES,
@@ -87,192 +68,9 @@ import type { SelectedAyah, SearchHit, Output, DailyAyah, User, Mode, Aspect, Mo
 
 void SES_TARZI_ORDER; void isFeatureUnlocked; void featureLockLabel; void ALLOWED_ADMIN_EMAILS; void isAdminEmail; void setCurrentTier; void tierAtLeast; void isRamadan; void isFriday; void JETON; void ADMIN_SECRET_PATH;
 void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
+// Sabitler studioConstants.ts'e, yardımcılar studioHelpers.ts'e taşındı
 
-const CATEGORY_ICONS: Record<CatId, LucideIcon> = {
-  yuklenenler: FolderUp,
-  namaz: Landmark,
-  musaf: BookOpen,
-  cicekler: Flower2,
-  yildizlar: Sparkles,
-  cennet: Palmtree,
-  deniz: Waves,
-  daglar: Mountain,
-  gunbatimi: Sunset,
-  gece: MoonStar,
-  selale: Droplets,
-  orman: Trees,
-  col: Sun,
-  kar: Snowflake,
-  sehir: Building2,
-  cami: Landmark,
-  desen: Shapes,
-  gol: Sailboat,
-  bulut: Cloud,
-  ates: Flame,
-  cehennem: CloudLightning,
-  hurma: TreePalm,
-  ari: Bug,
-  karinca: Footprints,
-};
-
-const DEFAULT_MASTER_SURUM = false;
-const RENDER_AUTH_LIVE =
-  ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_PAYMENTS_LIVE ?? "false") === "true";
-const SERVER_BAN_LIVE = RENDER_AUTH_LIVE;
-
-const MODES: Array<{ id: Mode; label: string; sub: string; icon: React.ElementType }> = [
-  { id: "short", label: "Kısa", sub: "59 sn", icon: Sparkles },
-  { id: "long", label: "Uzun", sub: "150 sn", icon: Sparkles },
-  { id: "full", label: "Tam", sub: "40 dk'ya kadar", icon: Sparkles },
-];
-const ASPECTS: Array<{ id: Aspect; label: string; sub?: string; icon: React.ElementType }> = [
-  { id: "9:16", label: "9:16", sub: "Reel", icon: Sparkles },
-  { id: "16:9", label: "16:9", sub: "YouTube", icon: Sparkles },
-  { id: "1:1", label: "1:1", sub: "Kare", icon: Sparkles },
-  { id: "4:5", label: "4:5", sub: "Portre", icon: Tablet },
-];
-const PRAYERS: Array<[string, string]> = [["İmsak", "Fajr"], ["Güneş", "Sunrise"], ["Öğle", "Dhuhr"], ["İkindi", "Asr"], ["Akşam", "Maghrib"], ["Yatsı", "Isha"]];
-
-const KEYWORD_CATEGORY_FALLBACK: Record<string, CatId> = {
-  seccade: "namaz", tavaf: "namaz", hira: "namaz", umre: "namaz", muezzin: "namaz", ibadet: "namaz",
-  namaz: "namaz", secde: "namaz", kıyam: "namaz", rüku: "namaz", maun: "namaz", cami: "namaz", mescit: "namaz", mihrab: "namaz",
-  ateş: "ates", alev: "ates", köz: "ates", yanan: "ates", yanıyor: "ates", yangın: "ates", tutuşan: "ates", kıvılcım: "ates", odun: "ates", şömine: "ates",
-  cehennem: "cehennem", azap: "cehennem", kaynar: "cehennem", irin: "cehennem", zakkum: "cehennem",
-  hurma: "hurma", vaha: "hurma", dal: "hurma", salkım: "hurma",
-  arı: "ari", bal: "ari", nahl: "ari", kovan: "ari", petek: "ari",
-  karınca: "karinca", karinca: "karinca", sürü: "karinca",
-  kurban: "col", çöl: "col", deve: "col", koyun: "col", duman: "col",
-  kevser: "deniz", su: "deniz", nehir: "deniz", deniz: "deniz", pınar: "deniz", havuz: "deniz", ırmak: "deniz", balık: "deniz", gemi: "deniz", dalga: "deniz",
-  cennet: "cennet", bahçe: "cennet", meyve: "cennet", şurub: "cennet", zeytin: "cennet", üzüm: "cennet", incir: "cennet", nar: "cennet",
-  gül: "cicekler", lale: "cicekler", çiçek: "cicekler", sümbül: "cicekler", zambak: "cicekler",
-  yıldız: "yildizlar", gök: "yildizlar", sema: "yildizlar", kamer: "yildizlar", ay: "yildizlar", gezegen: "yildizlar",
-  yayla: "daglar", dağ: "daglar", zirve: "daglar", kaya: "daglar",
-  orman: "orman", ağaç: "orman", yaprak: "orman", yeşillik: "orman",
-  şafak: "gunbatimi", güneş: "gunbatimi", aydınlan: "gunbatimi", fecr: "gunbatimi",
-  kar: "kar", buz: "kar", kış: "kar",
-  kubbe: "cami", fener: "cami",
-  medeniyet: "sehir", şehir: "sehir", belde: "sehir", kavim: "sehir", ev: "sehir",
-  desen: "desen", geometrik: "desen", tasavvuf: "desen",
-  bulut: "bulut", gökkubbe: "bulut",
-  göl: "gol", durgun: "gol", sakin: "gol", latif: "gol",
-};
-
-const SURAH_CATEGORY_HINT: Record<string, CatId> = {
-  "nahl": "ari", "yasin": "yildizlar", "rahman": "cennet", "mulk": "yildizlar",
-  "maun": "namaz", "tevbe": "cehennem", "bakara": "musaf", "fil": "sehir",
-  "kevser": "deniz", "nur": "musaf", "duha": "gunbatimi", "asr": "gunbatimi",
-  "tin": "hurma", "mutaffifin": "cehennem", "meryem": "hurma",
-};
-
-const fmtDuration = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
-const isWholeSurahSelected = (items: SelectedAyah[]): boolean => {
-  if (!items.length) return false;
-  const surahNo = items[0].s;
-  if (surahNo === 0) return false;
-  if (!items.every((it) => it.s === surahNo)) return false;
-  const total = SURAHS[surahNo - 1]?.count ?? 0;
-  if (!total || items.length !== total) return false;
-  const ayahSet = new Set(items.map((it) => it.a));
-  for (let i = 1; i <= total; i += 1) { if (!ayahSet.has(i)) return false; }
-  return true;
-};
-const fmtSize = (bytes: number) => bytes > 1 << 20 ? `${(bytes / (1 << 20)).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
-// ★ 1080p FULL HD RENDER — önceki 720p çıktı sıkıştırmada bulanıklaşıyordu.
-const dimensions = (aspect: Aspect): [number, number] =>
-  aspect === "9:16" ? [1080, 1920] :
-  aspect === "1:1"  ? [1080, 1080] :
-  aspect === "4:5"  ? [1080, 1350] :
-                      [1920, 1080];
-const uid = () => crypto.randomUUID?.() ?? `${Date.now()}-${Math.random()}`;
-
-async function fetchJSON(url: string, timeoutMs = 12000) {
-  const attempt = async () => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(url, { cache: "no-store", signal: controller.signal });
-      if (!response.ok) {
-        const err: Error & { status?: number } = new Error(String(response.status));
-        err.status = response.status;
-        throw err;
-      }
-      return await response.json();
-    } finally {
-      window.clearTimeout(timeout);
-    }
-  };
-  try {
-    return await attempt();
-  } catch (err) {
-    // ★ 429 (hız limiti) ve 5xx sunucu hatalarında tek sessiz yeniden deneme.
-    //   Yavaş internet / çökmüş API asla kullanıcıya hata veya ban olarak yansımaz.
-    const status = (err as Error & { status?: number })?.status;
-    const retryable = status === 429 || status === 503 || (status !== undefined && status >= 500) || status === undefined;
-    if (!retryable) throw err;
-    await new Promise((resolve) => window.setTimeout(resolve, 900));
-    return await attempt();
-  }
-}
-
-async function fetchAyah(surah: number, ayah: number, edition = "tr.diyanet") {
-  try {
-    const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${edition}`);
-    const ar = (json.data?.[0]?.text ?? "") as string;
-    const tr = (json.data?.[1]?.text ?? "") as string;
-    if (ar || tr) return { ar, tr };
-  } catch { /* yedek endpoint denenir */ }
-
-  const [arabic, translated] = await Promise.all([
-    fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`),
-    fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${edition}`),
-  ]);
-  return { ar: (arabic.data?.text ?? "") as string, tr: (translated.data?.text ?? "") as string };
-}
-
-async function fetchSurah(surah: number, edition: string) {
-  let arabic: Array<{ text: string }> = [];
-  let translated: Array<{ text: string }> = [];
-
-  try {
-    const json = await fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/editions/quran-uthmani,${edition}`);
-    arabic = json.data?.[0]?.ayahs ?? [];
-    translated = json.data?.[1]?.ayahs ?? [];
-  } catch { /* yedek endpoint denenir */ }
-
-  if (!arabic.length || !translated.length) {
-    const [arabicJson, translatedJson] = await Promise.all([
-      fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`),
-      fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/${edition}`),
-    ]);
-    arabic = arabicJson.data?.ayahs ?? [];
-    translated = translatedJson.data?.ayahs ?? [];
-  }
-
-  let rows = arabic.map((item: { text: string }, index: number) => ({ ar: item.text, tr: (translated[index]?.text ?? "") as string }));
-  const unique = new Set(rows.map((row: { tr: string }) => row.tr));
-  if (rows.length > 1 && unique.size === 1 && MEAL_FIXES[surah]?.length === rows.length && edition.startsWith("tr.")) {
-    rows = rows.map((row: { ar: string; tr: string }, index: number) => ({ ...row, tr: MEAL_FIXES[surah][index] }));
-  }
-  if (!rows.length) throw new Error("SURAH_EMPTY");
-  return rows as Array<{ ar: string; tr: string }>;
-}
-
-function pickMime() {
-  // ★ WEBM ÖNCELİKLİ: Tarayıcının ürettiği MP4 "fragmented mp4" olduğu için
-  //   süre (duration) metadata'sı dosyaya yazılmaz. Android galeri / TikTok
-  //   bu dosyayı "1 saniye" olarak görür. WebM'de bu bilgi fix-webm-duration
-  //   ile sonradan doğru şekilde yazılabildiği için WebM tercih edilir.
-  const choices = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"];
-  return choices.find((mime) => window.MediaRecorder?.isTypeSupported?.(mime)) ?? "";
-}
-
-function formatRemaining(ms: number) {
-  if (ms <= 0) return "-";
-  const total = Math.floor(ms / 1000), hour = Math.floor(total / 3600), minute = Math.floor((total % 3600) / 60), second = total % 60;
-  if (hour) return `${hour} sa ${minute} dk`;
-  if (minute) return `${minute} dk ${second} sn`;
-  return `${second} sn`;
-}
+// Tüm sabitler + yardımcılar dış dosyalara taşındı (studio/)
 
 export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_MASTER_SURUM }: { isMasterSürüm?: boolean }) {
   const [adminGodMode, setAdminGodMode] = useState(false);
@@ -1801,7 +1599,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       return;
     }
     const surahOnlyReciter = Boolean(reciter.surahPattern);
-    if (surahOnlyReciter && !isWholeSurahSelected(selected)) {
+    if (surahOnlyReciter && !isWholeSurahSelected(selected, SURAHS)) {
       notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
       return;
     }
