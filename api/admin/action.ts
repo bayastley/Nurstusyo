@@ -66,6 +66,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await db("nur_ban_logs", { method: "POST", body: JSON.stringify({ user_email: body.target, reason: body.reason || "Admin kararı", banned_by: admin.email }) });
     } else if (action === "unban_user") {
       await db(`nur_ban_logs?user_email=eq.${encodeURIComponent(body.target)}&unbanned=eq.false`, { method: "PATCH", body: JSON.stringify({ unbanned: true }) });
+    } else if (action === "delete_announcement") {
+      if (body.announcementId) {
+        await db(`nur_announcements?id=eq.${encodeURIComponent(body.announcementId)}`, { method: "PATCH", body: JSON.stringify({ active: false }) });
+      } else {
+        await db("nur_announcements?active=eq.true", { method: "PATCH", body: JSON.stringify({ active: false }) });
+      }
+    } else if (action === "clear_all_announcements") {
+      await db("nur_announcements?active=eq.true", { method: "PATCH", body: JSON.stringify({ active: false }) });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || "") }) }).catch(() => null);
     return res.status(200).json({ ok: true });
