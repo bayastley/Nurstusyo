@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Lock, Gem, Sparkles, Crown } from "lucide-react";
 
-export type LockKind = "pro" | "elit" | "v2" | "v3";
+export type LockKind = "pro" | "elit" | "v2" | "v3" | "maintenance";
 
 interface LockBadgeProps {
   kind: LockKind;
@@ -26,7 +26,8 @@ const KIND_META: Record<LockKind, {
   pro:  { label: "PRO",  tooltip: "Pro Üyelik Gerekir",     icon: Gem,      gradient: "linear-gradient(135deg,#f5dda6 0%,#d7aa52 100%)", glow: "rgba(215,170,82,.55)",  clickable: true },
   elit: { label: "ELİT", tooltip: "Elit Üyelik Gerekir",    icon: Crown,    gradient: "linear-gradient(135deg,#e8d48a 0%,#8b6914 50%,#d7aa52 100%)", glow: "rgba(232,212,138,.7)", clickable: true },
   v2:   { label: "V2",   tooltip: "V2 Güncellemesi Yakında", icon: Sparkles, gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
-  v3:   { label: "V3",   tooltip: "V3 Güncellemesi Yakında", icon: Lock,     gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
+  v3:          { label: "V3",      tooltip: "V3 Güncellemesi Yakında", icon: Lock,     gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
+  maintenance: { label: "🔧 BAKIMDA", tooltip: "Bu özellik şu an bakımda",  icon: Lock,     gradient: "linear-gradient(135deg,#f59e0b 0%,#b45309 100%)", glow: "rgba(245,158,11,.5)", clickable: false },
 };
 
 const POSITION_CLASS: Record<NonNullable<LockBadgeProps["position"]>, string> = {
