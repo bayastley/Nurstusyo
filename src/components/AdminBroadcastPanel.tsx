@@ -106,14 +106,30 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     notify("🗑️ Tüm duyurular silindi · Sayfa yenilenince etkili olur");
   };
 
-  const applyLock = () => {
+  const applyLock = async () => {
     let targetId = featureId;
     if (lockType === "category" && selectedCategory) targetId = selectedCategory;
     else if (lockType === "reciter" && selectedReciter) targetId = selectedReciter;
     if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
+    // Önce localStorage'a yaz (anında)
     setFeatureLock(targetId, featureLock);
-    const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
-    notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Sayfa yenilenince etkili olur`);
+    // Sonra Supabase API'ye de yaz (tüm kullanıcılara)
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock }),
+      });
+      const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
+      if (response.ok) {
+        notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Tüm kullanıcılara uygulandı`);
+      } else {
+        notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Bu cihazda aktif (sunucu erişimi yok)`);
+      }
+    } catch {
+      const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
+      notify(`✅ "${targetId}" → ${labelMap[featureLock] ?? featureLock} · Bu cihazda aktif`);
+    }
   };
 
   return (
