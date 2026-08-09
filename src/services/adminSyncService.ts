@@ -95,6 +95,7 @@ export function getSystemConfig(): SystemConfig {
 
 export function saveSystemConfig(config: SystemConfig): void {
   secureSet(SYNC_CONFIG_KEY, normalizeConfig(config));
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("nur_config_updated"));
 }
 
 export function getActiveAnnouncement(now = new Date()): Announcement | null {
