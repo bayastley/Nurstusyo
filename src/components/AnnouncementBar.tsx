@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Bell, CheckCircle, Gift, Sparkles, X, Trash2 } from "lucide-react";
 import { checkRateLimit } from "../rateLimiter";
 import type { Announcement } from "../services/adminSyncService";
+import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 
@@ -23,11 +24,16 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     let alive = true;
     const refresh = async () => {
       const response = await fetch("/api/config", { cache: "no-store" }).catch(() => null);
-      const data = response ? await response.json().catch(() => null) as { announcement?: any } | null : null;
+      const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }> } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());
         const item = data?.announcement;
         setAnnouncement(item ? { id: item.id, title: item.title, message: item.message, detail: item.detail, kind: item.kind, active: item.active, blinking: item.blinking, startsAt: item.starts_at, endsAt: item.ends_at, updatedAt: item.updated_at, forceOpen: item.force_open, requireAck: item.require_ack } : null);
+        if (Array.isArray(data?.featureLocks)) {
+          const cfg = getSystemConfig();
+          for (const lock of data.featureLocks) cfg.featureLocks[lock.feature_id] = lock.lock_level;
+          saveSystemConfig(cfg);
+        }
       }
     };
     void refresh();
