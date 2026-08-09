@@ -1714,20 +1714,26 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
         const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
         let lastVisualIndex = 0;
+        let lastProgress = -1;
         // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
         //   canvas draw'u bloke edip video donmasına yol açıyordu.
         const syncTimer = window.setInterval(() => {
           const elapsed = (performance.now() - startedAt) / 1000;
           const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
-          setProgress(30 + Math.round(currentProgress * 67));
+          const nextProgress = 30 + Math.round(currentProgress * 67);
+          if (nextProgress !== lastProgress) {
+            lastProgress = nextProgress;
+            setProgress(nextProgress);
+          }
           let idx = 0;
           for (let i = 0; i < ayetSüreleri.length; i += 1) {
             if (elapsed >= ayetSüreleri[i].start) idx = i;
           }
           if (idx !== lastVisualIndex) {
             lastVisualIndex = idx;
+            // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
+            //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
             verseIndexRef.current = idx;
-            setVerseIndex(idx);
           }
         }, 200);
         const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
