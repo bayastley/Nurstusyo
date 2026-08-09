@@ -33,8 +33,9 @@ export const isWholeSurahSelected = (items: SelectedAyah[], SURAHS: Array<{ coun
 };
 
 export function pickMime(): string {
-  // ★ WEBM ÖNCELİKLİ: 1 saniye sorunu için WebM tercih edilir
-  const choices = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"];
+  // ★ VP8 ÖNCELİKLİ: VP9 daha ağır encode/decode yapar; bazı cihazlarda
+  //   üretilen video 1-2 sn sonra donup sesin devam etmesine yol açabiliyor.
+  const choices = ["video/webm;codecs=vp8,opus", "video/webm", "video/webm;codecs=vp9,opus", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"];
   return choices.find((mime) => window.MediaRecorder?.isTypeSupported?.(mime)) ?? "";
 }
 
