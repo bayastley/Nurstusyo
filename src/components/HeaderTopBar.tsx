@@ -278,7 +278,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
                       <button onClick={() => { openAdminDashboard(); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] font-bold text-amber-300 transition hover:bg-white/5">
                         <Shield size={14} className="text-amber-400" />
-                        <span>Admin God Mode Paneli</span>
+                        <span>Admin Yönetim Paneli</span>
                       </button>
                     )}
                     <div className="mt-1 border-t border-white/5 px-4 py-2.5">
@@ -338,11 +338,11 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             {isMasterSürüm && (
               <button
                 type="button"
-                onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("God Mode kapatıldı"); }}
+                onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); }}
                 className="hidden items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300 transition hover:bg-emerald-500/20 sm:flex"
-                title="God Mode'u kapat"
+                title="Admin modunu kapat"
               >
-                <Shield size={10} /> GOD MODE · ÇIKIŞ
+                <Shield size={10} /> ADMIN · ÇIKIŞ
               </button>
             )}
             {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) */}
@@ -388,11 +388,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               ) : null}
             </div>
             {/* ★ HEDİYE KODU */}
-            <span className="relative hidden sm:inline-flex">
-              <span className="glass-soft pointer-events-none flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/40">
-                <span>🎁</span>Hediye Kodu
-              </span>
-              {!isMasterSürüm && <LockBadge kind="v3" position="top-right" tooltipText="V3 · Hediye Kodu Yakında" />}
+            <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
+              <span>🎁</span>Hediye Kodu
             </span>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
