@@ -50,7 +50,6 @@ import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
 import { AnnouncementBar } from "./components/AnnouncementBar";
-import { SimpleModePanel } from "./components/SimpleModePanel";
 import {
   getCurrentTier, setCurrentTier, tierAtLeast, isFeatureUnlocked, featureLockLabel,
   isAdminEmail, ADMIN_SECRET_PATH, ALLOWED_ADMIN_EMAILS,
@@ -116,12 +115,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [previewDuration, setPreviewDuration] = useState(0);
 
   const [previewMaximized, setPreviewMaximized] = useState(false);
-  const [simpleMode, setSimpleMode] = useState(() => {
-    try { return localStorage.getItem("nur_simple_mode") !== "0"; } catch { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_simple_mode", simpleMode ? "1" : "0"); } catch { /* ignore */ }
-  }, [simpleMode]);
   const previewWidth = useMemo(() => {
     // Büyütme efekti scale() ile yapılıyor; genişlik sabit kalır
     return aspect === "9:16" ? 300 : aspect === "4:5" ? 340 : aspect === "1:1" ? 380 : 500;
@@ -2043,21 +2036,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         </div>
         <div className="mx-auto mt-5 h-px w-52 animate-glow" style={{ background: "linear-gradient(90deg,transparent,var(--accent),transparent)" }} />
       </section>
-
-      <SimpleModePanel
-        daily={daily}
-        selectedCount={selected.length}
-        generating={generating}
-        progress={progress}
-        simpleMode={simpleMode}
-        onAddDaily={() => {
-          if (!daily) { notify("Günün ayeti yükleniyor, birazdan tekrar deneyin"); return; }
-          toggleAyah(daily.s, daily.a, daily.tr);
-        }}
-        onRandomAtmosphere={() => randomizeBackgrounds()}
-        onGenerate={handleGenerate}
-        onToggleAdvanced={() => setSimpleMode((value) => !value)}
-      />
 
       {/* MAIN 3 GRID */}
       <main className="mx-auto grid max-w-[1500px] gap-4 px-4 py-6 lg:grid-cols-[300px_280px_1fr]">
