@@ -77,6 +77,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedReciter, setSelectedReciter] = useState<string>("");
   const [saving, setSaving] = useState(false);
+  const [lockStatus, setLockStatus] = useState("");
 
   const publish = async () => {
     if (!title.trim() || !message.trim()) { notify("Başlık ve kısa mesaj zorunlu"); return; }
@@ -118,14 +119,13 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   };
 
   const applyLock = () => {
-    let targetId = featureId;
-    if (lockType === "category" && selectedCategory) targetId = selectedCategory;
-    else if (lockType === "reciter" && selectedReciter) targetId = selectedReciter;
+    const targetId = lockType === "all" ? featureId : lockType === "category" ? selectedCategory : selectedReciter;
     if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
     // localStorage'a yaz (anında)
     setFeatureLock(targetId, featureLock);
     const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
     const label = labelMap[featureLock] ?? featureLock;
+    setLockStatus(`✅ ${targetId} → ${label} uygulandı`);
     notify(`✅ "${targetId}" → ${label} uygulandı`);
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
   };
@@ -203,6 +203,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           <button type="button" onClick={applyLock} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black">
             <Save size={13} /> Kilidi Uygula
           </button>
+          {lockStatus && <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold text-emerald-300">{lockStatus}</p>}
         </div>
       </section>
     </div>
