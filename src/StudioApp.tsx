@@ -380,7 +380,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setJetonCount(adminJeton);
           persistJetonSecure(adminJeton);
           syncUserInDb(email, newUser.name, "elit", adminJeton);
-          notify("🛡️ Google doğrulandı · Kurucu Admin God Mode aktif");
+          notify("🛡️ Google doğrulandı · Kurucu Admin modu aktif");
           return;
         }
 
@@ -558,13 +558,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useEffect(() => {
     if (!isMasterSürüm) return;
     if (consumeTamperFlag()) {
-      notify("🛡️ GOD MODE: Önceki tamper kaydı temizlendi · ban uygulanmadı");
+      notify("🛡️ ADMIN: Önceki güvenlik kaydı temizlendi · ban uygulanmadı");
     }
     setLocalBanned(false);
     secureSet("nur_local_user_banned", false);
     secureSet("nur_local_user_ban_reason", "");
     onTamperDetected((key) => {
-      notify(`🛡️ GOD MODE UYARI: Tamper sinyali yakalandı (${key}) — ban UYGULANMADI, sadece bildirildi.`);
+      notify(`🛡️ ADMIN UYARI: Güvenlik sinyali yakalandı (${key}) — ban uygulanmadı, sadece bildirildi.`);
     });
   }, [isMasterSürüm, notify]);
 
@@ -1891,7 +1891,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       setJetonCount(userJeton);
       persistJetonSecure(userJeton);
       syncUserInDb(email, newUser.name, "elit", userJeton);
-      notify("🛡️ Kurucu Admin Girişi Başarılı! Tüm kilitler açıldı (God Mode).");
+      notify("🛡️ Kurucu Admin girişi başarılı! Tüm kilitler açıldı.");
     } else {
       syncUserInDb(email, newUser.name, userTier, userJeton);
       notify("Giriş başarılı! Hoş geldiniz.");
