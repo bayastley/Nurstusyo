@@ -9,6 +9,7 @@ import { RISK_META } from "../data";
 import { RECITERS } from "../reciters";
 import { T } from "../i18n";
 import { videoMaliyeti, reciterRequiredTier } from "../tier";
+import { getFeatureLock } from "../services/adminSyncService";
 import type { Clip } from "../clips";
 import type { Mode, Aspect, ModalName, Tier } from "../types";
 
@@ -202,8 +203,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 {sortedReciters.filter((item) => item.makam === group).map((item) => {
                   const risk = RISK_META[item.risk];
                   const active = item.id === reciterId;
-                  const requiredTier = reciterRequiredTier(item);
-                  const reciterLocked = !tierAtLeast(accessTier, requiredTier);
+                  const dynamicLock = getFeatureLock(item.id, "free");
+                  const requiredTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : reciterRequiredTier(item);
+                  const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
+                  const reciterLocked = maintenanceLocked || !tierAtLeast(accessTier, requiredTier);
                   const riskPercent = item.telifRiski ?? risk.percent;
                   const riskColor = item.risk === "low" ? "#34d399" : item.risk === "mid" ? "#fbbf24" : "#f87171";
                   return (
@@ -229,7 +232,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                           <span className="text-white/35 truncate">• {item.country}</span>
                         </span>
                       </span>
-                      {reciterLocked && <LockBadge kind={requiredTier === "pro" ? "pro" : "elit"} onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                      {reciterLocked && <LockBadge kind={maintenanceLocked ? "maintenance" : requiredTier === "pro" ? "pro" : "elit"} onUpgrade={() => openPremium("uyelik")} position="top-right" />}
                       <span
                         role="button"
                         title={reciterLocked ? "Üyelik gerekli" : "Ses örneğini çal"}
