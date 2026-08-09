@@ -138,7 +138,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       )}
 
       <div className="mx-auto max-w-[228px]">
-        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); setBackground(randomClip(kind)); }} items={[{ id: "img", label: t("template"), icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+        <Segmented value={clipKind} onChange={(kind) => { if (kind === "img") { return; } setClipKind(kind); setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+        {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">Şablon görseller V2 güncellemesinde açılacak</p>}
       </div>
 
       <div className="grid gap-2.5 sm:grid-cols-2">
