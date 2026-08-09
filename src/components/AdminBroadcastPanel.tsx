@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Bell, LockKeyhole, Save, Send, Trash2 } from "lucide-react";
 import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock } from "../services/adminSyncService";
+import { RECITERS } from "../reciters";
 
 interface AdminBroadcastPanelProps {
   notify: (message: string) => void;
@@ -45,18 +46,7 @@ const CATEGORY_OPTIONS = [
   ["ates", "Ateş"],
 ] as const;
 
-const RECITER_OPTIONS = [
-  ["sudais", "Abdurrahman es-Sudays"],
-  ["shuraim", "Suud es-Sureym"],
-  ["maher", "Maher el-Muaiqly"],
-  ["hudhaify", "Ali el-Hudeyfi"],
-  ["husary", "Mahmud Halil el-Husari"],
-  ["abdulbasit", "Abdulbasit Abdussamed"],
-  ["minshawi", "Muhammed Siddik el-Minsavi"],
-  ["alafasy", "Misari Resid el-Afasi"],
-  ["shatri", "Ebu Bekir es-Satiri"],
-  ["muhaisny", "Muhammed el-Muhaysini"],
-] as const;
+const RECITER_OPTIONS = RECITERS.map((reciter) => [reciter.id, reciter.name] as const);
 
 // Supabase'e direkt REST (service_role değil, anon key + bypass admin)
 function getSupabaseConfig() {
