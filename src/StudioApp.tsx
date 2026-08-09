@@ -50,6 +50,7 @@ import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
 import { AnnouncementBar } from "./components/AnnouncementBar";
+import { SimpleModePanel } from "./components/SimpleModePanel";
 import {
   getCurrentTier, setCurrentTier, tierAtLeast, isFeatureUnlocked, featureLockLabel,
   isAdminEmail, ADMIN_SECRET_PATH, ALLOWED_ADMIN_EMAILS,
@@ -115,6 +116,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [previewDuration, setPreviewDuration] = useState(0);
 
   const [previewMaximized, setPreviewMaximized] = useState(false);
+  const [simpleMode, setSimpleMode] = useState(() => {
+    try { return localStorage.getItem("nur_simple_mode") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("nur_simple_mode", simpleMode ? "1" : "0"); } catch { /* ignore */ }
+  }, [simpleMode]);
   const previewWidth = useMemo(() => {
     // Büyütme efekti scale() ile yapılıyor; genişlik sabit kalır
     return aspect === "9:16" ? 300 : aspect === "4:5" ? 340 : aspect === "1:1" ? 380 : 500;
@@ -181,8 +188,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const [shareTitle, setShareTitle] = useState(() => genTitle());
   const [shareDescription, setShareDescription] = useState(() => genDesc());
-  const [pickedTags] = useState(HASHTAG_POOL.slice(0, 10));
-
   const pickRandomTags = useCallback((count = 14, avoid?: string[]) => {
     const shuffled = [...HASHTAG_POOL].sort(() => Math.random() - 0.5);
     const filtered = avoid?.length ? shuffled.filter((t) => !avoid.includes(t)) : shuffled;
@@ -1801,10 +1806,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [aspect, batchFormats, generating, jetonCount, mode, notify, openPremium, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate]);
 
   const copyShare = useCallback(async () => {
-    const content = `${shareTitle}\n\n${shareDescription}\n\n${pickedTags.join(" ")}`;
+    const content = `${shareTitle}\n\n${shareDescription}`;
     try { await navigator.clipboard.writeText(content); } catch { const textarea = document.createElement("textarea"); textarea.value = content; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
     setCopied(true); window.setTimeout(() => setCopied(false), 1600); notify("Paylaşım metni kopyalandı");
-  }, [notify, pickedTags, shareDescription, shareTitle]);
+  }, [notify, shareDescription, shareTitle]);
 
   const shareOutput = useCallback(async (output: Output) => {
     const promoText = "Bu video nurstudyo.com yapay zeka otomasyonu ile 1 dakikada üretilmiştir. Siz de telifsiz ve sinematik Kur'an videoları üretmek için ziyaret edin!";
@@ -2038,6 +2043,21 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         </div>
         <div className="mx-auto mt-5 h-px w-52 animate-glow" style={{ background: "linear-gradient(90deg,transparent,var(--accent),transparent)" }} />
       </section>
+
+      <SimpleModePanel
+        daily={daily}
+        selectedCount={selected.length}
+        generating={generating}
+        progress={progress}
+        simpleMode={simpleMode}
+        onAddDaily={() => {
+          if (!daily) { notify("Günün ayeti yükleniyor, birazdan tekrar deneyin"); return; }
+          toggleAyah(daily.s, daily.a, daily.tr);
+        }}
+        onRandomAtmosphere={() => randomizeBackgrounds()}
+        onGenerate={handleGenerate}
+        onToggleAdvanced={() => setSimpleMode((value) => !value)}
+      />
 
       {/* MAIN 3 GRID */}
       <main className="mx-auto grid max-w-[1500px] gap-4 px-4 py-6 lg:grid-cols-[300px_280px_1fr]">
