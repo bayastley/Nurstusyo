@@ -15,6 +15,7 @@ import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, ty
 import { KISSAS } from "../data";
 import { T } from "../i18n";
 import { JETON } from "../tier";
+import { getFeatureLock } from "../services/adminSyncService";
 import type { ModalName, LoginTab, Tier } from "../types";
 
 const PRAYERS: Array<[string, string]> = [
@@ -494,14 +495,16 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
           <div className={`grid gap-3 ${clipKind === "img" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}>
             {filteredClips.map((clip) => {
-              const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
+              const dynamicLock = getFeatureLock(clip.cat as string, "free");
+              const catTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : (KATEGORI_TIER[clip.cat as CatId] ?? "free");
               const sameCat = combinedAllClips.filter(c => c.cat === clip.cat && c.kind === clipKind);
               const idx = sameCat.findIndex(c => c.id === clip.id);
-              const catLocked = !tierAtLeast(accessTier, catTier);
+              const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
+              const catLocked = maintenanceLocked || !tierAtLeast(accessTier, catTier);
               const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
               const videoLocked = !catLocked && idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier);
               const locked = catLocked || videoLocked;
-              const lockKind = catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
+              const lockKind = maintenanceLocked ? "maintenance" : catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
               return (
                 <div key={clip.id} className="relative">
                   <AtmosphereCard clip={clip} active={hoveredClip === clip.id} onHover={setHoveredClip} onPick={() => locked ? openPremium("uyelik") : pickClip(clip)} />
