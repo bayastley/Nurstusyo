@@ -395,7 +395,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         />
       )}
 
-      {/* ADMIN DASHBOARD GOD MODE MODAL */}
+      {/* ADMIN DASHBOARD MODAL */}
       {modal === "adminDashboard" && serverAdminVerified && (
         <AdminDashboardModal
           onClose={() => setModal(null)}
@@ -567,14 +567,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* ZIP EXPLORER MODAL */}
       {modal === "zip" && isMasterSürüm && (
-        <Modal title="ZIP Dosya Gezgini" sub="God Mode · V3 geliştirme aracı aktif" onClose={() => setModal(null)} wide>
+        <Modal title="ZIP Dosya Gezgini" sub="Admin · V3 geliştirme aracı aktif" onClose={() => setModal(null)} wide>
           <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} /></div>
         </Modal>
       )}
 
       {/* STORIES MODAL */}
       {modal === "stories" && isMasterSürüm && (
-        <Modal title="Kur'an Kıssaları" sub="God Mode · V2 içerikleri aktif" onClose={() => setModal(null)} wide>
+        <Modal title="Kur'an Kıssaları" sub="Admin · V2 içerikleri aktif" onClose={() => setModal(null)} wide>
           <div className="grid gap-3 sm:grid-cols-2">
             {KISSAS.map((story) => (
               <div key={`${story.s}:${story.a}`} className="rounded-2xl border border-white/10 bg-white/[.03] p-4">
