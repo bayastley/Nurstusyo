@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause,
 } from "lucide-react";
@@ -113,6 +113,13 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   progress,
   t,
 }) => {
+  const [configVersion, setConfigVersion] = useState(0);
+  useEffect(() => {
+    const onUpdate = () => setConfigVersion((v) => v + 1);
+    window.addEventListener("nur_config_updated", onUpdate);
+    return () => window.removeEventListener("nur_config_updated", onUpdate);
+  }, []);
+  void configVersion;
   // Video Üret butonu orta panele taşındı — prop uyumu için korunuyor
   void handleGenerate; void generating; void progress;
   return (
