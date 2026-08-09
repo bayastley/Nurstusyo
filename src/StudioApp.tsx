@@ -1705,6 +1705,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         await new Promise((resolve) => window.setTimeout(resolve, 240));
         // ★ Cihaza göre adaptif FPS/bitrate: kötü cihazlarda donma/kasma azaltılır
         const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
+        // ★ Bazı Chrome/VLC/WebM kombinasyonlarında canvas capture sadece ilk frame'i yazıyor.
+        //   requestFrame destekleniyorsa kayıt boyunca manuel frame pompalıyoruz.
+        const canvasTrack = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
+        const framePump = window.setInterval(() => {
+          try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ }
+        }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
         const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]), mime = pickMime();
         const pxCount = width * height;
         const baseBitrate = pxCount >= 1920 * 1080 ? 24_000_000 : pxCount >= 1080 * 1350 ? 20_000_000 : 16_000_000;
@@ -1735,7 +1741,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             verseIndexRef.current = idx;
           }
         }, 200);
-        const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
+        const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
         const userStop = () => { userStopped = true; finishRecording(); };
         stopGenerationRef.current = userStop;
         safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
@@ -1744,6 +1750,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         recorder.start(1000);
         player.start();
         await stopped;
+        window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
         if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
