@@ -48,33 +48,11 @@ const CATEGORY_OPTIONS = [
 
 const RECITER_OPTIONS = RECITERS.map((reciter) => [reciter.id, reciter.name] as const);
 
-// Supabase'e direkt REST (service_role değil, anon key + bypass admin)
-function getSupabaseConfig() {
-  const url = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-  const key = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_SUPABASE_ANON_KEY ?? "";
-  return { url, key };
-}
-
-async function supabasePost(path: string, body: unknown): Promise<boolean> {
-  const { url, key } = getSupabaseConfig();
-  if (!url || !key) return false;
+async function adminAction(body: unknown): Promise<boolean> {
   try {
-    const res = await fetch(`${url}/rest/v1/${path}`, {
+    const res = await fetch("/api/admin/action", {
       method: "POST",
-      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
-      body: JSON.stringify(body),
-    });
-    return res.ok;
-  } catch { return false; }
-}
-
-async function supabasePatch(path: string, body: unknown): Promise<boolean> {
-  const { url, key } = getSupabaseConfig();
-  if (!url || !key) return false;
-  try {
-    const res = await fetch(`${url}/rest/v1/${path}`, {
-      method: "PATCH",
-      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
     return res.ok;
@@ -119,12 +97,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       requireAck,
     };
     saveAnnouncement(ann);
-    // Supabase'e yaz (tüm kullanıcılara)
-    const ok = await supabasePost("nur_announcements?on_conflict=id", {
-      title: ann.title, message: ann.message, detail: ann.detail, kind: ann.kind,
-      active: true, blinking: ann.blinking, force_open: ann.forceOpen, require_ack: ann.requireAck,
-      starts_at: ann.startsAt, ends_at: ann.endsAt, created_by: "admin",
-    });
+    const ok = await adminAction({ action: "publish_announcement", announcement: ann });
     setSaving(false);
     if (ok) {
       notify("✅ Duyuru tüm kullanıcılara yayınlandı");
@@ -140,8 +113,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     cfg.announcements = [];
     saveSystemConfig(cfg);
     try { localStorage.removeItem("nur_read_announcement"); } catch { /* ignore */ }
-    // Supabase'den de kaldır
-    await supabasePatch("nur_announcements?active=eq.true", { active: false });
+    await adminAction({ action: "clear_all_announcements" });
     notify("🗑️ Tüm duyurular kaldırıldı · Sayfa yenilenince tümünde gider");
   };
 
@@ -152,14 +124,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
     // localStorage'a yaz (anında)
     setFeatureLock(targetId, featureLock);
-    // Supabase'e yaz (tüm kullanıcılara)
-    const ok = await supabasePost("nur_feature_locks?on_conflict=feature_id", {
-      feature_id: targetId,
-      lock_level: featureLock,
-      active: true,
-      updated_by: "admin",
-      updated_at: new Date().toISOString(),
-    });
+    const ok = await adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
     const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
     const label = labelMap[featureLock] ?? featureLock;
     if (ok) {
