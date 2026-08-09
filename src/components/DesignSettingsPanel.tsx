@@ -302,7 +302,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   {locked && <span className="ml-1 text-[7px] text-amber-300">PRO</span>}
                   {!locked && !tierAtLeast(accessTier, "elit") && !hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-amber-300">ELİT</span>}
                   {!tierAtLeast(accessTier, "elit") && hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-emerald-400">24s AÇIK</span>}
-                  {isMasterSürüm && <span className="ml-1 text-[7px] text-emerald-400">GOD</span>}
+                  {isMasterSürüm && <span className="ml-1 text-[7px] text-emerald-400">ADMIN</span>}
                 </button>
               );
             })}
