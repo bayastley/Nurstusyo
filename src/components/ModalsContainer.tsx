@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   X, Hourglass, Shield, Search, FolderUp, Shuffle, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
   Image as ImageIcon, Film, Play,
@@ -238,6 +238,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setLegalTab,
   t,
 }) => {
+  const [configVersion, setConfigVersion] = useState(0);
+  useEffect(() => {
+    const onUpdate = () => setConfigVersion((v) => v + 1);
+    window.addEventListener("nur_config_updated", onUpdate);
+    return () => window.removeEventListener("nur_config_updated", onUpdate);
+  }, []);
+  void configVersion;
   // Sahte e-posta/şifre akışı kaldırıldı; prop'lar eski modal sözleşmesi bozulmasın diye korunuyor.
   void phone; void setPhone; void verifyCode; void setVerifyCode; void sentCode;
   void handleLoginSubmit; void handleRegisterSubmit; void handleForgotPassword; void handleVerifyCode;
