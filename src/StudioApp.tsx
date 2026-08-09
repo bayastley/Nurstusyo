@@ -1687,8 +1687,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }
         getVideoUrl(clip).then((primaryUrl) => {
           const video = ensureVideo(primaryUrl, clip.src);
-          if (video.readyState >= 2 && video.videoWidth > 0) { video.play().catch(() => undefined); resolve(); return; }
-          const done = () => { video.play().catch(() => undefined); resolve(); };
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            try { video.currentTime = 0.05; } catch { /* ignore */ }
+            video.play().catch(() => undefined);
+            resolve();
+            return;
+          }
+          const done = () => {
+            try { video.currentTime = 0.05; } catch { /* ignore */ }
+            video.play().catch(() => undefined);
+            resolve();
+          };
           video.addEventListener("loadeddata", done, { once: true });
           video.addEventListener("canplay", done, { once: true });
           video.addEventListener("error", done, { once: true });
@@ -1697,6 +1706,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           void getPosterUrl(clip).catch(() => undefined);
         }).catch(() => { resolve(); });
       })));
+      // ★ Render öncesi tüm seçili videolara ısınma payı ver.
+      // R2/CDN ilk frame'i geç getirirse ilk ayetler donuk kaydoluyordu.
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
       const formats = batchFormats.length ? batchFormats : [aspect];
       for (let formatIndex = 0; formatIndex < formats.length; formatIndex += 1) {
         const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect; const [width, height] = dimensions(outputAspect); canvas.width = width; canvas.height = height;
@@ -1739,6 +1751,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
             //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
             verseIndexRef.current = idx;
+            const activeClip = renderClips[idx];
+            if (activeClip?.kind === "vid") {
+              try {
+                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), activeClip.src);
+                const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
+                if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
+                  const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));
+                  if (Math.abs(activeVideo.currentTime - nextTime) > 0.75) activeVideo.currentTime = nextTime;
+                }
+                activeVideo.play().catch(() => undefined);
+              } catch { /* ignore */ }
+            }
           }
         }, 200);
         const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
