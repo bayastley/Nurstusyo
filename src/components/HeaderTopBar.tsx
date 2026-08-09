@@ -1,407 +1,470 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette,
-  LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb, Film,
+  Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause,
 } from "lucide-react";
-import { getBanLogs } from "../services/adminSyncService";
-import { LANGS, T, type Lang } from "../i18n";
-import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault } from "../tier";
-import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
-import type { DailyAyah, User, ModalName } from "../types";
+import { SectionTitle, Segmented } from "./UIElements";
+import { LockBadge, LockedOverlay } from "./LockBadge";
+import { getVideoUrlSync, getPosterUrlSync } from "../videoUrl";
+import { RISK_META } from "../data";
+import { RECITERS } from "../reciters";
+import { T } from "../i18n";
+import { videoMaliyeti, reciterRequiredTier } from "../tier";
+import { getFeatureLock } from "../services/adminSyncService";
+import type { Clip } from "../clips";
+import type { Mode, Aspect, ModalName, Tier } from "../types";
 
-interface HeaderTopBarProps {
-  daily: DailyAyah | null;
-  dailyPoolLength: number;
-  dailyIndex: number;
-  toggleAyah: (s: number, a: number, tr?: string) => void;
-  menuOpen: boolean;
-  setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  user: User | null;
-  handleLogout: () => void;
+interface DesignSettingsPanelProps {
+  setPickingFor: (id: string | null) => void;
   setModal: (modal: ModalName) => void;
-  openAdminDashboard: () => void;
-  setLibType: (type: any) => void;
+  background: Clip;
+  combinedAllClipsLength: number;
+  randomizeBackgrounds: () => void;
   isMasterSürüm: boolean;
-  setAdminGodMode: (val: boolean) => void;
-  setSmartAiEnabled: (val: boolean) => void;
-  setBatchFormats: (val: any) => void;
-  notify: (msg: string) => void;
-  jetonCount: number;
+  sortedReciters: typeof RECITERS;
+  reciterId: string;
+  setReciterId: (id: string) => void;
+  accessTier: Tier;
   openPremium: (tab?: "uyelik" | "jeton") => void;
-  lang: Lang;
-  setLang: (lang: Lang) => void;
-  langOpen: boolean;
-  setLangOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  nextPrayer: { name: string; key: string; diff: number } | null;
-  prayerCity: string;
-  formatRemaining: (ms: number) => string;
+  previewReciterId: string | null;
+  playReciterPreview: (id: string) => void;
+  mode: Mode;
+  setMode: (m: Mode) => void;
+  tierAtLeast: (have: Tier, need: Tier) => boolean;
+  tier: Tier;
+  MODES: Array<{ id: Mode; label: string; sub: string; icon: React.ElementType }>;
+  ASPECTS: Array<{ id: Aspect; label: string; sub?: string; icon: React.ElementType }>;
+  aspect: Aspect;
+  setAspect: (a: Aspect) => void;
+  batchFormats: Aspect[];
+  setBatchFormats: React.Dispatch<React.SetStateAction<Aspect[]>>;
+  tryUnlockElitFeature: (key: any, label: string) => boolean;
+  hasMicroUnlock: (key: any) => boolean;
+  arabicFont: string;
+  setArabicFont: (f: string) => void;
+  ARABIC_FONTS: Array<{ id: string; label: string; css: string }>;
+  textSize: "kucuk" | "normal" | "buyuk";
+  setTextSize: (s: "kucuk" | "normal" | "buyuk") => void;
+  shimmerStyle: string;
+  setShimmerStyle: (s: string) => void;
+  SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }>;
+  cardBg: "seffaf" | "koyu";
+  setCardBg: (bg: "seffaf" | "koyu") => void;
+  /** ★ Marka / kanal imzası (Elit + God Mode) — konum seçilebilir */
+  brandSignature: string;
+  setBrandSignature: (v: string) => void;
+  brandPos: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt";
+  setBrandPos: (v: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt") => void;
+  setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
+  CINE_FILTERS: Array<{ id: string; label: string; css: string; tint?: string; tintAlpha?: number }>;
+  cinematic: string;
+  setCinematic: (c: string) => void;
+  handleGenerate: () => void;
+  generating: boolean;
+  progress: number;
   t: (key: keyof (typeof T)["tr"]) => string;
 }
 
-export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
-  daily,
-  dailyPoolLength,
-  dailyIndex,
-  toggleAyah,
-  menuOpen,
-  setMenuOpen,
-  user,
-  handleLogout,
+export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
+  setPickingFor,
   setModal,
-  openAdminDashboard,
-  setLibType,
+  background,
+  combinedAllClipsLength,
+  randomizeBackgrounds,
   isMasterSürüm,
-  setAdminGodMode,
-  setSmartAiEnabled,
-  setBatchFormats,
-  notify,
-  jetonCount,
+  sortedReciters,
+  reciterId,
+  setReciterId,
+  accessTier,
   openPremium,
-  lang,
-  setLang,
-  langOpen,
-  setLangOpen,
-  nextPrayer,
-  prayerCity,
-  formatRemaining,
+  previewReciterId,
+  playReciterPreview,
+  mode,
+  setMode,
+  tierAtLeast,
+  tier,
+  MODES,
+  ASPECTS,
+  aspect,
+  setAspect,
+  batchFormats,
+  setBatchFormats,
+  tryUnlockElitFeature,
+  hasMicroUnlock,
+  arabicFont,
+  setArabicFont,
+  ARABIC_FONTS,
+  textSize,
+  setTextSize,
+  shimmerStyle,
+  setShimmerStyle,
+  SHIMMER_STYLES,
+  cardBg,
+  setCardBg,
+  brandSignature,
+  setBrandSignature,
+  brandPos,
+  setBrandPos,
+  setTextOffset,
+  CINE_FILTERS,
+  cinematic,
+  setCinematic,
+  handleGenerate,
+  generating,
+  progress,
   t,
 }) => {
-  const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
-  const [updatesOpen, setUpdatesOpen] = React.useState(false);
-  const updatesTimer = React.useRef<number>(0);
-
-  // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
-  const [banCount, setBanCount] = React.useState<number>(() => getBanLogs().length);
-  React.useEffect(() => {
-    const iv = window.setInterval(() => setBanCount(getBanLogs().length), 2500);
-    return () => window.clearInterval(iv);
+  const [configVersion, setConfigVersion] = useState(0);
+  useEffect(() => {
+    const onUpdate = () => setConfigVersion((v) => v + 1);
+    window.addEventListener("nur_config_updated", onUpdate);
+    return () => window.removeEventListener("nur_config_updated", onUpdate);
   }, []);
-
-  React.useEffect(() => {
-    fetchRemoteConfig().then((cfg) => {
-      if (cfg?.modules) setDynamicModules(cfg.modules);
-    });
-  }, [menuOpen]);
-
-  React.useEffect(() => {
-    if (!menuOpen) setUpdatesOpen(false);
-  }, [menuOpen]);
-
-  const openUpdates = () => {
-    window.clearTimeout(updatesTimer.current);
-    setUpdatesOpen(true);
-  };
-  const closeUpdatesDelayed = () => {
-    window.clearTimeout(updatesTimer.current);
-    updatesTimer.current = window.setTimeout(() => setUpdatesOpen(false), 220);
-  };
-
+  void configVersion;
+  // Video Üret butonu orta panele taşındı — prop uyumu için korunuyor
+  void handleGenerate; void generating; void progress;
   return (
-    <>
-      {/* DAILY STRIP */}
-      <div className="daily-strip border-b border-white/5">
-        <div className="mx-auto flex max-w-[1500px] items-center gap-2 px-4 py-1.5 text-[10px] text-white/55">
-          <Sparkles size={11} className="animate-glow" style={{ color: "var(--accent)" }} />
-          <span className="shrink-0 font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{t("dailyAyah")}</span>
-
-          {daily ? (
-            <button className="min-w-0 flex-1 truncate text-left transition hover:text-white/80" onClick={() => toggleAyah(daily.s, daily.a, daily.tr)}>
-              <span className="font-arabic hidden text-[13px] text-white/75 sm:inline">{daily.ar.slice(0, 56)}</span>
-              <span className="mx-2 hidden text-white/20 sm:inline">|</span>
-              {daily.tr.slice(0, 120)} <b className="text-white/75">{daily.ref}</b>
+    <section className="space-y-4">
+      {/* Atmosphere Selection */}
+      <div className="glass rounded-2xl p-4">
+        <SectionTitle icon={Sparkles} title={t("atmosphere")} />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => { setPickingFor(null); setModal("atmos"); }}
+            className="group relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-white/10"
+          >
+            {background ? (
+              background.kind === "vid" ? (
+                <video
+                  src={getVideoUrlSync(background)}
+                  poster={getPosterUrlSync(background) ?? background.poster}
+                  muted
+                  loop
+                  playsInline
+                  onError={(e) => { const v = e.currentTarget; if (v.src !== background.src) v.src = background.src; }}
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                />
+              ) : (
+                <img
+                  src={background.src}
+                  alt={background.label}
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                />
+              )
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-white/5">
+                <span className="text-[22px] opacity-60">🌌</span>
+              </div>
+            )}
+            <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-1.5 pt-6 text-left text-[8px] text-white/80">
+              {background?.label ?? "Varsayılan"}
+            </span>
+          </button>
+          <div className="grid flex-1 gap-1.5">
+            <button onClick={() => setModal("atmos")} className="glass-soft rounded-lg px-3 py-2 text-[10px] font-semibold text-white/70">
+              {t("atmoLibrary")} ({combinedAllClipsLength})
             </button>
-          ) : (
-            <span className="text-white/30">{t("loading")}</span>
-          )}
-          <span className="hidden tabular-nums text-white/25 md:inline">{dailyPoolLength ? dailyIndex + 1 : 0}/{dailyPoolLength || "-"}</span>
-        </div>
-      </div>
-
-      {/* HEADER */}
-      <header className="glass sticky top-0 z-[80] border-x-0 border-t-0">
-        <div className="relative mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5">
-          <div className="flex items-center gap-3" data-sidebar-trigger="true">
-            <div className="relative">
-              <button className="glass-soft rounded-lg p-2 text-white/70 hover:text-white" onClick={() => setMenuOpen((value) => !value)}>
-                {menuOpen ? <X size={17} /> : <Menu size={17} />}
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                onClick={() => randomizeBackgrounds()}
+                className="flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold text-black"
+                style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+              >
+                <Shuffle size={11} />{t("randomAll")}
               </button>
-              {menuOpen && (
-                <>
-                  <button className="fixed inset-0 z-40 cursor-default" aria-label="Menüyü kapat" onClick={() => setMenuOpen(false)} />
-                  <div
-                    data-sidebar-panel="true"
-                    className="modal-in absolute left-0 top-12 z-50 w-60 rounded-xl py-1.5 shadow-2xl"
-                    style={{
-                      background: "#101219",
-                      border: "1px solid rgba(255,255,255,.10)",
-                      boxShadow: "0 24px 60px rgba(0,0,0,.75)",
-                    }}
-                  >
-                    <button onClick={() => { setModal("login"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 text-left text-[11px] font-bold text-white transition hover:bg-white/5 border-b border-white/5">
-                      {user ? (
-                        <>
-                          <LogIn size={14} style={{ color: "var(--accent)" }} />
-                          <span className="flex-1 truncate">{user.name}</span>
-                          <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="text-[9px] text-red-400 hover:text-red-300">Çıkış</button>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={14} style={{ color: "var(--accent)" }} />
-                          <span>Kayıt Ol / Giriş Yap</span>
-                        </>
-                      )}
-                    </button>
-                    {[
-                      { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                    ].map((item) => (
-                      <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                        <item.icon size={14} style={{ color: "var(--accent)" }} />
-                        {item.label}
-                      </button>
-                    ))}
-
-                    {/* ★ GÜNCELLEMELER — hover/tıkla ile sağa açılan kilitli modül paneli */}
-                    <div
-                      className="relative"
-                      onMouseEnter={openUpdates}
-                      onMouseLeave={closeUpdatesDelayed}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setUpdatesOpen((v) => !v)}
-                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] transition hover:bg-white/5 ${updatesOpen ? "bg-white/5 text-white" : "text-white/65 hover:text-white"}`}
-                      >
-                        <Sparkles size={14} style={{ color: "var(--accent)" }} />
-                        <span className="flex-1">Güncellemeler</span>
-                        <span className="flex items-center gap-1">
-                          <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[7.5px] font-black text-amber-300">
-                            {dynamicModules.filter((m) => m.active && m.lock !== "free").length + 1}
-                          </span>
-                          <ChevronDown size={11} className="-rotate-90 opacity-60" />
-                        </span>
-                      </button>
-
-                      {updatesOpen && (
-                        <div
-                          onMouseEnter={openUpdates}
-                          onMouseLeave={closeUpdatesDelayed}
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          className="modal-in absolute left-[calc(100%+8px)] top-0 z-[70] w-60 overflow-hidden rounded-xl py-1.5 shadow-2xl"
-                          style={{
-                            background: "#101219",
-                            border: "1px solid rgba(215,170,82,.35)",
-                            boxShadow: "0 24px 60px rgba(0,0,0,.8)",
-                          }}
-                        >
-                          <div className="border-b border-white/5 px-3 pb-2 pt-1">
-                            <p className="text-[9.5px] font-black uppercase tracking-widest" style={{ color: "var(--accent-2)" }}>
-                              Yakında Gelecek Modüller
-                            </p>
-                            <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi</p>
-                          </div>
-
-                          {/* ★ Ayet & Dua Kütüphanesi — V2 kilidiyle Güncellemeler panelinde */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isMasterSürüm) return;
-                                setModal("library");
-                                setUpdatesOpen(false);
-                                setMenuOpen(false);
-                              }}
-                              className={`relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] transition hover:bg-white/5 ${
-                                isMasterSürüm ? "text-white/85 font-medium" : "text-white/50"
-                              }`}
-                            >
-                              <BookOpen size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                              <span className="min-w-0 flex-1 truncate">Ayet & Dua Kütüphanesi</span>
-                            </button>
-                            {!isMasterSürüm && (
-                              <LockBadge kind="v2" position="top-right" tooltipText="V2 Güncellemesi Yakında" />
-                            )}
-                          </div>
-
-                          {dynamicModules.filter((m) => m.active).map((item) => {
-                            const IconComponent = item.iconName === "Sparkles" ? Sparkles : item.iconName === "LibraryBig" ? LibraryBig : item.iconName === "Heart" ? Heart : BookOpen;
-                            const isUnlocked = item.lock === "free" || isMasterSürüm;
-                            return (
-                              <div key={item.id} className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!isUnlocked) return;
-                                    if (item.category === "hadis") { setLibType("hadis"); setModal("library"); }
-                                    else if (item.category === "dua") { setLibType("dua"); setModal("library"); }
-                                    else setModal("stories");
-                                    setUpdatesOpen(false);
-                                    setMenuOpen(false);
-                                  }}
-                                  className={`relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] transition hover:bg-white/5 ${
-                                    isUnlocked ? "text-white/85 font-medium" : "text-white/50"
-                                  }`}
-                                >
-                                  <IconComponent size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                                  <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                                </button>
-                                {!isUnlocked && (
-                                  <LockBadge
-                                    kind={item.lock === "v2" || item.lock === "v3" ? item.lock : item.lock === "pro" ? "pro" : "elit"}
-                                    position="top-right"
-                                    tooltipText={`${item.lock.toUpperCase()} Güncellemesi Yakında`}
-                                  />
-                                )}
-                              </div>
-                            );
-                          })}
-
-                          <div className="relative border-t border-white/5">
-                            <button
-                              type="button"
-                              className="relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] text-white/40 cursor-not-allowed"
-                            >
-                              <Shield size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                              <span className="min-w-0 flex-1 truncate">Kurumsal Üyelik & Ajans</span>
-                            </button>
-                            <LockBadge kind="v3" position="top-right" tooltipText="V3 · Kurumsal Paketler Yakında" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                      <HelpCircle size={14} style={{ color: "var(--accent)" }} />
-                      {t("menuSuggest")} / {t("menuComplaint")}
-                    </button>
-                    {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
-                      <button onClick={() => { openAdminDashboard(); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] font-bold text-amber-300 transition hover:bg-white/5">
-                        <Shield size={14} className="text-amber-400" />
-                        <span>Admin Yönetim Paneli</span>
-                      </button>
-                    )}
-                    <div className="mt-1 border-t border-white/5 px-4 py-2.5">
-                      <button
-                        onClick={() => { openPremium("uyelik"); setMenuOpen(false); }}
-                        className="flex w-full items-center gap-2 rounded-xl py-2 px-1 text-left text-[11px] font-bold text-[color:var(--accent-2)] transition hover:bg-white/5 hover:text-white"
-                      >
-                        <Gem size={14} style={{ color: "var(--accent)" }} />
-                        <span>{t("premium")}</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
+              {isMasterSürüm ? (
+                <button type="button" onClick={() => setModal("zip")} className="glass-soft flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold text-white/70">
+                  <FolderUp size={11} /> ZIP / Image
+                </button>
+              ) : (
+                <span className="relative flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold glass-soft text-white/30 cursor-not-allowed">
+                  <FolderUp size={11} /> ZIP / Image
+                  <LockBadge kind="v3" position="top-right" tooltipText="V3 Güncellemesi Yakında" />
+                </span>
               )}
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="absolute left-[68px] flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <img src="/logo.png" alt="Nûr Stüdyo Logo" className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
-            <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
-            <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
-          </div>
+      {/* Reciter Selection */}
+      <div className="glass rounded-2xl p-4">
+        <SectionTitle icon={Zap} title="⚡ HOCA / TİLAVET" />
+        <div className="mb-3 flex items-center justify-center gap-3 text-[8px] font-bold uppercase tracking-wider">
+          {(["low", "mid", "high"] as const).map((risk) => {
+            const c = risk === "low" ? "#34d399" : risk === "mid" ? "#fbbf24" : "#f87171";
+            return (
+              <span key={risk} className="flex items-center gap-1" style={{ color: c }}>
+                <span className="h-2 w-2 rounded-full" style={{ background: c }} />
+                {risk === "low" ? "Düşük" : risk === "mid" ? "Orta" : "Yüksek"}
+              </span>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          {(["Haram", "Telif"] as const).map((group) => (
+            <div key={group} className="max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+              <p className="mb-1.5 flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-white/30">
+                {group === "Haram" ? "KÂBE İMAMLARI" : "TELİF KÂRİLER"} <ChevronDown size={9} className="-rotate-90" />
+              </p>
+              <div className="space-y-0.5">
+                {sortedReciters.filter((item) => item.makam === group).map((item) => {
+                  const risk = RISK_META[item.risk];
+                  const active = item.id === reciterId;
+                  const dynamicLock = getFeatureLock(item.id, "free");
+                  const requiredTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : reciterRequiredTier(item);
+                  const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
+                  const reciterLocked = maintenanceLocked || !tierAtLeast(accessTier, requiredTier);
+                  const riskPercent = item.telifRiski ?? risk.percent;
+                  const riskColor = item.risk === "low" ? "#34d399" : item.risk === "mid" ? "#fbbf24" : "#f87171";
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => { if (reciterLocked) { openPremium("uyelik"); return; } setReciterId(item.id); }}
+                      className={`group relative flex w-full items-center gap-2 rounded-lg px-1.5 py-1 text-left transition ${
+                        active ? "bg-white/[.07] ring-1 ring-[color:var(--accent)]" : reciterLocked ? "opacity-45 hover:bg-white/[.04]" : "hover:bg-white/[.04]"
+                      }`}
+                    >
+                      <span className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-black shadow-inner" style={{ background: `linear-gradient(135deg,${item.color},#fff)` }}>
+                        {item.initial}
+                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-[#0c0d12]" style={{ background: riskColor }} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[9.5px] font-bold text-white/90 leading-tight">
+                          {item.name}
+                          {item.surahPattern && <span className="ml-1 rounded bg-white/10 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-white/50" title="Bu hocada sadece tam sure kaydı mevcut, ayet ayet tilavet yok">Tam Sure</span>}
+                        </span>
+                        <span className="mt-0.5 flex items-center gap-1 truncate text-[7.5px] leading-tight">
+                          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: riskColor }} />
+                          <span className="font-bold shrink-0" style={{ color: riskColor }}>{risk.label} %{riskPercent}</span>
+                          <span className="text-white/35 truncate">• {item.country}</span>
+                        </span>
+                      </span>
+                      {reciterLocked && <LockBadge kind={maintenanceLocked ? "maintenance" : requiredTier === "pro" ? "pro" : "elit"} onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                      <span
+                        role="button"
+                        title={reciterLocked ? "Üyelik gerekli" : "Ses örneğini çal"}
+                        className={`rounded-full p-1 shrink-0 transition ${previewReciterId === item.id ? "text-black bg-[color:var(--accent)]" : "bg-white/10 text-white/70 opacity-70 group-hover:opacity-100 group-hover:bg-white/20"}`}
+                        onClick={(event) => { event.stopPropagation(); if (reciterLocked) openPremium("uyelik"); else playReciterPreview(item.id); }}
+                      >
+                        {previewReciterId === item.id ? <Pause size={8} /> : <Play size={8} />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setModal("guide")}
-              className="hidden items-center gap-1.5 rounded-full border border-[color:var(--accent)]/40 bg-white/[0.05] px-3 py-1.5 text-[9.5px] font-bold text-[color:var(--accent-2)] transition hover:scale-105 hover:bg-white/10 active:scale-95 md:flex cursor-pointer"
-              title="Eğitim ve kullanım rehberi videosunu izleyin"
-            >
-              <Film size={11} style={{ color: "var(--accent)" }} /> Nasıl Kullanılır? (İzle/Öğren)
-            </button>
-            {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
-              <>
-                <button
-                  type="button"
-                  onClick={openAdminDashboard}
-                  className="hidden items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[9.5px] font-black text-amber-300 shadow-lg transition hover:scale-105 active:scale-95 sm:flex"
-                  title="Admin Yönetim Paneli"
-                >
-                  <Shield size={11} className="text-amber-400" /> ADMIN PANEL
-                </button>
-                {banCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={openAdminDashboard}
-                    className="relative flex h-7 w-7 items-center justify-center rounded-full bg-red-500/20 border border-red-500/40 text-red-300 shadow-lg transition hover:scale-110 active:scale-95"
-                    title={`${banCount} Siber Denetim / Ban Kaydı — Tıkla, incele ve gerekirse banı kaldır`}
-                  >
-                    <Lightbulb size={13} className="animate-pulse text-amber-300" fill="currentColor" />
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-600 text-[7.5px] font-black text-white ring-1 ring-black">
-                      {banCount}
-                    </span>
-                  </button>
-                )}
-              </>
-            )}
-            {isMasterSürüm && (
-              <button
-                type="button"
-                onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); }}
-                className="hidden items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300 transition hover:bg-emerald-500/20 sm:flex"
-                title="Admin modunu kapat"
-              >
-                <Shield size={10} /> ADMIN · ÇIKIŞ
-              </button>
-            )}
-            {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) */}
-            {(() => {
-              const vault = getJetonVault();
+      {/* Duration & Format */}
+      <div className="glass grid gap-4 rounded-2xl p-4 xl:grid-cols-2">
+        <div>
+          <SectionTitle icon={Clock} title={t("mode")} />
+          <Segmented
+            value={mode}
+            onChange={setMode}
+            items={MODES.map((item) => ({
+              ...item,
+              label: item.id === "short" ? t("modeShort") : item.id === "long" ? t("modeLong") : t("modeFull"),
+              sub: `${item.sub} · ${videoMaliyeti(item.id, tier)} jeton`,
+            }))}
+          />
+        </div>
+        <div>
+          <SectionTitle icon={Smartphone} title={t("format")} />
+          <Segmented
+            value={aspect}
+            onChange={setAspect}
+            isLocked={(id) => id !== "9:16" && !tierAtLeast(accessTier, "pro")}
+            onLocked={() => openPremium("uyelik")}
+            lockLabel={() => "Pro Üyelik Gerekir"}
+            items={ASPECTS}
+          />
+          <div className="mt-2 flex gap-1">
+            {(["9:16", "1:1", "16:9", "4:5"] as Aspect[]).map((item) => {
+              const active = batchFormats.includes(item);
+              const locked = item !== "9:16" && !tierAtLeast(accessTier, "pro");
               return (
                 <button
-                  onClick={() => openPremium("jeton")}
-                  className="glass-soft group relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tabular-nums transition hover:scale-105 sm:flex cursor-pointer"
-                  style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.3)" }}
-                  title={`Toplam Bakiyeniz: ${jetonCount} Jeton (${vault.purchasedJeton} Satın Alınan + ${vault.subJeton} Günlük Hak)`}
+                  key={item}
+                  onClick={() => {
+                    if (locked) { openPremium("uyelik"); return; }
+                    if (!active && batchFormats.length >= 1 && !tierAtLeast(accessTier, "elit")) {
+                      if (!tryUnlockElitFeature("batch", "Toplu Üretim")) return;
+                    }
+                    setBatchFormats((current) => active ? current.filter((entry) => entry !== item) : [...current, item]);
+                  }}
+                  className={`relative flex-1 rounded-lg py-1 text-[8px] font-bold transition ${active ? "text-black" : "glass-soft text-white/35"}`}
+                  style={active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
                 >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                    <Coins size={9} className="text-black" strokeWidth={3} />
-                  </span>
-                  <span className="transition-all group-hover:text-white">
-                    {isMasterSürüm || jetonCount >= 999999 ? "♾️ SINIRSIZ" : jetonCount}
-                  </span>
-                  {!(isMasterSürüm || jetonCount >= 999999) && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">jeton</span>
-                  )}
+                  {item}
+                  {locked && <span className="ml-1 text-[7px] text-amber-300">PRO</span>}
+                  {!locked && !tierAtLeast(accessTier, "elit") && !hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-amber-300">ELİT</span>}
+                  {!tierAtLeast(accessTier, "elit") && hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-emerald-400">24s AÇIK</span>}
+                  {isMasterSürüm && <span className="ml-1 text-[7px] text-emerald-400">ADMIN</span>}
                 </button>
               );
-            })()}
-            {/* ★ PREMIUM */}
-            <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />Premium
-            </button>
-            <div className="relative">
-              <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>
-                {LANGS.find((item) => item.code === lang)?.flag}<ChevronDown size={10} />
-              </button>
-              {langOpen ? (
-                <div className="glass modal-in absolute right-0 top-10 z-50 w-40 rounded-xl p-1.5 shadow-2xl">
-                  {LANGS.map((item) => (
-                    <button key={item.code} onClick={() => { setLang(item.code); setLangOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] text-white/65 hover:bg-white/5">
-                      <span>{item.flag}</span>
-                      <span className="flex-1">{item.label}</span>
-                      {item.code === lang ? <Check size={11} style={{ color: "var(--accent)" }} /> : null}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            {/* ★ HEDİYE KODU */}
-            <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
-              <span>🎁</span>Hediye Kodu
-            </span>
-            <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
-                <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <Moon size={11} />
-              <span className="hidden sm:inline">{nextPrayer ? `${nextPrayer.name} ${formatRemaining(nextPrayer.diff)}` : prayerCity}</span>
-            </button>
+            })}
+          </div>
+          <div className="mt-1.5 text-center text-[8px] text-white/30">
+            Üç formatı aynı anda indirme: <span className="font-black text-amber-300">ELİT</span> ya da {videoMaliyeti("short", tier)} jetonla 24 saatlik açma
           </div>
         </div>
-      </header>
-    </>
+      </div>
+
+      {/* Typography & Design + Cinematic Filter */}
+      <div className="grid gap-3 md:grid-cols-2">
+        {/* Typography (Elit) */}
+        <div className="glass relative rounded-2xl p-3">
+          <div className="flex items-center justify-between mb-2 border-b border-white/5 pb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md" style={{ background: "rgba(255,255,255,.05)", color: "var(--accent)" }}>
+                <Palette size={11} />
+              </span>
+              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">Yazı & Tasarım</h2>
+            </div>
+            {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>ELİT</span>}
+          </div>
+          {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}
+          <div className="relative">
+          <div className="grid grid-cols-2 gap-1.5">
+            <label className="block">
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Arapça Font</span>
+              <select value={arabicFont} onChange={(e) => setArabicFont(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
+                {ARABIC_FONTS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Boyutu</span>
+              <select value={textSize} onChange={(e) => setTextSize(e.target.value as typeof textSize)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
+                <option value="kucuk">Küçük</option>
+                <option value="normal">Normal</option>
+                <option value="buyuk">Büyük (Önerilen)</option>
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Işıltısı</span>
+              <select value={shimmerStyle} onChange={(e) => setShimmerStyle(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
+                {SHIMMER_STYLES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Kart Arka Planı</span>
+              <select value={cardBg} onChange={(e) => setCardBg(e.target.value as typeof cardBg)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
+                <option value="seffaf">Şeffaf</option>
+                <option value="koyu">Koyu Kart</option>
+              </select>
+            </label>
+          </div>
+
+          {/* ★ MARKA / KANAL İMZASI — Elit üyeler + God Mode · konum seçilebilir */}
+          {(isMasterSürüm || tierAtLeast(accessTier, "elit")) && (
+            <div className="mt-2 space-y-1.5">
+              <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider text-amber-300">
+                🛡️ Marka / Kanal İmzanız
+                <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[6.5px] font-black text-amber-300">
+                  {isMasterSürüm ? "ADMİN" : "ELİT"}
+                </span>
+              </span>
+              <input
+                value={brandSignature}
+                onChange={(e) => setBrandSignature(e.target.value)}
+                maxLength={28}
+                placeholder="@nurstudyo"
+                className="glass-soft w-full rounded-lg px-2 py-1.5 text-[10px] font-bold text-white outline-none focus:border-[color:var(--accent)]"
+              />
+
+              <span className="block text-[8px] font-bold uppercase tracking-wider text-white/45">
+                İmza Konumu
+              </span>
+              <div className="grid grid-cols-2 gap-1">
+                {([
+                  { id: "sol-ust", label: "↖ Sol Üst" },
+                  { id: "sag-ust", label: "↗ Sağ Üst" },
+                  { id: "sol-alt", label: "↙ Sol Alt" },
+                  { id: "sag-alt", label: "↘ Sağ Alt" },
+                ] as const).map((pos) => (
+                  <button
+                    key={pos.id}
+                    type="button"
+                    onClick={() => setBrandPos(pos.id)}
+                    className={`rounded-lg px-2 py-1.5 text-[9px] font-bold transition ${
+                      brandPos === pos.id
+                        ? "text-black shadow-md"
+                        : "glass-soft text-white/50 hover:text-white/80"
+                    }`}
+                    style={brandPos === pos.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+                  >
+                    {pos.label}
+                  </button>
+                ))}
+              </div>
+              <span className="block text-[8px] leading-relaxed text-white/35">
+                Altın renkte görünür · <b className="text-white/50">Sol Üst</b> önerilir (meal yazısıyla çakışmaz) · boş bırakılırsa gizlenir
+              </span>
+            </div>
+          )}
+          {/* Metin konum pedi */}
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/45">Metin Konumu</span>
+            <div className="grid grid-cols-3 gap-0.5">
+              <span />
+              <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} aria-label="Yukarı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-180" /></button>
+              <span />
+              <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-40, o.x - 5) }))} aria-label="Sola" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-90" /></button>
+              <button onClick={() => setTextOffset({ x: 0, y: 0 })} aria-label="Sıfırla" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-[8px] font-black text-[color:var(--accent)] hover:brightness-125">⟲</button>
+              <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(40, o.x + 5) }))} aria-label="Sağa" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="-rotate-90" /></button>
+              <span />
+              <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} aria-label="Aşağı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} /></button>
+              <span />
+            </div>
+          </div>
+          {!tierAtLeast(accessTier, "elit") && (
+            <LockedOverlay kind="elit" onUpgrade={() => openPremium("uyelik")} rounded="rounded-xl" />
+          )}
+          </div>
+        </div>
+
+        {/* Cinematic Filter (Pro) */}
+        <div className="glass relative rounded-2xl p-3">
+          <div className="flex items-center justify-between mb-2 border-b border-white/5 pb-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="flex h-5 w-5 items-center justify-center rounded-md" style={{ background: "rgba(255,255,255,.05)", color: "var(--accent)" }}>
+                <Wand2 size={11} />
+              </span>
+              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">Sinematik Filtre</h2>
+            </div>
+            {!tierAtLeast(accessTier, "pro") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>PRO</span>}
+          </div>
+          {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}
+          <div className="relative">
+          <div className="grid grid-cols-2 gap-1">
+            {CINE_FILTERS.map((f) => {
+              const on = cinematic === f.id;
+              return (
+                <button
+                  key={f.id}
+                  onClick={() => setCinematic(f.id)}
+                  className={`relative overflow-hidden rounded-lg border px-2 py-1.5 text-left text-[9px] font-bold transition-all duration-200 ${
+                    on ? "border-[color:var(--accent)] text-[color:var(--accent-2)] shadow-md" : "glass-soft text-white/60 hover:text-white hover:border-white/25"
+                  }`}
+                  style={on ? { background: `linear-gradient(135deg, ${f.tint ?? "#3a2c10"}55, rgba(12,13,18,.6))` } : undefined}
+                >
+                  <span className="relative z-10 block truncate">{f.label}</span>
+                  {on && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full animate-glow" style={{ background: "var(--accent)" }} />}
+                </button>
+              );
+            })}
+          </div>
+          {!tierAtLeast(accessTier, "pro") && (
+            <LockedOverlay kind="pro" onUpgrade={() => openPremium("uyelik")} rounded="rounded-xl" />
+          )}
+          </div>
+        </div>
+      </div>
+
+      {/* ★ Video Üret butonu, Akıllı AI'nin altına (orta panele) taşındı */}
+    </section>
   );
 };
