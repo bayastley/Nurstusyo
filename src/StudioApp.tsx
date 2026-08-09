@@ -136,26 +136,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     };
   }, []);
 
-  const ARABIC_FONTS: Array<{ id: string; label: string; css: string }> = [
-    { id: "amiri", label: "Amiri (Klasik Hat)", css: "Amiri, serif" },
-    { id: "scheherazade", label: "Scheherazade (Kur'an)", css: "'Scheherazade New', serif" },
-    { id: "lateef", label: "Lateef (İnce Zarif)", css: "Lateef, serif" },
-    { id: "reemkufi", label: "Reem Kufi (Modern)", css: "'Reem Kufi', sans-serif" },
-    { id: "arefruqaa", label: "Aref Ruqaa (Rika Hat)", css: "'Aref Ruqaa', serif" },
-  ];
+  const ARABIC_FONTS = _ARABIC_FONTS;
   const [arabicFont, setArabicFont] = useState("amiri");
   const [textSize, setTextSize] = useState<"kucuk" | "normal" | "buyuk">("buyuk");
 
-  const SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }> = [
-    { id: "altin", label: "Altın Işıltı", c1: "#f5dda6", c2: "#d7aa52", glow: "rgba(215,170,82,.55)" },
-    { id: "gumus", label: "Gümüş Işıltı", c1: "#f1f5f9", c2: "#94a3b8", glow: "rgba(203,213,225,.5)" },
-    { id: "zumrut", label: "Zümrüt Işıltı", c1: "#a7f3d0", c2: "#10b981", glow: "rgba(16,185,129,.55)" },
-    { id: "safir", label: "Safir Işıltı", c1: "#bfdbfe", c2: "#3b82f6", glow: "rgba(59,130,246,.55)" },
-    { id: "yakut", label: "Yakut Işıltı", c1: "#fecaca", c2: "#ef4444", glow: "rgba(239,68,68,.55)" },
-    { id: "ametist", label: "Ametist Işıltı", c1: "#e9d5ff", c2: "#a855f7", glow: "rgba(168,85,247,.55)" },
-    { id: "gulkurusu", label: "Gül Kurusu Işıltı", c1: "#fecdd3", c2: "#e11d48", glow: "rgba(225,29,72,.5)" },
-    { id: "duz", label: "Düz Beyaz (Işıltısız)", c1: "#ffffff", c2: "#ffffff", glow: "rgba(255,255,255,.35)", still: true },
-  ];
+  const SHIMMER_STYLES = _SHIMMER_STYLES;
   const [shimmerStyle, setShimmerStyle] = useState("altin");
   const shimmerCfg = SHIMMER_STYLES.find((s) => s.id === shimmerStyle) ?? SHIMMER_STYLES[0];
   const [cardBg, setCardBg] = useState<"seffaf" | "koyu">("seffaf");
@@ -177,16 +162,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const arabicFontCss = ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif";
   const textSizeMul = textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1;
 
-  const CINE_FILTERS: Array<{ id: string; label: string; css: string; tint?: string; tintAlpha?: number }> = [
-    { id: "orijinal", label: "Orijinal", css: "none" },
-    { id: "nur", label: "Nur (Sıcak Altın)", css: "sepia(.28) saturate(1.35) brightness(1.06) contrast(1.05)", tint: "#d7aa52", tintAlpha: 0.10 },
-    { id: "huzur", label: "Huzur (Sinematik)", css: "saturate(.88) brightness(.96) contrast(1.12)", tint: "#1a4a52", tintAlpha: 0.14 },
-    { id: "gece", label: "Gece (Koyu Mavi)", css: "brightness(.82) saturate(.85)", tint: "#0a1430", tintAlpha: 0.22 },
-    { id: "zumrut", label: "Zümrüt", css: "saturate(1.25) contrast(1.05)", tint: "#0a3d2a", tintAlpha: 0.16 },
-    { id: "altinsaat", label: "Altın Saat", css: "sepia(.42) saturate(1.45) brightness(1.08)", tint: "#ff9048", tintAlpha: 0.10 },
-    { id: "kabe", label: "Kâbe Vurgulu", css: "contrast(1.18) saturate(1.1) sepia(.12)", tint: "#d7aa52", tintAlpha: 0.06 },
-    { id: "siyahbeyaz", label: "Siyah Beyaz", css: "grayscale(1) contrast(1.12) brightness(.98)" },
-  ];
+  const CINE_FILTERS = _CINE_FILTERS;
   const [cinematic, setCinematic] = useState("orijinal");
   const cineFilter = CINE_FILTERS.find((f) => f.id === cinematic) ?? CINE_FILTERS[0];
 
