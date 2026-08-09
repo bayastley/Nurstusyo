@@ -91,13 +91,15 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
     return () => { alive = false; };
   }, [clip, nearViewport]);
 
-  // Load only enough video data to show a real first frame when the card nears the viewport.
+  // ★ Performans: Galeride onlarca video aynı anda yüklenirse Chrome bellek/CPU şişer.
+  //   Bu yüzden video dosyasını sadece kullanıcı kartın üstüne geldiğinde alıyoruz.
+  //   Normal durumda sadece küçük poster/procedural görsel gösterilir.
   useEffect(() => {
-    if (!nearViewport || clip.kind !== "vid") return;
+    if (!nearViewport || clip.kind !== "vid" || !hovered) return;
     let alive = true;
     getVideoUrl(clip).then((url) => { if (alive) setVideoUrl(url); }).catch(() => setVideoFailed(true));
     return () => { alive = false; };
-  }, [clip, nearViewport]);
+  }, [clip, nearViewport, hovered]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -167,7 +169,7 @@ export const AtmosphereCard: React.FC<AtmosphereCardProps> = ({ clip, active, on
           muted
           loop
           playsInline
-          preload="auto"
+          preload="metadata"
           onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
           onError={() => setVideoFailed(true)}
