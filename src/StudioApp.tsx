@@ -130,9 +130,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return {
       low,
       previewFps: mobile ? 20 : low ? 24 : mid ? 30 : 30, // Mobilde daha düşük FPS
-      renderFps: mobile ? 24 : low ? 30 : mid ? 45 : 60,
-      bitrateScale: mobile ? 0.35 : low ? 0.48 : mid ? 0.72 : 1, // Mobilde daha düşük bitrate
-      audioBitrate: mobile ? 128_000 : low ? 160_000 : 256_000,
+      // ★ Daha stabil render: 60fps/24Mbps WebM bazı cihazlarda donuk video üretir.
+      renderFps: mobile ? 20 : low ? 24 : mid ? 30 : 30,
+      bitrateScale: mobile ? 0.28 : low ? 0.38 : mid ? 0.55 : 0.62,
+      audioBitrate: mobile ? 96_000 : low ? 128_000 : 160_000,
     };
   }, []);
 
@@ -1731,7 +1732,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }, 200);
         const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
         const userStop = () => { userStopped = true; finishRecording(); };
-        stopGenerationRef.current = userStop; safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750); player.onended = finishRecording; recorder.start(); player.start(); await stopped;
+        stopGenerationRef.current = userStop;
+        safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
+        player.onended = finishRecording;
+        // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
+        recorder.start(1000);
+        player.start();
+        await stopped;
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
         if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
