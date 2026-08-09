@@ -444,7 +444,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         <Modal title={t("atmoLibrary")} sub={pickingFor ? `${t("pickForAyah")}: ${pickingFor}` : t("hoverPreview")} onClose={() => { setModal(null); setPickingFor(null); }} wide>
           <div className="mb-3 flex flex-wrap gap-2">
             <div className="w-44">
-              <Segmented value={clipKind} onChange={(kind) => { if (kind === "img") return; setClipKind(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+              <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm) return; setClipKind(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
             </div>
             <div className="relative min-w-48 flex-1">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
