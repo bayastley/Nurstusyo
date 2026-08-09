@@ -290,7 +290,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-base font-black tracking-wider text-white">
-                  ADMIN GOD MODE YÖNETİM PANELİ
+                  ADMIN YÖNETİM PANELİ
                 </h3>
                 <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 text-[8px] font-black text-emerald-300">
                   ŞİFRELİ KORUMALI
