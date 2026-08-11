@@ -8,7 +8,38 @@ import { LANGS, T, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault } from "../tier";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
-import type { DailyAyah, User, ModalName } from "../types";
+export interface DailyAyah {
+  s: number;
+  a: number;
+  tr: string;
+  ar: string;
+  ref: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  fullName?: string;
+  name?: string;
+  premium?: boolean;
+}
+
+export type ModalName = 
+  | "login" 
+  | "register" 
+  | "forgot" 
+  | "guide" 
+  | "themes" 
+  | "suggest" 
+  | "complaint" 
+  | "legal" 
+  | "library" 
+  | "stories" 
+  | "contact" 
+  | "prayer" 
+  | null;
+
+
 
 interface HeaderTopBarProps {
   daily: DailyAyah | null;
