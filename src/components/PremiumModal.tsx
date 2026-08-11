@@ -4,7 +4,6 @@ import {
   Gem,
   Crown,
   Check,
-  Sparkles,
   Coins,
   Star,
   Wallet,
@@ -31,7 +30,7 @@ interface PremiumModalProps {
 
 export const PremiumModal: React.FC<PremiumModalProps> = ({
   onClose,
-  initialTab = "uyelik",
+  initialTab = "jeton",
   currentTier = "free",
   onPurchase,
   onTokenPurchase,
@@ -39,9 +38,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 }) => {
   const copy = getPaymentCopy(lang);
   const proFeatures = Array.isArray(copy.proFeatures) ? copy.proFeatures : [];
-  const elitFeatures = Array.isArray(copy.elitFeatures)
-    ? copy.elitFeatures
-    : [];
+  const elitFeatures = Array.isArray(copy.elitFeatures) ? copy.elitFeatures : [];
   const packageLabels = Array.isArray(copy.packageLabels)
     ? copy.packageLabels
     : [];
@@ -101,7 +98,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       setJetonState(getJeton());
       onTokenPurchase?.(paket.jeton);
       setProcessing(null);
-      showToast(`+${paket.jeton} hizmet hakkı yüklendi (demo)`);
+      showToast(`+${paket.jeton} ⚡ Enerji yüklendi (demo)`);
     }, 700);
   };
 
@@ -112,16 +109,17 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="glass modal-in relative flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl shadow-2xl"
+        className="glass modal-in relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl shadow-2xl"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        style={{ border: "1px solid rgba(215,170,82,.25)" }}
+        style={{ border: "1px solid rgba(215,170,82,.28)" }}
       >
+        {/* Üst başlık */}
         <div
-          className="relative h-24 shrink-0 overflow-hidden"
+          className="relative shrink-0 overflow-hidden px-6 pb-4 pt-8"
           style={{
             background:
-              "radial-gradient(ellipse at 20% 0%, rgba(215,170,82,.28), transparent 55%), radial-gradient(ellipse at 80% 0%, rgba(245,221,166,.22), transparent 55%), linear-gradient(180deg, #1a1408 0%, #0c0d12 100%)",
+              "radial-gradient(ellipse at 50% 0%, rgba(215,170,82,.2), transparent 60%), linear-gradient(180deg, #14110a 0%, #0c0d12 100%)",
           }}
         >
           <button
@@ -146,69 +144,76 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             </span>
           </div>
 
-          <div className="relative flex h-full flex-col items-center justify-center px-6 text-center">
-            <div className="flex items-center gap-2 text-[9px] font-bold tracking-[0.28em] text-white/50">
-              <span
-                className="h-px w-8"
-                style={{
-                  background: "linear-gradient(90deg,transparent,var(--accent))",
-                }}
-              />
-              NÛR STÜDYO
-              <span
-                className="h-px w-8"
-                style={{
-                  background: "linear-gradient(90deg,var(--accent),transparent)",
-                }}
-              />
-            </div>
-            <h2
-              className="mt-1 font-display text-2xl font-black tracking-[.08em] md:text-3xl"
-              style={{
-                background:
-                  "linear-gradient(110deg,#f5dda6 0%,#ffffff 40%,#d7aa52 70%,#f5dda6 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
-            >
-              {copy.title}
-            </h2>
-          </div>
+          <h2
+            className="text-center font-display text-2xl font-black tracking-[0.12em] md:text-3xl"
+            style={{
+              background:
+                "linear-gradient(110deg,#f5dda6 0%,#ffffff 40%,#d7aa52 70%,#f5dda6 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            {copy.title}
+          </h2>
         </div>
 
-        {/* Sekmeler ortada — eskisi gibi */}
-        <div className="flex items-center justify-center gap-2 border-b border-white/10 px-4 pt-3">
-          {(
-            [
-              { id: "uyelik" as const, label: copy.membership, icon: Crown },
-              { id: "jeton" as const, label: copy.energyTab, icon: Coins },
-            ] as const
-          ).map(({ id, label, icon: Icon }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 rounded-t-xl px-5 py-2.5 text-xs font-bold transition ${
-                tab === id
-                  ? "bg-white/10 text-[color:var(--accent-2)]"
-                  : "text-white/45 hover:text-white/80"
-              }`}
-              style={
-                tab === id
-                  ? { borderBottom: "2px solid var(--accent)" }
-                  : { borderBottom: "2px solid transparent" }
-              }
-            >
-              <Icon size={13} />
-              {label}
-            </button>
-          ))}
+        {/* ★ SEKMELER — ayrı, ortalı, eskisi gibi büyük pill */}
+        <div className="flex items-center justify-center gap-6 px-6 pt-5">
+          <button
+            type="button"
+            onClick={() => setTab("uyelik")}
+            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-[11px] font-black uppercase tracking-wider transition ${
+              tab === "uyelik"
+                ? "text-black shadow-lg"
+                : "text-white/45 hover:text-white/75"
+            }`}
+            style={
+              tab === "uyelik"
+                ? {
+                    background:
+                      "linear-gradient(135deg,var(--accent-2),var(--accent))",
+                  }
+                : {
+                    background: "rgba(255,255,255,.04)",
+                    border: "1px solid rgba(255,255,255,.08)",
+                  }
+            }
+          >
+            <Crown size={14} />
+            {copy.membership}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setTab("jeton")}
+            className={`flex items-center gap-2 rounded-full px-6 py-2.5 text-[11px] font-black uppercase tracking-wider transition ${
+              tab === "jeton"
+                ? "text-black shadow-lg"
+                : "text-white/45 hover:text-white/75"
+            }`}
+            style={
+              tab === "jeton"
+                ? {
+                    background:
+                      "linear-gradient(135deg,var(--accent-2),var(--accent))",
+                  }
+                : {
+                    background: "rgba(255,255,255,.04)",
+                    border: "1px solid rgba(255,255,255,.08)",
+                  }
+            }
+          >
+            <Coins size={14} />
+            {copy.energyTab}
+          </button>
         </div>
 
-        <div className="scrollbar-thin flex-1 overflow-y-auto p-4 md:p-6">
+        {/* İçerik */}
+        <div className="scrollbar-thin flex-1 overflow-y-auto px-4 py-5 md:px-6">
           {tab === "uyelik" ? (
-            <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
+            /* ★ Üyelik: iki ayrı panel yan yana (Yazı&Tasarım | Filtre gibi) */
+            <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
               <UyelikKarti
                 icon={Gem}
                 isim="NÛR PRO"
@@ -241,39 +246,38 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               />
             </div>
           ) : (
+            /* ★ Enerji paketleri: tek sıra 5 kart */
             <div>
-              <p className="mb-4 text-center text-[11px] text-white/55">
+              <p className="mb-5 text-center text-[11px] text-white/50">
                 {copy.intro}
               </p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mx-auto grid max-w-5xl grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {paketler.map((p, i) => {
                   const vurgu = i === 2;
                   const busy = processing === `jeton-${p.jeton}`;
                   const label = packageLabels[i] ?? p.label;
                   return (
-                    <button
+                    <div
                       key={p.code}
-                      type="button"
-                      disabled={busy}
-                      onClick={() => handleBuyJeton(p)}
-                      className={`group relative flex flex-col rounded-2xl p-4 text-left transition ${
-                        vurgu
-                          ? "shadow-lg shadow-[rgba(215,170,82,.15)]"
-                          : "glass-soft hover:border-[color:var(--accent)]/40"
+                      className={`relative flex flex-col items-center rounded-2xl px-3 pb-3 pt-5 text-center transition ${
+                        vurgu ? "shadow-lg" : ""
                       }`}
                       style={
                         vurgu
                           ? {
                               background:
-                                "linear-gradient(160deg,rgba(215,170,82,.18),rgba(255,255,255,.04))",
-                              border: "1px solid rgba(215,170,82,.45)",
+                                "linear-gradient(165deg,rgba(215,170,82,.22),rgba(12,13,18,.95) 50%)",
+                              border: "1.5px solid rgba(215,170,82,.55)",
                             }
-                          : { border: "1px solid rgba(255,255,255,.08)" }
+                          : {
+                              background: "rgba(255,255,255,.03)",
+                              border: "1px solid rgba(255,255,255,.08)",
+                            }
                       }
                     >
                       {vurgu && (
                         <span
-                          className="absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider text-black"
+                          className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5 text-[8px] font-black tracking-wider text-black"
                           style={{
                             background:
                               "linear-gradient(135deg,var(--accent-2),var(--accent))",
@@ -282,46 +286,53 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                           {copy.popular}
                         </span>
                       )}
-                      <div className="mb-2 flex items-center gap-2">
-                        <span
-                          className="flex h-9 w-9 items-center justify-center rounded-xl"
-                          style={{
-                            background: vurgu
-                              ? "linear-gradient(135deg,var(--accent-2),var(--accent))"
-                              : "rgba(255,255,255,.06)",
-                            color: vurgu ? "#000" : "var(--accent-2)",
-                          }}
-                        >
-                          <Sparkles size={16} />
-                        </span>
-                        <div>
-                          <div className="text-sm font-black text-white">
-                            {p.jeton} {copy.energy}
-                          </div>
-                          <div className="text-[10px] text-white/45">{label}</div>
-                        </div>
+
+                      <span
+                        className="mb-3 flex h-11 w-11 items-center justify-center rounded-full"
+                        style={{
+                          background: vurgu
+                            ? "linear-gradient(135deg,var(--accent-2),var(--accent))"
+                            : "rgba(215,170,82,.12)",
+                          color: vurgu ? "#000" : "var(--accent-2)",
+                        }}
+                      >
+                        <Coins size={18} />
+                      </span>
+
+                      <div
+                        className="font-display text-3xl font-black tabular-nums"
+                        style={{ color: "var(--accent-2)" }}
+                      >
+                        {p.jeton}
                       </div>
-                      <div className="mt-auto flex items-end justify-between pt-2">
-                        <span className="text-lg font-black text-[color:var(--accent-2)]">
-                          ₺{p.tl}
-                        </span>
-                        <span
-                          className={`rounded-lg px-2.5 py-1 text-[10px] font-bold ${
-                            busy ? "bg-white/10 text-white/50" : "text-black"
-                          }`}
-                          style={
-                            busy
-                              ? undefined
-                              : {
-                                  background:
-                                    "linear-gradient(135deg,var(--accent-2),var(--accent))",
-                                }
-                          }
-                        >
-                          {busy ? copy.processing : copy.buy}
-                        </span>
+                      <div className="mt-0.5 text-[9px] font-bold uppercase tracking-wider text-white/40">
+                        ⚡ {copy.energy.replace("⚡ ", "")}
                       </div>
-                    </button>
+                      <div className="mt-1 text-[10px] text-white/35">{label}</div>
+
+                      <div
+                        className="mt-3 font-display text-xl font-black"
+                        style={{ color: "var(--accent-2)" }}
+                      >
+                        ₺{p.tl}
+                      </div>
+                      <div className="mt-0.5 text-[9px] text-white/30">
+                        ⚡ {copy.energy.replace("⚡ ", "")} · {copy.buy}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handleBuyJeton(p)}
+                        className="mt-3 w-full rounded-xl py-2 text-[10px] font-black uppercase tracking-wide text-black transition disabled:opacity-60"
+                        style={{
+                          background:
+                            "linear-gradient(135deg,var(--accent-2),var(--accent))",
+                        }}
+                      >
+                        {busy ? copy.processing : copy.buy}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -329,6 +340,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           )}
         </div>
 
+        {/* Alt şerit */}
         <div className="shrink-0 border-t border-white/10 px-4 py-3">
           <label className="flex cursor-pointer items-center justify-center gap-2 text-[9px] leading-relaxed text-white/55">
             <input
@@ -374,11 +386,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             </h4>
             <ul className="space-y-2 text-[10px] leading-relaxed text-white/65">
               {[
-                "Satın alınan üyelik ve hizmet paketleri dijital ürün/hizmettir; teslim sonrası iade yapılmaz.",
-                "Hizmet bakiyesi hesabına otomatik yüklenir ve üretimlerde anlık düşer.",
+                "Satın alınan üyelik ve ⚡ Enerji dijital hizmettir; teslim sonrası iade yapılmaz.",
+                "⚡ Enerji hesabına otomatik yüklenir ve üretimlerde anlık düşer.",
                 "Üyelikler aylık yenilenir; iptal etmediğin sürece aktif kalır.",
-                "Üretim iptal edilirse hizmet bakiyesi düşmez — sadece tamamlanan render ücretlenir.",
-                "Hizmet/üyelik kötüye kullanımda durdurulabilir.",
+                "Üretim iptal edilirse ⚡ Enerji düşmez — sadece tamamlanan render ücretlenir.",
+                "⚡ Enerji/üyelik kötüye kullanımda durdurulabilir.",
                 "Telif riski yüksek kârilerde platform itirazları kullanıcı sorumluluğundadır.",
               ].map((text) => (
                 <li key={text} className="flex gap-2">
@@ -445,16 +457,19 @@ const UyelikKarti: React.FC<{
 }) => (
   <div
     className={`relative flex flex-col rounded-2xl p-5 ${
-      vurgu ? "shadow-xl shadow-[rgba(215,170,82,.12)]" : "glass-soft"
+      vurgu ? "shadow-xl" : ""
     }`}
     style={
       vurgu
         ? {
             background:
-              "linear-gradient(165deg,rgba(215,170,82,.2),rgba(12,13,18,.95) 45%)",
+              "linear-gradient(165deg,rgba(215,170,82,.18),rgba(12,13,18,.96) 45%)",
             border: "1px solid rgba(215,170,82,.45)",
           }
-        : { border: "1px solid rgba(255,255,255,.08)" }
+        : {
+            background: "rgba(255,255,255,.03)",
+            border: "1px solid rgba(255,255,255,.08)",
+          }
     }
   >
     {vurgu && (
