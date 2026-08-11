@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════
-// i18n DİL AYARLARI, ÇEVİRİLER
+// i18n DİL AYARLARI, ÇEVİRİLER VE YASAL METİNLER
 // ════════════════════════════════════════════════════════
 
 export type Lang = "tr" | "en" | "ar" | "de" | "ru" | "fr" | "es" | "id" | "ur" | "fa";
@@ -25,47 +25,24 @@ export const LANGS: LangOption[] = [
 ];
 
 export const MEAL_EDITIONS: Record<Lang, string> = {
-  tr: "tr.diyanet",
-  en: "en.sahih",
-  ar: "ar.alafasy",
-  de: "de.bubenheim",
-  ru: "ru.kuliev",
-  fr: "fr.hamidullah",
-  es: "es.cortes",
-  id: "id.indonesian",
-  ur: "ur.jalandhry",
-  fa: "fa.fooladvand",
+  tr: "tr.diyanet", en: "en.sahih", ar: "ar.alafasy", de: "de.bubenheim",
+  ru: "ru.kuliev", fr: "fr.hamidullah", es: "es.cortes", id: "id.indonesian",
+  ur: "ur.jalandhry", fa: "fa.fooladvand",
 };
 
 export const T: Record<Lang, Record<string, string>> = {
   tr: {
-    premium: "Premium Pro",
-    loading: "Yükleniyor...",
-    loginTitle: "Giriş Yap / Kayıt Ol",
-    googleAuth: "Google ile devam et",
+    dailyAyah: "Günün Ayeti", loading: "Yükleniyor...", menuGuide: "Kullanım Kılavuzu", menuThemes: "Tema Galerisi", menuSuggest: "Öneri Bildir", menuComplaint: "Sorun Bildir", premium: "Premium Pro", tagline: "Ultra Yüksek Kaliteli Kur'an Videosu Tasarlayın & Paylaşın", library: "Kütüphane & Ayet Arama", addAyah: "Ayet Ekle", wholeSurah: "Tüm Sureyi Ekle", atmoType: "Atmosfer Türü", template: "Şablon Görsel", motion: "Hareketli Video", selectedAyahs: "Seçili Ayetler", ready: "Videolarınız Hazır!", download: "İndir", share: "Paylaş", atmosphere: "Atmosfer Tasarımı", atmoLibrary: "Atmosfer Galerisi", randomAll: "Rastgele Ata", reciter: "Kâri & Ses Sanatçısı", kaaba: "Mescid-i Haram / Mescid-i Nebevî", copyright: "Telifsiz Stüdyo Kayıtları", mode: "Süre Modu", modeShort: "Kısa Video (Shorts / Reel)", modeLong: "Uzun Video (150 sn)", modeFull: "Tam Sürüm", format: "Video Ekran Formatı", stop: "Durdur", generate: "Video Üret", shareTitle: "Açıklama & Sosyal Medya Metni", refreshText: "Yazıyı Yenile", refreshTitle: "Başlığı Yenile", copy: "Metni Kopyala", copied: "Kopyalandı!", hashtagPool: "Etiket Havuzu", randomHashtag: "Rastgele Etiket", footerTag: "İyiliğe ve hayra vesile olmak dileğiyle...", pickForAyah: "Bu ayet için özel atmosfer seçin", hoverPreview: "Önizleme için üzerine gelin, seçmek için tıklayın", themesTitle: "Stüdyo Renk Temaları", themesSub: "Arayüz ve video renk paletini özelleştirin", prayerTitle: "Namaz Vakitleri & Ezan", prayerSearch: "Şehir ara... (ör: İstanbul, Konya)", guideTitle: "Hızlı Başlangıç Kılavuzu", guideSub: "4 adımda harika videolar hazırlayın", step1T: "1. Kütüphaneden Ayet Seçin", step1D: "Arama çubuğunu veya sure listesini kullanarak istediğiniz ayetleri ekleyin.", step2T: "2. Kâri Sesini ve Makamı Belirleyin", step2D: "Kâri listenizden gönlünüze hitap eden sesi ve okuyuşu tercih edin.", step3T: "3. Atmosfer & Görselliği Özelleştirin", step3D: "Hareketli videolar veya şablon görseller arasından sahnenize en uygun olanı seçin.", step4T: "4. Üretin ve Paylaşın", step4D: "Video Üret butonuna basarak yüksek kaliteli MP4/WebM videonuzu anında indirin.", storiesTitle: "Kur'an Kıssaları", storiesSub: "Peygamberlerin ibret dolu yaşam öyküleri", addThis: "Bu Ayeti Ekle", contactSuggest: "Öneri Formu", contactComplaint: "Hata / Sorun Bildirimi", contactSub: "Görüşleriniz NûR Stüdyo'yu geliştirmemize yardımcı oluyor.", sendEmail: "E-posta İle Gönder", loginTitle: "Giriş Yap / Kayıt Ol", loginSubtitle: "Nûr Stüdyo'ya hoş geldiniz", registerTab: "Kayıt Ol", loginTab: "Giriş Yap", fullName: "Ad Soyad", phoneNumber: "Telefon Numarası", email: "E-posta Adresi", password: "Şifre", confirmPassword: "Şifre Tekrar", registerBtn: "Kayıt Ol", loginBtn: "Giriş Yap", googleAuth: "Google ile devam et", forgotPassword: "Şifremi Unuttum", verificationCode: "Doğrulama Kodu", codeSent: "6 haneli kod gönderildi", verifyBtn: "Doğrula", resetPassword: "Şifre Sıfırla", backToLogin: "Geri dön", successVideoReady: "Sinematik Videonuz Başarıyla Hazırlandı! Cihazınıza İndiriliyor...",
   },
   en: {
-    premium: "Premium Pro",
-    loading: "Loading...",
-    loginTitle: "Login / Register",
-    googleAuth: "Continue with Google",
+    dailyAyah: "Ayah of the Day", loading: "Loading...", menuGuide: "User Guide", menuThemes: "Theme Gallery", menuSuggest: "Suggest Feature", menuComplaint: "Report Issue", premium: "Premium Pro", tagline: "Design & Share Ultra High Quality Quran Videos", library: "Library & Ayah Search", addAyah: "Add Verse", wholeSurah: "Add Full Surah", atmoType: "Atmosphere Type", template: "Still Template", motion: "Motion Video", selectedAyahs: "Selected Verses", ready: "Your Video is Ready!", download: "Download", share: "Share", atmosphere: "Atmosphere Design", atmoLibrary: "Atmosphere Gallery", randomAll: "Randomize", reciter: "Reciter & Audio", kaaba: "Masjid al-Haram / An-Nabawi", copyright: "Royalty Free Recitations", mode: "Duration Mode", modeShort: "Short (Shorts / Reels)", modeLong: "Long (150s)", modeFull: "Full Duration", format: "Video Format", stop: "Stop", generate: "Render Video", shareTitle: "Caption & Social Media Text", refreshText: "Regenerate Text", refreshTitle: "Regenerate Title", copy: "Copy Text", copied: "Copied!", hashtagPool: "Hashtags", randomHashtag: "Random Hashtags", footerTag: "May it be a means of goodness and blessing...", pickForAyah: "Pick atmosphere for this verse", hoverPreview: "Hover to preview, click to select", themesTitle: "Studio Themes", themesSub: "Customize application color scheme", prayerTitle: "Prayer Times", prayerSearch: "Search city...", guideTitle: "Quick Start Guide", guideSub: "Create video in 4 easy steps", step1T: "1. Select Ayahs", step1D: "Use search bar or surah list to add verses.", step2T: "2. Choose Reciter", step2D: "Select your preferred qari and style.", step3T: "3. Choose Background Atmosphere", step3D: "Select motion videos or scenic templates.", step4T: "4. Render & Share", step4D: "Click Render Video to generate high quality video.", storiesTitle: "Quranic Stories", storiesSub: "Inspiring stories of the Prophets", addThis: "Add Verse", contactSuggest: "Feedback", contactComplaint: "Report Bug", contactSub: "Your feedback helps improve Nûr Studio.", sendEmail: "Send Email", loginTitle: "Login / Register", loginSubtitle: "Welcome to Nûr Studio", registerTab: "Register", loginTab: "Login", fullName: "Full Name", phoneNumber: "Phone Number", email: "Email Address", password: "Password", confirmPassword: "Confirm Password", registerBtn: "Register", loginBtn: "Login", googleAuth: "Continue with Google", forgotPassword: "Forgot Password", verificationCode: "Verification Code", codeSent: "6-digit code sent", verifyBtn: "Verify", resetPassword: "Reset Password", backToLogin: "Back to Login", successVideoReady: "Your Cinematic Video is Ready! Downloading to Device...",
   },
   ar: {
-    premium: "بريميوم برو",
-    loading: "جاري التحميل...",
-    loginTitle: "تسجيل الدخول / التسجيل",
-    googleAuth: "المتابعة باستخدام Google",
+    dailyAyah: "آية اليوم", loading: "جاري التحميل...", menuGuide: "دليل الاستخدام", menuThemes: "معرض الثيمات", menuSuggest: "اقتراح", menuComplaint: "الإبلاغ عن مشكلة", premium: "بريميوم برو", tagline: "تصميم ومشاركة فيديوهات القرآن الكريم بأعلى جودة", library: "المكتبة والبحث في الآيات", addAyah: "إضافة آية", wholeSurah: "إضافة السورة كاملة", atmoType: "نوع الخلفية", template: "صورة ثابتة", motion: "فيديو متحرك", selectedAyahs: "الآيات المختارة", ready: "الفيديو جاهز!", download: "تحميل", share: "مشاركة", atmosphere: "تصميم الخلفية", atmoLibrary: "مكتبة الخلفيات", randomAll: "تحديد عشوائي", reciter: "القارئ والصوت", kaaba: "المسجد الحرام / النبوي", copyright: "تسجيلات خالية من حقوق النشر", mode: "نمط المدة", modeShort: "فيديو قصير (Shorts / Reels)", modeLong: "فيديو طويل (150 ثانية)", modeFull: "المدة الكاملة", format: "أبعاد الفيديو", stop: "إيقاف", generate: "إنتاج الفيديو", shareTitle: "النص والوصف للمشاركة", refreshText: "تحديث النص", refreshTitle: "تحديث العنوان", copy: "نسخ النص", copied: "تم النسخ!", hashtagPool: "الوسوم", randomHashtag: "وسوم عشوائية", footerTag: "نسأل الله أن يجعل هذا العمل خالصاً لوجهه الكريم...", pickForAyah: "اختر خلفية لهذه الآية", hoverPreview: "مرر لمعاينة الخلفية، اضغط للاختيار", themesTitle: "ثيمات الاستوديو", themesSub: "تخصيص ألوان الواجهة", prayerTitle: "مواقيت الصلاة", prayerSearch: "ابحث عن المدينة...", guideTitle: "دليل البدء السريع", guideSub: "أنشئ مقاطع فيديو في 4 خطوات سهلة", step1T: "1. اختر الآيات", step1D: "استخدم شريط البحث أو قائمة السور لإضافة الآيات.", step2T: "2. اختر القارئ", step2D: "اختر القارئ المفضل لديك والأسلوب.", step3T: "3. اختر خلفية الفيديو", step3D: "اختر مقاطع فيديو متحركة أو قوالب ثابتة.", step4T: "4. إنتاج ومشاركة", step4D: "انقر فوق إنتاج الفيديو لإنشاء فيديو عالي الجودة.", storiesTitle: "قصص القرآن", storiesSub: "قصص ملهمة من الأنبياء", addThis: "إضافة آية", contactSuggest: "تعليقات", contactComplaint: "الإبلاغ عن خطأ", contactSub: "تعليقاتك تساعد في تحسين استوديو نُور.", sendEmail: "إرسال بريد إلكتروني", loginTitle: "تسجيل الدخول / التسجيل", loginSubtitle: "مرحبًا بك في استوديو نُور", registerTab: "تسجيل جديد", loginTab: "تسجيل الدخول", fullName: "الاسم الكامل", phoneNumber: "رقم الهاتف", email: "البريد الإلكتروني", password: "كلمة المرور", confirmPassword: "تأكيد كلمة المرور", registerBtn: "تسجيل", loginBtn: "تسجيل الدخول", googleAuth: "المتابعة باستخدام Google", forgotPassword: "نسيت كلمة المرور", verificationCode: "رمز التحقق", codeSent: "تم إرسال رمز مكون من 6 أرقام", verifyBtn: "تحقق", resetPassword: "إعادة تعيين كلمة المرور", backToLogin: "العودة لتسجيل الدخول", successVideoReady: "فيديو سينمائي جاهز! جاري التحميل على الجهاز...",
   },
-  de: {},
-  ru: {},
-  fr: {},
-  es: {},
-  id: {},
-  ur: {},
-  fa: {},
+  de: {}, ru: {}, fr: {}, es: {}, id: {}, ur: {}, fa: {}
 };
 
 // Geriye dönük: eski import yolları için
 export { getPaymentCopy } from "./paymentCopy";
 export type { PaymentCopy } from "./paymentCopy";
-// Not: Lang tipi bu dosyada tanımlı; paymentCopy kendi Lang union'ını kullanır (döngü yok)
