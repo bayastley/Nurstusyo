@@ -132,10 +132,10 @@ const trDict: Dict = {
   resetPassword: "Şifre Sıfırla",
   backToLogin: "Geri dön",
   successVideoReady: "Sinematik Videonuz Başarıyla Hazırlandı! Cihazınıza İndiriliyor...",
-  energy: "Enerji",
-  energyShort: "⚡ Enerji",
+  energy: "Üretim hakkı",
+  energyShort: "⚡ Üretim hakkı",
   membership: "Üyelik",
-  energyPack: "Enerji Paketi",
+  energyPack: "Üretim hakkı paketi",
 };
 
 const enDict: Dict = {
@@ -220,10 +220,10 @@ const enDict: Dict = {
   resetPassword: "Reset Password",
   backToLogin: "Back to Login",
   successVideoReady: "Your Cinematic Video is Ready! Downloading to Device...",
-  energy: "Energy",
-  energyShort: "⚡ Energy",
+  energy: "Production rights",
+  energyShort: "⚡ Production rights",
   membership: "Membership",
-  energyPack: "Energy Pack",
+  energyPack: "Production rights pack",
 };
 
 const arDict: Dict = {
@@ -308,10 +308,10 @@ const arDict: Dict = {
   resetPassword: "إعادة تعيين كلمة المرور",
   backToLogin: "العودة لتسجيل الدخول",
   successVideoReady: "فيديو سينمائي جاهز! جاري التحميل على الجهاز...",
-  energy: "الطاقة",
-  energyShort: "⚡ الطاقة",
+  energy: "حق الإنتاج",
+  energyShort: "⚡ حق الإنتاج",
   membership: "العضوية",
-  energyPack: "باقة الطاقة",
+  energyPack: "باقة حق الإنتاج",
 };
 
 const deDict: Dict = {
@@ -395,10 +395,10 @@ const deDict: Dict = {
   resetPassword: "Passwort zurücksetzen",
   backToLogin: "Zurück zur Anmeldung",
   successVideoReady: "Ihr Video ist fertig! Wird heruntergeladen...",
-  energy: "Energie",
-  energyShort: "⚡ Energie",
+  energy: "Produktionsrecht",
+  energyShort: "⚡ Produktionsrecht",
   membership: "Mitgliedschaft",
-  energyPack: "Energiepaket",
+  energyPack: "Produktionsrecht-Paket",
 };
 
 const frDict: Dict = {
@@ -482,10 +482,10 @@ const frDict: Dict = {
   resetPassword: "Réinitialiser le mot de passe",
   backToLogin: "Retour à la connexion",
   successVideoReady: "Votre vidéo est prête ! Téléchargement...",
-  energy: "Énergie",
-  energyShort: "⚡ Énergie",
+  energy: "Droit de production",
+  energyShort: "⚡ Droit de production",
   membership: "Abonnement",
-  energyPack: "Pack Énergie",
+  energyPack: "Pack droit de production",
 };
 
 const esDict: Dict = {
@@ -569,10 +569,10 @@ const esDict: Dict = {
   resetPassword: "Restablecer contraseña",
   backToLogin: "Volver al inicio de sesión",
   successVideoReady: "¡Tu video está listo! Descargando...",
-  energy: "Energía",
-  energyShort: "⚡ Energía",
+  energy: "Derecho de producción",
+  energyShort: "⚡ Derecho de producción",
   membership: "Membresía",
-  energyPack: "Paquete de Energía",
+  energyPack: "Paquete de derecho de producción",
 };
 
 const ruDict: Dict = {
@@ -656,10 +656,10 @@ const ruDict: Dict = {
   resetPassword: "Сбросить пароль",
   backToLogin: "Назад ко входу",
   successVideoReady: "Ваше видео готово! Загрузка...",
-  energy: "Энергия",
-  energyShort: "⚡ Энергия",
+  energy: "Право на производство",
+  energyShort: "⚡ Право на производство",
   membership: "Подписка",
-  energyPack: "Пакет энергии",
+  energyPack: "Пакет права на производство",
 };
 
 const idDict: Dict = {
@@ -743,10 +743,10 @@ const idDict: Dict = {
   resetPassword: "Atur Ulang Kata Sandi",
   backToLogin: "Kembali ke Masuk",
   successVideoReady: "Video Anda siap! Mengunduh...",
-  energy: "Energi",
-  energyShort: "⚡ Energi",
+  energy: "Hak produksi",
+  energyShort: "⚡ Hak produksi",
   membership: "Keanggotaan",
-  energyPack: "Paket Energi",
+  energyPack: "Paket hak produksi",
 };
 
 const urDict: Dict = {
@@ -768,10 +768,10 @@ const urDict: Dict = {
   loginBtn: "لاگ ان",
   registerBtn: "رجسٹر",
   googleAuth: "گوگل کے ساتھ جاری رکھیں",
-  energy: "توانائی",
-  energyShort: "⚡ توانائی",
+  energy: "پیداوار کا حق",
+  energyShort: "⚡ پیداوار کا حق",
   membership: "رکنیت",
-  energyPack: "توانائی پیکج",
+  energyPack: "پیداوار حق پیکج",
 };
 
 const faDict: Dict = {
@@ -793,10 +793,10 @@ const faDict: Dict = {
   loginBtn: "ورود",
   registerBtn: "ثبت‌نام",
   googleAuth: "ادامه با گوگل",
-  energy: "انرژی",
-  energyShort: "⚡ انرژی",
+  energy: "حق تولید",
+  energyShort: "⚡ حق تولید",
   membership: "عضویت",
-  energyPack: "بسته انرژی",
+  energyPack: "بسته حق تولید",
 };
 
 /**
@@ -871,18 +871,18 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Oturum ve tercihler yalnızca cihazdaki şifreli LocalStorage'da saklanır. Sunucu taraflı davranış kaydı yoktur.\n\n" +
           "• Google hesap bilgileri — oturum doğrulama\n" +
           "• Tema, dil tercihleri\n" +
-          "• Enerji bakiyesi ve üyelik durumu\n\n" +
+          "• Üretim hakkı bakiyesi ve üyelik durumu (hizmet kullanımı)\n\n" +
           "ÇEREZ: Yalnızca zorunlu teknik çerezler. Reklam çerezi yok.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
         refund:
-          "DİJİTAL HİZMET KAPSAMI\n\n" +
-          "Satın alınan Enerji paketleri ve üyelik planları anında teslim edilen dijital hizmet kapsamındadır.\n\n" +
+          "DİJİTAL ÜRÜN / HİZMET KAPSAMI\n\n" +
+          "Satın alınan üretim hakkı paketleri ve üyelik planları anında ifa edilen dijital ürün/hizmettir. Ödenen tutar hizmet bedelidir.\n\n" +
           "CAYMA HAKKI\n\n" +
           "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
-          "KULLANILMAMIŞ ENERJİ BAKİYESİ\n\n" +
-          "Hiç kullanılmamış bakiyeler için 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketlerde iade yoktur.\n\n" +
+          "KULLANILMAMIŞ ÜRETİM HAKKI\n\n" +
+          "Hiç kullanılmamış üretim hakkı için 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketlerde iade yoktur.\n\n" +
           "TEKNİK HATA\n\n" +
-          "Ödeme tamamlanmasına rağmen Enerji tanımlanmamışsa dekontunuzla destek@nurstudyo.com — 2 iş günü.\n\n" +
+          "Hizmet bedeli ödenmesine rağmen üretim hakkı tanımlanmamışsa dekontunuzla destek@nurstudyo.com — 2 iş günü.\n\n" +
           "ÖDEME GÜVENLİĞİ\n\n" +
           "Ödemeler PCI DSS uyumlu PayTR/iyzico üzerinden 256-bit SSL ile yapılır. Kart bilgisi saklanmaz.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
@@ -909,7 +909,7 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
         kvkk:
           "DATA CONTROLLER\n\n" +
           "Contact: support@nurstudyo.com\n\n" +
-          "PERSONAL DATA: Name, email, profile photo via Google OAuth. Preferences stored encrypted on device only.\n\n" +
+          "PERSONAL DATA: Name, email, profile photo via Google OAuth. Processed for account verification and service delivery (service fee / payment). Preferences stored encrypted on device only.\n\n" +
           "YOUR RIGHTS: Access, correction, deletion — support@nurstudyo.com within 30 days.\n\n" +
           "Last updated: August 2026",
         privacy:
@@ -917,16 +917,16 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Session and preferences in encrypted LocalStorage only. No server-side tracking.\n\n" +
           "• Google account info — auth only\n" +
           "• Theme/language preferences\n" +
-          "• Energy balance and membership\n\n" +
+          "• Production-rights balance and membership (service use)\n\n" +
           "COOKIES: Essential technical cookies only.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
         refund:
-          "DIGITAL SERVICE SCOPE\n\n" +
-          "Purchased Energy packs and memberships are instantly delivered digital services.\n\n" +
+          "DIGITAL PRODUCT / SERVICE SCOPE\n\n" +
+          "Purchased production-rights packs and memberships are instantly delivered digital products/services. The amount paid is a service fee.\n\n" +
           "RIGHT OF WITHDRAWAL\n\n" +
           "Not available for instantly performed digital services with explicit consent under Turkish consumer law.\n\n" +
-          "UNUSED ENERGY BALANCE\n\n" +
-          "Fully unused balances: contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
+          "UNUSED PRODUCTION RIGHTS\n\n" +
+          "Fully unused production rights: contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
           "PAYMENT SECURITY\n\n" +
           "PayTR/iyzico PCI DSS, 256-bit SSL. No card storage.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",

@@ -98,7 +98,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       setJetonState(getJeton());
       onTokenPurchase?.(paket.jeton);
       setProcessing(null);
-      showToast(`+${paket.jeton} ⚡ Enerji yüklendi (demo)`);
+      showToast(`+${paket.jeton} ⚡ üretim hakkı yüklendi (demo)`);
     }, 700);
   };
 
@@ -386,11 +386,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             </h4>
             <ul className="space-y-2 text-[10px] leading-relaxed text-white/65">
               {[
-                "Satın alınan üyelik ve ⚡ Enerji dijital hizmettir; teslim sonrası iade yapılmaz.",
-                "⚡ Enerji hesabına otomatik yüklenir ve üretimlerde anlık düşer.",
+                "Satın alınan üyelik ve ⚡ üretim hakkı dijital ürün/hizmettir; ödenen tutar hizmet bedelidir. Teslim sonrası iade yapılmaz.",
+                "⚡ Üretim hakkı hesabına otomatik tanımlanır ve üretimlerde anlık düşer.",
                 "Üyelikler aylık yenilenir; iptal etmediğin sürece aktif kalır.",
-                "Üretim iptal edilirse ⚡ Enerji düşmez — sadece tamamlanan render ücretlenir.",
-                "⚡ Enerji/üyelik kötüye kullanımda durdurulabilir.",
+                "Üretim iptal edilirse ⚡ üretim hakkı düşmez — sadece tamamlanan render için hizmet bedeli işlenir.",
+                "Üretim hakkı/üyelik kötüye kullanımda durdurulabilir.",
                 "Telif riski yüksek kârilerde platform itirazları kullanıcı sorumluluğundadır.",
               ].map((text) => (
                 <li key={text} className="flex gap-2">
