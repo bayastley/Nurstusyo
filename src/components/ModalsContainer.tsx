@@ -13,7 +13,7 @@ import { AdminDashboardModal } from "./AdminDashboardModal";
 import { CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
-import { T } from "../i18n";
+import { T, type Lang } from "../i18n";
 import { JETON } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
 import type { ModalName, LoginTab, Tier } from "../types";
@@ -143,6 +143,7 @@ interface ModalsContainerProps {
   legalTab: "tos" | "kvkk" | "gizlilik" | "iade";
   setLegalTab: (t: "tos" | "kvkk" | "gizlilik" | "iade") => void;
   t: (key: keyof (typeof T)["tr"]) => string;
+  lang: Lang;
 }
 
 export const ModalsContainer: React.FC<ModalsContainerProps> = ({
@@ -237,6 +238,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   legalTab,
   setLegalTab,
   t,
+  lang,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
   useEffect(() => {
@@ -314,7 +316,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </button>
             <p className="text-center text-[9px] leading-relaxed text-white/40">
               Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
-              Şifre gerekmez · Anında <b className="text-white/60">+20 jeton</b> hediye
+              Şifre gerekmez · Anında <b className="text-white/60">+20 ⚡ Enerji</b> hediye
             </p>
 
             {/* ★ MİSAFİR MODU */}
@@ -361,11 +363,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Hourglass size={16} /></span>
               <div><h3 className="font-display text-sm font-black" style={{ color: "var(--accent-2)" }}>Tam Sürümü Aç</h3><p className="text-[9px] text-white/40">40 dakikaya kadar video modu</p></div>
             </div>
-            <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{JETON.MIKRO_KILIT_ACMA_UCRETI} jeton</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
-            <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} jeton</b></div>
+            <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Enerji</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
+            <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ Enerji</b></div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="glass-soft rounded-xl py-2.5 text-[10px] font-bold text-white/65">Vazgeç</button>
-              <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{JETON.MIKRO_KILIT_ACMA_UCRETI} Jeton Öde ve Aç</button>
+              <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Enerji Öde ve Aç</button>
             </div>
           </div>
         </div>
@@ -374,6 +376,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* PREMIUM MODAL */}
       {premiumOpen && (
         <PremiumModal
+          lang={lang}
           initialTab={premiumTab}
           currentTier={tier}
           onClose={() => setPremiumOpen(false)}
@@ -385,12 +388,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             const next = cur + bonus;
             localStorage.setItem("nur_jeton", String(next));
             setJetonCount(next);
-            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif 🌙 +${bonus} jeton`);
+            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif 🌙 +${bonus} ⚡ Enerji`);
           }}
           onTokenPurchase={(amount) => {
             const next = Number(localStorage.getItem("nur_jeton") || 0);
             setJetonCount(next);
-            notify(`${amount} jeton hesabına eklendi`);
+            notify(`${amount} ⚡ Enerji hesabına eklendi`);
           }}
         />
       )}
@@ -733,6 +736,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}
       <LegalModal
+        lang={lang}
         tosOpen={tosOpen}
         setTosOpen={setTosOpen}
         legalTab={legalTab}

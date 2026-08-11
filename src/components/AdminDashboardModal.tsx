@@ -184,7 +184,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${targetUser.jeton} Jeton (${delta > 0 ? "+" + delta : delta})`);
+      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${targetUser.jeton} ⚡ Enerji (${delta > 0 ? "+" + delta : delta})`);
     }
   };
 
@@ -206,7 +206,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`⚡ ${targetUser.email} bakiyesi ${safeAmount} Jeton yapıldı!`);
+      notify(`⚡ ${targetUser.email} bakiyesi ${safeAmount} ⚡ Enerji yapıldı!`);
     }
   };
 
@@ -319,7 +319,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             }`}
             style={activeTab === "users" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <UserCheck size={14} /> Kullanıcı & Jeton
+            <UserCheck size={14} /> Kullanıcı & ⚡ Enerji
           </button>
           <button
             onClick={() => setActiveTab("broadcast")}
@@ -403,7 +403,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               </div>
 
-              {/* 2. Seçili Kullanıcı Profil Kartı & Paket + Jeton Yönetimi */}
+              {/* 2. Seçili kullanıcı profili ve enerji yönetimi */}
               {selectedUser && (
                 <div
                   className="relative overflow-hidden rounded-3xl border p-5 transition-all"
@@ -446,10 +446,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       </p>
                     </div>
 
-                    {/* Jeton Bakiye Ekleme / Çıkarma */}
+                    {/* Enerji bakiyesi ekleme / çıkarma */}
                     <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                        🪙 Jeton Bakiye Yönetimi
+                        🪙 ⚡ Enerji Bakiye Yönetimi
                       </label>
                       <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
                         <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
@@ -459,7 +459,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                           </span>
                         ) : (
                           <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
-                            {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">JETON</span>
+                            {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">⚡ ENERJİ</span>
                           </span>
                         )}
                       </div>
@@ -468,7 +468,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         <button
                           onClick={() => handleJetonChange(selectedUser.email, -jetonDelta)}
                           className="flex h-9 items-center justify-center gap-1 rounded-xl bg-red-500/20 border border-red-500/30 px-3 text-[11px] font-black text-red-300 transition hover:bg-red-500/30 active:scale-95"
-                          title={`${jetonDelta} jeton çıkar`}
+                          title={`${jetonDelta} ⚡ Enerji çıkar`}
                         >
                           <Minus size={12} strokeWidth={3} /> {jetonDelta}
                         </button>
@@ -494,7 +494,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                             onClick={() => handleDirectJetonSet(selectedUser.email, amt)}
                             className="flex-1 rounded-lg bg-white/5 py-1 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition"
                           >
-                            ={amt} Jeton
+                            ={amt} ⚡ Enerji
                           </button>
                         ))}
                       </div>

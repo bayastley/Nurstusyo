@@ -353,7 +353,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   onClick={() => openPremium("jeton")}
                   className="glass-soft group relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tabular-nums transition hover:scale-105 sm:flex cursor-pointer"
                   style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.3)" }}
-                  title={`Toplam Bakiyeniz: ${jetonCount} Jeton (${vault.purchasedJeton} Satın Alınan + ${vault.subJeton} Günlük Hak)`}
+                  title={`Toplam Bakiyeniz: ${jetonCount} ⚡ Enerji (${vault.purchasedJeton} Satın Alınan + ${vault.subJeton} Günlük Hak)`}
                 >
                   <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                     <Coins size={9} className="text-black" strokeWidth={3} />
@@ -362,7 +362,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {isMasterSürüm || jetonCount >= 999999 ? "♾️ SINIRSIZ" : jetonCount}
                   </span>
                   {!(isMasterSürüm || jetonCount >= 999999) && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">jeton</span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ Enerji</span>
                   )}
                 </button>
               );

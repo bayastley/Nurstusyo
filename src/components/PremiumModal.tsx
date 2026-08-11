@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { X, Gem, Crown, Check, Sparkles, Coins, Star, MapPin, Wallet, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { X, Gem, Crown, Check, Sparkles, Coins, Star, Wallet } from "lucide-react";
 import { PRICING, JETON_PAKETLERI, setCurrentTier, getJeton, addPurchasedJeton, type Tier } from "../tier";
 // ★ Fiyat kilidi + gerçek PayTR/iyzico entegrasyonu için TEK gerçek fiyat kaynağı.
 // LIVE mode: import.meta.env.VITE_PAYMENTS_LIVE === "true" olursa startCheckout()
 // gerçek backend'e (/api/payments/create) POST atar, PayTR/iyzico iframe açılır.
 // DEMO mode (default): mevcut sahte akış çalışır, tier/jeton yerelde güncellenir.
 import { startCheckout, PRODUCTS } from "../payments/pricing";
+import { getPaymentCopy } from "../i18n/paymentCopy";
 
 const PAYMENTS_LIVE =
   ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_PAYMENTS_LIVE ?? "false") === "true";
@@ -16,41 +17,6 @@ const jetonProductCode = (jeton: number): string | null => {
   return map[jeton] ?? null;
 };
 
-/** ★ TL ANA FİYATTIR (sabit). USD karşılığı güncel kurdan anlık hesaplanır. */
-const FALLBACK_USD_TRY = 47;
-
-/** Kullanıcı konumu — Intl + ip-api fallback */
-type GeoInfo = { country: string; flag: string; currency: string } | null;
-async function detectGeo(): Promise<GeoInfo> {
-  // 1. IP ülke bilgisi — gerçek ülkeye locale'den daha yakın sonuç verir.
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    if (res.ok) {
-      const data = await res.json();
-      return { country: data.country_code || "TR", flag: countryToFlag(data.country_code || "TR"), currency: data.currency || "TRY" };
-    }
-  } catch { /* ignore */ }
-  // 2. Browser locale fallback (konum servisi kapalıysa izin istemeden çalışır)
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    const locale = navigator.language || "tr-TR";
-    const countryFromLocale = locale.split("-")[1]?.toUpperCase() || "";
-    const tzCountry = tz.split("/")[0] || "";
-    const guess = countryFromLocale || tzCountry;
-    if (guess) {
-      const flag = countryToFlag(guess);
-      const currency = guess === "TR" ? "₺" : guess === "US" ? "$" : guess === "EU" ? "€" : "$";
-      return { country: guess, flag, currency };
-    }
-  } catch { /* ignore */ }
-  // 3. Güvenli varsayılan
-  return { country: "TR", flag: "🇹🇷", currency: "₺" };
-}
-function countryToFlag(cc: string): string {
-  if (!cc || cc.length !== 2) return "🌍";
-  return cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
-}
-
 interface PremiumModalProps {
   onClose: () => void;
   /** Başlangıç sekmesi */
@@ -60,29 +26,8 @@ interface PremiumModalProps {
   /** Satın alma başarılı olunca (şimdilik demo) */
   onPurchase?: (tier: Tier) => void;
   onTokenPurchase?: (amount: number) => void;
+  lang?: import("../i18n").Lang;
 }
-
-const UYELIK_OZELLIKLERI: Record<"pro" | "elit", string[]> = {
-  pro: [
-    "15 hoca (10 Kâbe imamı + 5 popüler telif)",
-    "İlk 5 kategoride TÜM videolar (250 içerik)",
-    "20 tema (10 Pro tonu)",
-    "1080p render · watermark'sız",
-    "Sinematik renk filtreleri (8 ton)",
-    "Yazı/başlık yenileme AI",
-    "Günlük 40 jeton · tavan 100 · Cuma +15",
-  ],
-  elit: [
-    "TÜM hocalar (36+) · telif kâriler dahil",
-    "TÜM 10 aktif kategori (500 içerik)",
-    "TÜM 20 tema (5 Elit tonu)",
-    "Batch üretim + Akıllı AI arama sınırsız",
-    "Hashtag ekleme · tek tık sosyal paylaşım",
-    "Yazı tipi & tasarım stüdyosu (5 hat fontu)",
-    "Günlük 150 jeton tavan · Ramazan 200",
-    "Öncelikli destek (destek@nurstudyo.com · max 3 iş günü)",
-  ],
-};
 
 export const PremiumModal: React.FC<PremiumModalProps> = ({
   onClose,
@@ -90,39 +35,19 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   currentTier = "free",
   onPurchase,
   onTokenPurchase,
+  lang = "tr",
 }) => {
+  const copy = getPaymentCopy(lang);
   // Tier geçiş kuralları: Free → Pro/Elit, Pro → Elit, Elit → hiçbir şey
   const proLocked = currentTier === "pro" || currentTier === "elit";
   const elitLocked = currentTier === "elit";
-  const proLabel = currentTier === "pro" ? "Mevcut planın" : currentTier === "elit" ? "Elit üyeliğin var" : undefined;
-  const elitLabel = currentTier === "elit" ? "Mevcut planın" : undefined;
+  const proLabel = currentTier === "pro" ? copy.currentPlan : currentTier === "elit" ? copy.elitAction : undefined;
+  const elitLabel = currentTier === "elit" ? copy.currentPlan : undefined;
   const [tab, setTab] = useState<"uyelik" | "jeton">(initialTab);
   const [processing, setProcessing] = useState<string | null>(null);
   const [jeton, setJeton] = useState<number>(() => getJeton());
-  const [geo, setGeo] = useState<GeoInfo>(null);
-  const [geoLoading, setGeoLoading] = useState(true);
-  const [usdTry, setUsdTry] = useState(FALLBACK_USD_TRY);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
-
-  useEffect(() => {
-    let live = true;
-    setGeoLoading(true);
-    detectGeo().then((g) => { if (live) { setGeo(g); setGeoLoading(false); } });
-    return () => { live = false; };
-  }, []);
-
-  useEffect(() => {
-    let live = true;
-    fetch("https://open.er-api.com/v6/latest/USD")
-      .then((response) => response.json())
-      .then((data: { rates?: { TRY?: number } }) => {
-        const rate = data.rates?.TRY;
-        if (live && typeof rate === "number" && rate > 0) setUsdTry(rate);
-      })
-      .catch(() => undefined);
-    return () => { live = false; };
-  }, []);
 
   const handleSubscribe = async (tier: "pro" | "elit") => {
     // Tier geçiş kısıtlaması
@@ -244,16 +169,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             <rect width="800" height="120" fill="url(#nur-geo)" />
           </svg>
 
-          {/* ★ JETON SAYACI + KONUM — sağ üst */}
+          {/* Energy balance */}
           <div className="absolute right-4 top-3 flex items-center gap-2">
             <span className="flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-black tabular-nums text-[color:var(--accent-2)] backdrop-blur-sm" style={{ border: "1px solid rgba(215,170,82,.3)" }}>
               <Wallet size={11} style={{ color: "var(--accent)" }} />
               {jeton}
-              <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">jeton</span>
-            </span>
-            <span className="flex items-center gap-1 rounded-full bg-black/50 px-2.5 py-1 text-[10px] font-bold text-white/70 backdrop-blur-sm" style={{ border: "1px solid rgba(255,255,255,.1)" }}>
-              {geoLoading ? <Loader2 size={10} className="animate-spin" /> : <MapPin size={10} style={{ color: "var(--accent)" }} />}
-              {geoLoading ? "…" : <>{geo?.flag} {geo?.country === "TR" ? "Türkiye" : geo?.country}</>}
+              <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ Enerji</span>
             </span>
             <button
               type="button"
@@ -282,11 +203,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 color: "transparent",
               }}
             >
-              ÜYELİK & JETON
+              {copy.title}
             </h2>
-            <p className="mt-1 text-[9px] text-white/40">
-              {geoLoading ? "Konumun belirleniyor…" : `Konumun: ${geo?.flag} · güncel kur ₺${usdTry.toFixed(2)}`}
-            </p>
           </div>
         </div>
 
@@ -299,7 +217,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             }`}
             style={tab === "uyelik" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <Crown size={13} /> Üyelik
+            <Crown size={13} /> {copy.membership}
           </button>
           <button
             onClick={() => setTab("jeton")}
@@ -308,7 +226,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             }`}
             style={tab === "jeton" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <Coins size={13} /> Jeton Paketi
+            <Coins size={13} /> {copy.energyTab}
           </button>
         </div>
 
@@ -321,13 +239,15 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 tier="pro"
                 icon={Gem}
                 isim="NÛR PRO"
-                altbaslik="İçerik üreticisi"
+                altbaslik={copy.proFeatures[0]}
                 fiyatTL={PRICING.PRO.tl}
-                ozellikler={UYELIK_OZELLIKLERI.pro}
+                ozellikler={copy.proFeatures}
                 vurgu={false}
                 processing={processing === "pro"}
                 onSec={() => handleSubscribe("pro")}
-                rate={usdTry}
+                actionLabel={copy.proAction}
+                processingLabel={copy.processing}
+                perMonthLabel={copy.perMonth}
                 disabled={proLocked}
                 disabledLabel={proLabel}
               />
@@ -336,13 +256,15 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 tier="elit"
                 icon={Crown}
                 isim="NÛR ELİT"
-                altbaslik="Kurucu · hoca · ajans"
+                altbaslik={copy.elitFeatures[0]}
                 fiyatTL={PRICING.ELIT.tl}
-                ozellikler={UYELIK_OZELLIKLERI.elit}
+                ozellikler={copy.elitFeatures}
                 vurgu
                 processing={processing === "elit"}
                 onSec={() => handleSubscribe("elit")}
-                rate={usdTry}
+                actionLabel={copy.elitAction}
+                processingLabel={copy.processing}
+                perMonthLabel={copy.perMonth}
                 disabled={elitLocked}
                 disabledLabel={elitLabel}
               />
@@ -350,7 +272,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           ) : (
             <div>
               <p className="mb-4 text-center text-[11px] text-white/55">
-                Abone olmadan, tek seferlik jeton satın al — kendi hızında üret.
+                {copy.intro}
               </p>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {JETON_PAKETLERI.map((p, i) => {
@@ -375,7 +297,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     >
                       {vurgu && (
                         <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-[8px] font-black tracking-widest text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                          POPÜLER
+                          {copy.popular}
                         </span>
                       )}
                       <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full" style={{ background: "rgba(215,170,82,.15)" }}>
@@ -384,31 +306,22 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                       <div className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
                         {p.jeton}
                       </div>
-                      <div className="text-[9px] font-bold uppercase tracking-wider text-white/40">jeton</div>
-                      <div className="mt-2 text-[8px] font-semibold text-white/55">{p.label}</div>
+                      <div className="text-[9px] font-bold uppercase tracking-wider text-white/40">⚡ Enerji</div>
+                      <div className="mt-2 text-[8px] font-semibold text-white/55">{copy.packageLabels[i] ?? p.label}</div>
                       <div className="mt-3 flex items-baseline gap-0.5">
                         <span className="font-display text-lg font-black text-white tabular-nums">₺{p.tl.toLocaleString("tr-TR")}</span>
                       </div>
-                      <div className="mt-0.5 text-[8px] font-medium tabular-nums text-white/35">
-                        ≈ ${(p.tl / usdTry).toFixed(2)} USD · kur ₺{usdTry.toFixed(2)}
-                      </div>
-                      <div className="mt-1 text-[8.5px] font-medium text-white/40">
-                        {p.unitPrice}
-                      </div>
+                      <div className="mt-1 text-[8.5px] font-medium text-white/40">{copy.energy} · {copy.buy}</div>
                       <span
                         className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[9px] font-black uppercase tracking-wider text-black transition group-hover:brightness-110"
                         style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                       >
-                        {busy ? "İşleniyor…" : "Satın Al"}
+                         {busy ? copy.processing : copy.buy}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="mt-5 flex items-center justify-center gap-1.5 text-center text-[10px] text-white/40">
-                <MapPin size={10} style={{ color: "var(--accent)" }} />
-                {geoLoading ? "Konumun belirleniyor…" : `Konumun: ${geo?.flag} ${geo?.country === "TR" ? "Türkiye" : geo?.country} · güncel kur ₺${usdTry.toFixed(2)}`}
-              </p>
             </div>
           )}
         </div>
@@ -423,13 +336,13 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               className="accent-[var(--accent)]"
             />
             <span>
-              Satın alma koşullarını okudum ve kabul ediyorum.
+              {copy.accept}
               <button
                 type="button"
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTermsOpen(true); }}
                 className="ml-1 font-bold text-[color:var(--accent-2)] underline underline-offset-2 hover:text-white"
               >
-                Koşulları oku
+                {copy.termsTitle}
               </button>
             </span>
           </label>
@@ -458,14 +371,14 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               <X size={14} />
             </button>
             <h4 className="mb-3 font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>
-              Satın Alma Koşulları
+              {copy.termsTitle}
             </h4>
             <ul className="space-y-2 text-[10px] leading-relaxed text-white/65">
-              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Satın alınan üyelik ve jetonlar dijital üründür; teslim sonrası iade yapılmaz.</span></li>
-              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Jetonlar hesabına otomatik yüklenir ve üretimlerde anlık düşer.</span></li>
+              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Satın alınan üyelik ve ⚡ Enerji iler dijital üründür; teslim sonrası iade yapılmaz.</span></li>
+              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>⚡ Enerji hesabına otomatik yüklenir ve üretimlerde anlık düşer.</span></li>
               <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Üyelikler aylık yenilenir; iptal etmediğin sürece aktif kalır.</span></li>
-              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Üretim iptal edilirse jeton düşmez — sadece tamamlanan render ücretlenir.</span></li>
-              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Jeton/üyelik kötüye kullanım, sahte hesap veya bot tespitinde durdurulabilir.</span></li>
+              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Üretim iptal edilirse ⚡ Enerji düşmez — sadece tamamlanan render ücretlenir.</span></li>
+              <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>⚡ Enerji/üyelik kötüye kullanım, sahte hesap veya bot tespitinde durdurulabilir.</span></li>
               <li className="flex gap-2"><span style={{ color: "var(--accent)" }}>•</span><span>Telif riski yüksek kârilerde oluşabilecek platform itirazları kullanıcı sorumluluğundadır.</span></li>
             </ul>
             <button
@@ -474,7 +387,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               className="mt-4 w-full rounded-xl py-2.5 text-[10px] font-black uppercase tracking-wider text-black"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              Okudum, kabul ediyorum
+              {copy.termsButton}
             </button>
           </div>
         </div>
@@ -494,10 +407,12 @@ const UyelikKarti: React.FC<{
   vurgu: boolean;
   processing: boolean;
   onSec: () => void;
-  rate: number;
+  actionLabel: string;
+  processingLabel: string;
+  perMonthLabel: string;
   disabled?: boolean;
   disabledLabel?: string;
-}> = ({ tier: _tier, icon: Icon, isim, altbaslik, fiyatTL, ozellikler, vurgu, processing, onSec, rate, disabled, disabledLabel }) => {
+}> = ({ tier: _tier, icon: Icon, isim, altbaslik, fiyatTL, ozellikler, vurgu, processing, onSec, actionLabel, processingLabel, perMonthLabel, disabled, disabledLabel }) => {
   void _tier;
   return (
     <div
@@ -539,15 +454,12 @@ const UyelikKarti: React.FC<{
         </div>
       </div>
 
-      {/* Fiyat — TL sabit fiyat, USD yaklaşık küçük altında (sadece aylık, yıllık satış yok) */}
+      {/* Fiyat: sabit TL fiyatı */}
       <div className="mt-4 flex items-end gap-2">
         <span className="font-display text-4xl font-black tabular-nums text-white">
           ₺{fiyatTL.toLocaleString("tr-TR")}
         </span>
-        <span className="mb-1 text-[10px] text-white/40">/ ay</span>
-      </div>
-      <div className="mt-0.5 text-[9px] text-white/30 tabular-nums">
-        ≈ ${(fiyatTL / rate).toFixed(2)} USD · kur ₺{rate.toFixed(2)}
+        <span className="mb-1 text-[10px] text-white/40">{perMonthLabel}</span>
       </div>
 
       {/* Özellikler */}
@@ -577,19 +489,19 @@ const UyelikKarti: React.FC<{
       >
         {disabled ? (
           <>
-            <Check size={13} /> {disabledLabel ?? "Mevcut planın"}
+            <Check size={13} /> {disabledLabel ?? actionLabel}
           </>
         ) : processing ? (
           <>
-            <Sparkles size={13} className="animate-spin" /> İşleniyor…
+            <Sparkles size={13} className="animate-spin" /> {processingLabel}
           </>
         ) : vurgu ? (
           <>
-            <Crown size={13} /> Elit Ol
+            <Crown size={13} /> {actionLabel}
           </>
         ) : (
           <>
-            <Gem size={13} /> Pro'ya Geç
+            <Gem size={13} /> {actionLabel}
           </>
         )}
       </button>
