@@ -5,8 +5,7 @@
 
 import React from "react";
 import { X, Shield } from "lucide-react";
-import { getPaymentCopy } from "../i18n/paymentCopy";
-import type { Lang } from "../i18n";
+import { getPaymentCopy, type Lang } from "../i18n";
 
 interface LegalModalProps {
   tosOpen: boolean;
@@ -17,7 +16,11 @@ interface LegalModalProps {
 }
 
 export const LegalModal: React.FC<LegalModalProps> = ({
-  tosOpen, setTosOpen, legalTab, setLegalTab, lang,
+  tosOpen,
+  setTosOpen,
+  legalTab,
+  setLegalTab,
+  lang,
 }) => {
   if (!tosOpen) return null;
 
@@ -37,7 +40,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
       onClick={() => setTosOpen(false)}
     >
       <div
-        className="glass modal-in relative w-full max-w-lg rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]"
+        className="glass modal-in relative flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl p-6 shadow-2xl"
         style={{ border: "1px solid rgba(215,170,82,.35)" }}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
@@ -52,11 +55,19 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         </button>
 
         <div className="mb-3 flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black shrink-0" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-black"
+            style={{
+              background: "linear-gradient(135deg,var(--accent-2),var(--accent))",
+            }}
+          >
             <Shield size={18} />
           </span>
           <div>
-            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>
+            <h3
+              className="font-display text-sm font-black tracking-wider"
+              style={{ color: "var(--accent-2)" }}
+            >
               {copy.legalTitle}
             </h3>
             <p className="text-[9.5px] text-white/40">{copy.legalSubtitle}</p>
@@ -68,13 +79,21 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setLegalTab(tab.id)}
               className={`rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition ${
                 legalTab === tab.id
                   ? "text-black shadow-md"
                   : "glass-soft text-white/50 hover:text-white"
               }`}
-              style={legalTab === tab.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+              style={
+                legalTab === tab.id
+                  ? {
+                      background:
+                        "linear-gradient(135deg,var(--accent-2),var(--accent))",
+                    }
+                  : undefined
+              }
             >
               {tab.label}
             </button>
@@ -82,18 +101,12 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         </div>
 
         {/* Tab Contents */}
-        <div className="flex-1 overflow-y-auto pr-1 text-[11px] leading-relaxed text-white/80 space-y-3 scrollbar-thin">
-
-          {/* ── KULLANIM ŞARTLARI ── */}
+        <div className="scrollbar-thin flex-1 space-y-3 overflow-y-auto pr-1 text-[11px] leading-relaxed text-white/80">
           {legalTab === "tos" && <LegalPanel text={copy.legalBody.tos} />}
-
-          {/* ── KVKK ── */}
           {legalTab === "kvkk" && <LegalPanel text={copy.legalBody.kvkk} />}
-
-          {/* ── GİZLİLİK ── */}
-          {legalTab === "gizlilik" && <LegalPanel text={copy.legalBody.privacy} />}
-
-          {/* ── İADE ── */}
+          {legalTab === "gizlilik" && (
+            <LegalPanel text={copy.legalBody.privacy} />
+          )}
           {legalTab === "iade" && <LegalPanel text={copy.legalBody.refund} />}
         </div>
       </div>
@@ -103,7 +116,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
 const LegalPanel: React.FC<{ text: string }> = ({ text }) => (
   <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-    <p className="text-white/90 leading-relaxed">{text}</p>
+    <p className="leading-relaxed text-white/90">{text}</p>
     <p className="mt-4 text-[10px] text-white/40">support@nurstudyo.com</p>
   </div>
 );
