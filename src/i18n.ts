@@ -376,7 +376,7 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Nûr Stüdyo, kullanıcı tercihlerini ve oturum bilgilerini yalnızca kullanıcının kendi cihazındaki şifreli LocalStorage alanında saklar. Sunucu taraflı kullanıcı davranış kaydı yapılmamaktadır.\n\n" +
           "• Google hesap bilgileri (ad, e-posta, profil fotoğrafı) — yalnızca oturum doğrulama için\n" +
           "• Tema, dil ve arayüz tercihleri — cihaz üzerinde şifreli olarak\n" +
-          "• Enerji bakiyesi ve üyelik durumu — cihaz üzerinde şifreli olarak\n" +
+          "• Hizmet bakiyesi ve üyelik durumu — cihaz üzerinde şifreli olarak\n" +
           "• Video üretim geçmişi — cihaz üzerinde, sunucuya gönderilmez\n\n" +
           "ÇEREZ KULLANIMI\n\n" +
           "Platform yalnızca zorunlu teknik çerezler kullanır. Reklamcılık veya kullanıcı takibine yönelik üçüncü taraf çerezleri kullanılmamaktadır.\n\n" +
@@ -385,13 +385,13 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
         refund:
           "DİJİTAL HİZMET KAPSAMI\n\n" +
-          "Satın alınan jeton paketleri ve üyelik planları anında teslim edilen dijital hizmet kapsamındadır.\n\n" +
+          "Satın alınan birim paketleri ve üyelik planları anında teslim edilen dijital hizmet kapsamındadır.\n\n" +
           "CAYMA HAKKI\n\n" +
           "6502 sayılı TKHK m.49 ve Mesafeli Sözleşmeler Yönetmeliği m.15/1-ğ uyarınca; kullanıcının açık onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
-          "KULLANILMAMIŞ JETON BAKİYESİ\n\n" +
+          "KULLANILMAMIŞ BİRİM BAKİYESİ\n\n" +
           "Hiç kullanılmamış bakiyeler için satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketler için iade yapılmamaktadır.\n\n" +
           "TEKNİK HATA\n\n" +
-          "Ödeme tamamlanmasına rağmen jeton tanımlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
+          "Ödeme tamamlanmasına rağmen birim tanımlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
           "ÖDEME GÜVENLİĞİ\n\n" +
           "Ödemeler PCI DSS uyumlu PayTR/iyzico altyapısı üzerinden 256-bit SSL şifrelemesiyle gerçekleştirilmektedir. Kart bilgileri platformumuzda saklanmamaktadır.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
@@ -442,7 +442,7 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Nûr Studio stores user preferences and session information exclusively in encrypted LocalStorage on the user's own device. No server-side user behavior tracking is performed.\n\n" +
           "• Google account info (name, email, profile photo) — authentication only\n" +
           "• Theme, language and UI preferences — encrypted on device\n" +
-          "• Energy balance and membership status — encrypted on device\n" +
+          "• Unit balance and membership status — encrypted on device\n" +
           "• Video production history — on device only, never sent to servers\n\n" +
           "COOKIE USAGE\n\n" +
           "The platform uses only essential technical cookies. No third-party advertising or user tracking cookies are used. Google Analytics or similar tracking tools are not integrated.\n\n" +
@@ -451,13 +451,13 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Last updated: August 2026 · support@nurstudyo.com",
         refund:
           "DIGITAL SERVICE SCOPE\n\n" +
-          "Purchased token packages and membership plans are classified as instantly delivered digital services.\n\n" +
+          "Purchased unit packages and membership plans are classified as instantly delivered digital services.\n\n" +
           "RIGHT OF WITHDRAWAL\n\n" +
           "In accordance with Turkish Consumer Protection Law and the Distance Contracts Regulation, the right of withdrawal cannot be exercised for digital services that are immediately performed with the user's explicit consent.\n\n" +
-          "UNUSED TOKEN BALANCE\n\n" +
+          "UNUSED UNIT BALANCE\n\n" +
           "For completely unused balances, you may contact support@nurstudyo.com within 7 days of purchase. No refunds are provided for partially used packages.\n\n" +
           "TECHNICAL ISSUES\n\n" +
-          "If tokens are not credited despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
+          "If units are not credited despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
           "PAYMENT SECURITY\n\n" +
           "Payments are processed through PCI DSS compliant PayTR/iyzico infrastructure with 256-bit SSL encryption. Card information is never stored on our platform.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
