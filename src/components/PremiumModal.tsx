@@ -177,7 +177,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           </div>
         </div>
 
-        <div className="flex gap-2 border-b border-white/10 px-4 pt-3">
+        {/* Sekmeler ortada — eskisi gibi */}
+        <div className="flex items-center justify-center gap-2 border-b border-white/10 px-4 pt-3">
           {(
             [
               { id: "uyelik" as const, label: copy.membership, icon: Crown },
@@ -188,7 +189,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`flex items-center gap-1.5 rounded-t-xl px-4 py-2.5 text-xs font-bold transition ${
+              className={`flex items-center gap-1.5 rounded-t-xl px-5 py-2.5 text-xs font-bold transition ${
                 tab === id
                   ? "bg-white/10 text-[color:var(--accent-2)]"
                   : "text-white/45 hover:text-white/80"
@@ -207,7 +208,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
         <div className="scrollbar-thin flex-1 overflow-y-auto p-4 md:p-6">
           {tab === "uyelik" ? (
-            <div className="grid gap-4 md:grid-cols-[1fr_1.15fr]">
+            <div className="mx-auto grid max-w-3xl gap-4 md:grid-cols-2">
               <UyelikKarti
                 icon={Gem}
                 isim="NÛR PRO"
@@ -295,7 +296,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         </span>
                         <div>
                           <div className="text-sm font-black text-white">
-                            {p.jeton} ⚡
+                            {p.jeton} {copy.energy}
                           </div>
                           <div className="text-[10px] text-white/45">{label}</div>
                         </div>

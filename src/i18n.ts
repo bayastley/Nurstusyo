@@ -442,7 +442,7 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Nûr Studio stores user preferences and session information exclusively in encrypted LocalStorage on the user's own device. No server-side user behavior tracking is performed.\n\n" +
           "• Google account info (name, email, profile photo) — authentication only\n" +
           "• Theme, language and UI preferences — encrypted on device\n" +
-          "• Unit balance and membership status — encrypted on device\n" +
+          "• Service balance and membership status — encrypted on device\n" +
           "• Video production history — on device only, never sent to servers\n\n" +
           "COOKIE USAGE\n\n" +
           "The platform uses only essential technical cookies. No third-party advertising or user tracking cookies are used. Google Analytics or similar tracking tools are not integrated.\n\n" +
@@ -450,14 +450,14 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Account data is retained during active membership. Upon account deletion, your data is permanently removed from the system within 30 days.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
         refund:
-          "DIGITAL SERVICE SCOPE\n\n" +
-          "Purchased unit packages and membership plans are classified as instantly delivered digital services.\n\n" +
+          "DIGITAL PRODUCT / SERVICE SCOPE\n\n" +
+          "Purchased service packs and membership plans are classified as instantly delivered digital products/services.\n\n" +
           "RIGHT OF WITHDRAWAL\n\n" +
           "In accordance with Turkish Consumer Protection Law and the Distance Contracts Regulation, the right of withdrawal cannot be exercised for digital services that are immediately performed with the user's explicit consent.\n\n" +
-          "UNUSED UNIT BALANCE\n\n" +
-          "For completely unused balances, you may contact support@nurstudyo.com within 7 days of purchase. No refunds are provided for partially used packages.\n\n" +
+          "UNUSED SERVICE BALANCE\n\n" +
+          "For completely unused service balances, you may contact support@nurstudyo.com within 7 days of purchase. No refunds are provided for partially used packs.\n\n" +
           "TECHNICAL ISSUES\n\n" +
-          "If units are not credited despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
+          "If the purchased service is not activated despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
           "PAYMENT SECURITY\n\n" +
           "Payments are processed through PCI DSS compliant PayTR/iyzico infrastructure with 256-bit SSL encryption. Card information is never stored on our platform.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
