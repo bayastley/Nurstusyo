@@ -1,10 +1,11 @@
 // ════════════════════════════════════════════════════════
 // LEGAL MODAL — KVKK, Kullanım Şartları, Gizlilik, İade
-// ModalsContainer.tsx'den ayrıldı (boyut için)
+// GitHub orijinali + dil düzeltmesi
 // ════════════════════════════════════════════════════════
 
 import React from "react";
 import { X, Shield } from "lucide-react";
+// LegalModal GitHub'da ../i18n kullanıyor — getPaymentCopy artık TR-first
 import { getPaymentCopy, type Lang } from "../i18n";
 
 interface LegalModalProps {
@@ -24,14 +25,15 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 }) => {
   if (!tosOpen) return null;
 
-  const copy = getPaymentCopy(lang);
+  // lang boş/undefined ise TR — EN'ye düşmez
+  const copy = getPaymentCopy(lang ?? "tr");
 
   const tabs = [
-    { id: "tos", label: copy.legalTabs.tos },
-    { id: "kvkk", label: copy.legalTabs.kvkk },
-    { id: "gizlilik", label: copy.legalTabs.privacy },
-    { id: "iade", label: copy.legalTabs.refund },
-  ] as const;
+    { id: "tos" as const, label: copy.legalTabs.tos },
+    { id: "kvkk" as const, label: copy.legalTabs.kvkk },
+    { id: "gizlilik" as const, label: copy.legalTabs.privacy },
+    { id: "iade" as const, label: copy.legalTabs.refund },
+  ];
 
   return (
     <div
@@ -74,7 +76,6 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           </div>
         </div>
 
-        {/* Legal Tabs */}
         <div className="mb-3 flex flex-wrap gap-1 border-b border-white/10 pb-2">
           {tabs.map((tab) => (
             <button
@@ -100,7 +101,6 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           ))}
         </div>
 
-        {/* Tab Contents */}
         <div className="scrollbar-thin flex-1 space-y-3 overflow-y-auto pr-1 text-[11px] leading-relaxed text-white/80">
           {legalTab === "tos" && <LegalPanel text={copy.legalBody.tos} />}
           {legalTab === "kvkk" && <LegalPanel text={copy.legalBody.kvkk} />}
@@ -116,7 +116,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
 const LegalPanel: React.FC<{ text: string }> = ({ text }) => (
   <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
-    <p className="leading-relaxed text-white/90">{text}</p>
-    <p className="mt-4 text-[10px] text-white/40">support@nurstudyo.com</p>
+    {/* whitespace-pre-line: \n\n satır kırılımlarını gösterir */}
+    <p className="whitespace-pre-line leading-relaxed text-white/90">{text}</p>
+    <p className="mt-4 text-[10px] text-white/40">destek@nurstudyo.com</p>
   </div>
 );
