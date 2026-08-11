@@ -1,14 +1,4 @@
-export type Lang =
-  | "tr"
-  | "en"
-  | "ar"
-  | "de"
-  | "ru"
-  | "fr"
-  | "es"
-  | "id"
-  | "ur"
-  | "fa";
+import type { Lang } from "../i18n";
 
 export interface PaymentCopy {
   title: string;
@@ -36,15 +26,13 @@ export interface PaymentCopy {
   legalBody: { tos: string; kvkk: string; privacy: string; refund: string };
 }
 
-// ★ iyzico: jeton/kredi/enerji/token/coin YASAK → ürün/hizmet dili
-// Değişken adları (jeton, energy) aynı kalır — sadece görünen metin
 const tr: PaymentCopy = {
-  title: "ÜYELİK & HİZMET",
-  balance: "Hizmet",
+  title: "ÜYELİK & ⚡ ENERJİ",
+  balance: "⚡ Enerji",
   membership: "Üyelik",
-  energy: "Hizmet",
-  energyTab: "Hizmet Paketi",
-  intro: "Abone olmadan tek seferlik hizmet paketi satın al — kendi hızında üret.",
+  energy: "⚡ Enerji",
+  energyTab: "⚡ Enerji Paketi",
+  intro: "Abone olmadan, tek seferlik ⚡ Enerji satın al - kendi hızında üret.",
   popular: "POPÜLER",
   buy: "Satın Al",
   perMonth: "/ ay",
@@ -63,7 +51,7 @@ const tr: PaymentCopy = {
     "1080p filigransız üretim",
     "Sinematik filtreler",
     "AI yazı yenileme",
-    "Günlük 40 hizmet hakkı",
+    "Günlük 40 ⚡ Enerji",
   ],
   elitFeatures: [
     "Tüm hocalar",
@@ -72,7 +60,7 @@ const tr: PaymentCopy = {
     "Sınırsız AI arama",
     "Sosyal paylaşım",
     "Tasarım stüdyosu",
-    "Günlük 150 hizmet hakkı",
+    "Günlük 150 ⚡ Enerji",
     "Öncelikli destek",
   ],
   legalTabs: {
@@ -100,6 +88,7 @@ const tr: PaymentCopy = {
       "UYGULANACAK HUKUK\n\n" +
       "İşbu koşullar Türk Hukuku'na tabidir. Uyuşmazlıklarda Türkiye Cumhuriyeti mahkemeleri yetkilidir.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
+
     kvkk:
       "VERİ SORUMLUSU\n\n" +
       "6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu, nurstudyo.com alan adı üzerinden hizmet veren şahıs firmasıdır.\nİletişim: destek@nurstudyo.com\n\n" +
@@ -116,12 +105,13 @@ const tr: PaymentCopy = {
       "HAKLARINIZ (KVKK M.11)\n\n" +
       "Kişisel verilerinize erişim, düzeltme, silme ve itiraz haklarınız bulunmaktadır. destek@nurstudyo.com adresine başvurunuz. Talepler 30 gün içinde yanıtlanır.\n\n" +
       "Son güncelleme: Ağustos 2026 · kvkk.gov.tr",
+
     privacy:
       "TOPLANAN VERİLER\n\n" +
       "Nûr Stüdyo, kullanıcı tercihlerini ve oturum bilgilerini yalnızca kullanıcının kendi cihazındaki şifreli LocalStorage alanında saklar. Sunucu taraflı kullanıcı davranış kaydı yapılmamaktadır. Toplanan veriler şunlardır:\n\n" +
       "• Google hesap bilgileri (ad, e-posta, profil fotoğrafı) — yalnızca oturum doğrulama için\n" +
       "• Tema, dil ve arayüz tercihleri — cihaz üzerinde şifreli olarak\n" +
-      "• Hizmet bakiyesi ve üyelik durumu — cihaz üzerinde şifreli olarak\n" +
+      "• Enerji bakiyesi ve üyelik durumu — cihaz üzerinde şifreli olarak\n" +
       "• Video üretim geçmişi — cihaz üzerinde, sunucuya gönderilmez\n\n" +
       "ÇEREZ KULLANIMI\n\n" +
       "Platform yalnızca zorunlu teknik çerezler kullanır. Reklamcılık veya kullanıcı takibine yönelik üçüncü taraf çerezleri kullanılmamaktadır. Google Analytics veya benzeri izleme araçları entegre edilmemiştir.\n\n" +
@@ -138,17 +128,18 @@ const tr: PaymentCopy = {
       "• EveryAyah / MP3Quran — Kur'an ses kaynakları\n\n" +
       "Bu hizmetlerin kendi gizlilik politikaları geçerlidir.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
+
     refund:
       "DİJİTAL HİZMET KAPSAMI\n\n" +
-      "Satın alınan hizmet paketleri ve üyelik planları anında teslim edilen dijital ürün/hizmet kapsamındadır.\n\n" +
+      "Satın alınan hizmet paketleri ve üyelik planları anında teslim edilen dijital hizmet kapsamındadır.\n\n" +
       "CAYMA HAKKI\n\n" +
       "6502 sayılı TKHK m.49 ve Mesafeli Sözleşmeler Yönetmeliği m.15/1-ğ uyarınca; kullanıcının açık onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
       "KULLANILMAMIŞ HİZMET BAKİYESİ\n\n" +
-      "Hiç kullanılmamış hizmet bakiyeleri için satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketler için iade yapılmamaktadır.\n\n" +
+      "Hiç kullanılmamış bakiyeler için satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketler için iade yapılmamaktadır.\n\n" +
       "ÜYELİK İPTALİ\n\n" +
-      "Aylık üyelikler dönem sonuna kadar aktif kalır. İptal talebi bir sonraki dönemin başlangıcından önce yapılmalıdır. Mevcut dönem için kısmi iade yapılmaz. İptal sonrası hesabınız ücretsiz (Free) plana düşer ve mevcut hizmet bakiyeniz korunur.\n\n" +
+      "Aylık üyelikler dönem sonuna kadar aktif kalır. İptal talebi bir sonraki dönemin başlangıcından önce yapılmalıdır. Mevcut dönem için kısmi iade yapılmaz. İptal sonrası hesabınız ücretsiz (Free) plana düşer ve mevcut ⚡ Enerji bakiyeniz korunur.\n\n" +
       "TEKNİK HATA\n\n" +
-      "Ödeme tamamlanmasına rağmen satın alınan hizmet tanımlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
+      "Ödeme tamamlanmasına rağmen hizmet tanımlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
       "ÖDEME GÜVENLİĞİ\n\n" +
       "Ödemeler PCI DSS uyumlu PayTR/iyzico altyapısı üzerinden 256-bit SSL şifrelemesiyle gerçekleştirilmektedir. Kart bilgileri platformumuzda saklanmamaktadır.\n\n" +
       "İADE SÜRECİ\n\n" +
@@ -160,13 +151,12 @@ const tr: PaymentCopy = {
 const translations: Partial<Record<Lang, PaymentCopy>> = {
   en: {
     ...tr,
-    title: "MEMBERSHIP & SERVICE",
-    balance: "Service",
+    title: "MEMBERSHIP & ⚡ ENERGY",
+    balance: "⚡ Energy",
     membership: "Membership",
-    energy: "Service",
-    energyTab: "Service Pack",
-    intro:
-      "Buy a one-time service pack without a subscription and create at your own pace.",
+    energy: "⚡ Energy",
+    energyTab: "⚡ Energy Packages",
+    intro: "Buy one-time ⚡ Energy without a subscription and create at your own pace.",
     popular: "POPULAR",
     buy: "Buy",
     perMonth: "/ month",
@@ -185,7 +175,7 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
       "1080p watermark-free",
       "Cinematic filters",
       "AI text refresh",
-      "Daily 40 service credits",
+      "Daily 40 ⚡ Energy",
     ],
     elitFeatures: [
       "All reciters",
@@ -194,11 +184,9 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
       "Unlimited AI search",
       "Social sharing",
       "Design studio",
-      "Daily 150 service credits",
+      "Daily 150 ⚡ Energy",
       "Priority support",
     ],
-    // EN UI'da "credits" riskli olabilir → service rights
-    // düzeltme aşağıda features'ta:
     legalTabs: {
       tos: "Terms of Use",
       kvkk: "Data Protection",
@@ -224,6 +212,7 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "GOVERNING LAW\n\n" +
         "These terms are governed by the laws of the Republic of Turkey. Turkish courts have exclusive jurisdiction over any disputes.\n\n" +
         "Last updated: August 2026 · support@nurstudyo.com",
+
       kvkk:
         "DATA CONTROLLER\n\n" +
         "The data controller under applicable data protection regulations is the sole proprietorship operating via nurstudyo.com.\nContact: support@nurstudyo.com\n\n" +
@@ -240,12 +229,13 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "YOUR RIGHTS\n\n" +
         "You have the right to access, correct, delete and object to your personal data. Contact support@nurstudyo.com. Requests are answered within 30 days.\n\n" +
         "Last updated: August 2026",
+
       privacy:
         "DATA COLLECTED\n\n" +
         "Nûr Studio stores user preferences and session information exclusively in encrypted LocalStorage on the user's own device. No server-side user behavior tracking is performed. Collected data includes:\n\n" +
         "• Google account info (name, email, profile photo) — authentication only\n" +
         "• Theme, language and UI preferences — encrypted on device\n" +
-        "• Service balance and membership status — encrypted on device\n" +
+        "• Energy balance and membership status — encrypted on device\n" +
         "• Video production history — on device only, never sent to servers\n\n" +
         "COOKIE USAGE\n\n" +
         "The platform uses only essential technical cookies. No third-party advertising or user tracking cookies are used. Google Analytics or similar tracking tools are not integrated.\n\n" +
@@ -262,17 +252,18 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "• EveryAyah / MP3Quran — Quran audio sources\n\n" +
         "Their respective privacy policies apply.\n\n" +
         "Last updated: August 2026 · support@nurstudyo.com",
+
       refund:
-        "DIGITAL PRODUCT / SERVICE SCOPE\n\n" +
-        "Purchased service packs and membership plans are classified as instantly delivered digital products/services.\n\n" +
+        "DIGITAL SERVICE SCOPE\n\n" +
+        "Purchased service packages and membership plans are classified as instantly delivered digital services.\n\n" +
         "RIGHT OF WITHDRAWAL\n\n" +
         "In accordance with Turkish Consumer Protection Law and the Distance Contracts Regulation, the right of withdrawal cannot be exercised for digital services that are immediately performed with the user's explicit consent.\n\n" +
         "UNUSED SERVICE BALANCE\n\n" +
-        "For completely unused service balances, you may contact support@nurstudyo.com within 7 days of purchase. No refunds are provided for partially used packs.\n\n" +
+        "For completely unused balances, you may contact support@nurstudyo.com within 7 days of purchase. No refunds are provided for partially used packages.\n\n" +
         "MEMBERSHIP CANCELLATION\n\n" +
-        "Monthly memberships remain active until the end of the current period. Cancellation requests must be made before the start of the next billing period. No partial refunds for the current period. After cancellation, your account reverts to the Free plan and your existing service balance is preserved.\n\n" +
+        "Monthly memberships remain active until the end of the current period. Cancellation requests must be made before the start of the next billing period. No partial refunds for the current period. After cancellation, your account reverts to the Free plan and your existing ⚡ Energy balance is preserved.\n\n" +
         "TECHNICAL ISSUES\n\n" +
-        "If the purchased service is not activated despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
+        "If services are not credited despite a completed payment, please contact support@nurstudyo.com with your payment receipt. Issues are reviewed within 2 business days.\n\n" +
         "PAYMENT SECURITY\n\n" +
         "Payments are processed through PCI DSS compliant PayTR/iyzico infrastructure with 256-bit SSL encryption. Card information is never stored on our platform.\n\n" +
         "REFUND PROCESS\n\n" +
@@ -280,163 +271,185 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "Last updated: August 2026 · support@nurstudyo.com",
     },
   },
-};
+  ar: {
+    ...tr,
+    title: "العضوية و⚡ الطاقة",
+    balance: "⚡ الطاقة",
+    membership: "العضوية",
+    energy: "⚡ الطاقة",
+    energyTab: "حزم ⚡ الطاقة",
+    intro: "اشترِ ⚡ الطاقة دون اشتراك وأنشئ بإيقاعك.",
+    popular: "الأكثر شعبية",
+    buy: "شراء",
+    perMonth: "/ شهر",
+    processing: "جارٍ المعالجة...",
+    currentPlan: "خطتك الحالية",
+    proAction: "الترقية إلى Pro",
+    elitAction: "الترقية إلى Elit",
+    accept: "لقد قرأت شروط الشراء وأوافق عليها.",
+    termsTitle: "شروط الشراء",
+    termsButton: "قرأت وأوافق",
+    packageLabels: ["مبتدئ", "قياسي", "متوسط", "كبير", "ضخم"],
+    proFeatures: [
+      "15 قارئ",
+      "250 محتوى",
+      "20 سمة",
+      "إنتاج 1080p بدون علامة مائية",
+      "مرشحات سينمائية",
+      "تجديد النص بالذكاء الاصطناعي",
+      "40 ⚡ طاقة يومياً",
+    ],
+    elitFeatures: [
+      "جميع القراء",
+      "500 محتوى",
+      "20 سمة",
+      "بحث ذكي غير محدود",
+      "مشاركة اجتماعية",
+      "استوديو التصميم",
+      "150 ⚡ طاقة يومياً",
+      "دعم أولوي",
+    ],
+    legalTabs: {
+      tos: "شروط الاستخدام",
+      kvkk: "حماية البيانات",
+      privacy: "الخصوصية وملفات تعريف الارتباط",
+      refund: "الشراء والاسترداد",
+    },
+    legalTitle: "المعلومات القانونية والاتفاقيات",
+    legalSubtitle: "بوابة الاتفاقيات المؤسسية لـ nurstudyo.com",
+    legalBody: {
+      tos:
+        "تعريف المنصة وحدود المسؤولية\n\n" +
+        "نُور ستوديو (nurstudyo.com) هي منصة إنتاج فيديو رقمية مدعومة بالذكاء الاصطناعي مصممة لمنشئي المحتوى الإسلامي. تعمل المنصة كمؤسسة فردية تقدم خدمة البرمجيات ولا تدعي حقوق الطبع والنشر على أي محتوى إعلامي.\n\n" +
+        "مسؤولية المحتوى\n\n" +
+        "جميع مسؤوليات حقوق الطبع والنشر والترخيص والنشر الناشئة عن توزيع المحتوى المنتج على المنصة إلى أطراف ثالثة (يوتيوب، تيك توك، إنستغرام، إلخ) تعود حصرياً للمستخدم.\n\n" +
+        "الحساب والوصول\n\n" +
+        "مطلوب المصادقة عبر حساب Google لاستخدام خدمات المنصة. أمان الحساب مسؤولية المستخدم. تحتفظ المنصة بالحق في تعليق أو إغلاق الحسابات التي تنتهك شروط الخدمة.\n\n" +
+        "القانون المطبق\n\n" +
+        "تخضع هذه الشروط لقوانين جمهورية تركيا.\n\n" +
+        "آخر تحديث: أغسطس 2026 · support@nurstudyo.com",
 
-// EN features'ta "credits" kalmasın
-translations.en!.proFeatures = [
-  "15 reciters",
-  "250 assets",
-  "20 themes",
-  "1080p watermark-free",
-  "Cinematic filters",
-  "AI text refresh",
-  "Daily 40 service rights",
-];
-translations.en!.elitFeatures = [
-  "All reciters",
-  "500 assets",
-  "20 themes",
-  "Unlimited AI search",
-  "Social sharing",
-  "Design studio",
-  "Daily 150 service rights",
-  "Priority support",
-];
+      kvkk:
+        "مراقب البيانات\n\n" +
+        "مراقب البيانات بموجب لوائح حماية البيانات المعمول بها هو المؤسسة الفردية العاملة عبر nurstudyo.com.\n\n" +
+        "البيانات الشخصية المجمعة\n\n" +
+        "الاسم وعنوان البريد الإلكتروني وصورة الملف الشخصي التي تم الحصول عليها من خلال Google OAuth 2.0. يتم تخزين تفضيلات الاستخدام حصرياً في التخزين المحلي المشفر على جهاز المستخدم.\n\n" +
+        "أغراض المعالجة\n\n" +
+        "تتم معالجة البيانات الشخصية للتحقق من الحساب وتقديم الخدمة ومعالجة الدفع. لا تتم معالجة أي بيانات لأغراض تسويقية.\n\n" +
+        "عمليات النقل إلى أطراف ثالثة\n\n" +
+        "قد تتم مشاركة بياناتك مع PayTR/iyzico للمدفوعات وGoogle LLC للمصادقة وCloudflare/Vercel للبنية التحتية.\n\n" +
+        "حقوقك\n\n" +
+        "لديك الحق في الوصول إلى بياناتك الشخصية وتصحيحها وحذفها والاعتراض عليها. تواصل مع support@nurstudyo.com.\n\n" +
+        "آخر تحديث: أغسطس 2026",
 
-translations.ar = {
-  ...tr,
-  title: "العضوية والخدمة",
-  balance: "الخدمة",
-  membership: "العضوية",
-  energy: "الخدمة",
-  energyTab: "باقة الخدمة",
-  intro: "اشترِ باقة خدمة دون اشتراك وأنشئ بإيقاعك.",
-  popular: "الأكثر شعبية",
-  buy: "شراء",
-  perMonth: "/ شهر",
-  processing: "جارٍ المعالجة...",
-  currentPlan: "خطتك الحالية",
-  proAction: "الترقية إلى Pro",
-  elitAction: "الترقية إلى Elit",
-  accept: "لقد قرأت شروط الشراء وأوافق عليها.",
-  termsTitle: "شروط الشراء",
-  termsButton: "قرأت وأوافق",
-  packageLabels: ["مبتدئ", "قياسي", "متوسط", "كبير", "ضخم"],
-  proFeatures: [
-    "15 قارئ",
-    "250 محتوى",
-    "20 سمة",
-    "إنتاج 1080p بدون علامة مائية",
-    "مرشحات سينمائية",
-    "تجديد النص بالذكاء الاصطناعي",
-    "40 حق خدمة يومياً",
-  ],
-  elitFeatures: [
-    "جميع القراء",
-    "500 محتوى",
-    "20 سمة",
-    "بحث ذكي غير محدود",
-    "مشاركة اجتماعية",
-    "استوديو التصميم",
-    "150 حق خدمة يومياً",
-    "دعم أولوي",
-  ],
-  legalTabs: {
-    tos: "شروط الاستخدام",
-    kvkk: "حماية البيانات",
-    privacy: "الخصوصية وملفات تعريف الارتباط",
-    refund: "الشراء والاسترداد",
+      privacy:
+        "البيانات المجمعة\n\n" +
+        "يخزن نُور ستوديو تفضيلات المستخدم ومعلومات الجلسة حصرياً في التخزين المحلي المشفر على جهاز المستخدم. لا يتم إجراء تتبع سلوك المستخدم من جانب الخادم.\n\n" +
+        "استخدام ملفات تعريف الارتباط\n\n" +
+        "تستخدم المنصة فقط ملفات تعريف الارتباط التقنية الضرورية. لا يتم استخدام ملفات تعريف ارتباط إعلانية أو تتبع من أطراف ثالثة.\n\n" +
+        "أمان التخزين المحلي\n\n" +
+        "جميع البيانات المخزنة على الجهاز محمية بتشفير AES-256. تكتشف تقنية التحقق من توقيع HMAC وربط بصمة المتصفح أي نسخ أو تلاعب بالبيانات.\n\n" +
+        "فترة الاحتفاظ بالبيانات\n\n" +
+        "يتم الاحتفاظ ببيانات الحساب أثناء العضوية النشطة. عند حذف الحساب، تتم إزالة بياناتك نهائياً خلال 30 يوماً.\n\n" +
+        "آخر تحديث: أغسطس 2026 · support@nurstudyo.com",
+
+      refund:
+        "نطاق الخدمة الرقمية\n\n" +
+        "تُصنف حزم الخدمات وخطط العضوية المشتراة كخدمات رقمية يتم تسليمها فوراً.\n\n" +
+        "حق الانسحاب\n\n" +
+        "وفقاً لقانون حماية المستهلك التركي ونظام العقود عن بُعد، لا يمكن ممارسة حق الانسحاب للخدمات الرقمية التي يتم تنفيذها فوراً بموافقة المستخدم الصريحة.\n\n" +
+        "الرصيد غير المستخدم\n\n" +
+        "للأرصدة غير المستخدمة بالكامل، يمكنك التواصل مع support@nurstudyo.com خلال 7 أيام من الشراء. لا تتم عمليات استرداد للحزم المستخدمة جزئياً.\n\n" +
+        "إلغاء العضوية\n\n" +
+        "تظل العضويات الشهرية نشطة حتى نهاية الفترة الحالية. بعد الإلغاء، يعود حسابك إلى الخطة المجانية ويتم الحفاظ على رصيد ⚡ الطاقة الحالي.\n\n" +
+        "أمان الدفع\n\n" +
+        "تتم معالجة المدفوعات من خلال بنية PayTR/iyzico المتوافقة مع PCI DSS بتشفير SSL 256 بت. لا يتم تخزين معلومات البطاقة على منصتنا أبداً.\n\n" +
+        "آخر تحديث: أغسطس 2026 · support@nurstudyo.com",
+    },
   },
-  legalTitle: "المعلومات القانونية والاتفاقيات",
-  legalSubtitle: "بوابة الاتفاقيات المؤسسية لـ nurstudyo.com",
-};
-
-translations.de = {
-  ...tr,
-  title: "MITGLIEDSCHAFT & SERVICE",
-  balance: "Service",
-  membership: "Mitgliedschaft",
-  energy: "Service",
-  energyTab: "Servicepaket",
-  intro: "Kaufe ein einmaliges Servicepaket ohne Abo und produziere in deinem Tempo.",
-  popular: "BELIEBT",
-  buy: "Kaufen",
-  perMonth: "/ Monat",
-  processing: "Wird verarbeitet...",
-  currentPlan: "Aktueller Plan",
-  proAction: "Zu Pro wechseln",
-  elitAction: "Elite werden",
-  accept: "Ich habe die Kaufbedingungen gelesen und akzeptiere sie.",
-  termsTitle: "Kaufbedingungen",
-  termsButton: "Gelesen und akzeptiert",
-  legalTabs: {
-    tos: "Nutzungsbedingungen",
-    kvkk: "Datenschutz",
-    privacy: "Privatsphäre & Cookies",
-    refund: "Kauf & Erstattung",
+  de: {
+    ...tr,
+    title: "MITGLIEDSCHAFT & ⚡ ENERGIE",
+    balance: "⚡ Energie",
+    membership: "Mitgliedschaft",
+    energy: "⚡ Energie",
+    energyTab: "⚡ Energiepakete",
+    intro: "Kaufe ⚡ Energie ohne Abo und produziere in deinem Tempo.",
+    popular: "BELIEBT",
+    buy: "Kaufen",
+    perMonth: "/ Monat",
+    processing: "Wird verarbeitet...",
+    currentPlan: "Aktueller Plan",
+    proAction: "Zu Pro wechseln",
+    elitAction: "Elite werden",
+    accept: "Ich habe die Kaufbedingungen gelesen und akzeptiere sie.",
+    termsTitle: "Kaufbedingungen",
+    termsButton: "Gelesen und akzeptiert",
+    legalTabs: {
+      tos: "Nutzungsbedingungen",
+      kvkk: "Datenschutz",
+      privacy: "Privatsphäre & Cookies",
+      refund: "Kauf & Erstattung",
+    },
+    legalTitle: "Rechtliche Informationen",
+    legalSubtitle: "nurstudyo.com Unternehmensportal",
   },
-  legalTitle: "Rechtliche Informationen",
-  legalSubtitle: "nurstudyo.com Unternehmensportal",
-};
-
-translations.fr = {
-  ...tr,
-  title: "ABONNEMENT & SERVICE",
-  balance: "Service",
-  membership: "Abonnement",
-  energy: "Service",
-  energyTab: "Pack service",
-  intro: "Achetez un pack service sans abonnement et créez à votre rythme.",
-  popular: "POPULAIRE",
-  buy: "Acheter",
-  perMonth: "/ mois",
-  processing: "Traitement...",
-  currentPlan: "Plan actuel",
-  proAction: "Passer à Pro",
-  elitAction: "Devenir Elite",
-  accept: "J'ai lu et j'accepte les conditions d'achat.",
-  termsTitle: "Conditions d'achat",
-  termsButton: "Lu et accepté",
-  legalTabs: {
-    tos: "Conditions d'utilisation",
-    kvkk: "Protection des données",
-    privacy: "Confidentialité & Cookies",
-    refund: "Achat & Remboursement",
+  fr: {
+    ...tr,
+    title: "ABONNEMENT & ⚡ ÉNERGIE",
+    balance: "⚡ Énergie",
+    membership: "Abonnement",
+    energy: "⚡ Énergie",
+    energyTab: "Packs ⚡ Énergie",
+    intro: "Achetez de l'⚡ Énergie sans abonnement et créez à votre rythme.",
+    popular: "POPULAIRE",
+    buy: "Acheter",
+    perMonth: "/ mois",
+    processing: "Traitement...",
+    currentPlan: "Plan actuel",
+    proAction: "Passer à Pro",
+    elitAction: "Devenir Elite",
+    accept: "J'ai lu et j'accepte les conditions d'achat.",
+    termsTitle: "Conditions d'achat",
+    termsButton: "Lu et accepté",
+    legalTabs: {
+      tos: "Conditions d'utilisation",
+      kvkk: "Protection des données",
+      privacy: "Confidentialité & Cookies",
+      refund: "Achat & Remboursement",
+    },
+    legalTitle: "Informations juridiques",
+    legalSubtitle: "Portail d'entreprise nurstudyo.com",
   },
-  legalTitle: "Informations juridiques",
-  legalSubtitle: "Portail d'entreprise nurstudyo.com",
-};
-
-translations.es = {
-  ...tr,
-  title: "MEMBRESÍA Y SERVICIO",
-  balance: "Servicio",
-  membership: "Membresía",
-  energy: "Servicio",
-  energyTab: "Paquete de servicio",
-  intro: "Compra un paquete de servicio sin suscripción y crea a tu ritmo.",
-  popular: "POPULAR",
-  buy: "Comprar",
-  perMonth: "/ mes",
-  processing: "Procesando...",
-  currentPlan: "Plan actual",
-  proAction: "Cambiar a Pro",
-  elitAction: "Ser Elite",
-  accept: "He leído y acepto las condiciones de compra.",
-  termsTitle: "Condiciones de compra",
-  termsButton: "Leído y aceptado",
-  legalTabs: {
-    tos: "Términos de uso",
-    kvkk: "Protección de datos",
-    privacy: "Privacidad y Cookies",
-    refund: "Compra y reembolso",
+  es: {
+    ...tr,
+    title: "MEMBRESÍA Y ⚡ ENERGÍA",
+    balance: "⚡ Energía",
+    membership: "Membresía",
+    energy: "⚡ Energía",
+    energyTab: "Paquetes de ⚡ Energía",
+    intro: "Compra ⚡ Energía sin suscripción y crea a tu ritmo.",
+    popular: "POPULAR",
+    buy: "Comprar",
+    perMonth: "/ mes",
+    processing: "Procesando...",
+    currentPlan: "Plan actual",
+    proAction: "Cambiar a Pro",
+    elitAction: "Ser Elite",
+    accept: "He leído y acepto las condiciones de compra.",
+    termsTitle: "Condiciones de compra",
+    termsButton: "Leído y aceptado",
+    legalTabs: {
+      tos: "Términos de uso",
+      kvkk: "Protección de datos",
+      privacy: "Privacidad y Cookies",
+      refund: "Compra y reembolso",
+    },
+    legalTitle: "Información legal",
+    legalSubtitle: "Portal corporativo nurstudyo.com",
   },
-  legalTitle: "Información legal",
-  legalSubtitle: "Portal corporativo nurstudyo.com",
 };
 
-export function getPaymentCopy(lang?: Lang | string | null): PaymentCopy {
-  const code = String(lang || "tr").trim().toLowerCase() as Lang;
-  if (code === "tr") return tr;
-  return translations[code] ?? tr;
+export function getPaymentCopy(lang: Lang): PaymentCopy {
+  return translations[lang] ?? tr;
 }
