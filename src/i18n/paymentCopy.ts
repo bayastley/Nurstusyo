@@ -88,7 +88,6 @@ const tr: PaymentCopy = {
       "UYGULANACAK HUKUK\n\n" +
       "İşbu koşullar Türk Hukuku'na tabidir. Uyuşmazlıklarda Türkiye Cumhuriyeti mahkemeleri yetkilidir.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
-
     kvkk:
       "VERİ SORUMLUSU\n\n" +
       "6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında veri sorumlusu, nurstudyo.com alan adı üzerinden hizmet veren şahıs firmasıdır.\nİletişim: destek@nurstudyo.com\n\n" +
@@ -105,7 +104,6 @@ const tr: PaymentCopy = {
       "HAKLARINIZ (KVKK M.11)\n\n" +
       "Kişisel verilerinize erişim, düzeltme, silme ve itiraz haklarınız bulunmaktadır. destek@nurstudyo.com adresine başvurunuz. Talepler 30 gün içinde yanıtlanır.\n\n" +
       "Son güncelleme: Ağustos 2026 · kvkk.gov.tr",
-
     privacy:
       "TOPLANAN VERİLER\n\n" +
       "Nûr Stüdyo, kullanıcı tercihlerini ve oturum bilgilerini yalnızca kullanıcının kendi cihazındaki şifreli LocalStorage alanında saklar. Sunucu taraflı kullanıcı davranış kaydı yapılmamaktadır. Toplanan veriler şunlardır:\n\n" +
@@ -128,7 +126,6 @@ const tr: PaymentCopy = {
       "• EveryAyah / MP3Quran — Kur'an ses kaynakları\n\n" +
       "Bu hizmetlerin kendi gizlilik politikaları geçerlidir.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
-
     refund:
       "DİJİTAL HİZMET KAPSAMI\n\n" +
       "Satın alınan jeton paketleri ve üyelik planları anında teslim edilen dijital hizmet kapsamındadır.\n\n" +
@@ -139,7 +136,7 @@ const tr: PaymentCopy = {
       "ÜYELİK İPTALİ\n\n" +
       "Aylık üyelikler dönem sonuna kadar aktif kalır. İptal talebi bir sonraki dönemin başlangıcından önce yapılmalıdır. Mevcut dönem için kısmi iade yapılmaz. İptal sonrası hesabınız ücretsiz (Free) plana düşer ve mevcut ⚡ Enerji bakiyeniz korunur.\n\n" +
       "TEKNİK HATA\n\n" +
-      "Ödeme tamamlanmasına rağmen jeton tanınlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
+      "Ödeme tamamlanmasına rağmen jeton tanımlanmamışsa ödeme dekontunuzla destek@nurstudyo.com adresine başvurunuz. 2 iş günü içinde incelenir.\n\n" +
       "ÖDEME GÜVENLİĞİ\n\n" +
       "Ödemeler PCI DSS uyumlu PayTR/iyzico altyapısı üzerinden 256-bit SSL şifrelemesiyle gerçekleştirilmektedir. Kart bilgileri platformumuzda saklanmamaktadır.\n\n" +
       "İADE SÜRECİ\n\n" +
@@ -156,7 +153,8 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
     membership: "Membership",
     energy: "⚡ Energy",
     energyTab: "⚡ Energy Packages",
-    intro: "Buy one-time ⚡ Energy without a subscription and create at your own pace.",
+    intro:
+      "Buy one-time ⚡ Energy without a subscription and create at your own pace.",
     popular: "POPULAR",
     buy: "Buy",
     perMonth: "/ month",
@@ -212,7 +210,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "GOVERNING LAW\n\n" +
         "These terms are governed by the laws of the Republic of Turkey. Turkish courts have exclusive jurisdiction over any disputes.\n\n" +
         "Last updated: August 2026 · support@nurstudyo.com",
-
       kvkk:
         "DATA CONTROLLER\n\n" +
         "The data controller under applicable data protection regulations is the sole proprietorship operating via nurstudyo.com.\nContact: support@nurstudyo.com\n\n" +
@@ -229,7 +226,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "YOUR RIGHTS\n\n" +
         "You have the right to access, correct, delete and object to your personal data. Contact support@nurstudyo.com. Requests are answered within 30 days.\n\n" +
         "Last updated: August 2026",
-
       privacy:
         "DATA COLLECTED\n\n" +
         "Nûr Studio stores user preferences and session information exclusively in encrypted LocalStorage on the user's own device. No server-side user behavior tracking is performed. Collected data includes:\n\n" +
@@ -252,7 +248,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "• EveryAyah / MP3Quran — Quran audio sources\n\n" +
         "Their respective privacy policies apply.\n\n" +
         "Last updated: August 2026 · support@nurstudyo.com",
-
       refund:
         "DIGITAL SERVICE SCOPE\n\n" +
         "Purchased token packages and membership plans are classified as instantly delivered digital services.\n\n" +
@@ -328,7 +323,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "القانون المطبق\n\n" +
         "تخضع هذه الشروط لقوانين جمهورية تركيا.\n\n" +
         "آخر تحديث: أغسطس 2026 · support@nurstudyo.com",
-
       kvkk:
         "مراقب البيانات\n\n" +
         "مراقب البيانات بموجب لوائح حماية البيانات المعمول بها هو المؤسسة الفردية العاملة عبر nurstudyo.com.\n\n" +
@@ -341,7 +335,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "حقوقك\n\n" +
         "لديك الحق في الوصول إلى بياناتك الشخصية وتصحيحها وحذفها والاعتراض عليها. تواصل مع support@nurstudyo.com.\n\n" +
         "آخر تحديث: أغسطس 2026",
-
       privacy:
         "البيانات المجمعة\n\n" +
         "يخزن نُور ستوديو تفضيلات المستخدم ومعلومات الجلسة حصرياً في التخزين المحلي المشفر على جهاز المستخدم. لا يتم إجراء تتبع سلوك المستخدم من جانب الخادم.\n\n" +
@@ -352,7 +345,6 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
         "فترة الاحتفاظ بالبيانات\n\n" +
         "يتم الاحتفاظ ببيانات الحساب أثناء العضوية النشطة. عند حذف الحساب، تتم إزالة بياناتك نهائياً خلال 30 يوماً.\n\n" +
         "آخر تحديث: أغسطس 2026 · support@nurstudyo.com",
-
       refund:
         "نطاق الخدمة الرقمية\n\n" +
         "تُصنف حزم الجيتون وخطط العضوية المشتراة كخدمات رقمية يتم تسليمها فوراً.\n\n" +
@@ -450,6 +442,9 @@ const translations: Partial<Record<Lang, PaymentCopy>> = {
   },
 };
 
-export function getPaymentCopy(lang: Lang): PaymentCopy {
-  return translations[lang] ?? tr;
+/** Seçili dil yoksa TR. Asla sessizce EN'ye düşmez. */
+export function getPaymentCopy(lang?: Lang | string | null): PaymentCopy {
+  const code = String(lang || "tr").trim().toLowerCase() as Lang;
+  if (code === "tr") return tr;
+  return translations[code] ?? tr;
 }
