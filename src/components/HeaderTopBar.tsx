@@ -362,7 +362,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {isMasterSürüm || jetonCount >= 999999 ? "♾️ SINIRSIZ" : jetonCount}
                   </span>
                   {!(isMasterSürüm || jetonCount >= 999999) && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ Enerji</span>
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ Üretim hakkı</span>
                   )}
                 </button>
               );

@@ -176,7 +176,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="min-h-[74px] space-y-2">
         <button onClick={handleGenerate} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-[14px] font-black tracking-[.16em]" style={{ background: generating ? "#b91c1c" : "linear-gradient(135deg,var(--accent-2),var(--accent))", color: generating ? "white" : "black" }}>
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
-          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ Enerji`}
+          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ Üretim hakkı`}
         </button>
       </div>
     </section>
