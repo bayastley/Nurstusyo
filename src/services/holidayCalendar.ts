@@ -37,22 +37,26 @@ export function isRewardClaimed(eventKey: string): boolean {
  */
 export function claimHolyDayReward(
   eventKey: string,
-  kind: VideoKind,
-  amount: number,
-): { ok: boolean; message: string } {
+  kindOrAmount: VideoKind | number,
+  amount?: number,
+): { ok: boolean; message: string; newJeton: number } {
+  const kind: VideoKind = typeof kindOrAmount === "number" ? "kisa" : kindOrAmount;
+  const giftAmount = Math.max(0, Math.floor(typeof kindOrAmount === "number" ? kindOrAmount : amount ?? 0));
   if (isRewardClaimed(eventKey)) {
     return {
       ok: false,
       message: "🚨 Bu hediye bu gün için zaten alındı.",
+      newJeton: 0,
     };
   }
 
-  grantPack(kind, amount);
+  grantPack(kind, giftAmount);
   secureSet(CLAIMED_KEYS_PREFIX + eventKey, true);
 
   return {
     ok: true,
-    message: `🎉 Tebrikler! ${amount} adet ${VIDEO_KIND_LABEL[kind]} üretim hakkı hesabınıza tanımlandı.`,
+    message: `🎉 Tebrikler! ${giftAmount} adet ${VIDEO_KIND_LABEL[kind]} üretim hakkı hesabınıza tanımlandı.`,
+    newJeton: giftAmount,
   };
 }
 

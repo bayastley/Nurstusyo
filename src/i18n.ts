@@ -877,10 +877,14 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
         refund:
           "DİJİTAL HİZMET KAPSAMI\n\n" +
           "Satın alınan aylık üyelikler ve tek seferlik video üretim paketleri anında ifa edilen dijital hizmetlerdir. Ödenen tutar doğrudan hizmet bedelidir. Platformda bakiye yükleme, cüzdan veya para benzeri bir sistem bulunmaz.\n\n" +
+          "MESAFELİ SATIŞ SÖZLEŞMESİ\n\n" +
+          "Kullanıcı, satın alma işlemini tamamlamadan önce hizmetin dijital içerik / dijital hizmet niteliğinde olduğunu, ödeme sonrası hizmetin elektronik ortamda derhal sunulacağını ve video üretim sürecinin başlatılmasıyla hizmetin ifasına başlanacağını kabul eder.\n\n" +
+          "HİZMETİN İFASI\n\n" +
+          "Video üretimi başlatıldığında sistem kullanıcının seçtiği ayet, ses, atmosfer, format ve tasarım ayarlarına göre kişiye özel dijital video üretir. Bu işlem kullanıcı talebiyle başlatılan kişiselleştirilmiş dijital hizmettir.\n\n" +
           "CAYMA HAKKI\n\n" +
-          "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca, kullanıcının açık onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
+          "6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca; kullanıcının açık onayıyla anında ifasına başlanan dijital hizmetlerde cayma hakkı kullanılamaz. Kullanıcı video üretimini başlattıktan, video oluşturulduktan veya hizmetten kısmen yararlandıktan sonra iade talep edemez.\n\n" +
           "HİÇ KULLANILMAMIŞ PAKET\n\n" +
-          "Satın alınan tek seferlik paketten hiç video üretilmemişse, satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurularak iade talep edilebilir. Kısmen kullanılmış paketlerde iade yapılmaz.\n\n" +
+          "Satın alınan tek seferlik paketten hiç video üretilmemişse ve hizmet ifasına hiç başlanmamışsa, satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurularak iade talep edilebilir. Bir kez video üretildiyse, paket kısmen kullanıldıysa veya üretim süreci başlatıldıysa iade yapılmaz.\n\n" +
           "TEKNİK HATA\n\n" +
           "Hizmet bedeli ödenmesine rağmen üyelik veya video üretim paketi tanımlanmamışsa ödeme dekontu ile destek@nurstudyo.com adresine başvurulabilir. Talep en geç 2 iş günü içinde incelenir.\n\n" +
           "ÖDEME GÜVENLİĞİ\n\n" +
