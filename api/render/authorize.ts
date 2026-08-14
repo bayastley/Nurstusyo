@@ -2,10 +2,34 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { requireAuth } from "../_shared/auth.ts";
 import { rateLimit } from "../_shared/rateLimit.ts";
 import { requireAllowedOrigin } from "../_shared/security.ts";
-import { spendWallet } from "../_shared/supabase.ts";
+import { consumeVideo } from "../_shared/supabase.ts";
 
-const MODE_COST: Record<string, number> = { short: 8, long: 15, full: 45 };
-const ALLOWED_MODES = new Set(Object.keys(MODE_COST));
+// ════════════════════════════════════════════════════════
+// RENDER AUTHORIZE
+//
+// ★ İYZİCO UYUMU:
+//   Bakiye düşümü YOKTUR. Üretim izni iki kaynaktan gelir:
+//     1) Üyelik seviyesinin günlük kotası
+//     2) Satın alınmış tek seferlik paket hakkı
+// ════════════════════════════════════════════════════════
+
+type Tier = "free" | "pro" | "elit";
+type VideoKind = "kisa" | "uzun" | "tam";
+
+/** Süre modu → video türü */
+const MODE_TO_KIND: Record<string, VideoKind> = {
+  short: "kisa",
+  long: "uzun",
+  full: "tam",
+};
+
+/** Üyelik seviyesine göre günlük kota */
+const DAILY_QUOTA: Record<Tier, Record<VideoKind, number>> = {
+  free: { kisa: 3, uzun: 0, tam: 0 },
+  pro: { kisa: 8, uzun: 3, tam: 0 },
+  elit: { kisa: 15, uzun: 5, tam: 1 },
+};
+
 const ALLOWED_FORMATS = new Set(["9:16", "1:1", "16:9", "4:5"]);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -21,19 +45,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = requireAuth(req, res);
   if (!user) return;
 
-  const livePayments = process.env.VITE_PAYMENTS_LIVE === "true";
-  const walletBackendEnabled = process.env.NUR_WALLET_BACKEND_ENABLED === "true";
-
-  if (livePayments && !walletBackendEnabled) {
-    return res.status(503).json({
-      ok: false,
-      error: "Canlı üretim için server-side wallet/DB henüz etkin değil",
-    });
-  }
-
   const { mode, formats } = req.body || {};
 
-  if (typeof mode !== "string" || !ALLOWED_MODES.has(mode)) {
+  if (typeof mode !== "string" || !MODE_TO_KIND[mode]) {
     return res.status(400).json({ ok: false, error: "Geçersiz süre modu" });
   }
 
@@ -46,21 +60,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ ok: false, error: "Bilinmeyen video formatı" });
   }
 
-  const cost = MODE_COST[mode] * uniqueFormats.length;
+  const kind = MODE_TO_KIND[mode];
+  const tier: Tier = (user as { tier?: Tier }).tier ?? "free";
+  const quota = DAILY_QUOTA[tier][kind];
 
-  if (livePayments && walletBackendEnabled) {
-    const spent = await spendWallet(user.id, cost);
-    if (!spent.ok) {
-      return res.status(402).json({ ok: false, error: spent.error || "Yetersiz bakiye" });
-    }
-    return res.status(200).json({ ok: true, userId: user.id, cost, balance: spent.balance, mode, formats: uniqueFormats });
+  // Bu üyelik bu türü hiç üretemiyorsa (ve paketi de yoksa) erken uyar
+  const backendEnabled = process.env.NUR_QUOTA_BACKEND_ENABLED === "true";
+  const livePayments = process.env.VITE_PAYMENTS_LIVE === "true";
+
+  if (livePayments && !backendEnabled) {
+    return res.status(503).json({
+      ok: false,
+      error: "Canlı üretim için sunucu tarafı kota servisi henüz etkin değil",
+    });
   }
 
+  if (backendEnabled) {
+    // Her format ayrı bir üretim sayılır
+    const results = [];
+    for (let i = 0; i < uniqueFormats.length; i += 1) {
+      const spent = await consumeVideo(user.id, kind, quota);
+      if (!spent.ok) {
+        return res.status(402).json({
+          ok: false,
+          error:
+            spent.error === "NO_RIGHTS_LEFT"
+              ? "Bugünkü üretim hakkınız doldu. Paket alarak devam edebilirsiniz."
+              : "Üretim izni alınamadı",
+          kind,
+        });
+      }
+      results.push(spent);
+    }
+
+    const last = results[results.length - 1];
+    return res.status(200).json({
+      ok: true,
+      userId: user.id,
+      kind,
+      mode,
+      formats: uniqueFormats,
+      source: last.source,
+      quotaLeft: last.quota_left,
+      packLeft: last.pack_left,
+    });
+  }
+
+  // Demo mod: istemci tarafındaki kota takibi geçerli
   return res.status(200).json({
     ok: true,
+    demo: true,
     userId: user.id,
-    cost,
+    kind,
     mode,
     formats: uniqueFormats,
+    dailyQuota: quota,
   });
 }

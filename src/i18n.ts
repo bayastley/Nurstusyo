@@ -77,7 +77,7 @@ const trDict: Dict = {
   copyright: "Telifsiz Stüdyo Kayıtları",
   mode: "Süre Modu",
   modeShort: "Kısa Video (Shorts / Reel)",
-  modeLong: "Uzun Video (150 sn)",
+  modeLong: "Uzun Video (600 sn)",
   modeFull: "Tam Sürüm",
   format: "Video Ekran Formatı",
   stop: "Durdur",
@@ -111,7 +111,7 @@ const trDict: Dict = {
   addThis: "Bu Ayeti Ekle",
   contactSuggest: "Öneri Formu",
   contactComplaint: "Hata / Sorun Bildirimi",
-  contactSub: "Görüşleriniz NûR Stüdyo'yu geliştirmemize yardımcı oluyor.",
+  contactSub: "Görüşleriniz NÛR Stüdyo'yu geliştirmemize yardımcı oluyor.",
   sendEmail: "E-posta İle Gönder",
   loginTitle: "Giriş Yap / Kayıt Ol",
   loginSubtitle: "Nûr Stüdyo'ya hoş geldiniz",
@@ -132,10 +132,10 @@ const trDict: Dict = {
   resetPassword: "Şifre Sıfırla",
   backToLogin: "Geri dön",
   successVideoReady: "Sinematik Videonuz Başarıyla Hazırlandı! Cihazınıza İndiriliyor...",
-  energy: "Üretim hakkı",
-  energyShort: "⚡ Üretim hakkı",
+  energy: "Günlük hakkın",
+  energyShort: "Bugün",
   membership: "Üyelik",
-  energyPack: "Üretim hakkı paketi",
+  energyPack: "Video paketi",
 };
 
 const enDict: Dict = {
@@ -165,7 +165,7 @@ const enDict: Dict = {
   copyright: "Royalty Free Recitations",
   mode: "Duration Mode",
   modeShort: "Short Video (Shorts / Reel)",
-  modeLong: "Long Video (150s)",
+  modeLong: "Long Video (600s)",
   modeFull: "Full Duration",
   format: "Video Screen Format",
   stop: "Stop",
@@ -220,10 +220,10 @@ const enDict: Dict = {
   resetPassword: "Reset Password",
   backToLogin: "Back to Login",
   successVideoReady: "Your Cinematic Video is Ready! Downloading to Device...",
-  energy: "Production rights",
-  energyShort: "⚡ Production rights",
+  energy: "Daily allowance",
+  energyShort: "Today",
   membership: "Membership",
-  energyPack: "Production rights pack",
+  energyPack: "Video package",
 };
 
 const arDict: Dict = {
@@ -253,7 +253,7 @@ const arDict: Dict = {
   copyright: "تسجيلات خالية من حقوق النشر",
   mode: "نمط المدة",
   modeShort: "فيديو قصير (Shorts / Reels)",
-  modeLong: "فيديو طويل (150 ثانية)",
+  modeLong: "فيديو طويل (600 ثانية)",
   modeFull: "المدة الكاملة",
   format: "أبعاد الفيديو",
   stop: "إيقاف",
@@ -308,10 +308,10 @@ const arDict: Dict = {
   resetPassword: "إعادة تعيين كلمة المرور",
   backToLogin: "العودة لتسجيل الدخول",
   successVideoReady: "فيديو سينمائي جاهز! جاري التحميل على الجهاز...",
-  energy: "حق الإنتاج",
-  energyShort: "⚡ حق الإنتاج",
+  energy: "رصيدك اليومي",
+  energyShort: "اليوم",
   membership: "العضوية",
-  energyPack: "باقة حق الإنتاج",
+  energyPack: "باقة الفيديو",
 };
 
 const deDict: Dict = {
@@ -340,7 +340,7 @@ const deDict: Dict = {
   reciter: "Rezitator & Audio",
   mode: "Dauer-Modus",
   modeShort: "Kurzvideo (Shorts / Reel)",
-  modeLong: "Langes Video (150s)",
+  modeLong: "Langes Video (600s)",
   modeFull: "Volle Dauer",
   format: "Videoformat",
   stop: "Stopp",
@@ -395,10 +395,10 @@ const deDict: Dict = {
   resetPassword: "Passwort zurücksetzen",
   backToLogin: "Zurück zur Anmeldung",
   successVideoReady: "Ihr Video ist fertig! Wird heruntergeladen...",
-  energy: "Produktionsrecht",
-  energyShort: "⚡ Produktionsrecht",
+  energy: "Tägliches Kontingent",
+  energyShort: "Heute",
   membership: "Mitgliedschaft",
-  energyPack: "Produktionsrecht-Paket",
+  energyPack: "Videopaket",
 };
 
 const frDict: Dict = {
@@ -427,7 +427,7 @@ const frDict: Dict = {
   reciter: "Récitateur & audio",
   mode: "Mode durée",
   modeShort: "Vidéo courte (Shorts / Reel)",
-  modeLong: "Vidéo longue (150s)",
+  modeLong: "Vidéo longue (600s)",
   modeFull: "Durée complète",
   format: "Format vidéo",
   stop: "Arrêter",
@@ -482,10 +482,10 @@ const frDict: Dict = {
   resetPassword: "Réinitialiser le mot de passe",
   backToLogin: "Retour à la connexion",
   successVideoReady: "Votre vidéo est prête ! Téléchargement...",
-  energy: "Droit de production",
-  energyShort: "⚡ Droit de production",
+  energy: "Quota quotidien",
+  energyShort: "Aujourd'hui",
   membership: "Abonnement",
-  energyPack: "Pack droit de production",
+  energyPack: "Pack vidéo",
 };
 
 const esDict: Dict = {
@@ -514,7 +514,7 @@ const esDict: Dict = {
   reciter: "Recitador y audio",
   mode: "Modo de duración",
   modeShort: "Video corto (Shorts / Reel)",
-  modeLong: "Video largo (150s)",
+  modeLong: "Video largo (600s)",
   modeFull: "Duración completa",
   format: "Formato de video",
   stop: "Detener",
@@ -569,10 +569,10 @@ const esDict: Dict = {
   resetPassword: "Restablecer contraseña",
   backToLogin: "Volver al inicio de sesión",
   successVideoReady: "¡Tu video está listo! Descargando...",
-  energy: "Derecho de producción",
-  energyShort: "⚡ Derecho de producción",
+  energy: "Cuota diaria",
+  energyShort: "Hoy",
   membership: "Membresía",
-  energyPack: "Paquete de derecho de producción",
+  energyPack: "Paquete de video",
 };
 
 const ruDict: Dict = {
@@ -601,7 +601,7 @@ const ruDict: Dict = {
   reciter: "Чтец и аудио",
   mode: "Режим длительности",
   modeShort: "Короткое видео (Shorts / Reel)",
-  modeLong: "Длинное видео (150 с)",
+  modeLong: "Длинное видео (600 с)",
   modeFull: "Полная длительность",
   format: "Формат видео",
   stop: "Стоп",
@@ -656,10 +656,10 @@ const ruDict: Dict = {
   resetPassword: "Сбросить пароль",
   backToLogin: "Назад ко входу",
   successVideoReady: "Ваше видео готово! Загрузка...",
-  energy: "Право на производство",
-  energyShort: "⚡ Право на производство",
+  energy: "Дневной лимит",
+  energyShort: "Сегодня",
   membership: "Подписка",
-  energyPack: "Пакет права на производство",
+  energyPack: "Видеопакет",
 };
 
 const idDict: Dict = {
@@ -688,7 +688,7 @@ const idDict: Dict = {
   reciter: "Qari & Audio",
   mode: "Mode Durasi",
   modeShort: "Video Pendek (Shorts / Reel)",
-  modeLong: "Video Panjang (150 dtk)",
+  modeLong: "Video Panjang (600 dtk)",
   modeFull: "Durasi Penuh",
   format: "Format Video",
   stop: "Berhenti",
@@ -743,10 +743,10 @@ const idDict: Dict = {
   resetPassword: "Atur Ulang Kata Sandi",
   backToLogin: "Kembali ke Masuk",
   successVideoReady: "Video Anda siap! Mengunduh...",
-  energy: "Hak produksi",
-  energyShort: "⚡ Hak produksi",
+  energy: "Kuota harian",
+  energyShort: "Hari ini",
   membership: "Keanggotaan",
-  energyPack: "Paket hak produksi",
+  energyPack: "Paket video",
 };
 
 const urDict: Dict = {
@@ -768,10 +768,10 @@ const urDict: Dict = {
   loginBtn: "لاگ ان",
   registerBtn: "رجسٹر",
   googleAuth: "گوگل کے ساتھ جاری رکھیں",
-  energy: "پیداوار کا حق",
-  energyShort: "⚡ پیداوار کا حق",
+  energy: "روزانہ حد",
+  energyShort: "آج",
   membership: "رکنیت",
-  energyPack: "پیداوار حق پیکج",
+  energyPack: "ویڈیو پیکج",
 };
 
 const faDict: Dict = {
@@ -793,10 +793,10 @@ const faDict: Dict = {
   loginBtn: "ورود",
   registerBtn: "ثبت‌نام",
   googleAuth: "ادامه با گوگل",
-  energy: "حق تولید",
-  energyShort: "⚡ حق تولید",
+  energy: "سهمیه روزانه",
+  energyShort: "امروز",
   membership: "عضویت",
-  energyPack: "بسته حق تولید",
+  energyPack: "بسته ویدیو",
 };
 
 /**
@@ -828,7 +828,7 @@ export function translate(lang: Lang | string | null | undefined, key: string): 
   return dict[key] || T.tr[key] || T.en[key] || key;
 }
 
-// ─── Yasal metinler (TR-first, iyzico: jeton/kredi YOK, Enerji OK) ───
+// ─── Yasal metinler (TR-first · bakiye/jeton/kredi kavramı YOKTUR) ───
 type LegalBundle = {
   legalTitle: string;
   legalSubtitle: string;
@@ -871,20 +871,20 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Oturum ve tercihler yalnızca cihazdaki şifreli LocalStorage'da saklanır. Sunucu taraflı davranış kaydı yoktur.\n\n" +
           "• Google hesap bilgileri — oturum doğrulama\n" +
           "• Tema, dil tercihleri\n" +
-          "• Üretim hakkı bakiyesi ve üyelik durumu (hizmet kullanımı)\n\n" +
+          "• Üyelik durumu ve günlük hizmet kullanım sayısı\n\n" +
           "ÇEREZ: Yalnızca zorunlu teknik çerezler. Reklam çerezi yok.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
         refund:
-          "DİJİTAL ÜRÜN / HİZMET KAPSAMI\n\n" +
-          "Satın alınan üretim hakkı paketleri ve üyelik planları anında ifa edilen dijital ürün/hizmettir. Ödenen tutar hizmet bedelidir.\n\n" +
+          "DİJİTAL HİZMET KAPSAMI\n\n" +
+          "Satın alınan aylık üyelikler ve tek seferlik video üretim paketleri anında ifa edilen dijital hizmetlerdir. Ödenen tutar doğrudan hizmet bedelidir. Platformda bakiye yükleme, cüzdan veya para benzeri bir sistem bulunmaz.\n\n" +
           "CAYMA HAKKI\n\n" +
-          "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
-          "KULLANILMAMIŞ ÜRETİM HAKKI\n\n" +
-          "Hiç kullanılmamış üretim hakkı için 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketlerde iade yoktur.\n\n" +
+          "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca, kullanıcının açık onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
+          "HİÇ KULLANILMAMIŞ PAKET\n\n" +
+          "Satın alınan tek seferlik paketten hiç video üretilmemişse, satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurularak iade talep edilebilir. Kısmen kullanılmış paketlerde iade yapılmaz.\n\n" +
           "TEKNİK HATA\n\n" +
-          "Hizmet bedeli ödenmesine rağmen üretim hakkı tanımlanmamışsa dekontunuzla destek@nurstudyo.com — 2 iş günü.\n\n" +
+          "Hizmet bedeli ödenmesine rağmen üyelik veya video üretim paketi tanımlanmamışsa ödeme dekontu ile destek@nurstudyo.com adresine başvurulabilir. Talep en geç 2 iş günü içinde incelenir.\n\n" +
           "ÖDEME GÜVENLİĞİ\n\n" +
-          "Ödemeler PCI DSS uyumlu PayTR/iyzico üzerinden 256-bit SSL ile yapılır. Kart bilgisi saklanmaz.\n\n" +
+          "Ödemeler PCI DSS uyumlu iyzico güvenli ödeme altyapısı üzerinden 256-bit SSL ile alınır. Kart bilgisi platformumuzda saklanmaz.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
       },
     },
@@ -917,18 +917,18 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Session and preferences in encrypted LocalStorage only. No server-side tracking.\n\n" +
           "• Google account info — auth only\n" +
           "• Theme/language preferences\n" +
-          "• Production-rights balance and membership (service use)\n\n" +
+          "• Membership status and daily service usage count\n\n" +
           "COOKIES: Essential technical cookies only.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
         refund:
-          "DIGITAL PRODUCT / SERVICE SCOPE\n\n" +
-          "Purchased production-rights packs and memberships are instantly delivered digital products/services. The amount paid is a service fee.\n\n" +
+          "DIGITAL SERVICE SCOPE\n\n" +
+          "Purchased memberships and one-time video production packages are instantly delivered digital services. The amount paid is a service fee. There is no wallet, balance top-up or money-like unit on the platform.\n\n" +
           "RIGHT OF WITHDRAWAL\n\n" +
           "Not available for instantly performed digital services with explicit consent under Turkish consumer law.\n\n" +
-          "UNUSED PRODUCTION RIGHTS\n\n" +
-          "Fully unused production rights: contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
+          "COMPLETELY UNUSED PACKAGE\n\n" +
+          "If no video has been produced from a one-time package, contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
           "PAYMENT SECURITY\n\n" +
-          "PayTR/iyzico PCI DSS, 256-bit SSL. No card storage.\n\n" +
+          "Payments are processed through iyzico secure payment infrastructure with PCI DSS and 256-bit SSL. No card data is stored on our platform.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
       },
     },

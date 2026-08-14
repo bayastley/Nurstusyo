@@ -1,46 +1,48 @@
 // ════════════════════════════════════════════════════════
-// PRICING.TS — Browser-safe fiyat kaynağı ve checkout başlatıcı.
+// PRICING.TS — Ürün / hizmet kataloğu
 //
-// Bu dosya HEM istemcide HEM sunucuda import edilebilir (crypto/node kullanmaz).
-// Webhook doğrulama fonksiyonları için ./webhook.server.ts dosyasına bak.
-//
-// ★ GÜVENLİK KURALI:
-// Fiyat bilgisi ASLA kullanıcının tarayıcısından okunup ödeme şirketine
-// gönderilmez. İstemci yalnızca bir ÜRÜN KODU (productCode) gönderir.
-// Tutar, bu dosyadaki sabit listeden sunucu tarafında okunur ve imzalanır.
+// ★ İYZİCO UYUMU:
+//   Bakiye yükleme YOKTUR. Kullanıcı bakiye satın almaz.
+//   Satılan şey: belirli sayıda video üretim HİZMETİdir.
+//   "jeton / kredi / kontör / token / coin / bakiye / cüzdan"
+//   kelimeleri bu dosyada ve arayüzde KULLANILMAZ.
 // ════════════════════════════════════════════════════════
 
-export type Currency = "TRY" | "USD";
-export type ProductKind = "subscription" | "tokens";
+export type Currency = "TRY";
+export type ProductKind = "subscription" | "package";
+export type VideoKind = "kisa" | "uzun" | "tam";
 
 export interface Product {
   /** İstemcinin göndereceği TEK bilgi — tutar değil, sadece bu kod */
   code: string;
   kind: ProductKind;
   title: string;
-  /** Kuruş cinsinden (PayTR/iyzico kuruş bekler) — 32900 = 329,00 TL */
+  /** Ürün açıklaması — fatura ve ödeme sayfasında görünür */
+  description: string;
+  /** Kuruş cinsinden — 14900 = 149,00 TL */
   amountMinor: number;
   currency: Currency;
-  /** Abonelik ise süre (gün), jeton paketi ise verilecek jeton */
+  /** Abonelik ise */
   grantTier?: "pro" | "elit";
   grantDays?: number;
-  grantTokens?: number;
-  /** Satışa kapatmak için */
+  /** Paket ise: hangi türden kaç adet video üretim hizmeti */
+  videoKind?: VideoKind;
+  videoCount?: number;
   active: boolean;
 }
 
 /**
  * ★ RESMİ FİYAT LİSTESİ — sadece burada değişir.
- * UI bu listeden okur (gösterim için), ödeme isteği ise
- * sunucuda yine bu listeden doğrulanır.
+ * Sunucu tutarı daima buradan okur; istemci tutar gönderemez.
  */
 export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
   // ─── Abonelikler (aylık) ───
   SUB_PRO_1M: {
     code: "SUB_PRO_1M",
     kind: "subscription",
-    title: "NÛR PRO — Aylık",
-    amountMinor: 26300,          // 263,00 TL (lansman %20 indirimli)
+    title: "NÛR PRO — Aylık Üyelik",
+    description: "Aylık üyelik. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
+    amountMinor: 14900,
     currency: "TRY",
     grantTier: "pro",
     grantDays: 30,
@@ -49,66 +51,172 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
   SUB_ELIT_1M: {
     code: "SUB_ELIT_1M",
     kind: "subscription",
-    title: "NÛR ELİT — Aylık",
-    amountMinor: 40000,          // 400,00 TL (lansman %20 indirimli)
+    title: "NÛR ELİT — Aylık Üyelik",
+    description: "Aylık üyelik. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
+    amountMinor: 24900,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 30,
     active: true,
   },
-  // ─── Jeton paketleri (tek seferlik) ───
-  TOK_50:   { code: "TOK_50",   kind: "tokens", title: "50 Jeton — Başlangıç",  amountMinor: 2900,   currency: "TRY", grantTokens: 50,   active: true },
-  TOK_100:  { code: "TOK_100",  kind: "tokens", title: "100 Jeton — Standart",  amountMinor: 5400,   currency: "TRY", grantTokens: 100,  active: true },
-  TOK_300:  { code: "TOK_300",  kind: "tokens", title: "300 Jeton — Orta",      amountMinor: 15800,  currency: "TRY", grantTokens: 300,  active: true },
-  TOK_800:  { code: "TOK_800",  kind: "tokens", title: "800 Jeton — Büyük",     amountMinor: 41600,  currency: "TRY", grantTokens: 800,  active: true },
-  TOK_2000: { code: "TOK_2000", kind: "tokens", title: "2000 Jeton — Dev",      amountMinor: 94400,  currency: "TRY", grantTokens: 2000, active: true },
+
+  // ─── Kısa video paketleri (59 sn) ───
+  PK_KISA_15: {
+    code: "PK_KISA_15",
+    kind: "package",
+    title: "15 Kısa Video Üretim Hizmeti",
+    description: "59 saniyelik 15 adet video üretim hizmeti.",
+    amountMinor: 3500,
+    currency: "TRY",
+    videoKind: "kisa",
+    videoCount: 15,
+    active: true,
+  },
+  PK_KISA_35: {
+    code: "PK_KISA_35",
+    kind: "package",
+    title: "35 Kısa Video Üretim Hizmeti",
+    description: "59 saniyelik 35 adet video üretim hizmeti.",
+    amountMinor: 6900,
+    currency: "TRY",
+    videoKind: "kisa",
+    videoCount: 35,
+    active: true,
+  },
+  PK_KISA_70: {
+    code: "PK_KISA_70",
+    kind: "package",
+    title: "70 Kısa Video Üretim Hizmeti",
+    description: "59 saniyelik 70 adet video üretim hizmeti.",
+    amountMinor: 11900,
+    currency: "TRY",
+    videoKind: "kisa",
+    videoCount: 70,
+    active: true,
+  },
+
+  // ─── Uzun video paketleri (600 sn) ───
+  PK_UZUN_8: {
+    code: "PK_UZUN_8",
+    kind: "package",
+    title: "8 Uzun Video Üretim Hizmeti",
+    description: "600 saniyelik 8 adet video üretim hizmeti.",
+    amountMinor: 4500,
+    currency: "TRY",
+    videoKind: "uzun",
+    videoCount: 8,
+    active: true,
+  },
+  PK_UZUN_20: {
+    code: "PK_UZUN_20",
+    kind: "package",
+    title: "20 Uzun Video Üretim Hizmeti",
+    description: "600 saniyelik 20 adet video üretim hizmeti.",
+    amountMinor: 8900,
+    currency: "TRY",
+    videoKind: "uzun",
+    videoCount: 20,
+    active: true,
+  },
+  PK_UZUN_40: {
+    code: "PK_UZUN_40",
+    kind: "package",
+    title: "40 Uzun Video Üretim Hizmeti",
+    description: "600 saniyelik 40 adet video üretim hizmeti.",
+    amountMinor: 14900,
+    currency: "TRY",
+    videoKind: "uzun",
+    videoCount: 40,
+    active: true,
+  },
+
+  // ─── Tam sürüm paketleri (45 dk) ───
+  PK_TAM_2: {
+    code: "PK_TAM_2",
+    kind: "package",
+    title: "2 Tam Sürüm Video Üretim Hizmeti",
+    description: "45 dakikaya kadar 2 adet video üretim hizmeti.",
+    amountMinor: 3900,
+    currency: "TRY",
+    videoKind: "tam",
+    videoCount: 2,
+    active: true,
+  },
+  PK_TAM_5: {
+    code: "PK_TAM_5",
+    kind: "package",
+    title: "5 Tam Sürüm Video Üretim Hizmeti",
+    description: "45 dakikaya kadar 5 adet video üretim hizmeti.",
+    amountMinor: 8900,
+    currency: "TRY",
+    videoKind: "tam",
+    videoCount: 5,
+    active: true,
+  },
+  PK_TAM_10: {
+    code: "PK_TAM_10",
+    kind: "package",
+    title: "10 Tam Sürüm Video Üretim Hizmeti",
+    description: "45 dakikaya kadar 10 adet video üretim hizmeti.",
+    amountMinor: 15900,
+    currency: "TRY",
+    videoKind: "tam",
+    videoCount: 10,
+    active: true,
+  },
 });
 
-/** Ürünü koda göre getir — bilinmeyen/pasif kod null döner (istek reddedilir) */
 export function getProduct(code: string): Product | null {
   const p = PRODUCTS[code];
   if (!p || !p.active) return null;
   return p;
 }
 
-/** Görüntüleme için biçimlendirilmiş fiyat (₺329,00) */
+/** Görüntüleme için biçimlendirilmiş fiyat (₺149) */
 export function formatPrice(p: Product): string {
   const major = p.amountMinor / 100;
-  return p.currency === "TRY"
-    ? `₺${major.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`
-    : `$${major.toFixed(2)}`;
+  return `₺${major.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
 }
 
-/** UI'da listelemek için — tutarlar yine buradan gelir, kullanıcı değiştiremez */
+/** Video başına düşen birim ücret — paket karşılaştırması için */
+export function unitPrice(p: Product): string {
+  if (!p.videoCount) return "";
+  const per = p.amountMinor / 100 / p.videoCount;
+  return `video başına ₺${per.toFixed(2)}`;
+}
+
 export const SUBSCRIPTION_CODES = ["SUB_PRO_1M", "SUB_ELIT_1M"] as const;
-export const TOKEN_CODES = ["TOK_50", "TOK_100", "TOK_300", "TOK_800", "TOK_2000"] as const;
+
+export const PACKAGE_CODES: Record<VideoKind, readonly string[]> = {
+  kisa: ["PK_KISA_15", "PK_KISA_35", "PK_KISA_70"],
+  uzun: ["PK_UZUN_8", "PK_UZUN_20", "PK_UZUN_40"],
+  tam: ["PK_TAM_2", "PK_TAM_5", "PK_TAM_10"],
+};
+
+export const PACKAGE_GROUP_META: Record<VideoKind, { label: string; sub: string; emoji: string; accent: string }> = {
+  kisa: { label: "Kısa Video", sub: "59 saniye · Reels & Shorts", emoji: "🎬", accent: "#34d399" },
+  uzun: { label: "Uzun Video", sub: "600 saniye · Derin anlatım", emoji: "🎞️", accent: "#60a5fa" },
+  tam: { label: "Tam Sürüm", sub: "45 dakikaya kadar · Tam sure", emoji: "🎥", accent: "#f5dda6" },
+};
 
 // ════════════════════════════════════════════════════════
 // İSTEMCİ → SUNUCU SÖZLEŞMESİ
 // ════════════════════════════════════════════════════════
 
-/** İstemcinin gönderebileceği TEK yapı — içinde TUTAR YOKTUR */
 export interface CheckoutRequest {
-  productCode: string;   // ör. "SUB_PRO_1M"
-  userId?: string;       // Eski istemci sözleşmesiyle uyum için opsiyonel
+  productCode: string;
+  userId?: string;
   email?: string;
-  /** Ödeme sonrası dönülecek sayfa */
   returnUrl?: string;
 }
 
 export interface CheckoutResponse {
   ok: boolean;
-  /** PayTR iframe token / iyzico checkout formu */
   token?: string;
   paymentUrl?: string;
   error?: string;
 }
 
-/**
- * ★ İstemciden gelen isteği doğrula.
- * Tutar istemciden gelmediği için manipülasyon yüzeyi yoktur;
- * burada yalnızca ürün kodunun geçerliliği kontrol edilir.
- */
 export function validateCheckout(req: CheckoutRequest): { ok: true; product: Product } | { ok: false; error: string } {
   if (!req || typeof req.productCode !== "string") return { ok: false, error: "Geçersiz istek" };
   const product = getProduct(req.productCode);
@@ -117,10 +225,6 @@ export function validateCheckout(req: CheckoutRequest): { ok: true; product: Pro
   return { ok: true, product };
 }
 
-/**
- * ★ İstemcinin ödeme başlatmak için çağıracağı fonksiyon.
- * Dikkat: tutar GÖNDERİLMEZ. Sunucu tutarı PRODUCTS'tan okur.
- */
 export async function startCheckout(req: CheckoutRequest): Promise<CheckoutResponse> {
   const check = validateCheckout(req);
   if (!check.ok) return { ok: false, error: check.error };
@@ -129,7 +233,6 @@ export async function startCheckout(req: CheckoutRequest): Promise<CheckoutRespo
     const res = await fetch("/api/payments/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // ★ Sadece ürün KODU gider — fiyat asla istemciden taşınmaz
       body: JSON.stringify({
         productCode: req.productCode,
         returnUrl: req.returnUrl ?? window.location.origin + "/odeme-sonuc",

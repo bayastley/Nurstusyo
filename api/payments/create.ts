@@ -1,15 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import crypto from "crypto";
 import { getProduct, validateCheckout } from "../../src/payments/pricing";
 import { requireAuth } from "../_shared/auth.ts";
 import { rateLimit } from "../_shared/rateLimit.ts";
 import { requireAllowedOrigin } from "../_shared/security.ts";
 import { createOrder } from "../_shared/supabase.ts";
-
-function normalizeIp(req: VercelRequest): string {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
-  return forwarded || req.socket.remoteAddress || "127.0.0.1";
-}
 
 function isAllowedReturnUrl(raw: unknown): string {
   const fallback = "https://nurstudyo.com/odeme-sonuc";
@@ -54,17 +48,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ ok: false, error: "Kullanıcı kimliği geçersiz" });
     }
 
-    const providerChoice = (process.env.PAYMENTS_PROVIDER || "auto").toLowerCase();
-    const paytrMerchantId = process.env.PAYTR_MERCHANT_ID || "";
-    const paytrMerchantKey = process.env.PAYTR_MERCHANT_KEY || "";
-    const paytrMerchantSalt = process.env.PAYTR_MERCHANT_SALT || "";
+    const providerChoice = (process.env.PAYMENTS_PROVIDER || "iyzico").toLowerCase();
     const iyzicoApiKey = process.env.IYZICO_API_KEY || "";
     const iyzicoSecretKey = process.env.IYZICO_SECRET_KEY || "";
 
-    const paytrReady = Boolean(paytrMerchantId && paytrMerchantKey && paytrMerchantSalt);
     const iyzicoReady = Boolean(iyzicoApiKey && iyzicoSecretKey);
-    const usePaytr = providerChoice === "paytr" ? paytrReady : providerChoice === "iyzico" ? false : paytrReady;
-    const useIyzico = !usePaytr && (providerChoice === "iyzico" ? iyzicoReady : iyzicoReady);
+    const useIyzico = providerChoice === "iyzico" && iyzicoReady;
 
     const orderId = `NUR-${product.code}-${safeUserId}-${Date.now()}`;
     const livePayments = process.env.VITE_PAYMENTS_LIVE === "true";
@@ -79,7 +68,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const chosenProvider = usePaytr ? "paytr" : "iyzico";
+    if (providerChoice !== "iyzico") {
+      return res.status(400).json({ ok: false, error: "Bu projede yalnızca iyzico ödeme altyapısı aktiftir" });
+    }
+
+    const chosenProvider = "iyzico";
 
     await createOrder({
       orderId,
@@ -90,22 +83,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       provider: chosenProvider,
     }).catch(() => undefined);
 
-    if (usePaytr) {
-      const userIp = normalizeIp(req);
-      const basket = Buffer.from(JSON.stringify([[product.title, (product.amountMinor / 100).toFixed(2), 1]])).toString("base64");
-      const hashStr = `${paytrMerchantId}${userIp}${orderId}${safeEmail}${product.amountMinor}${basket}000TRYno3d0`;
-      const paytrToken = crypto.createHmac("sha256", paytrMerchantKey).update(hashStr + paytrMerchantSalt).digest("base64");
-
-      return res.status(200).json({ ok: true, token: paytrToken, paymentUrl: `https://www.paytr.com/iframe/${paytrToken}`, orderId, product });
-    }
-
     if (useIyzico) {
       return res.status(200).json({ ok: true, paymentUrl: `https://iyzi.co/checkout/${orderId}`, orderId, product, returnUrl: safeReturnUrl });
     }
 
-    if (providerChoice === "paytr" && !paytrReady) {
-      return res.status(500).json({ ok: false, error: "PAYMENTS_PROVIDER=paytr seçili ama PayTR anahtarları eksik" });
-    }
     if (providerChoice === "iyzico" && !iyzicoReady) {
       return res.status(500).json({ ok: false, error: "PAYMENTS_PROVIDER=iyzico seçili ama iyzico anahtarları eksik" });
     }

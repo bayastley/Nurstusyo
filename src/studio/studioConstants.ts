@@ -32,7 +32,7 @@ export const SERVER_BAN_LIVE = RENDER_AUTH_LIVE;
 
 export const MODES: Array<{ id: Mode; label: string; sub: string; icon: React.ElementType }> = [
   { id: "short", label: "Kısa", sub: "59 sn", icon: Sparkles },
-  { id: "long", label: "Uzun", sub: "150 sn", icon: Sparkles },
+  { id: "long", label: "Uzun", sub: "600 sn", icon: Sparkles },
   { id: "full", label: "Tam", sub: "40 dk'ya kadar", icon: Sparkles },
 ];
 

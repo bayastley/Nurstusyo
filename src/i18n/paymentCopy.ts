@@ -1,23 +1,37 @@
 import type { Lang } from "../i18n";
 
+// ════════════════════════════════════════════════════════
+// PAYMENTCOPY.TS — Ödeme ve yasal metinler
+//
+// ★ İYZİCO UYUMU — YASAK KELİMELER:
+//   jeton · kredi · kontör · token · coin · bakiye · cüzdan · enerji
+//   Bunların hiçbiri bu dosyada geçmez.
+//   Kullanılan dil: "üyelik", "video üretim hizmeti", "paket", "günlük hak".
+// ════════════════════════════════════════════════════════
+
 export interface PaymentCopy {
   title: string;
-  balance: string;
+  subtitle: string;
   membership: string;
-  energy: string;
-  energyTab: string;
+  packageTab: string;
+  todayUsage: string;
   intro: string;
   popular: string;
+  mostChosen: string;
   buy: string;
   perMonth: string;
+  perVideo: string;
   processing: string;
   currentPlan: string;
   proAction: string;
   elitAction: string;
   accept: string;
-  termsTitle: string;
-  termsButton: string;
-  packageLabels: string[];
+  packageNote: string;
+  securityNote: string;
+  quotaNote: string;
+  kindShort: string;
+  kindLong: string;
+  kindFull: string;
   proFeatures: string[];
   elitFeatures: string[];
   legalTabs: { tos: string; kvkk: string; privacy: string; refund: string };
@@ -26,46 +40,51 @@ export interface PaymentCopy {
   legalBody: { tos: string; kvkk: string; privacy: string; refund: string };
 }
 
-// ★ iyzico güvenli dil:
-// UI: ⚡ Üretim hakkı
-// Ödeme/KVKK: hizmet bedeli / üretim hakkı
-// YASAK kelimeler yok: jeton, kredi, token, coin, kontör, enerji (bakiye hissi)
 const tr: PaymentCopy = {
-  title: "ÜYELİK & ⚡ ÜRETİM HAKKI",
-  balance: "⚡ Üretim hakkı",
-  membership: "Üyelik",
-  energy: "⚡ Üretim hakkı",
-  energyTab: "⚡ Üretim hakkı paketi",
+  title: "ÜYELİK & PAKETLER",
+  subtitle: "Her gün yenilenen üretim hakkıyla üret",
+  membership: "Aylık Üyelik",
+  packageTab: "Tek Seferlik Paket",
+  todayUsage: "Bugünkü kullanımın",
   intro:
-    "Abone olmadan tek seferlik ⚡ üretim hakkı paketi satın al — kendi hızında üret.",
-  popular: "POPÜLER",
+    "Aylık üyelikle her gün belirli sayıda video üretebilirsin. " +
+    "Daha fazlasına ihtiyacın olursa tek seferlik paket alabilirsin.",
+  popular: "EN POPÜLER",
+  mostChosen: "EN ÇOK TERCİH",
   buy: "Satın Al",
   perMonth: "/ ay",
+  perVideo: "video başına",
   processing: "İşleniyor...",
-  currentPlan: "Mevcut planın",
-  proAction: "Pro'ya Geç",
-  elitAction: "Elit Ol",
-  accept: "Satın alma koşullarını okudum ve kabul ediyorum.",
-  termsTitle: "Satın Alma Koşulları",
-  termsButton: "Okudum, kabul ediyorum",
-  packageLabels: ["Başlangıç", "Standart", "Orta", "Büyük", "Dev"],
+  currentPlan: "Mevcut üyeliğin",
+  proAction: "PRO'YA GEÇ",
+  elitAction: "ELİT OL",
+  accept:
+    "Satın alma koşullarını, mesafeli satış sözleşmesini ve iade politikasını okudum, kabul ediyorum.",
+  packageNote:
+    "Paketler tek seferliktir ve süresi dolmaz. Günlük üyelik hakkın bittiğinde otomatik olarak paketinden kullanılır.",
+  securityNote:
+    "Ödemeler PCI DSS uyumlu altyapı ile 256-bit SSL üzerinden alınır · Kart bilgisi saklanmaz",
+  quotaNote: "Günlük haklar her gün yenilenir · devretmez",
+  kindShort: "Kısa Video",
+  kindLong: "Uzun Video",
+  kindFull: "Tam Sürüm",
   proFeatures: [
-    "15 hoca",
-    "250 içerik",
+    "Günde 8 kısa + 3 uzun video (600 sn)",
+    "15 kâri sesi",
+    "250 atmosfer içeriği",
     "20 tema",
     "1080p filigransız üretim",
     "Sinematik filtreler",
-    "AI yazı yenileme",
-    "Günlük 40 ⚡ üretim hakkı",
+    "AI başlık ve açıklama",
   ],
   elitFeatures: [
-    "Tüm hocalar",
-    "500 içerik",
-    "20 tema",
+    "Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sürüm",
+    "Tüm kâri sesleri",
+    "500 atmosfer içeriği",
     "Sınırsız AI arama",
-    "Sosyal paylaşım",
+    "Sosyal paylaşım paneli",
     "Tasarım stüdyosu",
-    "Günlük 150 ⚡ üretim hakkı",
+    "Kendi imzanı ekleme",
     "Öncelikli destek",
   ],
   legalTabs: {
@@ -79,373 +98,229 @@ const tr: PaymentCopy = {
   legalBody: {
     tos:
       "PLATFORM TANIMI VE SORUMLULUK SINIRI\n\n" +
-      "Nûr Stüdyo (nurstudyo.com), İslami içerik üreticilerine yönelik yapay zeka destekli dijital video üretim platformudur. Platform yalnızca yazılım aracılık hizmeti sunar.\n\n" +
+      "Nûr Stüdyo (nurstudyo.com), İslami içerik üreticilerine yönelik yapay zekâ destekli " +
+      "dijital video üretim platformudur. Platform yalnızca yazılım hizmeti sunar.\n\n" +
+      "HİZMET MODELİ\n\n" +
+      "Platformda ön ödemeli bakiye, cüzdan veya para benzeri bir birim bulunmaz. " +
+      "Kullanıcı; aylık üyelik satın alarak her gün belirli sayıda video üretim hizmetinden " +
+      "yararlanır veya tek seferlik video üretim paketi satın alır. " +
+      "Satın alınan her ürün, doğrudan belirli sayıda video üretim hizmetine karşılık gelir.\n\n" +
       "İÇERİK SORUMLULUĞU\n\n" +
       "Üretilen içeriklerin yayın ve telif sorumluluğu kullanıcıya aittir.\n\n" +
       "HESAP VE ERİŞİM\n\n" +
-      "Google hesabı ile kimlik doğrulama zorunludur.\n\n" +
+      "Hizmetten yararlanmak için Google hesabı ile kimlik doğrulama zorunludur.\n\n" +
       "UYGULANACAK HUKUK\n\n" +
       "Türk Hukuku geçerlidir. Yetkili mahkemeler T.C. mahkemeleridir.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
     kvkk:
       "VERİ SORUMLUSU\n\n" +
-      "Veri sorumlusu nurstudyo.com üzerinden hizmet veren şahıs firmasıdır.\nİletişim: destek@nurstudyo.com\n\n" +
+      "Veri sorumlusu nurstudyo.com üzerinden hizmet veren şahıs firmasıdır.\n" +
+      "İletişim: destek@nurstudyo.com\n\n" +
       "İŞLENEN KİŞİSEL VERİLER\n\n" +
-      "Google OAuth ile alınan ad-soyad, e-posta ve profil fotoğrafı; hesap doğrulama ve hizmet sunumu (hizmet bedeli / ödeme süreçleri) için işlenir. Tercihler cihazdaki şifreli LocalStorage'da tutulur.\n\n" +
+      "Google OAuth ile alınan ad-soyad, e-posta ve profil fotoğrafı; hesap doğrulama ve " +
+      "hizmet sunumu için işlenir. Üyelik durumu ve günlük hizmet kullanım sayısı, " +
+      "hizmetin doğru sunulabilmesi amacıyla tutulur.\n\n" +
       "HAKLARINIZ (KVKK m.11)\n\n" +
       "Erişim, düzeltme, silme, itiraz: destek@nurstudyo.com — 30 gün içinde yanıtlanır.\n\n" +
       "Son güncelleme: Ağustos 2026 · kvkk.gov.tr",
     privacy:
       "TOPLANAN VERİLER\n\n" +
-      "Oturum ve tercihler yalnızca cihazdaki şifreli LocalStorage'da saklanır.\n\n" +
+      "Oturum ve tercihler cihazdaki şifreli alanda saklanır.\n\n" +
       "• Google hesap bilgileri — oturum doğrulama\n" +
       "• Tema ve dil tercihleri\n" +
-      "• Üretim hakkı bakiyesi ve üyelik durumu (hizmet kullanımı)\n" +
-      "• Video üretim geçmişi — cihazda, sunucuya gitmez\n\n" +
+      "• Üyelik durumu ve günlük hizmet kullanım sayısı\n" +
+      "• Video üretim geçmişi — cihazda tutulur, sunucuya gitmez\n\n" +
       "ÇEREZ: Yalnızca zorunlu teknik çerezler. Reklam çerezi yoktur.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
     refund:
-      "DİJİTAL ÜRÜN / HİZMET KAPSAMI\n\n" +
-      "Satın alınan üretim hakkı paketleri ve üyelik planları, anında ifa edilen dijital ürün/hizmettir. Ödenen tutar hizmet bedelidir.\n\n" +
+      "DİJİTAL HİZMET KAPSAMI\n\n" +
+      "Satın alınan aylık üyelik ve tek seferlik video üretim paketleri, anında ifa edilen " +
+      "dijital hizmetlerdir. Ödenen tutar doğrudan hizmet bedelidir. " +
+      "Platformda bakiye yükleme veya para saklama işlevi bulunmaz.\n\n" +
       "CAYMA HAKKI\n\n" +
-      "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca; kullanıcının açık onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
-      "KULLANILMAMIŞ ÜRETİM HAKKI\n\n" +
-      "Hiç kullanılmamış üretim hakkı için satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurulabilir. Kısmen kullanılmış paketlerde iade yapılmaz.\n\n" +
+      "6502 sayılı TKHK ve Mesafeli Sözleşmeler Yönetmeliği uyarınca; kullanıcının açık " +
+      "onayıyla anında ifa edilen dijital hizmetlerde cayma hakkı kullanılamaz.\n\n" +
+      "HİÇ KULLANILMAMIŞ PAKET\n\n" +
+      "Satın alınan paketten hiç video üretilmemişse, satın alma tarihinden itibaren 7 gün " +
+      "içinde destek@nurstudyo.com adresine başvurularak iade talep edilebilir. " +
+      "Kısmen kullanılmış paketlerde iade yapılmaz.\n\n" +
       "ÜYELİK İPTALİ\n\n" +
-      "Aylık üyelik dönem sonuna kadar sürer. İptal sonrası Free plana düşülür; kalan üretim hakkı bakiyesi korunur.\n\n" +
+      "Aylık üyelik dönem sonuna kadar geçerlidir. İptal sonrası ücretsiz plana geçilir; " +
+      "daha önce satın alınmış tek seferlik paket hakları saklı kalır.\n\n" +
       "TEKNİK HATA\n\n" +
-      "Hizmet bedeli ödenmesine rağmen üretim hakkı tanımlanmamışsa ödeme dekontu ile destek@nurstudyo.com — 2 iş günü.\n\n" +
+      "Ödeme alınmasına rağmen hizmet tanımlanmamışsa ödeme dekontu ile " +
+      "destek@nurstudyo.com — 2 iş günü içinde çözülür.\n\n" +
       "ÖDEME GÜVENLİĞİ\n\n" +
-      "Ödemeler PCI DSS uyumlu PayTR/iyzico altyapısı ile 256-bit SSL üzerinden yapılır. Kart bilgisi saklanmaz.\n\n" +
+      "Ödemeler PCI DSS uyumlu altyapı ile 256-bit SSL üzerinden yapılır. " +
+      "Kart bilgisi saklanmaz.\n\n" +
       "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
   },
 };
 
-const translations: Partial<Record<Lang, PaymentCopy>> = {
-  en: {
-    ...tr,
-    title: "MEMBERSHIP & ⚡ PRODUCTION RIGHTS",
-    balance: "⚡ Production rights",
-    membership: "Membership",
-    energy: "⚡ Production rights",
-    energyTab: "⚡ Production rights pack",
-    intro:
-      "Buy a one-time ⚡ production rights pack without a subscription and create at your own pace.",
-    popular: "POPULAR",
-    buy: "Buy",
-    perMonth: "/ month",
-    processing: "Processing...",
-    currentPlan: "Current plan",
-    proAction: "Switch to Pro",
-    elitAction: "Go Elite",
-    accept: "I have read and accept the purchase terms.",
-    termsTitle: "Purchase Terms",
-    termsButton: "I have read and accept",
-    packageLabels: ["Starter", "Standard", "Medium", "Large", "Mega"],
-    proFeatures: [
-      "15 reciters",
-      "250 assets",
-      "20 themes",
-      "1080p watermark-free",
-      "Cinematic filters",
-      "AI text refresh",
-      "Daily 40 ⚡ production rights",
-    ],
-    elitFeatures: [
-      "All reciters",
-      "500 assets",
-      "20 themes",
-      "Unlimited AI search",
-      "Social sharing",
-      "Design studio",
-      "Daily 150 ⚡ production rights",
-      "Priority support",
-    ],
-    legalTabs: {
-      tos: "Terms of Use",
-      kvkk: "Data Protection",
-      privacy: "Privacy & Cookies",
-      refund: "Purchase & Refund",
-    },
-    legalTitle: "Legal Information",
-    legalSubtitle: "nurstudyo.com Corporate Portal",
-    legalBody: {
-      tos:
-        "PLATFORM DEFINITION\n\n" +
-        "Nûr Studio is a digital video production platform. Publishing liability is the user's responsibility.\n\n" +
-        "Last updated: August 2026 · support@nurstudyo.com",
-      kvkk:
-        "DATA CONTROLLER\n\n" +
-        "Contact: support@nurstudyo.com\n\n" +
-        "Personal data (name, email, photo via Google OAuth) is processed for account verification and service delivery (service fee / payment).\n\n" +
-        "Last updated: August 2026",
-      privacy:
-        "DATA COLLECTED\n\n" +
-        "Preferences and production-rights balance stored encrypted on device. Essential cookies only.\n\n" +
-        "Last updated: August 2026 · support@nurstudyo.com",
-      refund:
-        "DIGITAL PRODUCT / SERVICE SCOPE\n\n" +
-        "Purchased production-rights packs and memberships are instantly delivered digital products/services. The amount paid is a service fee.\n\n" +
-        "RIGHT OF WITHDRAWAL\n\n" +
-        "Not available for instantly performed digital services with explicit consent under Turkish consumer law.\n\n" +
-        "UNUSED PRODUCTION RIGHTS\n\n" +
-        "Fully unused rights: contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
-        "PAYMENT SECURITY\n\n" +
-        "PayTR/iyzico PCI DSS, 256-bit SSL. No card storage.\n\n" +
-        "Last updated: August 2026 · support@nurstudyo.com",
-    },
+const en: PaymentCopy = {
+  ...tr,
+  title: "MEMBERSHIP & PACKAGES",
+  subtitle: "Create with daily renewing production allowance",
+  membership: "Monthly Membership",
+  packageTab: "One-Time Package",
+  todayUsage: "Your usage today",
+  intro:
+    "With a monthly membership you can produce a set number of videos every day. " +
+    "If you need more, buy a one-time package.",
+  popular: "MOST POPULAR",
+  mostChosen: "BEST VALUE",
+  buy: "Buy",
+  perMonth: "/ month",
+  perVideo: "per video",
+  processing: "Processing...",
+  currentPlan: "Current membership",
+  proAction: "GET PRO",
+  elitAction: "GET ELITE",
+  accept: "I have read and accept the purchase terms and refund policy.",
+  packageNote:
+    "Packages are one-time and never expire. When your daily allowance runs out, your package is used automatically.",
+  securityNote: "Payments are processed over PCI DSS infrastructure with 256-bit SSL · No card data stored",
+  quotaNote: "Daily allowance resets every day · does not carry over",
+  kindShort: "Short Video",
+  kindLong: "Long Video",
+  kindFull: "Full Length",
+  proFeatures: [
+    "8 short + 3 long videos daily (600s)",
+    "15 reciters",
+    "250 atmosphere assets",
+    "20 themes",
+    "1080p watermark-free",
+    "Cinematic filters",
+    "AI title and description",
+  ],
+  elitFeatures: [
+    "15 short + 5 long videos daily (600s) + 1 full length",
+    "All reciters",
+    "500 atmosphere assets",
+    "Unlimited AI search",
+    "Social sharing panel",
+    "Design studio",
+    "Custom signature",
+    "Priority support",
+  ],
+  legalTabs: {
+    tos: "Terms of Use",
+    kvkk: "Data Protection",
+    privacy: "Privacy & Cookies",
+    refund: "Purchase & Refund",
   },
+  legalTitle: "Legal Information",
+  legalSubtitle: "nurstudyo.com Corporate Portal",
+  legalBody: {
+    tos:
+      "PLATFORM DEFINITION\n\n" +
+      "Nûr Studio is an AI-assisted digital video production platform.\n\n" +
+      "SERVICE MODEL\n\n" +
+      "There is no prepaid balance or wallet on the platform. Users purchase a monthly " +
+      "membership granting a daily number of video productions, or a one-time video " +
+      "production package. Each purchase corresponds directly to a service.\n\n" +
+      "Publishing liability belongs to the user.\n\n" +
+      "Last updated: August 2026 · support@nurstudyo.com",
+    kvkk:
+      "DATA CONTROLLER\n\nContact: support@nurstudyo.com\n\n" +
+      "Name, email and profile photo via Google OAuth are processed for account " +
+      "verification and service delivery.\n\nLast updated: August 2026",
+    privacy:
+      "DATA COLLECTED\n\n" +
+      "Preferences, membership status and daily service usage count are stored encrypted " +
+      "on device. Essential cookies only.\n\nLast updated: August 2026 · support@nurstudyo.com",
+    refund:
+      "DIGITAL SERVICE SCOPE\n\n" +
+      "Memberships and one-time video production packages are instantly delivered digital " +
+      "services. There is no balance top-up function.\n\n" +
+      "RIGHT OF WITHDRAWAL\n\n" +
+      "Not available for instantly performed digital services with explicit consent.\n\n" +
+      "COMPLETELY UNUSED PACKAGE\n\n" +
+      "If no video was produced from the package, contact support@nurstudyo.com within 7 days.\n\n" +
+      "PAYMENT SECURITY\n\nPCI DSS, 256-bit SSL. No card storage.\n\n" +
+      "Last updated: August 2026 · support@nurstudyo.com",
+  },
+};
+
+const translations: Partial<Record<Lang, PaymentCopy>> = {
+  en,
   de: {
-    ...tr,
-    title: "MITGLIEDSCHAFT & ⚡ PRODUKTIONSRECHT",
-    balance: "⚡ Produktionsrecht",
-    membership: "Mitgliedschaft",
-    energy: "⚡ Produktionsrecht",
-    energyTab: "⚡ Produktionsrecht-Paket",
-    intro: "Kaufe einmalig ⚡ Produktionsrechte ohne Abo.",
-    popular: "BELIEBT",
+    ...en,
+    title: "MITGLIEDSCHAFT & PAKETE",
+    membership: "Monatliche Mitgliedschaft",
+    packageTab: "Einmaliges Paket",
+    todayUsage: "Deine heutige Nutzung",
     buy: "Kaufen",
     perMonth: "/ Monat",
-    processing: "Wird verarbeitet...",
-    currentPlan: "Aktueller Plan",
-    proAction: "Zu Pro wechseln",
-    elitAction: "Elite werden",
-    accept: "Ich akzeptiere die Kaufbedingungen.",
-    termsTitle: "Kaufbedingungen",
-    termsButton: "Gelesen und akzeptiert",
-    packageLabels: ["Start", "Standard", "Mittel", "Groß", "Mega"],
-    proFeatures: [
-      "15 Rezitatoren",
-      "250 Inhalte",
-      "20 Themes",
-      "1080p ohne Wasserzeichen",
-      "Täglich 40 ⚡ Produktionsrechte",
-    ],
-    elitFeatures: [
-      "Alle Rezitatoren",
-      "500 Inhalte",
-      "Unbegrenzte KI",
-      "Täglich 150 ⚡ Produktionsrechte",
-      "Priority Support",
-    ],
-    legalTabs: {
-      tos: "Nutzungsbedingungen",
-      kvkk: "Datenschutz",
-      privacy: "Privatsphäre",
-      refund: "Kauf & Erstattung",
-    },
-    legalTitle: "Rechtliche Informationen",
-    legalSubtitle: "nurstudyo.com Portal",
+    perVideo: "pro Video",
+    currentPlan: "Aktuelle Mitgliedschaft",
+    proAction: "PRO HOLEN",
+    elitAction: "ELITE HOLEN",
   },
   fr: {
-    ...tr,
-    title: "ABONNEMENT & ⚡ DROIT DE PRODUCTION",
-    balance: "⚡ Droit de production",
-    membership: "Abonnement",
-    energy: "⚡ Droit de production",
-    energyTab: "Pack ⚡ droit de production",
-    intro: "Achetez un pack ⚡ droit de production sans abonnement.",
-    popular: "POPULAIRE",
+    ...en,
+    title: "ABONNEMENT & PACKS",
+    membership: "Abonnement mensuel",
+    packageTab: "Pack unique",
+    todayUsage: "Votre utilisation du jour",
     buy: "Acheter",
     perMonth: "/ mois",
-    processing: "Traitement...",
-    currentPlan: "Plan actuel",
-    proAction: "Passer à Pro",
-    elitAction: "Devenir Elite",
-    accept: "J'accepte les conditions d'achat.",
-    termsTitle: "Conditions d'achat",
-    termsButton: "Lu et accepté",
-    packageLabels: ["Début", "Standard", "Moyen", "Grand", "Mega"],
-    proFeatures: [
-      "15 récitateur",
-      "250 contenus",
-      "20 thèmes",
-      "1080p sans filigrane",
-      "40 ⚡ droits de production/jour",
-    ],
-    elitFeatures: [
-      "Tous les récitateur",
-      "500 contenus",
-      "IA illimitée",
-      "150 ⚡ droits de production/jour",
-      "Support prioritaire",
-    ],
-    legalTabs: {
-      tos: "Conditions",
-      kvkk: "Données",
-      privacy: "Confidentialité",
-      refund: "Achat & Remboursement",
-    },
-    legalTitle: "Informations juridiques",
-    legalSubtitle: "Portail nurstudyo.com",
+    perVideo: "par vidéo",
+    currentPlan: "Abonnement actuel",
+    proAction: "PASSER À PRO",
+    elitAction: "DEVENIR ELITE",
   },
   es: {
-    ...tr,
-    title: "MEMBRESÍA Y ⚡ DERECHO DE PRODUCCIÓN",
-    balance: "⚡ Derecho de producción",
-    membership: "Membresía",
-    energy: "⚡ Derecho de producción",
-    energyTab: "Paquete ⚡ derecho de producción",
-    intro: "Compra un paquete ⚡ de derecho de producción sin suscripción.",
-    popular: "POPULAR",
+    ...en,
+    title: "MEMBRESÍA Y PAQUETES",
+    membership: "Membresía mensual",
+    packageTab: "Paquete único",
+    todayUsage: "Tu uso de hoy",
     buy: "Comprar",
     perMonth: "/ mes",
-    processing: "Procesando...",
-    currentPlan: "Plan actual",
-    proAction: "Cambiar a Pro",
-    elitAction: "Ser Elite",
-    accept: "Acepto las condiciones de compra.",
-    termsTitle: "Condiciones de compra",
-    termsButton: "Leído y aceptado",
-    packageLabels: ["Inicio", "Estándar", "Medio", "Grande", "Mega"],
-    proFeatures: [
-      "15 recitadores",
-      "250 contenidos",
-      "20 temas",
-      "1080p sin marca",
-      "40 ⚡ derechos de producción/día",
-    ],
-    elitFeatures: [
-      "Todos los recitadores",
-      "500 contenidos",
-      "IA ilimitada",
-      "150 ⚡ derechos de producción/día",
-      "Soporte prioritario",
-    ],
-    legalTabs: {
-      tos: "Términos",
-      kvkk: "Datos",
-      privacy: "Privacidad",
-      refund: "Compra y reembolso",
-    },
-    legalTitle: "Información legal",
-    legalSubtitle: "Portal nurstudyo.com",
+    perVideo: "por video",
+    currentPlan: "Membresía actual",
+    proAction: "OBTENER PRO",
+    elitAction: "SER ELITE",
   },
   ar: {
-    ...tr,
-    title: "العضوية و⚡ حق الإنتاج",
-    balance: "⚡ حق الإنتاج",
-    membership: "العضوية",
-    energy: "⚡ حق الإنتاج",
-    energyTab: "باقة ⚡ حق الإنتاج",
-    intro: "اشترِ باقة ⚡ حق الإنتاج دون اشتراك.",
-    popular: "الأكثر شعبية",
+    ...en,
+    title: "العضوية والباقات",
+    membership: "عضوية شهرية",
+    packageTab: "باقة لمرة واحدة",
+    todayUsage: "استخدامك اليوم",
     buy: "شراء",
     perMonth: "/ شهر",
-    processing: "جارٍ المعالجة...",
-    currentPlan: "خطتك الحالية",
-    proAction: "الترقية إلى Pro",
-    elitAction: "الترقية إلى Elit",
-    accept: "أوافق على شروط الشراء.",
-    termsTitle: "شروط الشراء",
-    termsButton: "قرأت وأوافق",
-    packageLabels: ["مبتدئ", "قياسي", "متوسط", "كبير", "ضخم"],
-    proFeatures: [
-      "15 قارئ",
-      "250 محتوى",
-      "20 سمة",
-      "1080p بدون علامة",
-      "40 ⚡ حق إنتاج يومياً",
-    ],
-    elitFeatures: [
-      "جميع القراء",
-      "500 محتوى",
-      "ذكاء غير محدود",
-      "150 ⚡ حق إنتاج يومياً",
-      "دعم أولوي",
-    ],
-    legalTabs: {
-      tos: "شروط الاستخدام",
-      kvkk: "حماية البيانات",
-      privacy: "الخصوصية",
-      refund: "الشراء والاسترداد",
-    },
-    legalTitle: "معلومات قانونية",
-    legalSubtitle: "بوابة nurstudyo.com",
+    perVideo: "لكل فيديو",
+    currentPlan: "عضويتك الحالية",
+    proAction: "الترقية إلى PRO",
+    elitAction: "الترقية إلى ELIT",
   },
   ru: {
-    ...tr,
-    title: "ПОДПИСКА И ⚡ ПРАВО НА ПРОИЗВОДСТВО",
-    balance: "⚡ Право на производство",
-    membership: "Подписка",
-    energy: "⚡ Право на производство",
-    energyTab: "Пакет ⚡ права на производство",
-    intro: "Купите пакет ⚡ права на производство без подписки.",
-    popular: "ПОПУЛЯРНОЕ",
+    ...en,
+    title: "ПОДПИСКА И ПАКЕТЫ",
+    membership: "Месячная подписка",
+    packageTab: "Разовый пакет",
+    todayUsage: "Использовано сегодня",
     buy: "Купить",
     perMonth: "/ мес",
-    processing: "Обработка...",
-    currentPlan: "Текущий план",
-    proAction: "Перейти на Pro",
-    elitAction: "Стать Elite",
-    accept: "Я принимаю условия покупки.",
-    termsTitle: "Условия покупки",
-    termsButton: "Прочитано и принято",
-    packageLabels: ["Старт", "Стандарт", "Средний", "Большой", "Мега"],
-    proFeatures: [
-      "15 чтецов",
-      "250 материалов",
-      "20 тем",
-      "1080p без водяного знака",
-      "40 ⚡ прав на производство/день",
-    ],
-    elitFeatures: [
-      "Все чтецы",
-      "500 материалов",
-      "Безлимитный ИИ",
-      "150 ⚡ прав на производство/день",
-      "Приоритетная поддержка",
-    ],
-    legalTabs: {
-      tos: "Условия",
-      kvkk: "Данные",
-      privacy: "Конфиденциальность",
-      refund: "Покупка и возврат",
-    },
-    legalTitle: "Правовая информация",
-    legalSubtitle: "Портал nurstudyo.com",
+    perVideo: "за видео",
+    currentPlan: "Текущая подписка",
+    proAction: "ПОЛУЧИТЬ PRO",
+    elitAction: "СТАТЬ ELITE",
   },
   id: {
-    ...tr,
-    title: "KEANGGOTAAN & ⚡ HAK PRODUKSI",
-    balance: "⚡ Hak produksi",
-    membership: "Keanggotaan",
-    energy: "⚡ Hak produksi",
-    energyTab: "Paket ⚡ hak produksi",
-    intro: "Beli paket ⚡ hak produksi sekali tanpa langganan.",
-    popular: "POPULER",
+    ...en,
+    title: "KEANGGOTAAN & PAKET",
+    membership: "Keanggotaan Bulanan",
+    packageTab: "Paket Sekali Beli",
+    todayUsage: "Pemakaian hari ini",
     buy: "Beli",
     perMonth: "/ bulan",
-    processing: "Memproses...",
-    currentPlan: "Paket saat ini",
-    proAction: "Beralih ke Pro",
-    elitAction: "Menjadi Elite",
-    accept: "Saya menerima syarat pembelian.",
-    termsTitle: "Syarat Pembelian",
-    termsButton: "Saya setuju",
-    packageLabels: ["Awal", "Standar", "Menengah", "Besar", "Mega"],
-    proFeatures: [
-      "15 qari",
-      "250 konten",
-      "20 tema",
-      "1080p tanpa watermark",
-      "40 ⚡ hak produksi/hari",
-    ],
-    elitFeatures: [
-      "Semua qari",
-      "500 konten",
-      "AI tanpa batas",
-      "150 ⚡ hak produksi/hari",
-      "Dukungan prioritas",
-    ],
-    legalTabs: {
-      tos: "Ketentuan",
-      kvkk: "Data",
-      privacy: "Privasi",
-      refund: "Beli & Pengembalian",
-    },
-    legalTitle: "Informasi Hukum",
-    legalSubtitle: "Portal nurstudyo.com",
+    perVideo: "per video",
+    currentPlan: "Keanggotaan saat ini",
+    proAction: "AMBIL PRO",
+    elitAction: "JADI ELITE",
   },
 };
 

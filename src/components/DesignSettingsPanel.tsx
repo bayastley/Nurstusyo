@@ -267,7 +267,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             items={MODES.map((item) => ({
               ...item,
               label: item.id === "short" ? t("modeShort") : item.id === "long" ? t("modeLong") : t("modeFull"),
-              sub: `${item.sub} · ${videoMaliyeti(item.id, tier)} ⚡ Enerji`,
+              sub: `${item.sub} · ${videoMaliyeti(item.id, tier)} ⚡ Üretim hakkı`,
             }))}
           />
         </div>

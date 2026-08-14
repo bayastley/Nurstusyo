@@ -66,12 +66,30 @@ export async function getOrder(orderId: string) {
   return rows[0] ?? null;
 }
 
-export async function grantProductToUser(data: { orderId: string; userId: string; grantTier?: string; grantDays?: number; grantTokens?: number }) {
+export async function grantProductToUser(data: {
+  orderId: string;
+  userId: string;
+  grantTier?: string;
+  grantDays?: number;
+  /** Paket ürünü: hangi tür video (kisa | uzun | tam) */
+  videoKind?: string;
+  /** Paket ürünü: kaç adet üretim hizmeti */
+  videoCount?: number;
+}) {
   const order = await getOrder(data.orderId);
   if (order?.status === "paid") return order;
-  if (data.grantTokens) {
-    const wallet = await ensureWallet(data.userId);
-    await request(`nur_wallets?user_id=eq.${encodeURIComponent(data.userId)}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ purchased_jeton: Number(wallet?.purchased_jeton || 0) + data.grantTokens, updated_at: new Date().toISOString() }) });
+
+  // ★ Paket ürünü: kullanıcıya belirli sayıda video üretim hizmeti tanımlanır.
+  //   Bakiye yüklemesi DEĞİLDİR; para birimi tutulmaz.
+  if (data.videoKind && data.videoCount) {
+    await request("rpc/nur_grant_video_rights", {
+      method: "POST",
+      body: JSON.stringify({
+        p_user_id: data.userId,
+        p_video_kind: data.videoKind,
+        p_amount: data.videoCount,
+      }),
+    }).catch(() => undefined);
   }
   if (data.grantTier === "pro" || data.grantTier === "elit") {
     const ends = new Date(Date.now() + Number(data.grantDays || 30) * 86400000).toISOString();
@@ -81,9 +99,30 @@ export async function grantProductToUser(data: { orderId: string; userId: string
   return request(`nur_orders?id=eq.${encodeURIComponent(data.orderId)}`, { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }) });
 }
 
-export async function spendWallet(userId: string, cost: number) {
-  const rows = await request<Array<{ ok: boolean; balance: number; error: string | null }>>("rpc/nur_spend_wallet_tokens", { method: "POST", body: JSON.stringify({ p_user_id: userId, p_amount: cost }) });
-  return rows[0] ?? { ok: false, error: "WALLET_ERROR", balance: 0 };
+/**
+ * ★ Video üretim izni harcar.
+ *   Önce üyeliğin günlük kotası, kota bitince satın alınmış paket hakkı düşer.
+ *   Bakiye/para düşümü DEĞİLDİR.
+ */
+export async function consumeVideo(userId: string, videoKind: string, dailyQuota: number) {
+  const rows = await request<Array<{ ok: boolean; source: string; quota_left: number; pack_left: number; error: string | null }>>(
+    "rpc/nur_consume_video",
+    {
+      method: "POST",
+      body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_daily_quota: dailyQuota }),
+    },
+  );
+  return rows[0] ?? { ok: false, source: "none", quota_left: 0, pack_left: 0, error: "QUOTA_ERROR" };
+}
+
+/** Kullanıcının kalan paket haklarını getirir */
+export async function getVideoRights(userId: string) {
+  const rows = await request<Array<{ video_kind: string; remaining: number }>>(
+    `nur_video_rights?user_id=eq.${encodeURIComponent(userId)}&select=video_kind,remaining`,
+  );
+  const out: Record<string, number> = { kisa: 0, uzun: 0, tam: 0 };
+  for (const row of rows) out[row.video_kind] = row.remaining;
+  return out;
 }
 
 export async function claimReward(userId: string, rewardKey: string, amount: number) {

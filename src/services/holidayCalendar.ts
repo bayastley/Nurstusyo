@@ -1,96 +1,82 @@
 // ════════════════════════════════════════════════════════════════
-// HOLIDAYCALENDAR.TS — Manevi Takvim ve 'Tıkla-Al' Ödül Motoru
+// HOLIDAYCALENDAR.TS — Manevi Takvim ve Hediye Motoru
+//
+// ★ İYZİCO UYUMU:
+//   Hediye olarak bakiye/jeton EKLENMEZ.
+//   Özel günlerde kullanıcıya ek VİDEO ÜRETİM HAKKI tanımlanır.
 // ════════════════════════════════════════════════════════════════
 
-import { serverDateISO, serverDayOfWeek, isDeviceClockTampered } from "../serverTime";
+import { serverDateISO, serverDayOfWeek } from "../serverTime";
 import { secureGet, secureSet } from "../secureStore";
-import { JETON, getJeton, setJeton } from "../tier";
+import { HEDIYE, grantPack, VIDEO_KIND_LABEL, type VideoKind } from "../tier";
 
 export interface HolyDayBannerState {
   type: "notice" | "claim" | "none";
-  eventKey: string; // e.g. "cuma-2026-03-27"
+  eventKey: string;
   title: string;
   badgeText: string;
+  /** Hediye edilecek video türü */
+  rewardKind: VideoKind;
+  /** Kaç adet ek üretim hakkı */
   rewardAmount: number;
   isClaimed: boolean;
   canClaim: boolean;
 }
 
-const CLAIMED_KEYS_PREFIX = "nur_claimed_reward_";
+const CLAIMED_KEYS_PREFIX = "nur_claimed_gift_";
 
-/**
- * Belirli bir manevi ödülün bu cihaz/hesap tarafından önceden alınıp alınmadığını kontrol eder.
- * HMAC-SHA256 imzalı zarf içinden doğrular.
- */
+/** Bu hediye daha önce alındı mı — HMAC imzalı zarftan doğrulanır */
 export function isRewardClaimed(eventKey: string): boolean {
   if (typeof window === "undefined") return false;
   return secureGet<boolean>(CLAIMED_KEYS_PREFIX + eventKey, false);
 }
 
 /**
- * ZIRHLI TIKLA-AL ÖDÜL MÜHÜRLERİ (AES + HMAC)
- * Kullanıcı 'Tıkla Al' butonuna bastığında çağrılır.
- * 
- * Güvenlik Katmanı:
- * 1. Zaten alındıysa → Hile/Aşım tespiti!
- * 2. Cihaz saati kaydırılmışsa → Dondur!
- * 3. Başarılı ise → HMAC imzası ile tarih ve eventKey mühürlenir.
+ * Hediye üretim hakkını tanımlar.
+ * Aynı gün için ikinci kez alınamaz.
  */
 export function claimHolyDayReward(
   eventKey: string,
-  rewardAmount: number
-): { ok: boolean; newJeton: number; message: string } {
-  // 1. Saat manipülasyonu kontrolü — worldtimeapi erişilemeyen ülkelerde
-  //    cihaz saati "tampered" olarak işaretlenebilir. Bu durumda ödülü engelleme,
-  //    sadece fallback olarak devam et.
-  void isDeviceClockTampered; // tamper check devre dışı (erişim sorunu)
-
-  // 2. Mükerrer alım tespiti (HMAC doğrulaması)
+  kind: VideoKind,
+  amount: number,
+): { ok: boolean; message: string } {
   if (isRewardClaimed(eventKey)) {
     return {
       ok: false,
-      newJeton: getJeton(),
-      message: "🚨 Güvenlik İhlali: Bu ödül bu kutsal gün için zaten alındı!",
+      message: "🚨 Bu hediye bu gün için zaten alındı.",
     };
   }
 
-  // 3. Jeton bakiyesini güncelle (Tavanı deler, cap dışı eklenir)
-  const currentJeton = getJeton();
-  const nextJeton = currentJeton + rewardAmount;
-  setJeton(nextJeton);
-
-  // 4. Bu eventKey için ödülü HMAC-SHA256 ile mühürle
+  grantPack(kind, amount);
   secureSet(CLAIMED_KEYS_PREFIX + eventKey, true);
 
   return {
     ok: true,
-    newJeton: nextJeton,
-    message: `🎉 Tebrikler! +${rewardAmount} Hediye Jetonunuz hesabınıza mühürlendi!`,
+    message: `🎉 Tebrikler! ${amount} adet ${VIDEO_KIND_LABEL[kind]} üretim hakkı hesabınıza tanımlandı.`,
   };
 }
 
-/**
- * Sunucu saatine göre anlık manevi takvim durumunu sorgular.
- */
+/** Sunucu saatine göre anlık manevi takvim durumu */
 export function getHolyDayState(): HolyDayBannerState {
-  const day = serverDayOfWeek(); // 0: Pazar, 1: Pzt, ..., 4: Perşembe, 5: Cuma, 6: Cts
+  const day = serverDayOfWeek();
   const todayIso = serverDateISO();
 
-  // Test / Takvim Özel Gün Kontrolleri (localStorage override desteği)
   const isKadir = typeof window !== "undefined" && localStorage.getItem("nur_kadir_gecesi_mode") === "1";
   const isKandil = typeof window !== "undefined" && localStorage.getItem("nur_kandil_mode") === "1";
   const isBayram = typeof window !== "undefined" && localStorage.getItem("nur_bayram_mode") === "1";
+  const isRamazan = typeof window !== "undefined" && localStorage.getItem("nur_ramadan_mode") === "1";
 
-  // 1. KADİR GECESİ (En Yüksek Öncelik)
+  // 1. KADİR GECESİ
   if (isKadir) {
     const eventKey = `kadir-${todayIso}`;
     const claimed = isRewardClaimed(eventKey);
     return {
       type: "claim",
       eventKey,
-      title: "✨ Mübarek Kadir Gecesi! +50 Jeton Hediyeniz Hazır!",
-      badgeText: "🎁 KADİR GECESİ HEDİYESİNİ AL",
-      rewardAmount: JETON.KADIR_GECESI,
+      title: `✨ Mübarek Kadir Gecesi! ${HEDIYE.KADIR.amount} uzun video hediyeniz hazır`,
+      badgeText: claimed ? "✓ HEDİYE ALINDI" : "🎁 HEDİYENİ AL",
+      rewardKind: HEDIYE.KADIR.kind,
+      rewardAmount: HEDIYE.KADIR.amount,
       isClaimed: claimed,
       canClaim: !claimed,
     };
@@ -103,9 +89,10 @@ export function getHolyDayState(): HolyDayBannerState {
     return {
       type: "claim",
       eventKey,
-      title: "🎉 Mübarek Bayramınız Kutlu Olsun! +30 Jeton Hediyeniz Hazır!",
-      badgeText: "🎁 BAYRAM HEDİYESİNİ AL",
-      rewardAmount: JETON.BAYRAM_BONUS,
+      title: `🎉 Bayramınız kutlu olsun! ${HEDIYE.BAYRAM.amount} uzun video hediyeniz hazır`,
+      badgeText: claimed ? "✓ HEDİYE ALINDI" : "🎁 HEDİYENİ AL",
+      rewardKind: HEDIYE.BAYRAM.kind,
+      rewardAmount: HEDIYE.BAYRAM.amount,
       isClaimed: claimed,
       canClaim: !claimed,
     };
@@ -118,48 +105,68 @@ export function getHolyDayState(): HolyDayBannerState {
     return {
       type: "claim",
       eventKey,
-      title: "🌙 Mübarek Kandiliniz Kutlu Olsun! +20 Jeton Hediyeniz Hazır!",
-      badgeText: "🎁 KANDİL HEDİYESİNİ AL",
-      rewardAmount: JETON.KANDIL_BONUS,
+      title: `🌙 Kandiliniz mübarek olsun! ${HEDIYE.KANDIL.amount} kısa video hediyeniz hazır`,
+      badgeText: claimed ? "✓ HEDİYE ALINDI" : "🎁 HEDİYENİ AL",
+      rewardKind: HEDIYE.KANDIL.kind,
+      rewardAmount: HEDIYE.KANDIL.amount,
       isClaimed: claimed,
       canClaim: !claimed,
     };
   }
 
-  // 4. CUMA GÜNÜ (Cuma, day === 5)
+  // 4. RAMAZAN
+  if (isRamazan) {
+    const eventKey = `ramazan-${todayIso}`;
+    const claimed = isRewardClaimed(eventKey);
+    return {
+      type: "claim",
+      eventKey,
+      title: `🌙 Ramazan bereketi! ${HEDIYE.RAMAZAN.amount} kısa video hediyeniz hazır`,
+      badgeText: claimed ? "✓ HEDİYE ALINDI" : "🎁 RAMAZAN HEDİYESİ",
+      rewardKind: HEDIYE.RAMAZAN.kind,
+      rewardAmount: HEDIYE.RAMAZAN.amount,
+      isClaimed: claimed,
+      canClaim: !claimed,
+    };
+  }
+
+  // 5. CUMA GÜNÜ
   if (day === 5) {
     const eventKey = `cuma-${todayIso}`;
     const claimed = isRewardClaimed(eventKey);
     return {
       type: "claim",
       eventKey,
-      title: "🕌 Mübarek Cuma! Hediye +15 Jetonunuz Hazır!",
-      badgeText: claimed ? "✓ CUMA HEDİYESİ ALINDI" : "🎁 [ŞİMDİ TIKLA AL]",
-      rewardAmount: JETON.CUMA_BONUS,
+      title: `🕌 Mübarek Cuma! ${HEDIYE.CUMA.amount} kısa video hediyeniz hazır`,
+      badgeText: claimed ? "✓ HEDİYE ALINDI" : "🎁 ŞİMDİ AL",
+      rewardKind: HEDIYE.CUMA.kind,
+      rewardAmount: HEDIYE.CUMA.amount,
       isClaimed: claimed,
       canClaim: !claimed,
     };
   }
 
-  // 5. PERŞEMBE GÜNÜ (Cuma İhbarı, day === 4)
+  // 6. PERŞEMBE — Cuma hatırlatması
   if (day === 4) {
     return {
       type: "notice",
       eventKey: `cuma-notice-${todayIso}`,
-      title: "🕌 Yarın Cuma! Tavanı Delen +15 Jeton Hediyenizi Kaçırmayın!",
+      title: `🕌 Yarın Cuma! ${HEDIYE.CUMA.amount} kısa video hediyenizi kaçırmayın`,
       badgeText: "⏰ YARIN MÜBAREK CUMA",
-      rewardAmount: JETON.CUMA_BONUS,
+      rewardKind: HEDIYE.CUMA.kind,
+      rewardAmount: HEDIYE.CUMA.amount,
       isClaimed: false,
       canClaim: false,
     };
   }
 
-  // Standart Gün
+  // Standart gün
   return {
     type: "none",
     eventKey: `none-${todayIso}`,
     title: "✨ Nûr Stüdyo — 1 dakikada profesyonel Kur'an videoları tasarlayın",
     badgeText: "NÛR STÜDYO",
+    rewardKind: "kisa",
     rewardAmount: 0,
     isClaimed: false,
     canClaim: false,
