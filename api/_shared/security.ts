@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+declare const process: { env: Record<string, string | undefined> };
+
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://nurstudyo.com",
   "https://www.nurstudyo.com",

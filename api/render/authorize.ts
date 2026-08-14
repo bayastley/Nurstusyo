@@ -4,6 +4,8 @@ import { rateLimit } from "../_shared/rateLimit";
 import { requireAllowedOrigin } from "../_shared/security";
 import { consumeVideo } from "../_shared/supabase";
 
+declare const process: { env: Record<string, string | undefined> };
+
 // ════════════════════════════════════════════════════════
 // RENDER AUTHORIZE
 //

@@ -1,6 +1,8 @@
 interface UserInput { id: string; email: string; name: string; picture?: string; tier?: string; is_admin?: boolean }
 interface OrderInput { orderId: string; userId: string; productCode: string; amountMinor: number; currency: string; provider: string }
 
+declare const process: { env: Record<string, string | undefined> };
+
 function config() {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";

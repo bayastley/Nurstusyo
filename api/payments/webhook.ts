@@ -12,18 +12,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const provider = queryProvider === "iyzico" || req.body?.paymentId ? "iyzico" : "";
 
     if (queryProvider && queryProvider !== "iyzico") {
-      return res.status(400).send("FAIL");
+      res.status(400).end("FAIL");
+      return;
     }
 
     if (provider !== "iyzico") {
-      return res.status(400).send("FAIL");
+      res.status(400).end("FAIL");
+      return;
     }
 
     const result = handleWebhook(provider, req.body);
 
     if (!result.ok) {
       console.warn("[Webhook Fraud/Invalid]", result.error, result.log);
-      return res.status(400).send("FAIL");
+      res.status(400).end("FAIL");
+      return;
     }
 
     console.log("[Webhook Verified]", result.product?.title, result.log);
@@ -66,6 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ status: "success", result });
   } catch (error) {
     console.error("[Webhook Error]", error);
-    return res.status(500).send("FAIL");
+    res.status(500).end("FAIL");
+    return;
   }
 }

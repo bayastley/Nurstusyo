@@ -5,6 +5,8 @@ import { rateLimit } from "../_shared/rateLimit";
 import { requireAllowedOrigin } from "../_shared/security";
 import { createOrder } from "../_shared/supabase";
 
+declare const process: { env: Record<string, string | undefined> };
+
 function isAllowedReturnUrl(raw: unknown): string {
   const fallback = "https://nurstudyo.com/odeme-sonuc";
   if (typeof raw !== "string" || raw.length > 300) return fallback;

@@ -2,8 +2,8 @@
 // SERVERTIME.TS — Tamper-proof zaman kaynağı.
 //
 // ★ NEDEN GEREKLİ:
-// Kullanıcı Windows saatini elle "Cuma günü" yaparsa CUMA_BONUS +15 jeton
-// yükleniyor, ya da bir sonraki gün için "günlük bonus" tekrar alınıyor.
+// Kullanıcı Windows saatini elle "Cuma günü" yaparsa Cuma hediyesi haksız
+// alınıyor, ya da günlük kota erken sıfırlanıyor.
 // Bu dosya kullanıcının cihaz saatine ASLA güvenmez; internetten gerçek
 // sunucu zamanını çeker.
 //
@@ -197,17 +197,31 @@ export function serverNow(): number {
 
 /** Bugünün tarihi (YYYY-MM-DD, sunucu bazlı) — günlük bonus için */
 export function serverDateISO(): string {
-  return new Date(serverNow()).toISOString().slice(0, 10);
+  // Türkiye takvimi kullanılır. UTC'ye göre gün değişimi, Türkiye'de gece 00:00
+  // sonrası hâlâ bir önceki gün hediyesi göstermemeli.
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(serverNow()));
+  const get = (type: string) => parts.find((part) => part.type === type)?.value || "00";
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 /** Bugün Cuma mı? — cihaz saatinden bağımsız */
 export function serverIsFriday(): boolean {
-  return new Date(serverNow()).getDay() === 5;
+  return serverDayOfWeek() === 5;
 }
 
 /** Haftanın günü (0=Pazar … 6=Cumartesi) — sunucu bazlı */
 export function serverDayOfWeek(): number {
-  return new Date(serverNow()).getDay();
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Istanbul",
+    weekday: "short",
+  }).format(new Date(serverNow()));
+  const map: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return map[weekday] ?? new Date(serverNow()).getDay();
 }
 
 /** Kullanıcı saatinde tamper tespit edildi mi? */
