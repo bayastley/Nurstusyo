@@ -184,7 +184,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${targetUser.jeton} ⚡ Enerji (${delta > 0 ? "+" + delta : delta})`);
+      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${targetUser.jeton} ⚡ Üretim hakkı (${delta > 0 ? "+" + delta : delta})`);
     }
   };
 
@@ -206,7 +206,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`⚡ ${targetUser.email} bakiyesi ${safeAmount} ⚡ Enerji yapıldı!`);
+      notify(`⚡ ${targetUser.email} bakiyesi ${safeAmount} ⚡ Üretim hakkı yapıldı!`);
     }
   };
 
@@ -319,7 +319,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             }`}
             style={activeTab === "users" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <UserCheck size={14} /> Kullanıcı & ⚡ Enerji
+            <UserCheck size={14} /> Kullanıcı & ⚡Üretim hakkı
           </button>
           <button
             onClick={() => setActiveTab("broadcast")}
@@ -403,7 +403,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               </div>
 
-              {/* 2. Seçili kullanıcı profili ve enerji yönetimi */}
+              {/* 2. Seçili kullanıcı profili ve Üretim hakkı yönetimi */}
               {selectedUser && (
                 <div
                   className="relative overflow-hidden rounded-3xl border p-5 transition-all"
@@ -446,10 +446,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       </p>
                     </div>
 
-                    {/* Enerji bakiyesi ekleme / çıkarma */}
+                    {/* Üretim hakkı bakiyesi ekleme / çıkarma */}
                     <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                        🪙 ⚡ Enerji Bakiye Yönetimi
+                        🪙 ⚡ Üretim hakkı Bakiye Yönetimi
                       </label>
                       <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
                         <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
@@ -468,7 +468,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         <button
                           onClick={() => handleJetonChange(selectedUser.email, -jetonDelta)}
                           className="flex h-9 items-center justify-center gap-1 rounded-xl bg-red-500/20 border border-red-500/30 px-3 text-[11px] font-black text-red-300 transition hover:bg-red-500/30 active:scale-95"
-                          title={`${jetonDelta} ⚡ Enerji çıkar`}
+                          title={`${jetonDelta} ⚡ Üretim hakkı çıkar`}
                         >
                           <Minus size={12} strokeWidth={3} /> {jetonDelta}
                         </button>
@@ -494,7 +494,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                             onClick={() => handleDirectJetonSet(selectedUser.email, amt)}
                             className="flex-1 rounded-lg bg-white/5 py-1 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition"
                           >
-                            ={amt} ⚡ Enerji
+                            ={amt} ⚡ Üretim hakkı
                           </button>
                         ))}
                       </div>

@@ -316,7 +316,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </button>
             <p className="text-center text-[9px] leading-relaxed text-white/40">
               Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
-              Şifre gerekmez · Anında <b className="text-white/60">+20 ⚡ Enerji</b> hediye
+              Şifre gerekmez · Anında <b className="text-white/60">+20 ⚡ Üretim hakkı</b> hediye
             </p>
 
             {/* ★ MİSAFİR MODU */}
@@ -363,11 +363,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Hourglass size={16} /></span>
               <div><h3 className="font-display text-sm font-black" style={{ color: "var(--accent-2)" }}>Tam Sürümü Aç</h3><p className="text-[9px] text-white/40">40 dakikaya kadar video modu</p></div>
             </div>
-            <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Enerji</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
-            <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ Enerji</b></div>
+            <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Üretim hakkı</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
+            <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ Üretim hakkı</b></div>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="glass-soft rounded-xl py-2.5 text-[10px] font-bold text-white/65">Vazgeç</button>
-              <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Enerji Öde ve Aç</button>
+              <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Üretim hakkı Öde ve Aç</button>
             </div>
           </div>
         </div>
@@ -388,12 +388,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             const next = cur + bonus;
             localStorage.setItem("nur_jeton", String(next));
             setJetonCount(next);
-            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif 🌙 +${bonus} ⚡ Enerji`);
+            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif 🌙 +${bonus} ⚡ Üretim hakkı`);
           }}
           onTokenPurchase={(amount) => {
             const next = Number(localStorage.getItem("nur_jeton") || 0);
             setJetonCount(next);
-            notify(`${amount} ⚡ Enerji hesabına eklendi`);
+            notify(`${amount} ⚡ Üretim hakkı hesabına eklendi`);
           }}
         />
       )}
