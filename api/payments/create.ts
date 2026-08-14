@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getProduct, validateCheckout } from "../../src/payments/pricing";
-import { requireAuth } from "../_shared/auth.ts";
-import { rateLimit } from "../_shared/rateLimit.ts";
-import { requireAllowedOrigin } from "../_shared/security.ts";
-import { createOrder } from "../_shared/supabase.ts";
+import { requireAuth } from "../_shared/auth";
+import { rateLimit } from "../_shared/rateLimit";
+import { requireAllowedOrigin } from "../_shared/security";
+import { createOrder } from "../_shared/supabase";
 
 function isAllowedReturnUrl(raw: unknown): string {
   const fallback = "https://nurstudyo.com/odeme-sonuc";

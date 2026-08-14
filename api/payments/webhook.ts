@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleWebhook } from "../../src/payments/webhook.server";
-import { rateLimit } from "../_shared/rateLimit.ts";
-import { getOrder, grantProductToUser } from "../_shared/supabase.ts";
+import { rateLimit } from "../_shared/rateLimit";
+import { getOrder, grantProductToUser } from "../_shared/supabase";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
@@ -9,9 +9,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const queryProvider = typeof req.query.provider === "string" ? req.query.provider : "";
-    const provider = queryProvider === "paytr" || queryProvider === "iyzico" ? queryProvider : req.body?.paymentId ? "iyzico" : "paytr";
+    const provider = queryProvider === "iyzico" || req.body?.paymentId ? "iyzico" : "";
 
-    if (queryProvider && queryProvider !== "paytr" && queryProvider !== "iyzico") {
+    if (queryProvider && queryProvider !== "iyzico") {
+      return res.status(400).send("FAIL");
+    }
+
+    if (provider !== "iyzico") {
       return res.status(400).send("FAIL");
     }
 
@@ -24,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log("[Webhook Verified]", result.product?.title, result.log);
 
-    const orderId = provider === "paytr" ? String(req.body?.merchant_oid ?? "") : String(req.body?.conversationId ?? "");
+    const orderId = String(req.body?.conversationId ?? "");
 
     if (orderId.startsWith("NUR-")) {
       try {
@@ -37,7 +41,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             userId: order.user_id,
             grantTier: result.product.grantTier,
             grantDays: result.product.grantDays,
-            grantTokens: result.product.grantTokens,
+            videoKind: result.product.videoKind,
+            videoCount: result.product.videoCount,
           });
           console.log("[Webhook Granted]", orderId, result.product.code);
         } else if (!order) {
@@ -48,7 +53,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               userId: fallbackUserId,
               grantTier: result.product.grantTier,
               grantDays: result.product.grantDays,
-              grantTokens: result.product.grantTokens,
+              videoKind: result.product.videoKind,
+              videoCount: result.product.videoCount,
             }).catch(() => undefined);
           }
         }
@@ -57,7 +63,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    if (provider === "paytr") return res.status(200).send("OK");
     return res.status(200).json({ status: "success", result });
   } catch (error) {
     console.error("[Webhook Error]", error);

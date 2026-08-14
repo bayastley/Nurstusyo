@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAuth } from "../_shared/auth.ts";
-import { rateLimit } from "../_shared/rateLimit.ts";
-import { requireAllowedOrigin } from "../_shared/security.ts";
-import { consumeVideo } from "../_shared/supabase.ts";
+import { requireAuth } from "../_shared/auth";
+import { rateLimit } from "../_shared/rateLimit";
+import { requireAllowedOrigin } from "../_shared/security";
+import { consumeVideo } from "../_shared/supabase";
 
 // ════════════════════════════════════════════════════════
 // RENDER AUTHORIZE
