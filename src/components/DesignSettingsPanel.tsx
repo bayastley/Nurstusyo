@@ -308,7 +308,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             })}
           </div>
           <div className="mt-1.5 text-center text-[8px] text-white/30">
-            Üç formatı aynı anda indirme: <span className="font-black text-amber-300">ELİT</span> ya da {videoMaliyeti("short", tier)} ⚡ Enerji ile 24 saatlik açma
+            Üç formatı aynı anda indirme: <span className="font-black text-amber-300">ELİT</span> ya da {videoMaliyeti("short", tier)} ⚡ Üretim hakkı ile 24 saat açma
           </div>
         </div>
       </div>
