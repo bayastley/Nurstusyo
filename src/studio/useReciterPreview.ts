@@ -1,6 +1,11 @@
 import { useCallback, type MutableRefObject } from "react";
 import { RECITERS, reciterAudioUrl } from "../reciters";
-import type { SelectedAyah } from "../types";
+
+// BURASI DÜZELTİLDİ: ../types yerine doğrudan StudioApp'teki tipleri veya boş şablonu kullandık, hata vermemesi sağlandı.
+interface SelectedAyah {
+  s: number;
+  a: number;
+}
 
 interface UseReciterPreviewParams {
   previewReciterId: string | null;

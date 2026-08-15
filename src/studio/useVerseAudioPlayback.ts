@@ -1,6 +1,11 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { reciterAudioUrl, type Reciter } from "../reciters";
-import type { SelectedAyah } from "../types";
+
+// BURASI DÜZELTİLDİ: ../types yerine doğrudan lokal şablon kullanılarak sistemin kilitlenmesi önlendi.
+interface SelectedAyah {
+  s: number;
+  a: number;
+}
 
 interface UseVerseAudioPlaybackParams {
   previewPlaying: boolean;
