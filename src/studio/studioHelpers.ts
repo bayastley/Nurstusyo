@@ -47,8 +47,7 @@ export function formatRemaining(ms: number): string {
   return `${second} sn`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
+export async function fetchJSON(url: string, timeoutMs = 12000): Promise<unknown> {
   const attempt = async () => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), timeoutMs);

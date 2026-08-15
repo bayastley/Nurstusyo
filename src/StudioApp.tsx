@@ -1,31 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import fixWebmDuration from "fix-webm-duration";
 import { X, AlertTriangle, Ban, BookOpen } from "lucide-react";
 import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
-  MODES, ASPECTS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
+  MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
-import { detectCategoryFromAyahText } from "./studio/detectCategoryFromAyah";
-import { useMediaCache } from "./studio/useMediaCache";
-import { useAudioSilence } from "./studio/useAudioSilence";
-import { useMicroUnlocks } from "./studio/useMicroUnlocks";
-import { useGuestTrial } from "./studio/useGuestTrial";
-import { useRenderQuality } from "./studio/useRenderQuality";
-import { useDocumentLanguage, useDocumentTheme } from "./studio/useDocumentPreferences";
-import { useAuthSession } from "./studio/useAuthSession";
-import { useSecurityGuards } from "./studio/useSecurityGuards";
-import { useVerseAudioPlayback } from "./studio/useVerseAudioPlayback";
-import { useReciterPreview } from "./studio/useReciterPreview";
-import { useVideoGenerator } from "./studio/useVideoGenerator";
-import { useManualAuthActions } from "./studio/useManualAuthActions";
-import { usePrayerTimes } from "./studio/usePrayerTimes";
-import { useSearchResults } from "./studio/useSearchResults";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
-  fmtDuration, fmtSize, dimensions,
-  formatRemaining, fetchJSON, fetchAyah, fetchSurah,
+  fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
+  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah,
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import {
@@ -37,6 +23,7 @@ import {
   KATEGORI_TIER,
   FREE_VIDEOS_PER_CATEGORY,
   CATEGORY_PALETTE,
+  toHiRes,
   type CatId,
   type Clip,
   } from "./clips";
@@ -49,12 +36,13 @@ import {
   SURAHS,
   THEMES,
   THEME_EMOJI,
+  TURKISH_CITIES,
   EXTRA_THEMES,
   THEME_TIER,
   THEME_EMOJI_EXTRA,
 } from "./data";
 import { LANGS, MEAL_EDITIONS, T, type Lang } from "./i18n";
-import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER } from "./reciters";
+import { RECITERS, reciterAudioUrl, RECITER_SES_TARZI, SES_TARZI_ORDER } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { HeaderTopBar } from "./components/HeaderTopBar";
 import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
@@ -67,19 +55,21 @@ import {
   getCurrentTier, setCurrentTier, tierAtLeast, isFeatureUnlocked, featureLockLabel,
   isAdminEmail, ADMIN_SECRET_PATH, ALLOWED_ADMIN_EMAILS,
   JETON, isFriday, isRamadan, reciterRequiredTier, jetonTavani, videoMaliyeti,
-  hasMicroUnlock, getJeton,
+  hasMicroUnlock, grantMicroUnlock, getJeton, setJeton as persistJetonSecure,
   addPurchasedJeton, addDailySubJeton,
   type Tier,
 } from "./tier";
-import { secureGet, secureSet } from "./secureStore";
+import { consumeTamperFlag, onTamperDetected, secureGet, secureSet } from "./secureStore";
 import { serverDateISO, serverIsFriday, isDeviceClockTampered, syncServerTime } from "./serverTime";
-import { getPosterUrlSync } from "./videoUrl";
-import { onErrorCaptured, type DebugGuideMessage } from "./debugGuide";
-import type { SelectedAyah, Output, DailyAyah, User, Mode, Aspect, ModalName, LoginTab } from "./types";
+import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl } from "./videoUrl";
+import { checkRateLimit } from "./rateLimiter";
+import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
+import { syncUserInDb } from "./components/AdminDashboardModal";
+import { fetchRemoteConfig, getSystemConfig, banUserInDb, getBanLogs } from "./services/adminSyncService";
+import type { SelectedAyah, SearchHit, Output, DailyAyah, User, Mode, Aspect, ModalName, LoginTab } from "./types";
 
 void SES_TARZI_ORDER; void isFeatureUnlocked; void featureLockLabel; void ALLOWED_ADMIN_EMAILS; void isAdminEmail; void setCurrentTier; void tierAtLeast; void isRamadan; void isFriday; void JETON; void ADMIN_SECRET_PATH;
 void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
-const PRO_TOTAL_ATMOS = 350;
 // Sabitler studioConstants.ts'e, yardımcılar studioHelpers.ts'e taşındı
 
 // Tüm sabitler + yardımcılar dış dosyalara taşındı (studio/)
@@ -104,7 +94,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("nur_lang") as Lang) || "tr");
   const [themeId, setThemeId] = useState(() => localStorage.getItem("nur_theme") || "nur");
   const [query, setQuery] = useState("");
-  const { results, searching } = useSearchResults(query, lang);
+  const [results, setResults] = useState<SearchHit[]>([]);
+  const [searching, setSearching] = useState(false);
   const [surah, setSurah] = useState("1");
   const [ayah, setAyah] = useState("1");
   const [selected, setSelected] = useState<SelectedAyah[]>([]);
@@ -130,7 +121,22 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return aspect === "9:16" ? 300 : aspect === "4:5" ? 340 : aspect === "1:1" ? 380 : 500;
   }, [aspect]);
 
-  const renderQuality = useRenderQuality();
+  const renderQuality = useMemo(() => {
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const memory = nav.deviceMemory ?? 8;
+    const cores = navigator.hardwareConcurrency ?? 8;
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const low = mobile || memory <= 4 || cores <= 4;
+    const mid = !low && (memory <= 6 || cores <= 6);
+    return {
+      low,
+      previewFps: mobile ? 20 : low ? 24 : mid ? 30 : 30, // Mobilde daha düşük FPS
+      // ★ Daha stabil render: 60fps/24Mbps WebM bazı cihazlarda donuk video üretir.
+      renderFps: mobile ? 20 : low ? 24 : mid ? 30 : 30,
+      bitrateScale: mobile ? 0.28 : low ? 0.38 : mid ? 0.55 : 0.62,
+      audioBitrate: mobile ? 96_000 : low ? 128_000 : 160_000,
+    };
+  }, []);
 
   const ARABIC_FONTS = _ARABIC_FONTS;
   const [arabicFont, setArabicFont] = useState("amiri");
@@ -189,7 +195,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [dailyPaused] = useState(false);
   const [prayerCity, setPrayerCity] = useState(() => localStorage.getItem("nur_city") || "İstanbul");
   const [prayerSearch, setPrayerSearch] = useState("");
-  const { prayerTimings, nextPrayer, filteredCities } = usePrayerTimes(prayerCity, prayerSearch);
+  const [prayerTimings, setPrayerTimings] = useState<Record<string, string> | null>(null);
+  const [now, setNow] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [modal, setModal] = useState<ModalName>(null);
@@ -247,7 +254,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const lastDescRef = useRef<string>("");
   const selectedRef = useRef(selected), verseIndexRef = useRef(verseIndex), backgroundRef = useRef(background);
   const ayahBackgroundsRef = useRef(ayahBackgrounds), aspectRef = useRef(aspect), themeRef = useRef(THEMES[0]);
-  const { imageCache, videoCache, videoWatchdog, ensureImage, ensureVideo } = useMediaCache();
+  const imageCache = useRef(new Map<string, HTMLImageElement>()), videoCache = useRef(new Map<string, HTMLVideoElement>());
+  // ★ Render sırasında videonun donmasını engelleyen canlılık izleyicisi (watchdog)
+  const videoWatchdog = useRef(new Map<HTMLVideoElement, { t: number; at: number }>());
 
   const combinedAllClips = useMemo(
     () => (QURAN_CLIPS.length ? [...QURAN_CLIPS, ...TEMPLATE_CLIPS] : [...ALL_CLIPS, ...QURAN_CLIPS]),
@@ -301,34 +310,209 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify("Admin paneli için doğrulanmış Google admin oturumu gerekli");
   }, [isDevMaster, notify]);
 
-  useAuthSession({
-    notify,
-    setUser,
-    setAdminGodMode,
-    setTier,
-    setJetonCount,
-    setLocalBanned,
-    setLocalBanReason,
-  });
+  // ★ Google OAuth PKCE dönüşü — code backend'de doğrulanır, sahte mail kabul edilmez
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    if (!code || !state) return;
 
-  const { tryUnlockElitFeature, tryUnlockFullMode } = useMicroUnlocks({
-    tier,
-    jetonCount,
-    isMasterSürüm,
-    setJetonCount,
-    notify,
-    openPremium,
-  });
-  const { getGuestUsed, bumpGuestUsed, handleGuestContinue } = useGuestTrial(notify, setModal);
+    const storedState = sessionStorage.getItem("nur_google_state") || "";
+    const verifier = sessionStorage.getItem("nur_google_pkce_verifier") || "";
+    sessionStorage.removeItem("nur_google_state");
+    sessionStorage.removeItem("nur_google_pkce_verifier");
+    window.history.replaceState({}, "", window.location.pathname || "/");
 
-  const { silenceAudioOnly, silenceAllAudio } = useAudioSilence({
-    verseAudioRef,
-    reciterPreviewRef,
-    previewTimerRef,
-    setPreviewPlaying,
-    setPreviewReciterId,
-    setPreviewTime,
-  });
+    if (!storedState || storedState !== state || !verifier) {
+      notify("⚠️ Google giriş oturumu doğrulanamadı. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            code,
+            codeVerifier: verifier,
+            redirectUri: `${window.location.origin}/`,
+          }),
+        });
+        const data = await response.json().catch(() => null) as {
+          ok?: boolean;
+          error?: string;
+          user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier; isAdmin?: boolean };
+          wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
+        } | null;
+        if (cancelled) return;
+        if (!response.ok || !data?.ok || !data.user?.email) {
+          notify(data?.error || "Google girişi doğrulanamadı");
+          return;
+        }
+
+        const email = data.user.email.trim().toLowerCase();
+        // ★ Admin yetkisi: sunucu (NUR_ADMIN_EMAILS) VEYA istemci listesi — ikisinden biri yeter
+        const isKurucuAdmin = Boolean(data.user.isAdmin) || isAdminEmail(email);
+        const newUser: User = {
+          id: data.user.id,
+          name: isKurucuAdmin ? "Ömer Kaya (Kurucu Admin)" : data.user.name || email.split("@")[0],
+          email,
+          phone: "",
+          verified: true,
+        };
+
+        setUser(newUser);
+        localStorage.setItem("nur_user", JSON.stringify(newUser));
+
+        if (isKurucuAdmin) {
+          const adminJeton = Math.max(1000, data.wallet?.total ?? getJeton());
+          setAdminGodMode(true);
+          setTier("elit");
+          setCurrentTier("elit");
+          setJetonCount(adminJeton);
+          persistJetonSecure(adminJeton);
+          syncUserInDb(email, newUser.name, "elit", adminJeton);
+          notify("🛡️ Google doğrulandı · Kurucu Admin modu aktif");
+          return;
+        }
+
+        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
+        setTier(dbTier);
+        setCurrentTier(dbTier);
+        let nextJeton = data.wallet?.total ?? getJeton();
+        const bonusKey = `nur_google_register_bonus_${data.user.id}`;
+        if (!localStorage.getItem(bonusKey)) {
+          nextJeton += JETON.KAYIT_BONUSU_FREE;
+          persistJetonSecure(nextJeton);
+          setJetonCount(nextJeton);
+          localStorage.setItem(bonusKey, "1");
+          notify(`🎉 Google ile giriş başarılı · +${JETON.KAYIT_BONUSU_FREE} jeton hediye edildi`);
+        } else {
+          notify("Google ile giriş başarılı · hoş geldiniz");
+        }
+        syncUserInDb(email, newUser.name, dbTier, nextJeton);
+      } catch {
+        if (!cancelled) notify("Google girişi sırasında bağlantı hatası oluştu");
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [notify, tier]);
+
+  // ★ Server-side oturum kontrolü: localStorage tek başına yetki sayılmaz.
+  useEffect(() => {
+    const stored = localStorage.getItem("nur_user");
+    if (!stored) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch("/api/auth/me", { cache: "no-store" });
+        if (cancelled) return;
+        if (!response.ok) {
+          setUser(null);
+          localStorage.removeItem("nur_user");
+          setAdminGodMode(false);
+          return;
+        }
+        const data = await response.json().catch(() => null) as {
+          ok?: boolean;
+          user?: { id: string; email: string; name: string; verified: boolean; isAdmin?: boolean; tier?: Tier };
+          wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
+          banned?: boolean;
+          banReason?: string;
+        } | null;
+        if (!data?.ok || !data.user?.email) return;
+        // ★ Sunucu "banlı" dediyse: tarayıcı geçmişi silinmiş olsa bile engel ekranı açılır
+        if (data.banned) {
+          const serverReason = data.banReason || "Sistem Verilerini Kurcalama / Jeton Hilesi Girişimi";
+          setUser(null);
+          localStorage.removeItem("nur_user");
+          setAdminGodMode(false);
+          setLocalBanned(true);
+          setLocalBanReason(serverReason);
+          secureSet("nur_local_user_banned", true);
+          secureSet("nur_local_user_ban_reason", serverReason);
+          return;
+        }
+        const verifiedUser: User = {
+          id: data.user.id,
+          name: data.user.name,
+          email: data.user.email,
+          phone: "",
+          verified: data.user.verified,
+        };
+        setUser(verifiedUser);
+        localStorage.setItem("nur_user", JSON.stringify(verifiedUser));
+        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
+        setTier(data.user.isAdmin ? "elit" : dbTier);
+        setCurrentTier(data.user.isAdmin ? "elit" : dbTier);
+        if (data.wallet) {
+          setJetonCount(data.wallet.total);
+          persistJetonSecure(data.wallet.total);
+        }
+        if (data.user.isAdmin) setAdminGodMode(true);
+      } catch { /* offline/dev durumda sessiz geç */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const [, setMicroUnlockTick] = useState(0);
+  const tryUnlockElitFeature = useCallback((key: "batch" | "ai_search", featureLabel: string): boolean => {
+    if (isMasterSürüm) return true;
+    if (tierAtLeast(tier, "elit")) return true;
+    if (hasMicroUnlock(key)) return true;
+    if (jetonCount >= JETON.MIKRO_KILIT_ACMA_UCRETI) {
+      const remaining = Math.max(0, getJeton() - JETON.MIKRO_KILIT_ACMA_UCRETI);
+      persistJetonSecure(remaining);
+      setJetonCount(remaining);
+      grantMicroUnlock(key);
+      setMicroUnlockTick((n) => n + 1);
+      notify(`🔓 ${featureLabel} 24 saatliğine açıldı · −${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton`);
+      return true;
+    }
+    notify(`${featureLabel} için ${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton gerekiyor (24 saatlik açma) · mevcut: ${jetonCount}`);
+    openPremium("jeton");
+    return false;
+  }, [tier, jetonCount, notify, openPremium, isMasterSürüm]);
+
+  const tryUnlockFullMode = useCallback((): boolean => {
+    if (isMasterSürüm) return true;
+    if (tierAtLeast(tier, "pro")) return true;
+    if (hasMicroUnlock("full_mode")) return true;
+    if (jetonCount >= JETON.MIKRO_KILIT_ACMA_UCRETI) {
+      const remaining = Math.max(0, getJeton() - JETON.MIKRO_KILIT_ACMA_UCRETI);
+      persistJetonSecure(remaining);
+      setJetonCount(remaining);
+      grantMicroUnlock("full_mode");
+      setMicroUnlockTick((n) => n + 1);
+      notify(`✅ Tam Sürüm modu 24 saatliğine açıldı · −${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton düşürüldü`);
+      return true;
+    }
+    notify(`⚠️ Tam Sürüm modunu 24 saatliğine açmak için ${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton gerekiyor · mevcut: ${jetonCount}`);
+    openPremium("jeton");
+    return false;
+  }, [tier, jetonCount, notify, openPremium, isMasterSürüm]);
+
+  const silenceAudioOnly = useCallback(() => {
+    try {
+      const all = document.querySelectorAll("audio");
+      all.forEach((a) => {
+        try { a.pause(); a.currentTime = 0; a.removeAttribute("src"); a.load(); } catch { /* ignore */ }
+      });
+    } catch { /* ignore */ }
+    const v = verseAudioRef.current;
+    if (v) { try { v.pause(); v.src = ""; v.load(); } catch {} verseAudioRef.current = null; }
+    const r = reciterPreviewRef.current;
+    if (r) { try { r.pause(); r.src = ""; r.load(); } catch {} reciterPreviewRef.current = null; }
+    if (previewTimerRef.current) { window.clearTimeout(previewTimerRef.current); previewTimerRef.current = 0; }
+  }, []);
+
+  const silenceAllAudio = useCallback(() => {
+    silenceAudioOnly();
+    setPreviewPlaying(false); setPreviewReciterId(null); setPreviewTime(0);
+  }, [silenceAudioOnly]);
 
   useEffect(() => {
     const onVisibility = () => { if (document.hidden) silenceAllAudio(); };
@@ -343,17 +527,143 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     });
   }, []);
 
-  useSecurityGuards({
-    isMasterSürüm,
-    serverBanLive: SERVER_BAN_LIVE,
-    user,
-    modal,
-    notify,
-    setTier,
-    setJetonCount,
-    setLocalBanned,
-    setLocalBanReason,
-  });
+  // ★ ÜCRETSİZ BULUT SENKRONİZASYONU (Gist / Raw Sync)
+  useEffect(() => {
+    fetchRemoteConfig().then((remoteCfg) => {
+      if (remoteCfg) {
+        const savedUser = localStorage.getItem("nur_user");
+        if (savedUser) {
+          try {
+            const u = JSON.parse(savedUser) as User;
+            const remoteUser = remoteCfg.users.find(x => x.email.toLowerCase() === u.email.toLowerCase());
+            if (remoteUser) {
+              setTier(remoteUser.tier);
+              setCurrentTier(remoteUser.tier);
+              setJetonCount(remoteUser.jeton);
+              persistJetonSecure(remoteUser.jeton);
+            }
+          } catch { /* ignore */ }
+        }
+      }
+    });
+  }, []);
+
+  // ★ GOD MODE — ban durumunu otomatik temizler + tamper sinyalini BANLAMADAN bildirir
+  useEffect(() => {
+    if (!isMasterSürüm) return;
+    if (consumeTamperFlag()) {
+      notify("🛡️ ADMIN: Önceki güvenlik kaydı temizlendi · ban uygulanmadı");
+    }
+    setLocalBanned(false);
+    secureSet("nur_local_user_banned", false);
+    secureSet("nur_local_user_ban_reason", "");
+    onTamperDetected((key) => {
+      notify(`🛡️ ADMIN UYARI: Güvenlik sinyali yakalandı (${key}) — ban uygulanmadı, sadece bildirildi.`);
+    });
+  }, [isMasterSürüm, notify]);
+
+  // ★ CANLI BAN BİLDİRİM İZLEYİCİSİ — yeni her ban kaydında admin'e anında toast düşer
+  const seenBanIds = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isMasterSürüm) return;
+    const scan = (announce: boolean) => {
+      const logs = getBanLogs();
+      const fresh = logs.filter((l) => !seenBanIds.current.has(l.id));
+      fresh.forEach((l) => seenBanIds.current.add(l.id));
+      if (!announce || !fresh.length) return;
+      fresh.slice(0, 3).forEach((l, i) => {
+        window.setTimeout(() => {
+          notify(
+            `⛔ BAN: ${l.userEmail} · ${l.isAuto ? "SİSTEM OTOMATİK" : "ADMİN"} · Sebep: ${l.reason} — Yanlışsa Admin Panel > Ban & Siber Denetim'den kaldır`
+          );
+        }, i * 2600);
+      });
+    };
+    scan(false); // İlk taramada mevcut kayıtları sessizce işaretle
+    const iv = window.setInterval(() => scan(true), 2500);
+    return () => window.clearInterval(iv);
+  }, [isMasterSürüm, notify]);
+
+  // ★ SİBER KORUMA VE OTOMATİK BAN DİNLEYİCİSİ
+  useEffect(() => {
+    if (isMasterSürüm) return; // God Mode'da tamper guard devre dışı
+    // ★ GÜVENLİK GARANTİSİ: Bu fonksiyon YALNIZCA gerçek veri kurcalama
+    //   (tamper) olaylarında çalışır. Yavaş internet, çöken API, 429 hız limiti
+    //   gibi ağ hataları bu yola ASLA girmez — masum kullanıcı ban yemez.
+    const applyAutoBan = (reasonText: string) => {
+      persistJetonSecure(0);
+      setJetonCount(0);
+      setTier("free");
+      setCurrentTier("free");
+      setLocalBanned(true);
+      setLocalBanReason(reasonText);
+      secureSet("nur_local_user_banned", true);
+      secureSet("nur_local_user_ban_reason", reasonText);
+      const userMail = user?.email || "bilinmeyen-cihaz";
+      banUserInDb(userMail, reasonText, "Sistem Otomatik Guard", true);
+      // ★ SUNUCU MÜHRÜ: Hileci tarayıcı verisini silse bile HttpOnly cookie
+      //   kaldığı için Supabase'teki BANNED kaydına takılır ve kaçamaz.
+      fetch("/api/ban/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reasonText }),
+      }).catch(() => undefined);
+      notify("⚠️ Güvenlik: Hesap verilerinde hile/tamper tespit edildi. Erişim donduruldu.");
+    };
+
+    if (consumeTamperFlag()) {
+      applyAutoBan("Sistem Verilerini Kurcalama / Jeton Hilesi Girişimi");
+    }
+    onTamperDetected(() => {
+      applyAutoBan("Sistem Verilerini Kurcalama / Jeton Hilesi Girişimi");
+    });
+  }, [notify, user, isMasterSürüm]);
+
+  // ★ BAN DURUMU CANLI DENETLEYİCİ
+  useEffect(() => {
+    if (isMasterSürüm) return; // God Mode'da ban denetimi devre dışı
+
+    if (SERVER_BAN_LIVE && user) {
+      fetch("/api/ban/status", { cache: "no-store" })
+        .then(async (response) => ({ response, data: await response.json().catch(() => null) as { ok?: boolean; error?: string; isBanned?: boolean; reason?: string } | null }))
+        .then(({ response, data }) => {
+          if (!response.ok || !data?.ok) {
+            setLocalBanned(true);
+            setLocalBanReason(data?.error || "Canlı ban doğrulaması yapılamadı");
+            return;
+          }
+          if (data.isBanned) {
+            setLocalBanned(true);
+            setLocalBanReason(data.reason || "Yasal İhlal / Siber Güvenlik Uyarısı");
+          } else {
+            setLocalBanned(false);
+          }
+        })
+        .catch(() => {
+          setLocalBanned(true);
+          setLocalBanReason("Canlı ban doğrulama servisine ulaşılamadı");
+        });
+      return;
+    }
+
+    const savedUser = localStorage.getItem("nur_user");
+    if (savedUser) {
+      try {
+        const u = JSON.parse(savedUser) as User;
+        const cfg = getSystemConfig();
+        const dbUser = cfg.users.find((x) => x.email.toLowerCase() === u.email.toLowerCase());
+        if (dbUser && dbUser.isBanned) {
+          setLocalBanned(true);
+          setLocalBanReason(dbUser.banReason || "Yasal İhlal / Siber Güvenlik Uyarısı");
+          secureSet("nur_local_user_banned", true);
+          secureSet("nur_local_user_ban_reason", dbUser.banReason || "Yasal İhlal / Siber Güvenlik Uyarısı");
+        } else if (dbUser && !dbUser.isBanned) {
+          setLocalBanned(false);
+          secureSet("nur_local_user_banned", false);
+        }
+      } catch { /* ignore */ }
+    }
+  }, [user, modal, isMasterSürüm]);
 
   useEffect(() => { selectedRef.current = selected; }, [selected]);
   useEffect(() => { verseIndexRef.current = verseIndex; }, [verseIndex]);
@@ -368,27 +678,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     }
   }, [aspect]);
-  useDocumentTheme(theme, themeRef);
-  useDocumentLanguage(lang);
-
-  // ★ DİL DEĞİŞİNCE HER ŞEY ÇEVRİLİR
-  //   Panel etiketleri t() ile zaten çevriliyor.
-  //   Burada başlık, açıklama ve etiketler de yeni dilde yeniden üretilir.
-  const langFirstRun = useRef(true);
-  useEffect(() => {
-    if (langFirstRun.current) { langFirstRun.current = false; return; }
-    const current = selectedRef.current[verseIndexRef.current] ?? selectedRef.current[0];
-    if (current) {
-      setShareTitle(genTitle(current.sName, current.s, current.a, lang));
-      setShareDescription(genDesc(`${current.sName}`, current.s, current.a, reciter.name, lang));
-    } else {
-      setShareTitle(genTitle(undefined, undefined, undefined, lang));
-      setShareDescription(genDesc(undefined, undefined, undefined, undefined, lang));
-    }
-    setVisibleTags(pickRandomTags(14));
-    notify(`🌐 ${LANGS.find((l) => l.code === lang)?.label ?? lang} · arayüz, başlık ve açıklama çevrildi`);
-  }, [lang, reciter.name, pickRandomTags, notify]);
+  useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem("nur_theme", theme.id); }, [theme]);
+  useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
+  useEffect(() => { const interval = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(interval); }, []);
 
   useEffect(() => {
     if (window.location.pathname === ADMIN_SECRET_PATH) setAdminAuthOpen(true);
@@ -466,6 +759,31 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   useEffect(() => {
     let live = true;
+    localStorage.setItem("nur_city", prayerCity);
+    const fetchByCoords = (lat: number, lng: number) => {
+      fetchJSON(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`).then((json) => {
+        if (live) setPrayerTimings(json.data?.timings ?? null);
+      }).catch(() => { if (live) setPrayerTimings(null); });
+    };
+    const fetchByCity = () => {
+      fetchJSON(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(prayerCity)}&country=Turkey&method=13`).then((json) => {
+        if (live) setPrayerTimings(json.data?.timings ?? null);
+      }).catch(() => { if (live) setPrayerTimings(null); });
+    };
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
+        () => fetchByCity(),
+        { timeout: 5000 }
+      );
+    } else {
+      fetchByCity();
+    }
+    return () => { live = false; };
+  }, [prayerCity]);
+
+  useEffect(() => {
+    let live = true;
     // ★ Günlük ayetler 4'lü küçük partiler halinde yüklenir — API'ye aynı anda
     //   14 istek fırlatmak 429 hız limiti tetikliyordu. Parti parti gidince
     //   hem limit aşımı azalır hem yavaş internette tek tek dolar.
@@ -506,7 +824,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   son tam ayetten sonrası otomatik bırakılır. Kullanıcı bunu seçim anında görür.
   useEffect(() => {
     if (selected.length < 2) return;
-    const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
+    const cap = mode === "short" ? 59 : mode === "long" ? 150 : JETON.TAM_SURUM_CAP_SANIYE;
     const estimateAyahSeconds = (item: SelectedAyah) => {
       if (item.s === 0) return Math.max(4, Math.min(22, item.tr.length * 0.055));
       const arClean = item.ar.replace(/[\u064B-\u065F\u0670]/g, "");
@@ -522,7 +840,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       acc += dur + 0.03;
       fitCount += 1;
     }
-    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (40:00)";
+    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (150 sn)" : "Tam Sürüm (40:00)";
     const key = `${mode}-${selected.length}-${fitCount}-${Math.round(total)}`;
     const nowMs = Date.now();
     if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;
@@ -530,21 +848,133 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify(`⚠️ ${modeLabel} süresi seçili ayetlere yetmiyor · ayet yarım kalmasın diye yaklaşık ilk ${fitCount} ayet alınır, sonrası bırakılır`);
   }, [selected, mode, notify]);
 
-  useVerseAudioPlayback({
-    previewPlaying,
-    selected,
-    verseIndex,
-    reciter,
-    verseAudioRef,
-    previewTimerRef,
-    verseIndexRef,
-    setPreviewPlaying,
-    setPreviewDuration,
-    setPreviewTime,
-    setVerseIndex,
-    notify,
-    silenceAudioOnly,
-  });
+  useEffect(() => {
+    const trimmed = query.trim(); if (trimmed.length < 2) { setResults([]); setSearching(false); return; }
+    // ★ Türkçe uzatma işaretlerini sadeleştir: "nur" → "Nûr", "yunus" → "Yûnus" eşleşir
+    const normTr = (s: string) => s.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const matchedSurahs = SURAHS.filter(s => normTr(s.name).includes(normTr(trimmed))).slice(0, 10);
+    if (matchedSurahs.length > 0) { setResults(matchedSurahs.map(s => ({ s: s.n, a: 1, name: s.name, tr: `${s.count} ayet • Sure #${s.n}` }))); setSearching(false); return; }
+    let live = true; setSearching(true);
+    const timer = window.setTimeout(() => { fetchJSON(`https://api.alquran.cloud/v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`).then((json) => { if (!live) return; setResults((json.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({ s: match.surah.number, a: match.numberInSurah, name: SURAHS[match.surah.number - 1]?.name ?? match.surah.englishName, tr: match.text }))); }).catch(() => { if (live) setResults([]); }).finally(() => { if (live) setSearching(false); }); }, 420);
+    return () => { live = false; window.clearTimeout(timer); };
+  }, [query, lang]);
+
+  useEffect(() => {
+    silenceAudioOnly();
+    if (!previewPlaying || !selected.length) return;
+    const current = selected[verseIndex]; if (!current) return;
+    if (current.s === 0) { setPreviewDuration(0); setPreviewTime(0); return; }
+    const isSurahOnly = Boolean(reciter.surahPattern);
+    const audioSrc = isSurahOnly
+      ? reciter.surahPattern!.replace("{S}", String(current.s).padStart(3, "0"))
+      : reciterAudioUrl(reciter.path, current.s, current.a);
+    const audio = new Audio(audioSrc);
+    try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
+    audio.preload = "auto"; audio.volume = 0.9;
+    let destroyed = false;
+    let ayetTimer = 0;
+    const cleanup = () => { window.clearTimeout(safetyTimer); window.clearInterval(ayetTimer); audio.pause(); audio.src = ""; };
+
+    if (isSurahOnly) {
+      audio.onloadedmetadata = () => {
+        if (destroyed) return;
+        const sureSüresi = Number.isFinite(audio.duration) ? audio.duration : 0;
+        setPreviewDuration(sureSüresi);
+        if (sureSüresi <= 0) return;
+        const herAyet = sureSüresi / Math.max(selected.length, 1);
+        let baslangic = performance.now();
+        ayetTimer = window.setInterval(() => {
+          if (destroyed) return;
+          const elapsed = (performance.now() - baslangic) / 1000;
+          setPreviewTime(elapsed);
+          const yeniIdx = Math.min(Math.floor(elapsed / herAyet), selected.length - 1);
+          if (yeniIdx !== verseIndexRef.current) {
+            setVerseIndex(yeniIdx);
+          }
+        }, 200);
+      };
+      audio.ontimeupdate = () => { if (!destroyed) setPreviewTime(audio.currentTime); };
+      audio.onended = () => { if (!destroyed) { cleanup(); setVerseIndex(selected.length - 1); setPreviewPlaying(false); setPreviewTime(0); } };
+      // ★ Hata durumunda ayet konumunu SIFIRLAMA — kullanıcı neredeyse orada kalsın
+      audio.onerror = () => {
+        if (!destroyed) {
+          cleanup();
+          setPreviewPlaying(false);
+          notify("⚠️ Bu kârinin tam sure kaydı yüklenemedi · ayet konumu korundu");
+        }
+      };
+    } else {
+      let advanced = false;
+      const advance = () => {
+        if (advanced) return; advanced = true;
+        window.clearTimeout(safetyTimer);
+        window.clearInterval(ayetTimer);
+        setPreviewTime(0);
+        if (verseIndex < selected.length - 1) setVerseIndex((i) => i + 1);
+        else { setVerseIndex(selected.length - 1); setPreviewPlaying(false); }
+      };
+      audio.ontimeupdate = () => { setPreviewTime(audio.currentTime); setPreviewDuration(Number.isFinite(audio.duration) ? audio.duration : 0); };
+      audio.onloadedmetadata = () => setPreviewDuration(audio.duration || 0);
+      // ★ Sadece ses gerçekten bittiğinde sonraki ayete geç
+      audio.onended = advance;
+      // ★ Hata/kesinti durumunda İLERLEME — aksi halde hoca değişince
+      //   art arda 404 alıp önizleme son ayete fırlıyordu.
+      audio.onerror = () => {
+        if (destroyed) return;
+        cleanup();
+        setPreviewPlaying(false);
+        notify("⚠️ Bu kârinin ses kaydı yüklenemedi · ayet konumu korundu");
+      };
+      audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
+      audio.onabort = () => { if (!destroyed) setPreviewPlaying(false); };
+    }
+    const safetyTimer = window.setTimeout(() => { if (!destroyed && audio.readyState < 2) { cleanup(); setPreviewPlaying(false); } }, 9000);
+    verseAudioRef.current = audio;
+    audio.play().catch(() => { if (!destroyed) { cleanup(); setPreviewPlaying(false); } });
+    return () => { destroyed = true; cleanup(); };
+  }, [previewPlaying, verseIndex, selected, reciter.path, reciter.surahPattern, notify, silenceAudioOnly]);
+
+  const ensureImage = useCallback((url: string) => {
+    let image = imageCache.current.get(url);
+    if (!image) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.decoding = "async";
+      img.src = url;
+      image = img;
+      imageCache.current.set(url, image);
+    }
+    return image;
+  }, []);
+  const ensureVideo = useCallback((url: string, fallbackUrl?: string) => {
+    let video = videoCache.current.get(url);
+    if (!video) {
+      const el = document.createElement("video");
+      el.crossOrigin = "anonymous"; el.src = url; el.muted = true; el.loop = true; el.playsInline = true; el.preload = "auto";
+      el.autoplay = true;
+      el.defaultMuted = true;
+      // ★ Donma koruması: bitiş/takılma anında kendini toparla
+      const revive = () => { try { if (el.ended) el.currentTime = 0; el.play().catch(() => undefined); } catch { /* ignore */ } };
+      el.addEventListener("ended", revive);
+      el.addEventListener("stalled", revive);
+      el.addEventListener("suspend", revive);
+      el.addEventListener("pause", revive);
+      el.play().catch(() => undefined);
+      
+      if (fallbackUrl && fallbackUrl !== url) {
+        el.addEventListener("error", () => {
+          if (el.src !== fallbackUrl) {
+            el.src = fallbackUrl;
+            el.load();
+            el.play().catch(() => undefined);
+          }
+        }, { once: true });
+      }
+      video = el;
+      videoCache.current.set(url, video);
+    }
+    return video;
+  }, []);
 
   useCanvasDraw({
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
@@ -553,8 +983,402 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, user,
   });
 
+  const _CANVAS_DRAW_MOVED_TO_HOOK = true; void _CANVAS_DRAW_MOVED_TO_HOOK;
+  if (false) useEffect(() => {
+    let frame = 0, tick = 0, lastPreviewDraw = 0;
+    // ★ Kelime bazlı sarma + aşırı uzun tek kelimeyi karakter bazında zorla kırma.
+    //   Böylece Arapça metin hiçbir koşulda sağdan/soldan taşmaz.
+    const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
+      const lines: string[] = [];
+      let line = "";
+      const pushHard = (word: string) => {
+        let chunk = "";
+        for (const ch of word) {
+          const cand = chunk + ch;
+          if (chunk && ctx.measureText(cand).width > maxWidth) { lines.push(chunk); chunk = ch; }
+          else chunk = cand;
+        }
+        return chunk;
+      };
+      text.split(/\s+/).filter(Boolean).forEach((word) => {
+        if (ctx.measureText(word).width > maxWidth) {
+          if (line) { lines.push(line); line = ""; }
+          line = pushHard(word);
+          return;
+        }
+        const candidate = line ? `${line} ${word}` : word;
+        if (line && ctx.measureText(candidate).width > maxWidth) { lines.push(line); line = word; }
+        else line = candidate;
+      });
+      if (line) lines.push(line);
+      return lines;
+    };
+    const cover = (ctx: CanvasRenderingContext2D, source: CanvasImageSource & { videoWidth?: number; videoHeight?: number; naturalWidth?: number; naturalHeight?: number }, width: number, height: number, zoom = 1) => {
+      const sourceWidth = source.videoWidth || source.naturalWidth || 0, sourceHeight = source.videoHeight || source.naturalHeight || 0;
+      if (!sourceWidth || !sourceHeight) return false;
+      const scale = Math.max(width / sourceWidth, height / sourceHeight) * zoom, drawWidth = sourceWidth * scale, drawHeight = sourceHeight * scale;
+      ctx.drawImage(source, (width - drawWidth) / 2, (height - drawHeight) / 2, drawWidth, drawHeight); return true;
+    };
+    const drawKaleidoscope = (ctx: CanvasRenderingContext2D, width: number, height: number, tick: number, theme: { bg: string; bg2: string; acc: string; acc2: string }, palette: { primary: string; secondary: string; glow: string; bg: string; bg2: string } | null) => {
+      const bg = palette?.bg ?? theme.bg;
+      const bg2 = palette?.bg2 ?? theme.bg2;
+      const acc = palette?.primary ?? theme.acc;
+      const acc2 = palette?.secondary ?? theme.acc2;
+      const glow = palette?.glow ?? theme.acc2;
+      const bgGrad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.75);
+      bgGrad.addColorStop(0, bg2);
+      bgGrad.addColorStop(0.55, bg);
+      bgGrad.addColorStop(1, "#000000");
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      const cx = width / 2, cy = height / 2;
+      const t = tick * 0.008;
+      const breathe = 0.85 + Math.sin(t * 0.7) * 0.12;
+      const baseR = Math.min(width, height) * 0.32 * breathe;
+      const petals = 8;
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(t * 0.15);
+      ctx.strokeStyle = glow + "55";
+      ctx.lineWidth = 1;
+      for (let r = 0; r < 3; r++) {
+        const rr = baseR * (1.2 + r * 0.22);
+        ctx.beginPath();
+        ctx.arc(0, 0, rr, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Mobilde "lighter" efekti aşırı parlaklık yapıyor, normal kullan
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      ctx.save();
+      ctx.translate(cx, cy);
+      if (!isMobile) ctx.globalCompositeOperation = "lighter"; // Mobilde flash yok
+      for (let i = 0; i < petals; i++) {
+        ctx.save();
+        ctx.rotate((i / petals) * Math.PI * 2 + t * 0.08);
+        const petalLen = baseR * (1 + Math.sin(t + i * 0.4) * 0.15);
+        const petalWid = baseR * 0.38;
+        const grad = ctx.createLinearGradient(0, 0, 0, -petalLen);
+        grad.addColorStop(0, acc + "99"); // Mobilde daha az alpha
+        grad.addColorStop(0.5, acc2 + (isMobile ? "33" : "55"));
+        grad.addColorStop(1, acc + "00");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(petalWid, -petalLen * 0.35, petalWid * 0.7, -petalLen * 0.85, 0, -petalLen);
+        ctx.bezierCurveTo(-petalWid * 0.7, -petalLen * 0.85, -petalWid, -petalLen * 0.35, 0, 0);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      for (let i = 0; i < petals; i++) {
+        ctx.save();
+        ctx.rotate((i / petals) * Math.PI * 2 - t * 0.12 + Math.PI / petals);
+        const petalLen = baseR * 0.55 * (1 + Math.sin(t * 1.3 + i) * 0.1);
+        const petalWid = baseR * 0.18;
+        const grad = ctx.createLinearGradient(0, 0, 0, -petalLen);
+        grad.addColorStop(0, acc2 + (isMobile ? "66" : "aa")); // Mobilde daha az alpha
+        grad.addColorStop(1, acc2 + "00");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(petalWid, -petalLen * 0.4, petalWid * 0.5, -petalLen * 0.9, 0, -petalLen);
+        ctx.bezierCurveTo(-petalWid * 0.5, -petalLen * 0.9, -petalWid, -petalLen * 0.4, 0, 0);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      const coreR = baseR * 0.12 * (1 + Math.sin(t * 2) * 0.2);
+      const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, coreR * 3);
+      coreGrad.addColorStop(0, acc2 + "ff");
+      coreGrad.addColorStop(0.4, acc + "88");
+      coreGrad.addColorStop(1, acc + "00");
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(0, 0, coreR * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (let i = 0; i < 24; i++) {
+        const angle = (i / 24) * Math.PI * 2 + t * 0.3;
+        const dist = baseR * (0.7 + Math.sin(t * 0.5 + i * 1.7) * 0.5);
+        const px = Math.cos(angle) * dist;
+        const py = Math.sin(angle) * dist;
+        const sz = 1 + Math.sin(t * 2 + i) * 0.8;
+        const alpha = 0.3 + Math.sin(t * 3 + i * 0.9) * 0.3;
+        ctx.fillStyle = acc2 + Math.round(alpha * 255).toString(16).padStart(2, "0");
+        ctx.beginPath();
+        ctx.arc(px, py, sz, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+      ctx.globalCompositeOperation = "source-over";
+    };
+    const draw = () => {
+      const nowFrame = performance.now();
+      const minFrameGap = 1000 / renderQuality.previewFps;
+      if (lastPreviewDraw && nowFrame - lastPreviewDraw < minFrameGap) {
+        frame = requestAnimationFrame(draw);
+        return;
+      }
+      lastPreviewDraw = nowFrame;
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const [width, height] = dimensions(aspectRef.current);
+        if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+        const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
+        if (ctx) {
+          tick += 1;
+          // ★ Yüksek kaliteli ölçekleme — video büyütülürken pikselleşme/bulanıklık olmaz
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          const currentItems = selectedRef.current, currentIndex = Math.min(verseIndexRef.current, Math.max(currentItems.length - 1, 0)), currentAyah = currentItems[currentIndex];
+          const clip = (currentAyah && ayahBackgroundsRef.current[currentAyah.id]) || backgroundRef.current, currentTheme = themeRef.current;
+          ctx.fillStyle = currentTheme.bg; ctx.fillRect(0, 0, width, height); let painted = false;
+          const zoom = 1.03 + Math.sin(tick / 500) * 0.012;
+          if (cineFilter.css !== "none") { try { ctx.filter = cineFilter.css; } catch { /* ignore */ } }
+          if (clip.kind === "vid") {
+            const primaryUrl = getVideoUrlSync(clip); const posterUrl = getPosterUrlSync(clip); const video = ensureVideo(primaryUrl, clip.src);
+            if (video.paused && !video.ended && video.readyState >= 1) { video.play().catch(() => undefined); }
+
+            // ★ CANLILIK İZLEYİCİSİ — MediaRecorder kaydı sırasında tarayıcı videoyu
+            //   kısabiliyor veya buffer'da takılabiliyor. currentTime 300 ms boyunca
+            //   ilerlemezse videoyu zorla yeniden başlatıp akışı canlı tutuyoruz.
+            {
+              const nowMs = performance.now();
+              const wd = videoWatchdog.current.get(video) ?? { t: -1, at: nowMs };
+              if (video.currentTime !== wd.t) {
+                wd.t = video.currentTime;
+                wd.at = nowMs;
+              } else if (nowMs - wd.at > 300) {
+                try {
+                  const dur = Number.isFinite(video.duration) ? video.duration : 0;
+                  if (video.ended || (dur > 0 && video.currentTime >= dur - 0.05)) video.currentTime = 0;
+                  video.play().catch(() => undefined);
+                } catch { /* ignore */ }
+                wd.at = nowMs;
+              }
+              videoWatchdog.current.set(video, wd);
+            }
+
+            if (video.readyState >= 1 && video.videoWidth > 0) painted = cover(ctx, video, width, height, 1.015);
+            if (!painted && clip.poster) {
+              const poster = ensureImage(posterUrl ?? clip.poster);
+              if (poster.complete && poster.naturalWidth > 0) painted = cover(ctx, poster, width, height, zoom);
+              if (!painted) { const p2 = ensureImage(clip.poster); if (p2.complete && p2.naturalWidth > 0) painted = cover(ctx, p2, width, height, zoom); }
+            }
+          }
+          else {
+            // ★ Şablon görselde render/önizleme için 1080p sürüm kullanılır (galeri thumbnail hızlı kalsın)
+            const hi = ensureImage(toHiRes(clip.src));
+            if (hi.complete && hi.naturalWidth > 0) painted = cover(ctx, hi, width, height, zoom);
+            if (!painted) { const image = ensureImage(clip.src); if (image.complete) painted = cover(ctx, image, width, height, zoom); }
+          }
+          try { ctx.filter = "none"; } catch { /* ignore */ }
+          if (painted && cineFilter.tint) { ctx.globalAlpha = cineFilter.tintAlpha ?? 0.1; ctx.fillStyle = cineFilter.tint; ctx.fillRect(0, 0, width, height); ctx.globalAlpha = 1; }
+          if (!painted) { const palette = CATEGORY_PALETTE[clip.cat] ?? null; drawKaleidoscope(ctx, width, height, tick, currentTheme, palette); }
+          const shade = ctx.createLinearGradient(0, 0, 0, height); shade.addColorStop(0, "rgba(0,0,0,.42)"); shade.addColorStop(.42, "rgba(0,0,0,.22)"); shade.addColorStop(1, "rgba(0,0,0,.92)"); ctx.fillStyle = shade; ctx.fillRect(0, 0, width, height);
+
+          if (showArapca) {
+            ctx.textAlign = "center"; ctx.shadowColor = "rgba(0,0,0,.65)"; ctx.shadowBlur = 14; ctx.fillStyle = currentTheme.acc2; ctx.font = `700 ${Math.round(height * .025)}px Amiri,serif`; ctx.fillText("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", width / 2, height * .11);
+          }
+
+          if (currentAyah) {
+            ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.72)"; ctx.font = `600 ${Math.round(height * .0105)}px Inter,sans-serif`;
+            ctx.fillText(currentAyah.s > 0 ? `${currentAyah.sName} Suresi  •  ${currentAyah.s}:${currentAyah.a}` : currentAyah.sName, width / 2, height * .148);
+            ctx.strokeStyle = currentTheme.acc; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(width * .34, height * .17); ctx.lineTo(width * .47, height * .17); ctx.moveTo(width * .53, height * .17); ctx.lineTo(width * .66, height * .17); ctx.stroke();
+            ctx.fillStyle = currentTheme.acc; ctx.save(); ctx.translate(width / 2, height * .17); ctx.rotate(Math.PI / 4); ctx.fillRect(-4, -4, 8, 8); ctx.restore(); ctx.shadowBlur = 16;
+            {
+              // ★ OTOMATİK SIĞDIRMA MOTORU
+              // Uzun ayetlerde metin bloğu; üstteki sure referansı ile alttaki filigran
+              // arasındaki GÜVENLİ ALANA sığana kadar punto kademeli küçültülür.
+              // Böylece hiçbir ayet sağdan/soldan taşmaz, alttan/üstten kesilmez.
+              const arLen = currentAyah.ar.length;
+              const trLen = currentAyah.tr.length;
+
+              let arBase = height * 0.028;
+              if (arLen > 300) arBase *= 0.52;
+              else if (arLen > 200) arBase *= 0.62;
+              else if (arLen > 120) arBase *= 0.74;
+              else if (arLen > 70) arBase *= 0.85;
+
+              let trBase = width * 0.022;
+              if (trLen > 300) trBase *= 0.65;
+              else if (trLen > 180) trBase *= 0.78;
+
+              const onlyMeal = !showArapca && showSubMeal;
+              const currentAspect = aspectRef.current;
+              // Güvenli dikey bant: yalnız meal varsa tam merkeze alınır,
+              // Arapça+meal birlikteyse üst referans ve alt filigran arası kullanılır.
+              const safeTop = height * (onlyMeal ? 0.34 : 0.163);
+              const safeBottom = height * (onlyMeal ? 0.74 : 0.905);
+              const safeH = safeBottom - safeTop;
+              const arMaxW = width * 0.80;
+              // 16:9'da YouTube oynatıcıda taşma görünmemesi için daha dar satır genişliği
+              const trMaxW = width * (currentAspect === "16:9" ? 0.56 : currentAspect === "1:1" ? 0.70 : 0.78);
+
+              let arabicSize = 0;
+              let arabicHeight = 0;
+              let translationSize = 0;
+              let arabicLines: string[] = [];
+              let translationLines: string[] = [];
+              let sepH = 0;
+              let totalH = 0;
+
+              // 22 kademede %4 küçülterek sığdır (min punto sınırlarına kadar)
+              for (let step = 0; step < 22; step += 1) {
+                const shrink = Math.pow(0.96, step);
+                arabicSize = Math.round(Math.min(48, Math.max(13, arBase * shrink)) * textSizeMul);
+                const trMaxSize = currentAspect === "16:9" ? 21 : onlyMeal ? 26 : 24;
+                translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * textSizeMul);
+                arabicHeight = arabicSize * 1.72; // hareke/uzatma payı
+
+                ctx.font = `700 ${arabicSize}px ${arabicFontCss}`;
+                arabicLines = showArapca ? wrapText(ctx, currentAyah.ar, arMaxW) : [];
+
+                ctx.font = `400 ${translationSize}px Inter,sans-serif`;
+                translationLines = showSubMeal ? wrapText(ctx, currentAyah.tr, trMaxW) : [];
+
+                sepH = (arabicLines.length > 0 && translationLines.length > 0) ? translationSize * 1.35 : 0;
+                totalH =
+                  (arabicLines.length > 0 ? arabicLines.length * arabicHeight : 0) +
+                  sepH +
+                  (translationLines.length > 0 ? translationLines.length * translationSize * 1.55 : 0);
+
+                if (totalH <= safeH) break;
+              }
+
+              // Sadece meal gösteriliyorsa kullanıcı offset'i sıfırlanır, metin tam ortalanır.
+              const ox = onlyMeal ? 0 : textOffset.x * width * 0.004;
+              const oyRaw = onlyMeal ? 0 : textOffset.y * height * 0.004;
+              // Kullanıcı kaydırması dahil, blok her zaman güvenli bandın içinde kalır
+              const centeredTop = safeTop + (safeH - totalH) / 2;
+              const oy = Math.max(
+                safeTop - centeredTop,
+                Math.min(oyRaw, safeBottom - totalH - centeredTop)
+              );
+              let y = centeredTop + oy;
+
+              if (cardBg === "koyu" && totalH > 0) {
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = "rgba(6,7,12,.62)";
+                const pad = arabicSize * 0.7;
+                const rw = width * .9, rh = totalH + pad * 2, rx = width / 2 - rw / 2, ry = y - pad;
+                ctx.beginPath();
+                ctx.roundRect(rx, ry, rw, rh, 18);
+                ctx.fill();
+                ctx.strokeStyle = `${currentTheme.acc}55`; ctx.lineWidth = 1.5; ctx.stroke();
+              }
+
+              const goldFill = () => {
+                if (shimmerCfg.still) { ctx.fillStyle = shimmerCfg.c1; return; }
+                const g = ctx.createLinearGradient(0, 0, width, 0);
+                const shift = (tick * 0.004) % 1;
+                g.addColorStop(Math.max(0, shift - 0.25), shimmerCfg.c1);
+                g.addColorStop(shift, "#ffffff");
+                g.addColorStop(Math.min(1, shift + 0.25), shimmerCfg.c2);
+                ctx.fillStyle = g;
+              };
+              if (showArapca && arabicLines.length > 0) {
+                ctx.font = `700 ${arabicSize}px ${arabicFontCss}`; goldFill(); ctx.shadowColor = shimmerCfg.glow; ctx.shadowBlur = shimmerCfg.still ? 14 : 22;
+                const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
+                try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
+                arabicLines.forEach((line) => { ctx.fillText(line, width / 2 + ox, y + arabicSize * 0.8); y += arabicHeight; });
+                try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = prevDir || "ltr"; } catch { /* ignore */ }
+                ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.beginPath(); ctx.moveTo(width * .28, y + 8); ctx.lineTo(width * .72, y + 8); ctx.stroke();
+                y += sepH;
+              }
+              if (showSubMeal && translationLines.length > 0) {
+                ctx.font = `400 ${translationSize}px Inter,sans-serif`;
+                ctx.fillStyle = "rgba(255,255,255,.95)";
+                ctx.shadowColor = "rgba(0, 0, 0, 0.85)";
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 2;
+                translationLines.forEach((line) => { ctx.fillText(line, width / 2 + ox, y + translationSize); y += translationSize * 1.6; });
+                ctx.shadowBlur = 0;
+              }
+
+            }
+          } else { ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.font = `500 ${Math.round(height * .018)}px Inter,sans-serif`; ctx.fillText("Kütüphaneden ayet seçin", width / 2, height / 2); }
+
+          // ★ Free ve Pro paketlerde sağ alt köşeye mecburi nurstudyo.com filigranı gömülür.
+          //   Elit üye için (veya God Mode) hiçbir reklam / filigran basılmaz (%100 temiz, white-label).
+          //   Misafir kullanıcı (giriş yapmamış): accessTier görsel olarak "elit" ama filigran yine de basılır.
+          const realTierForWatermark = !user && !isMasterSürüm ? "free" : accessTier;
+          if (realTierForWatermark === "free" || realTierForWatermark === "pro") {
+            ctx.save();
+            ctx.font = `700 ${Math.round(height * 0.018)}px Inter,sans-serif`;
+            ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+            ctx.shadowColor = "rgba(0, 0, 0, 0.7)";
+            ctx.shadowBlur = 4;
+            ctx.textAlign = "right";
+            ctx.fillText("nurstudyo.com", width * 0.95, height * 0.965);
+            ctx.restore();
+          }
+
+          // ★ MARKA / KANAL İMZASI — Elit üyeler + God Mode. Konum seçilebilir.
+          if ((isMasterSürüm || accessTier === "elit") && brandSignature.trim()) {
+            ctx.save();
+            const sigSize = Math.round(height * 0.019);
+            ctx.font = `800 ${sigSize}px Inter,sans-serif`;
+            const isLeft = brandPos === "sol-ust" || brandPos === "sol-alt";
+            const isTop = brandPos === "sol-ust" || brandPos === "sag-ust";
+            const sigX = isLeft ? width * 0.05 : width * 0.95;
+            const sigY = isTop ? height * 0.052 : height * 0.965;
+            ctx.textAlign = isLeft ? "left" : "right";
+            const gx = isLeft ? sigX : sigX - sigSize * 9;
+            const sigGrad = ctx.createLinearGradient(gx, 0, gx + sigSize * 9, 0);
+            sigGrad.addColorStop(0, "#f5dda6");
+            sigGrad.addColorStop(0.5, "#ffffff");
+            sigGrad.addColorStop(1, "#d7aa52");
+            ctx.fillStyle = sigGrad;
+            ctx.shadowColor = "rgba(0, 0, 0, 0.9)";
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetY = 1;
+            ctx.fillText(brandSignature.trim(), sigX, sigY);
+            ctx.restore();
+          }
+        }
+      }
+      frame = requestAnimationFrame(draw);
+    };
+    frame = requestAnimationFrame(draw); return () => cancelAnimationFrame(frame);
+  }, [ensureImage, ensureVideo, showArapca, showSubMeal, accessTier, arabicFontCss, textSizeMul, shimmerCfg, cardBg, textOffset, cineFilter, isMasterSürüm, brandSignature, brandPos, renderQuality.previewFps]);
+
   const detectCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId => {
-    return detectCategoryFromAyahText(ar, tr, surahName, SURAH_CATEGORY_HINT, KEYWORD_CATEGORY_FALLBACK);
+    void ar;
+    const surahKey = surahName.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (SURAH_CATEGORY_HINT[surahKey]) return SURAH_CATEGORY_HINT[surahKey];
+    const norm = (s: string) => s.toLocaleLowerCase("tr");
+    const words = norm(`${surahName} ${tr}`).split(/[^a-zçğıöşüâîû]+/i).filter(Boolean);
+    let matched: CatId | null = null;
+    let bestLen = 0;
+    for (const word of words) {
+      for (const [kw, catVal] of Object.entries(KEYWORD_CATEGORY_FALLBACK)) {
+        const kwNorm = norm(kw);
+        const isMatch = kwNorm.length <= 3 ? word === kwNorm : word.startsWith(kwNorm) || word === kwNorm;
+        if (isMatch && kwNorm.length > bestLen) {
+          matched = catVal;
+          bestLen = kwNorm.length;
+        }
+      }
+    }
+    if (matched) return matched;
+
+    // ★ ÇEŞİTLİLİK MOTORU — eşleşme yoksa artık HER ZAMAN "musaf" (Kur'an) dönmüyor.
+    //   Ayet metninden üretilen stabil hash ile estetik kategoriler arasında dağıtılır.
+    //   Böylece her ayet farklı bir atmosfer alır, aynı Kur'an görseli tekrar etmez.
+    const AESTHETIC_POOL: CatId[] = [
+      "namaz", "yildizlar", "deniz", "daglar", "gunbatimi",
+      "gece", "selale", "orman", "cicekler", "musaf",
+    ];
+    let h = 2166136261;
+    const src = `${surahName}|${tr}`;
+    for (let i = 0; i < src.length; i += 1) { h ^= src.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return AESTHETIC_POOL[(h >>> 0) % AESTHETIC_POOL.length];
   }, []);
 
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
@@ -582,10 +1406,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       const quranClips = MOTION_CLIPS.filter((clip) => clip.cat === "musaf");
       if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
-      setVerseIndex(selectedRef.current.length);
-      setShareTitle(genTitle(meta.name, s, a, lang));
-      setShareDescription(genDesc(meta.name, s, a, reciter.name, lang));
-      notify(`${meta.name} ${s}:${a} eklendi`);
+      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
     } catch { notify("Ayet yüklenemedi"); }
   }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah]);
 
@@ -625,37 +1446,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return pool;
   }, [libType, libEmotion, libSearch]);
 
-  // ★ PRO üyenin görebileceği ilk 350 içeriğin kimlik listesi (tek seferlik hesap)
-  const proAllowedIds = useMemo(() => {
-    const set = new Set<string>();
-    const pool = combinedAllClips.filter((c) => {
-      const need = KATEGORI_TIER[c.cat as CatId] ?? "free";
-      return need === "free" || need === "pro";
-    });
-    for (let i = 0; i < Math.min(PRO_TOTAL_ATMOS, pool.length); i += 1) set.add(pool[i].id);
-    return set;
-  }, [combinedAllClips]);
-
   const isClipAccessible = useCallback((clip: Clip): boolean => {
     if (isMasterSürüm) return true;
-
-    // ★ ELİT: hiçbir kilit yok — tüm kategoriler, tüm içerikler açık
-    if (accessTier === "elit") return true;
-
     const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
-
-    // ★ PRO: free + pro kategorileri açık, toplam 350 içerik hakkı
-    if (accessTier === "pro") {
-      if (catTier === "elit") return false;
-      return proAllowedIds.has(clip.id);
-    }
-
-    // ★ FREE: sadece free kategoriler, kategori başına 10 içerik
-    if (catTier !== "free") return false;
+    if (!tierAtLeast(accessTier, catTier)) return false;
     const sameCat = combinedAllClips.filter((c) => c.cat === clip.cat && c.kind === clipKind);
     const idx = sameCat.findIndex((c) => c.id === clip.id);
-    return idx < FREE_VIDEOS_PER_CATEGORY;
-  }, [accessTier, clipKind, combinedAllClips, isMasterSürüm, proAllowedIds]);
+    const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
+    if (idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier)) return false;
+    return true;
+  }, [accessTier, clipKind, combinedAllClips, isMasterSürüm]);
 
   const randomizeBackgrounds = useCallback((scopeCat?: CatId) => {
     let pool = combinedAllClips.filter((clip) => clip.kind === clipKind && isClipAccessible(clip));
@@ -720,68 +1520,315 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify("✨ Akıllı AI: Ayet kelimelerine göre sahne atandı!");
   }, [combinedAllClips, notify, detectCategoryFromAyah]);
 
-  const { playReciterPreview } = useReciterPreview({
-    previewReciterId,
-    selectedRef,
-    reciterPreviewRef,
-    previewTimerRef,
-    setPreviewReciterId,
-    notify,
-    silenceAllAudio,
-  });
+  const playReciterPreview = useCallback((id: string) => {
+    silenceAllAudio();
+    const prev = reciterPreviewRef.current;
+    if (prev) { prev.pause(); prev.oncanplaythrough = null; prev.onloadeddata = null; prev.onended = null; prev.onerror = null; try { prev.src = ""; } catch { /* ignore */ } reciterPreviewRef.current = null; }
+    if (previewReciterId === id) { setPreviewReciterId(null); return; }
+    const target = RECITERS.find((item) => item.id === id);
+    const sample = selectedRef.current[0] ?? { s: 1, a: 1 };
+    if (!target) return;
+    const startPreview = (src: string) => {
+      const prevInStart = reciterPreviewRef.current;
+      if (prevInStart) {
+        prevInStart.pause();
+        prevInStart.onended = null;
+        prevInStart.onerror = null;
+        try { prevInStart.src = ""; } catch { /* ignore */ }
+      }
+      const audio = new Audio(src); audio.preload = "auto"; audio.volume = 0.88;
+      try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
+      reciterPreviewRef.current = audio; setPreviewReciterId(id);
+      const cleanup = () => { if (reciterPreviewRef.current !== audio) return; setPreviewReciterId(null); reciterPreviewRef.current = null; };
+      audio.onended = cleanup;
+      // ★ ARTIK BAŞKA HOCAYA DÜŞMÜYOR — yanlış ses çalmaz, dürüstçe uyarır
+      audio.onerror = () => {
+        if (reciterPreviewRef.current !== audio) return;
+        cleanup();
+        notify(`⚠️ ${target?.name ?? "Kâri"} · ses kaydı şu an yüklenemedi. Lütfen başka bir kâri deneyin.`);
+      };
+      audio.play().catch(() => { const onReady = () => { audio.removeEventListener("loadeddata", onReady); if (reciterPreviewRef.current === audio) { audio.play().catch(cleanup); } }; audio.addEventListener("loadeddata", onReady); });
+      previewTimerRef.current = window.setTimeout(() => { if (reciterPreviewRef.current === audio) { audio.pause(); cleanup(); } }, 10_000);
+    };
+    startPreview(
+      target.surahPattern
+        ? target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))
+        : reciterAudioUrl(target.path, sample.s, sample.a)
+    );
+  }, [previewReciterId, notify, silenceAllAudio]);
 
-  useVerseAudioPlayback({
-    previewPlaying,
-    selected,
-    verseIndex,
-    reciter,
-    verseAudioRef,
-    previewTimerRef,
-    verseIndexRef,
-    setPreviewPlaying,
-    setPreviewDuration,
-    setPreviewTime,
-    setVerseIndex,
-    notify,
-    silenceAudioOnly,
-  });
+  const handleGenerate = useCallback(async () => {
+    if (generating) { stopGenerationRef.current(); return; }
+    // ★ MİSAFİR MODU — üye olmadan 2 deneme videosu üretilebilir, indirme üyelik ister
+    if (!user && !isMasterSürüm) {
+      const used = getGuestUsed();
+      if (used >= GUEST_FREE_VIDEOS) {
+        notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +20 jeton kazan");
+        setLoginTab("register");
+        setModal("login");
+        return;
+      }
+      notify(`👋 Misafir denemesi ${used + 1}/${GUEST_FREE_VIDEOS} · indirmek için üyelik gerekir`);
+    }
+    const rl = checkRateLimit("video");
+    if (!rl.allowed) {
+      notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`);
+      return;
+    }
+    if (!selected.length) { notify("Önce en az bir ayet seçin"); return; }
+    if (!window.MediaRecorder) { notify("Tarayıcınız video üretimini desteklemiyor"); return; }
+    // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
+    const canvasEl = canvasRef.current;
+    if (!canvasEl || typeof canvasEl.captureStream !== "function") {
+      notify("⚠️ Bu tarayıcı canvas kaydını desteklemiyor · Chrome, Edge veya güncel Safari kullanın");
+      return;
+    }
+    const surahOnlyReciter = Boolean(reciter.surahPattern);
+    if (surahOnlyReciter && !isWholeSurahSelected(selected, SURAHS)) {
+      notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
+      return;
+    }
+    const formatCount = Math.max(batchFormats.length, 1);
+    const costPerVideo = videoMaliyeti(mode, accessTier);
+    const isGuest = !user && !isMasterSürüm;
+    // God Mode ve misafir deneme videolarında jeton harcanmaz
+    const totalCost = isMasterSürüm || isGuest ? 0 : costPerVideo * formatCount;
+    if (RENDER_AUTH_LIVE && !isMasterSürüm && !isGuest) {
+      try {
+        const response = await fetch("/api/render/authorize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode, formats: batchFormats.length ? batchFormats : [aspect] }),
+        });
+        const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number } | null;
+        if (!response.ok || !data?.ok) {
+          notify(data?.error || "Üretim yetkisi doğrulanamadı");
+          return;
+        }
+        if (typeof data.cost === "number" && data.cost !== totalCost) {
+          notify("Üretim maliyeti sunucu doğrulamasıyla uyuşmadı");
+          return;
+        }
+      } catch {
+        notify("Üretim yetkisi için sunucuya ulaşılamadı");
+        return;
+      }
+    }
+    if (jetonCount < totalCost) {
+      notify(`Bu üretim için ${totalCost} jeton gerekiyor · mevcut: ${jetonCount}`);
+      openPremium("jeton");
+      return;
+    }
+    let jetonCharged = false;
+    let userStopped = false;
+    silenceAllAudio();
+    setGenerating(true); setProgress(2);
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext, audioContext = new AudioContextClass();
+      const buffers: AudioBuffer[] = [], usedItems: SelectedAyah[] = [], audioOffsets: number[] = [];
+      const ayetSüreleri: Array<{ start: number; dur: number }> = [];
+      const cap = mode === "short" ? 59 : mode === "long" ? 150 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
+      if (surahOnlyReciter) {
+        setProgress(10);
+        const sNum = selected[0].s;
+        const url = reciter.surahPattern!.replace("{S}", String(sNum).padStart(3, "0"));
+        // ★ Muhammed el-Fakîh hocada atmosferlerin hızlı hızlı geçmesini engelle
+        selected.forEach((item) => {
+          ayahBackgroundsRef.current[item.id] = backgroundRef.current;
+        });
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+            audioOffsets.push(0); buffers.push(buffer); usedItems.push(...selected);
+            cursor = Math.min(buffer.duration, cap) + 0.03;
+            const sureSüresi = cursor - 0.03;
+            const herAyetSüresi = sureSüresi / Math.max(selected.length, 1);
+            selected.forEach((_, i) => { ayetSüreleri.push({ start: herAyetSüresi * i, dur: herAyetSüresi }); });
+          }
+        } catch { /* ignore */ }
+      } else {
+        for (let index = 0; index < selected.length; index += 1) {
+          const item = selected[index]; setProgress(4 + Math.round((index / selected.length) * 22));
+          try {
+            const response = await fetch(reciterAudioUrl(reciter.path, item.s, item.a));
+            if (!response.ok) continue;
+            const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+            if (cursor > 0 && cursor + buffer.duration > cap) break;
+            audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
+            ayetSüreleri.push({ start: cursor, dur: buffer.duration });
+            cursor += buffer.duration + .03;
+          } catch { }
+        }
+      }
+      if (!surahOnlyReciter && usedItems.length < selected.length) {
+        const dropped = selected.length - usedItems.length;
+        const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (150 sn)" : "Tam Sürüm (24:35)";
+        notify(`⚠️ ${modeLabel} süresi aşıldı · son ${dropped} ayet eklenmedi · ${usedItems.length} ayet ile üretiliyor`);
+      }
+      if (!buffers.length) throw new Error("Ses dosyaları alınamadı");
+      const total = cursor - .03, offline = new OfflineAudioContext(2, Math.ceil((total + .1) * 48000), 48000);
+      buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index], end = start + buffer.duration; const fadeIn = Math.min(.06, buffer.duration * .1), fadeOut = Math.min(.15, buffer.duration * .1); gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.92, start + fadeIn); gain.gain.setValueAtTime(.92, Math.max(start + fadeIn, end - fadeOut)); gain.gain.linearRampToValueAtTime(0.001, end); source.connect(gain).connect(offline.destination); source.start(start); });
+      setProgress(28); const rendered = await offline.startRendering(), canvas = canvasRef.current; if (!canvas) throw new Error("Önizleme bulunamadı");
 
-  const handleGenerate = useVideoGenerator({
-    generating,
-    setGenerating,
-    setProgress,
-    stopGenerationRef,
-    user,
-    isMasterSürüm,
-    getGuestUsed,
-    bumpGuestUsed,
-    setLoginTab,
-    setModal,
-    notify,
-    selected,
-    canvasRef,
-    reciter,
-    batchFormats,
-    aspect,
-    mode,
-    accessTier,
-    renderAuthLive: RENDER_AUTH_LIVE,
-    jetonCount,
-    setJetonCount,
-    openPremium,
-    silenceAllAudio,
-    ayahBackgroundsRef,
-    backgroundRef,
-    ensureImage,
-    ensureVideo,
-    renderQuality,
-    aspectRef,
-    verseIndexRef,
-    setVerseIndex,
-    setOutputs,
-    setActiveOutputId,
-    t,
-  });
+      const renderClips = usedItems.map((item) => ayahBackgroundsRef.current[item.id] || backgroundRef.current);
+      const uniqueRenderClips = Array.from(new Map(renderClips.map((clip) => [clip.id, clip])).values());
+      await Promise.all(uniqueRenderClips.map((clip) => new Promise<void>((resolve) => {
+        if (clip.kind === "img") {
+          // ★ Render için 1080p sürümü önceden yükle (keskin çıktı)
+          const image = ensureImage(toHiRes(clip.src));
+          ensureImage(clip.src); // yedek thumbnail
+          if (image.complete && image.naturalWidth > 0) { resolve(); return; }
+          const done = () => resolve();
+          image.addEventListener("load", done, { once: true });
+          image.addEventListener("error", done, { once: true });
+          window.setTimeout(done, 6000);
+          return;
+        }
+        getVideoUrl(clip).then((primaryUrl) => {
+          const video = ensureVideo(primaryUrl, clip.src);
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            try { video.currentTime = 0.05; } catch { /* ignore */ }
+            video.play().catch(() => undefined);
+            resolve();
+            return;
+          }
+          const done = () => {
+            try { video.currentTime = 0.05; } catch { /* ignore */ }
+            video.play().catch(() => undefined);
+            resolve();
+          };
+          video.addEventListener("loadeddata", done, { once: true });
+          video.addEventListener("canplay", done, { once: true });
+          video.addEventListener("error", done, { once: true });
+          video.load();
+          window.setTimeout(done, 7000);
+          void getPosterUrl(clip).catch(() => undefined);
+        }).catch(() => { resolve(); });
+      })));
+      // ★ Render öncesi tüm seçili videolara ısınma payı ver.
+      // R2/CDN ilk frame'i geç getirirse ilk ayetler donuk kaydoluyordu.
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      const formats = batchFormats.length ? batchFormats : [aspect];
+      for (let formatIndex = 0; formatIndex < formats.length; formatIndex += 1) {
+        const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect; const [width, height] = dimensions(outputAspect); canvas.width = width; canvas.height = height;
+        verseIndexRef.current = 0;
+        setVerseIndex(0);
+        await new Promise((resolve) => window.setTimeout(resolve, 240));
+        // ★ Cihaza göre adaptif FPS/bitrate: kötü cihazlarda donma/kasma azaltılır
+        const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
+        // ★ Bazı Chrome/VLC/WebM kombinasyonlarında canvas capture sadece ilk frame'i yazıyor.
+        //   requestFrame destekleniyorsa kayıt boyunca manuel frame pompalıyoruz.
+        const canvasTrack = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
+        const framePump = window.setInterval(() => {
+          try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ }
+        }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
+        const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]), mime = pickMime();
+        const pxCount = width * height;
+        const baseBitrate = pxCount >= 1920 * 1080 ? 24_000_000 : pxCount >= 1080 * 1350 ? 20_000_000 : 16_000_000;
+        const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
+        const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
+        const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
+        let lastVisualIndex = 0;
+        let lastProgress = -1;
+        // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
+        //   canvas draw'u bloke edip video donmasına yol açıyordu.
+        const syncTimer = window.setInterval(() => {
+          const elapsed = (performance.now() - startedAt) / 1000;
+          const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
+          const nextProgress = 30 + Math.round(currentProgress * 67);
+          if (nextProgress !== lastProgress) {
+            lastProgress = nextProgress;
+            setProgress(nextProgress);
+          }
+          let idx = 0;
+          for (let i = 0; i < ayetSüreleri.length; i += 1) {
+            if (elapsed >= ayetSüreleri[i].start) idx = i;
+          }
+          if (idx !== lastVisualIndex) {
+            lastVisualIndex = idx;
+            // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
+            //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
+            verseIndexRef.current = idx;
+            const activeClip = renderClips[idx];
+            if (activeClip?.kind === "vid") {
+              try {
+                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), activeClip.src);
+                const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
+                if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
+                  const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));
+                  if (Math.abs(activeVideo.currentTime - nextTime) > 0.75) activeVideo.currentTime = nextTime;
+                }
+                activeVideo.play().catch(() => undefined);
+              } catch { /* ignore */ }
+            }
+          }
+        }, 200);
+        const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
+        const userStop = () => { userStopped = true; finishRecording(); };
+        stopGenerationRef.current = userStop;
+        safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
+        player.onended = finishRecording;
+        // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
+        recorder.start(1000);
+        player.start();
+        await stopped;
+        window.clearInterval(framePump);
+        stream.getTracks().forEach((track) => track.stop());
+        destination.stream.getTracks().forEach((track) => track.stop());
+        if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
+        let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
+        // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
+        //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
+        const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
+        if (blob.type.includes("webm")) {
+          blob = await new Promise<Blob>((resolve) => {
+            let settled = false;
+            const finish = (fixed: Blob) => { if (!settled) { settled = true; resolve(fixed); } };
+            try {
+              // TikTok/WhatsApp/Galeri için duration metadata düzelt
+              fixWebmDuration(blob, recordedMs, (fixedBlob) => {
+                // MP4 olarak da dene (daha iyi uyumluluk)
+                if (fixedBlob && fixedBlob.size > 0) {
+                  finish(fixedBlob);
+                } else {
+                  finish(blob);
+                }
+              });
+              // Fallback: 5 saniye içinde düzelmezse orijinali kullan
+              window.setTimeout(() => finish(blob), 5000);
+            } catch (err) {
+              console.error('fixWebmDuration hatası:', err);
+              finish(blob);
+            }
+          });
+        }
+        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
+        setOutputs((current) => [output, ...current].slice(0, 8)); setActiveOutputId(output.id);
+      }
+      if (!isMasterSürüm && !userStopped && !jetonCharged) {
+        setProgress(98);
+        if (isGuest) {
+          // ★ Misafir: jeton düşmez, sadece deneme hakkı azalır
+          bumpGuestUsed();
+        } else {
+          const remainingJeton = Math.max(0, getJeton() - totalCost);
+          persistJetonSecure(remainingJeton);
+          setJetonCount(remainingJeton);
+        }
+        jetonCharged = true;
+      }
+      if (userStopped) { audioContext.close().catch(() => undefined); return; }
+      audioContext.close().catch(() => undefined); setProgress(100);
+      notify(t("successVideoReady"));
+    } catch (error) {
+      console.error(error);
+      reportRenderError(error);
+      if (!userStopped) notify("Video üretimi sırasında teknik bir takılma oluştu");
+    }
+    finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
+  }, [aspect, batchFormats, generating, jetonCount, mode, notify, openPremium, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate]);
 
   const copyShare = useCallback(async () => {
     const content = `${shareTitle}\n\n${shareDescription}`;
@@ -805,39 +1852,148 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     } catch { /* ignore */ }
   }, [notify, shareTitle, shareDescription]);
 
+  const nextPrayer = useMemo(() => {
+    if (!prayerTimings) return null;
+    let next: { name: string; key: string; diff: number } | null = null;
+    for (const [name, key] of PRAYERS) {
+      const value = prayerTimings[key]; if (!value) continue;
+      const [hour, minute] = value.slice(0, 5).split(":").map(Number), target = new Date(now);
+      target.setHours(hour, minute, 0, 0);
+      let diff = target.getTime() - now.getTime();
+      if (diff <= 0) diff += 86400000;
+      if (!next || diff < next.diff) next = { name, key, diff };
+    }
+    return next;
+  }, [now, prayerTimings]);
+
   const filteredClips = useMemo(() => {
     let pool = combinedAllClips;
     pool = pool.filter((clip) => clip.kind === clipKind);
     if (atmosCategory !== "all") { pool = pool.filter((clip) => clip.cat === atmosCategory); }
     const value = atmosQuery.trim().toLocaleLowerCase("tr");
     if (value) { pool = pool.filter((clip) => clip.label.toLocaleLowerCase("tr").includes(value)); }
-    // ★ Kilitli olanlar listenin sonuna itilir (Elit'te hiç kilitli yoktur)
     return [...pool].sort((a, b) => {
-      const lockedA = !isClipAccessible(a);
-      const lockedB = !isClipAccessible(b);
+      const sameCatA = combinedAllClips.filter(c => c.cat === a.cat && c.kind === clipKind);
+      const sameCatB = combinedAllClips.filter(c => c.cat === b.cat && c.kind === clipKind);
+      const idxA = sameCatA.findIndex(c => c.id === a.id);
+      const idxB = sameCatB.findIndex(c => c.id === b.id);
+      const catTierA = KATEGORI_TIER[a.cat as CatId] ?? "free";
+      const catTierB = KATEGORI_TIER[b.cat as CatId] ?? "free";
+      const nextTierA: Tier = catTierA === "free" ? "pro" : catTierA === "pro" ? "elit" : "elit";
+      const nextTierB: Tier = catTierB === "free" ? "pro" : catTierB === "pro" ? "elit" : "elit";
+      const lockedA = (!tierAtLeast(accessTier, catTierA)) || (tierAtLeast(accessTier, catTierA) && idxA >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTierA));
+      const lockedB = (!tierAtLeast(accessTier, catTierB)) || (tierAtLeast(accessTier, catTierB) && idxB >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTierB));
       return Number(lockedA) - Number(lockedB);
     });
-  }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, isClipAccessible]);
+  }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier]);
+
+  const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);
 
   const pickClip = (clip: Clip) => { if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip); notify(`Atmosfer seçildi: ${clip.label}`); setModal(null); setPickingFor(null); };
 
-  const { handleLoginSubmit, handleRegisterSubmit, handleForgotPassword, handleVerifyCode, handleLogout } = useManualAuthActions({
-    phone,
-    verifyCode,
-    sentCode,
-    tier,
-    notify,
-    setUser,
-    setAdminGodMode,
-    setTier,
-    setJetonCount,
-    setSentCode,
-    setLoginTab,
-    setModal,
-  });
+  const handleLoginSubmit = () => {
+    const rl = checkRateLimit("auth");
+    if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
+    const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
+    const isKurucuAdmin = isAdminEmail(email);
+    const userTier: Tier = isKurucuAdmin ? "elit" : tier;
+    const userJeton = isKurucuAdmin ? Math.max(1000, getJeton()) : getJeton();
+
+    const newUser: User = {
+      id: uid(),
+      name: isKurucuAdmin ? "Ömer Kaya (Kurucu Admin)" : "Demo Kullanıcı",
+      email,
+      phone,
+      verified: true,
+    };
+    setUser(newUser);
+    localStorage.setItem("nur_user", JSON.stringify(newUser));
+
+    if (isKurucuAdmin) {
+      setAdminGodMode(true);
+      setTier("elit");
+      setCurrentTier("elit");
+      setJetonCount(userJeton);
+      persistJetonSecure(userJeton);
+      syncUserInDb(email, newUser.name, "elit", userJeton);
+      notify("🛡️ Kurucu Admin girişi başarılı! Tüm kilitler açıldı.");
+    } else {
+      syncUserInDb(email, newUser.name, userTier, userJeton);
+      notify("Giriş başarılı! Hoş geldiniz.");
+    }
+    setModal(null);
+  };
+
+  const handleRegisterSubmit = () => {
+    const rl = checkRateLimit("auth");
+    if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
+    const email = phone.includes("@") ? phone.trim().toLowerCase() : "user@nurstudio.app";
+    const isKurucuAdmin = isAdminEmail(email);
+
+    const newUser: User = {
+      id: uid(),
+      name: isKurucuAdmin ? "Ömer Kaya (Kurucu Admin)" : "Yeni Kullanıcı",
+      email,
+      phone,
+      verified: true,
+    };
+    setUser(newUser);
+    localStorage.setItem("nur_user", JSON.stringify(newUser));
+
+    if (isKurucuAdmin) {
+      setAdminGodMode(true);
+      setTier("elit");
+      setCurrentTier("elit");
+      setJetonCount(1000);
+      persistJetonSecure(1000);
+      syncUserInDb(email, newUser.name, "elit", 1000);
+      notify("🛡️ Kurucu Admin Hesabı Oluşturuldu! 1000 Jeton + Nûr Elit tanımlandı.");
+    } else {
+      let nextJeton = getJeton();
+      if (!localStorage.getItem("nur_register_bonus_granted")) {
+        nextJeton = nextJeton + JETON.KAYIT_BONUSU_FREE;
+        persistJetonSecure(nextJeton);
+        localStorage.setItem("nur_register_bonus_granted", "1");
+        setJetonCount(nextJeton);
+        notify(`🎉 Kayıt başarılı! Hoş geldiniz — +${JETON.KAYIT_BONUSU_FREE} jeton hediye edildi.`);
+      } else {
+        notify("Kayıt başarılı! Hoş geldiniz.");
+      }
+      syncUserInDb(email, newUser.name, "free", nextJeton);
+    }
+    setModal(null);
+  };
+
+  // ★ MİSAFİR MODU — üye olmadan deneme hakkı
+  const GUEST_FREE_VIDEOS = 2;
+  const getGuestUsed = () => {
+    try { return Number(localStorage.getItem("nur_guest_videos") || 0); } catch { return 0; }
+  };
+  const bumpGuestUsed = () => {
+    try { localStorage.setItem("nur_guest_videos", String(getGuestUsed() + 1)); } catch { /* ignore */ }
+  };
+  const handleGuestContinue = useCallback(() => {
+    const used = getGuestUsed();
+    const left = Math.max(0, GUEST_FREE_VIDEOS - used);
+    if (left <= 0) {
+      notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +20 jeton kazan");
+      return;
+    }
+    setModal(null);
+    notify(`👋 Misafir modundasın · ${left} deneme videosu hakkın var · indirmek için üyelik gerekir`);
+  }, [notify]);
+
+  const handleForgotPassword = () => { const code = String(Math.floor(100000 + Math.random() * 900000)); setSentCode(code); setLoginTab("verify"); notify(`Doğrulama kodu: ${code}`); };
+  const handleVerifyCode = () => { if (verifyCode === sentCode) { notify("Kod doğrulandı! Şifrenizi sıfırlayabilirsiniz."); setLoginTab("forgot"); } else { notify("Kod hatalı!"); } };
+  const handleLogout = () => {
+    fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+    setUser(null);
+    setAdminGodMode(false);
+    localStorage.removeItem("nur_user");
+    notify("Çıkış yapıldı.");
+  };
 
   void _showGiftModalUnused; void _setShowGiftModalUnused; void user; void lockTip; void adminError; void adminEmailInput;
-  void MEAL_FIXES; void CATEGORY_PALETTE; void getPosterUrlSync; void fmtSize;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden text-[13px]" style={{ color: "var(--text)" }}>
@@ -846,10 +2002,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}
       <AnnouncementBar
         notify={notify}
-        onRewardClaimed={(newJeton?: number) => {
-          setJetonCount(typeof newJeton === "number" ? newJeton : getJeton());
+        onRewardClaimed={(newJeton) => {
+          setJetonCount(newJeton);
         }}
-        onTamperAttempt={(reason: string) => {
+        onTamperAttempt={(reason) => {
           setLocalBanned(true);
           setLocalBanReason(reason);
           secureSet("nur_local_user_banned", true);
@@ -885,7 +2041,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         prayerCity={prayerCity}
         formatRemaining={formatRemaining}
         t={t}
-        tier={tier}
       />
 
       <StudioHeroSection />
@@ -932,7 +2087,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           previewPlaying={previewPlaying}
           setPreviewPlaying={setPreviewPlaying}
           setPreviewTime={setPreviewTime}
-          randomizeBackgrounds={(cat?: unknown) => randomizeBackgrounds(cat as CatId | undefined)}
+          randomizeBackgrounds={randomizeBackgrounds}
           previewDuration={previewDuration}
           previewTime={previewTime}
           fmtDuration={fmtDuration}
@@ -946,8 +2101,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           isMasterSürüm={isMasterSürüm}
           tierAtLeast={tierAtLeast}
           tier={tier}
-          hasMicroUnlock={(key: unknown) => hasMicroUnlock(key as any)}
-          tryUnlockElitFeature={(key: unknown, label: string) => tryUnlockElitFeature(key as "batch" | "ai_search", label)}
+          hasMicroUnlock={hasMicroUnlock}
+          tryUnlockElitFeature={tryUnlockElitFeature}
           applySmartBackgrounds={applySmartBackgrounds}
           openPremium={openPremium}
           setSelected={setSelected}
@@ -959,7 +2114,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           fmtSize={fmtSize}
           shareOutput={shareOutput}
           user={user}
-          setLoginTab={(tab: unknown) => setLoginTab(tab as LoginTab)}
+          setLoginTab={setLoginTab}
           notify={notify}
           handleGenerate={handleGenerate}
           generating={generating}
@@ -1045,7 +2200,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         isMasterSürüm={isMasterSürüm}
         setModal={setModal}
         setTosOpen={setTosOpen}
-        openLegalTab={(tab: "tos" | "kvkk" | "gizlilik" | "iade") => { setLegalTab(tab); setTosOpen(true); }}
+        openLegalTab={(tab) => { setLegalTab(tab); setTosOpen(true); }}
         t={t}
       />
 
@@ -1251,3 +2406,5 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     </div>
   );
 }
+
+declare global { interface Window { webkitAudioContext: typeof AudioContext } }
