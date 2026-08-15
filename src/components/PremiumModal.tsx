@@ -126,6 +126,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const [tab, setTab] = useState<"uyelik" | "paket">(normalized);
   const [packKind, setPackKind] = useState<VideoKind>("kisa");
   const [accepted, setAccepted] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
   const activeTier: Tier = tier ?? currentTier ?? "free";
   const closeModal = () => {
     setOpen?.(false);
@@ -518,8 +519,39 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             />
             <span>
               Satın alma koşullarını, mesafeli satış sözleşmesini ve iade politikasını okudum, kabul ediyorum.
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setTermsOpen((value) => !value);
+                }}
+                className="ml-1 font-black underline decoration-[color:var(--accent)]/60 underline-offset-2 transition hover:text-white"
+              >
+                Koşulları oku
+              </button>
             </span>
           </label>
+
+          {termsOpen && (
+            <div className="mt-3 max-h-44 overflow-y-auto rounded-2xl border border-[color:var(--accent)]/25 bg-black/45 p-4 text-[10px] leading-relaxed text-white/70 scrollbar-thin">
+              <p className="font-black text-white">Mesafeli Satış Sözleşmesi ve İade Koşulları</p>
+              <p className="mt-2">
+                Satın alınan aylık üyelikler ve tek seferlik video üretim paketleri, elektronik ortamda sunulan dijital hizmetlerdir. Kullanıcı ödeme sonrası hizmetin derhal sunulacağını ve video üretim sürecinin kendi talebiyle başlatıldığını kabul eder.
+              </p>
+              <p className="mt-2">
+                Kullanıcı bir video üretimini başlattığında, video oluşturulduğunda veya paketten herhangi bir hak kullandığında hizmet ifasına başlanmış sayılır. Bu durumda cayma hakkı kullanılamaz ve iade yapılamaz.
+              </p>
+              <p className="mt-2">
+                Hiç kullanılmamış tek seferlik paketler için satın alma tarihinden itibaren 7 gün içinde destek ekibine başvurulabilir. Kısmen kullanılan paketlerde, üretilen veya üretim süreci başlatılan videolarda iade yapılmaz.
+              </p>
+              <p className="mt-2">
+                Teknik bir hata nedeniyle ödeme alındığı hâlde üyelik veya paket tanımlanmamışsa, ödeme dekontu ile destek@nurstudyo.com adresine başvurulmalıdır. Talepler en geç 2 iş günü içinde incelenir.
+              </p>
+              <p className="mt-2 text-white/45">
+                Ödemeler iyzico güvenli ödeme altyapısı üzerinden alınır. Kart bilgileri platformumuzda saklanmaz.
+              </p>
+            </div>
+          )}
 
           <p className="mt-3 text-center text-[9px] text-white/25">
             Ödemeler PCI DSS uyumlu altyapı ile 256-bit SSL üzerinden alınır · Kart bilgisi saklanmaz
