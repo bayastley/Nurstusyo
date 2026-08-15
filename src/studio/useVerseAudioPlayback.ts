@@ -1,7 +1,6 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { reciterAudioUrl, type Reciter } from "../reciters";
 
-// BURASI DÜZELTİLDİ: ../types yerine doğrudan lokal şablon kullanılarak sistemin kilitlenmesi önlendi.
 interface SelectedAyah {
   s: number;
   a: number;
@@ -40,8 +39,10 @@ export function useVerseAudioPlayback({
 }: UseVerseAudioPlaybackParams) {
   useEffect(() => {
     silenceAudioOnly();
-    if (!previewPlaying || !selected.length) return;
-    const current = selected[verseIndex];
+    if (!previewPlaying || !selected || !selected.length) return;
+    
+    // BURASI DÜZELTİLDİ: Seçili olan ayete güvenli erişim sağlandı
+    const current = selected[verseIndex] ?? selected[0];
     if (!current) return;
     if (current.s === 0) {
       setPreviewDuration(0);
