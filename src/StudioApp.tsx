@@ -36,7 +36,6 @@ import {
   TEMPLATE_CLIPS,
   KATEGORI_TIER,
   FREE_VIDEOS_PER_CATEGORY,
-  PRO_TOTAL_ATMOS,
   CATEGORY_PALETTE,
   type CatId,
   type Clip,
@@ -80,6 +79,7 @@ import type { SelectedAyah, Output, DailyAyah, User, Mode, Aspect, ModalName, Lo
 
 void SES_TARZI_ORDER; void isFeatureUnlocked; void featureLockLabel; void ALLOWED_ADMIN_EMAILS; void isAdminEmail; void setCurrentTier; void tierAtLeast; void isRamadan; void isFriday; void JETON; void ADMIN_SECRET_PATH;
 void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
+const PRO_TOTAL_ATMOS = 350;
 // Sabitler studioConstants.ts'e, yardımcılar studioHelpers.ts'e taşındı
 
 // Tüm sabitler + yardımcılar dış dosyalara taşındı (studio/)
@@ -932,7 +932,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           previewPlaying={previewPlaying}
           setPreviewPlaying={setPreviewPlaying}
           setPreviewTime={setPreviewTime}
-          randomizeBackgrounds={randomizeBackgrounds}
+          randomizeBackgrounds={(cat?: unknown) => randomizeBackgrounds(cat as CatId | undefined)}
           previewDuration={previewDuration}
           previewTime={previewTime}
           fmtDuration={fmtDuration}
@@ -946,8 +946,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           isMasterSürüm={isMasterSürüm}
           tierAtLeast={tierAtLeast}
           tier={tier}
-          hasMicroUnlock={hasMicroUnlock}
-          tryUnlockElitFeature={tryUnlockElitFeature}
+          hasMicroUnlock={(key: unknown) => hasMicroUnlock(key as any)}
+          tryUnlockElitFeature={(key: unknown, label: string) => tryUnlockElitFeature(key as "batch" | "ai_search", label)}
           applySmartBackgrounds={applySmartBackgrounds}
           openPremium={openPremium}
           setSelected={setSelected}
@@ -959,7 +959,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           fmtSize={fmtSize}
           shareOutput={shareOutput}
           user={user}
-          setLoginTab={setLoginTab}
+          setLoginTab={(tab: unknown) => setLoginTab(tab as LoginTab)}
           notify={notify}
           handleGenerate={handleGenerate}
           generating={generating}

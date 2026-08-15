@@ -1,4 +1,8 @@
-import type { CatId } from "../clips";
+type CatId =
+  | "yuklenenler" | "namaz" | "musaf" | "cicekler" | "yildizlar" | "cennet"
+  | "deniz" | "daglar" | "gunbatimi" | "gece" | "selale" | "orman"
+  | "col" | "kar" | "sehir" | "cami" | "desen" | "gol" | "bulut"
+  | "ates" | "cehennem" | "hurma" | "ari" | "karinca";
 
 const AESTHETIC_POOL: CatId[] = [
   "namaz",
