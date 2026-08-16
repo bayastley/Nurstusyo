@@ -10,7 +10,7 @@ const ALLOWED_REDIRECT_URIS = new Set([
 const ALLOWED_ORIGINS = new Set([...ALLOWED_REDIRECT_URIS].map((uri) => new URL(uri).origin));
 const AUTH_HITS = new Map<string, number[]>();
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
-const REGISTER_BONUS = 20;
+const REGISTER_BONUS = 5;
 
 function base64Url(value: Buffer | string): string {
   const buffer = Buffer.isBuffer(value) ? value : Buffer.from(value, "utf8");
