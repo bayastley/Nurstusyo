@@ -86,34 +86,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     active: true,
   },
 
-  // ─── Ömür Boyu (Lifetime) — tek seferlik, uzun süreli erişim ───
-  // ★ Gerçek "sonsuza kadar sınırsız" taahhüdü sunucu/depolama maliyeti
-  //   açısından sürdürülebilir olmadığından, sektör standardına uygun
-  //   şekilde "10 yıl" (pratikte kullanıcı ömrü boyunca yeterli) olarak
-  //   tanımlandı. Fiyat, aylık ücretin ~15 katı sektör ortalamasına göre
-  //   belirlendi (bkz. konusma/mesaj.txt'deki açıklama).
-  LIFETIME_PRO: {
-    code: "LIFETIME_PRO",
-    kind: "subscription",
-    title: "NÛR PRO — Ömür Boyu Erişim",
-    description: "Tek seferlik ödeme, tekrar ödeme yok. 10 yıl boyunca (pratikte ömür boyu) PRO hakları.",
-    amountMinor: 249900,
-    currency: "TRY",
-    grantTier: "pro",
-    grantDays: 3650,
-    active: true,
-  },
-  LIFETIME_ELIT: {
-    code: "LIFETIME_ELIT",
-    kind: "subscription",
-    title: "NÛR ELİT — Ömür Boyu Erişim",
-    description: "Tek seferlik ödeme, tekrar ödeme yok. 10 yıl boyunca (pratikte ömür boyu) tüm ELİT hakları.",
-    amountMinor: 499900,
-    currency: "TRY",
-    grantTier: "elit",
-    grantDays: 3650,
-    active: true,
-  },
+
 
   // ─── Kısa video paketleri (59 sn) ───
   PK_KISA_15: {
@@ -242,12 +215,15 @@ export function unitPrice(p: Product): string {
 
 export const SUBSCRIPTION_CODES = ["SUB_PRO_1M", "SUB_ELIT_1M"] as const;
 export const ANNUAL_SUBSCRIPTION_CODES = ["SUB_PRO_1Y", "SUB_ELIT_1Y"] as const;
-export const LIFETIME_CODES = ["LIFETIME_PRO", "LIFETIME_ELIT"] as const;
-export type BillingPeriod = "monthly" | "annual" | "lifetime";
+// ★ NOT: "Ömür boyu / lifetime" paket bilinçli olarak KALDIRILDI.
+//   10 yıllık erişimi ~2500 TL gibi tek seferlik bir bedelle vermek,
+//   uzun vadede sunucu/depolama/bant genişliği maliyetini karşılamaz
+//   ve şirket için zarara yol açar. Sadece Aylık ve Yıllık (indirimli)
+//   seçenekler sürdürülebilir kabul edildi.
+export type BillingPeriod = "monthly" | "annual";
 export const SUBSCRIPTION_CODES_BY_PERIOD: Record<BillingPeriod, readonly string[]> = {
   monthly: SUBSCRIPTION_CODES,
   annual: ANNUAL_SUBSCRIPTION_CODES,
-  lifetime: LIFETIME_CODES,
 };
 
 export const PACKAGE_CODES: Record<VideoKind, readonly string[]> = {

@@ -812,18 +812,91 @@ const faDict: Dict = {
   energyPack: "بسته ویدیو",
 };
 
+// ★ YENİ DİLLER — arayüz metinleri de değişsin diye (ur/fa ile aynı yöntem:
+//   İngilizce sözlük tabana alınıp en görünür anahtarlar native dile
+//   çevrildi). Meal (ayet çevirisi) zaten MEAL_EDITIONS üzerinden ayrı bir
+//   API'den kendi ana dilinde gelmeye devam ediyor.
+const bnDict: Dict = {
+  ...enDict,
+  dailyAyah: "দিনের আয়াত", loading: "লোড হচ্ছে...", menuGuide: "ব্যবহার নির্দেশিকা",
+  menuThemes: "থিম গ্যালারি", menuSuggest: "পরামর্শ দিন", menuComplaint: "সমস্যা রিপোর্ট করুন",
+  premium: "প্রিমিয়াম প্রো", tagline: "অতি উচ্চমানের কুরআন ভিডিও তৈরি করুন ও শেয়ার করুন",
+  library: "লাইব্রেরি ও আয়াত অনুসন্ধান", addAyah: "আয়াত যোগ করুন", wholeSurah: "সম্পূর্ণ সূরা যোগ করুন",
+  atmoType: "পরিবেশের ধরন", template: "স্থির টেমপ্লেট", motion: "মোশন ভিডিও",
+  selectedAyahs: "নির্বাচিত আয়াতসমূহ", ready: "আপনার ভিডিও প্রস্তুত!", download: "ডাউনলোড",
+  share: "শেয়ার করুন", atmosphere: "পরিবেশ ডিজাইন", atmoLibrary: "পরিবেশ গ্যালারি",
+  randomAll: "এলোমেলো করুন", reciter: "ক্বারী ও অডিও", mode: "সময়কাল মোড",
+  modeShort: "সংক্ষিপ্ত ভিডিও", modeLong: "দীর্ঘ ভিডিও", modeFull: "সম্পূর্ণ সময়কাল",
+  format: "ভিডিও স্ক্রিন ফরম্যাট", stop: "থামুন", generate: "ভিডিও তৈরি করুন",
+  copy: "টেক্সট কপি করুন", copied: "কপি হয়েছে!", loginTitle: "লগইন / নিবন্ধন",
+  loginTab: "লগইন", registerTab: "নিবন্ধন করুন", loginBtn: "লগইন", registerBtn: "নিবন্ধন করুন",
+  googleAuth: "গুগল দিয়ে চালিয়ে যান", email: "ইমেইল ঠিকানা", password: "পাসওয়ার্ড",
+  fullName: "পূর্ণ নাম", energy: "দৈনিক অধিকার", energyShort: "আজ",
+  membership: "সদস্যপদ", energyPack: "ভিডিও প্যাকেজ",
+};
+
+const msDict: Dict = {
+  ...enDict,
+  dailyAyah: "Ayat Hari Ini", loading: "Memuatkan...", menuGuide: "Panduan Pengguna",
+  menuThemes: "Galeri Tema", menuSuggest: "Cadangkan Ciri", menuComplaint: "Laporkan Isu",
+  premium: "Premium Pro", tagline: "Reka & Kongsi Video Al-Quran Berkualiti Ultra Tinggi",
+  library: "Perpustakaan & Carian Ayat", addAyah: "Tambah Ayat", wholeSurah: "Tambah Surah Penuh",
+  atmoType: "Jenis Suasana", template: "Templat Statik", motion: "Video Bergerak",
+  selectedAyahs: "Ayat Dipilih", ready: "Video Anda Sudah Sedia!", download: "Muat Turun",
+  share: "Kongsi", atmosphere: "Reka Bentuk Suasana", atmoLibrary: "Galeri Suasana",
+  randomAll: "Rawak", reciter: "Qari & Audio", mode: "Mod Tempoh",
+  modeShort: "Video Pendek", modeLong: "Video Panjang", modeFull: "Tempoh Penuh",
+  format: "Format Skrin Video", stop: "Henti", generate: "Jana Video",
+  copy: "Salin Teks", copied: "Disalin!", loginTitle: "Log Masuk / Daftar",
+  loginTab: "Log Masuk", registerTab: "Daftar", loginBtn: "Log Masuk", registerBtn: "Daftar",
+  googleAuth: "Teruskan dengan Google", email: "Alamat E-mel", password: "Kata Laluan",
+  fullName: "Nama Penuh", energy: "Hak Harian", energyShort: "Hari Ini",
+  membership: "Keahlian", energyPack: "Pakej Video",
+};
+
+const hiDict: Dict = {
+  ...enDict,
+  dailyAyah: "आज की आयत", loading: "लोड हो रहा है...", menuGuide: "उपयोगकर्ता गाइड",
+  menuThemes: "थीम गैलरी", menuSuggest: "सुझाव दें", menuComplaint: "समस्या रिपोर्ट करें",
+  premium: "प्रीमियम प्रो", tagline: "अति उच्च गुणवत्ता वाले कुरान वीडियो बनाएं और साझा करें",
+  library: "लाइब्रेरी और आयत खोज", addAyah: "आयत जोड़ें", wholeSurah: "पूरी सूरह जोड़ें",
+  atmoType: "वातावरण प्रकार", template: "स्थिर टेम्पलेट", motion: "मोशन वीडियो",
+  selectedAyahs: "चयनित आयतें", ready: "आपका वीडियो तैयार है!", download: "डाउनलोड",
+  share: "साझा करें", atmosphere: "वातावरण डिज़ाइन", atmoLibrary: "वातावरण गैलरी",
+  randomAll: "यादृच्छिक करें", reciter: "क़ारी और ऑडियो", mode: "अवधि मोड",
+  modeShort: "छोटा वीडियो", modeLong: "लंबा वीडियो", modeFull: "पूर्ण अवधि",
+  format: "वीडियो स्क्रीन प्रारूप", stop: "रोकें", generate: "वीडियो बनाएं",
+  copy: "टेक्स्ट कॉपी करें", copied: "कॉपी हो गया!", loginTitle: "लॉगिन / पंजीकरण",
+  loginTab: "लॉगिन", registerTab: "पंजीकरण करें", loginBtn: "लॉगिन", registerBtn: "पंजीकरण करें",
+  googleAuth: "Google से जारी रखें", email: "ईमेल पता", password: "पासवर्ड",
+  fullName: "पूरा नाम", energy: "दैनिक अधिकार", energyShort: "आज",
+  membership: "सदस्यता", energyPack: "वीडियो पैकेज",
+};
+
+const swDict: Dict = {
+  ...enDict,
+  dailyAyah: "Aya ya Leo", loading: "Inapakia...", menuGuide: "Mwongozo wa Mtumiaji",
+  menuThemes: "Ghala la Mandhari", menuSuggest: "Pendekeza Kipengele", menuComplaint: "Ripoti Tatizo",
+  premium: "Premium Pro", tagline: "Tengeneza na Shiriki Video za Qur'an za Ubora wa Juu Sana",
+  library: "Maktaba na Utafutaji wa Aya", addAyah: "Ongeza Aya", wholeSurah: "Ongeza Sura Nzima",
+  atmoType: "Aina ya Mazingira", template: "Kiolezo Kisichosonga", motion: "Video ya Mwendo",
+  selectedAyahs: "Aya Zilizochaguliwa", ready: "Video Yako Iko Tayari!", download: "Pakua",
+  share: "Shiriki", atmosphere: "Muundo wa Mazingira", atmoLibrary: "Ghala la Mazingira",
+  randomAll: "Chagua Bila Mpangilio", reciter: "Msomaji na Sauti", mode: "Hali ya Muda",
+  modeShort: "Video Fupi", modeLong: "Video Ndefu", modeFull: "Muda Kamili",
+  format: "Muundo wa Skrini ya Video", stop: "Simamisha", generate: "Tengeneza Video",
+  copy: "Nakili Maandishi", copied: "Imenakiliwa!", loginTitle: "Ingia / Jisajili",
+  loginTab: "Ingia", registerTab: "Jisajili", loginBtn: "Ingia", registerBtn: "Jisajili",
+  googleAuth: "Endelea na Google", email: "Anwani ya Barua Pepe", password: "Nenosiri",
+  fullName: "Jina Kamili", energy: "Haki ya Kila Siku", energyShort: "Leo",
+  membership: "Uanachama", energyPack: "Kifurushi cha Video",
+};
+
 /**
  * ★ ESKİ SORUN: de/ru/fr/es/id/ur/fa = {} boştu
  * t(key) çağrılınca undefined → ekranda Türkçe hardcoded kalıyordu
  * Şimdi her dil DOLU.
  */
-// ★ YENİ DİLLER (bn/ms/hi/sw): Arayüz sözlüğü şimdilik İngilizce temel
-//   alınarak dolduruldu (boş/undefined anahtar kalmasın diye). Bu sayede
-//   hiçbir buton/metin kırık görünmez. Meal (ayet çevirisi) ise YUKARIDAKİ
-//   MEAL_EDITIONS üzerinden zaten kendi ANA DİLİNDE (Bengalce/Malayca/
-//   Hintçe/Suahili) gelir — çünkü ayet çevirisi ayrı bir API kaynağından
-//   çekiliyor. Arayüz metinlerinin native çevirisi ileride topluluk/
-//   çevirmen desteğiyle tamamlanabilir.
 export const T: Record<Lang, Dict> = {
   tr: trDict,
   en: enDict,
@@ -835,10 +908,10 @@ export const T: Record<Lang, Dict> = {
   id: idDict,
   ur: urDict,
   fa: faDict,
-  bn: enDict,
-  ms: enDict,
-  hi: enDict,
-  sw: enDict,
+  bn: bnDict,
+  ms: msDict,
+  hi: hiDict,
+  sw: swDict,
 };
 
 /**

@@ -30,6 +30,9 @@ interface SocialSharePanelProps {
   setTosOpen: (v: boolean) => void;
   openLegalTab: (tab: "tos" | "kvkk" | "gizlilik" | "iade") => void;
   t: (key: keyof (typeof T)["tr"]) => string;
+  shareToWhatsApp?: () => void;
+  shareToTelegram?: () => void;
+  shareToX?: () => void;
 }
 
 export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
@@ -57,6 +60,9 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
   setTosOpen,
   openLegalTab,
   t,
+  shareToWhatsApp,
+  shareToTelegram,
+  shareToX,
 }) => {
   void setTosOpen;
   return (
@@ -166,6 +172,26 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
               >
                 {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? t("copied") : t("copy")}
               </button>
+
+              {/* ★ ÜCRETSİZ HIZLI PAYLAŞIM — API/onay süreci gerektirmeyen,
+                  platformların herkese açık paylaşım linkleri. Video dosyası
+                  paylaşımı için Video Önizleme panelindeki "Paylaş" (Web Share
+                  API) butonu kullanılır; burası sadece METİN paylaşımı içindir. */}
+              {shareToWhatsApp && (
+                <button onClick={shareToWhatsApp} className="glass-soft flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[10px] font-bold text-white/70 hover:text-white">
+                  <Share2 size={11} />WhatsApp
+                </button>
+              )}
+              {shareToTelegram && (
+                <button onClick={shareToTelegram} className="glass-soft flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[10px] font-bold text-white/70 hover:text-white">
+                  <Share2 size={11} />Telegram
+                </button>
+              )}
+              {shareToX && (
+                <button onClick={shareToX} className="glass-soft flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-[10px] font-bold text-white/70 hover:text-white">
+                  <Share2 size={11} />X
+                </button>
+              )}
 
               <button
                 onClick={() => {

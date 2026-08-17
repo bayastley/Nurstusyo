@@ -50,6 +50,44 @@ async function pkceChallenge(verifier: string): Promise<string> {
   return base64Url(digest);
 }
 
+// ★ "Yakında" teaser listesi — R2 depolamasına yüklenmekte olan 78 yeni
+//   atmosfer kategorisinin bir kısmı. Henüz gerçek görsel bağlanmadığı için
+//   sadece isim + kilit rozeti gösterilir, tıklanamaz (merak uyandırma amaçlı).
+const COMING_SOON_ATMOSPHERES: Array<{ id: string; label: string; emoji: string; lock: "V2" | "V3" }> = [
+  { id: "cs-kabe-siyah-ortu", label: "Kâbe Örtüsü", emoji: "🕋", lock: "V2" },
+  { id: "cs-medine-kubbe", label: "Yeşil Kubbe", emoji: "🕌", lock: "V2" },
+  { id: "cs-nur-dagi", label: "Nur Dağı", emoji: "⛰️", lock: "V2" },
+  { id: "cs-zemzem", label: "Zemzem Kuyusu", emoji: "💧", lock: "V2" },
+  { id: "cs-hira-magarasi", label: "Hira Mağarası", emoji: "🏔️", lock: "V3" },
+  { id: "cs-yildizli-cami", label: "Yıldızlı Gökyüzü", emoji: "🌌", lock: "V2" },
+  { id: "cs-kizil-deniz", label: "Kızıldeniz", emoji: "🌊", lock: "V2" },
+  { id: "cs-hurma-bahcesi", label: "Hurma Bahçesi", emoji: "🌴", lock: "V2" },
+  { id: "cs-cennet-bahce", label: "Cennet Bahçesi", emoji: "🌿", lock: "V3" },
+  { id: "cs-ates-alevi", label: "Ateş Alevi", emoji: "🔥", lock: "V3" },
+  { id: "cs-gece-yildiz", label: "Gece Yıldızları", emoji: "✨", lock: "V2" },
+  { id: "cs-col-kum", label: "Çöl Kumulları", emoji: "🏜️", lock: "V2" },
+  { id: "cs-buluttepe", label: "Bulut Tepeleri", emoji: "☁️", lock: "V2" },
+  { id: "cs-yagmur-damla", label: "Yağmur Damlası", emoji: "🌧️", lock: "V2" },
+  { id: "cs-gunes-dogus", label: "Güneşin Doğuşu", emoji: "🌅", lock: "V2" },
+  { id: "cs-karinca-yuvasi", label: "Karınca Yuvası", emoji: "🐜", lock: "V3" },
+  { id: "cs-ari-kovani", label: "Arı Kovanı", emoji: "🐝", lock: "V3" },
+  { id: "cs-balik-derinlik", label: "Deniz Derinliği", emoji: "🐋", lock: "V3" },
+  { id: "cs-kuslar-goc", label: "Kuşların Göçü", emoji: "🕊️", lock: "V2" },
+  { id: "cs-dag-zirve", label: "Dağ Zirvesi", emoji: "🏔️", lock: "V2" },
+  { id: "cs-selale-guc", label: "Güçlü Şelale", emoji: "💦", lock: "V2" },
+  { id: "cs-cennet-nehir", label: "Cennet Nehirleri", emoji: "🏞️", lock: "V3" },
+  { id: "cs-ay-tutulma", label: "Ay Tutulması", emoji: "🌘", lock: "V2" },
+  { id: "cs-gunes-tutulma", label: "Güneş Tutulması", emoji: "🌑", lock: "V3" },
+  { id: "cs-deprem-yer", label: "Yerin Sarsılışı", emoji: "🌍", lock: "V3" },
+  { id: "cs-kar-manzara", label: "Kar Manzarası", emoji: "❄️", lock: "V2" },
+  { id: "cs-zeytin-agac", label: "Zeytin Ağacı", emoji: "🫒", lock: "V2" },
+  { id: "cs-incir-agac", label: "İncir Ağacı", emoji: "🌳", lock: "V2" },
+  { id: "cs-uzum-bag", label: "Üzüm Bağı", emoji: "🍇", lock: "V2" },
+  { id: "cs-gemi-tufan", label: "Nûh'un Gemisi", emoji: "🚢", lock: "V3" },
+  { id: "cs-kuyu-yusuf", label: "Kuyu", emoji: "🕳️", lock: "V3" },
+  { id: "cs-balina-yunus", label: "Balina", emoji: "🐳", lock: "V3" },
+];
+
 interface ModalsContainerProps {
   modal: ModalName;
   setModal: (m: ModalName) => void;
@@ -249,6 +287,20 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     return () => window.removeEventListener("nur_config_updated", onUpdate);
   }, []);
   void configVersion;
+
+  // ★ KVKK: Pazarlama e-postası için AYRI, geri alınabilir açık rıza durumu.
+  //   Kullanıcı giriş yaptıktan sonra bu tercih /api/marketing/consent'e yazılır.
+  const [marketingConsent, setMarketingConsent] = useState(false);
+  useEffect(() => {
+    if (!user?.email) return;
+    fetch("/api/marketing/consent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ consented: marketingConsent }),
+    }).catch(() => undefined);
+    // Sadece kullanıcı checkbox'ı değiştirdiğinde veya yeni giriş yaptığında tetiklenir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [marketingConsent, user?.email]);
   // Sahte e-posta/şifre akışı kaldırıldı; prop'lar eski modal sözleşmesi bozulmasın diye korunuyor.
   void phone; void setPhone; void verifyCode; void setVerifyCode; void sentCode;
   void handleLoginSubmit; void handleRegisterSubmit; void handleForgotPassword; void handleVerifyCode;
@@ -320,6 +372,21 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
               Şifre gerekmez · Anında <b className="text-white/60">+5 ⚡ Üretim hakkı</b> hediye
             </p>
+
+            {/* ★ KVKK: Hesap oluşturma sözleşme gereği yapılır, onay kutusu GEREKMEZ.
+                Ama pazarlama e-postası BAĞIMSIZ bir işlem olduğu için AYRI, geri
+                alınabilir bir açık rıza kutusu burada sunulur (kanunen zorunlu ayrım). */}
+            <label className="flex items-start gap-2 px-1 text-[9px] leading-relaxed text-white/40">
+              <input
+                type="checkbox"
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                className="mt-0.5 accent-[#d7aa52]"
+              />
+              <span>
+                Yeni özellikler, indirim ve hatırlatmalardan haberdar olmak için e-posta almak istiyorum. (İsteğe bağlı, istediğiniz zaman iptal edebilirsiniz.)
+              </span>
+            </label>
 
             {/* ★ MİSAFİR MODU */}
             <button
@@ -526,6 +593,33 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               );
             })}
           </div>
+
+          {/* ★ MERAK UYANDIRAN TEASER — R2'ye hazırlanan 78 yeni atmosfer
+              kategorisi için henüz gerçek görsel bağlanmadı; bu yüzden gerçek
+              AtmosphereCard yerine SADECE isim + kilit rozeti gösteren, tıklanamaz
+              "yakında" kartları kullanılıyor. Gerçek görseller yüklenince bu
+              blok gerçek kategorilerle değiştirilecek. */}
+          {!isMasterSürüm && (
+            <div className="mt-5 border-t border-white/10 pt-4">
+              <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
+                <Lock size={11} /> Yakında: 78 Yeni Kur'an Temalı Atmosfer Kategorisi (V2/V3)
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+                {COMING_SOON_ATMOSPHERES.map((item) => (
+                  <div
+                    key={item.id}
+                    className="glass-soft relative flex h-16 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-xl opacity-50 saturate-50"
+                  >
+                    <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                      {item.lock}
+                    </span>
+                    <span className="text-[15px]">{item.emoji}</span>
+                    <span className="px-1 text-center text-[7.5px] font-bold leading-tight text-white/60">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </Modal>
       )}
 

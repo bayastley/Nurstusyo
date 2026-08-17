@@ -8,6 +8,7 @@ import {
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
+import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
   fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
@@ -75,6 +76,8 @@ void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
 // Tüm sabitler + yardımcılar dış dosyalara taşındı (studio/)
 
 export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_MASTER_SURUM }: { isMasterSürüm?: boolean }) {
+  // ★ Ücretsiz, tek satırlık ziyaretçi analitiği (Supabase nur_page_views'e yazar)
+  useAnalytics();
   const [adminGodMode, setAdminGodMode] = useState(false);
   // ★ GOD MODE GÜVENLİĞİ
   // App.tsx'teki geliştirici bayrağı yalnızca localhost/dev modunda geçerlidir.
@@ -1843,6 +1846,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       notify("📢 Paylaşım metni panoya kopyalandı!");
     } catch { /* ignore */ }
 
+    // ★ ÜCRETSİZ "OTOMATİK PAYLAŞIM": Sunucu/API onayı gerektiren gerçek
+    //   Instagram/TikTok/YouTube otomatik yükleme, her platformun ayrı
+    //   uygulama onay sürecini (haftalar sürebilir) gerektirir ve maliyet 0
+    //   ile yapılamaz. Bunun yerine tarayıcının YERLEŞİK Paylaşım Sayfasını
+    //   (Web Share API) açıyoruz — kullanıcı TEK DOKUNUŞLA Instagram, TikTok,
+    //   WhatsApp, Telegram gibi telefonda kurulu HERHANGİ bir uygulamaya
+    //   videoyu gönderebilir. Sıfır maliyet, sıfır onay süreci, sıfır sunucu.
     try {
       const file = new File([await (await fetch(output.url)).blob()], `nur-studyo.${output.ext}`, { type: output.mime });
       if (navigator.canShare?.({ files: [file] })) {
@@ -1851,6 +1861,25 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       }
     } catch { /* ignore */ }
   }, [notify, shareTitle, shareDescription]);
+
+  // ★ Masaüstü / dosya paylaşımı desteklemeyen tarayıcılar için METİN bazlı
+  //   hızlı paylaşım linkleri (WhatsApp, Telegram, X) — bunlar da tamamen
+  //   ücretsizdir, sunucu veya API anahtarı gerektirmez, sadece platformların
+  //   herkese açık "paylaşım linki" formatını kullanır.
+  const shareToWhatsApp = useCallback(() => {
+    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+  }, [shareTitle, shareDescription]);
+
+  const shareToTelegram = useCallback(() => {
+    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
+    window.open(`https://t.me/share/url?url=https://nurstudyo.com&text=${text}`, "_blank", "noopener,noreferrer");
+  }, [shareTitle, shareDescription]);
+
+  const shareToX = useCallback(() => {
+    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
+    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
+  }, [shareTitle, shareDescription]);
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;
@@ -2202,6 +2231,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         setTosOpen={setTosOpen}
         openLegalTab={(tab) => { setLegalTab(tab); setTosOpen(true); }}
         t={t}
+        shareToWhatsApp={shareToWhatsApp}
+        shareToTelegram={shareToTelegram}
+        shareToX={shareToX}
       />
 
       {/* TOAST NOTIFICATION */}

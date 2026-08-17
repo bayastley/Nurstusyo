@@ -13,7 +13,6 @@ import {
   formatPrice,
   SUBSCRIPTION_CODES,
   ANNUAL_SUBSCRIPTION_CODES,
-  LIFETIME_CODES,
   PACKAGE_CODES,
   PACKAGE_GROUP_META,
   type VideoKind,
@@ -314,12 +313,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         <div className="px-7 pb-7 pt-5">
           {tab === "uyelik" ? (
             <>
-            {/* PERİYOT SEÇİCİ: Aylık / Yıllık (indirimli) / Ömür Boyu */}
+            {/* PERİYOT SEÇİCİ: Aylık / Yıllık (indirimli) */}
             <div className="mb-4 flex flex-wrap justify-center gap-1.5 rounded-2xl border border-white/10 bg-black/40 p-1.5">
               {([
                 { id: "monthly" as BillingPeriod, label: "Aylık" },
                 { id: "annual" as BillingPeriod, label: "Yıllık · %10-20 İndirim" },
-                { id: "lifetime" as BillingPeriod, label: "Ömür Boyu (Tek Ödeme)" },
               ]).map((opt) => (
                 <button
                   key={opt.id}
@@ -378,12 +376,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 </button>
               </div>
 
-              {(period === "annual" ? ANNUAL_SUBSCRIPTION_CODES : period === "lifetime" ? LIFETIME_CODES : SUBSCRIPTION_CODES).map((code) => {
+              {(period === "annual" ? ANNUAL_SUBSCRIPTION_CODES : SUBSCRIPTION_CODES).map((code) => {
                 const p = PRODUCTS[code];
                 const isElit = p.grantTier === "elit";
                 const features = isElit ? ELIT_FEATURES : PRO_FEATURES;
                 const current = tier === p.grantTier;
-                const periodLabel = period === "annual" ? "/ yıl" : period === "lifetime" ? "/ tek ödeme" : "/ ay";
+                const periodLabel = period === "annual" ? "/ yıl" : "/ ay";
 
                 return (
                   <div
@@ -429,11 +427,6 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     {period === "annual" && (
                       <p className="mt-1 text-[9.5px] font-bold" style={{ color: isElit ? "#f5dda6" : "#34d399" }}>
                         Aylık {formatPrice(PRODUCTS[isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M"])} yerine ayda ortalama ₺{Math.round(p.amountMinor / 100 / 12)} · %{isElit ? 20 : 10} indirim
-                      </p>
-                    )}
-                    {period === "lifetime" && (
-                      <p className="mt-1 text-[9.5px] font-bold text-white/50">
-                        Tek seferlik ödeme · sonra hiç ödeme yok · 10 yıl geçerli
                       </p>
                     )}
 
