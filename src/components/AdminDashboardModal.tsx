@@ -13,6 +13,7 @@ import {
 } from "../services/adminSyncService";
 import type { Tier } from "../types";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
+import { sanitizeText, isValidEmail, clampNumber } from "../security/sanitize";
 
 export type { ManagedUser };
 
@@ -64,7 +65,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       notify("⛔ Kurucu Admin hesabı banlanamaz!");
       return;
     }
-    const finalReason = reason.trim() || "Yasal ihlal / Sistem güvenlik uyarısı";
+    const finalReason = sanitizeText(reason).trim().slice(0, 300) || "Yasal ihlal / Sistem güvenlik uyarısı";
     const banState = await serverManage("ban_user", { email, reason: finalReason });
     if (banState === "error") return;
     banUserInDb(email, finalReason, currentUserEmail, false);
@@ -218,10 +219,15 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [emailSearchResult, setEmailSearchResult] = useState<ManagedUser | null>(null);
 
   const handleEmailSearch = () => {
-    const q = emailSearchQuery.trim().toLowerCase();
+    const q = sanitizeText(emailSearchQuery).trim().toLowerCase().slice(0, 254);
     if (!q) {
       setEmailSearchResult(null);
       notify("⚠️ Aramak için bir e-posta adresi gir");
+      return;
+    }
+    if (!isValidEmail(q)) {
+      setEmailSearchResult(null);
+      notify("⚠️ Geçerli bir e-posta adresi gir");
       return;
     }
     const found = findUserByEmail(q);
@@ -237,8 +243,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleGiftRights = async (email: string, amount: number, newTier?: Tier) => {
     const target = email.trim().toLowerCase();
+    if (!isValidEmail(target)) { notify("⚠️ Geçerli bir e-posta adresi gir"); return; }
+    const safeAmount = clampNumber(amount, 0, 100000);
     if (!await assertAdminAction("gift_rights", target)) return;
-    const result = giftRightsToUser(target, amount, newTier);
+    const result = giftRightsToUser(target, safeAmount, newTier);
     if (!result.ok) {
       notify(`❌ ${target} bulunamadı`);
       return;

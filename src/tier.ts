@@ -347,7 +347,7 @@ export const HEDIYE = {
   RAMAZAN: { kind: "kisa" as VideoKind, amount: 5 },
   BAYRAM: { kind: "uzun" as VideoKind, amount: 2 },
   KADIR: { kind: "uzun" as VideoKind, amount: 3 },
-  KAYIT: { kind: "kisa" as VideoKind, amount: 3 },
+  KAYIT: { kind: "kisa" as VideoKind, amount: 5 },
 } as const;
 
 export function isRamadan(): boolean {

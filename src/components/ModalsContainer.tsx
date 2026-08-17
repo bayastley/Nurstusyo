@@ -318,7 +318,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </button>
             <p className="text-center text-[9px] leading-relaxed text-white/40">
               Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
-              Şifre gerekmez · Anında <b className="text-white/60">+20 ⚡ Üretim hakkı</b> hediye
+              Şifre gerekmez · Anında <b className="text-white/60">+5 ⚡ Üretim hakkı</b> hediye
             </p>
 
             {/* ★ MİSAFİR MODU */}
