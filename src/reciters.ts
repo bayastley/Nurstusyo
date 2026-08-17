@@ -49,6 +49,20 @@ export const RECITERS: Reciter[] = [
   { id: "qahtani", name: "Halid el-Kahtani", path: "Khaalid_Abdullaah_al-Qahtaanee_192kbps", makam: "Telif", risk: "mid", telifRiski: 30, riskAciklamasi: "Gur ve yuksek makam; tahmini orta risk.", color: mid, initial: "HK", country: "Suudi Arabistan" },
   { id: "sowaid", name: "Eymen Suveyd", path: "Ayman_Sowaid_64kbps", makam: "Telif", risk: "low", telifRiski: 6, riskAciklamasi: "Tecvid egitim kaydi; tahmini dusuk risk.", color: classic, initial: "ES", country: "Suriye" },
   { id: "parhizgar", name: "Sehriyar Perhizgar", path: "Parhizgar_48kbps", makam: "Telif", risk: "low", telifRiski: 5, riskAciklamasi: "Tahmini cok dusuk risk.", color: classic, initial: "SP", country: "Iran" },
+
+  // ★ EK KARILER — hizli/gur/yuksek makam, dusuk telif riski hedefiyle eklendi.
+  // Tum kayitlar EveryAyah acik arsivinden; ticari kullanim oncesi lisans
+  // teyidi onerilir (diger kayitlarla ayni uyari gecerlidir).
+  { id: "ali_jaber", name: "Ali Cabir", path: "Ali_Jaber_64kbps", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "Mescid-i Haram ile iliskilendirilen kari; gur ve vakur okuyus. Tahmini dusuk risk.", color: low, initial: "AC", country: "Suudi Arabistan" },
+  { id: "ghamdi_saad", name: "Sad el-Gamidi", path: "Ghamadi_40kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Yaygin ve gur sesli; hizli-orta tempo. Tahmini dusuk risk.", color: classic, initial: "SG", country: "Suudi Arabistan" },
+  { id: "hani_rifai", name: "Hani er-Rifai", path: "Hani_Rifai_192kbps", makam: "Telif", risk: "low", telifRiski: 12, riskAciklamasi: "Gur ve etkileyici ses tonu. Tahmini dusuk risk.", color: classic, initial: "HR", country: "Suudi Arabistan" },
+  { id: "fares_abbad", name: "Fares Abbad", path: "Fares_Abbad_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Hizli ve makamli okuyus tarzi. Tahmini dusuk risk.", color: classic, initial: "FA", country: "Suudi Arabistan" },
+  { id: "mustafa_ismail", name: "Mustafa Ismail", path: "Mustafa_Ismail_48kbps", makam: "Telif", risk: "low", telifRiski: 5, riskAciklamasi: "Klasik donem efsane kari (vefat 1978); tahmini cok dusuk risk, yuksek makam.", color: classic, initial: "MI", country: "Misir" },
+  { id: "akram_alaqimy", name: "Ekrem el-Alakimi", path: "Akram_AlAlaqimy_128kbps", makam: "Telif", risk: "low", telifRiski: 12, riskAciklamasi: "Hizli, gur ve makamli okuyus. Tahmini dusuk risk.", color: classic, initial: "EA", country: "Irak" },
+  { id: "abdulkareem", name: "Muhammed Abdulkerim", path: "Muhammad_AbdulKareem_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "MA", country: "Misir" },
+  { id: "bukhatir", name: "Salah Abdurrahman Buhatir", path: "Salaah_AbdulRahman_Bukhatir_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Berrak ve kararli ses tonu. Tahmini dusuk risk.", color: classic, initial: "SB", country: "BAE" },
+  { id: "yaser_salamah", name: "Yaser Selame", path: "Yaser_Salamah_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Enerjik ve hizli tempolu okuyus. Tahmini dusuk risk.", color: classic, initial: "YS", country: "Misir" },
+  { id: "tunaiji", name: "Halife et-Tuneyci", path: "Khalefa_Al_Tunaiji_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Gur sesli ve etkileyici tarz. Tahmini dusuk risk.", color: classic, initial: "HT", country: "BAE" },
 ];
 
 export function reciterAudioUrl(path: string, surah: number, ayah: number): string {
@@ -64,4 +78,7 @@ export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
   husary: "klasik", husary_mujawwad: "yuksek", husary_teacher: "klasik", abdulbasit: "klasik",
   abdulbasit_mujawwad: "yuksek", minshawi: "klasik", minshawi_mujawwad: "yuksek", tablawi: "yuksek",
   banna: "yuksek", sowaid: "klasik", parhizgar: "orta", shatri: "yuksek", akhdar: "icli",
+  ali_jaber: "yuksek", ghamdi_saad: "yuksek", hani_rifai: "yuksek", fares_abbad: "yuksek",
+  mustafa_ismail: "klasik", akram_alaqimy: "yuksek", abdulkareem: "yuksek", bukhatir: "yuksek",
+  yaser_salamah: "yuksek", tunaiji: "yuksek",
 };

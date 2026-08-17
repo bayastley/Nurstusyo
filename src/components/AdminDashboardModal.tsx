@@ -65,6 +65,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       notify("⛔ Kurucu Admin hesabı banlanamaz!");
       return;
     }
+    // ★ Güvenlik: Oturum açık olan admin kendi hesabını (hangi email ile
+    //   girmiş olursa olsun) yanlışlıkla banlayıp kendini kilitleyemesin.
+    if (email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) {
+      notify("⛔ Kendi oturum hesabınızı banlayamazsınız.");
+      return;
+    }
     const finalReason = sanitizeText(reason).trim().slice(0, 300) || "Yasal ihlal / Sistem güvenlik uyarısı";
     const banState = await serverManage("ban_user", { email, reason: finalReason });
     if (banState === "error") return;
