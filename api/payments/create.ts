@@ -40,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       email: sessionUser.email,
       returnUrl: typeof returnUrl === "string" ? returnUrl : undefined,
     });
-    if (!check.ok) return res.status(400).json({ ok: false, error: check.error });
+    if (!check.ok) return res.status(400).json({ ok: false, error: (check as any).error });
     const product = getProduct(check.product.code)!;
     const safeUserId = sanitizeOrderUserId(sessionUser.id);
     const safeEmail = sessionUser.email;
