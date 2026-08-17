@@ -1,26 +1,62 @@
 // ════════════════════════════════════════════════════════
 // SECURITY UTILS - Güvenlik ve sanitizasyon yardımcıları
+// ★ Harici paket bağımlılığı yok (dış kütüphane gerektirmez).
+//   Böylece npm install yapılamayan ortamlarda bile (vscode.dev
+//   gibi tarayıcı tabanlı editörler) build asla bozulmaz.
 // ════════════════════════════════════════════════════════
-import DOMPurify from "dompurify";
 
-// HTML sanitizasyon (XSS koruması)
+// Tehlikeli etiketleri ve olay (event) özniteliklerini temizler
+const SCRIPT_TAG_REGEX = /<script[^>]*>[\s\S]*?<\/script>/gi;
+const STYLE_TAG_REGEX = /<style[^>]*>[\s\S]*?<\/style>/gi;
+const ON_EVENT_ATTR_REGEX = /\son\w+\s*=\s*(".*?"|'.*?'|[^\s>]+)/gi;
+const JAVASCRIPT_URI_REGEX = /javascript\s*:/gi;
+const DATA_URI_HTML_REGEX = /data\s*:\s*text\/html/gi;
+const ALL_TAGS_REGEX = /<\/?[a-zA-Z][^>]*>/g;
+
+const ALLOWED_TAGS = new Set([
+  "b", "i", "em", "strong", "a", "p", "br", "span",
+  "ul", "ol", "li", "h1", "h2", "h3", "h4",
+  "blockquote", "pre", "code",
+]);
+
+// HTML sanitizasyon: sadece izinli etiketlere izin verir, script/style/olay
+// özniteliklerini ve javascript: URI'lerini tamamen temizler (XSS koruması).
 export function sanitizeHTML(input: string): string {
   if (!input || typeof input !== "string") return "";
-  return DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [
-      "b", "i", "em", "strong", "a", "p", "br", "span",
-      "ul", "ol", "li", "h1", "h2", "h3", "h4",
-      "blockquote", "pre", "code",
-    ],
-    ALLOWED_ATTR: ["href", "title", "target", "rel", "class"],
-    ALLOW_DATA_ATTR: false,
+  let out = input
+    .replace(SCRIPT_TAG_REGEX, "")
+    .replace(STYLE_TAG_REGEX, "")
+    .replace(ON_EVENT_ATTR_REGEX, "")
+    .replace(JAVASCRIPT_URI_REGEX, "")
+    .replace(DATA_URI_HTML_REGEX, "");
+
+  out = out.replace(ALL_TAGS_REGEX, (tag) => {
+    const match = /^<\/?\s*([a-zA-Z0-9]+)/.exec(tag);
+    const name = match?.[1]?.toLowerCase() ?? "";
+    if (!ALLOWED_TAGS.has(name)) return "";
+    // İzinli etiketlerde de sadece güvenli öznitelikler kalsın
+    const isClosing = tag.startsWith("</");
+    if (isClosing) return `</${name}>`;
+    const hrefMatch = /href\s*=\s*("([^"]*)"|'([^']*)')/i.exec(tag);
+    const href = hrefMatch?.[2] ?? hrefMatch?.[3] ?? "";
+    if (name === "a" && href && /^https?:\/\//i.test(href)) {
+      return `<a href="${href.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">`;
+    }
+    return `<${name}>`;
   });
+
+  return out;
 }
 
 // Metin sanitizasyon (HTML etiketlerini tamamen kaldır)
 export function sanitizeText(input: string): string {
   if (!input || typeof input !== "string") return "";
-  return DOMPurify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  return input
+    .replace(SCRIPT_TAG_REGEX, "")
+    .replace(STYLE_TAG_REGEX, "")
+    .replace(ALL_TAGS_REGEX, "")
+    .replace(JAVASCRIPT_URI_REGEX, "")
+    .trim();
 }
 
 // Email doğrulama
@@ -38,8 +74,8 @@ export function isValidURL(url: string): boolean {
 // Kullanıcı adı/İsim doğrulama (güvenli karakterler)
 export function sanitizeName(input: string): string {
   const cleaned = String(input || "").trim();
-  if (cleaned.length > 80) return cleaned.slice(0, 80);
-  return DOMPurify.sanitize(cleaned, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  const safe = sanitizeText(cleaned);
+  return safe.length > 80 ? safe.slice(0, 80) : safe;
 }
 
 // Uzunluk limitli metin kısaltma
@@ -86,7 +122,6 @@ export function generateCSRFToken(): string {
 export function validateCSRF(token: string, expected: string): boolean {
   if (!token || !expected) return false;
   if (token.length !== expected.length) return false;
-  // Timing-safe compare
   let diff = 0;
   for (let i = 0; i < token.length; i++) {
     diff |= token.charCodeAt(i) ^ expected.charCodeAt(i);
@@ -94,7 +129,7 @@ export function validateCSRF(token: string, expected: string): boolean {
   return diff === 0;
 }
 
-// Güvenli header set (HTTP header injection koruması)
+// Güvenli header adı kontrolü (HTTP header injection koruması)
 const HEADER_NAME_REGEX = /^[a-zA-Z0-9\-]+$/;
 export function isValidHeaderName(name: string): boolean {
   return HEADER_NAME_REGEX.test(name) && name.length <= 64;
