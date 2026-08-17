@@ -761,13 +761,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let live = true;
     localStorage.setItem("nur_city", prayerCity);
     const fetchByCoords = (lat: number, lng: number) => {
-      fetchJSON(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`).then((json) => {
-        if (live) setPrayerTimings(json.data?.timings ?? null);
+      fetchJSON(`https://api.aladhan.com/v1/timings?latitude=${lat}&longitude=${lng}&method=13`).then((json: any) => {
+        if (live) setPrayerTimings(json?.data?.timings ?? null);
       }).catch(() => { if (live) setPrayerTimings(null); });
     };
     const fetchByCity = () => {
-      fetchJSON(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(prayerCity)}&country=Turkey&method=13`).then((json) => {
-        if (live) setPrayerTimings(json.data?.timings ?? null);
+      fetchJSON(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(prayerCity)}&country=Turkey&method=13`).then((json: any) => {
+        if (live) setPrayerTimings(json?.data?.timings ?? null);
       }).catch(() => { if (live) setPrayerTimings(null); });
     };
     if (navigator.geolocation) {
@@ -855,7 +855,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const matchedSurahs = SURAHS.filter(s => normTr(s.name).includes(normTr(trimmed))).slice(0, 10);
     if (matchedSurahs.length > 0) { setResults(matchedSurahs.map(s => ({ s: s.n, a: 1, name: s.name, tr: `${s.count} ayet • Sure #${s.n}` }))); setSearching(false); return; }
     let live = true; setSearching(true);
-    const timer = window.setTimeout(() => { fetchJSON(`https://api.alquran.cloud/v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`).then((json) => { if (!live) return; setResults((json.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({ s: match.surah.number, a: match.numberInSurah, name: SURAHS[match.surah.number - 1]?.name ?? match.surah.englishName, tr: match.text }))); }).catch(() => { if (live) setResults([]); }).finally(() => { if (live) setSearching(false); }); }, 420);
+    const timer = window.setTimeout(() => { fetchJSON(`https://api.alquran.cloud/v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`).then((json: any) => { if (!live) return; setResults((json?.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({ s: match.surah.number, a: match.numberInSurah, name: SURAHS[match.surah.number - 1]?.name ?? match.surah.englishName, tr: match.text }))); }).catch(() => { if (live) setResults([]); }).finally(() => { if (live) setSearching(false); }); }, 420);
     return () => { live = false; window.clearTimeout(timer); };
   }, [query, lang]);
 
@@ -1387,7 +1387,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify("Ayet yükleniyor...");
     try {
       let ar = "", tr = knownTranslation ?? "";
-      if (knownTranslation) { const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json.data?.text ?? ""; }
+      if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
       const meta = SURAHS[s - 1], item = { id, s, a, sName: meta.name, ar, tr };
       setSelected((current) => [...current, item]);
@@ -2402,6 +2402,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         legalTab={legalTab}
         setLegalTab={setLegalTab}
         t={t}
+        lang={lang}
+        user={user}
       />
     </div>
   );

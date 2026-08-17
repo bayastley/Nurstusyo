@@ -8,6 +8,7 @@ import {
   getSystemConfig, saveSystemConfig, pushConfigToGithubGist,
   banUserInDb, unbanUserInDb, getBanLogs,
   syncUserInDb as syncUserInService,
+  findUserByEmail, giftRightsToUser, setUserTier,
   type ManagedUser, type DynamicModule, type SystemConfig, type BanLog,
 } from "../services/adminSyncService";
 import type { Tier } from "../types";
@@ -206,8 +207,60 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`⚡ ${targetUser.email} bakiyesi ${safeAmount} ⚡ Üretim hakkı yapıldı!`);
+      notify(` ${targetUser.email} bakiyesi ${safeAmount} ⚡ Üretim hakkı yapıldı!`);
     }
+  };
+
+  // ★ EMAIL ARAMA ve HAK HEDİYE
+  const [emailSearchQuery, setEmailSearchQuery] = useState<string>("");
+  const [giftAmount, setGiftAmount] = useState<number>(100);
+  const [giftTier, setGiftTier] = useState<Tier>("free");
+  const [emailSearchResult, setEmailSearchResult] = useState<ManagedUser | null>(null);
+
+  const handleEmailSearch = () => {
+    const q = emailSearchQuery.trim().toLowerCase();
+    if (!q) {
+      setEmailSearchResult(null);
+      notify("⚠️ Aramak için bir e-posta adresi gir");
+      return;
+    }
+    const found = findUserByEmail(q);
+    if (found) {
+      setEmailSearchResult(found);
+      setSelectedEmail(found.email);
+      notify(`✅ ${found.email} bulundu — ${found.tier.toUpperCase()} · ${found.jeton} ⚡`);
+    } else {
+      setEmailSearchResult(null);
+      notify(`❌ "${q}" adresiyle kayıtlı kullanıcı yok`);
+    }
+  };
+
+  const handleGiftRights = async (email: string, amount: number, newTier?: Tier) => {
+    const target = email.trim().toLowerCase();
+    if (!await assertAdminAction("gift_rights", target)) return;
+    const result = giftRightsToUser(target, amount, newTier);
+    if (!result.ok) {
+      notify(`❌ ${target} bulunamadı`);
+      return;
+    }
+    setSysConfig(getSystemConfig());
+    onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
+    notify(`🎁 ${result.user.email} · +${result.deltaJeton} ⚡ Üretim hakkı hediye edildi · tier: ${result.user.tier.toUpperCase()}`);
+    setEmailSearchResult(result.user);
+  };
+
+  const handleSetTierViaEmail = async (email: string, newTier: Tier) => {
+    const target = email.trim().toLowerCase();
+    if (!await assertAdminAction("change_tier", target)) return;
+    const updated = setUserTier(target, newTier);
+    if (!updated) {
+      notify(`❌ ${target} sistemde kayıtlı değil`);
+      return;
+    }
+    setSysConfig(getSystemConfig());
+    onUpdateUser(updated.email, updated.tier, updated.jeton);
+    notify(` ${updated.email} → ${newTier.toUpperCase()} olarak ayarlandı`);
+    setEmailSearchResult(updated);
   };
 
   const handleToggleModule = async (modId: string) => {
@@ -347,6 +400,88 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {/* TAB 1: USERS & JETONS */}
           {activeTab === "users" && (
             <>
+              {/* 0. EMAIL ile Kullanıcı Bul & Yönet */}
+              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                <label className="mb-2 block text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
+                   Email ile Kullanıcı Bul ve Yönet
+                </label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={emailSearchQuery}
+                    onChange={(e) => setEmailSearchQuery(e.target.value)}
+                    placeholder="ornek@gmail.com"
+                    className="glass-soft flex-1 min-w-[200px] rounded-xl py-2.5 px-3 text-[12px] font-medium text-white outline-none placeholder:text-white/30 focus:border-[color:var(--accent)]"
+                  />
+                  <button
+                    onClick={handleEmailSearch}
+                    className="rounded-xl px-3 py-2 text-[10px] font-black text-black"
+                    style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+                  >
+                    ARA
+                  </button>
+                </div>
+
+                {emailSearchResult && (
+                  <div className="mt-3 rounded-xl bg-black/40 p-3 text-[11px]">
+                    <div className="mb-1 font-bold text-white">
+                      {emailSearchResult.email}
+                    </div>
+                    <div className="mb-2 text-white/70">
+                      Tier: {emailSearchResult.tier.toUpperCase()} · Hak: {emailSearchResult.jeton} ⚡
+                      {emailSearchResult.isBanned ? " · BANLI" : ""}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => handleSetTierViaEmail(emailSearchResult.email, "free")}
+                        className="rounded-lg bg-white/10 px-2 py-1 text-[9px] font-bold text-white hover:bg-white/20"
+                      >
+                        FREE
+                      </button>
+                      <button
+                        onClick={() => handleSetTierViaEmail(emailSearchResult.email, "pro")}
+                        className="rounded-lg bg-amber-500/20 px-2 py-1 text-[9px] font-bold text-amber-200 hover:bg-amber-500/30"
+                      >
+                        PRO YAP
+                      </button>
+                      <button
+                        onClick={() => handleSetTierViaEmail(emailSearchResult.email, "elit")}
+                        className="rounded-lg bg-amber-400/30 px-2 py-1 text-[9px] font-bold text-amber-100 hover:bg-amber-400/40"
+                      >
+                        ELİT YAP
+                      </button>
+                      <input
+                        type="number"
+                        value={giftAmount}
+                        onChange={(e) => setGiftAmount(Number(e.target.value) || 0)}
+                        className="w-20 rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none"
+                        placeholder="100"
+                      />
+                      <button
+                        onClick={() => handleGiftRights(emailSearchResult.email, giftAmount, giftTier)}
+                        className="rounded-lg bg-emerald-500/25 px-2 py-1 text-[9px] font-bold text-emerald-200 hover:bg-emerald-500/35"
+                      >
+                        HAK HEDİYE ET
+                      </button>
+                      {emailSearchResult.isBanned ? (
+                        <button
+                          onClick={() => handleUnban(emailSearchResult.email)}
+                          className="rounded-lg bg-white/10 px-2 py-1 text-[9px] font-bold text-white hover:bg-white/20"
+                        >
+                          BAN KALDIR
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleBan(emailSearchResult.email, banReasonInput || "Admin kararı")}
+                          className="rounded-lg bg-red-500/25 px-2 py-1 text-[9px] font-bold text-red-200 hover:bg-red-500/35"
+                        >
+                          BANLA
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* 1. Kullanıcı Arama Çubuğu */}
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/60">

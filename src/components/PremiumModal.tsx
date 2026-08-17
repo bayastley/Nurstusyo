@@ -65,6 +65,7 @@ interface PremiumModalProps {
   tier?: Tier;
   onCheckout?: (productCode: string) => void;
   notify?: (msg: string) => void;
+  user?: { email?: string; googleId?: string } | null;
   /** Modal açılışında hangi sekme gelsin */
   initialTab?: PremiumTab;
   /** Eski ModalsContainer bu adla gönderiyor */
@@ -118,10 +119,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   onTokenPurchase,
   setTier,
   setCurrentTier,
+  user,
 }) => {
   // ★ Eski "jeton" sekmesi → yeni "paket" sekmesi
   const wanted = premiumTab ?? initialTab ?? "uyelik";
   const normalized: "uyelik" | "paket" = wanted === "uyelik" ? "uyelik" : "paket";
+  const hasGmailLogin = Boolean(user?.email || user?.googleId);
 
   const [tab, setTab] = useState<"uyelik" | "paket">(normalized);
   const [packKind, setPackKind] = useState<VideoKind>("kisa");
@@ -141,6 +144,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const handleBuy = (code: string) => {
     if (!accepted) {
       toast("Lütfen satın alma koşullarını onaylayın");
+      return;
+    }
+
+    // ★ Gmail girişi zorunlu: Elite/Pro satın almadan önce girilmiş olmalı
+    if (!hasGmailLogin && (code === "SUB_ELIT_1M" || code === "SUB_PRO_1M")) {
+      toast("⚠️ NÛR PRO/ELİT satın almak için önce Google ile giriş yapmalısınız");
       return;
     }
 

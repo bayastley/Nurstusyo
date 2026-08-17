@@ -152,7 +152,7 @@ export function verifyPayTRWebhook(payload: PayTRWebhookPayload): WebhookVerifyR
 
   const parsedOrder = parseOrderRef(payload.merchant_oid);
   if (!parsedOrder.ok) {
-    return invalidLog("paytr", payload.merchant_oid, parsedOrder.error, Number(payload.total_amount) || undefined);
+    return invalidLog("paytr", payload.merchant_oid, (parsedOrder as any).error, Number(payload.total_amount) || undefined);
   }
 
   const merchantSalt = process.env.PAYTR_MERCHANT_SALT ?? "";
@@ -338,7 +338,7 @@ export function verifyIyzicoWebhook(payload: IyzicoWebhookPayload): WebhookVerif
   const conversationId = payload.conversationId ?? "";
   const parsedOrder = parseOrderRef(conversationId);
   if (!parsedOrder.ok) {
-    return invalidLog("iyzico", payload.paymentId, parsedOrder.error);
+    return invalidLog("iyzico", payload.paymentId, (parsedOrder as any).error);
   }
   const productCode = parsedOrder.productCode;
   const userId = parsedOrder.userId;

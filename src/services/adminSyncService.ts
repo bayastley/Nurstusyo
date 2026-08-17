@@ -223,3 +223,70 @@ export async function fetchRemoteConfig(): Promise<SystemConfig | null> {
     return null;
   }
 }
+
+// ★ EMAIL ile kullanıcı arama
+export function findUserByEmail(email: string): ManagedUser | null {
+  const config = getSystemConfig();
+  const target = email.trim().toLowerCase();
+  const found = config.users.find((u) => u.email.toLowerCase() === target);
+  return found ?? null;
+}
+
+// ★ Admin tarafından üretilen kullanıcı listesi
+export function listAllUsers(): ManagedUser[] {
+  return getSystemConfig().users.slice();
+}
+
+// ★ Admin tarafından hak hediye etme (günlük kotası artırma / jeton)
+export interface GiftRightsResult {
+  ok: boolean;
+  user: ManagedUser;
+  deltaJeton: number;
+}
+
+export function giftRightsToUser(
+  email: string,
+  deltaJeton: number,
+  tierOverride?: Tier,
+): GiftRightsResult | { ok: false; user: null } {
+  const target = email.trim().toLowerCase();
+  const config = getSystemConfig();
+  const index = config.users.findIndex((u) => u.email.toLowerCase() === target);
+  if (index < 0) {
+    // kullanıcı yoksa, admin yine de kayıt açabilir
+    const now = new Date().toISOString();
+    config.users.push({
+      id: `u-${Math.random().toString(36).slice(2, 10)}`,
+      email: target,
+      name: target.split("@")[0],
+      tier: tierOverride ?? "free",
+      jeton: Math.max(0, deltaJeton),
+      updatedAt: now,
+    });
+    saveSystemConfig(config);
+    const created = config.users[config.users.length - 1];
+    return { ok: true, user: created, deltaJeton: Math.max(0, deltaJeton) };
+  }
+  const existing = config.users[index];
+  const updated: ManagedUser = {
+    ...existing,
+    jeton: Math.max(0, (existing.jeton ?? 0) + deltaJeton),
+    tier: tierOverride ?? existing.tier,
+    updatedAt: new Date().toISOString(),
+  };
+  config.users[index] = updated;
+  saveSystemConfig(config);
+  return { ok: true, user: updated, deltaJeton: Math.max(0, deltaJeton) };
+}
+
+// ★ Admin tarafından kullanıcı tier'ı doğrudan değiştirme
+export function setUserTier(email: string, tier: Tier): ManagedUser | null {
+  const target = email.trim().toLowerCase();
+  const config = getSystemConfig();
+  const index = config.users.findIndex((u) => u.email.toLowerCase() === target);
+  if (index < 0) return null;
+  const updated = { ...config.users[index], tier, updatedAt: new Date().toISOString() };
+  config.users[index] = updated;
+  saveSystemConfig(config);
+  return updated;
+}

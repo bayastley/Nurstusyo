@@ -47,7 +47,7 @@ export function formatRemaining(ms: number): string {
   return `${second} sn`;
 }
 
-export async function fetchJSON(url: string, timeoutMs = 12000): Promise<unknown> {
+export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
   const attempt = async () => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), timeoutMs);

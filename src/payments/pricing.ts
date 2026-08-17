@@ -227,7 +227,7 @@ export function validateCheckout(req: CheckoutRequest): { ok: true; product: Pro
 
 export async function startCheckout(req: CheckoutRequest): Promise<CheckoutResponse> {
   const check = validateCheckout(req);
-  if (!check.ok) return { ok: false, error: check.error };
+  if (!check.ok) return { ok: false, error: (check as any).error };
 
   try {
     const res = await fetch("/api/payments/create", {

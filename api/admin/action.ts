@@ -1,6 +1,48 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 
+// Input validation & security
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const SAFE_ID_REGEX = /^[a-zA-Z0-9\-_]+$/;
+
+function sanitize(input: unknown, max = 500): string {
+  if (!input || typeof input !== "string") return "";
+  const trimmed = input.trim();
+  return trimmed.slice(0, max).replace(/[<>"';]/g, "");
+}
+
+function validateEmail(email: unknown): string | null {
+  if (!email || typeof email !== "string") return null;
+  const cleaned = email.trim().toLowerCase().slice(0, 254);
+  if (!EMAIL_REGEX.test(cleaned)) return null;
+  return cleaned;
+}
+
+function validateTier(tier: unknown): "free" | "pro" | "elit" | null {
+  if (tier === "free" || tier === "pro" || tier === "elit") return tier;
+  return null;
+}
+
+function validateId(id: unknown): string | null {
+  if (!id || typeof id !== "string") return null;
+  if (!SAFE_ID_REGEX.test(id) || id.length > 64) return null;
+  return id;
+}
+
+// In-memory rate limit (per admin session)
+const rateLimitMap = new Map<string, { hits: number[] }>();
+
+function adminRateLimit(adminId: string, max = 100, windowMs = 60000): boolean {
+  const now = Date.now();
+  const key = `admin:${adminId}`;
+  const entry = rateLimitMap.get(key) ?? { hits: [] };
+  entry.hits = entry.hits.filter((h) => h >= now - windowMs);
+  if (entry.hits.length >= max) return false;
+  entry.hits.push(now);
+  rateLimitMap.set(key, entry);
+  return true;
+}
+
 interface AdminSession { id: string; email: string; verified: boolean; isAdmin: boolean; exp: number }
 
 function base64Url(input: Buffer): string { return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, ""); }
@@ -38,11 +80,19 @@ async function db<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   const admin = adminFromCookie(req);
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
+  
+  // ★ Admin rate limit (dakikada 100 işlem)
+  if (!adminRateLimit(admin.id, 100, 60000)) {
+    return res.status(429).json({ ok: false, error: "Çok fazla istek, lütfen bekleyin" });
+  }
+
   const body = req.body || {};
-  const action = String(body.action || "");
+  const action = String(body.action || "").slice(0, 32);
   try {
     if (action === "list_users") {
       const users = await db<any[]>("nur_users?select=id,email,name,tier,is_admin,updated_at&order=updated_at.desc");
@@ -52,23 +102,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (action === "publish_announcement") {
       const item = body.announcement || {};
-      if (!item.title || !item.message) return res.status(400).json({ ok: false, error: "Başlık ve mesaj gerekli" });
-      await db("nur_announcements", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ title: String(item.title).slice(0, 160), message: String(item.message).slice(0, 500), detail: String(item.detail || "").slice(0, 5000), kind: item.kind || "update", active: true, blinking: item.blinking !== false, force_open: Boolean(item.forceOpen), require_ack: Boolean(item.requireAck), starts_at: item.startsAt, ends_at: item.endsAt, created_by: admin.email }) });
+      const title = sanitize(item.title, 160);
+      const message = sanitize(item.message, 500);
+      if (!title || !message) return res.status(400).json({ ok: false, error: "Başlık ve mesaj gerekli" });
+      const kind = ["info", "update", "warning"].includes(item.kind) ? item.kind : "update";
+      await db("nur_announcements", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ title, message, detail: sanitize(item.detail, 5000), kind, active: true, blinking: item.blinking !== false, force_open: Boolean(item.forceOpen), require_ack: Boolean(item.requireAck), starts_at: item.startsAt, ends_at: item.endsAt, created_by: admin.email }) });
     } else if (action === "set_feature_lock") {
-      await db("nur_feature_locks?on_conflict=feature_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ feature_id: body.featureId, lock_level: body.lockLevel, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }) });
+      const featureId = validateId(body.featureId);
+      if (!featureId) return res.status(400).json({ ok: false, error: "Geçersiz feature ID" });
+      const lockLevel = ["free", "pro", "elit", "v2", "v3", "off"].includes(body.lockLevel) ? body.lockLevel : "free";
+      await db("nur_feature_locks?on_conflict=feature_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ feature_id: featureId, lock_level: lockLevel, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }) });
     } else if (action === "change_tier") {
-      await db(`nur_users?email=eq.${encodeURIComponent(body.target)}`, { method: "PATCH", body: JSON.stringify({ tier: body.tier, updated_at: new Date().toISOString() }) });
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const tier = validateTier(body.tier);
+      if (!tier) return res.status(400).json({ ok: false, error: "Geçersiz tier" });
+      await db(`nur_users?email=eq.${encodeURIComponent(email)}`, { method: "PATCH", body: JSON.stringify({ tier, updated_at: new Date().toISOString() }) });
     } else if (action === "change_jeton") {
-      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(body.target)}&select=id`);
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const total = Math.max(0, Math.min(1000000, Number(body.total) || 0));
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
       if (!users[0]) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı" });
-      await db(`nur_wallets?user_id=eq.${encodeURIComponent(users[0].id)}`, { method: "PATCH", body: JSON.stringify({ sub_jeton: Math.max(0, Number(body.total || 0)), purchased_jeton: 0, updated_at: new Date().toISOString() }) });
+      await db(`nur_wallets?user_id=eq.${encodeURIComponent(users[0].id)}`, { method: "PATCH", body: JSON.stringify({ sub_jeton: total, purchased_jeton: 0, updated_at: new Date().toISOString() }) });
     } else if (action === "ban_user") {
-      await db("nur_ban_logs", { method: "POST", body: JSON.stringify({ user_email: body.target, reason: body.reason || "Admin kararı", banned_by: admin.email }) });
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const reason = sanitize(body.reason, 500) || "Admin kararı";
+      await db("nur_ban_logs", { method: "POST", body: JSON.stringify({ user_email: email, reason, banned_by: admin.email }) });
     } else if (action === "unban_user") {
-      await db(`nur_ban_logs?user_email=eq.${encodeURIComponent(body.target)}&unbanned=eq.false`, { method: "PATCH", body: JSON.stringify({ unbanned: true }) });
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      await db(`nur_ban_logs?user_email=eq.${encodeURIComponent(email)}&unbanned=eq.false`, { method: "PATCH", body: JSON.stringify({ unbanned: true }) });
     } else if (action === "delete_announcement") {
-      if (body.announcementId) {
-        await db(`nur_announcements?id=eq.${encodeURIComponent(body.announcementId)}`, { method: "PATCH", body: JSON.stringify({ active: false }) });
+      const announcementId = body.announcementId ? validateId(body.announcementId) : null;
+      if (body.announcementId && !announcementId) return res.status(400).json({ ok: false, error: "Geçersiz ID" });
+      if (announcementId) {
+        await db(`nur_announcements?id=eq.${encodeURIComponent(announcementId)}`, { method: "PATCH", body: JSON.stringify({ active: false }) });
       } else {
         await db("nur_announcements?active=eq.true", { method: "PATCH", body: JSON.stringify({ active: false }) });
       }

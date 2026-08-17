@@ -144,6 +144,7 @@ interface ModalsContainerProps {
   setLegalTab: (t: "tos" | "kvkk" | "gizlilik" | "iade") => void;
   t: (key: keyof (typeof T)["tr"]) => string;
   lang: Lang;
+  user?: { email?: string; googleId?: string } | null;
 }
 
 export const ModalsContainer: React.FC<ModalsContainerProps> = ({
@@ -235,6 +236,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setTosOpen,
   tosAccepted,
   setTosAccepted,
+  user,
   legalTab,
   setLegalTab,
   t,
@@ -379,6 +381,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           lang={lang}
           initialTab={premiumTab}
           currentTier={tier}
+          user={user ?? null}
           onClose={() => setPremiumOpen(false)}
           onPurchase={(newTier) => {
             setTier(newTier);
