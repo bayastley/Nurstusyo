@@ -12,9 +12,12 @@ import {
   PRODUCTS,
   formatPrice,
   SUBSCRIPTION_CODES,
+  ANNUAL_SUBSCRIPTION_CODES,
+  LIFETIME_CODES,
   PACKAGE_CODES,
   PACKAGE_GROUP_META,
   type VideoKind,
+  type BillingPeriod,
 } from "../payments/pricing";
 import type { Tier } from "../tier";
 
@@ -86,7 +89,7 @@ interface PremiumModalProps {
 
 const PRO_FEATURES = [
   "Günde 8 kısa + 3 uzun video (600 sn)",
-  "15 kâri sesi",
+  "37 kâri sesi (2 ücretsiz + 35 PRO)",
   "250 atmosfer içeriği",
   "20 tema",
   "1080p filigransız üretim",
@@ -96,7 +99,7 @@ const PRO_FEATURES = [
 
 const ELIT_FEATURES = [
   "Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sürüm",
-  "Tüm kâri sesleri",
+  "Tüm 52 kâri sesi (nadir Verş rivayeti + Harem imamları dahil)",
   "500 atmosfer içeriği",
   "Sınırsız AI arama",
   "Sosyal paylaşım paneli",
@@ -127,6 +130,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const hasGmailLogin = Boolean(user?.email || user?.googleId);
 
   const [tab, setTab] = useState<"uyelik" | "paket">(normalized);
+  const [period, setPeriod] = useState<BillingPeriod>("monthly");
   const [packKind, setPackKind] = useState<VideoKind>("kisa");
   const [accepted, setAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
@@ -147,8 +151,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       return;
     }
 
-    // ★ Gmail girişi zorunlu: Elite/Pro satın almadan önce girilmiş olmalı
-    if (!hasGmailLogin && (code === "SUB_ELIT_1M" || code === "SUB_PRO_1M")) {
+    const targetProduct = PRODUCTS[code];
+
+    // ★ Gmail girişi zorunlu: Elit/Pro üyelik veren HER ürün için geçerli
+    //   (aylık, yıllık ve ömür boyu dahil — sadece SUB_*_1M değil).
+    if (!hasGmailLogin && targetProduct?.grantTier) {
       toast("⚠️ NÛR PRO/ELİT satın almak için önce Google ile giriş yapmalısınız");
       return;
     }
@@ -159,8 +166,9 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       return;
     }
 
-    // Bağlı değilse (eski akış) üyeliği doğrudan tanımla
-    if (code === "SUB_PRO_1M") {
+    // Bağlı değilse (eski akış) üyeliği doğrudan tanımla — tüm periyotlar
+    // (aylık/yıllık/ömür boyu) aynı mantıkla grantTier üzerinden işlenir.
+    if (targetProduct?.grantTier === "pro") {
       setTier?.("pro");
       setCurrentTier?.("pro");
       onPurchase?.("pro");
@@ -168,7 +176,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       closeModal();
       return;
     }
-    if (code === "SUB_ELIT_1M") {
+    if (targetProduct?.grantTier === "elit") {
       setTier?.("elit");
       setCurrentTier?.("elit");
       onPurchase?.("elit");
@@ -176,8 +184,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       closeModal();
       return;
     }
-    const product = PRODUCTS[code];
-    if (product?.videoCount) onTokenPurchase?.(product.videoCount);
+    if (targetProduct?.videoCount) onTokenPurchase?.(targetProduct.videoCount);
     toast("Ödeme sayfasına yönlendiriliyorsun...");
   };
 
@@ -306,6 +313,27 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         {/* İÇERİK */}
         <div className="px-7 pb-7 pt-5">
           {tab === "uyelik" ? (
+            <>
+            {/* PERİYOT SEÇİCİ: Aylık / Yıllık (indirimli) / Ömür Boyu */}
+            <div className="mb-4 flex flex-wrap justify-center gap-1.5 rounded-2xl border border-white/10 bg-black/40 p-1.5">
+              {([
+                { id: "monthly" as BillingPeriod, label: "Aylık" },
+                { id: "annual" as BillingPeriod, label: "Yıllık · %10-20 İndirim" },
+                { id: "lifetime" as BillingPeriod, label: "Ömür Boyu (Tek Ödeme)" },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setPeriod(opt.id)}
+                  className={`rounded-xl px-3 py-2 text-[10.5px] font-black transition active:scale-[0.97] ${
+                    period === opt.id ? "text-black shadow-lg" : "text-white/45 hover:text-white"
+                  }`}
+                  style={period === opt.id ? { background: "linear-gradient(135deg,#f5dda6,#d7aa52)" } : undefined}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
             <div className="grid gap-3 lg:grid-cols-3">
               <div
                 className="relative overflow-hidden rounded-2xl p-5 transition-transform hover:scale-[1.015]"
@@ -328,7 +356,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                   {[
                     "Her gün 3 kısa video",
                     "Kısa video: 59 saniye",
-                    "11 ücretsiz hoca sesi",
+                    "2 ücretsiz hoca sesi (Sudays + Husarî)",
                     "120 ücretsiz atmosfer seçeneği",
                     "10 ücretsiz tema",
                     "Temel başlık ve açıklama üretimi",
@@ -350,11 +378,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 </button>
               </div>
 
-              {SUBSCRIPTION_CODES.map((code) => {
+              {(period === "annual" ? ANNUAL_SUBSCRIPTION_CODES : period === "lifetime" ? LIFETIME_CODES : SUBSCRIPTION_CODES).map((code) => {
                 const p = PRODUCTS[code];
                 const isElit = p.grantTier === "elit";
                 const features = isElit ? ELIT_FEATURES : PRO_FEATURES;
                 const current = tier === p.grantTier;
+                const periodLabel = period === "annual" ? "/ yıl" : period === "lifetime" ? "/ tek ödeme" : "/ ay";
 
                 return (
                   <div
@@ -395,8 +424,18 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                       >
                         {formatPrice(p)}
                       </span>
-                      <span className="mb-1 text-[10px] font-bold text-white/35">/ ay</span>
+                      <span className="mb-1 text-[10px] font-bold text-white/35">{periodLabel}</span>
                     </div>
+                    {period === "annual" && (
+                      <p className="mt-1 text-[9.5px] font-bold" style={{ color: isElit ? "#f5dda6" : "#34d399" }}>
+                        Aylık {formatPrice(PRODUCTS[isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M"])} yerine ayda ortalama ₺{Math.round(p.amountMinor / 100 / 12)} · %{isElit ? 20 : 10} indirim
+                      </p>
+                    )}
+                    {period === "lifetime" && (
+                      <p className="mt-1 text-[9.5px] font-bold text-white/50">
+                        Tek seferlik ödeme · sonra hiç ödeme yok · 10 yıl geçerli
+                      </p>
+                    )}
 
                     <ul className="mt-4 space-y-1.5">
                       {features.map((f) => (
@@ -431,6 +470,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 );
               })}
             </div>
+            </>
           ) : (
             <>
               {/* Kategori seçici */}

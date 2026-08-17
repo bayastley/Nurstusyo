@@ -32,11 +32,36 @@ export const isWholeSurahSelected = (items: SelectedAyah[], SURAHS: Array<{ coun
   return true;
 };
 
+function isOldOrIosDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  // iOS/iPadOS (Safari) tarihsel olarak WebM'i hiç oynatamaz — sadece MP4/H.264 destekler.
+  const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+  // Eski/düşük donanımlı Android tarayıcılar da MP4/H.264'ü WebM'e göre çok daha güvenilir oynatır.
+  const isOldAndroidWebView = /Android\s([0-6])\./.test(ua) || /; wv\)/.test(ua);
+  return isIOS || isOldAndroidWebView;
+}
+
 export function pickMime(): string {
-  // ★ VP8 ÖNCELİKLİ: VP9 daha ağır encode/decode yapar; bazı cihazlarda
-  //   üretilen video 1-2 sn sonra donup sesin devam etmesine yol açabiliyor.
-  const choices = ["video/webm;codecs=vp8,opus", "video/webm", "video/webm;codecs=vp9,opus", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4"];
-  return choices.find((mime) => window.MediaRecorder?.isTypeSupported?.(mime)) ?? "";
+  // ★ ESKİ CİHAZ / iOS UYUMLULUĞU: iOS Safari WebM'i hiçbir sürümde
+  //   video/img elementinde oynatamaz (kayıt sırasında MediaRecorder WebM
+  //   üretse bile, kullanıcı "önizle/indir" dediğinde video açılmaz).
+  //   Bu yüzden iOS ve eski Android'de MP4/H.264 önceliklendirilir.
+  //   Modern masaüstü/Android tarayıcılarda ise VP8 (daha hafif encode,
+  //   daha az donma riski) öncelikli kalır.
+  const mp4First = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp8,opus", "video/webm"];
+  const webmFirst = ["video/webm;codecs=vp8,opus", "video/webm", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/mp4"];
+  const choices = isOldOrIosDevice() ? mp4First : webmFirst;
+  for (const mime of choices) {
+    try {
+      if (window.MediaRecorder?.isTypeSupported?.(mime)) return mime;
+    } catch {
+      // ★ iOS bazı sürümlerde isTypeSupported true dönüp start() sırasında
+      //   NotSupportedError fırlatabilir — bu yüzden çağrı try/catch içinde.
+      continue;
+    }
+  }
+  return "";
 }
 
 export function formatRemaining(ms: number): string {

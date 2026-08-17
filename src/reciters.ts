@@ -63,6 +63,22 @@ export const RECITERS: Reciter[] = [
   { id: "bukhatir", name: "Salah Abdurrahman Buhatir", path: "Salaah_AbdulRahman_Bukhatir_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Berrak ve kararli ses tonu. Tahmini dusuk risk.", color: classic, initial: "SB", country: "BAE" },
   { id: "yaser_salamah", name: "Yaser Selame", path: "Yaser_Salamah_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Enerjik ve hizli tempolu okuyus. Tahmini dusuk risk.", color: classic, initial: "YS", country: "Misir" },
   { id: "tunaiji", name: "Halife et-Tuneyci", path: "Khalefa_Al_Tunaiji_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Gur sesli ve etkileyici tarz. Tahmini dusuk risk.", color: classic, initial: "HT", country: "BAE" },
+
+  // ★ IKINCI TUR EKLEME — 52 kariye tamamlamak icin, hepsi dogrulanmis
+  // EveryAyah / acik arsiv kaynaklarindan (archive.org "quran-every-ayah"
+  // koleksiyonu ve Tarteel-AI EveryAyah veri seti ile capraz kontrol edildi).
+  { id: "ahmed_neana", name: "Ahmed Nu'ine", path: "Ahmed_Neana_128kbps", makam: "Telif", risk: "low", telifRiski: 6, riskAciklamasi: "Klasik Misir ekolu; tahmini cok dusuk risk.", color: classic, initial: "AN", country: "Misir" },
+  { id: "sahl_yassin", name: "Sehl Yasin", path: "Sahl_Yassin_128kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "SY", country: "Suudi Arabistan" },
+  { id: "ali_hajjaj", name: "Ali Haccac es-Suveysi", path: "Ali_Hajjaj_Alsuesy_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Gur ve akici okuyus. Tahmini dusuk risk.", color: classic, initial: "AH", country: "Misir" },
+  { id: "aziz_alili", name: "Aziz Alili", path: "Aziz_Alili_128kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "AZ", country: "Bosna Hersek" },
+  { id: "karim_mansoori", name: "Kerim Mansuri", path: "Karim_Mansoori_40kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "KM", country: "Iran" },
+  { id: "khalid_aljalil", name: "Halid el-Celil", path: "Khalid_AlJalil_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Berrak ve akici tarz. Tahmini dusuk risk.", color: classic, initial: "HC", country: "Suudi Arabistan" },
+  { id: "nabil_rifai", name: "Nebil er-Rifai", path: "Nabil_Rifai_48kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "NR", country: "Suudi Arabistan" },
+  { id: "hady_toure", name: "Hadi Ture", path: "Hady_Toure_64kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Batı Afrika ekolu; tahmini dusuk risk.", color: classic, initial: "HD", country: "Fildisi Sahili" },
+  { id: "balila", name: "Bender Baliile", path: "Bandar_Baleela_128kbps", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "Mescid-i Haram imami; gur ve vakur okuyus. Tahmini dusuk risk.", color: low, initial: "BB", country: "Suudi Arabistan" },
+  { id: "ibrahim_dosary_warsh", name: "Ibrahim ed-Dosari (Verş)", path: "Ibrahim_Al-Dosary_Warsh_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Nadir Verş rivayeti; tahmini dusuk risk.", color: classic, initial: "İD", country: "Suudi Arabistan" },
+  { id: "karim_mansoori_mujawwad", name: "Kerim Mansuri (Mucevved)", path: "Karim_Mansoori_Mujawwad_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Sanatli mucevved tarz; tahmini dusuk risk.", color: classic, initial: "KM", country: "Iran" },
+  { id: "yassin_jazaery_warsh", name: "Yasin el-Cezairi (Verş)", path: "Yassin_Al-Jazaery_Warsh_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Nadir Verş rivayeti; tahmini dusuk risk.", color: classic, initial: "YC", country: "Cezayir" },
 ];
 
 export function reciterAudioUrl(path: string, surah: number, ayah: number): string {
@@ -81,4 +97,8 @@ export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
   ali_jaber: "yuksek", ghamdi_saad: "yuksek", hani_rifai: "yuksek", fares_abbad: "yuksek",
   mustafa_ismail: "klasik", akram_alaqimy: "yuksek", abdulkareem: "yuksek", bukhatir: "yuksek",
   yaser_salamah: "yuksek", tunaiji: "yuksek",
+  ahmed_neana: "klasik", sahl_yassin: "orta", ali_hajjaj: "yuksek", aziz_alili: "orta",
+  karim_mansoori: "klasik", khalid_aljalil: "orta", nabil_rifai: "orta", hady_toure: "orta",
+  balila: "yuksek", ibrahim_dosary_warsh: "klasik", karim_mansoori_mujawwad: "yuksek",
+  yassin_jazaery_warsh: "klasik",
 };

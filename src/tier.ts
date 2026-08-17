@@ -70,8 +70,16 @@ export const TIER_LABEL: Record<Tier, string> = {
 export const TIER_PRICE_TRY: Record<Tier, number> = {
   free: 0,
   pro: 149,
-  elit: 249,
+  elit: 300,
 };
+
+// ★ Yıllık üyelik — aylık fiyatın üstüne otomatik indirim uygulanır.
+//   PRO: %10 indirim · ELİT: %20 indirim (bkz. src/payments/pricing.ts)
+export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.10, elit: 0.20 };
+export function annualPriceTRY(tier: Tier): number {
+  const base = TIER_PRICE_TRY[tier] * 12;
+  return Math.round(base * (1 - ANNUAL_DISCOUNT[tier]));
+}
 
 /** Bugün kaç adet üretildi — gün değişince otomatik sıfırlanır */
 interface DailyUsage {
@@ -260,17 +268,28 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
-export const FREE_RECITER_IDS = [
-  "sudais", "shuraim", "hudhaify", "akhdar", "husary", "husary_teacher", "minshawi", "sowaid", "parhizgar",
-  "abdulbasit_mujawwad", "minshawi_mujawwad",
-] as const;
+// ★ GÜNCELLEME: Sadece 2 kâri tamamen ücretsiz — geri kalan 50 kâri
+//   PRO ve ELİT üyelikler arasında dağıtıldı (satın alım/üyelik zorunlu).
+//   Ücretsiz kullanıcı en tanıdık iki sesle (Sudays + Husarî) tanışır,
+//   gerisi için üyelik gerekir.
+export const FREE_RECITER_IDS = ["sudais", "husary"] as const;
 
 export const PRO_RECITER_IDS = [
-  "maher", "juhany", "qasim", "budair", "ayyoub", "matroud", "basfar", "qatami", "dosari", "ajamy",
-  "husary_mujawwad", "abdulbasit", "tablawi", "banna", "jibreel",
+  "shuraim", "maher", "hudhaify", "juhany", "qasim", "budair", "ayyoub", "matroud", "akhdar",
+  "basfar", "qatami", "ajamy", "husary_mujawwad", "husary_teacher", "abdulbasit", "minshawi",
+  "tablawi", "banna", "jibreel", "sowaid", "parhizgar", "ghamdi_saad", "fares_abbad",
+  "akram_alaqimy", "abdulkareem", "bukhatir", "yaser_salamah", "ahmed_neana", "sahl_yassin",
+  "ali_hajjaj", "aziz_alili", "karim_mansoori", "khalid_aljalil", "nabil_rifai", "hady_toure",
 ] as const;
 
-export const ELIT_RECITER_IDS = ["alafasy", "shatri", "qahtani", "muhaisny"] as const;
+// ★ ELİT — satın alma / üyelik ZORUNLU. Bu kâriler hicbir sekilde ücretsiz
+//   veya PRO planla açılmaz; sadece NÛR ELİT abonesi veya "elit" ürün
+//   satın alan kullanıcı erişebilir (bkz. reciterRequiredTier fonksiyonu).
+export const ELIT_RECITER_IDS = [
+  "muhaisny", "alafasy", "shatri", "qahtani", "dosari", "abdulbasit_mujawwad",
+  "minshawi_mujawwad", "ali_jaber", "hani_rifai", "mustafa_ismail", "tunaiji",
+  "balila", "ibrahim_dosary_warsh", "karim_mansoori_mujawwad", "yassin_jazaery_warsh",
+] as const;
 
 export function reciterRequiredTier(reciter: {
   id: string;

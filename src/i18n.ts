@@ -12,7 +12,11 @@ export type Lang =
   | "es"
   | "id"
   | "ur"
-  | "fa";
+  | "fa"
+  | "bn"
+  | "ms"
+  | "hi"
+  | "sw";
 
 export interface LangOption {
   code: Lang;
@@ -32,6 +36,10 @@ export const LANGS: LangOption[] = [
   { code: "id", label: "Bahasa Indonesia", flag: "🇮🇩" },
   { code: "ur", label: "اردو", flag: "🇵🇰", dir: "rtl" },
   { code: "fa", label: "فارسی", flag: "🇮🇷", dir: "rtl" },
+  { code: "bn", label: "বাংলা", flag: "🇧🇩" },
+  { code: "ms", label: "Bahasa Melayu", flag: "🇲🇾" },
+  { code: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { code: "sw", label: "Kiswahili", flag: "🇰🇪" },
 ];
 
 export const MEAL_EDITIONS: Record<Lang, string> = {
@@ -45,6 +53,11 @@ export const MEAL_EDITIONS: Record<Lang, string> = {
   id: "id.indonesian",
   ur: "ur.jalandhry",
   fa: "fa.fooladvand",
+  // ★ YENİ DİLLER — büyük Müslüman nüfusuna sahip ülkeler için eklendi.
+  bn: "bn.bengali",
+  ms: "ms.basmeih",
+  hi: "hi.hindi",
+  sw: "sw.barwani",
 };
 
 /** Ortak UI anahtarları — her dilde DOLU olmalı */
@@ -804,6 +817,13 @@ const faDict: Dict = {
  * t(key) çağrılınca undefined → ekranda Türkçe hardcoded kalıyordu
  * Şimdi her dil DOLU.
  */
+// ★ YENİ DİLLER (bn/ms/hi/sw): Arayüz sözlüğü şimdilik İngilizce temel
+//   alınarak dolduruldu (boş/undefined anahtar kalmasın diye). Bu sayede
+//   hiçbir buton/metin kırık görünmez. Meal (ayet çevirisi) ise YUKARIDAKİ
+//   MEAL_EDITIONS üzerinden zaten kendi ANA DİLİNDE (Bengalce/Malayca/
+//   Hintçe/Suahili) gelir — çünkü ayet çevirisi ayrı bir API kaynağından
+//   çekiliyor. Arayüz metinlerinin native çevirisi ileride topluluk/
+//   çevirmen desteğiyle tamamlanabilir.
 export const T: Record<Lang, Dict> = {
   tr: trDict,
   en: enDict,
@@ -815,6 +835,10 @@ export const T: Record<Lang, Dict> = {
   id: idDict,
   ur: urDict,
   fa: faDict,
+  bn: enDict,
+  ms: enDict,
+  hi: enDict,
+  sw: enDict,
 };
 
 /**

@@ -53,10 +53,65 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     kind: "subscription",
     title: "NÛR ELİT — Aylık Üyelik",
     description: "Aylık üyelik. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 24900,
+    amountMinor: 30000,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 30,
+    active: true,
+  },
+
+  // ─── Abonelikler (yıllık — indirimli) ───
+  // ★ HESAP: PRO yıllık = 149×12=1788 TL taban, %10 indirim → 1609,20 TL
+  //          ELİT yıllık = 300×12=3600 TL taban, %20 indirim → 2880,00 TL
+  SUB_PRO_1Y: {
+    code: "SUB_PRO_1Y",
+    kind: "subscription",
+    title: "NÛR PRO — Yıllık Üyelik (%10 indirim)",
+    description: "12 aylık peşin üyelik. Aylık 149₺ yerine ortalama 134₺. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
+    amountMinor: 160920,
+    currency: "TRY",
+    grantTier: "pro",
+    grantDays: 365,
+    active: true,
+  },
+  SUB_ELIT_1Y: {
+    code: "SUB_ELIT_1Y",
+    kind: "subscription",
+    title: "NÛR ELİT — Yıllık Üyelik (%20 indirim)",
+    description: "12 aylık peşin üyelik. Aylık 300₺ yerine ortalama 240₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
+    amountMinor: 288000,
+    currency: "TRY",
+    grantTier: "elit",
+    grantDays: 365,
+    active: true,
+  },
+
+  // ─── Ömür Boyu (Lifetime) — tek seferlik, uzun süreli erişim ───
+  // ★ Gerçek "sonsuza kadar sınırsız" taahhüdü sunucu/depolama maliyeti
+  //   açısından sürdürülebilir olmadığından, sektör standardına uygun
+  //   şekilde "10 yıl" (pratikte kullanıcı ömrü boyunca yeterli) olarak
+  //   tanımlandı. Fiyat, aylık ücretin ~15 katı sektör ortalamasına göre
+  //   belirlendi (bkz. konusma/mesaj.txt'deki açıklama).
+  LIFETIME_PRO: {
+    code: "LIFETIME_PRO",
+    kind: "subscription",
+    title: "NÛR PRO — Ömür Boyu Erişim",
+    description: "Tek seferlik ödeme, tekrar ödeme yok. 10 yıl boyunca (pratikte ömür boyu) PRO hakları.",
+    amountMinor: 249900,
+    currency: "TRY",
+    grantTier: "pro",
+    grantDays: 3650,
+    active: true,
+  },
+  LIFETIME_ELIT: {
+    code: "LIFETIME_ELIT",
+    kind: "subscription",
+    title: "NÛR ELİT — Ömür Boyu Erişim",
+    description: "Tek seferlik ödeme, tekrar ödeme yok. 10 yıl boyunca (pratikte ömür boyu) tüm ELİT hakları.",
+    amountMinor: 499900,
+    currency: "TRY",
+    grantTier: "elit",
+    grantDays: 3650,
     active: true,
   },
 
@@ -186,6 +241,14 @@ export function unitPrice(p: Product): string {
 }
 
 export const SUBSCRIPTION_CODES = ["SUB_PRO_1M", "SUB_ELIT_1M"] as const;
+export const ANNUAL_SUBSCRIPTION_CODES = ["SUB_PRO_1Y", "SUB_ELIT_1Y"] as const;
+export const LIFETIME_CODES = ["LIFETIME_PRO", "LIFETIME_ELIT"] as const;
+export type BillingPeriod = "monthly" | "annual" | "lifetime";
+export const SUBSCRIPTION_CODES_BY_PERIOD: Record<BillingPeriod, readonly string[]> = {
+  monthly: SUBSCRIPTION_CODES,
+  annual: ANNUAL_SUBSCRIPTION_CODES,
+  lifetime: LIFETIME_CODES,
+};
 
 export const PACKAGE_CODES: Record<VideoKind, readonly string[]> = {
   kisa: ["PK_KISA_15", "PK_KISA_35", "PK_KISA_70"],
