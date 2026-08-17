@@ -123,7 +123,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
         ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore(); ctx.globalCompositeOperation = "source-over";
-    };
+  };
 
     const draw = () => {
       const nowFrame = performance.now();
@@ -203,12 +203,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               const centeredTop = safeTop + (safeH - totalH) / 2;
               const oy = Math.max(safeTop - centeredTop, Math.min(oyRaw, safeBottom - totalH - centeredTop));
               let y = centeredTop + oy;
-              if (p.cardBg === "koyu" && totalH > 0) {
-                ctx.shadowBlur = 0; ctx.fillStyle = "rgba(6,7,12,.62)";
-                const pad = arabicSize * 0.7, rw = width * .9, rh = totalH + pad * 2, rx = width / 2 - rw / 2, ry = y - pad;
-                ctx.beginPath(); ctx.roundRect(rx, ry, rw, rh, 18); ctx.fill();
-                ctx.strokeStyle = `${currentTheme.acc}55`; ctx.lineWidth = 1.5; ctx.stroke();
-              }
+
               const goldFill = () => {
                 if (p.shimmerCfg.still) { ctx.fillStyle = p.shimmerCfg.c1; return; }
                 const g = ctx.createLinearGradient(0, 0, width, 0), shift = (tick * 0.004) % 1;
@@ -225,8 +220,20 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               }
               if (p.showSubMeal && translationLines.length > 0) {
                 ctx.font = `400 ${translationSize}px Inter,sans-serif`; ctx.fillStyle = "rgba(255,255,255,.95)";
-                ctx.shadowColor = "rgba(0, 0, 0, 0.85)"; ctx.shadowBlur = 10; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
-                translationLines.forEach((line) => { ctx.fillText(line, width / 2 + ox, y + translationSize); y += translationSize * 1.6; });
+                
+                // Meal metnine eklenen kontur ve güçlü gölge ayarları
+                ctx.shadowColor = "rgba(0, 0, 0, 0.9)"; 
+                ctx.shadowBlur = 12; 
+                ctx.shadowOffsetX = 0; 
+                ctx.shadowOffsetY = 2;
+                ctx.lineWidth = 3; 
+                ctx.strokeStyle = "#000000";
+
+                translationLines.forEach((line) => { 
+                  ctx.strokeText(line, width / 2 + ox, y + translationSize); 
+                  ctx.fillText(line, width / 2 + ox, y + translationSize); 
+                  y += translationSize * 1.6; 
+                });
                 ctx.shadowBlur = 0;
               }
             }
