@@ -593,13 +593,10 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 Ödemeler iyzico güvenli ödeme altyapısı üzerinden alınır. Kart bilgileri platformumuzda saklanmaz.
               </p>
 
-              <div className="mt-3 rounded-xl border border-white/10 bg-white px-3 py-2">
-                <img
-                  src="/iyzico/logo_band_colored@2x.png"
-                  alt="iyzico ile Öde, Mastercard, Visa, American Express ve Troy logoları"
-                  className="mx-auto h-auto max-h-7 w-full max-w-[360px] object-contain"
-                  loading="lazy"
-                />
+              <div className="mt-3 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-center">
+                <p className="text-[10px] font-bold text-white/70 tracking-wide">🔒 iyzico Güvenli Ödeme</p>
+                <p className="mt-1 text-[9px] text-white/40">Mastercard · Visa · American Express · Troy</p>
+                <p className="mt-1 text-[9px] text-white/30">PCI DSS Uyumlu · 256-bit SSL · Kart bilgisi saklanmaz</p>
               </div>
 
               <p className="mt-3 text-[10px] text-white/55">

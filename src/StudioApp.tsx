@@ -1871,9 +1871,25 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
   }, [shareTitle, shareDescription]);
 
-  const shareToTelegram = useCallback(() => {
-    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
-    window.open(`https://t.me/share/url?url=https://nurstudyo.com&text=${text}`, "_blank", "noopener,noreferrer");
+  const shareToYouTube = useCallback(() => {
+    // YouTube Studio upload sayfasına, açıklama metni clipboard'a kopyalanarak yönlendirir
+    const text = `${shareTitle}\n\n${shareDescription}`;
+    navigator.clipboard.writeText(text).catch(() => undefined);
+    window.open("https://studio.youtube.com/channel/upload", "_blank", "noopener,noreferrer");
+  }, [shareTitle, shareDescription]);
+
+  const shareToTikTok = useCallback(() => {
+    // TikTok Creator Center'a yönlendirir, metin clipboard'a kopyalanır
+    const text = `${shareTitle}\n\n${shareDescription}`;
+    navigator.clipboard.writeText(text).catch(() => undefined);
+    window.open("https://www.tiktok.com/creator-center/upload", "_blank", "noopener,noreferrer");
+  }, [shareTitle, shareDescription]);
+
+  const shareToInstagram = useCallback(() => {
+    // Instagram Reels yükleme sayfasına yönlendirir, metin clipboard'a kopyalanır
+    const text = `${shareTitle}\n\n${shareDescription}`;
+    navigator.clipboard.writeText(text).catch(() => undefined);
+    window.open("https://www.instagram.com/reels/", "_blank", "noopener,noreferrer");
   }, [shareTitle, shareDescription]);
 
   const shareToX = useCallback(() => {
@@ -2232,8 +2248,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         openLegalTab={(tab) => { setLegalTab(tab); setTosOpen(true); }}
         t={t}
         shareToWhatsApp={shareToWhatsApp}
-        shareToTelegram={shareToTelegram}
         shareToX={shareToX}
+        shareToYouTube={shareToYouTube}
+        shareToTikTok={shareToTikTok}
+        shareToInstagram={shareToInstagram}
       />
 
       {/* TOAST NOTIFICATION */}
