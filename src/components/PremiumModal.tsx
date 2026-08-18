@@ -592,6 +592,19 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               <p className="mt-2 text-white/45">
                 Ödemeler iyzico güvenli ödeme altyapısı üzerinden alınır. Kart bilgileri platformumuzda saklanmaz.
               </p>
+
+              <div className="mt-3 rounded-xl border border-white/10 bg-white px-3 py-2">
+                <img
+                  src="/iyzico/logo_band_colored@2x.png"
+                  alt="iyzico ile Öde, Mastercard, Visa, American Express ve Troy logoları"
+                  className="mx-auto h-auto max-h-7 w-full max-w-[360px] object-contain"
+                  loading="lazy"
+                />
+              </div>
+
+              <p className="mt-3 text-[10px] text-white/55">
+                Destek: <a href="mailto:destek@nurstudyo.com" className="underline decoration-white/20 underline-offset-2 hover:text-white">destek@nurstudyo.com</a>
+              </p>
             </div>
           )}
 
