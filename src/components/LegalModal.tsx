@@ -118,6 +118,18 @@ const LegalPanel: React.FC<{ text: string }> = ({ text }) => (
   <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
     {/* whitespace-pre-line: \n\n satır kırılımlarını gösterir */}
     <p className="whitespace-pre-line leading-relaxed text-white/90">{text}</p>
-    <p className="mt-4 text-[10px] text-white/40">destek@nurstudyo.com</p>
+
+    <div className="mt-4 rounded-xl border border-white/10 bg-white px-3 py-2">
+      <img
+        src="/iyzico/logo_band_colored@2x.png"
+        alt="iyzico ile Öde, Mastercard, Visa, American Express ve Troy logoları"
+        className="mx-auto h-auto max-h-8 w-full max-w-[360px] object-contain"
+        loading="lazy"
+      />
+    </div>
+
+    <p className="mt-4 text-[10px] text-white/50">
+      Destek: <a href="mailto:destek@nurstudyo.com" className="underline decoration-white/20 underline-offset-2 hover:text-white">destek@nurstudyo.com</a>
+    </p>
   </div>
 );
