@@ -123,7 +123,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
         ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
       }
       ctx.restore(); ctx.globalCompositeOperation = "source-over";
-  };
+    };
 
     const draw = () => {
       const nowFrame = performance.now();
@@ -203,7 +203,19 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               const centeredTop = safeTop + (safeH - totalH) / 2;
               const oy = Math.max(safeTop - centeredTop, Math.min(oyRaw, safeBottom - totalH - centeredTop));
               let y = centeredTop + oy;
-
+              if (p.cardBg === "koyu" && totalH > 0) {
+                ctx.shadowBlur = 0; ctx.fillStyle = "rgba(6,7,12,.62)";
+                const pad = arabicSize * 0.7, rw = width * .9, rh = totalH + pad * 2, rx = width / 2 - rw / 2, ry = y - pad;
+                ctx.beginPath(); ctx.roundRect(rx, ry, rw, rh, 18); ctx.fill();
+                ctx.strokeStyle = `${currentTheme.acc}55`; ctx.lineWidth = 1.5; ctx.stroke();
+              } else if (totalH > 0) {
+                // ★ Okunabilirlik güvencesi: "şeffaf" kart modunda bile dağ/bulut/gökyüzü
+                //   gibi parlak veya karışık arka planlarda metin kaybolmasın diye
+                //   hafif, her zaman açık bir kontrast katmanı eklenir.
+                ctx.shadowBlur = 0; ctx.fillStyle = "rgba(0,0,0,.32)";
+                const pad = arabicSize * 0.55, rw = width * .86, rh = totalH + pad * 2, rx = width / 2 - rw / 2, ry = y - pad;
+                ctx.beginPath(); ctx.roundRect(rx, ry, rw, rh, 16); ctx.fill();
+              }
               const goldFill = () => {
                 if (p.shimmerCfg.still) { ctx.fillStyle = p.shimmerCfg.c1; return; }
                 const g = ctx.createLinearGradient(0, 0, width, 0), shift = (tick * 0.004) % 1;
@@ -219,21 +231,18 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.beginPath(); ctx.moveTo(width * .28, y + 8); ctx.lineTo(width * .72, y + 8); ctx.stroke(); y += sepH;
               }
               if (p.showSubMeal && translationLines.length > 0) {
-                ctx.font = `400 ${translationSize}px Inter,sans-serif`; ctx.fillStyle = "rgba(255,255,255,.95)";
-                
-                // Meal metnine eklenen kontur ve güçlü gölge ayarları
-                ctx.shadowColor = "rgba(0, 0, 0, 0.9)"; 
-                ctx.shadowBlur = 12; 
-                ctx.shadowOffsetX = 0; 
-                ctx.shadowOffsetY = 2;
-                ctx.lineWidth = 3; 
-                ctx.strokeStyle = "#000000";
-
-                translationLines.forEach((line) => { 
-                  ctx.strokeText(line, width / 2 + ox, y + translationSize); 
-                  ctx.fillText(line, width / 2 + ox, y + translationSize); 
-                  y += translationSize * 1.6; 
-                });
+                ctx.font = `400 ${translationSize}px Inter,sans-serif`;
+                ctx.shadowColor = "rgba(0, 0, 0, 0.9)"; ctx.shadowBlur = 12; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 2;
+                // ★ Ekstra kontrast: her satırın arkasına ince koyu bir çerçeve (stroke) çizilir.
+                //   Bu sayede dağ, bulut, gökyüzü gibi açık/parlak arka planlarda bile
+                //   meal metni her zaman net okunur.
+                ctx.lineWidth = Math.max(2, translationSize * 0.16);
+                ctx.strokeStyle = "rgba(0,0,0,.55)";
+                ctx.lineJoin = "round";
+                translationLines.forEach((line) => { ctx.strokeText(line, width / 2 + ox, y + translationSize); y += translationSize * 1.6; });
+                y -= translationLines.length * translationSize * 1.6;
+                ctx.fillStyle = "rgba(255,255,255,.97)";
+                translationLines.forEach((line) => { ctx.fillText(line, width / 2 + ox, y + translationSize); y += translationSize * 1.6; });
                 ctx.shadowBlur = 0;
               }
             }
