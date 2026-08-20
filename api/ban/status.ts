@@ -26,3 +26,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       degraded: true,
     });
   }
+
+  try {
+    const status = await getActiveBan(user.id, user.email);
+
+    return res.status(200).json({
+      ok: true,
+      userId: user.id,
+      isBanned: status.isBanned,
+      reason: status.reason || "",
+    });
+  } catch (error) {
+    console.error("[Ban Status Error]", error);
+
+    return res.status(200).json({
+      ok: true,
+      userId: user.id,
+      isBanned: false,
+      reason: "",
+      degraded: true,
+    });
+  }
+}
