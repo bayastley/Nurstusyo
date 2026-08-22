@@ -129,13 +129,14 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   // ★ Gerçek işlemi server üzerinden Supabase'e yazar.
+  //   /api/admin/action tüm yönetimsel işlemleri (tier, jeton, ban, lock) işler.
   //   503 = Supabase henüz bağlı değil → local fallback devam eder.
   const serverManage = async (action: string, payload: Record<string, unknown>): Promise<"done" | "fallback" | "error"> => {
     try {
-      const response = await fetch("/api/admin/manage", {
+      const response = await fetch("/api/admin/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, ...payload }),
+        body: JSON.stringify({ action, target: payload.email || payload.featureId || "", ...payload }),
       });
       if (response.status === 503) return "fallback";
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
