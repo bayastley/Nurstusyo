@@ -268,14 +268,17 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
-// ★ GÜNCELLEME: Sadece 2 kâri tamamen ücretsiz — geri kalan 50 kâri
-//   PRO ve ELİT üyelikler arasında dağıtıldı (satın alım/üyelik zorunlu).
-//   Ücretsiz kullanıcı en tanıdık iki sesle (Sudays + Husarî) tanışır,
-//   gerisi için üyelik gerekir.
-export const FREE_RECITER_IDS = ["sudais", "husary"] as const;
+// ★ GÜNCELLEME: Ücretsiz kâriler — düşük telifli, tanınmış hocalar.
+//   Geri kalan kâriler PRO ve ELİT üyelikler arasında dağıtıldı.
+export const FREE_RECITER_IDS = [
+  "sudais", "husary",
+  // ★ Eklenen: screenshoot'taki düşük telifli kâriler (free yapıldı)
+  "matroud", "shuraim", "maher", "sudais_fast",
+  "alafasy", "qahtani", "shatri",
+] as const;
 
 export const PRO_RECITER_IDS = [
-  "shuraim", "maher", "hudhaify", "juhany", "qasim", "budair", "ayyoub", "matroud", "akhdar",
+  "hudhaify", "juhany", "qasim", "budair", "ayyoub", "akhdar",
   "basfar", "qatami", "ajamy", "husary_mujawwad", "husary_teacher", "abdulbasit", "minshawi",
   "tablawi", "banna", "jibreel", "sowaid", "parhizgar", "ghamdi_saad", "fares_abbad",
   "akram_alaqimy", "abdulkareem", "bukhatir", "yaser_salamah", "ahmed_neana", "sahl_yassin",
@@ -286,9 +289,9 @@ export const PRO_RECITER_IDS = [
 //   veya PRO planla açılmaz; sadece NÛR ELİT abonesi veya "elit" ürün
 //   satın alan kullanıcı erişebilir (bkz. reciterRequiredTier fonksiyonu).
 export const ELIT_RECITER_IDS = [
-  "muhaisny", "alafasy", "shatri", "qahtani", "dosari", "abdulbasit_mujawwad",
+  "muhaisny", "dosari", "abdulbasit_mujawwad",
   "minshawi_mujawwad", "ali_jaber", "hani_rifai", "mustafa_ismail", "tunaiji",
-  "balila", "ibrahim_dosary_warsh", "karim_mansoori_mujawwad", "yassin_jazaery_warsh",
+  "ibrahim_dosary_warsh", "karim_mansoori_mujawwad", "yassin_jazaery_warsh",
 ] as const;
 
 export function reciterRequiredTier(reciter: {

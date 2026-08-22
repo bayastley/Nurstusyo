@@ -21,6 +21,7 @@ const mid = "#f59e0b";
 export const RECITERS: Reciter[] = [
   { id: "muhaisny", name: "Muhammed el-Muhaysini", path: "", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "MP3Quran tam sure kaydi. Tahmini dusuk risk; ticari kullanimdan once lisans kontrolu onerilir.", color: low, initial: "MM", country: "Suudi Arabistan", surahPattern: "https://server11.mp3quran.net/download/mhsny/{S}.mp3", requiredTier: "elit" },
   { id: "sudais", name: "Abdurrahman es-Sudays", path: "Abdurrahmaan_As-Sudais_192kbps", makam: "Haram", risk: "low", telifRiski: 20, riskAciklamasi: "Tahmini dusuk risk; platform hak politikalari ayrica kontrol edilmelidir.", color: low, initial: "AS", country: "Suudi Arabistan" },
+  { id: "sudais_fast", name: "Abdurrahman es-Sudays (Hızlı & Yüksek)", path: "Abdurrahmaan_As-Sudais_192kbps", makam: "Haram", risk: "low", telifRiski: 8, riskAciklamasi: "Dusuk telif riskli; hizli ve yuksek sesli okuyus tarzi. Ayetler arasi kisa.", color: low, initial: "AH", country: "Suudi Arabistan" },
   { id: "shuraim", name: "Suud es-Sureym", path: "Saood_ash-Shuraym_128kbps", makam: "Haram", risk: "low", telifRiski: 15, riskAciklamasi: "Tahmini dusuk risk.", color: low, initial: "SS", country: "Suudi Arabistan" },
   { id: "maher", name: "Maher el-Muaiqly", path: "MaherAlMuaiqly128kbps", makam: "Haram", risk: "low", telifRiski: 15, riskAciklamasi: "Tahmini dusuk risk.", color: low, initial: "MM", country: "Suudi Arabistan" },
   { id: "hudhaify", name: "Ali el-Hudeyfi", path: "Hudhaify_128kbps", makam: "Haram", risk: "low", telifRiski: 10, riskAciklamasi: "Tahmini dusuk risk.", color: low, initial: "AH", country: "Suudi Arabistan" },
@@ -75,7 +76,7 @@ export const RECITERS: Reciter[] = [
   { id: "khalid_aljalil", name: "Halid el-Celil", path: "Khalid_AlJalil_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Berrak ve akici tarz. Tahmini dusuk risk.", color: classic, initial: "HC", country: "Suudi Arabistan" },
   { id: "nabil_rifai", name: "Nebil er-Rifai", path: "Nabil_Rifai_48kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "NR", country: "Suudi Arabistan" },
   { id: "hady_toure", name: "Hadi Ture", path: "Hady_Toure_64kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Batı Afrika ekolu; tahmini dusuk risk.", color: classic, initial: "HD", country: "Fildisi Sahili" },
-  { id: "balila", name: "Bender Baliile", path: "Bandar_Baleela_128kbps", makam: "Haram", risk: "low", telifRiski: 12, riskAciklamasi: "Mescid-i Haram imami; gur ve vakur okuyus. Tahmini dusuk risk.", color: low, initial: "BB", country: "Suudi Arabistan" },
+  // balila (Bender Baliile) — EveryAyah'ta ses dosyasi yok, 404 donuyor, kaldirildi
   { id: "ibrahim_dosary_warsh", name: "Ibrahim ed-Dosari (Verş)", path: "Ibrahim_Al-Dosary_Warsh_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Nadir Verş rivayeti; tahmini dusuk risk.", color: classic, initial: "İD", country: "Suudi Arabistan" },
   { id: "karim_mansoori_mujawwad", name: "Kerim Mansuri (Mucevved)", path: "Karim_Mansoori_Mujawwad_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Sanatli mucevved tarz; tahmini dusuk risk.", color: classic, initial: "KM", country: "Iran" },
   { id: "yassin_jazaery_warsh", name: "Yasin el-Cezairi (Verş)", path: "Yassin_Al-Jazaery_Warsh_64kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "Nadir Verş rivayeti; tahmini dusuk risk.", color: classic, initial: "YC", country: "Cezayir" },
@@ -88,7 +89,7 @@ export function reciterAudioUrl(path: string, surah: number, ayah: number): stri
 export type SesTarzi = "yuksek" | "icli" | "klasik" | "orta";
 export const SES_TARZI_ORDER: Record<SesTarzi, number> = { yuksek: 0, icli: 1, orta: 2, klasik: 3 };
 export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
-  muhaisny: "yuksek", sudais: "yuksek", shuraim: "yuksek", maher: "yuksek", juhany: "yuksek",
+  muhaisny: "yuksek", sudais: "yuksek", sudais_fast: "yuksek", shuraim: "yuksek", maher: "yuksek", juhany: "yuksek",
   qasim: "yuksek", budair: "yuksek", qatami: "yuksek", dosari: "yuksek", qahtani: "yuksek",
   hudhaify: "icli", ayyoub: "icli", matroud: "icli", jibreel: "yuksek", alafasy: "yuksek",
   husary: "klasik", husary_mujawwad: "yuksek", husary_teacher: "klasik", abdulbasit: "klasik",

@@ -122,6 +122,24 @@ export function setFeatureLock(featureId: string, lock: FeatureLock): void {
   saveSystemConfig(config);
 }
 
+let _remoteSyncPromise: Promise<SystemConfig | null> | null = null;
+let _remoteSyncReady = false;
+
+/**
+ * ★ İlk yüklemede remote config'i çek ve bekle.
+ *   Sonraki çağrılarda zaten local'de olduğu için anında döner.
+ */
+export async function ensureRemoteSync(): Promise<SystemConfig | null> {
+  if (_remoteSyncPromise) return _remoteSyncPromise;
+  _remoteSyncPromise = fetchRemoteConfig().then((cfg) => { _remoteSyncReady = true; return cfg; });
+  return _remoteSyncPromise;
+}
+
+/** Remote config yüklendi mi? (UI'da loading durumu için) */
+export function isRemoteSyncReady(): boolean {
+  return _remoteSyncReady;
+}
+
 export function getFeatureLock(featureId: string, fallback: FeatureLock = "free"): FeatureLock {
   return getSystemConfig().featureLocks[featureId] ?? fallback;
 }

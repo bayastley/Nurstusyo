@@ -66,7 +66,7 @@ import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl } from "./
 import { checkRateLimit } from "./rateLimiter";
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { syncUserInDb } from "./components/AdminDashboardModal";
-import { fetchRemoteConfig, getSystemConfig, banUserInDb, getBanLogs } from "./services/adminSyncService";
+import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs } from "./services/adminSyncService";
 import type { SelectedAyah, SearchHit, Output, DailyAyah, User, Mode, Aspect, ModalName, LoginTab } from "./types";
 
 void SES_TARZI_ORDER; void isFeatureUnlocked; void featureLockLabel; void ALLOWED_ADMIN_EMAILS; void isAdminEmail; void setCurrentTier; void tierAtLeast; void isRamadan; void isFriday; void JETON; void ADMIN_SECRET_PATH;
@@ -76,6 +76,9 @@ void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
 // Tüm sabitler + yardımcılar dış dosyalara taşındı (studio/)
 
 export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_MASTER_SURUM }: { isMasterSürüm?: boolean }) {
+  // ★ İlk açılışta remote config'i çek (feature locks, announcements vs. global senkronizasyon)
+  useEffect(() => { ensureRemoteSync(); }, []);
+
   // ★ Ücretsiz, tek satırlık ziyaretçi analitiği (Supabase nur_page_views'e yazar)
   useAnalytics();
   const [adminGodMode, setAdminGodMode] = useState(false);
