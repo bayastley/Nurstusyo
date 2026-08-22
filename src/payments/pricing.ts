@@ -383,6 +383,7 @@ export async function startCheckout(req: CheckoutRequest): Promise<CheckoutRespo
   try {
     const res = await fetch("/api/payments/create", {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         productCode: req.productCode,

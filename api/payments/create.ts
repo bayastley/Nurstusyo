@@ -41,16 +41,15 @@ async function createIyzicoCheckoutForm(params: {
     currency: params.currency || "TRY",
     basketId: params.orderId,
     paymentGroup: "PRODUCT",
-    paymentCard: { cardUserKafka: "false" },
     buyer: {
       id: params.orderId.slice(0, 36),
       name: params.buyerName || "Kullanıcı",
       surname: ".",
       email: params.buyerEmail,
-      identityNumber: "0",
+      identityNumber: "11111111111",
       registrationAddress: "İnternet Kullanıcısı",
-      city: "İstanbul",
-      country: "Türkiye",
+      city: "Istanbul",
+      country: "Turkey",
       ip: "0.0.0.0",
     },
     shippingAddress: {
@@ -83,7 +82,8 @@ async function createIyzicoCheckoutForm(params: {
     if (result.status === "success") {
       return { ok: true, checkoutFormContent: result.checkoutFormContent, paymentPageUrl: result.paymentPageUrl, token: result.token };
     }
-    return { ok: false, error: result.errorMessage || "iyzico ödeme formu oluşturulamadı" };
+    console.error("[iyzico] Form oluşturulamadı:", JSON.stringify({ status: result.status, errorCode: result.errorCode, errorMessage: result.errorMessage, conversationId: params.orderId }));
+    return { ok: false, error: result.errorMessage || `iyzico hatası: ${result.errorCode || "bilinmeyen"}` };
   } catch (err: any) {
     return { ok: false, error: `iyzico API hatası: ${err?.message || err}` };
   }

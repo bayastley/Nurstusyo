@@ -453,9 +453,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           onClose={() => setPremiumOpen(false)}
           onCheckout={async (productCode) => {
             try {
+              notify("⏳ Ödeme sayfası hazırlanıyor...");
               const result = await startCheckout({ productCode });
               if (!result.ok) {
-                notify(result.error || "Ödeme başlatılamadı");
+                notify(`❌ Ödeme hatası: ${result.error || "Bilinmeyen hata — lütfen tekrar deneyin"}`);
                 return;
               }
               // Demo modunda — ödemeyi atla, ürünü doğrudan tanımla
