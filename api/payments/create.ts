@@ -238,7 +238,6 @@ async function createIyzicoCheckoutForm(params: {
     currency: params.currency || "TRY",
     basketId: basketId,
     paymentGroup: "PRODUCT",
-    paymentCard: { cardUserKey: "" },
     buyer: {
       id: (params.buyerName?.split("@")[0] || "user").slice(0, 36),
       name: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
@@ -279,7 +278,7 @@ async function createIyzicoCheckoutForm(params: {
   const nonce = randomNonce();
 
   console.log("[iyzico] İstek gönderiliyor:", {
-    url: `${baseUrl}/payment/iyzipos/checkoutform/auth/next`,
+    url: `${baseUrl}/payment/iyzipos/checkoutform/initialize`,
     sandbox: params.sandbox,
     conversationId: convId,
     basketId,
