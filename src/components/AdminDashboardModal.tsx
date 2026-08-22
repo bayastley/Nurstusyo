@@ -247,7 +247,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     if (found) {
       setEmailSearchResult(found);
       setSelectedEmail(found.email);
-      notify(`✅ ${found.email} bulundu — ${found.tier.toUpperCase()} · ${found.jeton} ⚡`);
+      const banInfo = found.isBanned ? " ⛔ BANLI" : "";
+      notify(`✅ ${found.email} bulundu — ${found.tier.toUpperCase()} · ${found.jeton} ⚡${banInfo}`);
       return;
     }
     // 2) localStorage'da yoksa Supabase'de ara
@@ -265,10 +266,20 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         if (remoteUser) {
           // Supabase'den bulunan kullanıcıyı localStorage'a senkronize et
           const synced = syncUserInDb(remoteUser.email, remoteUser.name, (remoteUser.tier || "free") as Tier, (remoteUser.wallet?.sub_jeton ?? 0) + (remoteUser.wallet?.purchased_jeton ?? 0));
+          // Ban durumunu kontrol et
+          const banCheck = await fetch("/api/ban/status", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: remoteUser.email }) }).catch(() => null);
+          const banData = banCheck ? await banCheck.json().catch(() => null) : null;
+          if (banData?.isBanned) {
+            syncUserInDb(remoteUser.email, remoteUser.name, "free" as Tier, 0);
+            banUserInDb(remoteUser.email, banData.reason || "Banlı", "System", true);
+          }
           setSysConfig(getSystemConfig());
-          setEmailSearchResult(synced);
+          setBanLogs(getBanLogs());
+          setEmailSearchResult(getSystemConfig().users.find((u) => u.email.toLowerCase() === q) ?? synced);
           setSelectedEmail(synced.email);
-          notify(`✅ ${synced.email} Supabase'de bulundu — ${synced.tier.toUpperCase()} · ${synced.jeton} ⚡`);
+          const finalUser = getSystemConfig().users.find((u) => u.email.toLowerCase() === q);
+          const banLabel = finalUser?.isBanned ? " ⛔ BANLI" : "";
+          notify(`✅ ${synced.email} Supabase'de bulundu — ${synced.tier.toUpperCase()} · ${synced.jeton} ⚡${banLabel}`);
           return;
         }
       }
@@ -615,60 +626,51 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       </p>
                     </div>
 
-                    {/* Üretim hakkı bakiyesi ekleme / çıkarma */}
+                    {/* Üretim hakkı bakiyesi yönetimi */}
                     <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
                       <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                        🪙 ⚡ Üretim hakkı Bakiye Yönetimi
+                        🪙 ⚡ Üretim Hakkı Bakiye Yönetimi
                       </label>
                       <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
                         <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
-                        {selectedUser.jeton >= 999999 ? (
-                          <span className="font-display text-lg font-black tracking-wide" style={{ color: "var(--accent-2)" }}>
-                            ♾️ SINIRSIZ
-                          </span>
-                        ) : (
-                          <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
-                            {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">⚡ ENERJİ</span>
-                          </span>
-                        )}
+                        <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
+                          {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">⚡ ENERJİ</span>
+                        </span>
                       </div>
 
+                      {/* Elle bakiye tanımlama */}
                       <div className="flex items-center gap-1.5 pt-1">
-                        <button
-                          onClick={() => handleJetonChange(selectedUser.email, -jetonDelta)}
-                          className="flex h-9 items-center justify-center gap-1 rounded-xl bg-red-500/20 border border-red-500/30 px-3 text-[11px] font-black text-red-300 transition hover:bg-red-500/30 active:scale-95"
-                          title={`${jetonDelta} ⚡ Üretim hakkı çıkar`}
-                        >
-                          <Minus size={12} strokeWidth={3} /> {jetonDelta}
-                        </button>
                         <input
                           type="number"
+                          min="0"
+                          placeholder="Miktar yaz..."
                           value={jetonDelta}
-                          onChange={(e) => setJetonDelta(Math.max(1, parseInt(e.target.value) || 1))}
-                          className="glass-soft h-9 w-16 rounded-xl text-center font-mono text-[12px] font-bold text-white outline-none"
+                          onChange={(e) => setJetonDelta(Math.max(0, parseInt(e.target.value) || 0))}
+                          className="glass-soft h-9 flex-1 rounded-xl px-3 font-mono text-[12px] font-bold text-white outline-none placeholder:text-white/30"
                         />
                         <button
-                          onClick={() => handleJetonChange(selectedUser.email, jetonDelta)}
-                          className="flex-1 flex h-9 items-center justify-center gap-1 rounded-xl text-[11px] font-black text-black transition hover:brightness-110 active:scale-95"
+                          onClick={() => handleDirectJetonSet(selectedUser.email, jetonDelta)}
+                          className="flex h-9 items-center justify-center gap-1 rounded-xl px-4 text-[11px] font-black text-black transition hover:brightness-110 active:scale-95"
                           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                         >
-                          <Plus size={12} strokeWidth={3} /> {jetonDelta} Ekle
+                          TANIMLA
                         </button>
                       </div>
 
+                      {/* Hızlı seçim butonları */}
                       <div className="flex items-center gap-1 pt-1">
-                        {[100, 500, 1000].map((amt) => (
+                        {[50, 100, 500, 1000].map((amt) => (
                           <button
                             key={amt}
                             onClick={() => handleDirectJetonSet(selectedUser.email, amt)}
                             className="flex-1 rounded-lg bg-white/5 py-1 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition"
                           >
-                            ={amt} ⚡ Üretim hakkı
+                            ={amt}
                           </button>
                         ))}
                       </div>
 
-                      {/* ★ BAKİYE SIFIRLA */}
+                      {/* Bakiye Sıfırla */}
                       <button
                         onClick={() => handleDirectJetonSet(selectedUser.email, 0)}
                         className="mt-1 w-full rounded-lg border border-red-500/30 bg-red-500/10 py-1.5 text-[9.5px] font-black text-red-400 transition hover:bg-red-500/20 active:scale-95"

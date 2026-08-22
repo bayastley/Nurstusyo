@@ -282,7 +282,7 @@ export const PRO_RECITER_IDS = [
   "basfar", "qatami", "ajamy", "husary_mujawwad", "husary_teacher", "abdulbasit", "minshawi",
   "tablawi", "banna", "jibreel", "sowaid", "parhizgar", "ghamdi_saad", "fares_abbad",
   "akram_alaqimy", "abdulkareem", "bukhatir", "yaser_salamah", "ahmed_neana", "sahl_yassin",
-  "ali_hajjaj", "aziz_alili", "karim_mansoori", "khalid_aljalil", "nabil_rifai", "hady_toure",
+  "aziz_alili", "karim_mansoori",
 ] as const;
 
 // ★ ELİT — satın alma / üyelik ZORUNLU. Bu kâriler hicbir sekilde ücretsiz
@@ -291,7 +291,7 @@ export const PRO_RECITER_IDS = [
 export const ELIT_RECITER_IDS = [
   "muhaisny", "dosari", "abdulbasit_mujawwad",
   "minshawi_mujawwad", "ali_jaber", "hani_rifai", "mustafa_ismail", "tunaiji",
-  "ibrahim_dosary_warsh", "karim_mansoori_mujawwad", "yassin_jazaery_warsh",
+  // ibrahim_dosary_warsh, karim_mansoori_mujawwad, yassin_jazaery_warsh — ses yok, kaldirildi
 ] as const;
 
 export function reciterRequiredTier(reciter: {
