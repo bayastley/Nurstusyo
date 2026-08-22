@@ -225,7 +225,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [giftTier, setGiftTier] = useState<Tier>("free");
   const [emailSearchResult, setEmailSearchResult] = useState<ManagedUser | null>(null);
 
-  const handleEmailSearch = () => {
+  const handleEmailSearch = async () => {
     const q = sanitizeText(emailSearchQuery).trim().toLowerCase().slice(0, 254);
     if (!q) {
       setEmailSearchResult(null);
@@ -237,15 +237,38 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       notify("⚠️ Geçerli bir e-posta adresi gir");
       return;
     }
-    const found = findUserByEmail(q);
+    // 1) Önce localStorage'da ara (hızlı)
+    let found = findUserByEmail(q);
     if (found) {
       setEmailSearchResult(found);
       setSelectedEmail(found.email);
       notify(`✅ ${found.email} bulundu — ${found.tier.toUpperCase()} · ${found.jeton} ⚡`);
-    } else {
-      setEmailSearchResult(null);
-      notify(`❌ "${q}" adresiyle kayıtlı kullanıcı yok`);
+      return;
     }
+    // 2) localStorage'da yoksa Supabase'de ara
+    notify("🔍 Supabase'de aranıyor...");
+    try {
+      const response = await fetch(`/api/admin/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_users" }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; users?: Array<{ id: string; email: string; name: string; tier: string; wallet?: { sub_jeton?: number; purchased_jeton?: number } }> } | null;
+      if (data?.ok && data.users) {
+        const remoteUser = data.users.find((u) => u.email.toLowerCase() === q);
+        if (remoteUser) {
+          // Supabase'den bulunan kullanıcıyı localStorage'a senkronize et
+          const synced = syncUserInDb(remoteUser.email, remoteUser.name, (remoteUser.tier || "free") as Tier, (remoteUser.wallet?.sub_jeton ?? 0) + (remoteUser.wallet?.purchased_jeton ?? 0));
+          setSysConfig(getSystemConfig());
+          setEmailSearchResult(synced);
+          setSelectedEmail(synced.email);
+          notify(`✅ ${synced.email} Supabase'de bulundu — ${synced.tier.toUpperCase()} · ${synced.jeton} ⚡`);
+          return;
+        }
+      }
+    } catch { /* fallback */ }
+    setEmailSearchResult(null);
+    notify(`❌ "${q}" adresiyle kayıtlı kullanıcı yok (Supabase'de de bulunamadı)`);
   };
 
   const handleGiftRights = async (email: string, amount: number, newTier?: Tier) => {
