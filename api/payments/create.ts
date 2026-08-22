@@ -225,36 +225,40 @@ async function createIyzicoCheckoutForm(params: {
   // Gerçek client IP'yi al
   const clientIp = params.clientIp || "85.110.0.1";
 
+  // iyzico için benzersiz conversationId ve basketId
+  const convId = `conv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const basketId = `bask-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   const requestPayload: Record<string, any> = {
     locale: "tr",
-    conversationId: params.orderId,
+    conversationId: convId,
     price: priceStr,
     paidPrice: priceStr,
     currency: params.currency || "TRY",
-    basketId: params.orderId,
+    basketId: basketId,
     paymentGroup: "PRODUCT",
     buyer: {
-      id: params.buyerName?.split("@")[0] || "user",
-      name: params.buyerName?.split("@")[0] || "Kullanici",
-      surname: buyerSurname,
+      id: (params.buyerName?.split("@")[0] || "user").slice(0, 36),
+      name: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
+      surname: buyerSurname.slice(0, 36),
       email: params.buyerEmail,
-      identityNumber: "11111111111",
-      registrationAddress: "Online Kullanici",
+      identityNumber: "10000000146",
+      registrationAddress: "Istanbul",
       city: "Istanbul",
       country: "Turkey",
       ip: clientIp,
     },
     shippingAddress: {
-      contactName: params.buyerName?.split("@")[0] || "Kullanici",
+      contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
       city: "Istanbul",
       country: "Turkey",
-      address: "Online Satis",
+      address: "Istanbul",
     },
     billingAddress: {
-      contactName: params.buyerName?.split("@")[0] || "Kullanici",
+      contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
       city: "Istanbul",
       country: "Turkey",
-      address: "Online Satis",
+      address: "Istanbul",
     },
     callbackUrl: "https://nurstudyo.com/api/payments/webhook?provider=iyzico",
   };
@@ -266,10 +270,14 @@ async function createIyzicoCheckoutForm(params: {
   console.log("[iyzico] İstek gönderiliyor:", {
     url: `${baseUrl}/payment/iyzipos/checkoutform/auth/next`,
     sandbox: params.sandbox,
-    orderId: params.orderId,
+    conversationId: convId,
+    basketId,
     price: priceStr,
     currency: params.currency,
+    buyerIdentity: requestPayload.buyer?.identityNumber,
+    buyerIp: requestPayload.buyer?.ip,
   });
+  console.log("[iyzico] Tam payload:", JSON.stringify(requestPayload, null, 2));
 
   try {
     const response = await fetch(
