@@ -253,6 +253,11 @@ export interface CheckoutResponse {
   ok: boolean;
   token?: string;
   paymentUrl?: string;
+  paymentPageUrl?: string;
+  checkoutFormContent?: string;
+  orderId?: string;
+  demo?: boolean;
+  message?: string;
   error?: string;
 }
 

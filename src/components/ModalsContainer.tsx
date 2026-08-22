@@ -16,6 +16,7 @@ import { KISSAS } from "../data";
 import { T, type Lang } from "../i18n";
 import { JETON } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
+import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 
 const PRAYERS: Array<[string, string]> = [
@@ -450,6 +451,31 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           currentTier={tier}
           user={user ?? null}
           onClose={() => setPremiumOpen(false)}
+          onCheckout={async (productCode) => {
+            try {
+              const result = await startCheckout({ productCode });
+              if (!result.ok) {
+                notify(result.error || "Ödeme başlatılamadı");
+                return;
+              }
+              // iyzico checkout form HTML'i döndüyse iframe içinde göster
+              if (result.checkoutFormContent) {
+                const w = window.open("", "_blank");
+                if (w) {
+                  w.document.write(result.checkoutFormContent);
+                  w.document.close();
+                } else {
+                  // popup engellendiyse redirect et
+                  if (result.paymentPageUrl) window.location.href = result.paymentPageUrl;
+                  else notify("Ödeme penceresi açılamadı, lütfen popup engelleyicisini devre dışı bırakın");
+                }
+              } else if (result.paymentPageUrl) {
+                window.location.href = result.paymentPageUrl;
+              }
+            } catch {
+              notify("Ödeme servisine ulaşılamadı");
+            }
+          }}
           onPurchase={(newTier) => {
             setTier(newTier);
             setCurrentTier(newTier);
