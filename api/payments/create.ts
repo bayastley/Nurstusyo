@@ -1,599 +1,221 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import crypto from "crypto";
+Repo dosyasını doğrudan açamıyorum (tarayıcı erişimim yok), ama log'lar hatayı net gösteriyor — iyzico'nun **errorCode 23** hatası tek bir anlama gelir:
 
-declare const process: { env: Record<string, string | undefined> };
+> **İsteğin gövdesinde `callbackUrl` alanı hiç gitmiyor (ya da boş string gidiyor).**
 
-// ═══════════════════════════════════════════════════════════════
-// ÜRÜN KATALOĞU — Sunucu tarafı, bağımsız
-// ═══════════════════════════════════════════════════════════════
-interface ServerProduct {
-  code: string;
-  kind: "subscription" | "package";
-  title: string;
-  amountMinor: number;
-  currency: string;
-  tier?: string;
-  videoKind?: string;
-  videoCount?: number;
-  grantDays?: number;
-  active: boolean;
-}
+Log'da gönderdiğin isteği yazdırmışsın: `conversationId`, `basketId`, `price`, `currency` var → **`callbackUrl` yok**. Yani payload'a hiç eklenmemiş veya `undefined` olduğu için `JSON.stringify` onu siliyor.
 
-const PRODUCTS: Record<string, ServerProduct> = {
-  // ─── ÜYELİKLER ────────────────────────────────────────
-  SUB_PRO_1M: {
-    code: "SUB_PRO_1M", kind: "subscription",
-    title: "Pro Aylık Üyelik",
-    amountMinor: 14900, currency: "TRY",
-    tier: "pro", grantDays: 30, active: true,
-  },
-  SUB_ELIT_1M: {
-    code: "SUB_ELIT_1M", kind: "subscription",
-    title: "Elit Aylık Üyelik",
-    amountMinor: 29900, currency: "TRY",
-    tier: "elit", grantDays: 30, active: true,
-  },
-  SUB_PRO_1Y: {
-    code: "SUB_PRO_1Y", kind: "subscription",
-    title: "Pro Yıllık Üyelik",
-    amountMinor: 119900, currency: "TRY",
-    tier: "pro", grantDays: 365, active: true,
-  },
-  SUB_ELIT_1Y: {
-    code: "SUB_ELIT_1Y", kind: "subscription",
-    title: "Elit Yıllık Üyelik",
-    amountMinor: 239900, currency: "TRY",
-    tier: "elit", grantDays: 365, active: true,
-  },
-  // ─── KISA VİDEO PAKETLERİ ─────────────────────────────
-  PK_KISA_15: {
-    code: "PK_KISA_15", kind: "package",
-    title: "15 Kısa Video Üretim Hizmeti",
-    amountMinor: 5900, currency: "TRY",
-    videoKind: "kisa", videoCount: 15, active: true,
-  },
-  PK_KISA_35: {
-    code: "PK_KISA_35", kind: "package",
-    title: "35 Kısa Video Üretim Hizmeti",
-    amountMinor: 9900, currency: "TRY",
-    videoKind: "kisa", videoCount: 35, active: true,
-  },
-  PK_KISA_70: {
-    code: "PK_KISA_70", kind: "package",
-    title: "70 Kısa Video Üretim Hizmeti",
-    amountMinor: 15900, currency: "TRY",
-    videoKind: "kisa", videoCount: 70, active: true,
-  },
-  // ─── UZUN VİDEO PAKETLERİ ─────────────────────────────
-  PK_UZUN_8: {
-    code: "PK_UZUN_8", kind: "package",
-    title: "8 Uzun Video Üretim Hizmeti",
-    amountMinor: 7900, currency: "TRY",
-    videoKind: "uzun", videoCount: 8, active: true,
-  },
-  PK_UZUN_20: {
-    code: "PK_UZUN_20", kind: "package",
-    title: "20 Uzun Video Üretim Hizmeti",
-    amountMinor: 14900, currency: "TRY",
-    videoKind: "uzun", videoCount: 20, active: true,
-  },
-  PK_UZUN_40: {
-    code: "PK_UZUN_40", kind: "package",
-    title: "40 Uzun Video Üretim Hizmeti",
-    amountMinor: 24900, currency: "TRY",
-    videoKind: "uzun", videoCount: 40, active: true,
-  },
-  // ─── TAM SÜRÜM PAKETLERİ ──────────────────────────────
-  PK_TAM_2: {
-    code: "PK_TAM_2", kind: "package",
-    title: "2 Tam Sürüm Video Üretim Hizmeti",
-    amountMinor: 3900, currency: "TRY",
-    videoKind: "tam", videoCount: 2, active: true,
-  },
-  PK_TAM_5: {
-    code: "PK_TAM_5", kind: "package",
-    title: "5 Tam Sürüm Video Üretim Hizmeti",
-    amountMinor: 8900, currency: "TRY",
-    videoKind: "tam", videoCount: 5, active: true,
-  },
-  PK_TAM_10: {
-    code: "PK_TAM_10", kind: "package",
-    title: "10 Tam Sürüm Video Üretim Hizmeti",
-    amountMinor: 15900, currency: "TRY",
-    videoKind: "tam", videoCount: 10, active: true,
-  },
-};
+---
 
-function getServerProduct(code: string): ServerProduct | null {
-  const p = PRODUCTS[code];
-  if (!p || !p.active) return null;
-  return p;
-}
+## En olası 4 sebep
 
-// ═══════════════════════════════════════════════════════════════
-// SESSION COOKIE OKUMA — Basit ve bağımsız
-// ═══════════════════════════════════════════════════════════════
-const COOKIE_NAME = "nur_session";
+| # | Sebep | Kontrol |
+|---|---|---|
+| 1 | `process.env.NEXT_PUBLIC_SITE_URL` / `SITE_URL` Vercel **Production** ortamında tanımlı değil → `callbackUrl: undefined` → JSON'dan düşüyor | Vercel → Settings → Environment Variables |
+| 2 | Alan adını yanlış yazmışsın: `callback_url`, `callBackUrl`, `callbackURL` | iyzico **sadece** `callbackUrl` kabul eder |
+| 3 | `callbackUrl`'i request objesine değil, hash/PKI stringine eklemişsin (veya tersi) | Aşağıdaki kod |
+| 4 | v1 (IYZWS) PKI string'i kullanıyorsun ve `callbackUrl` sıralaması yanlış | v2'ye geç (aşağıda) |
 
-function parseCookies(req: VercelRequest): Record<string, string> {
-  const header = req.headers.cookie || "";
-  return header.split(";").reduce<Record<string, string>>((acc, part) => {
-    const [key, ...rest] = part.trim().split("=");
-    if (!key) return acc;
-    acc[key] = decodeURIComponent(rest.join("="));
-    return acc;
-  }, {});
-}
+Ek not: iyzico `localhost`, `http://`, relative URL kabul etmez. **Mutlaka public `https://` olmalı.**
 
-function base64Url(input: Buffer | string): string {
-  const raw = Buffer.isBuffer(input) ? input : Buffer.from(input, "utf8");
-  return raw.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
+---
 
-function fromBase64Url(input: string): Buffer {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
-  return Buffer.from(normalized + pad, "base64");
-}
+## Çalışan `api/payments/create.ts` (IYZWSv2 – PKI derdi yok)
 
-function sessionSecret(): string {
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
-  if (!secret || secret.length < 20) throw new Error("Session secret tanımlı değil");
-  return secret;
-}
+```ts
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import crypto from 'crypto';
 
-function signPayload(payload: string): string {
-  return base64Url(crypto.createHmac("sha256", sessionSecret()).update(payload).digest());
-}
+const IYZICO_BASE = process.env.IYZICO_SANDBOX === 'true'
+  ? 'https://sandbox-api.iyzipay.com'
+  : 'https://api.iyzipay.com';
 
-interface AuthUser {
-  id: string;
-  sub: string;
-  email: string;
-  name: string;
-  picture?: string;
-  verified: boolean;
-  isAdmin: boolean;
-  iat: number;
-  exp: number;
-}
+const URI_PATH = '/payment/iyzipos/checkoutform/initialize/auth/ecom';
 
-function getSessionUser(req: VercelRequest): AuthUser | null {
-  try {
-    const token = parseCookies(req)[COOKIE_NAME];
-    if (!token || !token.includes(".")) return null;
-    const [payload, sig] = token.split(".");
-    if (!payload || !sig) return null;
-    const expected = signPayload(payload);
-    const sigBuf = Buffer.from(sig);
-    const expectedBuf = Buffer.from(expected);
-    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-    const user = JSON.parse(fromBase64Url(payload).toString("utf8")) as AuthUser;
-    if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
-    if (!user.email || !user.id || !user.sub || user.verified !== true) return null;
-    return user;
-  } catch {
-    return null;
-  }
-}
+// --- Auth header (IYZWSv2 / HMAC-SHA256) ---
+function buildAuthHeader(bodyString: string) {
+  const apiKey = process.env.IYZICO_API_KEY!;
+  const secretKey = process.env.IYZICO_SECRET_KEY!;
+  const randomKey = Date.now() + crypto.randomBytes(8).toString('hex');
 
-// ═══════════════════════════════════════════════════════════════
-// IYZICO SDK v2 — Resmi imza ve header oluşturma
-// ═══════════════════════════════════════════════════════════════
-function generateRandomString(): string {
-  return Math.floor(Date.now() / 1000) + Math.random().toString().slice(2);
-}
-
-function generateAuthHeaderV2(
-  apiKey: string,
-  secretKey: string,
-  uri: string,
-  jsonBody: string,
-  randomString: string
-): string {
-  // SDK'ya göre: HMAC-SHA256(randomString + uri + jsonBody, secretKey) → hex
   const signature = crypto
-    .createHmac("sha256", secretKey)
-    .update(randomString + uri + jsonBody)
-    .digest("hex");
-  // Authorization: IYZWSv2 base64(apiKey:xxx&randomKey:xxx&signature:xxx)
-  const authParams = [
-    "apiKey:" + apiKey,
-    "randomKey:" + randomString,
-    "signature:" + signature,
-  ];
-  const authString = authParams.join("&");
-  return "IYZWSv2 " + Buffer.from(authString).toString("base64");
-}
+    .createHmac('sha256', secretKey)
+    .update(randomKey + URI_PATH + bodyString)   // <-- gönderilen string ile BİREBİR aynı olmalı
+    .digest('hex');
 
-// ═══════════════════════════════════════════════════════════════
-// IYZICO CHECKOUT FORM OLUŞTURMA
-// ═══════════════════════════════════════════════════════════════
-async function createIyzicoCheckoutForm(params: {
-  apiKey: string;
-  secretKey: string;
-  orderId: string;
-  price: number;
-  currency: string;
-  buyerEmail: string;
-  buyerName: string;
-  returnUrl: string;
-  sandbox: boolean;
-  clientIp?: string;
-}): Promise<{
-  ok: boolean;
-  checkoutFormContent?: string;
-  paymentPageUrl?: string;
-  token?: string;
-  error?: string;
-}> {
-  const baseUrl = params.sandbox
-    ? "https://sandbox-api.iyzipay.com"
-    : "https://api.iyzipay.com";
+  const authString =
+    `apiKey:${apiKey}&randomKey:${randomKey}&signature:${signature}`;
 
-  const priceStr = (params.price / 100).toFixed(2);
-
-  // Kullanıcı adından surname çıkar
-  const nameParts = (params.buyerName || "Kullanici").split(/[.@+_-]/);
-  const buyerSurname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "Kullanici";
-
-  // Gerçek client IP'yi al
-  const clientIp = params.clientIp || "85.110.0.1";
-
-  // iyzico için benzersiz conversationId ve basketId
-  const convId = `conv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const basketId = `bask-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-  const requestPayload: Record<string, any> = {
-    locale: "tr",
-    conversationId: convId,
-    price: priceStr,
-    paidPrice: priceStr,
-    currency: params.currency || "TRY",
-    basketId: basketId,
-    paymentGroup: "PRODUCT",
-    paymentChannel: "WEB",
-    installment: "1",
-    buyer: {
-      id: (params.buyerName?.split("@")[0] || "user").slice(0, 36),
-      name: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
-      surname: buyerSurname.slice(0, 36),
-      gsmNumber: "+905000000000",
-      email: params.buyerEmail,
-      identityNumber: "10000000146",
-      lastLoginDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-      registrationDate: "2024-01-01 00:00:00",
-      registrationAddress: "Istanbul",
-      ip: clientIp,
-      city: "Istanbul",
-      country: "Turkey",
-      zipCode: "34000",
-    },
-    shippingAddress: {
-      contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Istanbul",
-      zipCode: "34000",
-    },
-    billingAddress: {
-      contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
-      city: "Istanbul",
-      country: "Turkey",
-      address: "Istanbul",
-      zipCode: "34000",
-    },
-    // callbackUrl merchant settings'de tanımlı değilse hata verir — kaldırıldı
-    basketItems: [
-      {
-        id: "nur_product_001",
-        name: params.orderId || "Nur Urun",
-        category1: "Dijital Hizmet",
-        category2: "Video Uretim",
-        itemType: "VIRTUAL",
-        price: priceStr,
-      },
-    ],
+  return {
+    authorization: 'IYZWSv2 ' + Buffer.from(authString).toString('base64'),
+    randomKey,
   };
+}
 
-  const jsonBody = JSON.stringify(requestPayload);
-  const randomString = generateRandomString();
-  const apiPath = "/payment/iyzipos/checkoutform/initialize/auth/ecom";
-  const authHeader = generateAuthHeaderV2(
-    params.apiKey,
-    params.secretKey,
-    apiPath,
-    jsonBody,
-    randomString
-  );
+// --- Site origin'i güvenli şekilde çöz ---
+function resolveOrigin(req: VercelRequest) {
+  const fromEnv =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : '');
 
-  console.log("[iyzico] İstek gönderiliyor:", {
-    url: `${baseUrl}${apiPath}`,
-    sandbox: params.sandbox,
-    conversationId: convId,
-    basketId,
-    price: priceStr,
-    currency: params.currency,
-  });
+  if (fromEnv) return fromEnv.replace(/\/+$/, '');
+
+  const proto = (req.headers['x-forwarded-proto'] as string) || 'https';
+  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host;
+  return `${proto}://${host}`.replace(/\/+$/, '');
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const response = await fetch(
-      `${baseUrl}${apiPath}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-iyzi-rnd": randomString,
-          Authorization: authHeader,
-        },
-        body: jsonBody,
-      }
-    );
+    const { price = '299.00', buyer, basketItems, address } = req.body ?? {};
 
-    const result = await response.json() as any;
+    const origin = resolveOrigin(req);
+    const callbackUrl = `${origin}/api/payments/callback`;
 
-    if (result.status === "success") {
-      console.log("[iyzico] Checkout form başarılı, token:", result.token?.slice(0, 20) + "...");
-      return {
-        ok: true,
-        checkoutFormContent: result.checkoutFormContent,
-        paymentPageUrl: result.paymentPageUrl,
-        token: result.token,
-      };
+    // 🔒 Guard: hata 23'ün bir daha olmaması için
+    if (!/^https:\/\/[^/]+\/.+/.test(callbackUrl) || callbackUrl.includes('undefined')) {
+      console.error('[payments/create] Geçersiz callbackUrl:', callbackUrl);
+      return res.status(500).json({ error: 'callbackUrl_invalid', callbackUrl });
     }
 
-    console.error("[iyzico] Hata — tam yanıt:", JSON.stringify({
-      status: result.status,
-      errorCode: result.errorCode,
-      errorMessage: result.errorMessage,
-      errorGroup: result.errorGroup,
-      systemTime: result.systemTime,
-    }));
+    const conversationId = `conv-${Date.now()}`;
+    const basketId = `bask-${Date.now()}`;
 
-    return {
-      ok: false,
-      error: result.errorMessage || `iyzico hatası: ${result.errorCode || "bilinmeyen"}`,
-    };
-  } catch (err: any) {
-    console.error("[iyzico] API çağrısı başarısız:", err?.message);
-    return {
-      ok: false,
-      error: `iyzico'ya bağlanılamadı: ${err?.message || "bilinmeyen hata"}`,
-    };
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// RETURN URL DOĞRULAMA
-// ═══════════════════════════════════════════════════════════════
-function isAllowedReturnUrl(raw: unknown): string {
-  const fallback = "https://nurstudyo.com/odeme-sonuc";
-  if (typeof raw !== "string" || raw.length > 300) return fallback;
-  try {
-    const u = new URL(raw);
-    const allowed = new Set([
-      "https://nurstudyo.com",
-      "https://www.nurstudyo.com",
-      "http://localhost:5173",
-    ]);
-    if (!allowed.has(u.origin)) return fallback;
-    return u.toString();
-  } catch {
-    return fallback;
-  }
-}
-
-function sanitizeUserId(userId: string): string {
-  return userId
-    .trim()
-    .replace(/[^a-zA-Z0-9._:@-]/g, "_")
-    .slice(0, 80);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// SUPABASE KAYIT — Basit, bağımsız
-// ═══════════════════════════════════════════════════════════════
-async function saveOrder(data: { orderId: string; userId: string; productCode: string; amountMinor: number; currency: string }) {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  if (!url || !key) {
-    console.warn("[payments/create] Supabase ayarları eksik, sipariş kaydı atlanıyor");
-    return;
-  }
-  try {
-    await fetch(`${url}/rest/v1/nur_orders`, {
-      method: "POST",
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal",
+    const request = {
+      locale: 'tr',
+      conversationId,
+      price: String(price),          // string, 2 hane, nokta ayraç
+      paidPrice: String(price),      // ZORUNLU
+      currency: 'TRY',
+      basketId,
+      paymentGroup: 'PRODUCT',
+      callbackUrl,                   // ✅ ZORUNLU ALAN — burada
+      enabledInstallments: [1, 2, 3, 6, 9],
+      buyer: {
+        id: buyer?.id ?? 'BY001',
+        name: buyer?.name ?? 'Ad',
+        surname: buyer?.surname ?? 'Soyad',
+        gsmNumber: buyer?.gsmNumber ?? '+905350000000',
+        email: buyer?.email ?? 'test@nurstudyo.com',
+        identityNumber: buyer?.identityNumber ?? '11111111111',
+        registrationAddress: buyer?.address ?? 'Türkiye',
+        ip: (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? '85.34.78.112',
+        city: buyer?.city ?? 'Istanbul',
+        country: 'Turkey',
       },
-      body: JSON.stringify({
-        id: data.orderId,
-        user_id: data.userId,
-        product_code: data.productCode,
-        amount_minor: data.amountMinor,
-        currency: data.currency,
-        provider: "iyzico",
-        status: "pending",
-        created_at: new Date().toISOString(),
-      }),
+      shippingAddress: {
+        contactName: `${buyer?.name ?? 'Ad'} ${buyer?.surname ?? 'Soyad'}`,
+        city: address?.city ?? 'Istanbul',
+        country: 'Turkey',
+        address: address?.address ?? 'Türkiye',
+      },
+      billingAddress: {
+        contactName: `${buyer?.name ?? 'Ad'} ${buyer?.surname ?? 'Soyad'}`,
+        city: address?.city ?? 'Istanbul',
+        country: 'Turkey',
+        address: address?.address ?? 'Türkiye',
+      },
+      basketItems: basketItems ?? [
+        {
+          id: 'ITEM1',
+          name: 'Nurstüdyo Paket',
+          category1: 'Egitim',
+          itemType: 'VIRTUAL',
+          price: String(price),      // basketItems toplamı = price olmalı
+        },
+      ],
+    };
+
+    // ⚠️ Aynı string hem imzada hem body'de kullanılmalı
+    const bodyString = JSON.stringify(request);
+    const { authorization, randomKey } = buildAuthHeader(bodyString);
+
+    console.log('[iyzico] İstek gönderiliyor:', {
+      url: IYZICO_BASE + URI_PATH,
+      callbackUrl,
+      conversationId,
+      price: request.price,
     });
-  } catch (err: any) {
-    console.warn("[payments/create] Supabase kayıt hatası (devam):", err?.message);
-  }
-}
 
-// ═══════════════════════════════════════════════════════════════
-// ANA HANDLER
-// ═══════════════════════════════════════════════════════════════
-export default async function handler(
-  req: VercelRequest,
-  res: VercelResponse
-) {
-  res.setHeader("Cache-Control", "no-store");
+    const iyziRes = await fetch(IYZICO_BASE + URI_PATH, {
+      method: 'POST',
+      headers: {
+        Authorization: authorization,
+        'x-iyzi-rnd': randomKey,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: bodyString,
+    });
 
-  // CORS — basit kontrol
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowedOrigins = [
-    "https://nurstudyo.com",
-    "https://www.nurstudyo.com",
-    "http://localhost:5173",
-    "http://localhost:5174",
-  ];
-  if (origin && !allowedOrigins.includes(origin) && referer) {
-    try {
-      const refererOrigin = new URL(referer).origin;
-      if (!allowedOrigins.includes(refererOrigin)) {
-        return res.status(403).json({ ok: false, error: "İzin verilmeyen kaynak" });
-      }
-    } catch {
-      // ignore
-    }
-  }
+    const data = await iyziRes.json();
 
-  // Method kontrolü
-  if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Sadece POST" });
-  }
-
-  // ─── HER ŞEY TEK TRY-CATCH İÇİNDE ────────────────────────
-  try {
-    // 1. Auth
-    let user: AuthUser | null = null;
-    try {
-      user = getSessionUser(req);
-    } catch (authErr: any) {
-      console.error("[payments/create] Auth hatası:", authErr?.message);
-    }
-
-    if (!user) {
-      console.log("[payments/create] Oturum bulunamadı");
-      return res.status(401).json({
-        ok: false,
-        error: "Ödeme yapmak için lütfen Google ile giriş yapın",
+    if (data.status !== 'success') {
+      console.error('[iyzico] Hata — tam yanıt:', data);
+      return res.status(400).json({
+        error: data.errorMessage,
+        code: data.errorCode,
+        sentCallbackUrl: callbackUrl,
       });
     }
 
-    // 2. Body parse
-    let body: any = {};
-    try {
-      body = req.body || {};
-      if (typeof body === "string") body = JSON.parse(body);
-    } catch {
-      return res.status(400).json({ ok: false, error: "Geçersiz istek gövdesi" });
-    }
-
-    const { productCode, returnUrl } = body;
-
-    // 3. Ürün doğrulama
-    if (!productCode || typeof productCode !== "string") {
-      return res.status(400).json({ ok: false, error: "productCode gerekli" });
-    }
-    const product = getServerProduct(productCode);
-    if (!product) {
-      return res.status(400).json({ ok: false, error: `"${productCode}" geçersiz ürün kodu` });
-    }
-
-    const safeUserId = sanitizeUserId(user.id);
-    const safeEmail = user.email;
-    const safeReturnUrl = isAllowedReturnUrl(returnUrl);
-    // iyzico conversationId max 36 karakter — kısa ID üret
-    const shortHash = crypto.createHash("md5").update(safeUserId + Date.now()).digest("hex").slice(0, 12);
-    const orderId = `NUR-${shortHash}`;
-
-    console.log("[payments/create] İstek:", {
-      user: safeEmail,
-      product: product.code,
-      orderId,
-      livePayments: process.env.VITE_PAYMENTS_LIVE,
-      sandbox: process.env.IYZICO_SANDBOX,
-    });
-
-    // 4. Demo mod
-    if (process.env.VITE_PAYMENTS_LIVE !== "true") {
-      console.log("[payments/create] Demo mod — ödeme atlanıyor");
-      return res.status(200).json({
-        ok: true,
-        demo: true,
-        message: "DEMO: Ödeme atlandı",
-        orderId,
-        product,
-      });
-    }
-
-    // 5. Canlı mod — env kontrolü
-    const iyzicoApiKey = process.env.IYZICO_API_KEY || "";
-    const iyzicoSecretKey = process.env.IYZICO_SECRET_KEY || "";
-    const sandbox = process.env.IYZICO_SANDBOX === "true";
-
-    console.log("[payments/create] Env:", {
-      hasApiKey: !!iyzicoApiKey,
-      hasSecretKey: !!iyzicoSecretKey,
-      sandbox,
-      provider: process.env.PAYMENTS_PROVIDER,
-    });
-
-    if (!iyzicoApiKey || !iyzicoSecretKey) {
-      console.error("[payments/create] iyzico anahtarları eksik");
-      return res.status(500).json({
-        ok: false,
-        error: "IYZICO_API_KEY veya IYZICO_SECRET_KEY tanımlı değil — Vercel Environment Variables bölümünden ekleyin",
-      });
-    }
-
-    // 6. Supabase'e sipariş kaydı (hata olsa bile devam)
-    await saveOrder({
-      orderId,
-      userId: safeUserId,
-      productCode: product.code,
-      amountMinor: product.amountMinor,
-      currency: product.currency,
-    });
-
-    // Gerçek client IP'yi al (Vercel x-forwarded-for header'ından)
-    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
-    const clientIp = forwarded || "85.110.0.1";
-
-    // 7. iyzico checkout form
-    const checkoutResult = await createIyzicoCheckoutForm({
-      apiKey: iyzicoApiKey,
-      secretKey: iyzicoSecretKey,
-      orderId,
-      price: product.amountMinor,
-      currency: product.currency || "TRY",
-      buyerEmail: safeEmail,
-      buyerName: safeEmail.split("@")[0] || "Kullanici",
-      returnUrl: safeReturnUrl,
-      sandbox,
-      clientIp,
-    });
-
-    if (!checkoutResult.ok) {
-      console.error("[payments/create] iyzico başarısız:", checkoutResult.error);
-      return res.status(500).json({
-        ok: false,
-        error: checkoutResult.error,
-      });
-    }
-
-    console.log("[payments/create] Başarılı, form içeriği gönderiliyor");
     return res.status(200).json({
-      ok: true,
-      checkoutFormContent: checkoutResult.checkoutFormContent,
-      paymentPageUrl: checkoutResult.paymentPageUrl,
-      token: checkoutResult.token,
-      orderId,
-      product,
-      returnUrl: safeReturnUrl,
+      token: data.token,
+      checkoutFormContent: data.checkoutFormContent,
+      paymentPageUrl: data.paymentPageUrl,
+      conversationId,
     });
-  } catch (err: any) {
-    console.error("[payments/create] Beklenmeyen hata:", err?.message, err?.stack);
-    return res.status(500).json({
-      ok: false,
-      error: `Sunucu hatası: ${err?.message || "bilinmeyen"}`,
-    });
+  } catch (e: any) {
+    console.error('[payments/create] fatal:', e);
+    return res.status(500).json({ error: e?.message ?? 'unknown' });
   }
 }
+```
+
+---
+
+## Hemen yapman gerekenler
+
+**1) Vercel env değişkenleri** (Production + Preview ikisine de ekle, sonra **Redeploy**):
+
+```
+IYZICO_API_KEY      = ...
+IYZICO_SECRET_KEY   = ...
+IYZICO_SANDBOX      = false
+NEXT_PUBLIC_SITE_URL= https://nurstudyo.com
+```
+> Env değişkeni ekledikten sonra **yeni deploy** almazsan eski build eski env ile çalışmaya devam eder — hatanın klasik sebebi budur.
+
+**2) Callback endpoint'i oluştur:** `api/payments/callback.ts` — iyzico buraya **POST** (form-urlencoded) ile `token` gönderir. Yoksa ödeme sonrası kullanıcı 404 alır:
+
+```ts
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const token = req.body?.token || req.query?.token;
+  // retrieve çağrısı ile ödemeyi doğrula, sonra:
+  res.redirect(303, `/odeme-sonuc?token=${token}`);
+}
+```
+> `vercel.json`'da rewrite/redirect varsa `/api/payments/callback` yolunun POST'u bozmadığından emin ol.
+
+**3) Doğrulama:** deploy sonrası log'da şunu görmelisin:
+```
+[iyzico] İstek gönderiliyor: { callbackUrl: "https://nurstudyo.com/api/payments/callback", ... }
+```
+`undefined/api/payments/callback` görüyorsan → env hâlâ yok demektir.
+
+---
+
+### Eğer v1 (IYZWS / PKI string) kullanmakta ısrarlıysan
+`callbackUrl` PKI string'inde **şu sırada** olmalı, aksi halde imza tutmaz:
+
+```
+[locale=tr,conversationId=...,price=...,basketId=...,paymentGroup=PRODUCT,buyer=[...],shippingAddress=[...],billingAddress=[...],basketItems=[...],callbackUrl=https://...,currency=TRY,paidPrice=...]
+```
+
+Ama tavsiyem yukarıdaki **v2**; sıralama derdi tamamen ortadan kalkıyor.
+
+İstersen mevcut `create.ts` dosyanın içeriğini buraya yapıştır, satır satır hangi yerde `callbackUrl`'in düştüğünü göstereyim.
