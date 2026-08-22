@@ -178,18 +178,32 @@ function getSessionUser(req: VercelRequest): AuthUser | null {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// IYZICO HMAC-SHA256 İMZA
+// IYZICO SDK v2 — Resmi imza ve header oluşturma
 // ═══════════════════════════════════════════════════════════════
-function createIyzicoSignature(secretKey: string, requestBody: string): string {
-  // iyzico v1: HMAC-SHA256(jsonBody, secretKey) — secretKey sadece key olarak kullanılır
-  return crypto
-    .createHmac("sha256", secretKey)
-    .update(requestBody, "utf8")
-    .digest("base64");
+function generateRandomString(): string {
+  return Math.floor(Date.now() / 1000) + Math.random().toString().slice(2);
 }
 
-function randomNonce(): string {
-  return crypto.randomBytes(16).toString("hex");
+function generateAuthHeaderV2(
+  apiKey: string,
+  secretKey: string,
+  uri: string,
+  jsonBody: string,
+  randomString: string
+): string {
+  // SDK'ya göre: HMAC-SHA256(randomString + uri + jsonBody, secretKey) → hex
+  const signature = crypto
+    .createHmac("sha256", secretKey)
+    .update(randomString + uri + jsonBody)
+    .digest("hex");
+  // Authorization: IYZWSv2 base64(apiKey:xxx&randomKey:xxx&signature:xxx)
+  const authParams = [
+    "apiKey:" + apiKey,
+    "randomKey:" + randomString,
+    "signature:" + signature,
+  ];
+  const authString = authParams.join("&");
+  return "IYZWSv2 " + Buffer.from(authString).toString("base64");
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -238,28 +252,36 @@ async function createIyzicoCheckoutForm(params: {
     currency: params.currency || "TRY",
     basketId: basketId,
     paymentGroup: "PRODUCT",
+    paymentChannel: "WEB",
+    installment: "1",
     buyer: {
       id: (params.buyerName?.split("@")[0] || "user").slice(0, 36),
       name: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
       surname: buyerSurname.slice(0, 36),
+      gsmNumber: "+905000000000",
       email: params.buyerEmail,
       identityNumber: "10000000146",
+      lastLoginDate: new Date().toISOString().slice(0, 19).replace("T", " "),
+      registrationDate: "2024-01-01 00:00:00",
       registrationAddress: "Istanbul",
+      ip: clientIp,
       city: "Istanbul",
       country: "Turkey",
-      ip: clientIp,
+      zipCode: "34000",
     },
     shippingAddress: {
       contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
       city: "Istanbul",
       country: "Turkey",
       address: "Istanbul",
+      zipCode: "34000",
     },
     billingAddress: {
       contactName: (params.buyerName?.split("@")[0] || "Kullanici").slice(0, 36),
       city: "Istanbul",
       country: "Turkey",
       address: "Istanbul",
+      zipCode: "34000",
     },
     // callbackUrl merchant settings'de tanımlı değilse hata verir — kaldırıldı
     basketItems: [
@@ -267,6 +289,7 @@ async function createIyzicoCheckoutForm(params: {
         id: "nur_product_001",
         name: params.orderId || "Nur Urun",
         category1: "Dijital Hizmet",
+        category2: "Video Uretim",
         itemType: "VIRTUAL",
         price: priceStr,
       },
@@ -274,29 +297,34 @@ async function createIyzicoCheckoutForm(params: {
   };
 
   const jsonBody = JSON.stringify(requestPayload);
-  const signature = createIyzicoSignature(params.secretKey, jsonBody);
-  const nonce = randomNonce();
+  const randomString = generateRandomString();
+  const apiPath = "/payment/iyzipos/checkoutform/initialize/auth/ecom";
+  const authHeader = generateAuthHeaderV2(
+    params.apiKey,
+    params.secretKey,
+    apiPath,
+    jsonBody,
+    randomString
+  );
 
   console.log("[iyzico] İstek gönderiliyor:", {
-    url: `${baseUrl}/payment/iyzipos/checkoutform/initialize`,
+    url: `${baseUrl}${apiPath}`,
     sandbox: params.sandbox,
     conversationId: convId,
     basketId,
     price: priceStr,
     currency: params.currency,
-    buyerIdentity: requestPayload.buyer?.identityNumber,
-    buyerIp: requestPayload.buyer?.ip,
   });
-  console.log("[iyzico] Tam payload:", JSON.stringify(requestPayload, null, 2));
 
   try {
     const response = await fetch(
-      `${baseUrl}/payment/iyzipos/checkoutform/initialize`,
+      `${baseUrl}${apiPath}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `PIWS2 v1:${params.apiKey}:${signature}:${nonce}`,
+          "x-iyzi-rnd": randomString,
+          Authorization: authHeader,
         },
         body: jsonBody,
       }
