@@ -390,9 +390,16 @@ export async function startCheckout(req: CheckoutRequest): Promise<CheckoutRespo
         returnUrl: req.returnUrl ?? window.location.origin + "/odeme-sonuc",
       }),
     });
-    if (!res.ok) return { ok: false, error: `Ödeme servisi hatası (${res.status})` };
-    return (await res.json()) as CheckoutResponse;
-  } catch {
-    return { ok: false, error: "Ödeme servisine ulaşılamadı" };
+    // Hata durumunda bile response body'yi oku — sunucunun gerçek hata mesajını göster
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = json?.error || json?.message || `Ödeme servisi hatası (${res.status})`;
+      console.error("[startCheckout] Sunucu hatası:", res.status, msg, json);
+      return { ok: false, error: msg };
+    }
+    return (json || {}) as CheckoutResponse;
+  } catch (err: any) {
+    console.error("[startCheckout] Bağlantı hatası:", err?.message);
+    return { ok: false, error: `Ödeme servisine ulaşılamadı: ${err?.message || ""}` };
   }
 }
