@@ -53,10 +53,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Ban reason input state
   const [banReasonInput, setBanReasonInput] = useState<string>("");
 
-  const banLogs: BanLog[] = getBanLogs();
+  const [banLogs, setBanLogs] = useState<BanLog[]>(() => getBanLogs());
 
   const handleBan = async (email: string, reason: string) => {
-    if (!await assertAdminAction("ban_user", email, reason)) return;
     if (!isAdminEmail(currentUserEmail)) {
       notify("⛔ Sadece Kurucu Admin ban yetkisine sahiptir.");
       return;
@@ -73,26 +72,37 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
     const finalReason = sanitizeText(reason).trim().slice(0, 300) || "Yasal ihlal / Sistem güvenlik uyarısı";
     const banState = await serverManage("ban_user", { email, reason: finalReason });
-    if (banState === "error") return;
+    // Ban her zaman yerel olarak kaydedilir (sunucu hata verse bile)
     banUserInDb(email, finalReason, currentUserEmail, false);
     setSysConfig(getSystemConfig());
+    setBanLogs(getBanLogs());
     onUpdateUser(email, "free", 0);
     setBanReasonInput("");
-    notify(banState === "done" ? `⛔ ${email} DB'ye işlendi ve süresiz banlandı!` : `⛔ ${email} süresiz banlandı! (yerel kayıt)`);
+    if (banState === "done") {
+      notify(`⛔ ${email} DB'ye işlendi ve süresiz banlandı!`);
+    } else if (banState === "fallback") {
+      notify(`⛔ ${email} süresiz banlandı! (yerel kayıt — DB henüz bağlı değil)`);
+    } else {
+      notify(`⛔ ${email} yerel olarak banlandı (sunucu hatası, DB'ye işlenemedi)`);
+    }
   };
 
   const handleUnban = async (email: string) => {
-    if (!await assertAdminAction("unban_user", email)) return;
     if (!isAdminEmail(currentUserEmail)) {
       notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
       return;
     }
     const unbanState = await serverManage("unban_user", { email });
-    if (unbanState === "error") return;
+    // Ban her zaman yerel olarak kaldırılır
     unbanUserInDb(email);
     setSysConfig(getSystemConfig());
+    setBanLogs(getBanLogs());
     onUpdateUser(email, "free", 20);
-    notify(`✅ ${email} banı kaldırıldı${unbanState === "done" ? " ve DB'ye işlendi" : " (yerel kayıt)"}.`);
+    if (unbanState === "done") {
+      notify(`✅ ${email} banı kaldırıldı ve DB'ye işlendi`);
+    } else {
+      notify(`✅ ${email} banı yerel olarak kaldırıldı (DB henüz bağlı değil)`);
+    }
   };
 
   // New module creation form state
@@ -113,6 +123,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     try {
       const response = await fetch("/api/admin/action", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, target, reason }),
       });
@@ -135,6 +146,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     try {
       const response = await fetch("/api/admin/action", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, target: payload.email || payload.featureId || "", ...payload }),
       });
@@ -151,9 +163,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   const handleTierChange = async (email: string, newTier: Tier) => {
-    if (!await assertAdminAction("change_tier", email)) return;
     const tierState = await serverManage("change_tier", { email, tier: newTier });
     if (tierState === "error") return;
+    // Sunucu başarılıysa localStorage'ı güncelle
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
         return { ...u, tier: newTier, updatedAt: new Date().toISOString() };
@@ -163,7 +175,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const newCfg = { ...sysConfig, users: updatedUsers };
     setSysConfig(newCfg);
     saveSystemConfig(newCfg);
-
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
@@ -172,33 +183,27 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   const handleJetonChange = async (email: string, delta: number) => {
-    if (!await assertAdminAction("change_jeton", email)) return;
     const targetUserNow = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    const jetonState = await serverManage("change_jeton", {
-      email,
-      total: Math.max(0, (targetUserNow?.jeton ?? 0) + delta),
-    });
+    const newTotal = Math.max(0, (targetUserNow?.jeton ?? 0) + delta);
+    const jetonState = await serverManage("change_jeton", { email, total: newTotal });
     if (jetonState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
-        const nextJeton = Math.max(0, u.jeton + delta);
-        return { ...u, jeton: nextJeton, updatedAt: new Date().toISOString() };
+        return { ...u, jeton: newTotal, updatedAt: new Date().toISOString() };
       }
       return u;
     });
     const newCfg = { ...sysConfig, users: updatedUsers };
     setSysConfig(newCfg);
     saveSystemConfig(newCfg);
-
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${targetUser.jeton} ⚡ Üretim hakkı (${delta > 0 ? "+" + delta : delta})`);
+      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${newTotal} ⚡ Üretim hakkı (${delta > 0 ? "+" + delta : delta})`);
     }
   };
 
   const handleDirectJetonSet = async (email: string, exactAmount: number) => {
-    if (!await assertAdminAction("change_jeton", email)) return;
     const safeAmount = Math.max(0, Math.floor(exactAmount));
     const setState = await serverManage("change_jeton", { email, total: safeAmount });
     if (setState === "error") return;
@@ -250,6 +255,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     try {
       const response = await fetch(`/api/admin/action`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "list_users" }),
       });
@@ -275,7 +281,17 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const target = email.trim().toLowerCase();
     if (!isValidEmail(target)) { notify("⚠️ Geçerli bir e-posta adresi gir"); return; }
     const safeAmount = clampNumber(amount, 0, 100000);
-    if (!await assertAdminAction("gift_rights", target)) return;
+    // Önce tier değiştir (eğer belirtildiyse)
+    if (newTier) {
+      const tierState = await serverManage("change_tier", { email: target, tier: newTier });
+      if (tierState === "error") return;
+    }
+    // Sonra jeton ekle
+    const currentState = users.find((u) => u.email.toLowerCase() === target);
+    const newTotal = Math.max(0, (currentState?.jeton ?? 0) + safeAmount);
+    const jetonState = await serverManage("change_jeton", { email: target, total: newTotal });
+    if (jetonState === "error") return;
+    // Başarılıysa localStorage'ı güncelle
     const result = giftRightsToUser(target, safeAmount, newTier);
     if (!result.ok) {
       notify(`❌ ${target} bulunamadı`);
@@ -289,7 +305,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleSetTierViaEmail = async (email: string, newTier: Tier) => {
     const target = email.trim().toLowerCase();
-    if (!await assertAdminAction("change_tier", target)) return;
+    const tierState = await serverManage("change_tier", { email: target, tier: newTier });
+    if (tierState === "error") return;
     const updated = setUserTier(target, newTier);
     if (!updated) {
       notify(`❌ ${target} sistemde kayıtlı değil`);
@@ -297,12 +314,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
     setSysConfig(getSystemConfig());
     onUpdateUser(updated.email, updated.tier, updated.jeton);
-    notify(` ${updated.email} → ${newTier.toUpperCase()} olarak ayarlandı`);
+    notify(`👑 ${updated.email} → ${newTier.toUpperCase()} olarak ayarlandı`);
     setEmailSearchResult(updated);
   };
 
   const handleToggleModule = async (modId: string) => {
-    if (!await assertAdminAction("toggle_module", modId)) return;
     const updatedMods = sysConfig.modules.map((m) => {
       if (m.id === modId) return { ...m, active: !m.active };
       return m;
@@ -314,7 +330,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   const handleCreateModule = async () => {
-    if (!await assertAdminAction("create_module", newModTitle.trim())) return;
     if (!newModTitle.trim()) {
       notify("Lütfen modül başlığı giriniz.");
       return;
@@ -337,7 +352,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   };
 
   const handlePushGist = async () => {
-    if (!await assertAdminAction("push_config", ghGistId.trim() || "new-gist")) return;
     if (!ghToken.trim()) {
       notify("Lütfen GitHub Personal Access Token giriniz.");
       return;
@@ -520,30 +534,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 )}
               </div>
 
-              {/* 1. Kullanıcı Arama Çubuğu */}
+              {/* Kayıtlı Kullanıcılar Listesi */}
               <div>
                 <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                  🔍 1. Kullanıcı Arama Çubuğu (E-posta veya Ad)
+                  🔍 Kayıtlı Kullanıcılar
                 </label>
-                <div className="relative">
-                  <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-                  <input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Örn: kayaom1233@gmail.com veya user@..."
-                    className="glass-soft w-full rounded-2xl py-3 pl-10 pr-4 text-[12px] font-medium text-white outline-none placeholder:text-white/30 focus:border-[color:var(--accent)]"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-
-                {/* Arama Sonuç Listesi / Seçim Etiketleri */}
+                {/* Kullanıcı Seçim Etiketleri */}
                 <div className="mt-2.5 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto scrollbar-thin p-1 rounded-xl bg-black/20">
                   {filteredUsers.map((u) => {
                     const isSelected = u.email.toLowerCase() === selectedEmail.toLowerCase();
@@ -672,13 +668,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         ))}
                       </div>
 
-                      {/* ★ SINIRSIZ JETON — admin/test hesapları için */}
+                      {/* ★ BAKİYE SIFIRLA */}
                       <button
-                        onClick={() => handleDirectJetonSet(selectedUser.email, 999999)}
-                        className="mt-1 w-full rounded-lg py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
-                        style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+                        onClick={() => handleDirectJetonSet(selectedUser.email, 0)}
+                        className="mt-1 w-full rounded-lg border border-red-500/30 bg-red-500/10 py-1.5 text-[9.5px] font-black text-red-400 transition hover:bg-red-500/20 active:scale-95"
                       >
-                        ♾️ SINIRSIZ JETON TANIMLA
+                        🔄 BAKİYEYİ SIFIRLA
                       </button>
                     </div>
                   </div>
