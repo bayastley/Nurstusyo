@@ -146,7 +146,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   const handleBuy = (code: string) => {
     if (!accepted) {
-      toast("Lütfen satın alma koşullarını onaylayın");
+      setTermsOpen(true);
+      toast("⚠️ Satın alma koşullarını kabul etmeniz gerekiyor");
       return;
     }
 

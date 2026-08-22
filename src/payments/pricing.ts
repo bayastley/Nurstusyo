@@ -8,7 +8,86 @@
 //   kelimeleri bu dosyada ve arayüzde KULLANILMAZ.
 // ════════════════════════════════════════════════════════
 
-export type Currency = "TRY";
+export type Currency = "TRY" | "USD" | "EUR" | "GBP";
+
+// ════════════════════════════════════════════════════════
+// ULUSLARARASI FİYATLANDIRMA — Konum bazlı fiyat çarpanı
+// ════════════════════════════════════════════════════════
+const REGION_MULTIPLIERS: Record<string, { mult: number; currency: Currency; symbol: string }> = {
+  TR: { mult: 1, currency: "TRY", symbol: "₺" },
+  // Avrupa + Kuzey Amerika + Avustralya — yüksek gelir
+  US: { mult: 4, currency: "USD", symbol: "$" },
+  GB: { mult: 4, currency: "GBP", symbol: "£" },
+  DE: { mult: 3.5, currency: "EUR", symbol: "€" },
+  FR: { mult: 3.5, currency: "EUR", symbol: "€" },
+  NL: { mult: 3.5, currency: "EUR", symbol: "€" },
+  BE: { mult: 3.5, currency: "EUR", symbol: "€" },
+  AT: { mult: 3.5, currency: "EUR", symbol: "€" },
+  IT: { mult: 3, currency: "EUR", symbol: "€" },
+  ES: { mult: 3, currency: "EUR", symbol: "€" },
+  PT: { mult: 3, currency: "EUR", symbol: "€" },
+  SE: { mult: 3.5, currency: "EUR", symbol: "€" },
+  NO: { mult: 4, currency: "EUR", symbol: "€" },
+  DK: { mult: 3.5, currency: "EUR", symbol: "€" },
+  FI: { mult: 3.5, currency: "EUR", symbol: "€" },
+  CH: { mult: 4, currency: "EUR", symbol: "€" },
+  AU: { mult: 3.5, currency: "USD", symbol: "$" },
+  CA: { mult: 3.5, currency: "USD", symbol: "$" },
+  JP: { mult: 3, currency: "USD", symbol: "$" },
+  KR: { mult: 3, currency: "USD", symbol: "$" },
+  // Orta Doğu + Kuzey Afrika — orta gelir
+  SA: { mult: 2.5, currency: "USD", symbol: "$" },
+  AE: { mult: 2.5, currency: "USD", symbol: "$" },
+  QA: { mult: 2.5, currency: "USD", symbol: "$" },
+  KW: { mult: 2.5, currency: "USD", symbol: "$" },
+  BH: { mult: 2.5, currency: "USD", symbol: "$" },
+  OM: { mult: 2, currency: "USD", symbol: "$" },
+  EG: { mult: 1.5, currency: "USD", symbol: "$" },
+  MA: { mult: 1.5, currency: "USD", symbol: "$" },
+  TN: { mult: 1.5, currency: "USD", symbol: "$" },
+  DZ: { mult: 1.5, currency: "USD", symbol: "$" },
+  JO: { mult: 2, currency: "USD", symbol: "$" },
+  LB: { mult: 2, currency: "USD", symbol: "$" },
+  IQ: { mult: 1.5, currency: "USD", symbol: "$" },
+  // Güney Asya — düşük-orta gelir
+  PK: { mult: 1.2, currency: "USD", symbol: "$" },
+  BD: { mult: 1.2, currency: "USD", symbol: "$" },
+  IN: { mult: 1.5, currency: "USD", symbol: "$" },
+  ID: { mult: 1.3, currency: "USD", symbol: "$" },
+  MY: { mult: 1.5, currency: "USD", symbol: "$" },
+  // Afrika — düşük gelir
+  NG: { mult: 1.2, currency: "USD", symbol: "$" },
+  GH: { mult: 1.2, currency: "USD", symbol: "$" },
+  KE: { mult: 1.2, currency: "USD", symbol: "$" },
+  ZA: { mult: 1.5, currency: "USD", symbol: "$" },
+};
+
+let _cachedCountry: string | null = null;
+let _countryFetchTime = 0;
+const COUNTRY_CACHE_MS = 60 * 60 * 1000; // 1 saat
+
+/** Kullanıcının ülke kodunu algıla (ipapi.co ile) */
+export async function detectCountry(): Promise<string> {
+  if (_cachedCountry && Date.now() - _countryFetchTime < COUNTRY_CACHE_MS) {
+    return _cachedCountry;
+  }
+  try {
+    const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(5000) });
+    const data = await res.json() as { country_code?: string };
+    _cachedCountry = (data.country_code || "TR").toUpperCase();
+    _countryFetchTime = Date.now();
+    return _cachedCountry;
+  } catch {
+    _cachedCountry = "TR";
+    _countryFetchTime = Date.now();
+    return "TR";
+  }
+}
+
+/** Ülke koduna göre fiyat çarpanı ve para birimi */
+export function getRegionPricing(countryCode: string) {
+  return REGION_MULTIPLIERS[countryCode.toUpperCase()] ?? { mult: 2, currency: "USD" as Currency, symbol: "$" };
+}
 export type ProductKind = "subscription" | "package";
 export type VideoKind = "kisa" | "uzun" | "tam";
 
@@ -204,6 +283,34 @@ export function getProduct(code: string): Product | null {
 export function formatPrice(p: Product): string {
   const major = p.amountMinor / 100;
   return `₺${major.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`;
+}
+
+/**
+ * ★ ULUSLARARASI FİYAT: Ülkeye göre fiyat hesapla
+ *   Try fiyatını veritabanına yollar, display price'ı ülkedeki para birimine çevirir.
+ */
+export function getDisplayPrice(p: Product, countryCode: string): { price: number; currency: Currency; symbol: string; formatted: string } {
+  const region = getRegionPricing(countryCode);
+  // TRY bazlı fiyattan hedef para birimine çevir (yaklaşık kur)
+  const tryAmount = p.amountMinor / 100;
+  let converted: number;
+  if (region.currency === "TRY") {
+    converted = tryAmount;
+  } else if (region.currency === "USD") {
+    converted = Math.round((tryAmount / 35) * region.mult * 100) / 100; // ~35 TRY/USD
+  } else if (region.currency === "EUR") {
+    converted = Math.round((tryAmount / 38) * region.mult * 100) / 100; // ~38 TRY/EUR
+  } else if (region.currency === "GBP") {
+    converted = Math.round((tryAmount / 44) * region.mult * 100) / 100; // ~44 TRY/GBP
+  } else {
+    converted = tryAmount * region.mult;
+  }
+  // Yuvarla (güzel görünmesi için)
+  if (converted > 100) converted = Math.round(converted);
+  else if (converted > 10) converted = Math.round(converted * 10) / 10;
+  else converted = Math.round(converted * 100) / 100;
+  const formatted = `${region.symbol}${converted.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: converted < 10 ? 2 : 0 })}`;
+  return { price: converted, currency: region.currency, symbol: region.symbol, formatted };
 }
 
 /** Video başına düşen birim ücret — paket karşılaştırması için */

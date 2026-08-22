@@ -458,14 +458,43 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 notify(result.error || "Ödeme başlatılamadı");
                 return;
               }
-              // iyzico checkout form HTML'i döndüyse iframe içinde göster
+              // Demo modunda — ödemeyi atla, ürünü doğrudan tanımla
+              if (result.demo) {
+                const product = result as any;
+                if (product.product?.grantTier === "pro") {
+                  setTier("pro"); setCurrentTier("pro");
+                  const bonus = 250;
+                  const cur = Number(localStorage.getItem("nur_jeton") || 0);
+                  const next = cur + bonus;
+                  localStorage.setItem("nur_jeton", String(next));
+                  setJetonCount(next);
+                  notify(`✅ [DEMO] NÛR PRO üyeliğin aktif edildi +${bonus} ⚡`);
+                } else if (product.product?.grantTier === "elit") {
+                  setTier("elit"); setCurrentTier("elit");
+                  const bonus = 500;
+                  const cur = Number(localStorage.getItem("nur_jeton") || 0);
+                  const next = cur + bonus;
+                  localStorage.setItem("nur_jeton", String(next));
+                  setJetonCount(next);
+                  notify(`👑 [DEMO] NÛR ELİT üyeliğin aktif edildi +${bonus} ⚡`);
+                } else if (product.product?.videoCount) {
+                  const amount = product.product.videoCount;
+                  const cur = Number(localStorage.getItem("nur_jeton") || 0);
+                  const next = cur + amount;
+                  localStorage.setItem("nur_jeton", String(next));
+                  setJetonCount(next);
+                  notify(`🎬 [DEMO] ${amount} video hakkı eklendi`);
+                }
+                setPremiumOpen(false);
+                return;
+              }
+              // Gerçek ödeme — iyzico checkout form
               if (result.checkoutFormContent) {
                 const w = window.open("", "_blank");
                 if (w) {
                   w.document.write(result.checkoutFormContent);
                   w.document.close();
                 } else {
-                  // popup engellendiyse redirect et
                   if (result.paymentPageUrl) window.location.href = result.paymentPageUrl;
                   else notify("Ödeme penceresi açılamadı, lütfen popup engelleyicisini devre dışı bırakın");
                 }
