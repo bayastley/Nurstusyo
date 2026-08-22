@@ -827,7 +827,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   son tam ayetten sonrası otomatik bırakılır. Kullanıcı bunu seçim anında görür.
   useEffect(() => {
     if (selected.length < 2) return;
-    const cap = mode === "short" ? 59 : mode === "long" ? 150 : JETON.TAM_SURUM_CAP_SANIYE;
+    const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
     const estimateAyahSeconds = (item: SelectedAyah) => {
       if (item.s === 0) return Math.max(4, Math.min(22, item.tr.length * 0.055));
       const arClean = item.ar.replace(/[\u064B-\u065F\u0670]/g, "");
@@ -843,7 +843,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       acc += dur + 0.03;
       fitCount += 1;
     }
-    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (150 sn)" : "Tam Sürüm (40:00)";
+    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (40:00)";
     const key = `${mode}-${selected.length}-${fitCount}-${Math.round(total)}`;
     const nowMs = Date.now();
     if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;
@@ -1630,7 +1630,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       const AudioContextClass = window.AudioContext || window.webkitAudioContext, audioContext = new AudioContextClass();
       const buffers: AudioBuffer[] = [], usedItems: SelectedAyah[] = [], audioOffsets: number[] = [];
       const ayetSüreleri: Array<{ start: number; dur: number }> = [];
-      const cap = mode === "short" ? 59 : mode === "long" ? 150 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
+      const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
       if (surahOnlyReciter) {
         setProgress(10);
         const sNum = selected[0].s;
@@ -1666,7 +1666,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       }
       if (!surahOnlyReciter && usedItems.length < selected.length) {
         const dropped = selected.length - usedItems.length;
-        const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (150 sn)" : "Tam Sürüm (24:35)";
+        const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (24:35)";
         notify(`⚠️ ${modeLabel} süresi aşıldı · son ${dropped} ayet eklenmedi · ${usedItems.length} ayet ile üretiliyor`);
       }
       if (!buffers.length) throw new Error("Ses dosyaları alınamadı");
