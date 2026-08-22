@@ -204,6 +204,7 @@ async function createIyzicoCheckoutForm(params: {
   buyerName: string;
   returnUrl: string;
   sandbox: boolean;
+  clientIp?: string;
 }): Promise<{
   ok: boolean;
   checkoutFormContent?: string;
@@ -217,6 +218,13 @@ async function createIyzicoCheckoutForm(params: {
 
   const priceStr = (params.price / 100).toFixed(2);
 
+  // Kullanıcı adından surname çıkar
+  const nameParts = (params.buyerName || "Kullanici").split(/[.@+_-]/);
+  const buyerSurname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "Kullanici";
+
+  // Gerçek client IP'yi al
+  const clientIp = params.clientIp || "85.110.0.1";
+
   const requestPayload: Record<string, any> = {
     locale: "tr",
     conversationId: params.orderId,
@@ -226,27 +234,27 @@ async function createIyzicoCheckoutForm(params: {
     basketId: params.orderId,
     paymentGroup: "PRODUCT",
     buyer: {
-      id: params.orderId.slice(0, 36),
-      name: params.buyerName || "Kullanıcı",
-      surname: ".",
+      id: params.buyerName?.split("@")[0] || "user",
+      name: params.buyerName?.split("@")[0] || "Kullanici",
+      surname: buyerSurname,
       email: params.buyerEmail,
       identityNumber: "11111111111",
-      registrationAddress: "İnternet Kullanıcısı",
+      registrationAddress: "Online Kullanici",
       city: "Istanbul",
       country: "Turkey",
-      ip: "0.0.0.0",
+      ip: clientIp,
     },
     shippingAddress: {
-      contactName: params.buyerName || "Kullanıcı",
+      contactName: params.buyerName?.split("@")[0] || "Kullanici",
       city: "Istanbul",
       country: "Turkey",
-      address: "İnternet Kullanıcısı",
+      address: "Online Satis",
     },
     billingAddress: {
-      contactName: params.buyerName || "Kullanıcı",
+      contactName: params.buyerName?.split("@")[0] || "Kullanici",
       city: "Istanbul",
       country: "Turkey",
-      address: "İnternet Kullanıcısı",
+      address: "Online Satis",
     },
     callbackUrl: "https://nurstudyo.com/api/payments/webhook?provider=iyzico",
   };
@@ -288,11 +296,13 @@ async function createIyzicoCheckoutForm(params: {
       };
     }
 
-    console.error("[iyzico] Hata:", {
+    console.error("[iyzico] Hata — tam yanıt:", JSON.stringify({
       status: result.status,
       errorCode: result.errorCode,
       errorMessage: result.errorMessage,
-    });
+      errorGroup: result.errorGroup,
+      systemTime: result.systemTime,
+    }));
 
     return {
       ok: false,
@@ -444,7 +454,9 @@ export default async function handler(
     const safeUserId = sanitizeUserId(user.id);
     const safeEmail = user.email;
     const safeReturnUrl = isAllowedReturnUrl(returnUrl);
-    const orderId = `NUR-${product.code}-${safeUserId}-${Date.now()}`;
+    // iyzico conversationId max 36 karakter — kısa ID üret
+    const shortHash = crypto.createHash("md5").update(safeUserId + Date.now()).digest("hex").slice(0, 12);
+    const orderId = `NUR-${shortHash}`;
 
     console.log("[payments/create] İstek:", {
       user: safeEmail,
@@ -495,6 +507,10 @@ export default async function handler(
       currency: product.currency,
     });
 
+    // Gerçek client IP'yi al (Vercel x-forwarded-for header'ından)
+    const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+    const clientIp = forwarded || "85.110.0.1";
+
     // 7. iyzico checkout form
     const checkoutResult = await createIyzicoCheckoutForm({
       apiKey: iyzicoApiKey,
@@ -503,9 +519,10 @@ export default async function handler(
       price: product.amountMinor,
       currency: product.currency || "TRY",
       buyerEmail: safeEmail,
-      buyerName: safeEmail.split("@")[0] || "Kullanıcı",
+      buyerName: safeEmail.split("@")[0] || "Kullanici",
       returnUrl: safeReturnUrl,
       sandbox,
+      clientIp,
     });
 
     if (!checkoutResult.ok) {
