@@ -8,10 +8,8 @@ import { createOrder } from "../_shared/supabase";
 
 declare const process: { env: Record<string, string | undefined> };
 
-// ─── iyzico HMAC-SHA256 İmza Oluşturucu ────────────────────────────────────
 function createIyzicoSignature(secretKey: string, requestBody: string): string {
-  const data = requestBody + secretKey;
-  return crypto.createHmac("sha256", secretKey).update(data, "utf8").digest("base64");
+  return crypto.createHmac("sha256", secretKey).update(requestBody + secretKey, "utf8").digest("base64");
 }
 
 function randomNonce(): string {
@@ -19,194 +17,85 @@ function randomNonce(): string {
 }
 
 async function createIyzicoCheckoutForm(params: {
-  apiKey: string;
-  secretKey: string;
-  orderId: string;
-  price: number;
-  currency: string;
-  buyerEmail: string;
-  buyerName: string;
-  returnUrl: string;
-  sandbox?: boolean;
+  apiKey: string; secretKey: string; orderId: string; price: number;
+  currency: string; buyerEmail: string; buyerName: string; returnUrl: string; sandbox?: boolean;
 }): Promise<{ ok: boolean; checkoutFormContent?: string; paymentPageUrl?: string; token?: string; error?: string }> {
-  const baseUrl = params.sandbox
-    ? "https://sandbox-api.iyzipay.com"
-    : "https://api.iyzipay.com";
+  const baseUrl = params.sandbox ? "https://sandbox-api.iyzipay.com" : "https://api.iyzipay.com";
   const priceStr = (params.price / 100).toFixed(2);
-  const requestPayload = {
-    locale: "tr",
-    conversationId: params.orderId,
-    price: priceStr,
-    paidPrice: priceStr,
-    currency: params.currency || "TRY",
-    basketId: params.orderId,
-    paymentGroup: "PRODUCT",
+  const payload = {
+    locale: "tr", conversationId: params.orderId, price: priceStr, paidPrice: priceStr,
+    currency: params.currency || "TRY", basketId: params.orderId, paymentGroup: "PRODUCT",
     buyer: {
-      id: params.orderId.slice(0, 36),
-      name: params.buyerName || "Kullanıcı",
-      surname: ".",
-      email: params.buyerEmail,
-      identityNumber: "11111111111",
-      registrationAddress: "İnternet Kullanıcısı",
-      city: "Istanbul",
-      country: "Turkey",
-      ip: "0.0.0.0",
+      id: params.orderId.slice(0, 36), name: params.buyerName || "Kullanıcı", surname: ".",
+      email: params.buyerEmail, identityNumber: "11111111111",
+      registrationAddress: "İnternet Kullanıcısı", city: "Istanbul", country: "Turkey", ip: "0.0.0.0",
     },
-    shippingAddress: {
-      contactName: params.buyerName || "Kullanıcı",
-      city: "Istanbul",
-      country: "Turkey",
-      address: "İnternet Kullanıcısı",
-    },
-    billingAddress: {
-      contactName: params.buyerName || "Kullanıcı",
-      city: "Istanbul",
-      country: "Turkey",
-      address: "İnternet Kullanıcısı",
-    },
+    shippingAddress: { contactName: params.buyerName || "Kullanıcı", city: "Istanbul", country: "Turkey", address: "İnternet Kullanıcısı" },
+    billingAddress: { contactName: params.buyerName || "Kullanıcı", city: "Istanbul", country: "Turkey", address: "İnternet Kullanıcısı" },
     callbackUrl: "https://nurstudyo.com/api/payments/webhook?provider=iyzico",
   };
-  const jsonBody = JSON.stringify(requestPayload);
+  const jsonBody = JSON.stringify(payload);
   const signature = createIyzicoSignature(params.secretKey, jsonBody);
-  const nonce = randomNonce();
-  try {
-    const response = await fetch(`${baseUrl}/payment/iyzipos/checkoutform/auth/next`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `PIWS2 v1:${params.apiKey}:${signature}:${nonce}`,
-      },
-      body: jsonBody,
-    });
-    const result = await response.json() as any;
-    if (result.status === "success") {
-      return { ok: true, checkoutFormContent: result.checkoutFormContent, paymentPageUrl: result.paymentPageUrl, token: result.token };
-    }
-    console.error("[iyzico] Form oluşturulamadı:", JSON.stringify({ status: result.status, errorCode: result.errorCode, errorMessage: result.errorMessage, conversationId: params.orderId }));
-    return { ok: false, error: result.errorMessage || `iyzico hatası: ${result.errorCode || "bilinmeyen"}` };
-  } catch (err: any) {
-    console.error("[iyzico] API çağrısı başarısız:", err?.message || err);
-    return { ok: false, error: `iyzico API hatası: ${err?.message || err}` };
+  const response = await fetch(`${baseUrl}/payment/iyzipos/checkoutform/auth/next`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `PIWS2 v1:${params.apiKey}:${signature}:${randomNonce()}` },
+    body: jsonBody,
+  });
+  const result = await response.json() as any;
+  if (result.status === "success") {
+    return { ok: true, checkoutFormContent: result.checkoutFormContent, paymentPageUrl: result.paymentPageUrl, token: result.token };
   }
-}
-
-function isAllowedReturnUrl(raw: unknown): string {
-  const fallback = "https://nurstudyo.com/odeme-sonuc";
-  if (typeof raw !== "string" || raw.length > 300) return fallback;
-  try {
-    const u = new URL(raw);
-    const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173"]);
-    if (!allowed.has(u.origin)) return fallback;
-    return u.toString();
-  } catch {
-    return fallback;
-  }
-}
-
-function sanitizeOrderUserId(userId: string): string {
-  return userId.trim().replace(/[^a-zA-Z0-9._:@-]/g, "_").slice(0, 80);
+  return { ok: false, error: result.errorMessage || `iyzico: ${result.errorCode || "bilinmeyen"}` };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS & rate limit
+  res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   if (!requireAllowedOrigin(req, res)) return;
   if (!rateLimit(req, res, "payments:create", 8, 60_000)) return;
 
-  // Auth — mevcut session'u kontrol et, 401'i kendi gönder
-  const sessionUser = getSessionUser(req);
-  if (!sessionUser) {
-    return res.status(401).json({ ok: false, error: "Ödeme yapmak için lütfen giriş yapın" });
-  }
-
   try {
-    const { productCode, returnUrl } = req.body || {};
-    const check = validateCheckout({
-      productCode: typeof productCode === "string" ? productCode : "",
-      userId: sessionUser.id,
-      email: sessionUser.email,
-      returnUrl: typeof returnUrl === "string" ? returnUrl : undefined,
-    });
-    if (!check.ok) return res.status(400).json({ ok: false, error: (check as any).error });
-    const product = getProduct(check.product.code)!;
-    const safeUserId = sanitizeOrderUserId(sessionUser.id);
-    const safeEmail = sessionUser.email;
-    const safeReturnUrl = isAllowedReturnUrl(returnUrl);
+    // Auth
+    const user = getSessionUser(req);
+    if (!user) return res.status(401).json({ ok: false, error: "Giriş yapın" });
 
-    if (safeUserId.length < 3) {
-      return res.status(400).json({ ok: false, error: "Kullanıcı kimliği geçersiz" });
-    }
+    const { productCode, returnUrl } = (req.body || {}) as any;
+    if (!productCode || typeof productCode !== "string") return res.status(400).json({ ok: false, error: "productCode gerekli" });
+    const product = getProduct(productCode);
+    if (!product) return res.status(400).json({ ok: false, error: "Geçersiz ürün" });
 
-    const providerChoice = (process.env.PAYMENTS_PROVIDER || "iyzico").toLowerCase();
-    const iyzicoApiKey = process.env.IYZICO_API_KEY || "";
-    const iyzicoSecretKey = process.env.IYZICO_SECRET_KEY || "";
-    const iyzicoReady = Boolean(iyzicoApiKey && iyzicoSecretKey);
-    const useIyzico = providerChoice === "iyzico" && iyzicoReady;
+    const safeUserId = user.id.trim().replace(/[^a-zA-Z0-9._:@-]/g, "_").slice(0, 80);
+    const safeEmail = user.email;
     const orderId = `NUR-${product.code}-${safeUserId}-${Date.now()}`;
-    const livePayments = process.env.VITE_PAYMENTS_LIVE === "true";
 
-    // Demo mod — gerçek ödeme yok
-    if (!livePayments) {
-      return res.status(200).json({
-        ok: true,
-        demo: true,
-        message: "Ödeme DEMO modunda.",
-        orderId,
-        product,
-      });
+    // Demo mod
+    if (process.env.VITE_PAYMENTS_LIVE !== "true") {
+      return res.status(200).json({ ok: true, demo: true, orderId, product });
     }
 
-    // Canlı ödeme — iyzico zorunlu
-    if (providerChoice !== "iyzico") {
-      return res.status(400).json({ ok: false, error: "Bu projede yalnızca iyzico ödeme altyapısı aktiftir" });
+    // Canlı ödeme
+    const apiKey = process.env.IYZICO_API_KEY || "";
+    const secretKey = process.env.IYZICO_SECRET_KEY || "";
+    if (!apiKey || !secretKey) {
+      return res.status(500).json({ ok: false, error: "IYZICO anahtarları eksik — Vercel env kontrol edin" });
     }
 
-    // iyzico anahtarları tanımlı mı?
-    if (!iyzicoReady) {
-      return res.status(500).json({ ok: false, error: "IYZICO_API_KEY veya IYZICO_SECRET_KEY tanımlı değil — Vercel env kontrol edin" });
-    }
+    // Supabase'e sipariş kaydı
+    await createOrder({ orderId, userId: safeUserId, productCode: product.code, amountMinor: product.amountMinor, currency: product.currency, provider: "iyzico" }).catch(() => {});
 
-    // Supabase'e sipariş kaydı (hata olsa bile devam et)
-    await createOrder({
-      orderId,
-      userId: safeUserId,
-      productCode: product.code,
-      amountMinor: product.amountMinor,
-      currency: product.currency,
-      provider: "iyzico",
-    }).catch((err) => console.warn("[Payments] Supabase sipariş kaydı başarısız (devam ediliyor):", err?.message));
-
-    // iyzico checkout form oluştur
-    const userName = safeEmail.split("@")[0] || "Kullanıcı";
-    const checkoutResult = await createIyzicoCheckoutForm({
-      apiKey: iyzicoApiKey,
-      secretKey: iyzicoSecretKey,
-      orderId,
-      price: product.amountMinor,
-      currency: product.currency || "TRY",
-      buyerEmail: safeEmail,
-      buyerName: userName,
-      returnUrl: safeReturnUrl,
+    // iyzico checkout
+    const result = await createIyzicoCheckoutForm({
+      apiKey, secretKey, orderId, price: product.amountMinor, currency: product.currency || "TRY",
+      buyerEmail: safeEmail, buyerName: safeEmail.split("@")[0] || "Kullanıcı",
+      returnUrl: returnUrl || "https://nurstudyo.com/odeme-sonuc",
       sandbox: process.env.IYZICO_SANDBOX === "true",
     });
 
-    if (!checkoutResult.ok) {
-      console.error("[Payments] iyzico checkout hatası:", checkoutResult.error);
-      return res.status(500).json({ ok: false, error: checkoutResult.error || "iyzico ödeme formu oluşturulamadı" });
-    }
+    if (!result.ok) return res.status(500).json({ ok: false, error: result.error });
+    return res.status(200).json({ ok: true, checkoutFormContent: result.checkoutFormContent, paymentPageUrl: result.paymentPageUrl, token: result.token, orderId, product });
 
-    return res.status(200).json({
-      ok: true,
-      checkoutFormContent: checkoutResult.checkoutFormContent,
-      paymentPageUrl: checkoutResult.paymentPageUrl,
-      token: checkoutResult.token,
-      orderId,
-      product,
-      returnUrl: safeReturnUrl,
-    });
-
-  } catch (error: any) {
-    console.error("[Payments Create Error]", error?.message || error, error?.stack);
-    return res.status(500).json({ ok: false, error: `Ödeme servisi hatası: ${error?.message || "bilinmeyen"}` });
+  } catch (err: any) {
+    console.error("[payments/create]", err?.message || err);
+    return res.status(500).json({ ok: false, error: err?.message || "Sunucu hatası" });
   }
 }
