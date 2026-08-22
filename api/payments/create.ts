@@ -67,32 +67,12 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    const buyer = body.buyer || {};
-    const price = money(body.price, '300.00');
-    const planName = String(body.planName || 'Nur Elit Paket');
+    const buyer = body.buyer || body.user || {};
+    const price = money(body.price != null ? body.price : body.amount, '300.00');
+    const planName = String(body.planName || body.plan || 'Nur Elit Paket');
 
     const origin = resolveOrigin(req);
     const callbackUrl = origin + '/api/payments/callback';
-
-    console.log('[payments/create] env kontrol:', {
-      hasApiKey: !!process.env.IYZICO_API_KEY,
-      hasSecretKey: !!process.env.IYZICO_SECRET_KEY,
-      origin: origin,
-      callbackUrl: callbackUrl,
-    });
-
-    if (
-      callbackUrl.indexOf('undefined') !== -1 ||
-      callbackUrl.indexOf('https://') !== 0 ||
-      callbackUrl.indexOf('localhost') !== -1
-    ) {
-      console.error('[payments/create] Gecersiz callbackUrl:', callbackUrl);
-      res.status(500).json({
-        error: 'callbackUrl olusturulamadi. NEXT_PUBLIC_SITE_URL ekleyin.',
-        callbackUrl: callbackUrl,
-      });
-      return;
-    }
 
     if (!process.env.IYZICO_API_KEY || !process.env.IYZICO_SECRET_KEY) {
       res.status(500).json({ error: 'iyzico anahtarlari eksik (env)' });
@@ -158,13 +138,6 @@ export default async function handler(req: any, res: any) {
     const bodyString = JSON.stringify(request);
     const auth = buildAuth(bodyString);
 
-    console.log('[iyzico] Istek gonderiliyor:', {
-      url: getBase() + URI_PATH,
-      callbackUrl: callbackUrl,
-      price: price,
-      conversationId: conversationId,
-    });
-
     const iyziRes = await fetch(getBase() + URI_PATH, {
       method: 'POST',
       headers: {
@@ -181,7 +154,6 @@ export default async function handler(req: any, res: any) {
     try {
       data = JSON.parse(raw);
     } catch (err) {
-      console.error('[iyzico] JSON olmayan yanit:', raw);
       res.status(502).json({ error: 'iyzico gecersiz yanit' });
       return;
     }
@@ -189,24 +161,50 @@ export default async function handler(req: any, res: any) {
     if (data.status !== 'success') {
       console.error('[iyzico] Hata - tam yanit:', data);
       res.status(400).json({
+        success: false,
         error: data.errorMessage || 'iyzico hatasi',
+        message: data.errorMessage || 'iyzico hatasi',
         code: data.errorCode,
-        sentCallbackUrl: callbackUrl,
       });
       return;
     }
 
-    console.log('[iyzico] Basarili. token:', data.token);
+    const token = String(data.token || '');
+    const html = String(data.checkoutFormContent || '');
+    const pageUrl = String(data.paymentPageUrl || '');
+
+    console.log('[iyzico] BASARILI', {
+      token: token,
+      paymentPageUrl: pageUrl,
+      htmlVarMi: html.length > 0,
+    });
 
     res.status(200).json({
+      success: true,
+      ok: true,
       status: 'success',
-      token: data.token,
-      checkoutFormContent: data.checkoutFormContent,
-      paymentPageUrl: data.paymentPageUrl,
+      token: token,
       conversationId: conversationId,
+      checkoutFormContent: html,
+      htmlContent: html,
+      content: html,
+      html: html,
+      paymentPageUrl: pageUrl,
+      url: pageUrl,
+      redirectUrl: pageUrl,
+      checkoutUrl: pageUrl,
+      data: {
+        token: token,
+        checkoutFormContent: html,
+        paymentPageUrl: pageUrl,
+      },
     });
   } catch (e: any) {
     console.error('[payments/create] fatal:', e);
-    res.status(500).json({ error: (e && e.message) || 'bilinmeyen hata' });
+    res.status(500).json({
+      success: false,
+      error: (e && e.message) || 'bilinmeyen hata',
+      message: (e && e.message) || 'bilinmeyen hata',
+    });
   }
 }
