@@ -188,7 +188,7 @@ export default async function handler(req: any, res: any) {
     const order = await sbGet(`nur_orders?id=eq.${encodeURIComponent(orderId)}&select=*`);
     const orderRow = Array.isArray(order) ? order[0] : null;
 
-    if (orderRow && orderRow.status === 'completed') {
+    if (orderRow && (orderRow.status === 'paid' || orderRow.status === 'completed')) {
       // Zaten tamamlanmış
       return res.status(200).json({ ok: true, alreadyCompleted: true });
     }
@@ -199,7 +199,7 @@ export default async function handler(req: any, res: any) {
     if (granted) {
       // Siparişi güncelle
       await sbPatch(`nur_orders?id=eq.${encodeURIComponent(orderId)}`, {
-        status: 'completed',
+        status: 'paid',
         payment_id: 'manual_verify',
         paid_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

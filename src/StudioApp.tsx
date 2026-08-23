@@ -95,7 +95,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             uzun: data.wallet.uzun || 0,
             tam: data.wallet.tam || 0,
           };
-          localStorage.setItem('nur_pack_rights_v1', JSON.stringify(rights));
+          secureSet('nur_pack_rights_v1', rights);
           console.log('[sync] Cüzdan senkronize:', rights);
         }
       } catch {}
@@ -447,12 +447,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         if (isKurucuAdmin) {
           const adminJeton = Math.max(1000, data.wallet?.total ?? getJeton());
           setAdminGodMode(true);
-          setTier("elit");
-          setCurrentTier("elit");
+          // ★ Admin olsa bile satın alınan tier'ı koru — sadece free ise elit yap
+          const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
+          setTier(adminTier);
+          setCurrentTier(adminTier);
           setJetonCount(adminJeton);
           persistJetonSecure(adminJeton);
-          syncUserInDb(email, newUser.name, "elit", adminJeton);
-          notify("🛡️ Google doğrulandı · Kurucu Admin modu aktif");
+          syncUserInDb(email, newUser.name, adminTier, adminJeton);
+          notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
           return;
         }
 
@@ -523,9 +525,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         };
         setUser(verifiedUser);
         localStorage.setItem("nur_user", JSON.stringify(verifiedUser));
-        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
-        setTier(data.user.isAdmin ? "elit" : dbTier);
-        setCurrentTier(data.user.isAdmin ? "elit" : dbTier);
+        // ★ Admin olsa bile satın alınan tier'ı koru — sadece free ise elit yap
+        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : (data.user.isAdmin ? "elit" : "free");
+        setTier(dbTier);
+        setCurrentTier(dbTier);
         if (data.wallet) {
           setJetonCount(data.wallet.total);
           persistJetonSecure(data.wallet.total);
@@ -1992,7 +1995,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
     const isKurucuAdmin = isAdminEmail(email);
-    const userTier: Tier = isKurucuAdmin ? "elit" : tier;
+    // ★ Admin olsa bile mevcut tier'ı koru, sadece free ise elit yap
+    const userTier: Tier = isKurucuAdmin ? (tier === "free" ? "elit" : tier) : tier;
     const userJeton = isKurucuAdmin ? Math.max(1000, getJeton()) : getJeton();
 
     const newUser: User = {

@@ -40,7 +40,8 @@ export function useManualAuthActions({
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
     const isKurucuAdmin = isAdminEmail(email);
-    const userTier: Tier = isKurucuAdmin ? "elit" : tier;
+    // ★ Admin olsa bile mevcut tier'ı koru, sadece free ise elit yap
+    const userTier: Tier = isKurucuAdmin ? (tier === "free" ? "elit" : tier) : tier;
     const userJeton = isKurucuAdmin ? Math.max(1000, getJeton()) : getJeton();
     const newUser: User = {
       id: uid(),

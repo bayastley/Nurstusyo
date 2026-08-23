@@ -70,7 +70,7 @@ async function updateOrderStatus(conversationId: string, status: string, payment
     body: JSON.stringify({
       status,
       payment_id: paymentId || null,
-      paid_at: status === 'completed' ? new Date().toISOString() : null,
+      paid_at: status === 'paid' ? new Date().toISOString() : null,
       updated_at: new Date().toISOString(),
     }),
   });
@@ -246,10 +246,10 @@ export default async function handler(req: any, res: any) {
           const granted = await grantProduct(order.user_id, order.product_code);
 
           if (granted) {
-            await updateOrderStatus(conversationId, 'completed', data.paymentId);
+            await updateOrderStatus(conversationId, 'paid', data.paymentId);
             console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
           } else {
-            await updateOrderStatus(conversationId, 'grant_failed', data.paymentId);
+            await updateOrderStatus(conversationId, 'failed', data.paymentId);
             console.error('[callback] ❌ Hak tanımlanamadı');
           }
         } else {

@@ -83,12 +83,14 @@ export function useAuthSession({
         if (isKurucuAdmin) {
           const adminJeton = Math.max(1000, data.wallet?.total ?? getJeton());
           setAdminGodMode(true);
-          setTier("elit");
-          setCurrentTier("elit");
+          // ★ Admin olsa bile satın alınan tier'ı koru — sadece free ise elit yap
+          const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
+          setTier(adminTier);
+          setCurrentTier(adminTier);
           setJetonCount(adminJeton);
           persistJetonSecure(adminJeton);
-          syncUserInDb(email, newUser.name, "elit", adminJeton);
-          notify("🛡️ Google doğrulandı · Kurucu Admin modu aktif");
+          syncUserInDb(email, newUser.name, adminTier, adminJeton);
+          notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
           return;
         }
 
