@@ -79,6 +79,33 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ İlk açılışta remote config'i çek (feature locks, announcements vs. global senkronizasyon)
   useEffect(() => { ensureRemoteSync(); }, []);
 
+  // ★ Supabase'den cüzdan bilgisini çek → localStorage'a yaz
+  useEffect(() => {
+    const syncWallet = async () => {
+      try {
+        const stored = localStorage.getItem('nur_user');
+        const u = stored ? JSON.parse(stored) : null;
+        if (!u?.id) return;
+        const res = await fetch('/api/payments/wallet', { credentials: 'include' });
+        const data = await res.json();
+        if (data?.ok && data.wallet) {
+          // localStorage'a yaz (tier.ts'in okuduğu format)
+          const rights = {
+            kisa: data.wallet.kisa || 0,
+            uzun: data.wallet.uzun || 0,
+            tam: data.wallet.tam || 0,
+          };
+          localStorage.setItem('nur_pack_rights_v1', JSON.stringify(rights));
+          console.log('[sync] Cüzdan senkronize:', rights);
+        }
+      } catch {}
+    };
+    syncWallet();
+    // Her 30 saniyede bir senkronize et
+    const iv = setInterval(syncWallet, 30000);
+    return () => clearInterval(iv);
+  }, []);
+
   // ★ Ücretsiz, tek satırlık ziyaretçi analitiği (Supabase nur_page_views'e yazar)
   useAnalytics();
 
