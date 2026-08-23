@@ -232,8 +232,6 @@ export default async function handler(req: any, res: any) {
     if (granted) {
       await sbPatch(`nur_orders?id=eq.${encodeURIComponent(orderId)}`, {
         status: 'paid',
-        payment_id: 'manual_verify',
-        paid_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
       return res.status(200).json({ ok: true, granted: true });

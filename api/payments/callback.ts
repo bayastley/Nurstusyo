@@ -63,14 +63,12 @@ async function findOrder(conversationId: string) {
 }
 
 // Sipariş durumunu güncelle
-async function updateOrderStatus(conversationId: string, status: string, paymentId?: string) {
+async function updateOrderStatus(conversationId: string, status: string, _paymentId?: string) {
   await sbRequest(`nur_orders?id=eq.${encodeURIComponent(conversationId)}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
     body: JSON.stringify({
-      status,
-      payment_id: paymentId || null,
-      paid_at: status === 'paid' ? new Date().toISOString() : null,
+      status: status === 'paid_ungranted' ? 'failed' : status,
       updated_at: new Date().toISOString(),
     }),
   });
@@ -291,8 +289,8 @@ export default async function handler(req: any, res: any) {
               await updateOrderStatus(conversationId, 'paid', data.paymentId);
               console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
             } else {
-              await updateOrderStatus(conversationId, 'paid_ungranted', data.paymentId);
-              console.error('[callback] ❌ Hak tanımlanamadı, paid_ungranted');
+              await updateOrderStatus(conversationId, 'failed', data.paymentId);
+              console.error('[callback] ❌ Hak tanımlanamadı, failed');
             }
           }
         } else {
