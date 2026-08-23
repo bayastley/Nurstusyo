@@ -24,6 +24,163 @@ function buildAuth(bodyString: string) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SUPABASE YARDIMCILARI
+// ═══════════════════════════════════════════════════════════════
+function getSupabase() {
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!url || !key) return null;
+  return { url, key };
+}
+
+async function sbRequest(path: string, options: any = {}) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const res = await fetch(`${sb.url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: sb.key,
+      Authorization: `Bearer ${sb.key}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    console.error(`[callback] Supabase ${res.status}:`, text.slice(0, 200));
+    return null;
+  }
+  const text = await res.text();
+  if (!text) return [];
+  try { return JSON.parse(text); } catch { return []; }
+}
+
+// conversationId ile siparişi bul
+async function findOrder(conversationId: string) {
+  const rows = await sbRequest(`nur_orders?id=eq.${encodeURIComponent(conversationId)}&select=*`);
+  return Array.isArray(rows) ? rows[0] : null;
+}
+
+// Sipariş durumunu güncelle
+async function updateOrderStatus(conversationId: string, status: string, paymentId?: string) {
+  await sbRequest(`nur_orders?id=eq.${encodeURIComponent(conversationId)}`, {
+    method: 'PATCH',
+    headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      status,
+      payment_id: paymentId || null,
+      paid_at: status === 'completed' ? new Date().toISOString() : null,
+      updated_at: new Date().toISOString(),
+    }),
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HAK TANIMLAMA — Doğru şema ile
+// ═══════════════════════════════════════════════════════════════
+async function grantProduct(userId: string, productCode: string) {
+  try {
+    const isPro = productCode.includes('PRO') && !productCode.includes('ELIT');
+    const isElit = productCode.includes('ELIT');
+    const isYearly = productCode.includes('_1Y');
+    const isPackage = productCode.startsWith('PK_');
+
+    // ─── ÜYELİK ise ─────────────────────────────────────────
+    if (isPro || isElit) {
+      const tier = isElit ? 'elit' : 'pro';
+      const days = isYearly ? 365 : 30;
+      const startsAt = new Date().toISOString();
+      const endsAt = new Date(Date.now() + days * 86400000).toISOString();
+
+      // nur_users tablosunda tier'ı güncelle
+      await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ tier, updated_at: new Date().toISOString() }),
+      });
+
+      // nur_subscriptions tablosuna kayıt ekle
+      await sbRequest('nur_subscriptions', {
+        method: 'POST',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          user_id: userId,
+          tier,
+          provider: 'iyzico',
+          starts_at: startsAt,
+          ends_at: endsAt,
+          status: 'active',
+        }),
+      });
+
+      console.log(`[callback] ✅ Üyelik tanımlandı: ${tier} (${days} gün)`);
+      return true;
+    }
+
+    // ─── VİDEO PAKETİ ise ──────────────────────────────────
+    if (isPackage) {
+      const match = productCode.match(/PK_(KISA|UZUN|TAM)_(\d+)/);
+      if (!match) {
+        console.error('[callback] Video paketi formatı tanınamadı:', productCode);
+        return false;
+      }
+
+      const videoKind = match[1].toLowerCase(); // kisa, uzun, tam
+      const videoCount = parseInt(match[2]);
+
+      // Her video tipinin jeton karşılığı:
+      // KISA = 1 jeton/video, UZUN = 3 jeton/video, TAM = 5 jeton/video
+      const jetonPerVideo: Record<string, number> = { kisa: 1, uzun: 3, tam: 5 };
+      const totalJeton = videoCount * (jetonPerVideo[videoKind] || 1);
+
+      // nur_wallets tablosunu güncelle
+      const existing = await sbRequest(
+        `nur_wallets?user_id=eq.${encodeURIComponent(userId)}&select=*`
+      );
+      const rows = Array.isArray(existing) ? existing : [];
+
+      if (rows.length > 0) {
+        // Mevcut cüzdan var — purchased_jeton'a ekle
+        await sbRequest(
+          `nur_wallets?user_id=eq.${encodeURIComponent(userId)}`,
+          {
+            method: 'PATCH',
+            headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({
+              purchased_jeton: (rows[0].purchased_jeton || 0) + totalJeton,
+              updated_at: new Date().toISOString(),
+            }),
+          }
+        );
+      } else {
+        // Yeni cüzdan oluştur
+        await sbRequest('nur_wallets', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            user_id: userId,
+            sub_jeton: 0,
+            purchased_jeton: totalJeton,
+          }),
+        });
+      }
+
+      console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind} = ${totalJeton} jeton`);
+      return true;
+    }
+
+    console.warn('[callback] Tanınmayan ürün kodu:', productCode);
+    return false;
+  } catch (err: any) {
+    console.error('[callback] Hak tanımlama hatası:', err?.message);
+    return false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ANA HANDLER
+// ═══════════════════════════════════════════════════════════════
 export default async function handler(req: any, res: any) {
   try {
     let token = '';
@@ -34,16 +191,20 @@ export default async function handler(req: any, res: any) {
       const params = new URLSearchParams(req.body);
       token = String(params.get('token') || '');
     }
+
     if (!token && req.query && req.query.token) {
       token = String(req.query.token);
     }
 
+    console.log('[callback] Token:', token ? 'var (' + token.slice(0, 20) + '...)' : 'yok');
+
     if (!token) {
-      res.writeHead(303, { Location: '/odeme-sonuc?durum=hata&sebep=token_yok' });
+      res.writeHead(303, { Location: '/?odeme=hata&sebep=token_yok' });
       res.end();
       return;
     }
 
+    // iyzico'ya ödeme durumunu sor
     const bodyString = JSON.stringify({ locale: 'tr', token: token });
     const auth = buildAuth(bodyString);
 
@@ -59,33 +220,57 @@ export default async function handler(req: any, res: any) {
     });
 
     const data: any = await iyziRes.json();
-    console.log('[payments/callback] sonuc:', {
+
+    console.log('[callback] iyzico yanıtı:', {
       status: data.status,
       paymentStatus: data.paymentStatus,
       conversationId: data.conversationId,
+      paymentId: data.paymentId,
+      price: data.price,
     });
 
     const ok = data.status === 'success' && data.paymentStatus === 'SUCCESS';
 
     if (ok) {
+      const conversationId = data.conversationId;
+
+      if (conversationId) {
+        const order = await findOrder(conversationId);
+
+        if (order) {
+          console.log('[callback] Sipariş bulundu:', {
+            userId: order.user_id,
+            productCode: order.product_code,
+          });
+
+          const granted = await grantProduct(order.user_id, order.product_code);
+
+          if (granted) {
+            await updateOrderStatus(conversationId, 'completed', data.paymentId);
+            console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
+          } else {
+            await updateOrderStatus(conversationId, 'grant_failed', data.paymentId);
+            console.error('[callback] ❌ Hak tanımlanamadı');
+          }
+        } else {
+          console.error('[callback] ❌ Sipariş bulunamadı:', conversationId);
+        }
+      }
+
       res.writeHead(303, {
-        Location:
-          '/odeme-sonuc?durum=basarili&id=' +
-          encodeURIComponent(String(data.paymentId || '')),
+        Location: '/?odeme=basarili&odemeId=' + encodeURIComponent(String(data.paymentId || '')),
       });
       res.end();
       return;
     }
 
     res.writeHead(303, {
-      Location:
-        '/odeme-sonuc?durum=hata&sebep=' +
-        encodeURIComponent(String(data.errorMessage || 'odeme_basarisiz')),
+      Location: '/?odeme=hata&sebep=' + encodeURIComponent(String(data.errorMessage || 'odeme_basarisiz')),
     });
     res.end();
   } catch (e: any) {
-    console.error('[payments/callback] fatal:', e);
-    res.writeHead(303, { Location: '/odeme-sonuc?durum=hata&sebep=sunucu' });
+    console.error('[callback] fatal:', e);
+    res.writeHead(303, { Location: '/?odeme=hata&sebep=sunucu' });
     res.end();
   }
 }
