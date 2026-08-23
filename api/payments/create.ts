@@ -46,12 +46,33 @@ function money(v: any, fallback: string) {
   return n.toFixed(2);
 }
 
+// ─── SUNUCU TARAFI ÜRÜN KATALOGU ─── Fiyatları buradan yönet
+const PRODUCT_CATALOG: Record<string, { price: string; name: string; kind: string }> = {
+  // Aylık abonelikler
+  SUB_PRO_1M:  { price: '149.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
+  SUB_ELIT_1M: { price: '300.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
+  // Yıllık abonelikler
+  SUB_PRO_1Y:  { price: '1609.20', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
+  SUB_ELIT_1Y: { price: '2880.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
+  // Kısa video paketleri
+  PK_KISA_15:  { price: '35.00',  name: '15 Kısa Video',  kind: 'package' },
+  PK_KISA_35:  { price: '69.00',  name: '35 Kısa Video',  kind: 'package' },
+  PK_KISA_70:  { price: '119.00', name: '70 Kısa Video',  kind: 'package' },
+  // Uzun video paketleri
+  PK_UZUN_8:   { price: '45.00',  name: '8 Uzun Video',   kind: 'package' },
+  PK_UZUN_20:  { price: '99.00',  name: '20 Uzun Video',  kind: 'package' },
+  PK_UZUN_40:  { price: '169.00', name: '40 Uzun Video',  kind: 'package' },
+  // Tam sürüm paketleri
+  PK_TAM_2:    { price: '79.00',  name: '2 Tam Sürüm',    kind: 'package' },
+  PK_TAM_5:    { price: '179.00', name: '5 Tam Sürüm',    kind: 'package' },
+  PK_TAM_10:   { price: '299.00', name: '10 Tam Sürüm',   kind: 'package' },
+};
+
 export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
-
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
     return;
@@ -60,17 +81,21 @@ export default async function handler(req: any, res: any) {
   try {
     let body = req.body || {};
     if (typeof body === 'string') {
-      try {
-        body = JSON.parse(body);
-      } catch (err) {
-        body = {};
-      }
+      try { body = JSON.parse(body); } catch { body = {}; }
     }
 
-    const buyer = body.buyer || body.user || {};
-    const price = money(body.price != null ? body.price : body.amount, '300.00');
-    const planName = String(body.planName || body.plan || 'Nur Elit Paket');
+    // ─── Product code'dan fiyatı bul ───
+    const productCode = String(body.productCode || 'SUB_ELIT_1M');
+    const catalogItem = PRODUCT_CATALOG[productCode];
+    if (!catalogItem) {
+      console.error('[payments/create] Tanınmayan ürün:', productCode);
+      res.status(400).json({ error: 'Tanınmayan ürün kodu: ' + productCode });
+      return;
+    }
 
+    const price = catalogItem.price;
+    const planName = catalogItem.name;
+    const buyer = body.buyer || body.user || {};
     const origin = resolveOrigin(req);
     const callbackUrl = origin + '/api/payments/callback';
 
@@ -83,12 +108,15 @@ export default async function handler(req: any, res: any) {
     const basketId = 'bask-' + Date.now();
     const ipHeader = String(req.headers['x-forwarded-for'] || '85.34.78.112');
     const ip = ipHeader.split(',')[0].trim() || '85.34.78.112';
-
     const name = String(buyer.name || 'Musteri');
     const surname = String(buyer.surname || 'Uye');
     const fullName = name + ' ' + surname;
     const city = String(buyer.city || 'Istanbul');
     const address = String(buyer.address || 'Turkiye');
+
+    // ─── Sandbox test identityNumber ─── Sandbox'ta geçerli test numarası
+    const isSandbox = process.env.IYZICO_SANDBOX === 'true';
+    const testIdentity = isSandbox ? '11111111110' : String(buyer.identityNumber || '11111111110');
 
     const request = {
       locale: 'tr',
@@ -99,14 +127,14 @@ export default async function handler(req: any, res: any) {
       basketId: basketId,
       paymentGroup: 'PRODUCT',
       callbackUrl: callbackUrl,
-      enabledInstallments: [1, 2, 3, 6, 9],
+      enabledInstallments: [1],
       buyer: {
         id: String(buyer.id || 'BY001'),
         name: name,
         surname: surname,
         gsmNumber: String(buyer.gsmNumber || '+905350000000'),
-        email: String(buyer.email || 'musteri@nurstudyo.com'),
-        identityNumber: String(buyer.identityNumber || '11111111111'),
+        email: String(buyer.email || 'test@nurstudyo.com'),
+        identityNumber: testIdentity,
         registrationAddress: address,
         ip: ip,
         city: city,
@@ -138,6 +166,58 @@ export default async function handler(req: any, res: any) {
     const bodyString = JSON.stringify(request);
     const auth = buildAuth(bodyString);
 
+    console.log('[payments/create] İstek:', { price, planName, conversationId, sandbox: process.env.IYZICO_SANDBOX });
+
+    // Supabase'e sipariş kaydı (callback bulacak)
+    try {
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+/g, '');
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (sbUrl && sbKey) {
+        // Cookie'den user ID al
+        let userId = 'anonymous';
+        try {
+          const cookies = (req.headers.cookie || '').split(';').reduce((acc: any, c: string) => {
+            const [k, ...v] = c.trim().split('=');
+            if (k) acc[k] = decodeURIComponent(v.join('='));
+            return acc;
+          }, {});
+          const token = cookies['nur_session'] || '';
+          if (token && token.includes('.')) {
+            const payload = token.split('.')[0];
+            const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+            const pad = normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : '';
+            const user = JSON.parse(Buffer.from(normalized + pad, 'base64').toString('utf8'));
+            if (user.id) userId = String(user.id);
+          }
+        } catch {}
+
+        // productCode zaten yukarda tanımlandı (PRODUCT_CATALOG lookup)
+
+        await fetch(`${sbUrl}/rest/v1/nur_orders`, {
+          method: 'POST',
+          headers: {
+            apikey: sbKey,
+            Authorization: `Bearer ${sbKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            id: conversationId,
+            user_id: userId,
+            product_code: productCode,
+            amount_minor: Math.round(parseFloat(price) * 100),
+            currency: 'TRY',
+            provider: 'iyzico',
+            status: 'pending',
+            created_at: new Date().toISOString(),
+          }),
+        });
+        console.log('[payments/create] Supabase sipariş kaydedildi:', conversationId);
+      }
+    } catch (err: any) {
+      console.warn('[payments/create] Supabase kayıt hatası (devam):', err?.message);
+    }
+
     const iyziRes = await fetch(getBase() + URI_PATH, {
       method: 'POST',
       headers: {
@@ -151,15 +231,13 @@ export default async function handler(req: any, res: any) {
 
     const raw = await iyziRes.text();
     let data: any = {};
-    try {
-      data = JSON.parse(raw);
-    } catch (err) {
+    try { data = JSON.parse(raw); } catch {
       res.status(502).json({ error: 'iyzico gecersiz yanit' });
       return;
     }
 
     if (data.status !== 'success') {
-      console.error('[iyzico] Hata - tam yanit:', data);
+      console.error('[iyzico] Hata:', data);
       res.status(400).json({
         success: false,
         error: data.errorMessage || 'iyzico hatasi',
@@ -173,11 +251,7 @@ export default async function handler(req: any, res: any) {
     const html = String(data.checkoutFormContent || '');
     const pageUrl = String(data.paymentPageUrl || '');
 
-    console.log('[iyzico] BASARILI', {
-      token: token,
-      paymentPageUrl: pageUrl,
-      htmlVarMi: html.length > 0,
-    });
+    console.log('[iyzico] ✅ Başarılı, token:', token.slice(0, 20) + '...');
 
     res.status(200).json({
       success: true,
