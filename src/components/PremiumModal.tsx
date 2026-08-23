@@ -18,6 +18,7 @@ import {
   type VideoKind,
   type BillingPeriod,
 } from "../payments/pricing";
+import { getPackRights } from "../tier";
 import type { Tier } from "../tier";
 
 const DAILY_QUOTA: Record<Tier, Record<VideoKind, number>> = {
@@ -40,13 +41,12 @@ function quotaText(kind: VideoKind, tier: Tier): string {
 
 function readPackRights(): Record<VideoKind, number> {
   try {
-    const raw = localStorage.getItem("nur_pack_rights_v1");
-    if (!raw) return { ...emptyRights };
-    const parsed = JSON.parse(raw) as Partial<Record<VideoKind, number>>;
+    // ★ secureGet ile şifreli veriden oku (secureStore.ts)
+    const rights = getPackRights();
     return {
-      kisa: Math.max(0, Number(parsed.kisa || 0)),
-      uzun: Math.max(0, Number(parsed.uzun || 0)),
-      tam: Math.max(0, Number(parsed.tam || 0)),
+      kisa: Math.max(0, rights.kisa || 0),
+      uzun: Math.max(0, rights.uzun || 0),
+      tam: Math.max(0, rights.tam || 0),
     };
   } catch {
     return { ...emptyRights };
