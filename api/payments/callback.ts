@@ -93,12 +93,26 @@ async function grantProduct(userId: string, productCode: string) {
       const startsAt = new Date().toISOString();
       const endsAt = new Date(Date.now() + days * 86400000).toISOString();
 
-      // nur_users tablosunda tier'ı güncelle
-      await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}`, {
-        method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
-        body: JSON.stringify({ tier, updated_at: new Date().toISOString() }),
-      });
+      // nur_users tablosunda tier'ı güncelle (yoksa oluştur)
+      const existingUser = await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}&select=id`);
+      if (Array.isArray(existingUser) && existingUser.length > 0) {
+        await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ tier, updated_at: new Date().toISOString() }),
+        });
+      } else {
+        await sbRequest('nur_users', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            id: userId,
+            email: userId.includes('@') ? userId : userId + '@nurstudyo.com',
+            tier,
+            created_at: new Date().toISOString(),
+          }),
+        });
+      }
 
       // nur_subscriptions tablosuna kayıt ekle
       await sbRequest('nur_subscriptions', {
@@ -129,10 +143,10 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase(); // kisa, uzun, tam
       const videoCount = parseInt(match[2]);
 
-      // Her video tipinin jeton karşılığı:
-      // KISA = 1 jeton/video, UZUN = 3 jeton/video, TAM = 5 jeton/video
-      const jetonPerVideo: Record<string, number> = { kisa: 1, uzun: 3, tam: 5 };
-      const totalJeton = videoCount * (jetonPerVideo[videoKind] || 1);
+      // Doğrudan video sayısını ekle (jeton'a çevirme — sadece sayı)
+      // purchased_kisa, purchased_uzun, purchased_tam sütunlarına yaz
+      const colMap: Record<string, string> = { kisa: 'purchased_kisa', uzun: 'purchased_uzun', tam: 'purchased_tam' };
+      const colName = colMap[videoKind] || 'purchased_kisa';
 
       // nur_wallets tablosunu güncelle
       const existing = await sbRequest(
@@ -141,32 +155,37 @@ async function grantProduct(userId: string, productCode: string) {
       const rows = Array.isArray(existing) ? existing : [];
 
       if (rows.length > 0) {
-        // Mevcut cüzdan var — purchased_jeton'a ekle
+        const currentVal = rows[0][colName] || 0;
         await sbRequest(
           `nur_wallets?user_id=eq.${encodeURIComponent(userId)}`,
           {
             method: 'PATCH',
             headers: { Prefer: 'return=minimal' },
             body: JSON.stringify({
-              purchased_jeton: (rows[0].purchased_jeton || 0) + totalJeton,
+              [colName]: currentVal + videoCount,
+              purchased_jeton: (rows[0].purchased_jeton || 0) + videoCount,
               updated_at: new Date().toISOString(),
             }),
           }
         );
       } else {
-        // Yeni cüzdan oluştur
+        const newRow: Record<string, any> = {
+          user_id: userId,
+          sub_jeton: 0,
+          purchased_jeton: videoCount,
+          purchased_kisa: 0,
+          purchased_uzun: 0,
+          purchased_tam: 0,
+        };
+        newRow[colName] = videoCount;
         await sbRequest('nur_wallets', {
           method: 'POST',
           headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify({
-            user_id: userId,
-            sub_jeton: 0,
-            purchased_jeton: totalJeton,
-          }),
+          body: JSON.stringify(newRow),
         });
       }
 
-      console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind} = ${totalJeton} jeton`);
+      console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind}`);
       return true;
     }
 
@@ -232,8 +251,24 @@ export default async function handler(req: any, res: any) {
     const ok = data.status === 'success' && data.paymentStatus === 'SUCCESS';
 
     if (ok) {
-      const conversationId = data.conversationId;
+      let conversationId = data.conversationId || data.basketId || '';
       let orderProductCode = '';
+
+      if (!conversationId) {
+        console.error('[callback] conversationId yok:', JSON.stringify(data).slice(0, 300));
+      }
+
+      // conversationId yoksa — paymentId ile bul veya en son pending siparişi al
+      if (!conversationId && data.paymentId) {
+        const byPayment = await sbRequest(`nur_orders?payment_id=eq.${encodeURIComponent(String(data.paymentId))}&select=*`);
+        const row = Array.isArray(byPayment) ? byPayment[0] : null;
+        if (row) conversationId = row.id;
+      }
+      if (!conversationId) {
+        const recent = await sbRequest('nur_orders?status=eq.pending&order=created_at.desc&limit=1&select=*');
+        const row = Array.isArray(recent) ? recent[0] : null;
+        if (row) conversationId = row.id;
+      }
 
       if (conversationId) {
         const order = await findOrder(conversationId);
