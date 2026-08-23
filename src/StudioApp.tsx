@@ -81,6 +81,41 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ Ücretsiz, tek satırlık ziyaretçi analitiği (Supabase nur_page_views'e yazar)
   useAnalytics();
+
+  // ★ Ödeme sonrası otomatik hak tanımlama (callback çalışmazsa fallback)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const odeme = params.get('odeme');
+    if (odeme === 'basarili') {
+      // URL'yi temizle
+      window.history.replaceState({}, '', window.location.pathname);
+      // Kullanıcı bilgisi varsa verify et
+      try {
+        const stored = localStorage.getItem('nur_user');
+        const u = stored ? JSON.parse(stored) : null;
+        if (u?.id) {
+          // Son satın almayı bul ve verify et
+          fetch('/api/payments/verify', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: params.get('odemeId') || 'unknown', productCode: 'SUB_ELIT_1M' }),
+          }).then(r => r.json()).then(d => {
+            if (d.ok) {
+              // Kullanıcı bilgilerini yenile
+              fetch('/api/auth/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(me => { if (me?.user) setUser(me.user); })
+                .catch(() => {});
+            }
+          }).catch(() => {});
+        }
+      } catch {}
+    } else if (odeme === 'hata') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const [adminGodMode, setAdminGodMode] = useState(false);
   // ★ GOD MODE GÜVENLİĞİ
   // App.tsx'teki geliştirici bayrağı yalnızca localhost/dev modunda geçerlidir.
