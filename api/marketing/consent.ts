@@ -1,17 +1,60 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAuth } from "../_shared/auth";
-import { rateLimit } from "../_shared/rateLimit";
-import { requireAllowedOrigin } from "../_shared/security";
-
-declare const process: { env: Record<string, string | undefined> };
+import crypto from "crypto";
 
 // ════════════════════════════════════════════════════════
 // EMAIL PAZARLAMA RIZASI — KVKK'ya uygun AYRI açık rıza uctu.
-// Hesap oluşturma (Google girişi) sözleşme gereği yapılır ve
-// buna onay kutusu GEREKMEZ; ama pazarlama e-postası göndermek
-// BAĞIMSIZ bir işleme amacıdır ve kanunen AYRI, geri alınabilir
-// bir rıza gerektirir. Bu endpoint sadece BU rızayı yönetir.
+// Self-contained — _shared importları Vercel'de çalışmıyor
 // ════════════════════════════════════════════════════════
+
+const COOKIE_NAME = "nur_session";
+
+function parseCookies(req: VercelRequest): Record<string, string> {
+  const header = req.headers.cookie || "";
+  return header.split(";").reduce<Record<string, string>>((acc, part) => {
+    const [key, ...rest] = part.trim().split("=");
+    if (!key) return acc;
+    acc[key] = decodeURIComponent(rest.join("="));
+    return acc;
+  }, {});
+}
+
+function sessionSecret(): string {
+  return process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+}
+
+function base64Url(input: Buffer | string): string {
+  const raw = Buffer.isBuffer(input) ? input : Buffer.from(input, "utf8");
+  return raw.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function fromBase64Url(input: string): Buffer {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+  return Buffer.from(normalized + pad, "base64");
+}
+
+function signPayload(payload: string): string {
+  return base64Url(crypto.createHmac("sha256", sessionSecret()).update(payload).digest());
+}
+
+function getSessionUser(req: VercelRequest): { id: string; email: string; name: string } | null {
+  const token = parseCookies(req)[COOKIE_NAME];
+  if (!token || !token.includes(".")) return null;
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig) return null;
+  const expected = signPayload(payload);
+  const sigBuf = Buffer.from(sig);
+  const expectedBuf = Buffer.from(expected);
+  if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
+  try {
+    const user = JSON.parse(fromBase64Url(payload).toString("utf8"));
+    if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
+    if (!user.email || !user.id) return null;
+    return user;
+  } catch {
+    return null;
+  }
+}
 
 function supabaseConfig() {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
@@ -33,11 +76,18 @@ async function db<T>(path: string, init: RequestInit = {}): Promise<T> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
-  if (!requireAllowedOrigin(req, res)) return;
-  if (!rateLimit(req, res, "marketing:consent", 20, 60_000)) return;
 
-  const user = requireAuth(req, res);
-  if (!user) return;
+  // Basit origin kontrolü
+  const origin = req.headers.origin || req.headers.referer || "";
+  const allowed = ["nurstudyo.com", "www.nurstudyo.com"];
+  if (origin && !allowed.some((a) => origin.includes(a))) {
+    return res.status(403).json({ ok: false, error: "Origin not allowed" });
+  }
+
+  const user = getSessionUser(req);
+  if (!user) {
+    return res.status(200).json({ ok: true, consented: false });
+  }
 
   try {
     if (req.method === "GET") {

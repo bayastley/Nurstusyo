@@ -63,31 +63,16 @@ export function useSecurityGuards({
     return () => window.clearInterval(interval);
   }, [isMasterSürüm, notify]);
 
-  // Client tamper tespiti: masum ağ hataları bu yola girmez.
+  // Client tamper tespiti — otomatik ban DEVRE DIŞI, sadece bildirim verilir.
   useEffect(() => {
     if (isMasterSürüm) return;
-    const applyAutoBan = (reasonText: string) => {
-      persistJetonSecure(0);
-      setJetonCount(0);
-      setTier("free");
-      setCurrentTier("free");
-      setLocalBanned(true);
-      setLocalBanReason(reasonText);
-      secureSet("nur_local_user_banned", true);
-      secureSet("nur_local_user_ban_reason", reasonText);
-      const userMail = user?.email || "bilinmeyen-cihaz";
-      banUserInDb(userMail, reasonText, "Sistem Otomatik Guard", true);
-      fetch("/api/ban/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: reasonText }),
-      }).catch(() => undefined);
-      notify("⚠️ Güvenlik: Hesap verilerinde hile/tamper tespit edildi. Erişim donduruldu.");
-    };
-
-    if (consumeTamperFlag()) applyAutoBan("Sistem Verilerini Kurcalama / Hak Manipülasyonu Girişimi");
-    onTamperDetected(() => applyAutoBan("Sistem Verilerini Kurcalama / Hak Manipülasyonu Girişimi"));
-  }, [isMasterSürüm, notify, setJetonCount, setLocalBanned, setLocalBanReason, setTier, user]);
+    if (consumeTamperFlag()) {
+      notify("🛡️ Güvenlik: Eski veri formatı tespit edildi · veriler otomatik güncellendi");
+    }
+    onTamperDetected((key) => {
+      notify(`🛡️ Güvenlik uyarısı: ${key} — otomatik ban uygulanmadı`);
+    });
+  }, [isMasterSürüm, notify]);
 
   // Ban durumu canlı denetleyici.
   useEffect(() => {
@@ -101,8 +86,7 @@ export function useSecurityGuards({
         }))
         .then(({ response, data }) => {
           if (!response.ok || !data?.ok) {
-            setLocalBanned(true);
-            setLocalBanReason(data?.error || "Canlı ban doğrulaması yapılamadı");
+            console.warn('[ban] API hatası, atlanıyor:', data?.error);
             return;
           }
           if (data.isBanned) {
@@ -113,8 +97,7 @@ export function useSecurityGuards({
           }
         })
         .catch(() => {
-          setLocalBanned(true);
-          setLocalBanReason("Canlı ban doğrulama servisine ulaşılamadı");
+          console.warn('[ban] Ban servisine ulaşılamadı, atlanıyor');
         });
       return;
     }

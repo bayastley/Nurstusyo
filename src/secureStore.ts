@@ -56,8 +56,10 @@ function seal(value: unknown): string {
 function unseal<T>(raw: string | null): T | null {
   if (!raw) return null;
   try {
-    // Eski (şifresiz) format tespiti: doğrudan sayı/string ise migrate et
-    if (!raw.startsWith("{")) return null;
+    // Eski (şifresiz) format: migrate et, tamper raporlama
+    if (!raw.startsWith("{")) {
+      try { return JSON.parse(raw) as T; } catch { return raw as unknown as T; }
+    }
     const env = JSON.parse(raw) as Envelope;
     if (!env || env.v !== 1 || !env.payload || !env.sig || !env.fp) return null;
 

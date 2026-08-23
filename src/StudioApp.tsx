@@ -275,6 +275,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [localBanReason, setLocalBanReason] = useState<string>(() => {
     return secureGet<string>("nur_local_user_ban_reason", "Sistem Güvenlik & Yasal Hak İhlali");
   });
+
+  // ★ AÇILIŞTA ESKİ BAN VERİLERİNİ TEMİZLE — otomatik ban devre dışı
+  useEffect(() => {
+    if (localBanned) {
+      setLocalBanned(false);
+      secureSet("nur_local_user_banned", false);
+      secureSet("nur_local_user_ban_reason", "");
+    }
+  }, []);
+
   const [legalTab, setLegalTab] = useState<"tos" | "kvkk" | "gizlilik" | "iade">("tos");
   const [debugGuideModal, setDebugGuideModal] = useState<DebugGuideMessage | null>(null);
   const [tosAccepted, setTosAccepted] = useState(false);
@@ -652,40 +662,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return () => window.clearInterval(iv);
   }, [isMasterSürüm, notify]);
 
-  // ★ SİBER KORUMA VE OTOMATİK BAN DİNLEYİCİSİ
+  // ★ GÜVENLİK BİLDİRİMİ — otomatik ban DEVRE DIŞI, sadece bildirim verilir
   useEffect(() => {
-    if (isMasterSürüm) return; // God Mode'da tamper guard devre dışı
-    // ★ GÜVENLİK GARANTİSİ: Bu fonksiyon YALNIZCA gerçek veri kurcalama
-    //   (tamper) olaylarında çalışır. Yavaş internet, çöken API, 429 hız limiti
-    //   gibi ağ hataları bu yola ASLA girmez — masum kullanıcı ban yemez.
-    const applyAutoBan = (reasonText: string) => {
-      persistJetonSecure(0);
-      setJetonCount(0);
-      setTier("free");
-      setCurrentTier("free");
-      setLocalBanned(true);
-      setLocalBanReason(reasonText);
-      secureSet("nur_local_user_banned", true);
-      secureSet("nur_local_user_ban_reason", reasonText);
-      const userMail = user?.email || "bilinmeyen-cihaz";
-      banUserInDb(userMail, reasonText, "Sistem Otomatik Guard", true);
-      // ★ SUNUCU MÜHRÜ: Hileci tarayıcı verisini silse bile HttpOnly cookie
-      //   kaldığı için Supabase'teki BANNED kaydına takılır ve kaçamaz.
-      fetch("/api/ban/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: reasonText }),
-      }).catch(() => undefined);
-      notify("⚠️ Güvenlik: Hesap verilerinde hile/tamper tespit edildi. Erişim donduruldu.");
-    };
-
+    if (isMasterSürüm) return;
     if (consumeTamperFlag()) {
-      applyAutoBan("Sistem Verilerini Kurcalama / Jeton Hilesi Girişimi");
+      notify("🛡️ Güvenlik: Eski veri formatı tespit edildi · veriler otomatik güncellendi");
     }
-    onTamperDetected(() => {
-      applyAutoBan("Sistem Verilerini Kurcalama / Jeton Hilesi Girişimi");
+    onTamperDetected((key) => {
+      notify(`🛡️ Güvenlik uyarısı: ${key} — otomatik ban uygulanmadı`);
     });
-  }, [notify, user, isMasterSürüm]);
+  }, [notify, isMasterSürüm]);
 
   // ★ BAN DURUMU CANLI DENETLEYİCİ
   useEffect(() => {
@@ -696,8 +682,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         .then(async (response) => ({ response, data: await response.json().catch(() => null) as { ok?: boolean; error?: string; isBanned?: boolean; reason?: string } | null }))
         .then(({ response, data }) => {
           if (!response.ok || !data?.ok) {
-            setLocalBanned(true);
-            setLocalBanReason(data?.error || "Canlı ban doğrulaması yapılamadı");
+            // API hatası — banlamayız, sadece log yazarız
+            console.warn('[ban] API hatası, atlanıyor:', data?.error);
             return;
           }
           if (data.isBanned) {
@@ -708,8 +694,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           }
         })
         .catch(() => {
-          setLocalBanned(true);
-          setLocalBanReason("Canlı ban doğrulama servisine ulaşılamadı");
+          // API'ye ulaşılamadı — banlamayız, sessizce geç
+          console.warn('[ban] Ban servisine ulaşılamadı, atlanıyor');
         });
       return;
     }
