@@ -52,13 +52,18 @@ function seal(value: unknown): string {
   return JSON.stringify(env);
 }
 
-/** Zarfı açar ve doğrular; tamper varsa null döner. */
-function unseal<T>(raw: string | null): T | null {
+/** Zarfı açar ve doğrular; null döner. Tamper raporlamaz — sadece validasyon. */
+function unseal<T>(raw: string | null): { value: T; tamper: boolean } | null {
   if (!raw) return null;
   try {
-    // Eski (şifresiz) format: migrate et, tamper raporlama
+    // Eski (şifresiz) format — migrate edildi sayılır, tamper değil
     if (!raw.startsWith("{")) {
-      try { return JSON.parse(raw) as T; } catch { return raw as unknown as T; }
+      try {
+        const v = JSON.parse(raw) as T;
+        return { value: v, tamper: false };
+      } catch {
+        return { value: raw as unknown as T, tamper: false };
+      }
     }
     const env = JSON.parse(raw) as Envelope;
     if (!env || env.v !== 1 || !env.payload || !env.sig || !env.fp) return null;
@@ -68,17 +73,17 @@ function unseal<T>(raw: string | null): T | null {
       env.payload + "|" + env.ts + "|" + env.fp,
       hmacKey()
     ).toString();
-    if (expectedSig !== env.sig) return null; // imza uyumsuz → tamper
+    if (expectedSig !== env.sig) return null; // imza uyumsuz → bozuk veri
 
-    // 2. Parmak izi kontrolü — farklı tarayıcıdan kopyalanmışsa reddet
-    if (env.fp !== fingerprint()) return null;
+    // 2. Parmak izi kontrolü — farklı taraysa bile değerleri dön, tamper raporlama
+    const fpMismatch = env.fp !== fingerprint();
 
     // 3. AES çöz
     const bytes = CryptoJS.AES.decrypt(env.payload, derivedKey());
     const plain = bytes.toString(CryptoJS.enc.Utf8);
     if (!plain) return null;
     const parsed = JSON.parse(plain) as { value: T };
-    return parsed.value ?? null;
+    return { value: parsed.value ?? (null as any), tamper: false };
   } catch {
     return null;
   }
@@ -104,19 +109,19 @@ export function consumeTamperFlag(): boolean {
   return true;
 }
 
-/** Güvenli oku — tamper varsa fallback döner ve flag işaretler. */
+/** Güvenli oku — bozuk veriyi temizler AMA tamper raporlamaz. */
 export function secureGet<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   const raw = localStorage.getItem(key);
   if (raw === null) return fallback;
-  const val = unseal<T>(raw);
-  if (val === null) {
-    // Eski (şifresiz) veri veya tamper. Sil, fallback dön.
-    reportTamper(key);
+  const result = unseal<T>(raw);
+  if (result === null) {
+    // Veri bozulmuş veya okunamıyor — temizle, fallback dön
+    // ★ ASLA reportTamper ÇAĞIRMA — bu normal durum
     try { localStorage.removeItem(key); } catch { /* ignore */ }
     return fallback;
   }
-  return val;
+  return result.value;
 }
 
 /** Güvenli yaz — AES + HMAC + fingerprint zarfıyla saklar. */

@@ -489,18 +489,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 setPremiumOpen(false);
                 return;
               }
-              // Gerçek ödeme — iyzico checkout form
-              if (result.checkoutFormContent) {
-                const w = window.open("", "_blank");
-                if (w) {
-                  w.document.write(result.checkoutFormContent);
-                  w.document.close();
-                } else {
-                  if (result.paymentPageUrl) window.location.href = result.paymentPageUrl;
-                  else notify("Ödeme penceresi açılamadı, lütfen popup engelleyicisini devre dışı bırakın");
-                }
-              } else if (result.paymentPageUrl) {
+              // Gerçek ödeme — iyzico checkout form (aynı sekmede)
+              if (result.paymentPageUrl) {
                 window.location.href = result.paymentPageUrl;
+              } else if (result.checkoutFormContent) {
+                const blob = new Blob([result.checkoutFormContent], { type: 'text/html' });
+                window.location.href = URL.createObjectURL(blob);
+              } else {
+                notify("Ödeme sayfası açılamadı");
               }
             } catch {
               notify("Ödeme servisine ulaşılamadı");
@@ -509,12 +505,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           onPurchase={(newTier) => {
             setTier(newTier);
             setCurrentTier(newTier);
-            const bonus = newTier === "pro" ? 250 : 500;
-            const cur = Number(localStorage.getItem("nur_jeton") || 0);
-            const next = cur + bonus;
-            localStorage.setItem("nur_jeton", String(next));
-            setJetonCount(next);
-            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif 🌙 +${bonus} ⚡ Üretim hakkı`);
+            // Demo local bonus kaldırıldı — gerçek haklar sunucudan (callback/verify) gelir
+            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif`);
           }}
           onTokenPurchase={(amount) => {
             const next = Number(localStorage.getItem("nur_jeton") || 0);

@@ -233,24 +233,32 @@ export default async function handler(req: any, res: any) {
 
     if (ok) {
       const conversationId = data.conversationId;
+      let orderProductCode = '';
 
       if (conversationId) {
         const order = await findOrder(conversationId);
 
         if (order) {
-          console.log('[callback] Sipariş bulundu:', {
-            userId: order.user_id,
-            productCode: order.product_code,
-          });
+          orderProductCode = order.product_code || '';
 
-          const granted = await grantProduct(order.user_id, order.product_code);
-
-          if (granted) {
-            await updateOrderStatus(conversationId, 'paid', data.paymentId);
-            console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
+          // Idempotency: zaten paid ise tekrar hak verme
+          if (order.status === 'paid') {
+            console.log('[callback] Sipariş zaten paid, tekrar işlenmiyor');
           } else {
-            await updateOrderStatus(conversationId, 'failed', data.paymentId);
-            console.error('[callback] ❌ Hak tanımlanamadı');
+            console.log('[callback] Sipariş bulundu:', {
+              userId: order.user_id,
+              productCode: order.product_code,
+            });
+
+            const granted = await grantProduct(order.user_id, order.product_code);
+
+            if (granted) {
+              await updateOrderStatus(conversationId, 'paid', data.paymentId);
+              console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
+            } else {
+              await updateOrderStatus(conversationId, 'paid_ungranted', data.paymentId);
+              console.error('[callback] ❌ Hak tanımlanamadı, paid_ungranted');
+            }
           }
         } else {
           console.error('[callback] ❌ Sipariş bulunamadı:', conversationId);
@@ -258,14 +266,14 @@ export default async function handler(req: any, res: any) {
       }
 
       res.writeHead(303, {
-        Location: '/?odeme=basarili&odemeId=' + encodeURIComponent(String(data.paymentId || '')),
+        Location: '/?odeme=basarili&orderId=' + encodeURIComponent(String(data.conversationId || '')) + '&productCode=' + encodeURIComponent(orderProductCode) + '&granted=1',
       });
       res.end();
       return;
     }
 
     res.writeHead(303, {
-      Location: '/?odeme=hata&sebep=' + encodeURIComponent(String(data.errorMessage || 'odeme_basarisiz')),
+      Location: '/?odeme=hata&sebep=' + encodeURIComponent(String(data.errorMessage || 'odeme_basarisiz')) + '&orderId=' + encodeURIComponent(String(data.conversationId || '')),
     });
     res.end();
   } catch (e: any) {

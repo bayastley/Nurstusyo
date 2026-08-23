@@ -58,7 +58,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     const result = claimHolyDayReward(holyDay.eventKey, holyDay.rewardAmount);
     notify(result.message);
     if (result.ok) onRewardClaimed?.(result.newJeton);
-    else if (result.message.includes("Guvenlik")) onTamperAttempt?.(result.message);
+    // Guvenlik tamper tetikleme kaldırıldı — ban uygulamıyor
     setHolyDay(getHolyDayState());
   };
 

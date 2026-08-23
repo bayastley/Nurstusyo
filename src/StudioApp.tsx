@@ -120,13 +120,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       try {
         const stored = localStorage.getItem('nur_user');
         const u = stored ? JSON.parse(stored) : null;
-        if (u?.id) {
-          // Son satın almayı bul ve verify et
+        const verifyOrderId = params.get('orderId');
+        const verifyProductCode = params.get('productCode');
+        if (u?.id && verifyOrderId && verifyProductCode) {
+          // Siparişi verify et
           fetch('/api/payments/verify', {
             method: 'POST',
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId: params.get('odemeId') || 'unknown', productCode: 'SUB_ELIT_1M' }),
+            body: JSON.stringify({ orderId: verifyOrderId, productCode: verifyProductCode }),
           }).then(r => r.json()).then(d => {
             if (d.ok) {
               // Kullanıcı bilgilerini yenile
@@ -2106,10 +2108,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setJetonCount(newJeton);
         }}
         onTamperAttempt={(reason) => {
-          setLocalBanned(true);
-          setLocalBanReason(reason);
-          secureSet("nur_local_user_banned", true);
-          secureSet("nur_local_user_ban_reason", reason);
+          // Tamper ban uygulamaz — sadece bildirim ver
+          notify(`⚠️ Güvenlik: ${reason}`);
         }}
       />
 

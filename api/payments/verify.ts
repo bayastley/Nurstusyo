@@ -176,28 +176,43 @@ export default async function handler(req: any, res: any) {
     let body: any = {};
     try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch { body = {}; }
 
-    const { orderId, productCode } = body;
+    const { orderId } = body;
 
-    if (!orderId || !productCode) {
-      return res.status(400).json({ ok: false, error: 'orderId ve productCode gerekli' });
+    if (!orderId) {
+      return res.status(400).json({ ok: false, error: 'orderId gerekli' });
     }
 
-    console.log('[verify] İstek:', { userId: user.id, orderId, productCode });
-
-    // Supabase'den siparişi kontrol et
+    // Supabase'den siparişi bul
     const order = await sbGet(`nur_orders?id=eq.${encodeURIComponent(orderId)}&select=*`);
     const orderRow = Array.isArray(order) ? order[0] : null;
 
-    if (orderRow && (orderRow.status === 'paid' || orderRow.status === 'completed')) {
-      // Zaten tamamlanmış
+    if (!orderRow) {
+      return res.status(404).json({ ok: false, error: 'Sipariş bulunamadı' });
+    }
+
+    // user_id eşleşme kontrolü
+    if (orderRow.user_id !== user.id) {
+      return res.status(403).json({ ok: false, error: 'Bu sipariş size ait değil' });
+    }
+
+    // Zaten paid ise tekrar verme (idempotency)
+    if (orderRow.status === 'paid' || orderRow.status === 'completed') {
       return res.status(200).json({ ok: true, alreadyCompleted: true });
     }
+
+    // Pending ise hâlâ ödenmemiş — verify'de hak verme
+    if (orderRow.status === 'pending') {
+      return res.status(202).json({ ok: false, error: 'Ödeme henüz tamamlanmadı' });
+    }
+
+    // productCode'u siparişten oku (istemciden alma!)
+    const productCode = orderRow.product_code;
+    console.log('[verify] İstek:', { userId: user.id, orderId, productCode });
 
     // Hak tanımla
     const granted = await grantProduct(user.id, productCode);
 
     if (granted) {
-      // Siparişi güncelle
       await sbPatch(`nur_orders?id=eq.${encodeURIComponent(orderId)}`, {
         status: 'paid',
         payment_id: 'manual_verify',

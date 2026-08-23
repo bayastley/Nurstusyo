@@ -104,19 +104,50 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const conversationId = 'conv-' + Date.now();
-    const basketId = 'bask-' + Date.now();
+    const orderId = 'NUR-' + Date.now() + '-' + crypto.randomBytes(4).toString('hex');
+    const conversationId = orderId;
+    const basketId = orderId;
     const ipHeader = String(req.headers['x-forwarded-for'] || '85.34.78.112');
     const ip = ipHeader.split(',')[0].trim() || '85.34.78.112';
-    const name = String(buyer.name || 'Musteri');
-    const surname = String(buyer.surname || 'Uye');
-    const fullName = name + ' ' + surname;
     const city = String(buyer.city || 'Istanbul');
     const address = String(buyer.address || 'Turkiye');
 
-    // ─── Sandbox test identityNumber ─── Sandbox'ta geçerli test numarası
+    // ─── Cookie session'dan kullanıcı bilgisi al ───
+    let userId = '';
+    let sessionEmail = '';
+    let sessionName = '';
+    try {
+      const cookies = (req.headers.cookie || '').split(';').reduce((acc: any, c: string) => {
+        const [k, ...v] = c.trim().split('=');
+        if (k) acc[k] = decodeURIComponent(v.join('='));
+        return acc;
+      }, {});
+      const token = cookies['nur_session'] || '';
+      if (token.includes('.')) {
+        const payload = token.split('.')[0];
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        const pad = normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : '';
+        const user = JSON.parse(Buffer.from(normalized + pad, 'base64').toString('utf8'));
+        if (user.id) userId = String(user.id);
+        if (user.email) sessionEmail = String(user.email);
+        if (user.name) sessionName = String(user.name);
+      }
+    } catch {}
+
+    if (!userId) {
+      console.error('[payments/create] Oturum bulunamadı');
+      res.status(401).json({ error: 'Giriş yapmalısınız' });
+      return;
+    }
+
+    // ─── Buyer bilgilerini doldur ───
+    const name = String(buyer.name || sessionName || 'Musteri');
+    const surname = String(buyer.surname || 'Uye');
+    const fullName = name + ' ' + surname;
     const isSandbox = process.env.IYZICO_SANDBOX === 'true';
     const testIdentity = isSandbox ? '11111111110' : String(buyer.identityNumber || '11111111110');
+    const buyerEmail = String(buyer.email || sessionEmail || 'test@nurstudyo.com');
+    const buyerId = String(buyer.id || userId || 'BY001');
 
     const request = {
       locale: 'tr',
@@ -129,11 +160,11 @@ export default async function handler(req: any, res: any) {
       callbackUrl: callbackUrl,
       enabledInstallments: [1],
       buyer: {
-        id: String(buyer.id || 'BY001'),
+        id: buyerId,
         name: name,
         surname: surname,
         gsmNumber: String(buyer.gsmNumber || '+905350000000'),
-        email: String(buyer.email || 'test@nurstudyo.com'),
+        email: buyerEmail,
         identityNumber: testIdentity,
         registrationAddress: address,
         ip: ip,
@@ -170,29 +201,9 @@ export default async function handler(req: any, res: any) {
 
     // Supabase'e sipariş kaydı (callback bulacak)
     try {
-      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+/g, '');
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$|\/+/g, '$/');
       const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (sbUrl && sbKey) {
-        // Cookie'den user ID al
-        let userId = 'anonymous';
-        try {
-          const cookies = (req.headers.cookie || '').split(';').reduce((acc: any, c: string) => {
-            const [k, ...v] = c.trim().split('=');
-            if (k) acc[k] = decodeURIComponent(v.join('='));
-            return acc;
-          }, {});
-          const token = cookies['nur_session'] || '';
-          if (token && token.includes('.')) {
-            const payload = token.split('.')[0];
-            const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-            const pad = normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : '';
-            const user = JSON.parse(Buffer.from(normalized + pad, 'base64').toString('utf8'));
-            if (user.id) userId = String(user.id);
-          }
-        } catch {}
-
-        // productCode zaten yukarda tanımlandı (PRODUCT_CATALOG lookup)
-
         await fetch(`${sbUrl}/rest/v1/nur_orders`, {
           method: 'POST',
           headers: {

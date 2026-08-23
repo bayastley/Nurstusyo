@@ -96,7 +96,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // bulunduğunda engellenir.
     let ban: { reason: string } | null = null;
     try {
-      const bans = await supabaseRows<{ reason: string }>(`nur_ban_logs?or=(user_id.eq.${encodeURIComponent(user.id)},user_email.eq.${encodeURIComponent(user.email)})&unbanned=eq.false&order=created_at.desc&limit=1&select=reason`);
+      const bans = await supabaseRows<{ reason: string }>(`nur_ban_logs?or=(user_id.eq.${encodeURIComponent(user.id)},user_email.eq.${encodeURIComponent(user.email)})&unbanned=eq.false&is_auto=eq.false&order=created_at.desc&limit=1&select=reason`);
       ban = bans[0] ?? null;
     } catch {
       ban = null;
