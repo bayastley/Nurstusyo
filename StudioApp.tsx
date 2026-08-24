@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fixWebmDuration from "fix-webm-duration";
-import { X, AlertTriangle, Ban, BookOpen } from "lucide-react";
+import { X, AlertTriangle, Ban, BookOpen, Zap } from "lucide-react";
 import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
@@ -51,7 +51,7 @@ import { VideoPreviewSection } from "./components/VideoPreviewSection";
 import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
-import { AnnouncementBar } from "./components/AnnouncementBar";import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, type Tier } from "./tier";
+import { AnnouncementBar } from "./components/AnnouncementBar";import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
 // ★ Yeni Hook'lar
@@ -93,6 +93,30 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // Toast (erkenden tanımlı çünkü hook'lar buna ihtiyaç duyuyor)
   const [toast, setToast] = useState<string | null>(null);
   const notify = useCallback((message: string) => setToast(message), []);
+
+  // ★ Cookie Consent
+  const [cookieAccepted, setCookieAccepted] = useState(() => {
+    try { return localStorage.getItem("nur_cookie_consent") === "1"; } catch { return false; }
+  });
+
+  // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
+  const [genConfirmOpen, setGenConfirmOpen] = useState(false);
+  const [genConfirmData, setGenConfirmData] = useState<{ cost: number; remaining: number; formatCount: number; mode: string } | null>(null);
+  const genConfirmResolveRef = useRef<((ok: boolean) => void) | null>(null);
+
+  const showGenerateConfirm = useCallback((cost: number, remaining: number, formatCount: number, mode: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setGenConfirmData({ cost, remaining, formatCount, mode });
+      setGenConfirmOpen(true);
+      genConfirmResolveRef.current = resolve;
+    });
+  }, []);
+
+  const handleGenConfirm = useCallback((ok: boolean) => {
+    setGenConfirmOpen(false);
+    genConfirmResolveRef.current?.(ok);
+    genConfirmResolveRef.current = null;
+  }, []);
 
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
   const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("nur_lang") as Lang) || "tr");
@@ -185,7 +209,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [previewReciterId, setPreviewReciterId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [outputs, setOutputs] = useState<Output[]>([]);
+  const [outputs, setOutputs] = useState<Output[]>(() => {
+    try {
+      const saved = localStorage.getItem("nur_gen_history");
+      return saved ? JSON.parse(saved).slice(0, 20) : [];
+    } catch { return []; }
+  });
   const [activeOutputId, setActiveOutputId] = useState<string | null>(null);
 
   const [showArapca, setShowArapca] = useState(true);
@@ -270,6 +299,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [accessTier]);
 
   const reciter = RECITERS.find((item) => item.id === reciterId) ?? RECITERS[0];
+  // ★ Geçmiş üretimi localStorage'a kaydet
+  useEffect(() => {
+    if (outputs.length > 0) {
+      try {
+        // Sadece metadata kaydet (blob URL'lerini değil)
+        const lite = outputs.map(o => ({ id: o.id, label: o.label, size: o.size, ext: o.ext, mime: o.mime, duration: o.duration }));
+        localStorage.setItem("nur_gen_history", JSON.stringify(lite.slice(0, 20)));
+      } catch {}
+    }
+  }, [outputs]);
+
   const activeOutput = outputs.find((output) => output.id === activeOutputId) ?? outputs[0] ?? null;
   const t = (key: keyof (typeof T)["tr"]) => T[lang][key] ?? T.tr[key];
 
@@ -681,6 +721,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       openPremium("jeton");
       return;
     }
+    // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
+    if (!isMasterSürüm && !isGuest && totalCost > 0 && (accessTier === "free" || accessTier === "pro")) {
+      const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode);
+      if (!confirmed) return;
+    }
     let jetonCharged = false;
     let userStopped = false;
     silenceAllAudio();
@@ -1065,6 +1110,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         notify("Kayıt başarılı! Hoş geldiniz.");
       }
       syncUserInDb(email, newUser.name, "free", nextJeton);
+      startTrial(); // ★ 7 gün ücretsiz PRO denemesi başlat
     }
     setModal(null);
   };
@@ -1312,13 +1358,99 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         shareToYouTube={shareToYouTube}
         shareToTikTok={shareToTikTok}
         shareToInstagram={shareToInstagram}
+        pickDesc={genDesc}
       />
+
+      {/* ★ COOKIE CONSENT BANNER */}
+      {!cookieAccepted && (
+        <div className="fixed bottom-0 left-0 right-0 z-[90] border-t border-white/10 bg-black/80 backdrop-blur-xl px-4 py-3">
+          <div className="mx-auto max-w-4xl flex flex-wrap items-center justify-between gap-3">
+            <p className="text-[10px] text-white/60 leading-relaxed">
+              🍪 Bu site çerezler kullanır. Deneyiminizi geliştirmek için çerezleri kabul edin. Detaylı bilgi için{' '}
+              <button onClick={() => { setLegalTab("gizlilik"); setTosOpen(true); }} className="underline text-[color:var(--accent-2)] hover:text-white">Gizlilik Politikamızı</button>{' '}
+              okuyabilirsiniz.
+            </p>
+            <button
+              onClick={() => { localStorage.setItem("nur_cookie_consent", "1"); setCookieAccepted(true); }}
+              className="shrink-0 rounded-xl px-4 py-1.5 text-[10px] font-bold text-black"
+              style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
+            >
+              Kabul Et
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* TOAST NOTIFICATION */}
       {toast ? (
         <div className="glass modal-in select-none fixed bottom-5 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-[10px] text-white shadow-2xl">
           <BookOpen size={12} style={{ color: "var(--accent)" }} />
           {toast}
+        </div>
+      ) : null}
+
+      {/* ★ ÜRETİM ONAY BALONU — free/pro maliyet uyarısı */}
+      {genConfirmOpen && genConfirmData ? (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => handleGenConfirm(false)}>
+          <div className="glass modal-in max-w-sm w-[90%] rounded-3xl border border-white/10 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}>
+                <Zap size={22} className="text-white" />
+              </div>
+              <div>
+                <h3 className="font-display text-base font-black text-white">Üretim Onayı</h3>
+                <p className="text-[10px] text-white/50">Maliyet bilgisi</p>
+              </div>
+            </div>
+
+            <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-white/50">Üretim türü</span>
+                <span className="font-bold text-white">{genConfirmData.mode === "short" ? "Kısa (59sn)" : genConfirmData.mode === "long" ? "Uzun (600sn)" : "Tam Sürüm"}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-white/50">Format sayısı</span>
+                <span className="font-bold text-white">{genConfirmData.formatCount} adet</span>
+              </div>
+              <div className="my-2 h-px bg-white/10" />
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="font-bold text-white/70">Harcanacak jeton</span>
+                <span className="font-black" style={{ color: "var(--accent)" }}>{genConfirmData.cost} ⚡</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-white/50">Kalan jetonun</span>
+                <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-white/50">Üretim sonrası</span>
+                <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
+                  {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
+                </span>
+              </div>
+            </div>
+
+            {genConfirmData.remaining - genConfirmData.cost <= 0 && (
+              <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
+                ⚠️ Jetonun yetersiz! Üretim sonrası bakiyen 0 olacak.
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleGenConfirm(false)}
+                className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
+              >
+                İptal
+              </button>
+              <button
+                onClick={() => handleGenConfirm(true)}
+                className="flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black text-white transition shadow-lg"
+                style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
+              >
+                Üret ⚡ {genConfirmData.cost}
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 
