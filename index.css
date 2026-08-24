@@ -1,0 +1,318 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --accent: #d7aa52;
+    --accent-2: #f5dda6;
+    --page: #0c0d12;
+    --page-2: #161822;
+    --text: #f3f4f6;
+  }
+
+  /* Sure seçim dropdown - metin görünürlüğü */
+  select option {
+    background-color: #14161f !important;
+    color: #f3f4f6 !important;
+  }
+
+  body {
+    background-color: var(--page);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    /* Mobil Safari: adres çubuğu açılıp kapanınca zıplamayı önler */
+    min-height: 100dvh;
+    overflow-x: hidden;
+    /* iOS: input yakınlaştırmasını ve dokunma gecikmesini azaltır */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iOS Safari: video/canvas tam ekran kaydırma davranışı */
+  canvas, video {
+    -webkit-touch-callout: none;
+  }
+
+/* ★ Atmosfer kartları — mobilde görünmeyen kartların render maliyetini sıfırla */
+.atmo-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 150px;
+}
+}
+
+/* Custom fonts */
+.font-arabic {
+  font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
+}
+
+.font-display {
+  font-family: 'Cinzel', 'Trajan Pro', 'Cinzel Decorative', serif, system-ui;
+}
+
+/* Glassmorphism effects */
+.glass {
+  background: rgba(18, 20, 29, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+.glass-soft {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-soft:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Animations */
+@keyframes glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-rise {
+  animation: rise 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Ambient slow rotation for atmosphere card fallback geometry */
+@keyframes nur-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.modal-in {
+  animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Sinematik meal / altyazı gölgesi */
+.shadow-cinematic-meal {
+  text-shadow: 0px 2px 8px rgba(0, 0, 0, 0.85), 0px 1px 3px rgba(0, 0, 0, 0.95);
+  filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.85));
+}
+
+/* Text Shimmer */
+.shimmer-text {
+  background: linear-gradient(
+    110deg,
+    var(--accent-2) 0%,
+    #ffffff 25%,
+    var(--accent) 50%,
+    var(--accent-2) 75%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shine 6s linear infinite;
+}
+
+@keyframes shine {
+  to { background-position: 200% center; }
+}
+
+/* Hero tagline: yavaş, durmadan akan metin + içinden beyaz ışık */
+.tagline-marquee {
+  display: inline-block;
+  min-width: max-content;
+  padding-inline: 4rem;
+  background: linear-gradient(100deg, var(--accent-2) 0%, var(--accent) 28%, #ffffff 50%, var(--accent) 72%, var(--accent-2) 100%);
+  background-size: 260% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: marqueeMove 22s linear infinite, taglineLight 6.5s linear infinite;
+  will-change: transform, background-position;
+}
+
+@keyframes marqueeMove {
+  from { transform: translateX(-55%); }
+  to { transform: translateX(55%); }
+}
+
+@keyframes taglineLight {
+  from { background-position: 0% center; }
+  to { background-position: 260% center; }
+}
+
+/* ════════════════════════════════════════════════════════
+   ★ ZENGİNLEŞTİRİLMİŞ 4K AKIŞ ŞERİDİ (Sonsuz Premium Marquee)
+   Mat siyah zemin · asil altın sarısı hat · parıldayan yıldız ikonları
+   ════════════════════════════════════════════════════════ */
+.tagline-viewport {
+  position: relative;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 9%, #000 91%, transparent 100%);
+}
+
+.tagline-track {
+  display: flex;
+  width: max-content;
+  animation: taglineScroll 46s linear infinite;
+  will-change: transform;
+}
+
+.tagline-viewport:hover .tagline-track {
+  animation-play-state: paused;
+}
+
+.tagline-seq {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.tagline-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-inline: 1.55rem;
+  white-space: nowrap;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.012em;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.tagline-item + .tagline-item {
+  border-left: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.tagline-text {
+  background: linear-gradient(
+    100deg,
+    var(--accent-2) 0%,
+    var(--accent) 26%,
+    #fffaf0 48%,
+    var(--accent) 70%,
+    var(--accent-2) 100%
+  );
+  background-size: 260% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: taglineLight 7s linear infinite;
+  text-shadow: 0 1px 12px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.tagline-star {
+  flex-shrink: 0;
+  color: var(--accent-2);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 75%, transparent));
+  animation: taglineStar 2.6s ease-in-out infinite;
+}
+
+@keyframes taglineScroll {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+
+@keyframes taglineStar {
+  0%, 100% { opacity: 0.65; transform: scale(0.9) rotate(0deg); }
+  50%      { opacity: 1;    transform: scale(1.12) rotate(90deg); }
+}
+
+@media (max-width: 640px) {
+  .tagline-item { font-size: 11px; padding-inline: 1.1rem; }
+  .tagline-track { animation-duration: 38s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tagline-track { animation-duration: 90s; }
+  .tagline-star { animation: none; }
+}
+
+.shimmer-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 70%
+  );
+  transform: rotate(30deg);
+  animation: buttonShine 4s infinite;
+}
+
+@keyframes buttonShine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  20%, 100% { transform: translateX(100%) rotate(30deg); }
+}
+
+/* Risk dots animation */
+.risk-dot-low { box-shadow: 0 0 8px #10b981; }
+.risk-dot-mid { box-shadow: 0 0 8px #f59e0b; }
+.risk-dot-high { box-shadow: 0 0 8px #ef4444; }
+
+/* Custom Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* Timeline range input */
+input[type="range"].timeline {
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.12);
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"].timeline::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent);
+}

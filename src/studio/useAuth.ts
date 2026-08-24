@@ -1,31 +1,58 @@
-import { useEffect } from "react";
-import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, type Tier } from "../tier";
+import { useState, useEffect, useCallback } from "react";
+import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, type Tier } from "../tier";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
-import { isAdminEmail } from "../tier";
 import { syncUserInDb } from "../components/adminHelpers";
-import { fetchRemoteConfig } from "../services/adminSyncService";
-import type { User } from "../types";
+import type { User, LoginTab } from "../types";
 
-interface UseAuthSessionParams {
-  notify: (message: string) => void;
-  setUser: (value: User | null) => void;
-  setAdminGodMode: (value: boolean) => void;
-  setTier: (value: Tier) => void;
-  setJetonCount: (value: number) => void;
-  setLocalBanned: (value: boolean) => void;
-  setLocalBanReason: (value: string) => void;
+interface UseAuthOptions {
+  isMasterSürüm: boolean;
+  isDevMaster: boolean;
+  notify: (msg: string) => void;
 }
 
-export function useAuthSession({
-  notify,
-  setUser,
-  setAdminGodMode,
-  setTier,
-  setJetonCount,
-  setLocalBanned,
-  setLocalBanReason,
-}: UseAuthSessionParams) {
-  // Google OAuth PKCE dönüşü — code backend'de doğrulanır, sahte mail kabul edilmez.
+interface UseAuthReturn {
+  user: User | null;
+  setUser: (u: User | null) => void;
+  loginTab: LoginTab;
+  setLoginTab: (tab: LoginTab) => void;
+  phone: string;
+  setPhone: (p: string) => void;
+  verifyCode: string;
+  setVerifyCode: (c: string) => void;
+  sentCode: string;
+  setSentCode: (c: string) => void;
+  adminGodMode: boolean;
+  setAdminGodMode: (v: boolean) => void;
+  serverAdminVerified: boolean;
+  setServerAdminVerified: (v: boolean) => void;
+  adminEmailInput: string;
+  setAdminEmailInput: (v: string) => void;
+  adminCodeInput: string;
+  setAdminCodeInput: (v: string) => void;
+  adminError: string | null;
+  setAdminError: (v: string | null) => void;
+  adminAuthOpen: boolean;
+  setAdminAuthOpen: (v: boolean) => void;
+  openAdminDashboard: () => Promise<void>;
+}
+
+export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions): UseAuthReturn {
+  const [user, setUser] = useState<User | null>(() => {
+    try { return secureGet<User | null>("nur_user_v1", null); } catch { return null; }
+  });
+
+  const [loginTab, setLoginTab] = useState<LoginTab>("login");
+  const [phone, setPhone] = useState("");
+  const [verifyCode, setVerifyCode] = useState("");
+  const [sentCode, setSentCode] = useState("");
+  const [adminGodMode, setAdminGodMode] = useState(false);
+  const [serverAdminVerified, setServerAdminVerified] = useState(false);
+  const [adminEmailInput, setAdminEmailInput] = useState("");
+  const [adminCodeInput, setAdminCodeInput] = useState("");
+  const [adminError, setAdminError] = useState<string | null>(null);
+  const [adminAuthOpen, setAdminAuthOpen] = useState(false);
+
+  // ★ Google OAuth PKCE dönüşü — code backend'de doğrulanır
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
@@ -59,7 +86,7 @@ export function useAuthSession({
           ok?: boolean;
           error?: string;
           user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier; isAdmin?: boolean };
-          wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
+          wallet?: { subJeton: number; purchasedJeton: number; kisa?: number; uzun?: number; tam?: number; total: number } | null;
         } | null;
         if (cancelled) return;
         if (!response.ok || !data?.ok || !data.user?.email) {
@@ -80,44 +107,34 @@ export function useAuthSession({
         setUser(newUser);
         secureSet("nur_user_v1", newUser);
 
+        // Cüzdan bilgisini secureStore'a yaz
+        if (data.wallet) {
+          secureSet("nur_pack_rights_v1", {
+            kisa: data.wallet.kisa ?? 0,
+            uzun: data.wallet.uzun ?? 0,
+            tam: data.wallet.tam ?? 0,
+          });
+        }
+
         if (isKurucuAdmin) {
-          const adminJeton = Math.max(1000, data.wallet?.total ?? getJeton());
-          setAdminGodMode(true);
-          // ★ Admin olsa bile satın alınan tier'ı koru — sadece free ise elit yap
           const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
-          setTier(adminTier);
           setCurrentTier(adminTier);
-          setJetonCount(adminJeton);
-          persistJetonSecure(adminJeton);
-          syncUserInDb(email, newUser.name, adminTier, adminJeton);
           notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
           return;
         }
 
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
-        setTier(dbTier);
         setCurrentTier(dbTier);
-        let nextJeton = data.wallet?.total ?? getJeton();
-        const bonusKey = `nur_google_register_bonus_${data.user.id}`;
-        if (!localStorage.getItem(bonusKey)) {
-          nextJeton += JETON.KAYIT_BONUSU_FREE;
-          persistJetonSecure(nextJeton);
-          setJetonCount(nextJeton);
-          localStorage.setItem(bonusKey, "1");
-          notify(`🎉 Google ile giriş başarılı · +${JETON.KAYIT_BONUSU_FREE} hak tanımlandı`);
-        } else {
-          notify("Google ile giriş başarılı · hoş geldiniz");
-        }
-        syncUserInDb(email, newUser.name, dbTier, nextJeton);
+        notify("Google ile giriş başarılı · hoş geldiniz");
       } catch {
         if (!cancelled) notify("Google girişi sırasında bağlantı hatası oluştu");
       }
     })();
 
     return () => { cancelled = true; };
-  }, [notify, setAdminGodMode, setJetonCount, setTier, setUser]);
+  }, [notify]);
 
-  // Server-side oturum kontrolü: localStorage tek başına yetki sayılmaz.
+  // ★ Server-side oturum kontrolü
   useEffect(() => {
     const stored = secureGet<string | null>("nur_user_v1", null);
     if (!stored) return;
@@ -135,21 +152,16 @@ export function useAuthSession({
         const data = await response.json().catch(() => null) as {
           ok?: boolean;
           user?: { id: string; email: string; name: string; verified: boolean; isAdmin?: boolean; tier?: Tier };
-          wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
+          wallet?: { subJeton: number; purchasedJeton: number; kisa?: number; uzun?: number; tam?: number; total: number } | null;
           banned?: boolean;
           banReason?: string;
         } | null;
         if (!data?.ok || !data.user?.email) return;
 
         if (data.banned) {
-          const serverReason = data.banReason || "Sistem Verilerini Kurcalama / Hak Manipülasyonu Girişimi";
           setUser(null);
           secureRemove("nur_user_v1");
           setAdminGodMode(false);
-          setLocalBanned(true);
-          setLocalBanReason(serverReason);
-          secureSet("nur_local_user_banned", true);
-          secureSet("nur_local_user_ban_reason", serverReason);
           return;
         }
 
@@ -162,38 +174,56 @@ export function useAuthSession({
         };
         setUser(verifiedUser);
         secureSet("nur_user_v1", verifiedUser);
-        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
-        setTier(dbTier);
-        setCurrentTier(dbTier);
+
+        // Cüzdan bilgisini secureStore'a yaz
         if (data.wallet) {
-          setJetonCount(data.wallet.total);
-          persistJetonSecure(data.wallet.total);
+          secureSet("nur_pack_rights_v1", {
+            kisa: data.wallet.kisa ?? 0,
+            uzun: data.wallet.uzun ?? 0,
+            tam: data.wallet.tam ?? 0,
+          });
         }
+
+        const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
+        setCurrentTier(dbTier);
+
         if (data.user.isAdmin) setAdminGodMode(true);
-      } catch {
-        // offline/dev durumda sessiz geç
-      }
+      } catch { /* offline/dev durumda sessiz geç */ }
     })();
     return () => { cancelled = true; };
-  }, [setAdminGodMode, setJetonCount, setLocalBanned, setLocalBanReason, setTier, setUser]);
+  }, []);
 
-  // Ücretsiz bulut senkronizasyonu (Gist / Raw Sync)
-  useEffect(() => {
-    fetchRemoteConfig().then((remoteCfg) => {
-      if (!remoteCfg) return;
-      const savedUser = secureGet<string | null>("nur_user_v1", null);
-      if (!savedUser) return;
-      try {
-        const user = JSON.parse(savedUser) as User;
-        const remoteUser = remoteCfg.users.find((x) => x.email.toLowerCase() === user.email.toLowerCase());
-        if (!remoteUser) return;
-        setTier(remoteUser.tier);
-        setCurrentTier(remoteUser.tier);
-        setJetonCount(remoteUser.jeton);
-        persistJetonSecure(remoteUser.jeton);
-      } catch {
-        // ignore remote sync errors
+  // ★ Admin session kontrolü
+  const openAdminDashboard = useCallback(async () => {
+    if (isDevMaster) {
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/admin/session", { cache: "no-store" });
+      if (response.ok) {
+        setServerAdminVerified(true);
+        setAdminGodMode(true);
+        return;
       }
-    });
-  }, [setJetonCount, setTier]);
+    } catch { /* ignore */ }
+
+    setAdminAuthOpen(true);
+    notify("Admin paneli için doğrulanmış Google admin oturumu gerekli");
+  }, [isDevMaster, notify]);
+
+  return {
+    user, setUser,
+    loginTab, setLoginTab,
+    phone, setPhone,
+    verifyCode, setVerifyCode,
+    sentCode, setSentCode,
+    adminGodMode, setAdminGodMode,
+    serverAdminVerified, setServerAdminVerified,
+    adminEmailInput, setAdminEmailInput,
+    adminCodeInput, setAdminCodeInput,
+    adminError, setAdminError,
+    adminAuthOpen, setAdminAuthOpen,
+    openAdminDashboard,
+  };
 }
