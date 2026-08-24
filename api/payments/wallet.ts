@@ -4,7 +4,7 @@ const COOKIE_NAME = 'nur_session';
 
 function parseCookies(req: any): Record<string, string> {
   const header = req.headers.cookie || '';
-  return header.split(';').reduce<Record<string, string>>((acc, part) => {
+  return header.split(';').reduce((acc: Record<string, string>, part) => {
     const [key, ...rest] = part.trim().split('=');
     if (!key) return acc;
     acc[key] = decodeURIComponent(rest.join('='));
@@ -86,17 +86,21 @@ export default async function handler(req: any, res: any) {
     // Gerçek uygulamada purchased_jeton türüne göre ayrılabilir
     const purchasedJeton = wallet.purchased_jeton || 0;
 
-    console.log('[wallet] Kullanıcı:', user.id, 'Jeton:', purchasedJeton);
+    // Ayrı video hakları — DB'de purchased_kisa/uzun/tam varsa onları kullan
+    const kisa = wallet.purchased_kisa ?? purchasedJeton;
+    const uzun = wallet.purchased_uzun ?? 0;
+    const tam = wallet.purchased_tam ?? 0;
+
+    console.log('[wallet] Kullanıcı:', user.id, 'Kısa:', kisa, 'Uzun:', uzun, 'Tam:', tam);
 
     return res.status(200).json({
       ok: true,
       wallet: {
         sub_jeton: wallet.sub_jeton || 0,
         purchased_jeton: purchasedJeton,
-        // Frontend'in beklediği format
-        kisa: purchasedJeton,
-        uzun: 0,
-        tam: 0,
+        kisa,
+        uzun,
+        tam,
       },
     });
   } catch (err: any) {

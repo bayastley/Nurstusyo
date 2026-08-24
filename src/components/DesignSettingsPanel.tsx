@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import type { DesignSettingsPanelProps } from "./designSettingsTypes";
 import {
   Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause,
 } from "lucide-react";
@@ -12,57 +13,6 @@ import { videoMaliyeti, reciterRequiredTier } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
 import type { Clip } from "../clips";
 import type { Mode, Aspect, ModalName, Tier } from "../types";
-
-interface DesignSettingsPanelProps {
-  setPickingFor: (id: string | null) => void;
-  setModal: (modal: ModalName) => void;
-  background: Clip;
-  combinedAllClipsLength: number;
-  randomizeBackgrounds: () => void;
-  isMasterSürüm: boolean;
-  sortedReciters: typeof RECITERS;
-  reciterId: string;
-  setReciterId: (id: string) => void;
-  accessTier: Tier;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
-  previewReciterId: string | null;
-  playReciterPreview: (id: string) => void;
-  mode: Mode;
-  setMode: (m: Mode) => void;
-  tierAtLeast: (have: Tier, need: Tier) => boolean;
-  tier: Tier;
-  MODES: Array<{ id: Mode; label: string; sub: string; icon: React.ElementType }>;
-  ASPECTS: Array<{ id: Aspect; label: string; sub?: string; icon: React.ElementType }>;
-  aspect: Aspect;
-  setAspect: (a: Aspect) => void;
-  batchFormats: Aspect[];
-  setBatchFormats: React.Dispatch<React.SetStateAction<Aspect[]>>;
-  tryUnlockElitFeature: (key: any, label: string) => boolean;
-  hasMicroUnlock: (key: any) => boolean;
-  arabicFont: string;
-  setArabicFont: (f: string) => void;
-  ARABIC_FONTS: Array<{ id: string; label: string; css: string }>;
-  textSize: "kucuk" | "normal" | "buyuk";
-  setTextSize: (s: "kucuk" | "normal" | "buyuk") => void;
-  shimmerStyle: string;
-  setShimmerStyle: (s: string) => void;
-  SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }>;
-  cardBg: "seffaf" | "koyu";
-  setCardBg: (bg: "seffaf" | "koyu") => void;
-  /** ★ Marka / kanal imzası (Elit + God Mode) — konum seçilebilir */
-  brandSignature: string;
-  setBrandSignature: (v: string) => void;
-  brandPos: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt";
-  setBrandPos: (v: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt") => void;
-  setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
-  CINE_FILTERS: Array<{ id: string; label: string; css: string; tint?: string; tintAlpha?: number }>;
-  cinematic: string;
-  setCinematic: (c: string) => void;
-  handleGenerate: () => void;
-  generating: boolean;
-  progress: number;
-  t: (key: keyof (typeof T)["tr"]) => string;
-}
 
 export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   setPickingFor,

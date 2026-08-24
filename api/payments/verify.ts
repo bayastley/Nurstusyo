@@ -4,7 +4,7 @@ const COOKIE_NAME = 'nur_session';
 
 function parseCookies(req: any): Record<string, string> {
   const header = req.headers.cookie || '';
-  return header.split(';').reduce<Record<string, string>>((acc, part) => {
+  return header.split(';').reduce((acc: Record<string, string>, part) => {
     const [key, ...rest] = part.trim().split('=');
     if (!key) return acc;
     acc[key] = decodeURIComponent(rest.join('='));

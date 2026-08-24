@@ -140,14 +140,46 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    // ─── Buyer bilgilerini doldur ───
-    const name = String(buyer.name || sessionName || 'Musteri');
-    const surname = String(buyer.surname || 'Uye');
+    // ─── Supabase'den gerçek kullanıcı bilgilerini çek ───
+    let dbUser: { name?: string; email?: string } | null = null;
+    try {
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+      const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (sbUrl && sbKey && userId) {
+        const sbRes = await fetch(
+          `${sbUrl}/rest/v1/nur_users?id=eq.${encodeURIComponent(userId)}&select=name,email`,
+          { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` }, cache: 'no-store' }
+        );
+        if (sbRes.ok) {
+          const rows = await sbRes.json() as any[];
+          if (rows[0]) dbUser = rows[0];
+        }
+      }
+    } catch {}
+
+    // ─── Buyer bilgilerini dinamik doldur ───
+    // İsim: body.buyer.name > Supabase > session > varsayılan
+    const rawName = String(buyer.name || dbUser?.name || sessionName || 'Nurstudyo');
+    // Google isimleri genelde tek kelime —split et
+    const nameParts = rawName.trim().split(/\s+/);
+    const name = nameParts[0] || 'Nurstudyo';
+    const surname = nameParts.slice(1).join(' ') || 'Kullanıcı';
     const fullName = name + ' ' + surname;
+
     const isSandbox = process.env.IYZICO_SANDBOX === 'true';
-    const testIdentity = isSandbox ? '11111111110' : String(buyer.identityNumber || '11111111110');
-    const buyerEmail = String(buyer.email || sessionEmail || 'test@nurstudyo.com');
+    // Sandbox'ta test TCKN, production'da gerçek TCKN veya placeholder
+    const identityNumber = isSandbox
+      ? '11111111110'
+      : String(buyer.identityNumber || '11111111110');
+    const buyerEmail = String(buyer.email || dbUser?.email || sessionEmail || 'kullanici@nurstudyo.com');
     const buyerId = String(buyer.id || userId || 'BY001');
+    // Telefon: body'den gelmiyorsa varsayılan (iyzico zorunlu tutuyor)
+    const gsmNumber = String(buyer.gsmNumber || '+905350000000');
+    // Şehir ve adres: body'den gelmiyorsa varsayılan
+    const buyerCity = String(buyer.city || 'İstanbul');
+    const buyerAddress = String(buyer.address || buyer.registrationAddress || 'Türkiye');
+
+    console.log('[payments/create] Buyer:', { name, surname, email: buyerEmail, city: buyerCity, sandbox: isSandbox });
 
     const request = {
       locale: 'tr',
@@ -163,25 +195,25 @@ export default async function handler(req: any, res: any) {
         id: buyerId,
         name: name,
         surname: surname,
-        gsmNumber: String(buyer.gsmNumber || '+905350000000'),
+        gsmNumber: gsmNumber,
         email: buyerEmail,
-        identityNumber: testIdentity,
-        registrationAddress: address,
+        identityNumber: identityNumber,
+        registrationAddress: buyerAddress,
         ip: ip,
-        city: city,
+        city: buyerCity,
         country: 'Turkey',
       },
       shippingAddress: {
         contactName: fullName,
-        city: city,
+        city: buyerCity,
         country: 'Turkey',
-        address: address,
+        address: buyerAddress,
       },
       billingAddress: {
         contactName: fullName,
-        city: city,
+        city: buyerCity,
         country: 'Turkey',
-        address: address,
+        address: buyerAddress,
       },
       basketItems: [
         {
@@ -201,7 +233,7 @@ export default async function handler(req: any, res: any) {
 
     // Supabase'e sipariş kaydı (callback bulacak)
     try {
-      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$|\/+/g, '$/');
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
       const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (sbUrl && sbKey) {
         await fetch(`${sbUrl}/rest/v1/nur_orders`, {
@@ -228,6 +260,28 @@ export default async function handler(req: any, res: any) {
     } catch (err: any) {
       console.warn('[payments/create] Supabase kayıt hatası (devam):', err?.message);
     }
+
+    // Token → orderId mapping (callback fallback)
+    try {
+      const mapUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+      const mapKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (mapUrl && mapKey && userId) {
+        await fetch(`${mapUrl}/rest/v1/nur_order_tokens`, {
+          method: 'POST',
+          headers: {
+            apikey: mapKey,
+            Authorization: `Bearer ${mapKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            order_id: conversationId,
+            user_id: userId,
+            product_code: productCode,
+          }),
+        });
+      }
+    } catch {}
 
     const iyziRes = await fetch(getBase() + URI_PATH, {
       method: 'POST',

@@ -46,6 +46,8 @@ interface VideoPreviewSectionProps {
   setModal: (modal: ModalName) => void;
   ayahBackgrounds: Record<string, Clip>;
   activeOutput: Output | null;
+  outputs: Output[];
+  setActiveOutputId: (id: string | null) => void;
   fmtSize: (bytes: number) => string;
   shareOutput: (output: Output) => void;
   user: unknown;
@@ -78,7 +80,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
-    activeOutput, fmtSize, shareOutput, user, setLoginTab, t, handleGenerate,
+    activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect,
   } = props;
   const [lowPower] = useState(lowPowerDevice);
@@ -141,6 +143,55 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm) { return; } setClipKind(kind); setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">Şablon görseller V2 güncellemesinde açılacak</p>}
       </div>
+
+      {/* İNDİRME KLASÖRÜ — en fazla 5 output, sırayla iner */}
+      {outputs.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü</p>
+            <span className="text-[8px] text-white/40">{outputs.length}/5</span>
+          </div>
+          <div className="grid gap-1.5">
+            {outputs.map((output, idx) => (
+              <div key={output.id} className={`flex items-center gap-2 rounded-xl px-2.5 py-2 transition ${output.id === activeOutput?.id ? "bg-white/[.06] border border-white/10" : "hover:bg-white/[.03]"}`}>
+                <button onClick={() => setActiveOutputId(output.id)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[9px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
+                  {idx + 1}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[9px] font-bold text-white/80">{output.label}</p>
+                  <p className="text-[7.5px] text-white/40">{fmtDuration(output.duration)} · {fmtSize(output.size)}</p>
+                </div>
+                <a href={user ? output.url : "#"} download={user ? `nur-studyo-${idx + 1}.${output.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[.06] text-white/60 hover:text-white transition">
+                  <Download size={11} />
+                </a>
+              </div>
+            ))}
+          </div>
+          {/* Toplu İndir Butonu */}
+          {outputs.length > 1 && (
+            <button
+              onClick={() => {
+                if (!user) { setLoginTab("register"); setModal("login"); return; }
+                outputs.forEach((output, idx) => {
+                  setTimeout(() => {
+                    const a = document.createElement("a");
+                    a.href = output.url;
+                    a.download = `nur-studyo-${idx + 1}.${output.ext}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }, idx * 800);
+                });
+                notify(`${outputs.length} video sırayla indiriliyor...`);
+              }}
+              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-black text-black"
+              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+            >
+              <Download size={11} />{outputs.length} Videoyu İndir
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-2.5 sm:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">

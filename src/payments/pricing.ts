@@ -354,6 +354,16 @@ export interface CheckoutRequest {
   userId?: string;
   email?: string;
   returnUrl?: string;
+  /** Dinamik satın alma bilgileri — opsiyonel, yoksa sunucu session'dan çeker */
+  buyer?: {
+    name?: string;
+    surname?: string;
+    email?: string;
+    gsmNumber?: string;
+    city?: string;
+    address?: string;
+    identityNumber?: string;
+  };
 }
 
 export interface CheckoutResponse {
@@ -386,35 +396,17 @@ export async function startCheckout(req: CheckoutRequest): Promise<CheckoutRespo
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        price: (check.product ? (check.product.amountMinor / 100).toFixed(2) : "300.00"),
-        planName: check.product ? check.product.title : req.productCode,
-        buyer: {
-          id: req.userId || "BY001",
-          name: "Müşteri",
-          surname: "Üye",
-          email: req.email || "musteri@nurstudyo.com",
-          gsmNumber: "+905350000000",
-          city: "Istanbul",
-          address: "Türkiye",
-        },
-        returnUrl: req.returnUrl ?? (typeof window !== "undefined" ? window.location.origin + "/odeme-sonuc" : ""),
+        productCode: req.productCode,
+        returnUrl: req.returnUrl ?? window.location.origin + "/odeme-sonuc",
+        buyer: req.buyer || {},
       }),
     });
-
     // Hata durumunda bile response body'yi oku — sunucunun gerçek hata mesajını göster
     const json = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = json?.error || json?.message || `Ödeme servisi hatası (${res.status})`;
       console.error("[startCheckout] Sunucu hatası:", res.status, msg, json);
       return { ok: false, error: msg };
-    }
-
-    // Backend cevabı başarılı ise ödeme sayfasına gönder
-    if (json && (json.ok || json.success || json.status === "success")) {
-      const payUrl = json.url || json.redirectUrl || json.paymentPageUrl || json.checkoutUrl || (json.data && (json.data.url || json.data.redirectUrl || json.data.paymentPageUrl));
-      if (payUrl && typeof window !== "undefined") {
-        window.location.href = payUrl;
-      }
     }
     return (json || {}) as CheckoutResponse;
   } catch (err: any) {

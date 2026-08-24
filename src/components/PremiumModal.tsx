@@ -1,11 +1,3 @@
-// ════════════════════════════════════════════════════════
-// PREMIUMMODAL.TSX — Üyelik & Video Üretim Paketleri
-//
-// ★ İYZİCO UYUMU:
-//   Bakiye / cüzdan / jeton / kredi / kontör yok.
-//   Günlük kota göstergesi + tek seferlik hizmet paketi satışı.
-// ════════════════════════════════════════════════════════
-
 import React, { useState } from "react";
 import { Crown, Gem, Check, X, Sparkles, Zap, Flame, Star } from "lucide-react";
 import {
@@ -18,94 +10,11 @@ import {
   type VideoKind,
   type BillingPeriod,
 } from "../payments/pricing";
-import { getPackRights } from "../tier";
+import { getPackRights, getQuotaLeft, getCurrentTier } from "../tier";
 import type { Tier } from "../tier";
+import type { PremiumModalProps, PremiumTab } from "./premiumModalHelpers";
+import { DAILY_QUOTA, TIER_LABEL, emptyRights, readPackRights, PRO_FEATURES, ELIT_FEATURES } from "./premiumModalHelpers";
 
-const DAILY_QUOTA: Record<Tier, Record<VideoKind, number>> = {
-  free: { kisa: 3, uzun: 0, tam: 0 },
-  pro: { kisa: 8, uzun: 3, tam: 0 },
-  elit: { kisa: 15, uzun: 5, tam: 1 },
-};
-
-const TIER_LABEL: Record<Tier, string> = {
-  free: "Ücretsiz",
-  pro: "NÛR PRO",
-  elit: "NÛR ELİT",
-};
-
-const emptyRights: Record<VideoKind, number> = { kisa: 0, uzun: 0, tam: 0 };
-
-function quotaText(kind: VideoKind, tier: Tier): string {
-  return `0/${DAILY_QUOTA[tier][kind]}`;
-}
-
-function readPackRights(): Record<VideoKind, number> {
-  try {
-    // ★ secureGet ile şifreli veriden oku (secureStore.ts)
-    const rights = getPackRights();
-    return {
-      kisa: Math.max(0, rights.kisa || 0),
-      uzun: Math.max(0, rights.uzun || 0),
-      tam: Math.max(0, rights.tam || 0),
-    };
-  } catch {
-    return { ...emptyRights };
-  }
-}
-
-/**
- * ★ GERİYE UYUMLULUK
- *   Eski ModalsContainer "jeton" sekmesini gönderiyor.
- *   Yeni modelde bu sekmenin adı "paket" oldu.
- *   İkisi de kabul edilir, "jeton" otomatik "paket" sayılır.
- */
-type PremiumTab = "uyelik" | "paket" | "jeton";
-
-interface PremiumModalProps {
-  open?: boolean;
-  setOpen?: (v: boolean) => void;
-  tier?: Tier;
-  onCheckout?: (productCode: string) => void;
-  notify?: (msg: string) => void;
-  user?: { email?: string; googleId?: string } | null;
-  /** Modal açılışında hangi sekme gelsin */
-  initialTab?: PremiumTab;
-  /** Eski ModalsContainer bu adla gönderiyor */
-  premiumTab?: PremiumTab;
-  /** Eski ModalsContainer bu adla gönderiyor */
-  currentTier?: Tier;
-  /** Eski ModalsContainer bu adla gönderiyor */
-  onClose?: () => void;
-  /** Eski ModalsContainer bu adla gönderiyor */
-  onPurchase?: (newTier: Tier) => void;
-  /** Eski ModalsContainer bu adla gönderiyor */
-  onTokenPurchase?: (amount: number) => void;
-  /** Eski akış: üyelik doğrudan burada tanımlanıyordu */
-  setTier?: (t: Tier) => void;
-  setCurrentTier?: (t: Tier) => void;
-  lang?: unknown;
-}
-
-const PRO_FEATURES = [
-  "Günde 8 kısa + 3 uzun video (600 sn)",
-  "37 kâri sesi (2 ücretsiz + 35 PRO)",
-  "250 atmosfer içeriği",
-  "20 tema",
-  "1080p filigransız üretim",
-  "Sinematik filtreler",
-  "AI başlık ve açıklama",
-];
-
-const ELIT_FEATURES = [
-  "Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sürüm",
-  "Tüm 52 kâri sesi (nadir Verş rivayeti + Harem imamları dahil)",
-  "500 atmosfer içeriği",
-  "Sınırsız AI arama",
-  "Sosyal paylaşım paneli",
-  "Tasarım stüdyosu",
-  "Kendi imzanı ekleme",
-  "Öncelikli destek",
-];
 
 export const PremiumModal: React.FC<PremiumModalProps> = ({
   open = true,
@@ -249,7 +158,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         <div className="mx-7 mt-5 rounded-2xl border border-white/10 bg-black/40 p-4">
           <div className="mb-2.5 flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-wider text-white/50">
-              Bugünkü kullanımın
+              Kalan Hakların
             </span>
             <span
               className="rounded-full px-2.5 py-0.5 text-[9px] font-black text-black"
@@ -260,29 +169,33 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           </div>
           <div className="grid grid-cols-3 gap-2">
             {(["kisa", "uzun", "tam"] as VideoKind[]).map((kind) => {
-              const total = DAILY_QUOTA[activeTier][kind];
               const meta = PACKAGE_GROUP_META[kind];
-              const extra = rights[kind];
+              const quotaLeft = getQuotaLeft(kind, activeTier);
+              const packRight = getPackRights()[kind] || 0;
+              const total = quotaLeft + packRight;
               return (
                 <div key={kind} className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-center">
                   <p className="text-[15px]">{meta.emoji}</p>
                   <p className="mt-0.5 text-[9px] font-bold text-white/45">{meta.label}</p>
-                  {total > 0 ? (
-                    <p className="mt-1 font-mono text-[13px] font-black" style={{ color: meta.accent }}>
-                      {quotaText(kind, activeTier)}
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-[9px] font-bold text-white/25">kotada yok</p>
-                  )}
-                  {extra > 0 && (
-                    <p className="mt-0.5 text-[8px] font-bold text-emerald-300">+{extra} paket</p>
-                  )}
+                  <p className="mt-1 font-mono text-[14px] font-black" style={{ color: meta.accent }}>
+                    {total}
+                  </p>
+                  <p className="mt-0.5 text-[8px] font-bold text-white/25">
+                    {quotaLeft > 0 && packRight > 0
+                      ? `üyelik: ${quotaLeft} + paket: ${packRight}`
+                      : quotaLeft > 0
+                        ? `üyelik: ${quotaLeft}/gün`
+                        : packRight > 0
+                          ? `paket: ${packRight} hak`
+                          : "hak yok"
+                    }
+                  </p>
                 </div>
               );
             })}
           </div>
           <p className="mt-2.5 text-center text-[9px] text-white/30">
-            Günlük haklar her gün yenilenir · devretmez
+            Üyelik hakları her gün yenilenir · paket hakları süresizdir, kullandıkça azalır
           </p>
         </div>
 

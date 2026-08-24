@@ -1,4 +1,5 @@
 import React from "react";
+import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette,
   LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb, Film,
@@ -9,35 +10,6 @@ import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault } from "../tier";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
-
-interface HeaderTopBarProps {
-  daily: DailyAyah | null;
-  dailyPoolLength: number;
-  dailyIndex: number;
-  toggleAyah: (s: number, a: number, tr?: string) => void;
-  menuOpen: boolean;
-  setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  user: User | null;
-  handleLogout: () => void;
-  setModal: (modal: ModalName) => void;
-  openAdminDashboard: () => void;
-  setLibType: (type: any) => void;
-  isMasterSürüm: boolean;
-  setAdminGodMode: (val: boolean) => void;
-  setSmartAiEnabled: (val: boolean) => void;
-  setBatchFormats: (val: any) => void;
-  notify: (msg: string) => void;
-  jetonCount: number;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
-  lang: Lang;
-  setLang: (lang: Lang) => void;
-  langOpen: boolean;
-  setLangOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  nextPrayer: { name: string; key: string; diff: number } | null;
-  prayerCity: string;
-  formatRemaining: (ms: number) => string;
-  t: (key: keyof (typeof T)["tr"]) => string;
-}
 
 export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   daily,

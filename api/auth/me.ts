@@ -87,10 +87,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const [users, wallets] = await Promise.all([
       supabaseRows<{ tier: "free" | "pro" | "elit"; is_admin: boolean }>(`nur_users?id=eq.${encodeURIComponent(user.id)}&select=tier,is_admin`),
-      supabaseRows<{ sub_jeton: number; purchased_jeton: number }>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton`),
+      supabaseRows<{ sub_jeton: number; purchased_jeton: number; purchased_kisa: number; purchased_uzun: number; purchased_tam: number }>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton,purchased_kisa,purchased_uzun,purchased_tam`),
     ]);
     const dbUser = users[0];
-    const wallet = wallets[0] ?? { sub_jeton: 0, purchased_jeton: 0 };
+    const wallet = wallets[0] ?? { sub_jeton: 0, purchased_jeton: 0, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
 
     // Ban sorgusu hata verirse fail-open: kullanıcı yalnızca açık bir ban kaydı
     // bulunduğunda engellenir.
@@ -112,11 +112,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         picture: user.picture || "",
         verified: user.verified,
         isAdmin: Boolean(user.isAdmin || dbUser?.is_admin),
-        tier: user.isAdmin || dbUser?.is_admin ? "elit" : dbUser?.tier || user.tier || "free",
+        tier: dbUser?.tier || user.tier || "free",
       },
       wallet: {
         subJeton: wallet.sub_jeton,
         purchasedJeton: wallet.purchased_jeton,
+        kisa: wallet.purchased_kisa ?? wallet.purchased_jeton ?? 0,
+        uzun: wallet.purchased_uzun ?? 0,
+        tam: wallet.purchased_tam ?? 0,
         total: wallet.sub_jeton + wallet.purchased_jeton,
       },
       banned: Boolean(ban),
