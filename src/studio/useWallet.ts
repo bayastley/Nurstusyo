@@ -15,7 +15,12 @@ interface UseWalletReturn {
 
 export function useWallet(notify: (msg: string) => void): UseWalletReturn {
   const [jetonCount, setJetonCount] = useState<number>(() => {
-    try { return Number(secureGet<number>("nur_jeton", 0)); } catch { return 0; }
+    try {
+      // ★ Kullanıcı giriş yapmadıysa jetonCount 0 olmalı
+      const user = secureGet<{ id?: string } | null>("nur_user_v1", null);
+      if (!user?.id) return 0;
+      return Number(secureGet<number>("nur_jeton", 0));
+    } catch { return 0; }
   });
 
   // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz
