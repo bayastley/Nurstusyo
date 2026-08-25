@@ -12,7 +12,7 @@ export interface HeaderTopBarProps {
   user: User | null;
   handleLogout: () => void;
   setModal: (modal: ModalName) => void;
-  openAdminDashboard: () => void;
+  openAdminDashboard: () => Promise<void>;
   setLibType: (type: any) => void;
   isMasterSürüm: boolean;
   setAdminGodMode: (val: boolean) => void;
