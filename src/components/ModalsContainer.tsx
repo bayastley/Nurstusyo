@@ -91,6 +91,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   hoveredClip,
   setHoveredClip,
   openPremium,
+  packRights,
   pickClip,
   libSearch,
   setLibSearch,
@@ -297,6 +298,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           initialTab={premiumTab}
           currentTier={tier}
           user={user ?? null}
+          packRights={packRights}
           onClose={() => setPremiumOpen(false)}
           onCheckout={async (productCode) => {
             try {

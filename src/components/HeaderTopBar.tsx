@@ -133,7 +133,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       </button>
                     ))}
 
-                    {/* ★ GÜNCELLEMELER — hover/tıkla ile sağa açılan kilitli modül paneli */}
+                    {/* ★ GÜNCELLEMELER — SADECE ADMİN GÖREBİLİR */}
+                    {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
                     <div
                       className="relative"
                       onMouseEnter={openUpdates}
@@ -242,6 +243,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </div>
                       )}
                     </div>
+                    )}
 
                     <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />

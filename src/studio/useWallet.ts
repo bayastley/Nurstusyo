@@ -9,22 +9,31 @@ import { serverDateISO, serverIsFriday, isDeviceClockTampered, syncServerTime } 
 
 export type VideoKind = "kisa" | "uzun" | "tam";
 
+export interface PackRights {
+  kisa: number;
+  uzun: number;
+  tam: number;
+}
+
 interface UseWalletReturn {
   jetonCount: number;
   setJetonCount: (n: number) => void;
   syncWallet: () => Promise<void>;
   consumeRight: (kind: VideoKind) => void;
+  packRights: PackRights;
 }
 
 export function useWallet(notify: (msg: string) => void): UseWalletReturn {
   const [jetonCount, setJetonCount] = useState<number>(() => {
     try {
-      // ★ Kullanıcı giriş yapmadıysa jetonCount 0 olmalı
       const user = secureGet<{ id?: string } | null>("nur_user_v1", null);
       if (!user?.id) return 0;
       return Number(secureGet<number>("nur_jeton", 0));
     } catch { return 0; }
   });
+
+  // ★ Pack rights — Supabase'den gelen güncel veri, React state olarak tutuluyor
+  const [packRights, setPackRights] = useState<PackRights>({ kisa: 0, uzun: 0, tam: 0 });
 
   // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz + jetonCount'u güncelle
   //   NOT: Local storage'dan kullanıcı kontrolü YAPMIYORUZ — redirect sonrası secureStore
@@ -40,9 +49,9 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
           uzun: data.wallet.uzun || 0,
           tam: data.wallet.tam || 0,
         };
+        // ★ React state'e yaz — secureStore fingerprint sorunu yüzünden buradan okunur
+        setPackRights(rights);
         secureSet("nur_pack_rights_v1", rights);
-        // ★ Toplam hakkı hesapla ve jetonCount'u HER ZAMAN güncelle
-        //    Eski localStorage verisi varsa bile sunucudaki gerçek veriyle değiştir
         const totalRights = rights.kisa + rights.uzun + rights.tam;
         persistJetonSecure(totalRights);
         setJetonCount(totalRights);
@@ -97,23 +106,24 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
 
   // ★ Hak düşürme — video üretildiğinde ilgili türden hak azalt
   const consumeRight = useCallback((kind: VideoKind) => {
-    // 1. Local state'i güncelle
-    const current = secureGet<Record<string, number> | null>("nur_pack_rights_v1", null) ?? { kisa: 0, uzun: 0, tam: 0 };
-    const newVal = Math.max(0, (current[kind] || 0) - 1);
-    const updated = { ...current, [kind]: newVal };
-    secureSet("nur_pack_rights_v1", updated);
-    // 2. Toplam jetonCount'u güncelle
-    const total = (updated.kisa || 0) + (updated.uzun || 0) + (updated.tam || 0);
-    persistJetonSecure(total);
-    setJetonCount(total);
-    // 3. Supabase'e yaz (fire-and-forget)
-    fetch("/api/payments/wallet-consume", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ kind }),
-    }).catch(() => undefined);
-    console.log("[wallet] Hak düşürüldü:", kind, "kalan:", newVal, "toplam:", total);
+    setPackRights(prev => {
+      const newVal = Math.max(0, (prev[kind] || 0) - 1);
+      const updated = { ...prev, [kind]: newVal };
+      secureSet("nur_pack_rights_v1", updated);
+      // Toplam jetonCount'u güncelle
+      const total = (updated.kisa || 0) + (updated.uzun || 0) + (updated.tam || 0);
+      persistJetonSecure(total);
+      setJetonCount(total);
+      // Supabase'e yaz (fire-and-forget)
+      fetch("/api/payments/wallet-consume", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind }),
+      }).catch(() => undefined);
+      console.log("[wallet] Hak düşürüldü:", kind, "kalan:", newVal, "toplam:", total);
+      return updated;
+    });
   }, []);
 
   return {
@@ -121,5 +131,6 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     setJetonCount,
     syncWallet,
     consumeRight,
+    packRights,
   };
 }

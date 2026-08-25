@@ -31,6 +31,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   setTier,
   setCurrentTier,
   user,
+  packRights: packRightsProp,
 }) => {
   // ★ Eski "jeton" sekmesi → yeni "paket" sekmesi
   const wanted = premiumTab ?? initialTab ?? "uyelik";
@@ -53,7 +54,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   if (!open) return null;
 
-  const rights = readPackRights();
+  const rights = packRightsProp ?? { kisa: 0, uzun: 0, tam: 0 };
 
   const handleBuy = (code: string) => {
     if (!accepted) {
@@ -179,7 +180,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             {(["kisa", "uzun", "tam"] as VideoKind[]).map((kind) => {
               const meta = PACKAGE_GROUP_META[kind];
               const quotaLeft = getQuotaLeft(kind, activeTier);
-              const packRight = getPackRights()[kind] || 0;
+              const packRight = (packRightsProp ?? {})[kind] || 0;
               const total = quotaLeft + packRight;
               return (
                 <div key={kind} className="rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-center">
@@ -209,7 +210,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
         {/* SATIN ALINAN PAKETLER */}
         {(() => {
-          const pr = readPackRights();
+          const pr = packRightsProp ?? { kisa: 0, uzun: 0, tam: 0 };
           const hasAny = (pr.kisa || 0) > 0 || (pr.uzun || 0) > 0 || (pr.tam || 0) > 0;
           if (!hasAny) return null;
           return (
