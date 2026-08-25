@@ -1,0 +1,522 @@
+export interface Kissa {
+  title: string;
+  ref: string;
+  text: string;
+  s: number;
+  a: number;
+}
+
+export const HASHTAG_CATEGORIES: Record<string, string[]> = {
+  kuran:     ["#kuran", "#ayet", "#mushaf", "#tilavet", "#tefsir", "#sure", "#meal", "#kuraniKerim"],
+  cuma:      ["#cuma", "#cumamübarek", "#cumagünü", "#hayırlıcumalar", "#cumadua"],
+  ramazan:   ["#ramazan", "#iftar", "#sahur", "#teravih", "#kadirgecesi", "#oruç", "#bayram"],
+  dua:       ["#dua", "#istiğfar", "#tevbe", "#secde", "#zikir", "#niyaz"],
+  tefekkur:  ["#tefekkür", "#maneviyat", "#huzur", "#içhuzur", "#sekinet", "#sükunet"],
+  huzur:     ["#huzur", "#rahmet", "#gönül", "#kalp", "#şifa"],
+  peygamber: ["#peygamber", "#efendimiz", "#hadis", "#sünnet", "#nebevi", "#salavat"],
+  aile:      ["#müslümanaile", "#anne", "#baba", "#evlilik", "#helal", "#terbiye"],
+  sosyal:    ["#islam", "#iman", "#namaz", "#allah", "#ümmet", "#hayır", "#sadaka"],
+  keşfet:    ["#keşfet", "#fyp", "#foryou", "#viral", "#reels", "#shorts"],
+  marka:     ["#nurstudyo", "#nurstüdyo"],
+};
+
+export const HASHTAG_POOL: string[] = Object.values(HASHTAG_CATEGORIES).flat();
+
+/** Rastgele hashtag kombinasyonu üretir — her kategoriden farklı sayıda çekerek çeşitlilik sağlar */
+export function randomHashtagCombo(count = 7): string[] {
+  const cats = Object.values(HASHTAG_CATEGORIES);
+  const picked: string[] = [];
+  const shuffledCats = [...cats].sort(() => Math.random() - 0.5);
+  for (const cat of shuffledCats) {
+    if (picked.length >= count) break;
+    const item = cat[Math.floor(Math.random() * cat.length)];
+    if (!picked.includes(item)) picked.push(item);
+  }
+  while (picked.length < count) {
+    const pool = HASHTAG_POOL;
+    const item = pool[Math.floor(Math.random() * pool.length)];
+    if (!picked.includes(item)) picked.push(item);
+  }
+  return picked.sort(() => Math.random() - 0.5);
+}
+
+export const KISSAS: Kissa[] = [
+  { title: "Yûsuf (a.s.) ve Kardeşlerinin Kıskançlığı", ref: "Yûsuf 12:5-8", text: "Yûsuf (a.s.)'nun babası Yakûb, onu kardeşlerinden daha çok seviyordu. Kardeşleri bunu fark ettiler ve aralarında plan yaptılar. En küçükleri Bünyâmin hariç hepsi Yûsuf'u öldürmeyi veya uzak bir yere atmayı kararlaştırdı.", s: 12, a: 5 },
+  { title: "Yûsuf (a.s.) Kuyuya Atılıyor", ref: "Yûsuf 12:15-17", text: "Kardeşleri Yûsuf'u kuyuya attılar. Sonra kanlı bir gömlek getirip babalarına gösterdiler: 'Bir kurt onu yedi.' Yakûb gözyaşlarını tutamadı. Oğlunu yitirmenin acısıyla beyazlara büründü. Yıllar sonra kuyudan çıkarılan Yûsuf Mısır'a satıldı, zindana atıldı, ama Allah onu en nihayet Mısır veziri yaptı.", s: 12, a: 15 },
+  { title: "Yûsuf (a.s.) ve Züleyhâ", ref: "Yûsuf 12:23-25", text: "Mısır'da Züleyhâ onu gördü ve güzelliğine hayran kaldı. Kadınlar onun güzelliğinden bahsedince onları meyve bıçağıyla el sallamaya davet etti. Kadınlar ellerini kestiler. Züleyhâ Yûsuf'u odasına çekmek istedi. Yûsuf kaçtı ve kapıyı arkasından kapattı. Gömleği arkadan yırtıldı. Züleyhâ yalan söyledi, Yûsuf zindana atıldı.", s: 12, a: 23 },
+  { title: "Yûsuf (a.s.) Rüya Yorumluyor", ref: "Yûsuf 12:36-42", text: "Zindanda iki kişi aynı rüyayı gördü. Yûsuf onlara rüyalarını yorumladı. Bir süre sonra saraydan davet geldi. Yedi ineklerin ve yedi kurak yılın rüyasını yorumladı. Allah onu yetenekleriyle yüceltti ve Mısır veziri yaptı.", s: 12, a: 36 },
+  { title: "Yûsuf (a.s.) Ailesiyle Buluşuyor", ref: "Yûsuf 12:99-100", text: "Babası Yakûb ve kardeşleri Mısır'a geldiğinde Yûsuf onları tanıyıp tanımamış gibi yaptı. Sonra çıkıp dedi ki: 'Bugün size kınama yoktur. Allah sizi bağışlasın.' Babasını göğsüne bastırdı. 'Bu rüyamın yorumu. Rabbim onu gerçek kıldı.'", s: 12, a: 99 },
+  { title: "Mûsâ (a.s.) Tûr Dağı'nda Vahyi Alıyor", ref: "Tâ-Hâ 20:10-14", text: "Mûsâ ailesiyle seyahat ederken bir ateş gördü. Yaklaştığında: 'Ey Mûsâ! Ben senin Rabbinim. Çıkart ayakkabılarını. Sen Tûr Vadisi'ndesin. Seni seçtim, vahyettiklerimi dinle.'", s: 20, a: 10 },
+  { title: "Mûsâ (a.s.) Asası ve Beyaz Eli", ref: "Tâ-Hâ 20:17-22", text: "Mûsâ: 'Ey Rabbim, göğsümü genişlet, işimi kolaylaştır, dilimdeki düğümü çöz.' Allah: 'Asanı at.' Asa bir yılan oldu. Eli beyaz çıktı, güzellik ve nur içinde. Bu ona ilk mucizesiydi.", s: 20, a: 17 },
+  { title: "Mûsâ (a.s.) Kızıldeniz'i Yarıyor", ref: "Şuarâ 26:63-68", text: "Firavun ve ordusu İsrail oğullarının peşinden geldi. Mûsâ asasını denize vurdu. Deniz yarıldı, her parça bir dağ gibi oldu. İsrail oğulları kurak bir yoldan geçti. Firavun ve ordusu arkalarından girdi ama sular tekrar kapandı ve hepsi boğuldu.", s: 26, a: 63 },
+  { title: "Mûsâ (a.s.) ile Hızır'ın Yolculuğu", ref: "Kehf 18:65-70", text: "Mûsâ bilgili birinin kendisinden daha bilgili olduğunu duyunca onu bulmaya çıktı. Hızır: 'Benimle yürümen için sabır göstermene ihtiyacım var. Hiçbir şey hakkında bana itiraz etme.' Mûsâ kabul etti.", s: 18, a: 65 },
+  { title: "Mûsâ ile Hızır - Delik Gemi", ref: "Kehf 18:71-72", text: "Birlikte bir gemiye bindiler. Hızır gemiye bir delik açtı. Mûsâ: 'Neden içindekilere zarar verecek bir delik açtın?' Hızır: 'Sana sabır göstermeyeceğini söylemedim mi?' Mûsâ: 'Beni bağışla.' dedi.", s: 18, a: 71 },
+  { title: "Mûsâ ile Hızır - Çocuk", ref: "Kehf 18:74-76", text: "Sonra bir çocukla karşılaştılar. Hızır çocuğu öldürdü. Mûsâ dehşetle: 'Masum birini mi öldürdün? Bu büyük bir suç!' Hızır: 'Sana sabır gösteremeyeceğini söylemedim mi?' Mûsâ: 'Artık sana itiraz etmeyeceğim.'", s: 18, a: 74 },
+  { title: "Mûsâ ile Hızır - Duvar", ref: "Kehf 18:77-78", text: "Sonra bir köye vardılar. Halk konuk etmek istemedi. Yıkılmak üzere bir duvar buldular. Hızır onu onardı. Mûsâ: 'İstesen ücret alabilirdin.' Hızır: 'Bu bizim ayrılma zamanımızdı.'", s: 18, a: 77 },
+  { title: "Hızır'ın Sırrı", ref: "Kehf 18:80-82", text: "Hızır açıkladı: 'O gemi denizde çalışan fakirindi, arkalarında zorba bir kral vardı, her güzel gemiyi zorla alıyordu. O çocuk için anne ve babası mü'mindi, çocuğu büyüyünce inkâra götürecekti. Duvar ise iki yetiminindi, altında hazinesi vardı.'", s: 18, a: 80 },
+  { title: "İbrâhîm (a.s.) ve Putları Kırması", ref: "Enbiyâ 21:57-58", text: "İbrâhîm kavmine: 'Niye putlara tapıyorsunuz?' Putlara: 'Yemek yiyor musunuz?' Sonra putları kırdı, en büyüğü dışında hepsini parçaladı. Kavmi: 'Putlarımıza bunu mu yaptın?' İbrâhîm: 'En büyüğü konuştuysa onu dinleyin.'", s: 21, a: 57 },
+  { title: "İbrâhîm (a.s.) Ateşe Atılıyor", ref: "Enbiyâ 21:68-69", text: "Kavmi İbrâhîm'i ateşe atma kararı aldı. Cebrail geldi: 'Bir isteğin var mı?' İbrâhîm: 'Senden başka isteğim yok.' Allah ateşe: 'Ey ateş! İbrâhîm üzerine serinlik ve selâmet ol!' Ateş ona zarar vermedi.", s: 21, a: 68 },
+  { title: "İbrâhîm (a.s.) Oğlunu Kurban Etmesi", ref: "Sâffât 37:100-103", text: "İbrâhîm rüyasında oğlunu kurban etmesi emredildi. Oğlu İsmâîl: 'Babacığım, emrolunduğun şeyi yap, inşallah beni sabredenlerden bulursun.' İkisi de Allah'a teslim oldular. Kurban etmek üzereyken seslendik: 'Ey İbrâhîm, rüyanı doğru çıkardın.' Bir koç indirdik.", s: 37, a: 100 },
+  { title: "Yûnus (a.s.) ve Balığın Karnı", ref: "Enbiyâ 21:87-88", text: "Yûnus kavmini uyarırken onlar dinlemedi. Denize atıldı, büyük bir balık onu yuttu. Karanlıkta Allah'a dua etti: 'Senden başka ilâh yoktur. Seni tenzih ederim. Ben haksızlık edenlerden oldum.' Duaları kabul edildi, balık onu kustu.", s: 21, a: 87 },
+  { title: "Lût (a.s.) ve Kavminin Helaki", ref: "Hûd 11:77-82", text: "Melekler Lût'a misafir olarak geldi. Kavmi cinsel olarak onları isteyerek geldi. Lût: 'Siz erkeklere yaklaşıyorsunuz, namuslu kadınları bırakıyorsunuz!' Melekler: 'Sen ve ailen gece yola çıkın, arkanıza bakmayın.' dediler.", s: 11, a: 77 },
+  { title: "Nûh (a.s.) ve Tufan", ref: "Hûd 11:37-42", text: "Allah Nûh'a: 'Gemiyi yap, bizim emrimizle.' Nûh gemiyi yaptı. Kavmi onu alay etti. Tufan başladığında inananları gemiye bindirdi. İnandığı halde arkada kalan oğlu denizde boğuldu.", s: 11, a: 37 },
+  { title: "Ad Kavminin Helaki", ref: "Hûd 11:50-60", text: "Âd kavmine Hûd gönderildi: 'Allah'a tapın, ondan başka ilâh yoktur.' Onlar yalanladılar. Allah onları çetin bir rüzgârla yedi gün helak etti.", s: 11, a: 50 },
+  { title: "Semûd Kavmi ve Deve", ref: "Şuarâ 26:155-158", text: "Salih onlara Allah'ın mucizesi olan bir dişi deve gösterdi: 'Bu size Allah'ın bir mucizesi, ona birşey yapmayın yoksa azap sizi yakalar.' Onlar deveyi kestiler.", s: 26, a: 155 },
+  { title: "Firavun'un Sonu", ref: "Yûnus 10:90-92", text: "Firavun Kızıldeniz'de boğulurken: 'İsrail oğullarının inandığı Allah'a ben de iman ettim.' Şimdi mi? Daha önce onu reddetmiş ve fasıkların lideri olmuştun. Bugün cesedini kurtaracağız ki sonraki nesillere ibret olasın.", s: 10, a: 90 },
+  { title: "Meryem (a.s.) ve İsa'nın Doğuşu", ref: "Meryem 19:16-21", text: "Meryem'e Allah'tan bir ruh üflendi. Hamile kaldığında bir hurma ağacının altında oturdu. Melek: 'Allah sana temiz bir oğlan çocuğu müjdeliyor.' Meryem: 'Hiçbir erkeğe dokunmadım.' Melek: 'Allah dilediği şeyi yaratır.'", s: 19, a: 16 },
+  { title: "İsa (a.s.) Beşikte Konuşuyor", ref: "Meryem 19:30-33", text: "Halk Meryem'i suçladığında İsa beşikten konuştu: 'Ben Allah'ın kuluşum. Bana Kitap verdi. Beni peygamber yaptı. Anneme şefkat gösterdi. Zulüm çıkarmadım, kâfir olmadım.'", s: 19, a: 30 },
+  { title: "İsa (a.s.) Mucizeleri", ref: "Âl-i İmrân 3:49", text: "İsa Allah'ın izniyle çamurdan kuş şekilleri yapıp üfledi, uçtu. Körlere, cüzzamlılara şifa verdi. Ölüleri diriltti.", s: 3, a: 49 },
+  { title: "İsa (a.s.)'nin Göğe Yükselişi", ref: "Nisâ 4:157-158", text: "Yahudiler İsa'yı öldürdüklerini sandılar ama Allah onu kendine kaldırdı. Onlar şüphe içindeydiler. Allah onu kendine yükseltti. Allah her şeye güç yeter.", s: 4, a: 157 },
+  { title: "Dâvûd (a.s.) ve Süleyman (a.s.)", ref: "Neml 27:15-16", text: "Dâvûd'a Zebûr'u, Süleyman'a ise hikmeti ve hükümdarlığı verdi. Süleyman rüzgârın emrine âmade edildiğini söyledi. Dağların ve kuşların da ona itaat ettiğini bildirdi.", s: 27, a: 15 },
+  { title: "Süleyman (a.s.) ve Belkıs", ref: "Neml 27:23-28", text: "Hüdhüd kuşu Süleyman'a: 'Ben Saba kraliçesi Belkıs'ın krallığını gördüm. Ona büyük bir taht var ama o Allah'a tapmıyor.' Süleyman o kadına mektup yazdı ve onu davet etti.", s: 27, a: 23 },
+  { title: "Süleyman (a.s.) ve Cinler", ref: "Neml 27:17-19", text: "Süleyman cinleri ve insanları bir araya topladı. Onlara orden yürüdü. Cinler sürekli çalışıyordu. Süleyman: 'Allah benden başka ilâh yoktur. Siz de itaat edin.'", s: 27, a: 17 },
+  { title: "Eyyûb (a.s.) ve Sabrı", ref: "Enbiyâ 21:83-84", text: "Eyyûb'un serveti, çocukları ve sıhhatı alındı. Çok acı çekti. Yıllarca sabretti. Sonra dua etti: 'Beni Rabbim buldu, Musibet beni çarptı. Sen en merhametlilersin.' Allah duasını kabul etti.", s: 21, a: 83 },
+  { title: "Yakûb (a.s.) Oğlunu Arıyor", ref: "Yûsuf 12:84-86", text: "Yakûb oğlu Yûsuf'u kaybettikten sonra: 'Üzüntümü ve kederimi ancak Allah'a arz ediyorum. Gözlerim beyazlaştı.' Oğulları: 'Yûsuf'u unutma, Allah'ın rahmetini ummaya devam et.'", s: 12, a: 84 },
+  { title: "Zekeriyyâ (a.s.) ve Yahya'nın Müjdesi", ref: "Meryem 19:4-9", text: "Zekeriyyâ çok yaşlanmıştı. Dua etti: 'Kemiklerime güç ver, bir mirasçı bırak.' Melekler: 'Sana Yahya adında bir oğul müjdeliyoruz.' Zekeriyyâ: 'Karım kısır, ben yaşlandım.' Melek: 'Allah dilediği şeyi yapar.'", s: 19, a: 4 },
+  { title: "Ashâb-ı Kehf", ref: "Kehf 18:13-17", text: "Bir grup genç inkârcı krala karşı iman etti. Mağaraya sığındılar. Allah onları 309 yıl uykuda korudu. Uyandıklarında: 'Rabbimiz hangi asırdayız?' dediler.", s: 18, a: 13 },
+  { title: "Ashâb-ı Kehf ve Köpekleri", ref: "Kehf 18:18", text: "Mağaranın girişinde uykuya dalmışlardı. Köpekleri de girişte ayaklarını uzatmıştı. Güneş açıldığında sağa, kapandığında sola döndü. Rüzgâr her tarafını sardı. Allah onları korudu.", s: 18, a: 18 },
+  { title: "Kârûn'un Zenginliği ve Helaki", ref: "Kasas 28:76-81", text: "Kârûn Mısır'da çok zengin bir adamdı. Hazineleri o kadar ağırdı ki kilitlerini taşımak için güçlü adamlar gerekliydi. Kibir gösterdi: 'Bu hazine bilgim sayesinde verildi.' Sonra gökten bir azap indi, yer onu yuttu.", s: 28, a: 76 },
+  { title: "Hz. Adem'in Yaratılışı", ref: "Bakara 2:30-33", text: "Allah meleklere: 'Ben yeryüzünde bir halife yaratacağım.' Melekler: 'Yeryüzünde fesat mı çıkaracak?' Allah: 'Ben sizin bilmediğiniz şeyleri bilirim.' Adem'e isimleri öğretti.", s: 2, a: 30 },
+  { title: "Hz. Adem'in Cennetten Çıkışı", ref: "Bakara 2:36-37", text: "Şeytan onlara vesvese verdi, cennetten çıkardı. Allah: 'İnin, birbirinize düşmansınız.' Adem Rabbinden tövbe etti. Allah: 'Şüphesiz ben tövbe edenleri severim.'", s: 2, a: 36 },
+  { title: "Habil ve Kâbil", ref: "Mâide 5:27-28", text: "Adem'in iki çocuğu hediye sundu. Birinin kabul edildi, diğerinin edilmedi. Kâbil öfkelendi: 'Seni öldüreceğim.' Habil: 'Allah ancak dindarların kurbanını kabul eder.' Kâbil onu öldürdü.", s: 5, a: 27 },
+  { title: "Hz. İdris (a.s.)", ref: "Meryem 19:56-57", text: "Allah İdris'i yüce bir makama kaldırdı. O dosdoğru idi. Allah onu cennet ağaçlarından bir yere yerleştirdi.", s: 19, a: 56 },
+  { title: "Hz. İsmâîl (a.s.) ve Zemzem", ref: "İbrâhîm 14:37", text: "İbrâhîm eşi Hâcer ve küçük oğlu İsmâîl'i Mekke'ye bıraktı. Kuru bir vadide hiçbir şeyleri yoktu. Hâcer Safa ile Merve arasında su aradı. Allah onlara Zemzem kuyusunu açtı.", s: 14, a: 37 },
+  { title: "Hz. Zülkarnayn", ref: "Kehf 18:83-88", text: "Zülkarnayn dünyayı dolaştı. Kuzeye gittiğinde Yecüc ve Mecüc'ün fesatçıları olduğunu söylediler. Metal döktü, büyük bir set yaptı. 'Rabbimden bir rahmet gelmedikçe onun karşısında bir şey bulamazsınız.'", s: 18, a: 83 },
+  { title: "Tûr Dağı'nın Kaldırılması", ref: "Bakara 2:63-64", text: "Allah Tûr Dağı'nı onların başının üzerine kaldırdı: 'Size verdiğimiz Kitap'a sımsıkı sarılın.' Dediler: 'Duyduk ve itaat ettik.' Ama Kitap'tan yüz çevirenleri lanetledi.", s: 2, a: 63 },
+  { title: "Hz. Süleyman ve Karınca", ref: "Neml 27:18-19", text: "Süleyman ordusuyla yürüyordu. Bir karınca: 'Yuvalarınıza girin, Süleyman ve ordusu farkında olmadan sizi ezmesin!' Süleyman gülümsedi ve dua etti.", s: 27, a: 18 },
+  { title: "Hz. Nûh'un Oğluyla Sınavı", ref: "Hûd 11:42-43", text: "Nûh oğluna: 'Bin bizimle beraber ol.' Oğlu: 'Ben güvenli bir dağa sığınacağım.' Nûh: 'Bugün Allah'ın merhametinden başka merhamet yoktur.' Dalgalar ikisinin arasını ayırdı.", s: 11, a: 42 },
+  { title: "Ashâb-ı Fil", ref: "Fîl 105:1-5", text: "Abreha Mekke'yi yıkmak istedi. Ona filler ordusu verildi. Allah onlara kuşlar gönderdi. Kuşlar taşlarla onları vurdular. Onlar çürümüş yaprak gibi oldular.", s: 105, a: 1 },
+  { title: "Hz. Yusuf'un Rüyası", ref: "Yûsuf 12:4-6", text: "Yûsuf rüyasında gördü: 'Onbir yıldız, Güneş ve Ay bana secde etti.' Babası Yakûb: 'Oğlum, rüyanı kardeşlerine söyleme. Yoksa sana tuzak kurarlar.'", s: 12, a: 4 },
+  { title: "Hz. Nûh'un Dua'sı", ref: "Nûh 71:25-26", text: "Nûh Rabbine dua etti: 'Rabbim, onlardan inkâr eden birini bile bırakma. Eğer onları bırakırsan zulmedenlerden başkasını bırakma.'", s: 71, a: 25 },
+  { title: "Hz. Hâcer'in Safa-Merve Koşması", ref: "Bakara 2:158", text: "Hâcer oğlu İsmâîl için su ararken Safa ile Merve tepeleri arasında koştu. Allah bu tepeleri kutsal kıldı. Müslimânlar haccında Hacer'in izinden yürüyor.", s: 2, a: 158 },
+  { title: "Hz. Mûsâ'nın Hızır'ı Araması", ref: "Kehf 18:60-64", text: "Mûsâ Hızır'ı bulmak istedi. Yanındakiyle yola çıktı: 'İki gün yürüyeceğiz, sonra nereye gittiğimizi bileceğiz.' Kızıldeniz kenarında Hızır'ı buldular.", s: 18, a: 60 },
+  { title: "Hz. Mûsâ'nın Asası", ref: "Tâ-Hâ 20:17-20", text: "Allah: 'Elindeki nedir?' Mûsâ: 'Benim asam.' Allah: 'Onu at.' Asa düştüğünde bir yılan gibi kıvrıldı. Allah: 'Onu tut, korkma.'", s: 20, a: 17 },
+  { title: "Hz. Muhammed'in Sığınağı", ref: "İnşirâh 94:1-4", text: "Allah peygamberine: 'Biz senin göğsünü açmadık mı? Yükünü kaldırmadık mı? Şüphesiz zorlukla beraber kolaylık var.'", s: 94, a: 1 },
+  { title: "Hz. Lût'un Uyarısı", ref: "Şuarâ 26:160-166", text: "Lût kavmine: 'Siz gerçekten kadınlara değil erkeklere yaklaşıyorsunuz. Aşk sınırını aşıyorsunuz.' Onlar onu yalanladılar. Allah onları azapla yok etti.", s: 26, a: 160 },
+  { title: "Hz. İbrâhîm'in Daveti", ref: "Enbiyâ 21:71-73", text: "Allah İbrâhîm'i kurtardı ve Lût'u da kurtardı. Onu高め bir ülkeye yerleştirdi. İbrâhîm'e, İsmâîl'e, İshâk'a ve Yakûb'a peygamberlik ve kitap verdik. Onları yeryüzünde halife kıldık.", s: 21, a: 71 },
+  { title: "İsrail Oğulları'nın Denizi Geçmesi", ref: "Bakara 2:50-52", text: "Biz sizi Kızıldeniz'den geçirdik. Sizi boğulmaktan kurtardık. Firavun'u ve ordusunu da gözlerinizin önünde boğduk. Mûsâ ile kırk gece konuştuk.", s: 2, a: 50 },
+  { title: "Hz. Muhammed'in Miracı", ref: "İsrâ 17:1", text: "Kulunu bir gece Mescid-i Haram'dan en yakın mescidine, etrafını bereketlendirdiğimiz Mescid-i Aksa'ya götüren Allah'ın şanı yücedir.", s: 17, a: 1 },
+  { title: "Hz. Nûh'un Gemisi", ref: "Hûd 11:37-41", text: "Allah Nûh'a: 'Gözlerimizin önünde ve bize ilham ettiğimiz üzere gemiyi yap.' Nûh gemiyi yaparken her geçişinde halk onu alay etti. Tufan başladığında gemiye binenler kurtuldu.", s: 11, a: 37 },
+];
+
+
+export const MEAL_FIXES: Record<number, string[]> = {};
+
+export const TURKISH_CITIES: string[] = [
+  "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya", "Adana", "Konya", "Gaziantep",
+  "Şanlıurfa", "Kocaeli", "Mersin", "Diyarbakır", "Hatay", "Manisa", "Kayseri",
+  "Samsun", "Balıkesir", "Kahramanmaraş", "Van", "Aydın", "Tekirdağ", "Sakarya",
+  "Denizli", "Muğla", "Eskişehir", "Erzurum", "Mardin", "Trabzon", "Malatya",
+  "Ordu", "Erzincan", "Rize", "Sivas",
+];
+
+// ════════════════════════════════════════════════════════
+// ★ BAŞLIK ŞABLONLARI — 36 seçenek · her dilde ayrı havuz
+//   {S} = sure adı · {N} = sure no · {A} = ayet no
+// ════════════════════════════════════════════════════════
+
+export const TITLE_TEMPLATES: Record<string, string[]> = {
+  tr: [
+    "✨ Hangi Ayet Kalbinize Dokundu? — {S} {N}:{A}",
+    "📖 Her Güne Bir Ayet: {S} Suresi {N}:{A}",
+    "🤲 Gönüllere Huzur Veren Tilavet | {S} {N}:{A}",
+    "🌿 Ruhunuzu Dinlendirecek Sözler: {S} {N}:{A}",
+    "🕌 Kalbi Yumuşatan Ayet · {S} {N}:{A}",
+    "🌙 Gecenin Sükûnetinde: {S} {N}:{A}",
+    "💫 Bu Ayeti Duyunca Durdum — {S} {N}:{A}",
+    "🌸 İçini Ferahlatacak Ayet | {S} {N}:{A}",
+    "🔥 Tüylerinizi Diken Diken Edecek Tilavet · {S} {N}:{A}",
+    "🕋 Kâbe Huzurunda: {S} {N}:{A}",
+    "📿 Zikir Gibi Dinlenen Ayet — {S} {N}:{A}",
+    "🌊 Gönül Denizinde Bir Damla | {S} {N}:{A}",
+    "⭐ Günün En Etkileyici Ayeti: {S} {N}:{A}",
+    "🤍 Kalbinize İyi Gelecek: {S} {N}:{A}",
+    "🌅 Sabahın Bereketiyle — {S} {N}:{A}",
+    "🎧 Kulaklıkla Dinleyin · {S} {N}:{A}",
+    "💚 Şifa Niyetine Bir Ayet | {S} {N}:{A}",
+    "🌟 Bir Kez Dinleyin Yeter: {S} {N}:{A}",
+    "🕊️ Huzurun Sesi — {S} {N}:{A}",
+    "📜 Unutulmaz Bir Ayet-i Kerîme · {S} {N}:{A}",
+    "🌹 Ruha Dokunan Tilavet | {S} {N}:{A}",
+    "✋ Durup Düşündüren Ayet: {S} {N}:{A}",
+    "🌌 Gecenin Nûru — {S} {N}:{A}",
+    "🫀 Kalpten Kalbe: {S} {N}:{A}",
+    "🔊 Sesi Açın ve Dinleyin · {S} {N}:{A}",
+    "🌱 Tefekkür İçin Bir Ayet | {S} {N}:{A}",
+    "🏞️ Doğanın Sükûnetiyle: {S} {N}:{A}",
+    "💎 Kur'an'dan Bir İnci — {S} {N}:{A}",
+    "🌤️ Sıkıntını Alacak Ayet · {S} {N}:{A}",
+    "🤍 Sabrı Öğreten Ayet | {S} {N}:{A}",
+    "🌺 Gönül Bahçesinden: {S} {N}:{A}",
+    "⚡ Bu Ayet Hayatınızı Değiştirebilir — {S} {N}:{A}",
+    "🕯️ Karanlıkta Bir Işık · {S} {N}:{A}",
+    "📲 Paylaş, Sevap Kazan | {S} {N}:{A}",
+    "🌈 Umut Veren Ayet: {S} {N}:{A}",
+    "🙏 Dua Niyetine Dinleyin — {S} {N}:{A}",
+  ],
+  en: [
+    "✨ Which Verse Touched Your Heart? — {S} {N}:{A}",
+    "📖 A Verse a Day: Surah {S} {N}:{A}",
+    "🤲 A Recitation That Brings Peace | {S} {N}:{A}",
+    "🌿 Words to Rest Your Soul: {S} {N}:{A}",
+    "🕌 A Verse That Softens the Heart · {S} {N}:{A}",
+    "🌙 In the Stillness of the Night: {S} {N}:{A}",
+    "💫 This Verse Stopped Me — {S} {N}:{A}",
+    "🌸 A Verse to Ease Your Mind | {S} {N}:{A}",
+    "🔥 A Recitation That Gives You Chills · {S} {N}:{A}",
+    "🕋 In the Presence of the Kaaba: {S} {N}:{A}",
+    "📿 A Verse Like Dhikr — {S} {N}:{A}",
+    "🌊 A Drop in the Ocean of the Heart | {S} {N}:{A}",
+    "⭐ Most Powerful Verse of the Day: {S} {N}:{A}",
+    "🤍 Good for Your Heart: {S} {N}:{A}",
+    "🌅 With the Blessing of Morning — {S} {N}:{A}",
+    "🎧 Listen With Headphones · {S} {N}:{A}",
+    "💚 A Verse for Healing | {S} {N}:{A}",
+    "🌟 Listen Once, It's Enough: {S} {N}:{A}",
+    "🕊️ The Sound of Serenity — {S} {N}:{A}",
+    "📜 An Unforgettable Verse · {S} {N}:{A}",
+    "🌹 A Recitation That Touches the Soul | {S} {N}:{A}",
+    "✋ A Verse That Makes You Pause: {S} {N}:{A}",
+    "🌌 Light of the Night — {S} {N}:{A}",
+    "🫀 From Heart to Heart: {S} {N}:{A}",
+    "🔊 Turn Up the Volume · {S} {N}:{A}",
+    "🌱 A Verse for Reflection | {S} {N}:{A}",
+    "🏞️ With Nature's Calm: {S} {N}:{A}",
+    "💎 A Pearl From the Quran — {S} {N}:{A}",
+    "🌤️ A Verse to Lift Your Burden · {S} {N}:{A}",
+    "🤍 A Verse That Teaches Patience | {S} {N}:{A}",
+    "🌺 From the Garden of the Heart: {S} {N}:{A}",
+    "⚡ This Verse Can Change Your Life — {S} {N}:{A}",
+    "🕯️ A Light in the Darkness · {S} {N}:{A}",
+    "📲 Share and Earn Reward | {S} {N}:{A}",
+    "🌈 A Verse of Hope: {S} {N}:{A}",
+    "🙏 Listen as a Prayer — {S} {N}:{A}",
+  ],
+  ar: [
+    "✨ أي آية لامست قلبك؟ — {S} {N}:{A}",
+    "📖 آية كل يوم: سورة {S} {N}:{A}",
+    "🤲 تلاوة تبعث السكينة | {S} {N}:{A}",
+    "🌿 كلمات تريح الروح: {S} {N}:{A}",
+    "🕌 آية تُلين القلوب · {S} {N}:{A}",
+    "🌙 في سكون الليل: {S} {N}:{A}",
+    "💫 هذه الآية أوقفتني — {S} {N}:{A}",
+    "🌸 آية تشرح الصدر | {S} {N}:{A}",
+    "🔥 تلاوة تقشعر لها الأبدان · {S} {N}:{A}",
+    "🕋 في رحاب الكعبة: {S} {N}:{A}",
+    "📿 آية كالذكر — {S} {N}:{A}",
+    "🌊 قطرة في بحر القلب | {S} {N}:{A}",
+    "⭐ أقوى آية اليوم: {S} {N}:{A}",
+    "🤍 خير لقلبك: {S} {N}:{A}",
+    "🌅 مع بركة الصباح — {S} {N}:{A}",
+    "🎧 استمع بالسماعات · {S} {N}:{A}",
+    "💚 آية للشفاء | {S} {N}:{A}",
+    "🌟 استمع مرة واحدة تكفي: {S} {N}:{A}",
+    "🕊️ صوت الطمأنينة — {S} {N}:{A}",
+    "📜 آية لا تُنسى · {S} {N}:{A}",
+    "🌹 تلاوة تلامس الروح | {S} {N}:{A}",
+    "✋ آية تدعوك للتوقف: {S} {N}:{A}",
+    "🌌 نور الليل — {S} {N}:{A}",
+    "🫀 من القلب إلى القلب: {S} {N}:{A}",
+    "🔊 ارفع الصوت · {S} {N}:{A}",
+    "🌱 آية للتفكر | {S} {N}:{A}",
+    "🏞️ مع هدوء الطبيعة: {S} {N}:{A}",
+    "💎 لؤلؤة من القرآن — {S} {N}:{A}",
+    "🌤️ آية ترفع همّك · {S} {N}:{A}",
+    "🤍 آية تعلّم الصبر | {S} {N}:{A}",
+    "🌺 من حديقة القلب: {S} {N}:{A}",
+    "⚡ هذه الآية قد تغيّر حياتك — {S} {N}:{A}",
+    "🕯️ نور في الظلام · {S} {N}:{A}",
+    "📲 شارك واكسب الأجر | {S} {N}:{A}",
+    "🌈 آية الأمل: {S} {N}:{A}",
+    "🙏 استمع بنية الدعاء — {S} {N}:{A}",
+  ],
+};
+
+/** Diğer diller İngilizce havuzu kullanır */
+function titlePool(lang: string): string[] {
+  return TITLE_TEMPLATES[lang] ?? TITLE_TEMPLATES.en;
+}
+
+const EMOTIONAL_TITLE_TEMPLATES: Record<string, string[]> = {
+  tr: [
+    "İçindeki yalnızlık hissini hafifletecek ayet... 🎧🤍",
+    "Bu ayeti duyunca kalbin biraz nefes alacak... 🌙🤲",
+    "Rabbim beni unuttu sanan herkes bunu dinlesin... 🕊️",
+    "Sessizce ağlayan kalplere inen teselli... 🤍",
+    "Kendini yorgun hissediyorsan bu ayet sana iyi gelecek... 🌿",
+    "Bu gece içini Allah'a açmadan uyuma... 🌙",
+    "Bir ayet bazen bin nasihatten güçlüdür... ✨",
+    "Kalbin daraldıysa bu tilaveti sonuna kadar dinle... 🎧",
+    "Umudunu kaybettiğin anlar için indirilen teselli... 🕯️",
+    "İçinde sakladığın acıya Kur'an'dan cevap... 🤲",
+    "Allah'ın rahmeti sana sandığından daha yakın... 🌸",
+    "Bu ayeti biri sana göndermiş gibi dinle... 💫",
+  ],
+  en: [
+    "📌 Hook Title: A verse for the loneliness you never say out loud... 🎧🤍",
+    "📌 Hook Title: If your heart feels tired, listen to this verse... 🌙",
+    "📌 Hook Title: For every soul that thinks it has been forgotten... 🕊️",
+    "📌 Hook Title: A Quranic comfort for silent tears... 🤍",
+    "📌 Hook Title: This verse may soften something inside you... 🌿",
+    "📌 Hook Title: Do not sleep before hearing this reminder... ✨",
+  ],
+  ar: [
+    "📌 عنوان مؤثر: آية لكل قلب يشعر بالوحدة بصمت... 🎧🤍",
+    "📌 عنوان مؤثر: إن كان قلبك متعبًا فاستمع لهذه الآية... 🌙",
+    "📌 عنوان مؤثر: لكل نفس ظنت أنها تُركت وحدها... 🕊️",
+    "📌 عنوان مؤثر: عزاء قرآني للدموع الصامتة... 🤍",
+    "📌 عنوان مؤثر: هذه الآية قد تلامس قلبك بعمق... 🌿",
+    "📌 عنوان مؤثر: لا تنم قبل أن تسمع هذا التذكير... ✨",
+  ],
+};
+
+function ayahMoodTitle(surahName: string, s: number, a: number, lang: string): string[] {
+  const name = `${surahName}`.toLocaleLowerCase("tr");
+  const tr = lang === "tr";
+  if (tr && (s === 93 || name.includes("duh"))) {
+    return [
+      "Rabbin seni terk etmedi... Bu ayet kalbine iyi gelecek 🤍",
+      "Yalnız kaldığını sandığın anda Duhâ Suresi sana sesleniyor 🌙",
+      "Kırgın kalpler için en büyük teselli: Rabbin seni bırakmadı 🕊️",
+      "İçin daraldıysa Duhâ Suresi'ni sonuna kadar dinle 🎧",
+    ];
+  }
+  if (tr && (s === 94 || name.includes("inşirah") || name.includes("insirah"))) {
+    return [
+      "Her zorluktan sonra bir kolaylık var... Bunu unutma 🌿",
+      "Kalbindeki ağırlığı hafifletecek ayetler 🤲",
+      "Sıkışmış gibi hissedenlere İnşirâh Suresi'nden teselli ✨",
+    ];
+  }
+  if (tr && (s === 36 || name.includes("yasin"))) {
+    return [
+      "Yâsîn Suresi'nden kalbe şifa olan ayetler 💚",
+      "Bu tilaveti sevdiklerine de gönder... Yâsîn'den huzur 🌹",
+      "Kalbin yorulduysa Yâsîn Suresi'ni dinle 🎧",
+    ];
+  }
+  if (tr && (s === 55 || name.includes("rahman"))) {
+    return [
+      "Rabbinin nimetlerini hatırlatan ayet... Şükretmek için dur 🌿",
+      "Rahmân Suresi kalbine nimetleri hatırlatsın 🤍",
+      "Hangi nimeti inkâr edebiliriz? Bu ayet düşündürüyor 🌙",
+    ];
+  }
+  if (tr && (s === 67 || name.includes("mülk") || name.includes("mulk"))) {
+    return [
+      "Gece uyumadan önce Mülk Suresi'nden huzur veren ayetler 🌙",
+      "Kabir karanlığını hatırlatan ve kalbi uyandıran tilavet 🕯️",
+      "Bu ayeti dinle, sonra bugününü bir daha düşün 🤲",
+    ];
+  }
+  if (tr && s === 2 && a === 255) {
+    return [
+      "Ayete'l-Kürsî: kalbine güven ve koruma hissi verecek ayet 🛡️",
+      "Korkuların arttığında Ayete'l-Kürsî'yi dinle 🤍",
+      "Allah her şeyi kuşatmıştır... Bu ayet kalbini toparlasın ✨",
+    ];
+  }
+  return [];
+}
+
+/** ★ 36 seçenekli, çok dilli rastgele başlık üretici */
+export function genTitle(surahName = "Bakara", s = 2, a = 255, lang = "tr"): string {
+  const pool = [
+    ...ayahMoodTitle(surahName, s, a, lang),
+    ...titlePool(lang),
+    ...(EMOTIONAL_TITLE_TEMPLATES[lang] ?? EMOTIONAL_TITLE_TEMPLATES.en),
+  ];
+  const tpl = pool[Math.floor(Math.random() * pool.length)];
+  return tpl.replace("{S}", surahName).replace("{N}", String(s)).replace("{A}", String(a));
+}
+
+// ════════════════════════════════════════════════════════
+// EK TEMALAR (v1.1 — toplam 20 tema, 5 free + 10 pro + 5 elit)
+// Mevcut 6 temaya dokunulmadı, 14 yeni şiirsel Türkçe tema eklendi.
+// ════════════════════════════════════════════════════════
+const DESC_INTRO: Record<string, string[]> = {
+  tr: [
+    "📌 {S} {N}:{A}. Ayet-i Kerîme",
+    "📖 {S} Suresi · {N}:{A}. Ayet",
+    "✨ Bugünün ayeti: {S} {N}:{A}",
+    "🕌 {S} Suresi {N}:{A} — huzur veren tilavet",
+    "🌿 Ruha dokunan ayet: {S} {N}:{A}",
+    "💫 Kalbe şifa: {S} Suresi {N}:{A}",
+    "🌙 Gece tilaveti · {S} {N}:{A}",
+    "📿 Zikir niyetine: {S} {N}:{A}",
+    "🤲 Dua ile: {S} Suresi {N}:{A}",
+    "🕋 Kâbe huzurunda: {S} {N}:{A}",
+  ],
+  en: [
+    "📌 {S} {N}:{A} — Noble Verse",
+    "📖 Surah {S} · Verse {N}:{A}",
+    "✨ Today's verse: {S} {N}:{A}",
+    "🕌 Surah {S} {N}:{A} — a peaceful recitation",
+    "🌿 A verse that touches the soul: {S} {N}:{A}",
+    "💫 Healing for the heart: Surah {S} {N}:{A}",
+    "🌙 Night recitation · {S} {N}:{A}",
+    "📿 As remembrance: {S} {N}:{A}",
+    "🤲 With prayer: Surah {S} {N}:{A}",
+    "🕋 In the presence of the Kaaba: {S} {N}:{A}",
+  ],
+  ar: [
+    "📌 {S} {N}:{A} — آية كريمة",
+    "📖 سورة {S} · الآية {N}:{A}",
+    "✨ آية اليوم: {S} {N}:{A}",
+    "🕌 سورة {S} {N}:{A} — تلاوة تبعث السكينة",
+    "🌿 آية تلامس الروح: {S} {N}:{A}",
+    "💫 شفاء للقلب: سورة {S} {N}:{A}",
+    "🌙 تلاوة الليل · {S} {N}:{A}",
+    "📿 بنية الذكر: {S} {N}:{A}",
+    "🤲 مع الدعاء: سورة {S} {N}:{A}",
+    "🕋 في رحاب الكعبة: {S} {N}:{A}",
+  ],
+};
+
+const DESC_LABELS: Record<string, { reciter: string; studio: string; quote: string; cta: string }> = {
+  tr: {
+    reciter: "🎧 Kâri",
+    studio: "🎬 Yapım: Nûr Stüdyo.com · İslamî Labs",
+    quote: '"Hakkında bilgi sahibi olmadığın şeyin ardına düşme. Çünkü kulak, göz ve kalp, bunların hepsi ondan sorumludur." (İsrâ 17:36)',
+    cta: "Ayeti arkadaşlarınızla paylaşarak iyiliğe vesile olabilirsiniz.",
+  },
+  en: {
+    reciter: "🎧 Reciter",
+    studio: "🎬 Produced by: Nûr Studio.com · Islamic Labs",
+    quote: '"Do not pursue that of which you have no knowledge. Indeed, the hearing, the sight and the heart — about all those one will be questioned." (Al-Isra 17:36)',
+    cta: "Share this verse with your friends and be a means of goodness.",
+  },
+  ar: {
+    reciter: "🎧 القارئ",
+    studio: "🎬 إنتاج: Nûr Studio.com · مختبرات إسلامية",
+    quote: '"وَلَا تَقْفُ مَا لَيْسَ لَكَ بِهِ عِلْمٌ ۚ إِنَّ السَّمْعَ وَالْبَصَرَ وَالْفُؤَادَ كُلُّ أُولَٰئِكَ كَانَ عَنْهُ مَسْئُولًا" (الإسراء ١٧:٣٦)',
+    cta: "شارك الآية مع أصدقائك لتكون سببًا في الخير.",
+  },
+  de: {
+    reciter: "🎧 Rezitator",
+    studio: "🎬 Produktion: Nûr Studio.com · Islamic Labs",
+    quote: '"Und verfolge nicht das, wovon du kein Wissen hast." (Al-Isra 17:36)',
+    cta: "Teile diesen Vers mit deinen Freunden und sei ein Mittel des Guten.",
+  },
+  fr: {
+    reciter: "🎧 Récitateur",
+    studio: "🎬 Production : Nûr Studio.com · Islamic Labs",
+    quote: '"Et ne poursuis pas ce dont tu n\'as aucune connaissance." (Al-Isra 17:36)',
+    cta: "Partagez ce verset avec vos amis et soyez une source de bien.",
+  },
+  es: {
+    reciter: "🎧 Recitador",
+    studio: "🎬 Producción: Nûr Studio.com · Islamic Labs",
+    quote: '"Y no persigas aquello de lo que no tienes conocimiento." (Al-Isra 17:36)',
+    cta: "Comparte este versículo con tus amigos y sé un medio de bondad.",
+  },
+  ru: {
+    reciter: "🎧 Чтец",
+    studio: "🎬 Продакшн: Nûr Studio.com · Islamic Labs",
+    quote: '"Не следуй тому, чего ты не знаешь." (Аль-Исра 17:36)',
+    cta: "Поделитесь этим аятом с друзьями и станьте причиной добра.",
+  },
+  id: {
+    reciter: "🎧 Qari",
+    studio: "🎬 Produksi: Nûr Studio.com · Islamic Labs",
+    quote: '"Dan janganlah kamu mengikuti sesuatu yang tidak kamu ketahui." (Al-Isra 17:36)',
+    cta: "Bagikan ayat ini kepada temanmu dan jadilah perantara kebaikan.",
+  },
+  ur: {
+    reciter: "🎧 قاری",
+    studio: "🎬 پروڈکشن: Nûr Studio.com · Islamic Labs",
+    quote: '"اور اس چیز کے پیچھے نہ پڑ جس کا تجھے علم نہیں۔" (الاسراء ۱۷:۳۶)',
+    cta: "اس آیت کو دوستوں کے ساتھ شیئر کریں اور نیکی کا ذریعہ بنیں۔",
+  },
+  fa: {
+    reciter: "🎧 قاری",
+    studio: "🎬 تولید: Nûr Studio.com · Islamic Labs",
+    quote: '"و از آنچه به آن علم نداری پیروی مکن." (اسراء ۱۷:۳۶)',
+    cta: "این آیه را با دوستان خود به اشتراک بگذارید و سبب خیر شوید.",
+  },
+};
+
+const DESC_EMOTIONAL_LINES: Record<string, string[]> = {
+  tr: [
+    "Kendini çaresiz, yalnız ve bitkin hisseden her kalp için bir teselli olsun.",
+    "Bu ayet sana bugün sadece bir video olarak değil, kalbine inen bir hatırlatma olarak gelsin.",
+    "Belki de bu sözler tam da şu an ihtiyacın olan sükûnettir.",
+    "Rabbimiz kulunu terk etmez; bazen cevap bir ayetin içinde saklıdır.",
+    "İçin daraldığında hatırla: Allah'ın rahmeti sandığından daha yakındır.",
+    "Bu tilaveti sonuna kadar dinle; belki kalbinin yükü biraz hafifler.",
+    "Eğer bu ayet sana dokunduysa, yorumlara bir 'Amin' bırakmayı unutma.",
+    "Bu mesajı ihtiyacı olan birine gönder; belki onun gecesine ışık olur.",
+  ],
+  en: [
+    "May this be a comfort for every heart that feels tired, lonely, or unseen.",
+    "Let this verse reach you not as content, but as a reminder for your heart.",
+    "Maybe these words are the calm your soul needed today.",
+    "Allah does not abandon His servant; sometimes the answer is hidden in a verse.",
+    "If this touched you, leave an 'Ameen' and share it with someone who needs it.",
+  ],
+  ar: [
+    "لتكن هذه الآية عزاءً لكل قلب متعب أو وحيد أو مكسور.",
+    "لعل هذه الكلمات هي السكينة التي احتاجتها روحك اليوم.",
+    "الله لا يترك عبده، وربما تكون الإجابة مخبأة في آية.",
+    "إن لامست هذه الآية قلبك فاكتب آمين وشاركها لمن يحتاجها.",
+  ],
+};
+
+function ayahMoodParagraph(surahName: string, s: number, a: number, lang: string): string {
+  const name = `${surahName}`.toLocaleLowerCase("tr");
+  if (lang !== "tr") {
+    return "If this reminder touched your heart, like the video, leave an Ameen in the comments and share it with someone who may need this peace today.";
+  }
+  if (s === 93 || name.includes("duh")) {
+    return "Rabbin seni terk etmedi ve sana darılmadı... Bu sure, kendini yalnız, kırgın, çaresiz ve tükenmiş hisseden her kalbe inen büyük bir tesellidir. Eğer bugün içinden kimseye anlatamadığın bir yorgunluk geçiyorsa, bu ayeti sadece dinleme; kalbine indir. Bu video sana huzur verdiyse beğen, yorumlara bir 'Amin' bırak ve bu teselliye ihtiyacı olan bir sevdiğinle paylaş.";
+  }
+  if (s === 94 || name.includes("inşirah") || name.includes("insirah")) {
+    return "Her zorluğun yanında mutlaka bir kolaylık vardır. Belki şu an yolun dar, kalbin yorgun, sabrın azalmış olabilir; ama Allah kulunu çaresiz bırakmaz. Bu ayet sana nefes aldırdıysa beğen, yorumlara 'Kolaylık yakındır' yaz ve bu hatırlatmayı bugün morali bozuk olan birine gönder.";
+  }
+  if (s === 36 || name.includes("yasin")) {
+    return "Yâsîn Suresi kalplere şifa, gönüllere sükûnet, evlere bereket olsun. Eğer bu tilavet içini rahatlattıysa beğenmeyi unutma, yorumlara bir 'Amin' bırak ve sevdiğin birine gönder; belki onun da kalbine tam ihtiyacı olan anda dokunur.";
+  }
+  if (s === 55 || name.includes("rahman")) {
+    return "Rabbinin nimetlerini düşünmek bazen insanın kalbini baştan sona değiştirir. Bugün sahip olduklarını fark etmek, şükretmek ve iç huzurunu yeniden bulmak için bu ayeti yavaşça dinle. Kalbine dokunduysa beğen, yorumlara 'Elhamdülillah' yaz ve bu şükür hatırlatmasını paylaş.";
+  }
+  if (s === 67 || name.includes("mülk") || name.includes("mulk")) {
+    return "Mülk Suresi insana dünyanın geçici olduğunu, asıl dönüşün Rabbimize olduğunu hatırlatır. Bu tilavet sana ölümü, ahireti ve kulluğu düşündürdüyse beğen, yorumlara bir dua bırak ve sevdiklerine gönder; belki bir kalbin uyanmasına vesile olur.";
+  }
+  if (s === 2 && a === 255) {
+    return "Ayete'l-Kürsî, kalbe güven veren, insana Allah'ın kudretini ve korumasını hatırlatan en güçlü ayetlerden biridir. Korkuların arttığında, içini vesvese sardığında ve sığınacak bir kapı aradığında bu ayeti dinle. Sana huzur verdiyse beğen, yorumlara 'Allah bize yeter' yaz ve sevdiklerinle paylaş.";
+  }
+  return "Bu ayet belki de bugün kalbinin tam ihtiyacı olan hatırlatmadır. Kendini yalnız, yorgun veya kırgın hissediyorsan birkaç saniye dur ve bu sözleri kalbinle dinle. Eğer sana huzur verdiyse beğen, yorumlara bir 'Amin' bırak ve sevdiğin birine gönder; belki onun duasına da vesile olursun.";
+}
+
+/** ★ Çok dilli, 30 varyantlı açıklama üretici */
+export function genDesc(
+  surahName = "Bakara Suresi",
+  s = 2,
+  a = 255,
+  reciterName = "Abdurrahman es-Sudays",
+  lang = "tr",
+): string {
+  const introPool = DESC_INTRO[lang] ?? DESC_INTRO.en;
+  const L = DESC_LABELS[lang] ?? DESC_LABELS.en;
+  const intro = introPool[Math.floor(Math.random() * introPool.length)]
+    .replace("{S}", surahName)
+    .replace("{N}", String(s))
+    .replace("{A}", String(a));
+
+  const emotionPool = DESC_EMOTIONAL_LINES[lang] ?? DESC_EMOTIONAL_LINES.en;
+  const emotion = emotionPool[Math.floor(Math.random() * emotionPool.length)];
+  const ayahMood = ayahMoodParagraph(surahName, s, a, lang);
+
+  return `${intro}
+
+${L.reciter}: ${reciterName}
+${L.studio}
+
+${L.quote}
+
+${emotion}
+
+${ayahMood}
+
+${L.cta}`;
+}
