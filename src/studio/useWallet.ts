@@ -23,7 +23,7 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     } catch { return 0; }
   });
 
-  // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz
+  // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz + jetonCount'u güncelle
   const syncWallet = useCallback(async () => {
     try {
       const u = secureGet<{ id?: string } | null>("nur_user_v1", null);
@@ -37,7 +37,12 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
           tam: data.wallet.tam || 0,
         };
         secureSet("nur_pack_rights_v1", rights);
-        console.log("[sync] Cüzdan senkronize:", rights);
+        // ★ Toplam hakkı hesapla ve jetonCount'u HER ZAMAN güncelle
+        //    Eski localStorage verisi varsa bile sunucudaki gerçek veriyle değiştir
+        const totalRights = rights.kisa + rights.uzun + rights.tam;
+        persistJetonSecure(totalRights);
+        setJetonCount(totalRights);
+        console.log("[sync] Cüzdan senkronize:", rights, "toplam:", totalRights);
       }
     } catch {}
   }, []);

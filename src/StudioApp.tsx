@@ -151,10 +151,31 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ Hook'lar (state'lerden sonra çağrılır)
   const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard } = useAuth({ isMasterSürüm, isDevMaster, notify });
-  const { jetonCount, setJetonCount } = useWallet(notify);
+  const { jetonCount, setJetonCount, syncWallet } = useWallet(notify);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser });
+
+  // ★ Callback sonrası ödeme dönüşü — URL'de odeme=basarili varsa cüzdanı yenile
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("odeme") === "basarili") {
+      // Supabase'in yazmasını bekle: 1sn sonra sync, 3sn sonra tekrar sync
+      setTimeout(() => syncWallet(), 1000);
+      setTimeout(() => syncWallet(), 3000);
+      setTimeout(() => syncWallet(), 6000);
+      notify("✅ Ödeme başarılı! Haklarınız hesabınıza yükleniyor...");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
+  // ★ PremiumModal her açıldığında cüzdanı yenile
+  useEffect(() => {
+    if (premiumOpen) {
+      syncWallet();
+    }
+  }, [premiumOpen]);
+
   const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
   const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
   const { dailyPool, dailyIndex, dailyPaused, daily } = useDailyAyah({ lang, setSelected });
