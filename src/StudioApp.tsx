@@ -154,20 +154,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { jetonCount, setJetonCount, syncWallet } = useWallet(notify);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
-  usePaymentFlow({ setUser });
-
-  // ★ Callback sonrası ödeme dönüşü — URL'de odeme=basarili varsa cüzdanı yenile
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("odeme") === "basarili") {
-      // Supabase'in yazmasını bekle: 1sn sonra sync, 3sn sonra tekrar sync
-      setTimeout(() => syncWallet(), 1000);
-      setTimeout(() => syncWallet(), 3000);
-      setTimeout(() => syncWallet(), 6000);
-      notify("✅ Ödeme başarılı! Haklarınız hesabınıza yükleniyor...");
-      window.history.replaceState({}, "", window.location.pathname);
-    }
-  }, []);
+  usePaymentFlow({ setUser, syncWallet });
 
   // ★ PremiumModal her açıldığında cüzdanı yenile
   useEffect(() => {
