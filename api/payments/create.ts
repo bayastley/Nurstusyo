@@ -316,7 +316,7 @@ export default async function handler(req: any, res: any) {
     const html = String(data.checkoutFormContent || '');
     const pageUrl = String(data.paymentPageUrl || '');
 
-    console.log('[iyzico] ✅ Başarılı, token:', token.slice(0, 20) + '...');
+    console.log('[iyzico] ✅ Başarılı, token: var');
 
     res.status(200).json({
       success: true,

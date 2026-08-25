@@ -213,7 +213,7 @@ export default async function handler(req: any, res: any) {
       token = String(req.query.token);
     }
 
-    console.log('[callback] Token:', token ? 'var (' + token.slice(0, 20) + '...)' : 'yok');
+    console.log('[callback] Token:', token ? 'var' : 'yok');
 
     if (!token) {
       res.writeHead(303, { Location: '/?odeme=hata&sebep=token_yok' });
@@ -277,20 +277,41 @@ export default async function handler(req: any, res: any) {
           // Idempotency: zaten paid ise tekrar hak verme
           if (order.status === 'paid') {
             console.log('[callback] Sipariş zaten paid, tekrar işlenmiyor');
+          } else if (order.status === 'processing') {
+            // Race condition koruması — başka bir istek işliyor
+            console.log('[callback] Sipariş şu an işleniyor, bekleniyor');
           } else {
-            console.log('[callback] Sipariş bulundu:', {
-              userId: order.user_id,
-              productCode: order.product_code,
-            });
+            // ★ Race condition koruması: pending'i processing'e çevir
+            //    Sadece başarılı olan istek devam eder
+            const lockResult = await sbRequest(
+              `nur_orders?id=eq.${encodeURIComponent(conversationId)}&status=eq.pending`,
+              {
+                method: 'PATCH',
+                headers: { Prefer: 'return=minimal' },
+                body: JSON.stringify({ status: 'processing', updated_at: new Date().toISOString() }),
+              }
+            );
 
-            const granted = await grantProduct(order.user_id, order.product_code);
-
-            if (granted) {
-              await updateOrderStatus(conversationId, 'paid', data.paymentId);
-              console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
+            // Eğer patch başarılıysa (0 row affected değilse) devam et
+            // Supabase PATCH her zaman 200 döner, kontrol etmek için tekrar oku
+            const lockedOrder = await findOrder(conversationId);
+            if (!lockedOrder || lockedOrder.status !== 'processing') {
+              console.log('[callback] Sipariş başka bir istek tarafından işleniyor');
             } else {
-              await updateOrderStatus(conversationId, 'failed', data.paymentId);
-              console.error('[callback] ❌ Hak tanımlanamadı, failed');
+              console.log('[callback] Sipariş bulundu:', {
+                userId: order.user_id,
+                productCode: order.product_code,
+              });
+
+              const granted = await grantProduct(order.user_id, order.product_code);
+
+              if (granted) {
+                await updateOrderStatus(conversationId, 'paid', data.paymentId);
+                console.log('[callback] ✅ Haklar tanımlandı, sipariş tamamlandı');
+              } else {
+                await updateOrderStatus(conversationId, 'failed', data.paymentId);
+                console.error('[callback] ❌ Hak tanımlanamadı, failed');
+              }
             }
           }
         } else {
