@@ -97,7 +97,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return false;
   });
   const isDevMaster = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && developerMaster);
-  const isMasterSürüm = isDevMaster || adminGodMode;
+  const [isMasterSürüm, setIsMasterSürüm] = useState(isDevMaster || adminGodMode);
 
   // Toast (erkenden tanımlı çünkü hook'lar buna ihtiyaç duyuyor)
   const [toast, setToast] = useState<string | null>(null);
@@ -155,6 +155,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, syncWallet });
+
+  // ★ Admin email tanındığında master modu aktifle
+  useEffect(() => {
+    if (user?.email && isAdminEmail(user.email) && !isMasterSürüm) {
+      setAdminGodMode(true);
+      setIsMasterSürüm(true);
+      localStorage.setItem("nur_admin_session", "1");
+      console.log("[admin] Admin email tanındı:", user.email, "→ sınırsız mod aktif");
+    }
+  }, [user?.email]);
 
   // ★ PremiumModal her açıldığında cüzdanı yenile
   useEffect(() => {
@@ -1081,6 +1091,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
     if (isKurucuAdmin) {
       setAdminGodMode(true);
+      setIsMasterSürüm(true);
       setTier("elit");
       setCurrentTier("elit");
       setJetonCount(userJeton);
@@ -1112,6 +1123,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
     if (isKurucuAdmin) {
       setAdminGodMode(true);
+      setIsMasterSürüm(true);
       setTier("elit");
       setCurrentTier("elit");
       setJetonCount(1000);

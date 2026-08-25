@@ -7,7 +7,7 @@ import {
 import { getBanLogs } from "../services/adminSyncService";
 import { LANGS, T, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights } from "../tier";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
 
@@ -325,16 +325,16 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   onClick={() => openPremium("jeton")}
                   className="glass-soft group relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tabular-nums transition hover:scale-105 sm:flex cursor-pointer"
                   style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.3)" }}
-                  title={`Toplam Bakiyeniz: ${jetonCount} ⚡ Üretim hakkı (${vault.purchasedJeton} Satın Alınan + ${vault.subJeton} Günlük Hak)`}
+                  title={(isMasterSürüm || isAdminEmail(user?.email || "")) ? `♾️ SINIRSIZ — Admin (${user?.email || ""})` : `Toplam: ${jetonCount} ⚡ | Kısa: ${getPackRights().kisa} | Uzun: ${getPackRights().uzun} | Tam: ${getPackRights().tam}`}
                 >
                   <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                     <Coins size={9} className="text-black" strokeWidth={3} />
                   </span>
                   <span className="transition-all group-hover:text-white">
-                    {isMasterSürüm || jetonCount >= 999999 ? "♾️ SINIRSIZ" : jetonCount}
+                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "♾️ SINIRSIZ" : jetonCount}
                   </span>
-                  {!(isMasterSürüm || jetonCount >= 999999) && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ Üretim hakkı</span>
+                  {!(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) && (
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-white/40">⚡ K{getPackRights().kisa} U{getPackRights().uzun} T{getPackRights().tam}</span>
                   )}
                 </button>
               );

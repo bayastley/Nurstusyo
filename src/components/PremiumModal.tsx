@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Crown, Gem, Check, X, Sparkles, Zap, Flame, Star } from "lucide-react";
 import {
   PRODUCTS,
@@ -42,6 +42,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const [packKind, setPackKind] = useState<VideoKind>("kisa");
   const [accepted, setAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
+  const [termsHighlight, setTermsHighlight] = useState(false);
+  const termsRef = useRef<HTMLDivElement>(null);
   const activeTier: Tier = tier ?? currentTier ?? "free";
   const closeModal = () => {
     setOpen?.(false);
@@ -56,6 +58,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const handleBuy = (code: string) => {
     if (!accepted) {
       setTermsOpen(true);
+      // ★ Sözleşme bölümüne scroll et ve vurgula
+      setTimeout(() => {
+        termsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTermsHighlight(true);
+        setTimeout(() => setTermsHighlight(false), 2500);
+      }, 100);
       toast("⚠️ Satın alma koşullarını kabul etmeniz gerekiyor");
       return;
     }
@@ -198,6 +206,41 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             Üyelik hakları her gün yenilenir · paket hakları süresizdir, kullandıkça azalır
           </p>
         </div>
+
+        {/* SATIN ALINAN PAKETLER */}
+        {(() => {
+          const pr = readPackRights();
+          const hasAny = (pr.kisa || 0) > 0 || (pr.uzun || 0) > 0 || (pr.tam || 0) > 0;
+          if (!hasAny) return null;
+          return (
+            <div className="mx-7 mt-4 rounded-2xl border border-[color:var(--accent)]/20 bg-[color:var(--accent)]/5 p-4">
+              <p className="mb-3 text-[10px] font-black uppercase tracking-wider text-[color:var(--accent)]">
+                📦 Satın Alınan Paketler
+              </p>
+              <div className="space-y-2">
+                {pr.kisa > 0 && (
+                  <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+                    <span className="text-[10px] font-bold text-white/70">🎬 Kısa Video (59sn)</span>
+                    <span className="font-mono text-[12px] font-black text-green-400">{pr.kisa} hak kaldı</span>
+                  </div>
+                )}
+                {pr.uzun > 0 && (
+                  <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+                    <span className="text-[10px] font-bold text-white/70">🎞️ Uzun Video (600sn)</span>
+                    <span className="font-mono text-[12px] font-black text-blue-400">{pr.uzun} hak kaldı</span>
+                  </div>
+                )}
+                {pr.tam > 0 && (
+                  <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
+                    <span className="text-[10px] font-bold text-white/70">🎥 Tam Sürüm (45dk)</span>
+                    <span className="font-mono text-[12px] font-black text-purple-400">{pr.tam} hak kaldı</span>
+                  </div>
+                )}
+              </div>
+              <p className="mt-2 text-center text-[8px] text-white/25">Haklar süresizdir, üretildikçe azalır</p>
+            </div>
+          );
+        })()}
 
         {/* SEKMELER */}
         <div className="mx-7 mt-5 flex gap-1.5 rounded-2xl border border-white/10 bg-black/50 p-1.5">
@@ -353,6 +396,24 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                       ))}
                     </ul>
 
+                    {/* Günlük Kota Gridi */}
+                    <div className="mt-4 grid grid-cols-3 gap-2">
+                      {(["kisa", "uzun", "tam"] as VideoKind[]).map((kind) => {
+                        const q = DAILY_QUOTA[p.grantTier ?? "free"]?.[kind] ?? 0;
+                        const emoji = kind === "kisa" ? "🎬" : kind === "uzun" ? "🎞️" : "🎥";
+                        const label = kind === "kisa" ? "Kısa" : kind === "uzun" ? "Uzun" : "Tam";
+                        return (
+                          <div key={kind} className="rounded-lg bg-white/5 p-2 text-center">
+                            <p className="text-[10px]">{emoji}</p>
+                            <p className="font-mono text-[13px] font-black" style={{ color: q > 0 ? (isElit ? "#f5dda6" : "#d7aa52") : "rgba(255,255,255,0.2)" }}>
+                              {q > 0 ? q : "—"}
+                            </p>
+                            <p className="text-[7px] font-bold text-white/30">{label}/gün</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+
                     <button
                       type="button"
                       disabled={current}
@@ -465,8 +526,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             </>
           )}
 
-          {/* Onay + yasal */}
-          <label className="mt-5 flex cursor-pointer items-start gap-2 text-[10px] leading-relaxed text-white/50">
+          {/* Onay + yasal — Satın alma onayı */}
+          <div
+            ref={termsRef}
+            className={`mt-5 rounded-2xl border p-4 transition-all duration-500 ${
+              termsHighlight
+                ? "border-[color:var(--accent)] bg-[color:var(--accent)]/15 shadow-[0_0_20px_rgba(215,170,82,0.3)]"
+                : "border-white/10 bg-white/[0.03]"
+            }`}
+          >
+          <label className="flex cursor-pointer items-start gap-2 text-[10px] leading-relaxed text-white/50">
             <input
               type="checkbox"
               checked={accepted}
@@ -487,6 +556,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               </button>
             </span>
           </label>
+          </div>
 
           {termsOpen && (
             <div className="mt-3 max-h-44 overflow-y-auto rounded-2xl border border-[color:var(--accent)]/25 bg-black/45 p-4 text-[10px] leading-relaxed text-white/70 scrollbar-thin">
