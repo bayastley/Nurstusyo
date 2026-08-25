@@ -24,11 +24,12 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
   });
 
   // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz + jetonCount'u güncelle
+  //   NOT: Local storage'dan kullanıcı kontrolü YAPMIYORUZ — redirect sonrası secureStore
+  //   henüz dolmamış olabilir. Sunucu kendi session cookie'sinden kontrol eder (401 döner).
   const syncWallet = useCallback(async () => {
     try {
-      const u = secureGet<{ id?: string } | null>("nur_user_v1", null);
-      if (!u?.id) return;
       const res = await fetch("/api/payments/wallet", { credentials: "include" });
+      if (!res.ok) return; // 401 = giriş yapılmamış, sunucu zaten döndü
       const data = await res.json();
       if (data?.ok && data.wallet) {
         const rights = {
