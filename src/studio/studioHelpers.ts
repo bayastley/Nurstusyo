@@ -93,7 +93,7 @@ export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
   } catch (err) {
     const status = (err as Error & { status?: number })?.status;
     const retryable = status === 429 || status === 503 || (status !== undefined && status >= 500) || status === undefined;
-    if (!retryable) throw err;
+    if (!retryable) { console.error("[fetchJSON] Kalıcı hata:", url, status, (err as Error).message); throw err; }
     // ★ 429 için daha uzun bekle (2sn), diğerleri için 1sn
     const waitMs = status === 429 ? 2000 : 1000;
     await new Promise((resolve) => window.setTimeout(resolve, waitMs));
@@ -118,7 +118,7 @@ function throttle(): Promise<void> {
 export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyanet"): Promise<{ ar: string; tr: string }> {
   const key = `${surah}:${ayah}:${edition}`;
   const cached = ayahCache.get(key);
-  if (cached) return cached;
+  if (cached) { console.log("[fetchAyah] Cache hit:", key); return cached; }
 
   // ★ Throttling — çok fazla paralel isteği engelle
   while (pendingFetches >= MAX_PARALLEL) {
@@ -136,7 +136,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyan
       ayahCache.set(key, result);
       return result;
     }
-  } catch { /* yedek endpoint denenir */ }
+  } catch (e) { console.warn("[fetchAyah] Birincil istek başarısız, yedek denenir:", `${surah}:${ayah}`, (e as Error).message); }
 
   // ★ Yedek: tek tek çek (ama throttlı)
   await throttle();
