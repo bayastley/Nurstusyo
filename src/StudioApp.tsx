@@ -295,6 +295,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const lastDescRef = useRef<string>("");
   const selectedRef = useRef(selected), verseIndexRef = useRef(verseIndex), backgroundRef = useRef(background);
   const ayahBackgroundsRef = useRef(ayahBackgrounds), aspectRef = useRef(aspect), themeRef = useRef(THEMES[0]);
+  useEffect(() => { ayahBackgroundsRef.current = ayahBackgrounds; }, [ayahBackgrounds]);
   const imageCache = useRef(new Map<string, HTMLImageElement>()), videoCache = useRef(new Map<string, HTMLVideoElement>());
   // ★ Render sırasında videonun donmasını engelleyen canlılık izleyicisi (watchdog)
   const videoWatchdog = useRef(new Map<HTMLVideoElement, { t: number; at: number }>());
