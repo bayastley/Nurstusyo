@@ -171,6 +171,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           const shade = ctx.createLinearGradient(0, 0, 0, height); shade.addColorStop(0, "rgba(0,0,0,.42)"); shade.addColorStop(.42, "rgba(0,0,0,.22)"); shade.addColorStop(1, "rgba(0,0,0,.92)"); ctx.fillStyle = shade; ctx.fillRect(0, 0, width, height);
           if (p.showArapca) { ctx.textAlign = "center"; ctx.shadowColor = "rgba(0,0,0,.65)"; ctx.shadowBlur = 14; ctx.fillStyle = currentTheme.acc2; ctx.font = `700 ${Math.round(height * .025)}px Amiri,serif`; ctx.fillText("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", width / 2, height * .11); }
           if (currentAyah) {
+            if (frame % 120 === 0) console.log("[canvas] currentAyah.tr length:", currentAyah.tr?.length, "showSubMeal:", p.showSubMeal, "ar length:", currentAyah.ar?.length);
             ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.72)"; ctx.font = `600 ${Math.round(height * .0105)}px Inter,sans-serif`;
             ctx.fillText(currentAyah.s > 0 ? `${currentAyah.sName} Suresi  •  ${currentAyah.s}:${currentAyah.a}` : currentAyah.sName, width / 2, height * .148);
             ctx.strokeStyle = currentTheme.acc; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(width * .34, height * .17); ctx.lineTo(width * .47, height * .17); ctx.moveTo(width * .53, height * .17); ctx.lineTo(width * .66, height * .17); ctx.stroke();

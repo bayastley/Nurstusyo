@@ -519,6 +519,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
       const meta = SURAHS[s - 1], item = { id, s, a, sName: meta.name, ar, tr };
+      console.log("[addAyah] item.tr length:", tr.length, "item.ar length:", ar.length, "id:", id);
       setSelected((current) => [...current, item]);
 
       if (smartAiEnabled) {
@@ -536,7 +537,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       const quranClips = MOTION_CLIPS.filter((clip) => clip.cat === "musaf");
       if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
       setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
-    } catch { notify("Ayet yüklenemedi"); }
+    } catch (e) { console.error("[addAyah] fetch hatası:", e); notify("Ayet yüklenemedi"); }
   }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah]);
 
   const toggleAyah = useCallback((s: number, a: number, knownTranslation?: string) => {
