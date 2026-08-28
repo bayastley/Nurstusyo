@@ -1,24 +1,22 @@
 import { useEffect } from "react";
 import type { User } from "../types";
+import { getCurrentTier, setCurrentTier, type Tier } from "../tier";
 
 interface UsePaymentFlowOptions {
   setUser: (u: User | null) => void;
+  setTier: (t: Tier) => void;
   syncWallet: () => Promise<void>;
 }
 
-export function usePaymentFlow({ setUser, syncWallet }: UsePaymentFlowOptions) {
+export function usePaymentFlow({ setUser, setTier, syncWallet }: UsePaymentFlowOptions) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const odeme = params.get("odeme");
     if (odeme === "basarili") {
-      // ★ URL parametrelerini AL, sonra temizle
       const verifyOrderId = params.get("orderId");
       const verifyProductCode = params.get("productCode");
       window.history.replaceState({}, "", window.location.pathname);
 
-      // ★ Önce verify, sonra cüzdanı yenile
-      //   NOT: Local storage'dan kullanıcı kontrolü YAPMIYORUZ — redirect sonrası secureStore
-      //   henüz dolmamış olabilir. Verify/auth/me/wallet endpoint'leri kendi session'ını kontrol eder.
       const doVerifyAndSync = async () => {
         // 1. Verify
         if (verifyOrderId && verifyProductCode) {
@@ -30,27 +28,39 @@ export function usePaymentFlow({ setUser, syncWallet }: UsePaymentFlowOptions) {
               body: JSON.stringify({ orderId: verifyOrderId, productCode: verifyProductCode }),
             });
             const d = await res.json().catch(() => null);
-            console.log('[payment] verify sonucu:', d);
-          } catch (e) { console.error('[payment] verify hatası:', e); }
+            console.log("[payment] verify sonucu:", d);
+          } catch (e) { console.error("[payment] verify hatasi:", e); }
         }
 
-        // 2. Tier ve kullanıcı bilgisini yenile
+        // 2. Tier ve kullanici bilgisini yenile
         try {
           const meRes = await fetch("/api/auth/me", { credentials: "include" });
           const me = await meRes.json().catch(() => null);
-          if (me?.user) setUser(me.user);
+          if (me?.user) {
+            setUser(me.user);
+            // Tier'i auth/me'den gelen deger ile guncelle
+            const dbTier = me.user.tier;
+            if (dbTier && (dbTier === "pro" || dbTier === "elit" || dbTier === "free")) {
+              const currentTier = getCurrentTier();
+              if (dbTier !== currentTier) {
+                setTier(dbTier);
+                setCurrentTier(dbTier);
+                console.log("[payment] Tier guncellendi:", dbTier);
+              }
+            }
+          }
         } catch {}
 
-        // 3. Cüzdanı yenile — Supabase yazmasını bekle
+        // 3. Cuzdani yenile
         await syncWallet();
         setTimeout(() => syncWallet(), 2000);
         setTimeout(() => syncWallet(), 5000);
         setTimeout(() => syncWallet(), 10000);
-        console.log('[payment] Cüzdan senkronize edildi');
+        console.log("[payment] Cuzdan senkronize edildi");
       };
       doVerifyAndSync();
     } else if (odeme === "hata") {
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, [setUser, syncWallet]);
+  }, [setUser, setTier, syncWallet]);
 }

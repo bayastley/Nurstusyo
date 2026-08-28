@@ -69,7 +69,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     localStorage.setItem("nur_read_announcement", announcement.id);
   };
 
-  if (!announcement && holyDay.type === "none" && !isAdmin) return null;
+  // Cuma hediyesi alindiktan sonra banner kaybolsun
+  if (!announcement && (holyDay.type === "none" || (holyDay.type === "claim" && holyDay.isClaimed)) && !isAdmin) return null;
   const unread = Boolean(announcement && readId !== announcement.id);
 
   return (
