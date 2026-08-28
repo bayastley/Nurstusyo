@@ -173,17 +173,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     }
   }, [premiumOpen]);
 
-  // ★ Ödeme sonrası tier senkronizasyonu — secureStore'daki tier değiştiğinde state'i güncelle
+  // Tier senkronizasyonu — auth/me'den gelen tier React state'e yazilir
   useEffect(() => {
     const dbTier = (user as any)?.tier as Tier | undefined;
     if (dbTier && (dbTier === "pro" || dbTier === "elit" || dbTier === "free")) {
-      const currentTier = getCurrentTier();
-      if (dbTier !== currentTier) {
+      const cur = getCurrentTier();
+      if (dbTier !== cur) {
         setTier(dbTier);
-        console.log('[tier] Tier senkronize edildi:', dbTier);
+        console.log('[tier] Senkronize:', dbTier, 'onceki:', cur);
       }
     }
-  }, [user?.id]);
+  }, [user]);
 
   const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
   const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
