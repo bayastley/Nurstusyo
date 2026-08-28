@@ -43,6 +43,8 @@ export interface User {
   email: string;
   phone: string;
   verified: boolean;
+  tier?: "free" | "pro" | "elit";
+  isAdmin?: boolean;
 }
 
 export type Mode = "short" | "long" | "full";
