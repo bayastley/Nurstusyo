@@ -102,6 +102,8 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           email,
           phone: "",
           verified: true,
+          tier: (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "free",
+          isAdmin: isKurucuAdmin,
         };
 
         setUser(newUser);
@@ -171,6 +173,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           email: data.user.email,
           phone: "",
           verified: data.user.verified,
+          tier: (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "free",
         };
         setUser(verifiedUser);
         secureSet("nur_user_v1", verifiedUser);
