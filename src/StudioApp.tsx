@@ -1202,8 +1202,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}
       <AnnouncementBar
         notify={notify}
-        onRewardClaimed={(newJeton) => {
-          setJetonCount(newJeton);
+        onRewardClaimed={() => {
+          syncWallet();
         }}
         onTamperAttempt={(reason) => {
           // Tamper ban uygulamaz — sadece bildirim ver

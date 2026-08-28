@@ -236,7 +236,8 @@ export default async function handler(req: any, res: any) {
       const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
       const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (sbUrl && sbKey) {
-        await fetch(`${sbUrl}/rest/v1/nur_orders`, {
+        console.log('[payments/create] Supabase URL:', sbUrl.substring(0, 40) + '...');
+        const sbRes = await fetch(`${sbUrl}/rest/v1/nur_orders`, {
           method: 'POST',
           headers: {
             apikey: sbKey,
@@ -255,10 +256,15 @@ export default async function handler(req: any, res: any) {
             created_at: new Date().toISOString(),
           }),
         });
-        console.log('[payments/create] Supabase sipariş kaydedildi:', conversationId);
+        if (!sbRes.ok) {
+          const errBody = await sbRes.text().catch(() => '');
+          console.error('[payments/create] Supabase yanıt:', sbRes.status, errBody.slice(0, 300));
+        } else {
+          console.log('[payments/create] Supabase sipariş kaydedildi:', conversationId);
+        }
       }
     } catch (err: any) {
-      console.warn('[payments/create] Supabase kayıt hatası (devam):', err?.message);
+      console.error('[payments/create] Supabase kayıt hatası:', err?.message, err?.cause?.message || '');
     }
 
     // Token → orderId mapping (callback fallback)
