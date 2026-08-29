@@ -56,7 +56,8 @@ function getSessionUser(req: VercelRequest): { id: string; email: string; name: 
 }
 
 function supabaseConfig() {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+  // ★ URL NORMALİZASYONU (fetch failed çözümü)
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   return { url, key };
 }

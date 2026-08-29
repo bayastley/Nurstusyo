@@ -141,9 +141,11 @@ export default async function handler(req: any, res: any) {
     }
 
     // ─── Supabase'den gerçek kullanıcı bilgilerini çek ───
+    // ★ URL NORMALİZASYONU: Supabase panelindeki ".../rest/v1/" biçimindeki
+    //   kopyalanan URL ve tırnak/boşluk hatalarına dayanıklı.
     let dbUser: { name?: string; email?: string } | null = null;
     try {
-      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
       const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (sbUrl && sbKey && userId) {
         const sbRes = await fetch(
@@ -233,7 +235,7 @@ export default async function handler(req: any, res: any) {
 
     // Supabase'e sipariş kaydı (callback bulacak)
     try {
-      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+      const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
       const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
       if (sbUrl && sbKey) {
         console.log('[payments/create] Supabase URL:', sbUrl.substring(0, 40) + '...');
@@ -267,27 +269,9 @@ export default async function handler(req: any, res: any) {
       console.error('[payments/create] Supabase kayıt hatası:', err?.message, err?.cause?.message || '');
     }
 
-    // Token → orderId mapping (callback fallback)
-    try {
-      const mapUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
-      const mapKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-      if (mapUrl && mapKey && userId) {
-        await fetch(`${mapUrl}/rest/v1/nur_order_tokens`, {
-          method: 'POST',
-          headers: {
-            apikey: mapKey,
-            Authorization: `Bearer ${mapKey}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify({
-            order_id: conversationId,
-            user_id: userId,
-            product_code: productCode,
-          }),
-        });
-      }
-    } catch {}
+    // ★ Token → orderId mapping: token iyzico yanıtından geldikten sonra
+    //   yazılır (aşağıda). Callback bu tabloyu okuyarak siparişi bulur —
+    //   Sandbox conversationId döndürmese bile haklar yüklenir.
 
     const iyziRes = await fetch(getBase() + URI_PATH, {
       method: 'POST',
@@ -321,6 +305,32 @@ export default async function handler(req: any, res: any) {
     const token = String(data.token || '');
     const html = String(data.checkoutFormContent || '');
     const pageUrl = String(data.paymentPageUrl || '');
+
+    // ★ Token → sipariş eşlemesi: iyzico Sandbox bazen conversationId
+    //   döndürmez; callback bu kayıt üzerinden siparişi bulur ve haklar
+    //   yine de yüklenir. (nur_order_tokens tablosu migration_fix.sql'de)
+    try {
+      // ★ URL NORMALİZASYONU (fetch failed çözümü)
+      const mapUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
+      const mapKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      if (mapUrl && mapKey && userId && token) {
+        await fetch(`${mapUrl}/rest/v1/nur_order_tokens`, {
+          method: 'POST',
+          headers: {
+            apikey: mapKey,
+            Authorization: `Bearer ${mapKey}`,
+            'Content-Type': 'application/json',
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            token,
+            order_id: conversationId,
+            user_id: userId,
+            product_code: productCode,
+          }),
+        });
+      }
+    } catch { /* ignore */ }
 
     console.log('[iyzico] ✅ Başarılı, token: var');
 

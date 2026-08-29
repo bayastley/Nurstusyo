@@ -28,7 +28,9 @@ function buildAuth(bodyString: string) {
 // SUPABASE YARDIMCILARI
 // ═══════════════════════════════════════════════════════════════
 function getSupabase() {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+  // ★ URL NORMALİZASYONU: ".../rest/v1/" veya tırnaklı yapıştırılan
+  //   değerlerde bile doğru REST kökü üretilir (fetch failed çözümü).
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   if (!url || !key) return null;
   return { url, key };
@@ -256,16 +258,25 @@ export default async function handler(req: any, res: any) {
         console.error('[callback] conversationId yok:', JSON.stringify(data).slice(0, 300));
       }
 
-      // conversationId yoksa — paymentId ile bul veya en son pending siparişi al
+      // ★ 1) conversationId yoksa: iyzico Sandbox bunu DÖNDÜRMEYEBİLİR (senin
+      //   logundaki "conversationId: undefined" bundandı). Siparişi TOKEN
+      //   üzerinden bul — create.ts token'ı nur_order_tokens'a yazıyor.
+      if (!conversationId && token) {
+        const byToken = await sbRequest(
+          `nur_order_tokens?token=eq.${encodeURIComponent(token)}&select=order_id`
+        );
+        const row = Array.isArray(byToken) ? byToken[0] : null;
+        if (row?.order_id) conversationId = row.order_id;
+      }
+      // ★ 2) paymentId ile bul (migration_fix.sql payment_id kolonunu ekler)
       if (!conversationId && data.paymentId) {
         const byPayment = await sbRequest(`nur_orders?payment_id=eq.${encodeURIComponent(String(data.paymentId))}&select=*`);
         const row = Array.isArray(byPayment) ? byPayment[0] : null;
         if (row) conversationId = row.id;
       }
+      // ★ 3) conversationId/basketId alanından (normal yol)
       if (!conversationId) {
-        const recent = await sbRequest('nur_orders?status=eq.pending&order=created_at.desc&limit=1&select=*');
-        const row = Array.isArray(recent) ? recent[0] : null;
-        if (row) conversationId = row.id;
+        conversationId = data.conversationId || data.basketId || '';
       }
 
       if (conversationId) {
@@ -282,13 +293,19 @@ export default async function handler(req: any, res: any) {
             console.log('[callback] Sipariş şu an işleniyor, bekleniyor');
           } else {
             // ★ Race condition koruması: pending'i processing'e çevir
-            //    Sadece başarılı olan istek devam eder
+            //    Sadece başarılı olan istek devam eder.
+            //    payment_id burada kaydedilir → sonraki callback'lerde
+            //    sipariş paymentId ile de bulunabilir.
             const lockResult = await sbRequest(
               `nur_orders?id=eq.${encodeURIComponent(conversationId)}&status=eq.pending`,
               {
                 method: 'PATCH',
                 headers: { Prefer: 'return=minimal' },
-                body: JSON.stringify({ status: 'processing', updated_at: new Date().toISOString() }),
+                body: JSON.stringify({
+                  status: 'processing',
+                  payment_id: String(data.paymentId || ''),
+                  updated_at: new Date().toISOString(),
+                }),
               }
             );
 

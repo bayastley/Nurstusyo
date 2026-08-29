@@ -71,7 +71,8 @@ export default async function handler(req: any, res: any) {
     const colMap: Record<string, string> = { kisa: 'purchased_kisa', uzun: 'purchased_uzun', tam: 'purchased_tam' };
     const colName = colMap[kind];
 
-    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+    // ★ URL NORMALİZASYONU (fetch failed çözümü)
+    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
     const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
     if (!sbUrl || !sbKey) {

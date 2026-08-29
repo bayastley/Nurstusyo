@@ -64,7 +64,8 @@ function adminFromCookie(req: VercelRequest): AdminSession | null {
 }
 
 function config() {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+  // ★ URL NORMALİZASYONU (fetch failed çözümü)
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) throw new Error("Supabase sunucu ayarları eksik");
   return { url, key };

@@ -20,10 +20,11 @@ export interface DbWallet {
 }
 
 function config(): SupabaseConfig | null {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "";
+  // ★ URL NORMALİZASYONU (fetch failed çözümü)
+  const rawUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-  if (!url || !serviceKey) return null;
-  return { url: url.replace(/\/$/, ""), serviceKey };
+  if (!rawUrl || !serviceKey) return null;
+  return { url: rawUrl, serviceKey };
 }
 
 export function isSupabaseConfigured(): boolean {

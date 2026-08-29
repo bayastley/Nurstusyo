@@ -61,26 +61,36 @@ export default async function handler(req: any, res: any) {
       return res.status(401).json({ ok: false, error: 'Giriş yapın' });
     }
 
-    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
+    // ★ URL NORMALİZASYONU (fetch failed çözümü)
+    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
     const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
     if (!sbUrl || !sbKey) {
       return res.status(200).json({ ok: true, wallet: { sub_jeton: 0, purchased_jeton: 0, kisa: 0, uzun: 0, tam: 0 } });
     }
 
-    // Supabase'den cüzdanı çek
-    const walletRes = await fetch(
-      `${sbUrl}/rest/v1/nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=*`,
-      {
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`,
-        },
+    // Supabase'den cüzdanı çek — bağlantı hatasında bile 500 dönme,
+    // sıfırlarla dön ki uygulama asla kilitlenmesin (log ile uyar).
+    let wallet: any = { sub_jeton: 0, purchased_jeton: 0, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
+    try {
+      const walletRes = await fetch(
+        `${sbUrl}/rest/v1/nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=*`,
+        {
+          headers: {
+            apikey: sbKey,
+            Authorization: `Bearer ${sbKey}`,
+          },
+        }
+      );
+      if (walletRes.ok) {
+        const rows = await walletRes.json() as any[];
+        wallet = rows?.[0] || wallet;
+      } else {
+        console.warn('[wallet] Supabase cevabı:', walletRes.status, await walletRes.text().catch(() => ''));
       }
-    );
-
-    const rows = await walletRes.json() as any[];
-    const wallet = rows?.[0] || { sub_jeton: 0, purchased_jeton: 0 };
+    } catch (err: any) {
+      console.warn('[wallet] Supabase bağlantı hatası (env kontrol et):', err?.message);
+    }
 
     // purchased_jeton'u video türlerine çevir (basit mantık: hepsi kısa video)
     // Gerçek uygulamada purchased_jeton türüne göre ayrılabilir
