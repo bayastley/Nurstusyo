@@ -139,10 +139,12 @@ export function getQuotaLeft(kind: VideoKind, tier: Tier = getCurrentTier()): nu
   return Math.max(0, total - getUsedToday(kind));
 }
 
-/** "Bugün: 3/8 kısa" gibi gösterim metni */
+/** "Kalan: 8/8 kısa" gibi gösterim metni — KALAN hak gösterir,
+ *  kullandıkça azalır (ör. 8/8 → 7/8 → 6/8 ...). */
 export function quotaText(kind: VideoKind, tier: Tier = getCurrentTier()): string {
   const total = DAILY_QUOTA[tier][kind];
-  return `${getUsedToday(kind)}/${total}`;
+  const left = Math.max(0, total - getUsedToday(kind));
+  return `${left}/${total}`;
 }
 
 // ════════════════════════════════════════════════════════
