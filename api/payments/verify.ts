@@ -116,7 +116,26 @@ async function grantProduct(userId: string, productCode: string) {
     if (isPro || isElit) {
       const tier = isElit ? 'elit' : 'pro';
       const days = isYearly ? 365 : 30;
-      const endsAt = new Date(Date.now() + days * 86400000).toISOString();
+
+      // ★ Mevcut aktif aboneliği kontrol et — varsa süresini uzat
+      let finalStartsAt = new Date().toISOString();
+      let finalEndsAt = new Date(Date.now() + days * 86400000).toISOString();
+
+      try {
+        const existingSubs = await sbGet(`nur_subscriptions?user_id=eq.${encodeURIComponent(userId)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at`);
+        if (Array.isArray(existingSubs) && existingSubs.length > 0 && existingSubs[0].ends_at) {
+          const currentEnd = new Date(existingSubs[0].ends_at);
+          const now = new Date();
+          if (currentEnd > now) {
+            // ★ Mevcut abonelik hala devam ediyor → süresini uzat
+            finalStartsAt = currentEnd.toISOString();
+            finalEndsAt = new Date(currentEnd.getTime() + days * 86400000).toISOString();
+            console.log(`[verify] ★ Mevcut abonelik uzatılıyor: ${currentEnd.toISOString()} → ${finalEndsAt} (+${days} gün)`);
+          }
+        }
+      } catch {
+        // nur_subscriptions tablosu yoksa sıfırdan başla
+      }
 
       // Kullanıcıyı nur_users'a ekle (yoksa)
       const existingUser = await sbGet(`nur_users?id=eq.${encodeURIComponent(userId)}&select=id`);
@@ -134,9 +153,9 @@ async function grantProduct(userId: string, productCode: string) {
       });
       await sbPost('nur_subscriptions', {
         user_id: userId, tier, provider: 'iyzico',
-        starts_at: new Date().toISOString(), ends_at: endsAt, status: 'active',
+        starts_at: finalStartsAt, ends_at: finalEndsAt, status: 'active',
       });
-      console.log('[verify] ✅ Üyelik:', tier, days, 'gün');
+      console.log(`[verify] ✅ Üyelik: ${tier} | Başlangıç: ${finalStartsAt} | Bitiş: ${finalEndsAt}`);
       return true;
     }
 

@@ -78,6 +78,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       return;
     }
 
+    // ★ Mevcut tier kontrolü — aynı tier'da uyarı göster (süre uzatılacak)
+    if (targetProduct?.grantTier && activeTier === targetProduct.grantTier) {
+      toast("ℹ️ Mevcut üyeliğiniz uzatılacak — kalan sürenizin üzerine eklenecek");
+    }
+
     // Ödeme akışı bağlıysa oraya git
     if (onCheckout) {
       onCheckout(code);
