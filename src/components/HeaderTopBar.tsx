@@ -309,7 +309,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 )}
               </>
             )}
-            {isMasterSürüm && (
+            {user && isMasterSürüm && (
               <button
                 type="button"
                 onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); }}
