@@ -2,6 +2,8 @@
 // titleTemplates.ts — Başlık ve açıklama şablonları (v2 — zenginleştirilmiş)
 // ════════════════════════════════════════════════════════
 
+import { getSurahDescription } from "./surahDescriptions";
+
 // ════════════════════════════════════════════════════════
 // BAŞLIK HAVUZLARI — Duygusal, merak uyandırıcı, ilgi çekici
 // ════════════════════════════════════════════════════════
@@ -479,6 +481,12 @@ function ayahMoodParagraph(surahName: string, s: number, a: number, lang: string
   if (lang !== "tr") {
     return "If this reminder touched your heart, like the video, leave an Ameen in the comments and share it with someone who may need this peace today. Every share is a charity, every Ameen is a prayer. www.nurstudyo.com";
   }
+
+  // ★ Önce 114 sure havuzunu kontrol et
+  const surahDesc = getSurahDescription(s);
+  if (surahDesc) return surahDesc;
+
+  // Fallback: eski mantık (belirli sureler için özel analiz)
   if (s === 93 || name.includes("duh")) {
     return "Rabbin seni terk etmedi ve sana darılmadı... Bu sure, kendini yalnız, kırgın, çaresiz ve tükenmiş hisseden her kalbe inen büyük bir tesellidir. Hz. Peygamber (s.a.v.) en zor zamanlarında bu sureyi okurdu. Eğer bugün içinden kimseye anlatamadığın bir yorgunluk geçiyorsa, bu ayeti sadece dinleme; kalbine indir. Bu video sana huzur verdiyse beğen, yorumlara bir 'Amin' bırak ve bu teselliye ihtiyacı olan bir sevdiğinle paylaş.";
   }
