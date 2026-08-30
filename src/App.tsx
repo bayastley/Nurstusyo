@@ -1,7 +1,7 @@
 import StudioApp from "./StudioApp";
 
-// Production'da açık bırakılmaz. God Mode yalnızca /admin girişinden, oturum belleğinde açılır.
-// Kilit durumu: true = tüm kilitler açık (geliştirme/test), false = normal kilitli mod
+// God Mode yalnızca /admin girişinden, oturum belleğinde açılır.
+// false = normal kullanıcılar kilitli modda başlar, admin giriş yapınca açılır
 const isMasterSürüm = false;
 
 export default function App() {

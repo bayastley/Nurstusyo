@@ -1189,7 +1189,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     setUser(null);
     setAdminGodMode(false);
+    setIsMasterSürüm(false);
     secureRemove("nur_user_v1");
+    localStorage.removeItem("nur_admin_session");
     notify("Çıkış yapıldı.");
   };
 

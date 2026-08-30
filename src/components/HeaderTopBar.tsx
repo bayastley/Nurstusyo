@@ -134,7 +134,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     ))}
 
                     {/* ★ GÜNCELLEMELER — SADECE ADMİN GÖREBİLİR */}
-                    {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
+                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
                     <div
                       className="relative"
                       onMouseEnter={openUpdates}
@@ -249,7 +249,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
                     </button>
-                    {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
+                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
                       <button onClick={() => { openAdminDashboard().then(() => setModal("adminDashboard")); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] font-bold text-amber-300 transition hover:bg-white/5">
                         <Shield size={14} className="text-amber-400" />
                         <span>Admin Yönetim Paneli</span>
@@ -284,7 +284,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             >
               <Film size={11} style={{ color: "var(--accent)" }} /> Nasıl Kullanılır? (İzle/Öğren)
             </button>
-            {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
+            {user && (isAdminEmail(user.email) || isMasterSürüm) && (
               <>
                 <button
                   type="button"
