@@ -86,18 +86,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // Payment flow → usePaymentFlow hook'unda
 
-  const [adminGodMode, setAdminGodMode] = useState(() => {
-    try {
-      // ★ Admin God Mode — localStorage'dan geri yükle
-      if (localStorage.getItem("nur_admin_session") === "1") return true;
-      // ★ Kullanıcı admin email ise otomatik sınırsız
-      const u = secureGet<{ id?: string; email?: string } | null>("nur_user_v1", null);
-      if (u?.email && isAdminEmail(u.email)) return true;
-    } catch {}
-    return false;
-  });
+  const [adminGodMode, setAdminGodMode] = useState(() => false);  // ★ Sunucudan gelen isAdmin'e güven, localStorage'a değil
   const isDevMaster = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && developerMaster);
   const [isMasterSürüm, setIsMasterSürüm] = useState(isDevMaster || adminGodMode);
+
+  // ★ adminGodMode değiştiğinde isMasterSürüm'ü senkronize et
+  useEffect(() => {
+    if (!isDevMaster) {
+      setIsMasterSürüm(adminGodMode);
+      if (!adminGodMode) localStorage.removeItem("nur_admin_session");
+    }
+  }, [adminGodMode, isDevMaster]);
 
   // Toast (erkenden tanımlı çünkü hook'lar buna ihtiyaç duyuyor)
   const [toast, setToast] = useState<string | null>(null);

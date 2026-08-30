@@ -190,7 +190,13 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setCurrentTier(dbTier);
 
-        if (data.user.isAdmin) setAdminGodMode(true);
+        // ★ Admin modu: SADECE isAdmin=true ise aç, değilse KAPAT (başka hesapla girişte eski admin session kalmasın)
+        if (data.user.isAdmin) {
+          setAdminGodMode(true);
+        } else {
+          setAdminGodMode(false);
+          localStorage.removeItem("nur_admin_session");
+        }
       } catch { /* offline/dev durumda sessiz geç */ }
     })();
     return () => { cancelled = true; };
