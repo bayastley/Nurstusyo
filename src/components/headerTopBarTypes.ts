@@ -1,6 +1,7 @@
 import type { DailyAyah, User, ModalName } from "../types";
 import type { Lang } from "../i18n";
 import { T } from "../i18n";
+import type { Tier } from "../tier";
 
 export interface HeaderTopBarProps {
   daily: DailyAyah | null;
@@ -29,4 +30,6 @@ export interface HeaderTopBarProps {
   prayerCity: string;
   formatRemaining: (ms: number) => string;
   t: (key: keyof (typeof T)["tr"]) => string;
+  tier?: Tier;
+  subscriptionEndsAt?: string | null;
 }

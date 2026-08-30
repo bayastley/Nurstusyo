@@ -146,7 +146,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
       {/* İNDİRME KLASÖRÜ — en fazla 5 output, sırayla iner */}
       {outputs.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
           <div className="mb-2 flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü</p>
             <span className="text-[8px] text-white/40">{outputs.length}/5</span>

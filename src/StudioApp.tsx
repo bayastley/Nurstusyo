@@ -150,7 +150,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ Hook'lar (state'lerden sonra çağrılır)
   const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard } = useAuth({ isMasterSürüm, isDevMaster, notify });
-  const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify);
+  const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify, user);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
@@ -528,14 +528,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
     const id = `${s}:${a}`;
     if (selectedRef.current.some((item) => item.id === id)) return;
-    notify("Ayet yükleniyor...");
+    // ★ Hemen seçili işaretle (optimistic update) — API beklemeden
+    const meta = SURAHS[s - 1];
+    const placeholder = { id, s, a, sName: meta?.name ?? "", ar: "", tr: knownTranslation ?? "Yükleniyor..." };
+    setSelected((current) => [...current, placeholder]);
+    setVerseIndex(selectedRef.current.length);
     try {
       let ar = "", tr = knownTranslation ?? "";
       if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
-      const meta = SURAHS[s - 1], item = { id, s, a, sName: meta.name, ar, tr };
+      const item = { id, s, a, sName: meta.name, ar, tr };
       console.log("[addAyah] item.tr length:", tr.length, "item.ar length:", ar.length, "id:", id);
-      setSelected((current) => [...current, item]);
+      // ★ Placeholder'ı gerçek veriyle değiştir
+      setSelected((current) => current.map((x) => x.id === id ? item : x));
 
       if (smartAiEnabled) {
         const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
@@ -1242,6 +1247,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         prayerCity={prayerCity}
         formatRemaining={formatRemaining}
         t={t}
+        tier={tier}
+        subscriptionEndsAt={subscriptionEndsAt}
       />
 
       <StudioHeroSection />

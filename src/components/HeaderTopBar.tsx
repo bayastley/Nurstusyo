@@ -8,6 +8,7 @@ import { getBanLogs } from "../services/adminSyncService";
 import { LANGS, T, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights } from "../tier";
+import { TIER_LABEL } from "./premiumModalHelpers";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
 
@@ -38,6 +39,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   prayerCity,
   formatRemaining,
   t,
+  tier,
+  subscriptionEndsAt,
 }) => {
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
@@ -319,8 +322,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <Shield size={10} /> ADMIN · ÇIKIŞ
               </button>
             )}
-            {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) */}
-            {(() => {
+            {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) — SADECE GİRİŞ YAPMIŞ */}
+            {user && (() => {
               const vault = getJetonVault();
               return (
                 <button
@@ -341,9 +344,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 </button>
               );
             })()}
-            {/* ★ PREMIUM */}
+            {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />Premium
+              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || "Ücretsiz") : "Giriş Yap"}
             </button>
             <div className="relative">
               <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>
