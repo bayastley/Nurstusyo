@@ -4,7 +4,7 @@ import {
   addPurchasedJeton, addDailySubJeton,
   jetonTavani, JETON,
 } from "../tier";
-import { secureGet, secureSet } from "../secureStore";
+import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { serverDateISO, serverIsFriday, isDeviceClockTampered, syncServerTime } from "../serverTime";
 
 export type VideoKind = "kisa" | "uzun" | "tam";
@@ -22,6 +22,7 @@ interface UseWalletReturn {
   consumeRight: (kind: VideoKind) => void;
   packRights: PackRights;
   subscriptionEndsAt: string | null;
+  resetWallet: () => void;
 }
 
 export function useWallet(notify: (msg: string) => void): UseWalletReturn {
@@ -131,6 +132,17 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     });
   }, []);
 
+  // ★ Çıkış yapınca cüzdanı sıfırla
+  const resetWallet = useCallback(() => {
+    setJetonCount(0);
+    setPackRights({ kisa: 0, uzun: 0, tam: 0 });
+    setSubscriptionEndsAt(null);
+    try {
+      secureRemove("nur_pack_rights_v1");
+      secureRemove("nur_jeton");
+    } catch {}
+  }, []);
+
   return {
     jetonCount,
     setJetonCount,
@@ -138,5 +150,6 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     consumeRight,
     packRights,
     subscriptionEndsAt,
+    resetWallet,
   };
 }

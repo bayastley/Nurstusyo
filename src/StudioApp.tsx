@@ -150,7 +150,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ Hook'lar (state'lerden sonra çağrılır)
   const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard } = useAuth({ isMasterSürüm, isDevMaster, notify });
-  const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt } = useWallet(notify);
+  const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
@@ -1189,6 +1189,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setUser(null);
     setAdminGodMode(false);
     setIsMasterSürüm(false);
+    setTier("free");
+    resetWallet();
     secureRemove("nur_user_v1");
     localStorage.removeItem("nur_admin_session");
     notify("Çıkış yapıldı.");
