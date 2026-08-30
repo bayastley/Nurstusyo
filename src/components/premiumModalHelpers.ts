@@ -76,4 +76,5 @@ export interface PremiumModalProps {
   setCurrentTier?: (t: Tier) => void;
   lang?: unknown;
   packRights?: { kisa: number; uzun: number; tam: number };
+  subscriptionEndsAt?: string | null;
 }

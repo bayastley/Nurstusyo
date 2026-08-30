@@ -21,6 +21,7 @@ interface UseWalletReturn {
   syncWallet: () => Promise<void>;
   consumeRight: (kind: VideoKind) => void;
   packRights: PackRights;
+  subscriptionEndsAt: string | null;
 }
 
 export function useWallet(notify: (msg: string) => void): UseWalletReturn {
@@ -34,6 +35,8 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
 
   // ★ Pack rights — Supabase'den gelen güncel veri, React state olarak tutuluyor
   const [packRights, setPackRights] = useState<PackRights>({ kisa: 0, uzun: 0, tam: 0 });
+  // ★ Abonelik bitiş tarihi
+  const [subscriptionEndsAt, setSubscriptionEndsAt] = useState<string | null>(null);
 
   // ★ Supabase'den cüzdan bilgisini çek → secureStore'a yaz + jetonCount'u güncelle
   //   NOT: Local storage'dan kullanıcı kontrolü YAPMIYORUZ — redirect sonrası secureStore
@@ -49,6 +52,8 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
           uzun: data.wallet.uzun || 0,
           tam: data.wallet.tam || 0,
         };
+        // ★ Abonelik bitiş tarihini kaydet
+        if (data.subscriptionEndsAt) setSubscriptionEndsAt(data.subscriptionEndsAt);
         // ★ React state'e yaz — secureStore fingerprint sorunu yüzünden buradan okunur
         setPackRights(rights);
         secureSet("nur_pack_rights_v1", rights);
@@ -132,5 +137,6 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     syncWallet,
     consumeRight,
     packRights,
+    subscriptionEndsAt,
   };
 }

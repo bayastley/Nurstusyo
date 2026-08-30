@@ -101,7 +101,20 @@ export default async function handler(req: any, res: any) {
     const uzun = wallet.purchased_uzun ?? 0;
     const tam = wallet.purchased_tam ?? 0;
 
-    console.log('[wallet] Kullanıcı:', user.id, 'Kısa:', kisa, 'Uzun:', uzun, 'Tam:', tam);
+    // ★ Abonelik bitiş tarihini çek
+    let subscriptionEndsAt: string | null = null;
+    try {
+      const subRes = await fetch(
+        `${sbUrl}/rest/v1/nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`,
+        { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` } }
+      );
+      if (subRes.ok) {
+        const subs = await subRes.json() as any[];
+        if (subs?.[0]?.ends_at) subscriptionEndsAt = subs[0].ends_at;
+      }
+    } catch { /* ignore */ }
+
+    console.log('[wallet] Kullanıcı:', user.id, 'Kısa:', kisa, 'Uzun:', uzun, 'Tam:', tam, 'Abonelik Bitiş:', subscriptionEndsAt);
 
     return res.status(200).json({
       ok: true,
@@ -112,6 +125,7 @@ export default async function handler(req: any, res: any) {
         uzun,
         tam,
       },
+      subscriptionEndsAt,
     });
   } catch (err: any) {
     console.error('[wallet] fatal:', err);

@@ -63,6 +63,7 @@ export interface ModalsContainerProps {
   setHoveredClip: (id: string | null) => void;
   openPremium: (tab?: "uyelik" | "jeton") => void;
   packRights: { kisa: number; uzun: number; tam: number };
+  subscriptionEndsAt?: string | null;
   pickClip: (clip: Clip) => void;
   libSearch: string;
   setLibSearch: (s: string) => void;

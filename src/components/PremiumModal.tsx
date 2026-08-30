@@ -32,6 +32,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   setCurrentTier,
   user,
   packRights: packRightsProp,
+  subscriptionEndsAt,
 }) => {
   // ★ Eski "jeton" sekmesi → yeni "paket" sekmesi
   const wanted = premiumTab ?? initialTab ?? "uyelik";
@@ -46,6 +47,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   const [termsHighlight, setTermsHighlight] = useState(false);
   const termsRef = useRef<HTMLDivElement>(null);
   const activeTier: Tier = tier ?? currentTier ?? "free";
+
+  // ★ Abonelik kalan gün sayısı
+  const remainingDays = (() => {
+    if (!subscriptionEndsAt || activeTier === "free") return null;
+    const end = new Date(subscriptionEndsAt);
+    const now = new Date();
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return diff > 0 ? diff : 0;
+  })();
+
   const closeModal = () => {
     setOpen?.(false);
     onClose?.();
@@ -178,7 +189,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               className="rounded-full px-2.5 py-0.5 text-[9px] font-black text-black"
               style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}
             >
-              {TIER_LABEL[activeTier]}
+              {TIER_LABEL[activeTier]}{remainingDays != null ? ` (${remainingDays} gün)` : ""}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2">
