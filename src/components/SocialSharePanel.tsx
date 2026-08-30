@@ -122,26 +122,12 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 {copied ? <Check size={11} /> : <Copy size={11} />}{copied ? t("copied") : t("copy")}
               </button>
 
-              {shareToWhatsApp && (
-                <button onClick={shareToWhatsApp} className="glass-soft flex items-center gap-1 rounded-xl px-2.5 py-2 text-[10px] font-bold text-white/70 hover:text-white">
-                  <Share2 size={10} />WhatsApp
-                </button>
-              )}
-              {shareToX && (
-                <button onClick={shareToX} className="glass-soft flex items-center gap-1 rounded-xl px-2.5 py-2 text-[10px] font-bold text-white/70 hover:text-white">
-                  <Share2 size={10} />X
-                </button>
-              )}
               {shareToYouTube && (
                 <button onClick={shareToYouTube} className="flex items-center gap-1 rounded-xl px-2.5 py-2 text-[10px] font-bold text-white hover:opacity-90" style={{ background: "linear-gradient(135deg,#ff0000,#cc0000)" }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
                   YouTube
                 </button>
               )}
-            </div>
-
-            {/* SATIR 2: TikTok + Instagram + Yenile + Hashtag (küçük) */}
-            <div className="mt-1 flex flex-wrap items-center gap-1">
               {shareToTikTok && (
                 <button onClick={shareToTikTok} className="glass-soft flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] font-bold text-white/60 hover:text-white" style={{ background: "linear-gradient(135deg,#010101,#69C9D0)" }}>
                   <svg width="9" height="9" viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V9.22a8.16 8.16 0 0 0 4.77 1.52V7.31a4.85 4.85 0 0 1-1-.62z"/></svg>
@@ -154,12 +140,16 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                   Instagram
                 </button>
               )}
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; if (!cur) { notify("Önce ayet seçin"); return; } let yeniAciklama = pickDesc(); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
-                <RefreshCw size={9} />Açıklama
+            </div>
+
+            {/* SATIR 2: Rastgele + Hashtag */}
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-black hover:opacity-90" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                <RefreshCw size={9} />Rastgele Açıklama
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; if (!cur) { notify("Önce ayet seçin"); return; } let yeniBaslik = genTitle(cur.sName, cur.s, cur.a); let tries = 0; while (yeniBaslik === lastTitleRef.current && tries < 6) { yeniBaslik = genTitle(cur.sName, cur.s, cur.a); tries += 1; } lastTitleRef.current = yeniBaslik; setShareTitle(yeniBaslik); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
-                <RefreshCw size={9} />Başlık
+              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; if (!cur) { notify("Önce ayet seçin"); return; } let yeniBaslik = genTitle(cur.sName, cur.s, cur.a); let tries = 0; while (yeniBaslik === lastTitleRef.current && tries < 6) { yeniBaslik = genTitle(cur.sName, cur.s, cur.a); tries += 1; } lastTitleRef.current = yeniBaslik; setShareTitle(yeniBaslik); }} className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-black hover:opacity-90" style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>
+                <RefreshCw size={9} />Rastgele Başlık
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
               <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; } setVisibleTags((current) => pickRandomTags(14, current)); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
