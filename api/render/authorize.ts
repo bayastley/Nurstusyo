@@ -153,14 +153,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const quota = DAILY_QUOTA[tier][kind];
 
   const backendEnabled = process.env.NUR_QUOTA_BACKEND_ENABLED === "true";
-  const livePayments = process.env.VITE_PAYMENTS_LIVE === "true";
-
-  if (livePayments && !backendEnabled) {
-    return res.status(503).json({
-      ok: false,
-      error: "Canlı üretim için sunucu tarafı kota servisi henüz etkin değil",
-    });
-  }
 
   if (backendEnabled) {
     const results = [];
