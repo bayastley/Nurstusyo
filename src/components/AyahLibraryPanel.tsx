@@ -122,10 +122,8 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
           <select
             value={surah}
             onChange={(event) => {
-              const newSurah = Number(event.target.value);
               setSurah(event.target.value);
               setAyah("1");
-              toggleAyah(newSurah, 1);
             }}
             className="glass-soft rounded-xl px-2 py-2 text-[10px] outline-none"
           >
@@ -135,9 +133,14 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
           </select>
           <select
             value={ayah}
-            onChange={(event) => setAyah(event.target.value)}
+            onChange={(event) => {
+              const a = Number(event.target.value);
+              setAyah(event.target.value);
+              toggleAyah(Number(surah), a);
+            }}
             className="glass-soft rounded-xl px-2 py-2 text-[10px] outline-none"
           >
+            <option value="" disabled>Ayet</option>
             {Array.from({ length: SURAHS[Number(surah) - 1]?.count ?? 1 }, (_, index) => (
               <option key={index + 1} value={index + 1}>{index + 1}</option>
             ))}
@@ -145,7 +148,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
         </div>
 
         {/* Ayah list */}
-        <div className="glass-soft mb-2 max-h-[228px] overflow-y-auto rounded-xl p-1.5 scrollbar-thin">
+        <div className="glass-soft mb-2 max-h-[350px] overflow-y-auto rounded-xl p-1.5 scrollbar-thin">
           {Array.from({ length: SURAHS[Number(surah) - 1].count }, (_, i) => i + 1).map((number) => {
             const isSelected = selected.some(x => x.id === `${surah}:${number}`);
             return (

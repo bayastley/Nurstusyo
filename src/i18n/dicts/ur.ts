@@ -1,0 +1,26 @@
+import { arDict } from "./ar";
+import type { Dict } from "../base";
+export const urDict: Dict = {
+  ...arDict,
+  dailyAyah: "آج کی آیت",
+  loading: "لوڈ ہو رہا ہے...",
+  menuGuide: "رہنمائی",
+  menuThemes: "تھیم گیلری",
+  premium: "پریمیم پرو",
+  tagline: "اعلیٰ معیار کی قرآن ویڈیوز بنائیں اور شیئر کریں",
+  library: "لائبریری اور آیت تلاش",
+  addAyah: "آیت شامل کریں",
+  ready: "آپ کی ویڈیو تیار ہے!",
+  download: "ڈاؤن لوڈ",
+  share: "شیئر",
+  generate: "ویڈیو بنائیں",
+  stop: "روکیں",
+  loginTitle: "لاگ ان / رجسٹر",
+  loginBtn: "لاگ ان",
+  registerBtn: "رجسٹر",
+  googleAuth: "گوگل کے ساتھ جاری رکھیں",
+  energy: "روزانہ حد",
+  energyShort: "آج",
+  membership: "رکنیت",
+  energyPack: "ویڈیو پیکج",
+};
