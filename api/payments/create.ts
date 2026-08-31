@@ -136,7 +136,7 @@ export default async function handler(req: any, res: any) {
         if (user.email) sessionEmail = String(user.email);
         if (user.name) sessionName = String(user.name);
       }
-    } catch {}
+    } catch (e) { console.error('[payments/create] Cookie parse hatası:', (e as Error).message); }
 
     if (!userId) {
       console.error('[payments/create] Oturum bulunamadı');
@@ -161,7 +161,7 @@ export default async function handler(req: any, res: any) {
           if (rows[0]) dbUser = rows[0];
         }
       }
-    } catch {}
+    } catch (e) { console.error('[payments/create] Supabase kullanıcı sorgusu hatası:', (e as Error).message); }
 
     // ─── Buyer bilgilerini dinamik doldur ───
     // İsim: body.buyer.name > Supabase > session > varsayılan

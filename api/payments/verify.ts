@@ -84,7 +84,7 @@ async function sbPatch(path: string, body: any) {
       },
       body: JSON.stringify(body),
     });
-  } catch {}
+  } catch (e) { console.error('[payments/verify] Supabase PATCH hatası:', (e as Error).message); }
 }
 
 async function sbPost(table: string, body: any) {
@@ -101,7 +101,7 @@ async function sbPost(table: string, body: any) {
       },
       body: JSON.stringify(body),
     });
-  } catch {}
+  } catch (e) { console.error('[payments/verify] Supabase INSERT hatası:', (e as Error).message); }
 }
 
 // ═══════════════════════════════════════════════════════════════
