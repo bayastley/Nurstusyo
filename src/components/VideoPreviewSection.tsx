@@ -144,30 +144,30 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">Şablon görseller V2 güncellemesinde açılacak</p>}
       </div>
 
-      {/* İNDİRME KLASÖRÜ — en fazla 5 output, sırayla iner */}
+      {/* İNDİRME KLASÖRÜ — en fazla 3 output gözükür, gizli olanlar Toplu İndir ile iner */}
       {outputs.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
-          <div className="mb-2 flex items-center justify-between">
+        <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
+          <div className="mb-1.5 flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü</p>
-            <span className="text-[8px] text-white/40">{outputs.length}/5</span>
+            <span className="text-[8px] text-white/40">{outputs.length} video</span>
           </div>
-          <div className="grid gap-1.5">
-            {outputs.map((output, idx) => (
-              <div key={output.id} className={`flex items-center gap-2 rounded-xl px-2.5 py-2 transition ${output.id === activeOutput?.id ? "bg-white/[.06] border border-white/10" : "hover:bg-white/[.03]"}`}>
-                <button onClick={() => setActiveOutputId(output.id)} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[9px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
+          <div className="grid gap-1">
+            {outputs.slice(0, 3).map((output, idx) => (
+              <div key={output.id} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition ${output.id === activeOutput?.id ? "bg-white/[.06] border border-white/10" : "hover:bg-white/[.03]"}`}>
+                <button onClick={() => setActiveOutputId(output.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[8px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
                   {idx + 1}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[9px] font-bold text-white/80">{output.label}</p>
-                  <p className="text-[7.5px] text-white/40">{fmtDuration(output.duration)} · {fmtSize(output.size)}</p>
+                  <p className="truncate text-[8px] font-bold text-white/80">{output.label}</p>
+                  <p className="text-[7px] text-white/40">{fmtDuration(output.duration)} · {fmtSize(output.size)}</p>
                 </div>
-                <a href={user ? output.url : "#"} download={user ? `nur-studyo-${idx + 1}.${output.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/[.06] text-white/60 hover:text-white transition">
-                  <Download size={11} />
+                <a href={user ? output.url : "#"} download={user ? `nur-studyo-${idx + 1}.${output.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/[.06] text-white/60 hover:text-white transition">
+                  <Download size={10} />
                 </a>
               </div>
             ))}
           </div>
-          {/* Toplu İndir Butonu */}
+          {/* Toplu İndir Butonu — 3'ten fazla video varsa gizli olanları da indirir */}
           {outputs.length > 1 && (
             <button
               onClick={() => {
@@ -184,10 +184,10 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 });
                 notify(`${outputs.length} video sırayla indiriliyor...`);
               }}
-              className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-black text-black"
+              className="mt-1.5 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[9px] font-black text-black"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              <Download size={11} />{outputs.length} Videoyu İndir
+              <Download size={10} />{outputs.length} Videoyu İndir
             </button>
           )}
         </div>
