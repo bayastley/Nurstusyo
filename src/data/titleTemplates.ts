@@ -3,6 +3,7 @@
 // ════════════════════════════════════════════════════════
 
 import { getSurahDescription } from "./surahDescriptions";
+import { getQuoteForSurah } from "../studio/surahQuotes";
 
 // ════════════════════════════════════════════════════════
 // BAŞLIK HAVUZLARI — Duygusal, merak uyandırıcı, ilgi çekici
@@ -334,28 +335,6 @@ const DESC_INTRO: Record<string, string[]> = {
   ],
 };
 
-const AYAH_QUOTES_TR: string[] = [
-  '"Hakkında bilgi sahibi olmadığın şeyin ardına düşme. Çünkü kulak, göz ve kalp, bunların hepsi ondan sorumludur." (İsrâ 17:36)',
-  '"Şüphesiz Allah, adaleti, iyilik ve akrabaya bakmayı emreder." (Nahl 16:90)',
-  '"De ki: O, Allah birdir. Allah Samed'dir. O, doğurmamış ve doğmamıştır." (İhlâs 112:1-4)',
-  '"Rabbim, ilmimi artır." (Tâhâ 20:114)',
-  '"Korku ve ümit, onun parmakları altındadır." (Resiyyât 56:10)',
-  '"Kim Allah'tan korkarsa, Allah ona bir çıkış yolu açar." (Talâk 65:2)',
-  '"Allah, iman edenleri sabır ve sarsılmaz irade ile hakikate ulaştırır." (İsra 17:17)',
-  '"Kur'an, sana vaholunandır; onu okumak sana farz kılınmıştır." (Furkân 25:73)',
-  '"Mü'minler, birbirlerine merhamet ve şefkat gösterirler." (Fetih 48:29)',
-  '"Yeryüzünde gezip de kendi kavimlerinden öncekilerin akibetlerine baksınlar." (En'âm 6:11)',
-  '"Sabret! Çünkü Allah, güzel davrananların mükafatını zayi etmez." (Hûd 11:115)',
-  '"De ki: Gerçek, Allah'tandır. O halde dilediğinize uyun." (Kehf 18:29)',
-  '"Allah, her şeyi bir ölçüye göre yaratmıştır." (Rad 13:8)',
-  '"Hiçbir yorgunluk ve incidentsız ona ulaşamazsın." (A'raf 7:189)',
-  '"Yakınlık kazanmak için en iyi amel, farz olanları yerine getirmektir." (Bakara 2:177)',
-  '"Ey Rabbimiz! Bize bu dünyada da iyilik ver, ahirette de iyilik ver." (Bakara 2:201)',
-  '"İnsan, Rabbi için yaratılmıştır." (Zâriyât 51:56)',
-  '"Kur'an, mü'minler için şifa ve rahmettir." (İsrâ 17:82)',
-  '"Allah size lightly循々, zorluk istemez." (Bakara 2:185)',
-  '"Kim sabrederse, Allah ona limitsiz bir mükafat verir." (Zümer 39:10)',
-];
 
 const DESC_LABELS: Record<string, { reciter: string; studio: string; quote: string; cta: string }> = {
   tr: {
@@ -631,9 +610,9 @@ export function genDesc(
   const promoPool = lang === "tr" ? PROMO_LINES : PROMO_LINES_EN;
   const promo = promoPool[Math.floor(Math.random() * promoPool.length)];
 
-  // ★ Rastgele ayet seç — her videoda farklı ayet gözüksün
+  // ★ Seçili sureye göre dinamik quote
   const quote = lang === "tr"
-    ? AYAH_QUOTES_TR[Math.floor(Math.random() * AYAH_QUOTES_TR.length)]
+    ? getQuoteForSurah(surahName, s, a)
     : L.quote;
 
   return `${intro}
