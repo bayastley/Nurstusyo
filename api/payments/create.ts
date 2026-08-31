@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { rateLimit } from '../_shared/rateLimit';
 
 const URI_PATH = '/payment/iyzipos/checkoutform/initialize/auth/ecom';
 
@@ -78,6 +79,9 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // ★ Rate limit — dakikada 10 istek (bot/spam koruması)
+  if (!rateLimit(req, res, 'payments:create', 10, 60_000)) return;
+
   try {
     let body = req.body || {};
     if (typeof body === 'string') {
@@ -85,11 +89,11 @@ export default async function handler(req: any, res: any) {
     }
 
     // ─── Product code'dan fiyatı bul ───
-    const productCode = String(body.productCode || 'SUB_ELIT_1M');
+    const productCode = String(body.productCode || '');
     const catalogItem = PRODUCT_CATALOG[productCode];
-    if (!catalogItem) {
+    if (!productCode || !catalogItem) {
       console.error('[payments/create] Tanınmayan ürün:', productCode);
-      res.status(400).json({ error: 'Tanınmayan ürün kodu: ' + productCode });
+      res.status(400).json({ error: 'Geçersiz ürün kodu' });
       return;
     }
 

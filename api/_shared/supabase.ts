@@ -4,8 +4,7 @@ interface OrderInput { orderId: string; userId: string; productCode: string; amo
 declare const process: { env: Record<string, string | undefined> };
 
 function config() {
-  // ★ URL NORMALİZASYONU (fetch failed çözümü)
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) throw new Error("Supabase sunucu ayarları eksik");
   return { url, key };

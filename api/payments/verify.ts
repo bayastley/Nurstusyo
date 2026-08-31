@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { rateLimit } from '../_shared/rateLimit';
 
 const COOKIE_NAME = 'nur_session';
 
@@ -203,6 +204,9 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'POST only' });
   }
+
+  // ★ Rate limit — dakikada 15 istek
+  if (!rateLimit(req, res, 'payments:verify', 15, 60_000)) return;
 
   try {
     const user = getUser(req);

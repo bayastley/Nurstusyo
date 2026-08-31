@@ -1,47 +1,17 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { rateLimit } from "../_shared/rateLimit";
 import crypto from "crypto";
 
 declare const process: { env: Record<string, string | undefined> };
 
 // ════════════════════════════════════════════════════════
-// ANALYTICS TRACK — SELF-CONTAINED (Vercel'de _shared importu
-// çalışmıyor: "ERR_MODULE_NOT_FOUND /var/task/api/_shared/rateLimit".
-// Bu yüzden rateLimit buraya inline edildi.)
+// ANALYTICS TRACK — ücretsiz, kendi barındırdığımız ziyaretçi
+// sayacı. Supabase'in ücretsiz planı + Vercel serverless'in
+// ücretsiz planı dışında hiçbir maliyeti yoktur.
 // ════════════════════════════════════════════════════════
 
-// ─── Inline rate limit (sliding window) ──────────────────
-const buckets = new Map<string, number[]>();
-
-function clientIp(req: VercelRequest): string {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
-  return forwarded || req.socket.remoteAddress || "unknown";
-}
-
-function rateLimit(req: VercelRequest, res: VercelResponse, key: string, maxRequests: number, windowMs: number): boolean {
-  const now = Date.now();
-  const bucketKey = `${key}:${clientIp(req)}`;
-  const bucket = buckets.get(bucketKey) ?? [];
-  const cutoff = now - windowMs;
-  const active = bucket.filter((hit) => hit >= cutoff);
-
-  if (active.length >= maxRequests) {
-    const base = Math.max(1, Math.ceil((windowMs - (now - active[0])) / 1000));
-    const jitter = Math.floor(Math.random() * 5);
-    res.setHeader("Retry-After", String(base + jitter));
-    res.setHeader("Cache-Control", "no-store");
-    res.status(429).json({ ok: false, error: "İstek işlenemedi" });
-    buckets.set(bucketKey, active);
-    return false;
-  }
-
-  active.push(now);
-  buckets.set(bucketKey, active);
-  return true;
-}
-
-// ─── Supabase config (URL normalizasyonlu) ───────────────
 function supabaseConfig() {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return null;
   return { url, key };
