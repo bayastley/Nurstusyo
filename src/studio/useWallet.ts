@@ -25,7 +25,7 @@ interface UseWalletReturn {
   resetWallet: () => void;
 }
 
-export function useWallet(notify: (msg: string) => void): UseWalletReturn {
+export function useWallet(notify: (msg: string) => void, user?: { id?: string } | null): UseWalletReturn {
   const [jetonCount, setJetonCount] = useState<number>(() => {
     try {
       const user = secureGet<{ id?: string } | null>("nur_user_v1", null);
@@ -66,11 +66,18 @@ export function useWallet(notify: (msg: string) => void): UseWalletReturn {
     } catch {}
   }, []);
 
+  // ★ Kullanıcı çıkış yaptığında veya oturum kapandığında cüzdanı sıfırla
   useEffect(() => {
-    syncWallet();
-    const iv = setInterval(syncWallet, 30000);
+    if (!user?.id) {
+      resetWallet();
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) syncWallet();
+    const iv = setInterval(() => { if (user?.id) syncWallet(); }, 30000);
     return () => clearInterval(iv);
-  }, [syncWallet]);
+  }, [syncWallet, user?.id]);
 
   // ★ Günlük bonus + Cuma bonusları
   useEffect(() => {

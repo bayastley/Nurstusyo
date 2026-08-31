@@ -528,19 +528,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
     const id = `${s}:${a}`;
     if (selectedRef.current.some((item) => item.id === id)) return;
-    // ★ Hemen seçili işaretle (optimistic update) — API beklemeden
     const meta = SURAHS[s - 1];
-    const placeholder = { id, s, a, sName: meta?.name ?? "", ar: "", tr: knownTranslation ?? "Yükleniyor..." };
-    setSelected((current) => [...current, placeholder]);
-    setVerseIndex(selectedRef.current.length);
     try {
+      // ★ Önce API'den veriyi çek, sonra ekle (placeholder yok)
       let ar = "", tr = knownTranslation ?? "";
       if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
-      const item = { id, s, a, sName: meta.name, ar, tr };
-      console.log("[addAyah] item.tr length:", tr.length, "item.ar length:", ar.length, "id:", id);
-      // ★ Placeholder'ı gerçek veriyle değiştir
-      setSelected((current) => current.map((x) => x.id === id ? item : x));
+      if (!ar && !tr) { notify(`${meta?.name ?? ""} ${s}:${a} — API verisi alınamadı`); return; }
+      const item = { id, s, a, sName: meta?.name ?? "", ar, tr };
+      setSelected((current) => [...current, item]);
+      setVerseIndex(selectedRef.current.length + 1);
 
       if (smartAiEnabled) {
         const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
@@ -557,7 +554,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       const quranClips = MOTION_CLIPS.filter((clip) => clip.cat === "musaf");
       if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
       setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
-    } catch (e) { console.error("[addAyah] fetch hatası:", e); notify("Ayet yüklenemedi"); }
+    } catch (e) { console.error("[addAyah] fetch hatası:", e); notify("Ayet yüklenemedi — API kontrol edin"); }
   }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah]);
 
   const toggleAyah = useCallback((s: number, a: number, knownTranslation?: string) => {
