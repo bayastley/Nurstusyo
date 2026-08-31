@@ -104,8 +104,9 @@ export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
 // ★ AYET CACHE — aynı ayeti tekrar çekmeyi engeller, rate-limit sorunu çözer
 const ayahCache = new Map<string, { ar: string; tr: string }>();
 let pendingFetches = 0;
-const MAX_PARALLEL = 2; // en fazla 2 paralel istek
-const THROTTLE_MS = 600; // her istek arasında minimum 600ms
+let frameCount = 0;
+const MAX_PARALLEL = 4; // en fazla 4 paralel istek (daha hızlı yükleme)
+const THROTTLE_MS = 250; // her istek arasında minimum 250ms (eskisi 600ms çok yavaştı)
 let lastFetchTime = 0;
 
 function throttle(): Promise<void> {
@@ -118,7 +119,7 @@ function throttle(): Promise<void> {
 export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyanet"): Promise<{ ar: string; tr: string }> {
   const key = `${surah}:${ayah}:${edition}`;
   const cached = ayahCache.get(key);
-  if (cached) { console.log("[fetchAyah] Cache hit:", key); return cached; }
+  if (cached) { if (frameCount++ % 20 === 0) console.log("[fetchAyah] Cache hit:", key); return cached; }
 
   // ★ Throttling — çok fazla paralel isteği engelle
   while (pendingFetches >= MAX_PARALLEL) {
@@ -131,22 +132,32 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyan
     const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ text: string }> };
     const ar = (json.data?.[0]?.text ?? "") as string;
     const tr = (json.data?.[1]?.text ?? "") as string;
+    console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
     if (ar || tr) {
       const result = { ar, tr };
       ayahCache.set(key, result);
+      pendingFetches--;
       return result;
     }
   } catch (e) { console.warn("[fetchAyah] Birincil istek başarısız, yedek denenir:", `${surah}:${ayah}`, (e as Error).message); }
 
   // ★ Yedek: tek tek çek (ama throttlı)
   await throttle();
-  const [arabic, translated] = await Promise.all([
-    fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`),
-    fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${edition}`),
-  ]) as [{ data?: { text: string } }, { data?: { text: string } }];
-  const result = { ar: (arabic.data?.text ?? "") as string, tr: (translated.data?.text ?? "") as string };
-  ayahCache.set(key, result);
-  return result;
+  try {
+    const [arabic, translated] = await Promise.all([
+      fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`),
+      fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${edition}`),
+    ]) as [{ data?: { text: string } }, { data?: { text: string } }];
+    const result = { ar: (arabic.data?.text ?? "") as string, tr: (translated.data?.text ?? "") as string };
+    console.log("[fetchAyah] Yedek başarılı:", key, "ar:", result.ar.length, "tr:", result.tr.length);
+    ayahCache.set(key, result);
+    pendingFetches--;
+    return result;
+  } catch (e2) {
+    console.error("[fetchAyah] Yedek de başarısız:", key, (e2 as Error).message);
+    pendingFetches--;
+    return { ar: "", tr: "" };
+  }
 }
 
 export async function fetchSurah(surah: number, edition: string): Promise<Array<{ ar: string; tr: string }>> {

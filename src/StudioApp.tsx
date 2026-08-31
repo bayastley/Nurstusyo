@@ -51,7 +51,8 @@ import { VideoPreviewSection } from "./components/VideoPreviewSection";
 import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
-import { AnnouncementBar } from "./components/AnnouncementBar";import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
+import { AnnouncementBar } from "./components/AnnouncementBar";
+import { CookieConsent } from "./components/CookieConsent";import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
 // ★ Yeni Hook'lar
@@ -537,8 +538,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       let ar = "", tr = knownTranslation ?? "";
       if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
-      // ★ Placeholder'ı gerçek veriyle değiştir
-      setSelected((current) => current.map((x) => x.id === id ? { ...x, ar, tr } : x));
+      // ★ Placeholder'ı gerçek veriyle değiştir (boşsa bile güncelle — API çalışmıyorsa boş kalmasın)
+      setSelected((current) => current.map((x) => x.id === id ? { ...x, ar: ar || x.ar, tr: tr || x.tr } : x));
 
       if (smartAiEnabled) {
         const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
@@ -1711,6 +1712,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         lang={lang}
         user={user}
       />
+
+      {/* COOKIE CONSENT — KVKK/AB Uyumu */}
+      <CookieConsent />
     </div>
   );
 }
