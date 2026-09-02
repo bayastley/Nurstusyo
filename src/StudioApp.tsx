@@ -103,10 +103,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [toast, setToast] = useState<string | null>(null);
   const notify = useCallback((message: string) => setToast(message), []);
 
-  // ★ Cookie Consent
-  const [cookieAccepted, setCookieAccepted] = useState(() => {
-    try { return localStorage.getItem("nur_cookie_consent") === "1"; } catch { return false; }
-  });
+  // ★ Cookie Consent — yeni KVKK component'i tarafından yönetiliyor
 
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
   const [genConfirmOpen, setGenConfirmOpen] = useState(false);
@@ -531,7 +528,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (selectedRef.current.some((item) => item.id === id)) return;
     const meta = SURAHS[s - 1];
     // ★ Hemen seçili işaretle (optimistic update) — API beklemeden
-    const placeholder = { id, s, a, sName: meta?.name ?? "", ar: "", tr: knownTranslation ?? "Yükleniyor..." };
+    const placeholder = { id, s, a, sName: meta?.name ?? "", ar: "", tr: knownTranslation ?? t("loadingVerse") };
     setSelected((current) => [...current, placeholder]);
     setVerseIndex(selectedRef.current.length);
     try {
@@ -560,7 +557,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       console.error("[addAyah] fetch hatası:", e);
       // ★ HATA: Placeholder'ı listeden çıkar
       setSelected((current) => current.filter((x) => x.id !== id));
-      notify("Ayet yüklenemedi");
+      notify(t("renderAuthError"));
     }
   }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah]);
 
@@ -576,15 +573,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [addAyah]);
 
   const addWholeSurah = useCallback(async () => {
-    const number = Number(surah); notify("Sure yükleniyor...");
+    const number = Number(surah); notify(t("loading"));
     try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(`${meta.name} Suresi tamamı eklendi (${rows.length} ayet)`); }
-    catch { notify("Sure yüklenemedi"); }
+    catch { notify(t("renderServerError")); }
   }, [surah, lang, notify]);
 
   const useFromLibrary = useCallback((item: LibraryItem) => {
     const s = item.s ?? 0, a = item.a ?? 0;
     const id = item.type === "ayet" && s > 0 ? `${s}:${a}` : `lib-${item.id}`;
-    if (selectedRef.current.some((x) => x.id === id)) { notify("Bu içerik zaten seçili"); setModal(null); return; }
+    if (selectedRef.current.some((x) => x.id === id)) { notify(t("guestLimit")); setModal(null); return; }
     setSelected((current) => [...current, { id, s, a, sName: item.title, ar: item.ar, tr: item.tr }]);
     setVerseIndex(selectedRef.current.length);
     notify(`✨ "${item.title}" stüdyoya eklendi`);
@@ -614,7 +611,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const randomizeBackgrounds = useCallback((scopeCat?: CatId) => {
     let pool = combinedAllClips.filter((clip) => clip.kind === clipKind && isClipAccessible(clip));
     if (scopeCat) pool = pool.filter((clip) => clip.cat === scopeCat);
-    if (pool.length === 0) { notify("Bu türde içerik yok"); return; }
+    if (pool.length === 0) { notify(t("guestLimit")); return; }
     const pick = () => pool[Math.floor(Math.random() * pool.length)];
     if (!selectedRef.current.length) {
       const c = pick();
@@ -1424,25 +1421,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         pickDesc={genDesc}
       />
 
-      {/* ★ COOKIE CONSENT BANNER */}
-      {!cookieAccepted && (
-        <div className="fixed bottom-0 left-0 right-0 z-[90] border-t border-white/10 bg-black/80 backdrop-blur-xl px-4 py-3">
-          <div className="mx-auto max-w-4xl flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[10px] text-white/60 leading-relaxed">
-              🍪 Bu site çerezler kullanır. Deneyiminizi geliştirmek için çerezleri kabul edin. Detaylı bilgi için{' '}
-              <button onClick={() => { setLegalTab("gizlilik"); setTosOpen(true); }} className="underline text-[color:var(--accent-2)] hover:text-white">Gizlilik Politikamızı</button>{' '}
-              okuyabilirsiniz.
-            </p>
-            <button
-              onClick={() => { localStorage.setItem("nur_cookie_consent", "1"); setCookieAccepted(true); }}
-              className="shrink-0 rounded-xl px-4 py-1.5 text-[10px] font-bold text-black"
-              style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
-            >
-              Kabul Et
-            </button>
-          </div>
-        </div>
-      )}
+
 
       {/* TOAST NOTIFICATION */}
       {toast ? (
