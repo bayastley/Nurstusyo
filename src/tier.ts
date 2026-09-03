@@ -44,6 +44,15 @@ export function isTrialActive(): boolean {
   return elapsed < TRIAL_DAYS * 86400000;
 }
 
+export function getTrialDaysLeft(): number {
+  if (typeof window === "undefined") return 0;
+  const start = localStorage.getItem(TRIAL_KEY);
+  if (!start) return 0;
+  const elapsed = Date.now() - Number(start);
+  const remaining = TRIAL_DAYS * 86400000 - elapsed;
+  return remaining > 0 ? Math.ceil(remaining / 86400000) : 0;
+}
+
 export function startTrial(): void {
   if (typeof window !== "undefined" && !localStorage.getItem(TRIAL_KEY)) {
     localStorage.setItem(TRIAL_KEY, String(Date.now()));
@@ -91,7 +100,7 @@ export const TIER_LABEL: Record<Tier, string> = {
 export const TIER_PRICE_TRY: Record<Tier, number> = {
   free: 0,
   pro: 149,
-  elit: 300,
+  elit: 250,
 };
 
 // ★ Yıllık üyelik — aylık fiyatın üstüne otomatik indirim uygulanır.
@@ -294,28 +303,43 @@ export function featureLockLabel(key: FeatureKey): string {
 // ★ GÜNCELLEME: Ücretsiz kâriler — düşük telifli, tanınmış hocalar.
 //   Geri kalan kâriler PRO ve ELİT üyelikler arasında dağıtıldı.
 export const FREE_RECITER_IDS = [
-  "sudais", "husary",
-  // ★ Eklenen: screenshoot'taki düşük telifli kâriler (free yapıldı)
-  "matroud", "shuraim", "maher", "sudais_fast",
-  "alafasy", "qahtani", "shatri",
+  // ★ Meşhur, yüksek telif — herkes denesin diye ücretsiz
+  'sudais', 'husary', 'alafasy', 'basit_mujawwad_128',
+  'minshawi_mujawwad', 'basit_192', 'muhaisny', 'dosari',
+  'ali_jaber', 'hani_rifai', 'mustafa_ismail', 'dussary',
 ] as const;
 
 export const PRO_RECITER_IDS = [
-  "hudhaify", "juhany", "qasim", "budair", "ayyoub", "akhdar",
-  "basfar", "qatami", "ajamy", "husary_mujawwad", "husary_teacher", "abdulbasit", "minshawi",
-  "tablawi", "banna", "jibreel", "sowaid", "parhizgar", "ghamdi_saad", "fares_abbad",
-  "akram_alaqimy", "abdulkareem", "bukhatir", "yaser_salamah", "ahmed_neana", "sahl_yassin",
-  "aziz_alili", "karim_mansoori",
+  // ★ Orta telif riski — PRO üyelikle açılır
+  'matroud', 'shuraim', 'maher', 'hudhaify', 'jibreel', 'basfar_64',
+  'husary_muallim', 'ghamadi', 'basit_64', 'katami', 'bukhatir',
+  'shatri', 'shatri_128', 'rifai', 'ajamy', 'husary_mujawwad_64',
+  'ali_jaber_64', 'menshawi_16', 'sudais_fast', 'basfar_192',
+  'shuraim_64', 'alafasy_64', 'hudhaify_64', 'jibreel_64',
+  'sudais_64', 'sudais_192_t', 'husary_fast', 'matroud_fast',
+  'basfar_fast', 'akhdar_32', 'muallim_fast', 'dussary_alt',
+  'katami_alt', 'bukhatir_alt', 'shatri_alt', 'rifai_64',
 ] as const;
 
 // ★ ELİT — satın alma / üyelik ZORUNLU. Bu kâriler hicbir sekilde ücretsiz
 //   veya PRO planla açılmaz; sadece NÛR ELİT abonesi veya "elit" ürün
 //   satın alan kullanıcı erişebilir (bkz. reciterRequiredTier fonksiyonu).
 export const ELIT_RECITER_IDS = [
-  "muhaisny", "dosari", "abdulbasit_mujawwad",
-  "minshawi_mujawwad", "ali_jaber", "hani_rifai", "mustafa_ismail", "tunaiji",
-  // ibrahim_dosary_warsh, karim_mansoori_mujawwad, yassin_jazaery_warsh — ses yok, kaldirildi
+  // ★ Düşük telif riski — ama premium konumlandırılmış
+  'mujawwad_elite1', 'mujawwad_elite2', 'minshawi_elite',
+  'basit_elite', 'husary_elite', 'sudais_elite', 'basfar_elite',
+  'tunaiji', 'dossari_elite', 'ajamy_alt', 'ali_jaber_alt',
+  'ghamadi_alt', 'maher_alt', 'shuraim_alt', 'basit_alt',
+  'basit_mujawwad_alt', 'husary_mujawwad_alt', 'jibreel_alt',
+  'shuraim_elite', 'maher_elite', 'ajamy_elite', 'bukhatir_elite',
+  'dussary_elite', 'katami_elite', 'shatri_elite', 'rifai_elite',
+  'ghamadi_elite', 'jibreel_elite', 'elite_27', 'elite_28',
+  'elite_29', 'elite_30', 'elite_31', 'elite_32',
+  'elite_33', 'elite_34', 'elite_35', 'elite_36',
+  'elite_37', 'elite_38', 'elite_39', 'elite_40',
 ] as const;
+
+
 
 export function reciterRequiredTier(reciter: {
   id: string;
@@ -536,7 +560,7 @@ export const JETON = {
 /** ESKİ AD — fiyat listesi yeni değerlere bağlandı */
 export const PRICING = {
   PRO: { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" },
-  ELIT: { tl: TIER_PRICE_TRY.elit, usd: 7.0, period: "aylık" },
+  ELIT: { tl: TIER_PRICE_TRY.elit, usd: 6.0, period: "aylık" },
   DENEME: { tl: 35, usd: 1.0, period: "tek seferlik" },
   UYE: { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" },
 } as const;

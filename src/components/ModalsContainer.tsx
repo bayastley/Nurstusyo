@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   X, Hourglass, Shield, Search, FolderUp, Shuffle, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
-  Image as ImageIcon, Film, Play,
+  Image as ImageIcon, Film,
 } from "lucide-react";
 import { LegalModal } from "./LegalModal";
 import { Modal, Segmented } from "./UIElements";
@@ -636,55 +636,6 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 </div>
               );
             })}
-          </div>
-        </Modal>
-      )}
-
-      {/* GUIDE / TUTORIAL VIDEO MODAL */}
-      {modal === "guide" && (
-        <Modal title="Nûr Stüdyo Nasıl Kullanılır? (Video Rehber)" sub="1 dakikada profesyonel video üretimi eğitim rehberi" onClose={() => setModal(null)} wide>
-          <div className="space-y-4">
-            {/* Video Player Frame */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[color:var(--accent)]/30 bg-black shadow-2xl">
-              <video
-                src="/videos/rehber.mp4"
-                controls
-                autoPlay
-                playsInline
-                className="h-full w-full object-cover"
-                poster="https://images.pexels.com/videos/35110882/free-video-35110882.jpg?auto=compress&cs=tinysrgb&fit=crop&h=630&w=1200"
-                onError={(e) => {
-                  const v = e.currentTarget;
-                  if (!v.dataset.fallback) {
-                    v.dataset.fallback = "1";
-                    v.src = "https://videos.pexels.com/video-files/35110882/35110882-hd_1920_1080_60fps.mp4";
-                  }
-                }}
-              />
-            </div>
-
-            {/* Steps List */}
-            <ol className="grid gap-2 sm:grid-cols-2">
-              {[[t("step1T"), t("step1D")], [t("step2T"), t("step2D")], [t("step3T"), t("step3D")], [t("step4T"), t("step4D")]].map(([title, description], index) => (
-                <li key={title} className="glass-soft flex gap-2.5 rounded-xl p-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{index + 1}</span>
-                  <span>
-                    <b className="block text-[10.5px] text-white/90">{title}</b>
-                    <span className="text-[9.5px] leading-relaxed text-white/50">{description}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
-
-            {/* YouTube Button */}
-            <div className="pt-2 border-t border-white/10 text-center">
-              <button
-                onClick={() => window.open("https://youtube.com/@nurstudyo", "_blank")}
-                className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[11px] font-bold text-white transition hover:scale-105 active:scale-95 shadow-lg bg-red-600 hover:bg-red-700 cursor-pointer"
-              >
-                <Play size={14} fill="white" /> ▶ YouTube Üzerinden Detaylı İzle (Video Rehber)
-              </button>
-            </div>
           </div>
         </Modal>
       )}

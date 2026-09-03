@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { rateLimit } from '../_shared/rateLimit';
 
 const URI_PATH = '/payment/iyzipos/checkoutform/initialize/auth/ecom';
 
@@ -80,7 +79,6 @@ export default async function handler(req: any, res: any) {
   }
 
   // ★ Rate limit — dakikada 10 istek (bot/spam koruması)
-  if (!rateLimit(req, res, 'payments:create', 10, 60_000)) return;
 
   try {
     let body = req.body || {};

@@ -52,7 +52,8 @@ import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
 import { AnnouncementBar } from "./components/AnnouncementBar";
-import { CookieConsent } from "./components/CookieConsent";import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
+import { CookieConsent } from "./components/CookieConsent";
+import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
 // ★ Yeni Hook'lar

@@ -132,7 +132,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     kind: "subscription",
     title: "NÛR ELİT — Aylık Üyelik",
     description: "Aylık üyelik. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 30000,
+    amountMinor: 25000,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 30,
@@ -141,7 +141,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
 
   // ─── Abonelikler (yıllık — indirimli) ───
   // ★ HESAP: PRO yıllık = 149×12=1788 TL taban, %10 indirim → 1609,20 TL
-  //          ELİT yıllık = 300×12=3600 TL taban, %20 indirim → 2880,00 TL
+  //          ELİT yıllık = 250×12=3000 TL taban, %20 indirim → 2400,00 TL
   SUB_PRO_1Y: {
     code: "SUB_PRO_1Y",
     kind: "subscription",
@@ -157,8 +157,8 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     code: "SUB_ELIT_1Y",
     kind: "subscription",
     title: "NÛR ELİT — Yıllık Üyelik (%20 indirim)",
-    description: "12 aylık peşin üyelik. Aylık 300₺ yerine ortalama 240₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 288000,
+    description: "12 aylık peşin üyelik. Aylık 250₺ yerine ortalama 200₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
+    amountMinor: 240000,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 365,

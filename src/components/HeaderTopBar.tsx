@@ -2,12 +2,12 @@ import React from "react";
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette,
-  LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb, Film,
+  LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { LANGS, T, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault, getPackRights } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft } from "../tier";
 import { TIER_LABEL } from "./premiumModalHelpers";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
@@ -92,6 +92,17 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           <span className="hidden tabular-nums text-white/25 md:inline">{dailyPoolLength ? dailyIndex + 1 : 0}/{dailyPoolLength || "-"}</span>
         </div>
       </div>
+
+      {/* TRIAL BANNER */}
+      {user && tier === "free" && isTrialActive() && (
+        <div className="bg-gradient-to-r from-emerald-600/90 to-green-600/90 border-b border-emerald-400/30">
+          <div className="mx-auto flex max-w-[1500px] items-center justify-center gap-2 px-4 py-1.5 text-[11px] text-white font-semibold">
+            <Sparkles size={13} className="animate-pulse text-yellow-300" />
+            <span>🎉 ÜCRETSİZ PRO DENEMEN AKTİF — <b className="text-yellow-200">{getTrialDaysLeft()} gün</b> kaldı</span>
+            <button className="ml-2 rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold hover:bg-white/30 transition" onClick={() => openPremium("uyelik")}>Hemen Üye Ol →</button>
+          </div>
+        </div>
+      )}
 
       {/* HEADER */}
       <header className="glass sticky top-0 z-[80] border-x-0 border-t-0">
@@ -280,13 +291,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setModal("guide")}
-              className="hidden items-center gap-1.5 rounded-full border border-[color:var(--accent)]/40 bg-white/[0.05] px-3 py-1.5 text-[9.5px] font-bold text-[color:var(--accent-2)] transition hover:scale-105 hover:bg-white/10 active:scale-95 md:flex cursor-pointer"
-              title="Eğitim ve kullanım rehberi videosunu izleyin"
-            >
-              <Film size={11} style={{ color: "var(--accent)" }} /> Nasıl Kullanılır? (İzle/Öğren)
-            </button>
             {user && (isAdminEmail(user.email) || isMasterSürüm) && (
               <>
                 <button
@@ -346,7 +350,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             })()}
             {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || "Ücretsiz") : "Giriş Yap"}
+              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("login")}
             </button>
             <div className="relative">
               <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>
