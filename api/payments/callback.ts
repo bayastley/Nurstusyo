@@ -1,5 +1,4 @@
 import crypto from 'crypto';
-import { rateLimit } from '../_shared/rateLimit';
 
 const URI_PATH = '/payment/iyzipos/checkoutform/auth/ecom/detail';
 
@@ -235,7 +234,6 @@ export default async function handler(req: any, res: any) {
     }
 
     // ★ Rate limit — dakikada 30 istek (webhook + redirect)
-    if (!rateLimit(req, res, 'payments:callback', 30, 60_000)) return;
 
     if (!token) {
       res.writeHead(303, { Location: '/?odeme=hata&sebep=token_yok' });
