@@ -47,6 +47,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
 
     const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
       const lines: string[] = [];
+      if (!text) return lines;
       let line = "";
       const pushHard = (word: string) => {
         let chunk = "";
