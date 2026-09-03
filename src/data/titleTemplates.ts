@@ -339,61 +339,61 @@ const DESC_INTRO: Record<string, string[]> = {
 const DESC_LABELS: Record<string, { reciter: string; studio: string; quote: string; cta: string }> = {
   tr: {
     reciter: "🎧 Kâri",
-    studio: "🎬 Yapım: Nûr Stüdyo.com · İslamî Labs",
+    studio: "🎬 Bu video www.nurstudyo.com ile üretilmiştir • İslamî Labs",
     quote: "",
     cta: "Ayeti arkadaşlarınızla paylaşarak iyiliğe vesile olabilirsiniz.",
   },
   en: {
     reciter: "🎧 Reciter",
-    studio: "🎬 Produced by: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Produced with www.nurstudyo.com • Islamic Labs",
     quote: '"Do not pursue that of which you have no knowledge. Indeed, the hearing, the sight and the heart — about all those one will be questioned." (Al-Isra 17:36)',
     cta: "Share this verse with your friends and be a means of goodness.",
   },
   ar: {
     reciter: "🎧 القارئ",
-    studio: "🎬 إنتاج: Nûr Studio.com · مختبرات إسلامية",
+    studio: "🎬 تم إنتاج هذا الفيديو بواسطة www.nurstudyo.com • مختبرات إسلامية",
     quote: '"وَلَا تَقْفُ مَا لَيْسَ لَكَ بِهِ عِلْمٌ ۚ إِنَّ السَّمْعَ وَالْبَصَرَ وَالْفُؤَادَ كُلُّ أُولَٰئِكَ كَانَ عَنْهُ مَسْئُولًا" (الإسراء ١٧:٣٦)',
     cta: "شارك الآية مع أصدقائك لتكون سببًا في الخير.",
   },
   de: {
     reciter: "🎧 Rezitator",
-    studio: "🎬 Produktion: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Erstellt mit www.nurstudyo.com • Islamic Labs",
     quote: '"Und verfolge nicht das, wovon du kein Wissen hast." (Al-Isra 17:36)',
     cta: "Teile diesen Vers mit deinen Freunden und sei ein Mittel des Guten.",
   },
   fr: {
     reciter: "🎧 Récitateur",
-    studio: "🎬 Production : Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Produit avec www.nurstudyo.com • Islamic Labs",
     quote: '"Et ne poursuis pas ce dont tu n\'as aucune connaissance." (Al-Isra 17:36)',
     cta: "Partagez ce verset avec vos amis et soyez une source de bien.",
   },
   es: {
     reciter: "🎧 Recitador",
-    studio: "🎬 Producción: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Producido con www.nurstudyo.com • Islamic Labs",
     quote: '"Y no persigas aquello de lo que no tienes conocimiento." (Al-Isra 17:36)',
     cta: "Comparte este versículo con tus amigos y sé un medio de bondad.",
   },
   ru: {
     reciter: "🎧 Чтец",
-    studio: "🎬 Продакшн: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Создано с помощью www.nurstudyo.com • Islamic Labs",
     quote: '"Не следуй тому, чего ты не знаешь." (Аль-Исра 17:36)',
     cta: "Поделитесь этим аятом с друзьями и станьте причиной добра.",
   },
   id: {
     reciter: "🎧 Qari",
-    studio: "🎬 Produksi: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 Diproduksi dengan www.nurstudyo.com • Islamic Labs",
     quote: '"Dan janganlah kamu mengikuti sesuatu yang tidak kamu ketahui." (Al-Isra 17:36)',
     cta: "Bagikan ayat ini kepada temanmu dan jadilah perantara kebaikan.",
   },
   ur: {
     reciter: "🎧 قاری",
-    studio: "🎬 پروڈکشن: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 www.nurstudyo.com کے ساتھ تیار کردہ • Islamic Labs",
     quote: '"اور اس چیز کے پیچھے نہ پڑ جس کا تجھے علم نہیں۔" (الاسراء ۱۷:۳۶)',
     cta: "اس آیت کو دوستوں کے ساتھ شیئر کریں اور نیکی کا ذریعہ بنیں۔",
   },
   fa: {
     reciter: "🎧 قاری",
-    studio: "🎬 تولید: Nûr Studio.com · Islamic Labs",
+    studio: "🎬 تولید شده با www.nurstudyo.com • Islamic Labs",
     quote: '"و از آنچه به آن علم نداری پیروی مکن." (اسراء ۱۷:۳۶)',
     cta: "این آیه را با دوستان خود به اشتراک بگذارید و سبب خیر شوید.",
   },
@@ -468,7 +468,7 @@ const DESC_EMOTIONAL_LINES: Record<string, string[]> = {
     "لعل هذه الكلمات هي السكينة التي احتاجتها روحك اليوم. ربما كنت تحمل هماً ل أيام أو ألماً لسنوات. القرآن شفاء، والبحث عنه في يدك.",
     "الله لا يترك عبده، وربما تكون الإجابة مخبأة في آية. دعوت فلم يأتِ الجواب؟ ربما الجواب في هذه التلاوة.",
     "إن لامست هذه الآية قلبك فاكتب آمين وشاركها لمن يحتاجها. كلمة آمين قد تساوي ألف أجر.",
-    "النبي ﷺ كان يبكي当他 reciting these verses. البكاء ليس ضعفاً بل نقاء قلب.",
+    "النبي صلى الله كان يبكي عند تلاوي هذه الآيات. البكاء ليس ضعفاً بل نقاء قلب.",
     "استمع لكل كلمة واكتبها في قلبك. غداً قد تكون هذه الكلمة أعظم دعماً لك. القرآن دليل لا يضيع أبداً.",
     "بعد الاستماع لهذه الآية ارفع يديك وادعُ الله. يسمعك ويعلمك وينتظرك.",
   ],
@@ -615,10 +615,11 @@ export function genDesc(
     ? getQuoteForSurah(surahName, s, a)
     : L.quote;
 
-  return `${intro}
+  return `${L.studio}
+
+${intro}
 
 ${L.reciter}: ${reciterName}
-${L.studio}
 
 ${quote}
 
