@@ -21,6 +21,7 @@ interface AdminUsersTabProps {
   handleBan: (email: string, reason: string) => void;
   handleUnban: (email: string) => void;
   handleTierChange: (email: string, tier: Tier) => void;
+  handleResetRights: (email: string) => void;
   jetonDelta: number;
   setJetonDelta: (v: number) => void;
   handleDirectJetonSet: (email: string, amount: number) => void;
@@ -35,7 +36,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   handleEmailSearch, handleSetTierViaEmail,
   giftAmount, setGiftAmount, giftTier, setGiftTier, handleGiftRights,
   selectedUser, banReasonInput, setBanReasonInput,
-  handleBan, handleUnban, handleTierChange,
+  handleBan, handleUnban, handleTierChange, handleResetRights,
   jetonDelta, setJetonDelta, handleDirectJetonSet,
   selectedEmail, setSelectedEmail, filteredUsers, currentUserEmail,
 }) => {
@@ -201,6 +202,13 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <p className="text-[9px] text-white/45 leading-relaxed">
                 Değiştirdiğiniz anda tüm kilitler bu kullanıcı için canlı güncellenir.
               </p>
+              <button
+                type="button"
+                onClick={() => { if (window.confirm(`⚠️ ${selectedUser.email} kullanıcısının TÜM hakları sıfırlanacak:\n\n• Kısa/Uzun/Tam video hakları\n• Jeton bakiyesi\n• Abonelik iptal edilecek\n• Tier FREE yapılacak\n\nEmin misiniz?`)) handleResetRights(selectedUser.email); }}
+                className="w-full rounded-xl bg-red-500/15 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-400 hover:bg-red-500/25 transition mt-1"
+              >
+                🗑️ TÜM HAKLARI SIFIRLA (Free Yap + Paketleri Sil)
+              </button>
             </div>
 
             {/* Üretim hakkı bakiyesi yönetimi */}

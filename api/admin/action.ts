@@ -118,7 +118,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
       const tier = validateTier(body.tier);
       if (!tier) return res.status(400).json({ ok: false, error: "Geçersiz tier" });
+      // ★ Tier değiştir + cüzdanı sıfırla (eğer free'ye düşürülüyorsa)
       await db(`nur_users?email=eq.${encodeURIComponent(email)}`, { method: "PATCH", body: JSON.stringify({ tier, updated_at: new Date().toISOString() }) });
+      if (tier === "free") {
+        // Free'ye düşürürken satın alınan hakları ve aboneliği sıfırla
+        const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+        if (users[0]?.id) {
+          await db(`nur_wallets?user_id=eq.${encodeURIComponent(users[0].id)}`, { method: "PATCH", body: JSON.stringify({ purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0, sub_jeton: 0, purchased_jeton: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
+          await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(users[0].id)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancelled_at: new Date().toISOString() }) }).catch(() => null);
+        }
+      }
     } else if (action === "change_jeton") {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
@@ -145,6 +154,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (action === "clear_all_announcements") {
       await db("nur_announcements?active=eq.true", { method: "PATCH", body: JSON.stringify({ active: false }) });
+    } else if (action === "reset_rights") {
+      // ★ TÜM HAKLARI SIFIRLA — tier, cüzdan, abonelik hepsini temizle
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      // 1) Tier'ı free yap
+      await db(`nur_users?email=eq.${encodeURIComponent(email)}`, { method: "PATCH", body: JSON.stringify({ tier: "free", updated_at: new Date().toISOString() }) });
+      // 2) Kullanıcıyı bul
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+      if (users[0]?.id) {
+        const uid = users[0].id;
+        // 3) Cüzdanı tamamen sıfırla
+        await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0, sub_jeton: 0, purchased_jeton: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
+        // 4) Aktif aboneliği iptal et
+        await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancelled_at: new Date().toISOString() }) }).catch(() => null);
+      }
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || "") }) }).catch(() => null);
     return res.status(200).json({ ok: true });

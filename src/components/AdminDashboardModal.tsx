@@ -210,6 +210,27 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
+  // ★ HAKLARI SIFIRLA — satın alınan tüm hakları, jetonu ve aboneliği sıfırla
+  const handleResetRights = async (email: string) => {
+    const resetState = await serverManage("reset_rights", { email });
+    if (resetState === "error") return;
+    // localStorage güncelle
+    const updatedUsers = users.map((u) => {
+      if (u.email.toLowerCase() === email.toLowerCase()) {
+        return { ...u, jeton: 0, tier: "free" as Tier, updatedAt: new Date().toISOString() };
+      }
+      return u;
+    });
+    const newCfg = { ...sysConfig, users: updatedUsers };
+    setSysConfig(newCfg);
+    saveSystemConfig(newCfg);
+    const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (targetUser) {
+      onUpdateUser(targetUser.email, "free", 0);
+      notify(`🗑️ ${targetUser.email} tüm hakları sıfırlandı — krótka/uzun/tam/jeton/abonelik temizlendi!`);
+    }
+  };
+
   // ★ EMAIL ARAMA ve HAK HEDİYE
   const [emailSearchQuery, setEmailSearchQuery] = useState<string>("");
   const [giftAmount, setGiftAmount] = useState<number>(100);
@@ -465,6 +486,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               handleBan={handleBan}
               handleUnban={handleUnban}
               handleTierChange={handleTierChange}
+              handleResetRights={handleResetRights}
               jetonDelta={jetonDelta}
               setJetonDelta={setJetonDelta}
               handleDirectJetonSet={handleDirectJetonSet}
