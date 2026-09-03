@@ -206,17 +206,11 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               const oy = Math.max(safeTop - centeredTop, Math.min(oyRaw, safeBottom - totalH - centeredTop));
               let y = centeredTop + oy;
 
-              const goldFill = () => {
-                if (p.shimmerCfg.still) { ctx.fillStyle = p.shimmerCfg.c1; return; }
-                const g = ctx.createLinearGradient(0, 0, width, 0), shift = (tick * 0.004) % 1;
-                g.addColorStop(Math.max(0, shift - 0.25), p.shimmerCfg.c1); g.addColorStop(shift, "#ffffff"); g.addColorStop(Math.min(1, shift + 0.25), p.shimmerCfg.c2);
-                ctx.fillStyle = g;
-              };
               if (p.showArapca && arabicLines.length > 0) {
-                ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`; goldFill(); ctx.shadowColor = p.shimmerCfg.glow; ctx.shadowBlur = p.shimmerCfg.still ? 14 : 22;
+                ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 10;
                 const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
                 try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
-                // Word-by-word highlight: her kelimeyi ayrı çiz, aktif kelimeyi parlat
+                // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
                 const wordDuration = 80; // her kelime ~80 frame parlıyor (yaklaşık 1.3 saniye @60fps)
@@ -234,18 +228,19 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                     const ww = ctx.measureText(word).width;
                     wordX -= ww;
                     if (isActive) {
-                      // Aktif kelime: altın glow + parlak
+                      // Aktif kelime: SENKRONIZE ALTIN PARLAMA — sadece bu kelime yanar
                       ctx.save();
                       ctx.shadowColor = "#ffd700";
-                      ctx.shadowBlur = 20;
+                      ctx.shadowBlur = 24;
                       ctx.fillStyle = "#ffffff";
-                      ctx.font = `700 ${Math.round(arabicSize * 1.12)}px ${p.arabicFontCss}`;
+                      ctx.font = `700 ${Math.round(arabicSize * 1.15)}px ${p.arabicFontCss}`;
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       ctx.restore();
+                      // Normal boyuta dön — diğer kelimeler sabit beyaz
                       ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`;
-                      goldFill();
-                      ctx.shadowColor = p.shimmerCfg.glow;
-                      ctx.shadowBlur = p.shimmerCfg.still ? 14 : 22;
+                      ctx.fillStyle = "rgba(255,255,255,.92)";
+                      ctx.shadowColor = "rgba(0,0,0,.5)";
+                      ctx.shadowBlur = 10;
                     } else {
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                     }
