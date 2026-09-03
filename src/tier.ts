@@ -300,43 +300,28 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
-// ★ GÜNCELLEME: Ücretsiz kâriler — düşük telifli, tanınmış hocalar.
-//   Geri kalan kâriler PRO ve ELİT üyelikler arasında dağıtıldı.
+// ★ DÜRÜST KÂRİ LİSTELERİ — her kâri benzersiz ses dosyası kullanır
+//   Tier'lar reciters.ts'deki tier alanına göre belirlenir
 export const FREE_RECITER_IDS = [
-  // ★ Meşhur, yüksek telif — herkes denesin diye ücretsiz
-  'sudais', 'husary', 'alafasy', 'basit_mujawwad_128',
-  'minshawi_mujawwad', 'basit_192', 'muhaisny', 'dosari',
-  'ali_jaber', 'hani_rifai', 'mustafa_ismail', 'dussary',
+  // ★ Yüksek telif riski — ünlü kâriler, Content ID yakalar
+  'sudais', 'husary', 'alafasy', 'basit_mujawwad',
+  'minshawi_mujawwad', 'muhaisny', 'husary_mujawwad',
+  'basit_192', 'shuraim', 'maher',
 ] as const;
 
 export const PRO_RECITER_IDS = [
-  // ★ Orta telif riski — PRO üyelikle açılır
-  'matroud', 'shuraim', 'maher', 'hudhaify', 'jibreel', 'basfar_64',
-  'husary_muallim', 'ghamadi', 'basit_64', 'katami', 'bukhatir',
-  'shatri', 'shatri_128', 'rifai', 'ajamy', 'husary_mujawwad_64',
-  'ali_jaber_64', 'menshawi_16', 'sudais_fast', 'basfar_192',
-  'shuraim_64', 'alafasy_64', 'hudhaify_64', 'jibreel_64',
-  'sudais_64', 'sudais_192_t', 'husary_fast', 'matroud_fast',
-  'basfar_fast', 'akhdar_32', 'muallim_fast', 'dussary_alt',
-  'katami_alt', 'bukhatir_alt', 'shatri_alt', 'rifai_64',
+  // ★ Orta telif riski — yarı ünlü kâriler
+  'matroud', 'hudhaify', 'jibreel', 'ghamadi', 'basfar_192',
+  'bukhatir', 'dussary', 'katami', 'rifai', 'ajamy',
+  'ali_jaber', 'shatri', 'sudais_fast', 'husary_fast',
 ] as const;
 
-// ★ ELİT — satın alma / üyelik ZORUNLU. Bu kâriler hicbir sekilde ücretsiz
-//   veya PRO planla açılmaz; sadece NÛR ELİT abonesi veya "elit" ürün
-//   satın alan kullanıcı erişebilir (bkz. reciterRequiredTier fonksiyonu).
+// ★ ELİT — düşük telif riski, premium konumlandırma
 export const ELIT_RECITER_IDS = [
-  // ★ Düşük telif riski — ama premium konumlandırılmış
-  'mujawwad_elite1', 'mujawwad_elite2', 'minshawi_elite',
-  'basit_elite', 'husary_elite', 'sudais_elite', 'basfar_elite',
-  'tunaiji', 'dossari_elite', 'ajamy_alt', 'ali_jaber_alt',
-  'ghamadi_alt', 'maher_alt', 'shuraim_alt', 'basit_alt',
-  'basit_mujawwad_alt', 'husary_mujawwad_alt', 'jibreel_alt',
-  'shuraim_elite', 'maher_elite', 'ajamy_elite', 'bukhatir_elite',
-  'dussary_elite', 'katami_elite', 'shatri_elite', 'rifai_elite',
-  'ghamadi_elite', 'jibreel_elite', 'elite_27', 'elite_28',
-  'elite_29', 'elite_30', 'elite_31', 'elite_32',
-  'elite_33', 'elite_34', 'elite_35', 'elite_36',
-  'elite_37', 'elite_38', 'elite_39', 'elite_40',
+  // ★ Düşük telif riski — nadir/kalitesiz kayıtlar, Content ID bulamaz
+  'basfar_64', 'husary_muallim', 'minshawi_16', 'akhdar_32',
+  'sudais_64', 'alafasy_64', 'hudhaify_64', 'jibreel_64',
+  'basit_64', 'rifai_64', 'ghamadi_40', 'shatri_64', 'shuraim_64',
 ] as const;
 
 
