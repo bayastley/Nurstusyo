@@ -216,7 +216,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
                 try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
                 // Word-by-word highlight: her kelimeyi ayrı çiz, aktif kelimeyi parlat
-                const allArabicWords = currentAyah.ar.split(/\s+/).filter(Boolean);
+                const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
                 const wordDuration = 80; // her kelime ~80 frame parlıyor (yaklaşık 1.3 saniye @60fps)
                 const activeIdx = totalWords > 0 ? Math.floor((tick / wordDuration) % totalWords) : -1;

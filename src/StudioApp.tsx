@@ -584,7 +584,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const s = item.s ?? 0, a = item.a ?? 0;
     const id = item.type === "ayet" && s > 0 ? `${s}:${a}` : `lib-${item.id}`;
     if (selectedRef.current.some((x) => x.id === id)) { notify(t("guestLimit")); setModal(null); return; }
-    setSelected((current) => [...current, { id, s, a, sName: item.title, ar: item.ar, tr: item.tr }]);
+    setSelected((current) => [...current, { id, s, a, sName: item.title, ar: item.ar || "", tr: item.tr || "" }]);
     setVerseIndex(selectedRef.current.length);
     notify(`✨ "${item.title}" stüdyoya eklendi`);
     setModal(null);
