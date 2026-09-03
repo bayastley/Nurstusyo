@@ -53,6 +53,8 @@ import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
 import { AnnouncementBar } from "./components/AnnouncementBar";
 import { CookieConsent } from "./components/CookieConsent";
+import { TelifDisclaimer } from "./components/TelifDisclaimer";
+import { useShareActions } from "./studio/useShareActions";
 import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
@@ -266,7 +268,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return pool.slice(0, count);
   }, []);
   const [visibleTags, setVisibleTags] = useState<string[]>(() => pickRandomTags(14));
-  const [copied, setCopied] = useState(false);
+  // copied → useShareActions hook'unda
   // dailyPool, dailyIndex, dailyPaused → useDailyAyah hook'unda
   // prayerCity, prayerSearch, prayerTimings → usePrayerTime hook'unda
   const [now, setNow] = useState(new Date());
@@ -991,69 +993,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
   }, [aspect, batchFormats, generating, jetonCount, mode, notify, openPremium, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate]);
 
-  const copyShare = useCallback(async () => {
-    const content = `${shareTitle}\n\n${shareDescription}`;
-    try { await navigator.clipboard.writeText(content); } catch { const textarea = document.createElement("textarea"); textarea.value = content; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
-    setCopied(true); window.setTimeout(() => setCopied(false), 1600); notify("Paylaşım metni kopyalandı");
-  }, [notify, shareDescription, shareTitle]);
-
-  const shareOutput = useCallback(async (output: Output) => {
-    const promoText = "Bu video nurstudyo.com yapay zeka otomasyonu ile 1 dakikada üretilmiştir. Siz de telifsiz ve sinematik Kur'an videoları üretmek için ziyaret edin!";
-    try {
-      await navigator.clipboard.writeText(promoText);
-      notify("📢 Paylaşım metni panoya kopyalandı!");
-    } catch { /* ignore */ }
-
-    // ★ ÜCRETSİZ "OTOMATİK PAYLAŞIM": Sunucu/API onayı gerektiren gerçek
-    //   Instagram/TikTok/YouTube otomatik yükleme, her platformun ayrı
-    //   uygulama onay sürecini (haftalar sürebilir) gerektirir ve maliyet 0
-    //   ile yapılamaz. Bunun yerine tarayıcının YERLEŞİK Paylaşım Sayfasını
-    //   (Web Share API) açıyoruz — kullanıcı TEK DOKUNUŞLA Instagram, TikTok,
-    //   WhatsApp, Telegram gibi telefonda kurulu HERHANGİ bir uygulamaya
-    //   videoyu gönderebilir. Sıfır maliyet, sıfır onay süreci, sıfır sunucu.
-    try {
-      const file = new File([await (await fetch(output.url)).blob()], `nur-studyo.${output.ext}`, { type: output.mime });
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: shareTitle, text: `${promoText}\n\n${shareDescription}`, files: [file] });
-        return;
-      }
-    } catch { /* ignore */ }
-  }, [notify, shareTitle, shareDescription]);
-
-  // ★ Masaüstü / dosya paylaşımı desteklemeyen tarayıcılar için METİN bazlı
-  //   hızlı paylaşım linkleri (WhatsApp, Telegram, X) — bunlar da tamamen
-  //   ücretsizdir, sunucu veya API anahtarı gerektirmez, sadece platformların
-  //   herkese açık "paylaşım linki" formatını kullanır.
-  const shareToWhatsApp = useCallback(() => {
-    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
-
-  const shareToYouTube = useCallback(() => {
-    // YouTube Studio upload sayfasına, açıklama metni clipboard'a kopyalanarak yönlendirir
-    const text = `${shareTitle}\n\n${shareDescription}`;
-    navigator.clipboard.writeText(text).catch(() => undefined);
-    window.open("https://studio.youtube.com/channel/upload", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
-
-  const shareToTikTok = useCallback(() => {
-    // TikTok Creator Center'a yönlendirir, metin clipboard'a kopyalanır
-    const text = `${shareTitle}\n\n${shareDescription}`;
-    navigator.clipboard.writeText(text).catch(() => undefined);
-    window.open("https://www.tiktok.com/creator-center/upload", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
-
-  const shareToInstagram = useCallback(() => {
-    // Instagram Reels yükleme sayfasına yönlendirir, metin clipboard'a kopyalanır
-    const text = `${shareTitle}\n\n${shareDescription}`;
-    navigator.clipboard.writeText(text).catch(() => undefined);
-    window.open("https://www.instagram.com/reels/", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
-
-  const shareToX = useCallback(() => {
-    const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
+  // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
+  const { copied, copyShare, shareOutput, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX } = useShareActions({ shareTitle, shareDescription, notify });
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;
@@ -1696,6 +1637,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       {/* COOKIE CONSENT — KVKK/AB Uyumu */}
       <CookieConsent />
+
+      {/* TELİF UYARISI — Kullanıcıları bilgilendir */}
+      <TelifDisclaimer
+        reciterName={reciter.name}
+        telifRiski={reciter.telifRiski}
+      />
     </div>
   );
 }
