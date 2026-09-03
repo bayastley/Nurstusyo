@@ -406,6 +406,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (selected.length < 2) return;
     const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
     const estimateAyahSeconds = (item: SelectedAyah) => {
+      if (!item.tr || !item.ar) return 4;
       if (item.s === 0) return Math.max(4, Math.min(22, item.tr.length * 0.055));
       const arClean = item.ar.replace(/[\u064B-\u065F\u0670]/g, "");
       return Math.max(3.2, Math.min(34, arClean.length * 0.105 + item.tr.length * 0.012 + 0.8));
