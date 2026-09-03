@@ -54,6 +54,7 @@ import { ModalsContainer } from "./components/ModalsContainer";
 import { AnnouncementBar } from "./components/AnnouncementBar";
 import { CookieConsent } from "./components/CookieConsent";
 import { TelifDisclaimer } from "./components/TelifDisclaimer";
+import { RoadmapModal } from "./components/RoadmapModal";
 import { useShareActions } from "./studio/useShareActions";
 import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
@@ -273,6 +274,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // prayerCity, prayerSearch, prayerTimings → usePrayerTime hook'unda
   const [now, setNow] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
+  const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [modal, setModal] = useState<ModalName>(null);
   const [tosOpen, setTosOpen] = useState(false);
@@ -1189,6 +1191,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         setLangOpen={setLangOpen}
         nextPrayer={nextPrayer}
         prayerCity={prayerCity}
+        setRoadmapOpen={setRoadmapOpen}
         formatRemaining={formatRemaining}
         t={t}
         tier={tier}
@@ -1643,6 +1646,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         reciterName={reciter.name}
         telifRiski={reciter.telifRiski}
       />
+
+      {/* V2-V3 YOL HARİTASI */}
+      <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
     </div>
   );
 }

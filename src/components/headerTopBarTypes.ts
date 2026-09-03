@@ -32,4 +32,5 @@ export interface HeaderTopBarProps {
   t: (key: keyof (typeof T)["tr"]) => string;
   tier?: Tier;
   subscriptionEndsAt?: string | null;
+  setRoadmapOpen?: (v: boolean) => void;
 }

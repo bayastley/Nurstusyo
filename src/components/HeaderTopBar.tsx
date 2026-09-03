@@ -41,6 +41,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   t,
   tier,
   subscriptionEndsAt,
+  setRoadmapOpen,
 }) => {
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
@@ -188,6 +189,17 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             </p>
                             <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi</p>
                           </div>
+
+                          {/* ★ YOL HARİTASI BUTONU */}
+                          <button
+                            type="button"
+                            onClick={() => { setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
+                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] text-white/85 font-bold hover:bg-white/5 transition"
+                          >
+                            <span className="text-base">🚀</span>
+                            <span className="min-w-0 flex-1 truncate">Güncelleme Yol Haritası</span>
+                            <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-green-500/20 text-green-400">V2 & V3</span>
+                          </button>
 
                           {/* ★ Ayet & Dua Kütüphanesi — V2 kilidiyle Güncellemeler panelinde */}
                           <div className="relative">
