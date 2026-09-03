@@ -177,7 +177,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
             ctx.strokeStyle = currentTheme.acc; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(width * .34, height * .17); ctx.lineTo(width * .47, height * .17); ctx.moveTo(width * .53, height * .17); ctx.lineTo(width * .66, height * .17); ctx.stroke();
             ctx.fillStyle = currentTheme.acc; ctx.save(); ctx.translate(width / 2, height * .17); ctx.rotate(Math.PI / 4); ctx.fillRect(-4, -4, 8, 8); ctx.restore(); ctx.shadowBlur = 16;
             {
-              const arLen = currentAyah.ar.length, trLen = currentAyah.tr.length;
+              const arLen = currentAyah.ar?.length ?? 0, trLen = currentAyah.tr?.length ?? 0;
               let arBase = height * 0.028;
               if (arLen > 300) arBase *= 0.52; else if (arLen > 200) arBase *= 0.62; else if (arLen > 120) arBase *= 0.74; else if (arLen > 70) arBase *= 0.85;
               let trBase = width * 0.022;
@@ -215,7 +215,43 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`; goldFill(); ctx.shadowColor = p.shimmerCfg.glow; ctx.shadowBlur = p.shimmerCfg.still ? 14 : 22;
                 const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
                 try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
-                arabicLines.forEach((line) => { ctx.fillText(line, width / 2 + ox, y + arabicSize * 0.8); y += arabicHeight; });
+                // Word-by-word highlight: her kelimeyi ayrı çiz, aktif kelimeyi parlat
+                const allArabicWords = currentAyah.ar.split(/\s+/).filter(Boolean);
+                const totalWords = allArabicWords.length;
+                const wordDuration = 80; // her kelime ~80 frame parlıyor (yaklaşık 1.3 saniye @60fps)
+                const activeIdx = totalWords > 0 ? Math.floor((tick / wordDuration) % totalWords) : -1;
+                arabicLines.forEach((line) => {
+                  const words = line.split(/\s+/).filter(Boolean);
+                  const globalStart = allArabicWords.indexOf(words[0]);
+                  // Kelimeleri sağdan sola (RTL) sırala ve çiz
+                  let xCursor = width / 2 + ox;
+                  const totalLineWidth = ctx.measureText(line).width;
+                  let wordX = xCursor + totalLineWidth / 2;
+                  words.forEach((word, wi) => {
+                    const globalIdx = globalStart + wi;
+                    const isActive = globalIdx === activeIdx;
+                    const ww = ctx.measureText(word).width;
+                    wordX -= ww;
+                    if (isActive) {
+                      // Aktif kelime: altın glow + parlak
+                      ctx.save();
+                      ctx.shadowColor = "#ffd700";
+                      ctx.shadowBlur = 20;
+                      ctx.fillStyle = "#ffffff";
+                      ctx.font = `700 ${Math.round(arabicSize * 1.12)}px ${p.arabicFontCss}`;
+                      ctx.fillText(word, wordX, y + arabicSize * 0.8);
+                      ctx.restore();
+                      ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`;
+                      goldFill();
+                      ctx.shadowColor = p.shimmerCfg.glow;
+                      ctx.shadowBlur = p.shimmerCfg.still ? 14 : 22;
+                    } else {
+                      ctx.fillText(word, wordX, y + arabicSize * 0.8);
+                    }
+                    wordX -= arabicSize * 0.35; // kelime arası boşluk
+                  });
+                  y += arabicHeight;
+                });
                 try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = prevDir || "ltr"; } catch { /* ignore */ }
                 ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.beginPath(); ctx.moveTo(width * .28, y + 8); ctx.lineTo(width * .72, y + 8); ctx.stroke(); y += sepH;
               }
