@@ -32,12 +32,12 @@ const DEFAULT_V2: Omit<Feature, "votes">[] = [
 ];
 
 const DEFAULT_V3: Omit<Feature, "votes">[] = [
-  { id: "mobil-uygulama", icon: Smartphone, title: "iOS & Android Uygulaması", desc: "Mobil uygulama ile push notification, offline video izleme.", tag: "V3", active: true },
-  { id: "ses-senkron", icon: Music, title: "Kelime Ses Senkronizasyonu", desc: "Okunan her kelime altın ışıkla parlar.", tag: "V3", active: true },
-  { id: "reklam", icon: Shield, title: "Reklam Entegrasyonu", desc: "Google AdSense ile reklam geliri.", tag: "V3", active: true },
-  { id: "coklu-kullanici", icon: Users, title: "Çoklu Kullanıcı & Ekip", desc: "Ekip ve aile planları.", tag: "V3", active: true },
-  { id: "api", icon: Zap, title: "Dış API Entegrasyonu", desc: "Dış uygulamaların entegrasyonu.", tag: "V3", active: true },
-  { id: "kurumsal", icon: Crown, title: "Kurumsal Üyelik", desc: "Ajanslar ve medya kuruluşları için özel paketler.", tag: "V3", active: true },
+  { id: "mobil-uygulama", icon: Smartphone, title: "Cebindeki Kur'an Stüdyosu", desc: "Telefonundan üret, indir, paylaş. İnternetsiz çalışsın, bildirim gelsin, her an üretime hazır ol. App Store ve Google Play'de olacak.", tag: "V3", active: true },
+  { id: "ses-senkron", icon: Music, title: "Harika Kelvinlight", desc: "Okunan her kelime altın ışıkla parlayacak. Gözlerin takip edecek, ruhun dinleyecek. Hızlı okuma moduyla ezber bile yapabilirsin.", tag: "V3", active: true },
+  { id: "reklam", icon: Shield, title: "Ücretsiz Kullanıcılar İçin Destek", desc: "Reklam geliriyle ücretsiz kullanıcılar da video üretebilecek. Sen seyret, o sana destek olsun. Pro kullanıcılar reklamsız devam edecek.", tag: "V3", active: true },
+  { id: "coklu-kullanici", icon: Users, title: "Ailesiyle ve Ekibiyle Üretim", desc: "Tek hesapla karınla, çocuklarınla, ekibinle üret. Aile paketi, ekip paketi. Herkes kendi hesabından ama tek fatura.", tag: "V3", active: true },
+  { id: "api", icon: Zap, title: "Camiler ve Medya İçin Entegrasyon", desc: "Camiler otomatik Cuma videosu üretebilecek. Medya kuruluşları tek tuşla binlerce video oluşturabilecek. API ile her şey otomatik.", tag: "V3", active: true },
+  { id: "kurumsal", icon: Crown, title: "Ajanslar ve Medya Şirketleri", desc: "Özel logon, özel rengin, sınırsız üretim. Ajanslar ve medya şirketleri için beyaz etiketli çözüm. Senin isminle, senin markanla.", tag: "V3", active: true },
 ];
 
 const ICON_MAP: Record<string, any> = { Brain, Mic, PenTool, Sparkles, Bell, Users, Globe, CreditCard, Headphones, Smartphone, Music, Shield, Zap, Crown };
