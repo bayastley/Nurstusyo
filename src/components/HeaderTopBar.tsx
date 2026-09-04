@@ -148,8 +148,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       </button>
                     ))}
 
-                    {/* ★ GÜNCELLEMELER — SADECE ADMİN GÖREBİLİR */}
-                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
+                    {/* ★ GÜNCELLEMELER — HERKES GÖRÜR, SADECE ADMİN AÇAR */}
+                    {user && (
                     <div
                       className="relative"
                       onMouseEnter={openUpdates}
