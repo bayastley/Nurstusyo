@@ -95,12 +95,33 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
   };
 
   const handleVote = (id: string) => {
-    if (localVotes[id] || isDeadlinePassed) return;
-    const newVotes = { ...localVotes, [id]: true };
+    if (isDeadlinePassed) return;
+    const prevId = Object.keys(localVotes).find(k => localVotes[k]);
+    // Aynı oya tekrar tıklandıysa — oyu kaldır
+    if (prevId === id) {
+      const newVotes = { ...localVotes };
+      delete newVotes[id];
+      setLocalVotes(newVotes);
+      try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
+      const v2 = data.v2.map(f => f.id === id ? { ...f, votes: Math.max(0, f.votes - 1) } : f);
+      const v3 = data.v3.map(f => f.id === id ? { ...f, votes: Math.max(0, f.votes - 1) } : f);
+      save({ v2, v3 });
+      return;
+    }
+    // Farklı bir FEATURE'a oy verildi — eskisini sil, yenisini ekle
+    const newVotes: Record<string, boolean> = { [id]: true };
     setLocalVotes(newVotes);
     try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
-    const v2 = data.v2.map(f => f.id === id ? { ...f, votes: f.votes + 1 } : f);
-    const v3 = data.v3.map(f => f.id === id ? { ...f, votes: f.votes + 1 } : f);
+    const v2 = data.v2.map(f => {
+      if (f.id === id) return { ...f, votes: f.votes + 1 };
+      if (prevId && f.id === prevId) return { ...f, votes: Math.max(0, f.votes - 1) };
+      return f;
+    });
+    const v3 = data.v3.map(f => {
+      if (f.id === id) return { ...f, votes: f.votes + 1 };
+      if (prevId && f.id === prevId) return { ...f, votes: Math.max(0, f.votes - 1) };
+      return f;
+    });
     save({ v2, v3 });
   };
 
@@ -188,7 +209,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
             <>
               <button
                 onClick={() => handleVote(f.id)}
-                disabled={localVotes[f.id] || isDeadlinePassed}
+                disabled={isDeadlinePassed}
                 className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? (version === "V2" ? "bg-amber-500/20 text-amber-300" : "bg-purple-500/20 text-purple-300") : (version === "V2" ? "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300")}`}
               >
                 <ThumbsUp size={12} />
