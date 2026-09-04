@@ -176,7 +176,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id,email,name,tier,created_at,updated_at`);
       if (!users[0]) return res.status(200).json({ ok: true, user: null, orders: [], wallet: null });
       const uid = users[0].id;
-      const orders = await db<any[]>(`nur_orders?user_id=eq.${encodeURIComponent(uid)}&select=id,product_code,amount,conversation_id,status,payment_id,created_at&order=created_at.desc&limit=10`);
+      const orders = await db<any[]>(`nur_orders?user_id=eq.${encodeURIComponent(uid)}&select=id,product_code,conversation_id,status,payment_id,created_at&order=created_at.desc&limit=10`);
       const wallets = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=purchased_kisa,purchased_uzun,purchased_tam,sub_jeton,purchased_jeton,updated_at`);
       const subs = await db<any[]>(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=product_code,status,expires_at,created_at&order=created_at.desc&limit=5`);
       return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs });
