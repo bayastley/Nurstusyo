@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Sparkles, Zap, Brain, Mic, Bell, Users, Globe, Lock, Rocket, Crown, Smartphone, Music, Shield, CreditCard, PenTool, Headphones, ThumbsUp, Plus, Trash2, RotateCcw, Clock, Settings, Save, Edit3 } from "lucide-react";
+import { X, ThumbsUp, Plus, Trash2, RotateCcw, Clock, Settings, Rocket, Edit3 } from "lucide-react";
 import { isAdminEmail } from "../tier";
+
+// ★ Icon'lar string olarak tutulur — JSON.parse'ta kaybolmaz
+const ICON_EMOJI: Record<string, string> = {
+  ai_meal: "🧠", kendi_ses: "🎤", kelime_video: "✍️", ai_arkaplan: "✨",
+  push: "🔔", ucretsiz_deneme: "🎁", referans: "👥", arsiv: "🌐",
+  e_fatura: "💳", meal_dinle: "🎧", mobil: "📱", ses_senkron: "🎵",
+  reklam: "🛡️", coklu_kullanici: "👥", api: "⚡", kurumsal: "👑",
+};
+function getIcon(id: string): string {
+  return ICON_EMOJI[id] || "✨";
+}
 
 interface RoadmapModalProps {
   open: boolean;
@@ -9,7 +20,7 @@ interface RoadmapModalProps {
 }
 
 interface Feature {
-  icon: any;
+  iconId: string;
   title: string;
   desc: string;
   tag: string;
@@ -19,29 +30,28 @@ interface Feature {
 }
 
 const DEFAULT_V2: Omit<Feature, "votes">[] = [
-  { id: "ai-meal", icon: Brain, title: "AI Meal Seslendirme", desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.", tag: "V2", active: true },
-  { id: "kendi-ses", icon: Mic, title: "Kendi Sesinle Seslendirme", desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek.", tag: "V2", active: true },
-  { id: "kelime-video", icon: PenTool, title: "Kelime Tabanlı Video Üretimi", desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin.", tag: "V2", active: true },
-  { id: "ai-arkaplan", icon: Sparkles, title: "AI Arka Plan Üretici", desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek.", tag: "V2", active: true },
-  { id: "push", icon: Bell, title: "Akıllı Push Bildirimi", desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim.", tag: "V2", active: true },
-  { id: "ucretsiz-deneme", icon: Sparkles, title: "Ücretsiz 7 Gün PRO Denemesi", desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez.", tag: "V2", active: true },
-  { id: "referans", icon: Users, title: "Referans & Davet Sistemi", desc: "Arkadaşını davet et, her ikisi de kazansın.", tag: "V2", active: true },
-  { id: "arsiv", icon: Globe, title: "Kullanıcı Arşivi", desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir.", tag: "V2", active: true },
-  { id: "e-fatura", icon: CreditCard, title: "Otomatik E-Fatura", desc: "Satın alımlarda otomatik e-fatura.", tag: "V2", active: true },
-  { id: "meal-dinle", icon: Headphones, title: "Meal Dinleme Modu", desc: "Videoları ses-only modda dinle.", tag: "V2", active: true },
+  { id: "ai-meal", iconId: "ai_meal", title: "AI Meal Seslendirme", desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.", tag: "V2", active: true },
+  { id: "kendi-ses", iconId: "kendi_ses", title: "Kendi Sesinle Seslendirme", desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek.", tag: "V2", active: true },
+  { id: "kelime-video", iconId: "kelime_video", title: "Kelime Tabanlı Video Üretimi", desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin.", tag: "V2", active: true },
+  { id: "ai-arkaplan", iconId: "ai_arkaplan", title: "AI Arka Plan Üretici", desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek.", tag: "V2", active: true },
+  { id: "push", iconId: "push", title: "Akıllı Push Bildirimi", desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim.", tag: "V2", active: true },
+  { id: "ucretsiz-deneme", iconId: "ucretsiz_deneme", title: "Ücretsiz 7 Gün PRO Denemesi", desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez.", tag: "V2", active: true },
+  { id: "referans", iconId: "referans", title: "Referans & Davet Sistemi", desc: "Arkadaşını davet et, her ikisi de kazansın.", tag: "V2", active: true },
+  { id: "arsiv", iconId: "arsiv", title: "Kullanıcı Arşivi", desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir.", tag: "V2", active: true },
+  { id: "e-fatura", iconId: "e_fatura", title: "Otomatik E-Fatura", desc: "Satın alımlarda otomatik e-fatura.", tag: "V2", active: true },
+  { id: "meal-dinle", iconId: "meal_dinle", title: "Meal Dinleme Modu", desc: "Videoları ses-only modda dinle.", tag: "V2", active: true },
 ];
 
 const DEFAULT_V3: Omit<Feature, "votes">[] = [
-  { id: "mobil-uygulama", icon: Smartphone, title: "Cebindeki Kur'an Stüdyosu", desc: "Telefonundan üret, indir, paylaş. İnternetsiz çalışsın, bildirim gelsin, her an üretime hazır ol. App Store ve Google Play'de olacak.", tag: "V3", active: true },
-  { id: "ses-senkron", icon: Music, title: "Harika Kelvinlight", desc: "Okunan her kelime altın ışıkla parlayacak. Gözlerin takip edecek, ruhun dinleyecek. Hızlı okuma moduyla ezber bile yapabilirsin.", tag: "V3", active: true },
-  { id: "reklam", icon: Shield, title: "Ücretsiz Kullanıcılar İçin Destek", desc: "Reklam geliriyle ücretsiz kullanıcılar da video üretebilecek. Sen seyret, o sana destek olsun. Pro kullanıcılar reklamsız devam edecek.", tag: "V3", active: true },
-  { id: "coklu-kullanici", icon: Users, title: "Ailesiyle ve Ekibiyle Üretim", desc: "Tek hesapla karınla, çocuklarınla, ekibinle üret. Aile paketi, ekip paketi. Herkes kendi hesabından ama tek fatura.", tag: "V3", active: true },
-  { id: "api", icon: Zap, title: "Camiler ve Medya İçin Entegrasyon", desc: "Camiler otomatik Cuma videosu üretebilecek. Medya kuruluşları tek tuşla binlerce video oluşturabilecek. API ile her şey otomatik.", tag: "V3", active: true },
-  { id: "kurumsal", icon: Crown, title: "Ajanslar ve Medya Şirketleri", desc: "Özel logon, özel rengin, sınırsız üretim. Ajanslar ve medya şirketleri için beyaz etiketli çözüm. Senin isminle, senin markanla.", tag: "V3", active: true },
+  { id: "mobil-uygulama", iconId: "mobil", title: "Cebindeki Kur'an Stüdyosu", desc: "Telefonundan üret, indir, paylaş. İnternetsiz çalışsın, bildirim gelsin, her an üretime hazır ol. App Store ve Google Play'de olacak.", tag: "V3", active: true },
+  { id: "ses-senkron", iconId: "ses_senkron", title: "Harika Kelvinlight", desc: "Okunan her kelime altın ışıkla parlayacak. Gözlerin takip edecek, ruhun dinleyecek. Hızlı okuma moduyla ezber bile yapabilirsin.", tag: "V3", active: true },
+  { id: "reklam", iconId: "reklam", title: "Ücretsiz Kullanıcılar İçin Destek", desc: "Reklam geliriyle ücretsiz kullanıcılar da video üretebilecek. Sen seyret, o sana destek olsun. Pro kullanıcılar reklamsız devam edecek.", tag: "V3", active: true },
+  { id: "coklu-kullanici", iconId: "coklu_kullanici", title: "Ailesiyle ve Ekibiyle Üretim", desc: "Tek hesapla karınla, çocuklarınla, ekibinle üret. Aile paketi, ekip paketi. Herkes kendi hesabından ama tek fatura.", tag: "V3", active: true },
+  { id: "api", iconId: "api", title: "Camiler ve Medya İçin Entegrasyon", desc: "Camiler otomatik Cuma videosu üretebilecek. Medya kuruluşları tek tuşla binlerce video oluşturabilecek. API ile her şey otomatik.", tag: "V3", active: true },
+  { id: "kurumsal", iconId: "kurumsal", title: "Ajanslar ve Medya Şirketleri", desc: "Özel logon, özel rengin, sınırsız üretim. Ajanslar ve medya şirketleri için beyaz etiketli çözüm. Senin isminle, senin markanla.", tag: "V3", active: true },
 ];
 
-const ICON_MAP: Record<string, any> = { Brain, Mic, PenTool, Sparkles, Bell, Users, Globe, CreditCard, Headphones, Smartphone, Music, Shield, Zap, Crown };
-const ICON_NAMES = Object.keys(ICON_MAP);
+// iconId → emoji tablosu zaten yukarıda ICON_EMOJI olarak tanımlı
 
 const STORAGE_KEY = "nur_roadmap_data";
 const VOTE_KEY = "nur_roadmap_votes";
@@ -138,14 +148,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
     if (!confirm("Bu özelliği silmek istediğine emin misin?")) return;
     if (version === "V2") save({ ...data, v2: data.v2.filter(f => f.id !== id) });
     else save({ ...data, v3: data.v3.filter(f => f.id !== id) });
-  };
-
-  const handleAddFeature = () => {
+  };    const handleAddFeature = () => {
     if (!newTitle.trim()) return;
-    const icon = Sparkles;
     const newFeature: Feature = {
       id: `custom-${Date.now()}`,
-      icon,
+      iconId: "ai_arkaplan",
       title: newTitle.trim(),
       desc: newDesc.trim() || "Yakında eklenecek.",
       tag: newVersion,
@@ -175,12 +182,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
 
   const renderFeature = (f: Feature, version: "V2" | "V3") => {
     const isEditing = editingId === f.id;
-    const IconComp = f.icon || Sparkles;
+    const emoji = getIcon(f.iconId);
 
     return (
       <div key={f.id} className={`flex items-start gap-3 p-3 rounded-xl border transition group ${version === "V2" ? "bg-white/[0.03] border-white/5 hover:border-amber-500/20" : "bg-white/[0.02] border-white/[0.03] opacity-60 hover:opacity-80"}`}>
-        <div className={`mt-0.5 p-1.5 rounded-lg group-hover:scale-110 transition ${version === "V2" ? "" : "bg-purple-500/10"}`} style={version === "V2" ? { backgroundColor: "var(--accent-2)", opacity: 0.15 } : undefined}>
-          <IconComp size={14} style={version === "V2" ? { color: "var(--accent-2)" } : undefined} className={version === "V3" ? "text-purple-400" : ""} />
+        <div className={`mt-0.5 p-1.5 rounded-lg text-sm group-hover:scale-110 transition ${version === "V2" ? "" : "bg-purple-500/10"}`} style={version === "V2" ? { backgroundColor: "var(--accent-2)", opacity: 0.15 } : undefined}>
+          {emoji}
         </div>
         <div className="flex-1 min-w-0">
           {isEditing ? (
