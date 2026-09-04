@@ -169,6 +169,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 4) Aktif aboneliği iptal et
         await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancelled_at: new Date().toISOString() }) }).catch(() => null);
       }
+    } else if (action === "user_history") {
+      // ★ KULLANICI GEÇMİŞİ — Email ile gir, son 10 siparişi + cüzdan durumunu gör
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id,email,name,tier,created_at,updated_at`);
+      if (!users[0]) return res.status(200).json({ ok: true, user: null, orders: [], wallet: null });
+      const uid = users[0].id;
+      const orders = await db<any[]>(`nur_orders?user_id=eq.${encodeURIComponent(uid)}&select=id,product_code,amount,conversation_id,status,payment_id,created_at&order=created_at.desc&limit=10`);
+      const wallets = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=purchased_kisa,purchased_uzun,purchased_tam,sub_jeton,purchased_jeton,updated_at`);
+      const subs = await db<any[]>(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=product_code,status,expires_at,created_at&order=created_at.desc&limit=5`);
+      return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || "") }) }).catch(() => null);
     return res.status(200).json({ ok: true });

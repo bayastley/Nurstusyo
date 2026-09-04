@@ -38,6 +38,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   // Ban reason input state
   const [banReasonInput, setBanReasonInput] = useState<string>("");
+  // ★ Kullanıcı geçmişi state
+  const [userHistory, setUserHistory] = useState<any>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyEmail, setHistoryEmail] = useState("");
 
   const [banLogs, setBanLogs] = useState<BanLog[]>(() => getBanLogs());
 
@@ -228,6 +232,39 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     if (targetUser) {
       onUpdateUser(targetUser.email, "free", 0);
       notify(`🗑️ ${targetUser.email} tüm hakları sıfırlandı — krótka/uzun/tam/jeton/abonelik temizlendi!`);
+    }
+  };
+
+  // ★ KULLANICI GEÇMİŞİ — Email ile son 10 siparişi göster
+  const handleUserHistory = async (email: string) => {
+    const q = sanitizeText(email).trim().toLowerCase().slice(0, 254);
+    if (!q || !isValidEmail(q)) {
+      notify("⚠️ Geçerli bir e-posta adresi gir");
+      return;
+    }
+    setLoadingHistory(true);
+    setHistoryEmail(q);
+    setUserHistory(null);
+    try {
+      const res = await fetch("/api/admin/action", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "user_history", target: q }),
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.ok) {
+        setUserHistory(data);
+        if (!data.user) {
+          notify(`ℹ️ "${q}" adresinde kayıtlı kullanıcı bulunamadı`);
+        }
+      } else {
+        notify(data?.error || "Geçmiş alınamadı");
+      }
+    } catch {
+      notify("⚠️ Sunucuya ulaşılamadı");
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -494,6 +531,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               setSelectedEmail={setSelectedEmail}
               filteredUsers={filteredUsers}
               currentUserEmail={currentUserEmail}
+              handleUserHistory={handleUserHistory}
+              userHistory={userHistory}
+              loadingHistory={loadingHistory}
+              historyEmail={historyEmail}
+              setHistoryEmail={setHistoryEmail}
+              setUserHistory={setUserHistory}
             />
           )}
           <AdminModulesSyncTab

@@ -1,5 +1,5 @@
 import React from "react";
-import { UserCheck, Crown, Ban, CheckCircle } from "lucide-react";
+import { UserCheck, Crown, Ban, CheckCircle, History, Search, Package, Clock, Wallet } from "lucide-react";
 import { isAdminEmail } from "../tier";
 import type { ManagedUser } from "../services/adminSyncService";
 import type { Tier } from "../types";
@@ -29,6 +29,12 @@ interface AdminUsersTabProps {
   setSelectedEmail: (v: string) => void;
   filteredUsers: ManagedUser[];
   currentUserEmail: string;
+  handleUserHistory: (email: string) => void;
+  userHistory: any;
+  loadingHistory: boolean;
+  historyEmail: string;
+  setHistoryEmail: (v: string) => void;
+  setUserHistory: (v: any) => void;
 }
 
 export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
@@ -39,6 +45,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   handleBan, handleUnban, handleTierChange, handleResetRights,
   jetonDelta, setJetonDelta, handleDirectJetonSet,
   selectedEmail, setSelectedEmail, filteredUsers, currentUserEmail,
+  handleUserHistory, userHistory, loadingHistory, historyEmail, setHistoryEmail, setUserHistory,
 }) => {
   return (
     <>
@@ -120,6 +127,123 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 </button>
               )}
             </div>
+            {/* GEÇMİŞ GÖR BUTONU */}
+            <button
+              onClick={() => handleUserHistory(emailSearchResult.email)}
+              disabled={loadingHistory}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500/15 px-3 py-2 text-[10px] font-bold text-blue-300 hover:bg-blue-500/25 transition disabled:opacity-50"
+            >
+              <History size={13} />
+              {loadingHistory ? "Yükleniyor..." : "Son 10 İşlem Geçmişi"}
+            </button>
+          </div>
+        )}
+
+        {/* ★ KULLANICI GEÇMİŞİ GÖRÜNTÜLEMESİ */}
+        {userHistory && (
+          <div className="mt-3 rounded-xl bg-black/50 border border-blue-500/20 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <History size={13} className="text-blue-400" />
+              <span className="text-[11px] font-bold text-blue-300">
+                {historyEmail} — İşlem Geçmişi
+              </span>
+            </div>
+
+            {/* Kullanıcı Bilgileri */}
+            {userHistory.user ? (
+              <>
+                <div className="mb-2 grid grid-cols-3 gap-2 text-[10px]">
+                  <div className="rounded-lg bg-white/5 p-2">
+                    <div className="text-white/40">Tier</div>
+                    <div className="font-bold text-white uppercase">{userHistory.user.tier}</div>
+                  </div>
+                  <div className="rounded-lg bg-white/5 p-2">
+                    <div className="text-white/40">Kayıt</div>
+                    <div className="font-bold text-white">{userHistory.user.created_at ? new Date(userHistory.user.created_at).toLocaleDateString("tr-TR") : "—"}</div>
+                  </div>
+                  <div className="rounded-lg bg-white/5 p-2">
+                    <div className="text-white/40">Son Güncelleme</div>
+                    <div className="font-bold text-white">{userHistory.user.updated_at ? new Date(userHistory.user.updated_at).toLocaleDateString("tr-TR") : "—"}</div>
+                  </div>
+                </div>
+
+                {/* Cüzdan Durumu */}
+                {userHistory.wallet && (
+                  <div className="mb-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2">
+                    <div className="mb-1 flex items-center gap-1">
+                      <Wallet size={11} className="text-amber-400" />
+                      <span className="text-[10px] font-bold text-amber-300">Cüzdan Durumu</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-[9px]">
+                      <div><span className="text-white/50">Kısa:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_kisa || 0}</span></div>
+                      <div><span className="text-white/50">Uzun:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_uzun || 0}</span></div>
+                      <div><span className="text-white/50">Tam:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_tam || 0}</span></div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Abonelikler */}
+                {userHistory.subscriptions?.length > 0 && (
+                  <div className="mb-2 rounded-lg bg-purple-500/10 border border-purple-500/20 p-2">
+                    <div className="mb-1 flex items-center gap-1">
+                      <Package size={11} className="text-purple-400" />
+                      <span className="text-[10px] font-bold text-purple-300">Abonelikler</span>
+                    </div>
+                    {userHistory.subscriptions.map((sub: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-[9px] text-white/60">
+                        <span>{sub.product_code}</span>
+                        <span className={sub.status === "active" ? "text-green-400" : "text-red-400"}>{sub.status}</span>
+                        <span>{sub.expires_at ? new Date(sub.expires_at).toLocaleDateString("tr-TR") : "—"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Son 10 Sipariş */}
+                {userHistory.orders?.length > 0 ? (
+                  <div className="rounded-lg bg-white/5 p-2">
+                    <div className="mb-1 flex items-center gap-1">
+                      <Package size={11} className="text-white/50" />
+                      <span className="text-[10px] font-bold text-white/70">Son {userHistory.orders.length} Sipariş</span>
+                    </div>
+                    <div className="space-y-1">
+                      {userHistory.orders.map((order: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between rounded-lg bg-white/[0.03] px-2 py-1.5 text-[9px]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-white/40">{order.id?.slice(0, 8)}</span>
+                            <span className="font-bold text-white">{order.product_code}</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-white/50">{order.amount ? `${order.amount}₺` : "—"}</span>
+                            <span className={order.status === "completed" ? "text-green-400 font-bold" : order.status === "pending" ? "text-yellow-400" : "text-red-400"}>
+                              {order.status}
+                            </span>
+                            <span className="text-white/30">
+                              {order.created_at ? new Date(order.created_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-[10px] text-white/30 py-2">
+                    Henüz sipariş kaydı yok
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center text-[10px] text-white/30 py-2">
+                Bu email adresinde kayıtlı kullanıcı bulunamadı
+              </div>
+            )}
+
+            <button
+              onClick={() => setUserHistory(null)}
+              className="mt-2 w-full rounded-lg bg-white/5 px-2 py-1 text-[9px] text-white/40 hover:bg-white/10 transition"
+            >
+              Geçmişi Kapat
+            </button>
           </div>
         )}
       </div>
