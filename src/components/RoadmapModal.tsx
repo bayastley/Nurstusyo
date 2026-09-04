@@ -1,131 +1,177 @@
-import React from "react";
-import { X, Sparkles, Zap, Brain, Mic, Bell, Users, Globe, Lock, Rocket, Crown, Smartphone, Music, Shield, CreditCard, PenTool, FileText, History, Headphones } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Sparkles, Zap, Brain, Mic, Bell, Users, Globe, Lock, Rocket, Crown, Smartphone, Music, Shield, CreditCard, PenTool, FileText, History, Headphones, ThumbsUp, ChevronDown } from "lucide-react";
 
 interface RoadmapModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-const V2_FEATURES = [
+interface Feature {
+  icon: any;
+  title: string;
+  desc: string;
+  tag: string;
+  votes?: number;
+  id: string;
+}
+
+const V2_FEATURES: Feature[] = [
   {
+    id: "ai-meal",
     icon: Brain,
     title: "AI Meal Seslendirme",
-    desc: "Yapay zeka ile Kur'an meal seslendirmesi. Telifsiz, anında üretilir. 22 farklı dilde meal seslendirmesi mümkün olacak. Hafızlar kendi sesiyle de entegre edebilecek.",
-    detail: "OpenAI TTS / Piper TTS altyapısı ile sıfır maliyet, yüksek kalite",
+    desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.",
     tag: "Yakında",
+    votes: 847,
   },
   {
+    id: "kendi-ses",
     icon: Mic,
     title: "Kendi Sesinle Seslendirme",
-    desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilir. Mobilde ve masaüstünde ses kayıt desteği. Otomatik gürültü temizleme ve ses ayarı.",
-    detail: "Mikrofon kaydı + otomatik ses seviyesi normalizasyonu",
+    desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek. Mobilde ve masaüstünde ses kayıt desteği.",
     tag: "Yakında",
+    votes: 623,
   },
   {
+    id: "kelime-video",
     icon: PenTool,
     title: "Kelime Tabanlı Video Üretimi",
-    desc: "Kullanıcılar kelime veya cümle yazacak, yapay zeka otomatik arka plan atmosfer ve tema seçecek. 'Sabır' yaz, çöl atmosferinde sinematik video çıkar.",
-    detail: "AI-powered topic analysis → otomatik tema + atmosfer seçimi",
+    desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin. 'Sabır' yaz, çöl atmosferinde sinematik video çıkaran bir sistem.",
     tag: "Yakında",
+    votes: 912,
   },
   {
+    id: "ai-arkaplan",
     icon: Sparkles,
     title: "AI Arka Plan Üretici",
-    desc: "Yazdığın metne göre yapay zeka kendisi arka plan, tema ve atmosfer belirleyecek. Kullanıcı sadece yazsın, gerisini AI halletsin. Her video benzersiz olacak.",
-    detail: "GPT-based content analysis → otomatik görsel + müzik eşleştirme",
+    desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek. Kullanıcı sadece yazsın, gerisini AI halletsin.",
     tag: "Yakında",
+    votes: 756,
   },
   {
+    id: "push",
     icon: Bell,
     title: "Akıllı Push Bildirimi",
-    desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim. Firebase Cloud Messaging ile. Kullanıcı tercihlerine göre kişiselleştirilmiş bildirimler.",
-    detail: "Firebase FCM + astrology-free, sadece dini takvim",
+    desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim. Kişiselleştirilmiş bildirimler.",
     tag: "Yakında",
+    votes: 534,
   },
   {
+    id: "ucretsiz-deneme",
     icon: Sparkles,
     title: "Ücretsiz 7 Gün PRO Denemesi",
-    desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez. Deneme süresinde PRO özelliklerinin tamamına erişim. Deneme sonunda otomatik free'ye dönüş.",
-    detail: "Dönüşüm oranını %300 artırması bekleniyor",
+    desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez. Deneme sonunda otomatik free'ye dönüş.",
     tag: "Yakında",
+    votes: 891,
   },
   {
+    id: "referans",
     icon: Users,
     title: "Referans & Davet Sistemi",
-    desc: "Arkadaşını davet et, her ikisi de kazansın. Her başarılı davette bonus üretim hakkı. Sosyal medya paylaşımı ile organik büyüme.",
-    detail: "Referans linki + otomatik bonus tanımlama",
+    desc: "Arkadaşını davet et, her ikisi de kazansın. Sosyal medya paylaşımı ile organik büyüme.",
     tag: "Yakında",
+    votes: 445,
   },
   {
+    id: "arsiv",
     icon: Globe,
     title: "Kullanıcı Arşivi",
-    desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir veya yeniden düzenle. Geçmiş üretim kayıtları, favori kâriler ve tercihler.",
-    detail: "Supabase Storage +(video metadata + thumbnail cache)",
+    desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir veya yeniden düzenle.",
     tag: "Yakında",
+    votes: 678,
   },
   {
+    id: "e-fatura",
     icon: CreditCard,
     title: "Otomatik E-Fatura",
-    desc: "İyzico ile otomatik e-fatura kesimi. Kullanıcılara otomatik fatura e-postası. Resmi muhasebe kayıtları için entegrasyon.",
-    detail: "İyzico API + e-fatura entegrasyonu",
+    desc: "Satın alımlarda otomatik e-fatura. Resmi muhasebe kayıtları için entegrasyon.",
     tag: "Yakında",
+    votes: 312,
   },
   {
+    id: "meal-dinle",
     icon: Headphones,
     title: "Meal Dinleme Modu",
-    desc: "Videoları ses-only modda dinle. Hafızlık ve ezber için mükemmel. Arka planda dinlerken ekran kapalı çalışmaya devam etsin.",
-    detail: "Background audio mode + notification controls",
+    desc: "Videoları ses-only modda dinle. Hafızlık ve ezber için mükemmel. Arka planda çalışmaya devam etsin.",
     tag: "Yakında",
+    votes: 567,
   },
 ];
 
-const V3_FEATURES = [
+const V3_FEATURES: Feature[] = [
   {
+    id: "mobil-uygulama",
     icon: Smartphone,
     title: "iOS & Android Uygulaması",
-    desc: "Capacitor ile native uygulama. Push notification, offline video izleme, parmak izi ile giriş. App Store ve Google Play'de.",
-    detail: "Capacitor + native bridge",
+    desc: "Mobil uygulama ile push notification, offline video izleme. App Store ve Google Play'de.",
     tag: "Planlandı",
+    votes: 1203,
   },
   {
+    id: "ses-senkron",
     icon: Music,
     title: "Kelime Ses Senkronizasyonu",
-    desc: "Tajwid tabanlı gerçek zamanlı kelime vurgulama. Okunan her kelime altın ışıkla parlar. Hızlı okuma modu da eklenecek.",
-    detail: "WebSocket-based real-time sync + Tajwid rules",
+    desc: "Okunan her kelime altın ışıkla parlar. Hızlı okuma modu da eklenecek.",
     tag: "Planlandı",
+    votes: 834,
   },
   {
+    id: "reklam",
     icon: Shield,
     title: "Reklam Entegrasyonu",
-    desc: "Google AdSense ile reklam geliri. Ücretsiz kullanıcılar video başında reklam görecek. PRO kullanıcılar reklamsız.",
-    detail: "AdSense + reward-based ads for free tier",
+    desc: "Google AdSense ile reklam geliri. Ücretsiz kullanıcılar video başında reklam görecek.",
     tag: "Planlandı",
+    votes: 234,
   },
   {
+    id: "coklu-kullanici",
     icon: Users,
     title: "Çoklu Kullanıcı & Ekip",
-    desc: "Ekip ve aile planları. Tek hesapla birden fazla kullanıcı. Ajanslar için kurumsal paket.",
-    detail: "Multi-seat billing + team management dashboard",
+    desc: "Ekip ve aile planları. Tek hesapla birden fazla kullanıcı.",
     tag: "Planlandı",
+    votes: 389,
   },
   {
+    id: "api",
     icon: Zap,
     title: "Dış API Entegrasyonu",
-    desc: "Dış uygulamaların Nûr Stüdyo'yu kullanması. REST API + webhook ile otomasyon. Camiler ve medya kuruluşları için.",
-    detail: "OpenAPI spec + rate limiting + API key management",
+    desc: "Dış uygulamaların Nûr Stüdyo'yu kullanması. REST API + webhook ile otomasyon.",
     tag: "Planlandı",
+    votes: 156,
   },
   {
+    id: "kurumsal",
     icon: Crown,
     title: "Kurumsal Üyelik",
-    desc: "Ajanslar ve medya kuruluşları için özel paketler. Toplu video üretimi, özel marka_embeddings, öncelikli destek.",
-    detail: "White-label + bulk pricing + SLA",
+    desc: "Ajanslar ve medya kuruluşları için özel paketler. Toplu video üretimi.",
     tag: "Planlandı",
+    votes: 278,
   },
 ];
 
+const VOTE_STORAGE_KEY = "nur_roadmap_votes";
+
+function getStoredVotes(): Record<string, boolean> {
+  try { return JSON.parse(localStorage.getItem(VOTE_STORAGE_KEY) || "{}"); } catch { return {}; }
+}
+
 export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => {
+  const [localVotes, setLocalVotes] = useState<Record<string, boolean>>(() => getStoredVotes());
+  const [v2Features, setV2Features] = useState(V2_FEATURES);
+  const [v3Features, setV3Features] = useState(V3_FEATURES);
+
   if (!open) return null;
+
+  const handleVote = (id: string) => {
+    if (localVotes[id]) return; // Oy kullanılmış
+    const newVotes = { ...localVotes, [id]: true };
+    setLocalVotes(newVotes);
+    try { localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(newVotes)); } catch {}
+    setV2Features(prev => prev.map(f => f.id === id ? { ...f, votes: (f.votes || 0) + 1 } : f));
+    setV3Features(prev => prev.map(f => f.id === id ? { ...f, votes: (f.votes || 0) + 1 } : f));
+  };
+
+  const totalVotes = [...v2Features, ...v3Features].reduce((sum, f) => sum + (f.votes || 0), 0);
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
@@ -140,7 +186,9 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
               <Rocket size={20} style={{ color: "var(--accent-2)" }} />
               Güncelleme Yol Haritası
             </h2>
-            <p className="text-[11px] text-white/40 mt-0.5">Nûr Stüdyo — Gelecek planları ve v2-v3 yenilikleri</p>
+            <p className="text-[11px] text-white/40 mt-0.5">
+              Nûr Stüdyo — Gelecek planları ve v2-v3 yenilikleri
+            </p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 transition">
             <X size={18} className="text-white/50" />
@@ -148,6 +196,16 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
         </div>
 
         <div className="p-6 space-y-8">
+          {/* Oy Sayacı */}
+          <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-center">
+            <p className="text-[10px] text-amber-300/80 font-bold">
+              🗳️ Toplam <span className="text-amber-200 font-black">{totalVotes.toLocaleString("tr-TR")}</span> oy kullanıldı
+            </p>
+            <p className="text-[9px] text-white/30 mt-0.5">
+              Hangi özelliği önce istiyorsan oyla — öncelik senin olsun
+            </p>
+          </div>
+
           {/* V2 Section */}
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -156,12 +214,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
               </div>
               <span className="text-sm font-bold text-white">Yakında Gelen Güncellemeler</span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">
-                {V2_FEATURES.length} yeni özellik
+                {v2Features.length} özellik
               </span>
             </div>
-            <div className="space-y-3">
-              {V2_FEATURES.map((f, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-amber-500/20 transition group">
+            <div className="space-y-2">
+              {v2Features.sort((a, b) => (b.votes || 0) - (a.votes || 0)).map((f, i) => (
+                <div key={f.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-amber-500/20 transition group">
                   <div className="mt-0.5 p-1.5 rounded-lg group-hover:scale-110 transition" style={{ backgroundColor: "var(--accent-2)", opacity: 0.15 }}>
                     <f.icon size={14} style={{ color: "var(--accent-2)" }} />
                   </div>
@@ -171,9 +229,19 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
                       <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">{f.tag}</span>
                     </div>
                     <p className="text-[10px] text-white/50 mt-0.5 leading-relaxed">{f.desc}</p>
-                    <p className="text-[9px] text-white/25 mt-1 font-mono">{f.detail}</p>
                   </div>
-                  <Lock size={12} className="text-white/20 mt-1 shrink-0" />
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
+                    <button
+                      onClick={() => handleVote(f.id)}
+                      disabled={localVotes[f.id]}
+                      className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300"}`}
+                    >
+                      <ThumbsUp size={12} />
+                    </button>
+                    <span className={`text-[9px] font-bold ${localVotes[f.id] ? "text-amber-300" : "text-white/25"}`}>
+                      {(f.votes || 0).toLocaleString("tr-TR")}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
@@ -187,12 +255,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
               </div>
               <span className="text-sm font-bold text-white">Uzun Vadeli Planlar</span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">
-                {V3_FEATURES.length} özellik
+                {v3Features.length} özellik
               </span>
             </div>
-            <div className="space-y-3">
-              {V3_FEATURES.map((f, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.03] opacity-60 hover:opacity-80 transition group">
+            <div className="space-y-2">
+              {v3Features.sort((a, b) => (b.votes || 0) - (a.votes || 0)).map((f, i) => (
+                <div key={f.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.03] opacity-60 hover:opacity-80 transition group">
                   <div className="mt-0.5 p-1.5 rounded-lg bg-purple-500/10 group-hover:scale-110 transition">
                     <f.icon size={14} className="text-purple-400" />
                   </div>
@@ -202,9 +270,19 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
                       <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">{f.tag}</span>
                     </div>
                     <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">{f.desc}</p>
-                    <p className="text-[9px] text-white/20 mt-1 font-mono">{f.detail}</p>
                   </div>
-                  <Lock size={12} className="text-white/15 mt-1 shrink-0" />
+                  <div className="flex flex-col items-center gap-0.5 shrink-0">
+                    <button
+                      onClick={() => handleVote(f.id)}
+                      disabled={localVotes[f.id]}
+                      className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? "bg-purple-500/20 text-purple-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300"}`}
+                    >
+                      <ThumbsUp size={12} />
+                    </button>
+                    <span className={`text-[9px] font-bold ${localVotes[f.id] ? "text-purple-300" : "text-white/20"}`}>
+                      {(f.votes || 0).toLocaleString("tr-TR")}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

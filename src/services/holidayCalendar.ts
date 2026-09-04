@@ -28,7 +28,10 @@ const CLAIMED_KEYS_PREFIX = "nur_claimed_gift_";
 /** Bu hediye daha önce alındı mı — HMAC imzalı zarftan doğrulanır */
 export function isRewardClaimed(eventKey: string): boolean {
   if (typeof window === "undefined") return false;
-  return secureGet<boolean>(CLAIMED_KEYS_PREFIX + eventKey, false);
+  // Hem secure hem plain kontrol — her ikisi de çalışsın
+  if (secureGet<boolean>(CLAIMED_KEYS_PREFIX + eventKey, false)) return true;
+  try { if (localStorage.getItem(CLAIMED_KEYS_PREFIX + eventKey + "_plain") === "1") return true; } catch {}
+  return false;
 }
 
 /**
@@ -52,6 +55,8 @@ export function claimHolyDayReward(
 
   grantPack(kind, giftAmount);
   secureSet(CLAIMED_KEYS_PREFIX + eventKey, true);
+  // Ekstra koruma — secureStore bozulsa bile banner kaybolsun
+  try { localStorage.setItem(CLAIMED_KEYS_PREFIX + eventKey + "_plain", "1"); } catch {}
 
   return {
     ok: true,
