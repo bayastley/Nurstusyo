@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { X, Sparkles, Zap, Brain, Mic, Bell, Users, Globe, Lock, Rocket, Crown, Smartphone, Music, Shield, CreditCard, PenTool, FileText, History, Headphones, ThumbsUp, ChevronDown } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { X, Sparkles, Zap, Brain, Mic, Bell, Users, Globe, Lock, Rocket, Crown, Smartphone, Music, Shield, CreditCard, PenTool, Headphones, ThumbsUp, Plus, Trash2, RotateCcw, Clock, Settings, Save, Edit3 } from "lucide-react";
+import { isAdminEmail } from "../tier";
 
 interface RoadmapModalProps {
   open: boolean;
   onClose: () => void;
+  adminEmail?: string;
 }
 
 interface Feature {
@@ -11,174 +13,210 @@ interface Feature {
   title: string;
   desc: string;
   tag: string;
-  votes?: number;
+  votes: number;
   id: string;
+  active: boolean;
 }
 
-const V2_FEATURES: Feature[] = [
-  {
-    id: "ai-meal",
-    icon: Brain,
-    title: "AI Meal Seslendirme",
-    desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.",
-    tag: "Yakında",
-    votes: 847,
-  },
-  {
-    id: "kendi-ses",
-    icon: Mic,
-    title: "Kendi Sesinle Seslendirme",
-    desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek. Mobilde ve masaüstünde ses kayıt desteği.",
-    tag: "Yakında",
-    votes: 623,
-  },
-  {
-    id: "kelime-video",
-    icon: PenTool,
-    title: "Kelime Tabanlı Video Üretimi",
-    desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin. 'Sabır' yaz, çöl atmosferinde sinematik video çıkaran bir sistem.",
-    tag: "Yakında",
-    votes: 912,
-  },
-  {
-    id: "ai-arkaplan",
-    icon: Sparkles,
-    title: "AI Arka Plan Üretici",
-    desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek. Kullanıcı sadece yazsın, gerisini AI halletsin.",
-    tag: "Yakında",
-    votes: 756,
-  },
-  {
-    id: "push",
-    icon: Bell,
-    title: "Akıllı Push Bildirimi",
-    desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim. Kişiselleştirilmiş bildirimler.",
-    tag: "Yakında",
-    votes: 534,
-  },
-  {
-    id: "ucretsiz-deneme",
-    icon: Sparkles,
-    title: "Ücretsiz 7 Gün PRO Denemesi",
-    desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez. Deneme sonunda otomatik free'ye dönüş.",
-    tag: "Yakında",
-    votes: 891,
-  },
-  {
-    id: "referans",
-    icon: Users,
-    title: "Referans & Davet Sistemi",
-    desc: "Arkadaşını davet et, her ikisi de kazansın. Sosyal medya paylaşımı ile organik büyüme.",
-    tag: "Yakında",
-    votes: 445,
-  },
-  {
-    id: "arsiv",
-    icon: Globe,
-    title: "Kullanıcı Arşivi",
-    desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir veya yeniden düzenle.",
-    tag: "Yakında",
-    votes: 678,
-  },
-  {
-    id: "e-fatura",
-    icon: CreditCard,
-    title: "Otomatik E-Fatura",
-    desc: "Satın alımlarda otomatik e-fatura. Resmi muhasebe kayıtları için entegrasyon.",
-    tag: "Yakında",
-    votes: 312,
-  },
-  {
-    id: "meal-dinle",
-    icon: Headphones,
-    title: "Meal Dinleme Modu",
-    desc: "Videoları ses-only modda dinle. Hafızlık ve ezber için mükemmel. Arka planda çalışmaya devam etsin.",
-    tag: "Yakında",
-    votes: 567,
-  },
+const DEFAULT_V2: Omit<Feature, "votes">[] = [
+  { id: "ai-meal", icon: Brain, title: "AI Meal Seslendirme", desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.", tag: "V2", active: true },
+  { id: "kendi-ses", icon: Mic, title: "Kendi Sesinle Seslendirme", desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek.", tag: "V2", active: true },
+  { id: "kelime-video", icon: PenTool, title: "Kelime Tabanlı Video Üretimi", desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin.", tag: "V2", active: true },
+  { id: "ai-arkaplan", icon: Sparkles, title: "AI Arka Plan Üretici", desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek.", tag: "V2", active: true },
+  { id: "push", icon: Bell, title: "Akıllı Push Bildirimi", desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim.", tag: "V2", active: true },
+  { id: "ucretsiz-deneme", icon: Sparkles, title: "Ücretsiz 7 Gün PRO Denemesi", desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez.", tag: "V2", active: true },
+  { id: "referans", icon: Users, title: "Referans & Davet Sistemi", desc: "Arkadaşını davet et, her ikisi de kazansın.", tag: "V2", active: true },
+  { id: "arsiv", icon: Globe, title: "Kullanıcı Arşivi", desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir.", tag: "V2", active: true },
+  { id: "e-fatura", icon: CreditCard, title: "Otomatik E-Fatura", desc: "Satın alımlarda otomatik e-fatura.", tag: "V2", active: true },
+  { id: "meal-dinle", icon: Headphones, title: "Meal Dinleme Modu", desc: "Videoları ses-only modda dinle.", tag: "V2", active: true },
 ];
 
-const V3_FEATURES: Feature[] = [
-  {
-    id: "mobil-uygulama",
-    icon: Smartphone,
-    title: "iOS & Android Uygulaması",
-    desc: "Mobil uygulama ile push notification, offline video izleme. App Store ve Google Play'de.",
-    tag: "Planlandı",
-    votes: 1203,
-  },
-  {
-    id: "ses-senkron",
-    icon: Music,
-    title: "Kelime Ses Senkronizasyonu",
-    desc: "Okunan her kelime altın ışıkla parlar. Hızlı okuma modu da eklenecek.",
-    tag: "Planlandı",
-    votes: 834,
-  },
-  {
-    id: "reklam",
-    icon: Shield,
-    title: "Reklam Entegrasyonu",
-    desc: "Google AdSense ile reklam geliri. Ücretsiz kullanıcılar video başında reklam görecek.",
-    tag: "Planlandı",
-    votes: 234,
-  },
-  {
-    id: "coklu-kullanici",
-    icon: Users,
-    title: "Çoklu Kullanıcı & Ekip",
-    desc: "Ekip ve aile planları. Tek hesapla birden fazla kullanıcı.",
-    tag: "Planlandı",
-    votes: 389,
-  },
-  {
-    id: "api",
-    icon: Zap,
-    title: "Dış API Entegrasyonu",
-    desc: "Dış uygulamaların Nûr Stüdyo'yu kullanması. REST API + webhook ile otomasyon.",
-    tag: "Planlandı",
-    votes: 156,
-  },
-  {
-    id: "kurumsal",
-    icon: Crown,
-    title: "Kurumsal Üyelik",
-    desc: "Ajanslar ve medya kuruluşları için özel paketler. Toplu video üretimi.",
-    tag: "Planlandı",
-    votes: 278,
-  },
+const DEFAULT_V3: Omit<Feature, "votes">[] = [
+  { id: "mobil-uygulama", icon: Smartphone, title: "iOS & Android Uygulaması", desc: "Mobil uygulama ile push notification, offline video izleme.", tag: "V3", active: true },
+  { id: "ses-senkron", icon: Music, title: "Kelime Ses Senkronizasyonu", desc: "Okunan her kelime altın ışıkla parlar.", tag: "V3", active: true },
+  { id: "reklam", icon: Shield, title: "Reklam Entegrasyonu", desc: "Google AdSense ile reklam geliri.", tag: "V3", active: true },
+  { id: "coklu-kullanici", icon: Users, title: "Çoklu Kullanıcı & Ekip", desc: "Ekip ve aile planları.", tag: "V3", active: true },
+  { id: "api", icon: Zap, title: "Dış API Entegrasyonu", desc: "Dış uygulamaların entegrasyonu.", tag: "V3", active: true },
+  { id: "kurumsal", icon: Crown, title: "Kurumsal Üyelik", desc: "Ajanslar ve medya kuruluşları için özel paketler.", tag: "V3", active: true },
 ];
 
-const VOTE_STORAGE_KEY = "nur_roadmap_votes";
+const ICON_MAP: Record<string, any> = { Brain, Mic, PenTool, Sparkles, Bell, Users, Globe, CreditCard, Headphones, Smartphone, Music, Shield, Zap, Crown };
+const ICON_NAMES = Object.keys(ICON_MAP);
+
+const STORAGE_KEY = "nur_roadmap_data";
+const VOTE_KEY = "nur_roadmap_votes";
+const DEADLINE_KEY = "nur_roadmap_deadline";
+
+function loadFeatures(): { v2: Feature[]; v3: Feature[] } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {
+    v2: DEFAULT_V2.map(f => ({ ...f, votes: 0 })),
+    v3: DEFAULT_V3.map(f => ({ ...f, votes: 0 })),
+  };
+}
+
+function saveFeatures(data: { v2: Feature[]; v3: Feature[] }) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
 
 function getStoredVotes(): Record<string, boolean> {
-  try { return JSON.parse(localStorage.getItem(VOTE_STORAGE_KEY) || "{}"); } catch { return {}; }
+  try { return JSON.parse(localStorage.getItem(VOTE_KEY) || "{}"); } catch { return {}; }
 }
 
-export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => {
+function getDeadline(): string {
+  try { return localStorage.getItem(DEADLINE_KEY) || ""; } catch { return ""; }
+}
+
+export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, adminEmail }) => {
+  const isAdmin = adminEmail ? isAdminEmail(adminEmail) : false;
+  const [data, setData] = useState(() => loadFeatures());
   const [localVotes, setLocalVotes] = useState<Record<string, boolean>>(() => getStoredVotes());
-  const [v2Features, setV2Features] = useState(V2_FEATURES);
-  const [v3Features, setV3Features] = useState(V3_FEATURES);
+  const [deadline, setDeadline] = useState(() => getDeadline());
+  const [adminMode, setAdminMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newVersion, setNewVersion] = useState<"V2" | "V3">("V2");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   if (!open) return null;
 
-  const handleVote = (id: string) => {
-    if (localVotes[id]) return; // Oy kullanılmış
-    const newVotes = { ...localVotes, [id]: true };
-    setLocalVotes(newVotes);
-    try { localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(newVotes)); } catch {}
-    setV2Features(prev => prev.map(f => f.id === id ? { ...f, votes: (f.votes || 0) + 1 } : f));
-    setV3Features(prev => prev.map(f => f.id === id ? { ...f, votes: (f.votes || 0) + 1 } : f));
+  const isDeadlinePassed = deadline && new Date(deadline) < new Date();
+  const daysLeft = deadline ? Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) : null;
+
+  const save = (newData: { v2: Feature[]; v3: Feature[] }) => {
+    setData(newData);
+    saveFeatures(newData);
   };
 
-  const totalVotes = [...v2Features, ...v3Features].reduce((sum, f) => sum + (f.votes || 0), 0);
+  const handleVote = (id: string) => {
+    if (localVotes[id] || isDeadlinePassed) return;
+    const newVotes = { ...localVotes, [id]: true };
+    setLocalVotes(newVotes);
+    try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
+    const v2 = data.v2.map(f => f.id === id ? { ...f, votes: f.votes + 1 } : f);
+    const v3 = data.v3.map(f => f.id === id ? { ...f, votes: f.votes + 1 } : f);
+    save({ v2, v3 });
+  };
+
+  const handleResetVotes = () => {
+    if (!confirm("Tüm oyları sıfırlamak istediğine emin misin?")) return;
+    const v2 = data.v2.map(f => ({ ...f, votes: 0 }));
+    const v3 = data.v3.map(f => ({ ...f, votes: 0 }));
+    save({ v2, v3 });
+    setLocalVotes({});
+    try { localStorage.removeItem(VOTE_KEY); } catch {}
+  };
+
+  const handleDeleteFeature = (id: string, version: "V2" | "V3") => {
+    if (!confirm("Bu özelliği silmek istediğine emin misin?")) return;
+    if (version === "V2") save({ ...data, v2: data.v2.filter(f => f.id !== id) });
+    else save({ ...data, v3: data.v3.filter(f => f.id !== id) });
+  };
+
+  const handleAddFeature = () => {
+    if (!newTitle.trim()) return;
+    const icon = Sparkles;
+    const newFeature: Feature = {
+      id: `custom-${Date.now()}`,
+      icon,
+      title: newTitle.trim(),
+      desc: newDesc.trim() || "Yakında eklenecek.",
+      tag: newVersion,
+      votes: 0,
+      active: true,
+    };
+    if (newVersion === "V2") save({ ...data, v2: [...data.v2, newFeature] });
+    else save({ ...data, v3: [...data.v3, newFeature] });
+    setNewTitle("");
+    setNewDesc("");
+    setShowAddForm(false);
+  };
+
+  const handleSaveEdit = (id: string, version: "V2" | "V3") => {
+    if (!editTitle.trim()) return;
+    const updater = (f: Feature) => f.id === id ? { ...f, title: editTitle.trim(), desc: editDesc.trim() } : f;
+    if (version === "V2") save({ ...data, v2: data.v2.map(updater) });
+    else save({ ...data, v3: data.v3.map(updater) });
+    setEditingId(null);
+  };
+
+  const handleSaveDeadline = () => {
+    try { localStorage.setItem(DEADLINE_KEY, deadline); } catch {}
+  };
+
+  const totalVotes = [...data.v2, ...data.v3].reduce((sum, f) => sum + f.votes, 0);
+
+  const renderFeature = (f: Feature, version: "V2" | "V3") => {
+    const isEditing = editingId === f.id;
+    const IconComp = f.icon || Sparkles;
+
+    return (
+      <div key={f.id} className={`flex items-start gap-3 p-3 rounded-xl border transition group ${version === "V2" ? "bg-white/[0.03] border-white/5 hover:border-amber-500/20" : "bg-white/[0.02] border-white/[0.03] opacity-60 hover:opacity-80"}`}>
+        <div className={`mt-0.5 p-1.5 rounded-lg group-hover:scale-110 transition ${version === "V2" ? "" : "bg-purple-500/10"}`} style={version === "V2" ? { backgroundColor: "var(--accent-2)", opacity: 0.15 } : undefined}>
+          <IconComp size={14} style={version === "V2" ? { color: "var(--accent-2)" } : undefined} className={version === "V3" ? "text-purple-400" : ""} />
+        </div>
+        <div className="flex-1 min-w-0">
+          {isEditing ? (
+            <div className="space-y-1.5">
+              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Özellik adı" />
+              <input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Açıklama" />
+              <div className="flex gap-1.5">
+                <button onClick={() => handleSaveEdit(f.id, version)} className="rounded-lg bg-green-500/20 px-2 py-0.5 text-[9px] font-bold text-green-300">Kaydet</button>
+                <button onClick={() => setEditingId(null)} className="rounded-lg bg-white/10 px-2 py-0.5 text-[9px] text-white/50">İptal</button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold text-white">{f.title}</span>
+                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${version === "V2" ? "bg-green-500/15 text-green-400 border border-green-500/20" : "bg-purple-500/15 text-purple-300 border border-purple-500/20"}`}>{f.tag}</span>
+              </div>
+              <p className={`text-[10px] mt-0.5 leading-relaxed ${version === "V2" ? "text-white/50" : "text-white/40"}`}>{f.desc}</p>
+            </>
+          )}
+        </div>
+
+        {/* Oy + Admin Kontrolleri */}
+        <div className="flex flex-col items-center gap-0.5 shrink-0">
+          {!adminMode && (
+            <>
+              <button
+                onClick={() => handleVote(f.id)}
+                disabled={localVotes[f.id] || isDeadlinePassed}
+                className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? (version === "V2" ? "bg-amber-500/20 text-amber-300" : "bg-purple-500/20 text-purple-300") : (version === "V2" ? "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300")}`}
+              >
+                <ThumbsUp size={12} />
+              </button>
+              <span className={`text-[9px] font-bold ${localVotes[f.id] ? (version === "V2" ? "text-amber-300" : "text-purple-300") : "text-white/25"}`}>
+                {f.votes.toLocaleString("tr-TR")}
+              </span>
+            </>
+          )}
+          {isAdmin && adminMode && (
+            <>
+              <button onClick={() => { setEditingId(f.id); setEditTitle(f.title); setEditDesc(f.desc); }} className="p-1 rounded bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition" title="Düzenle">
+                <Edit3 size={10} />
+              </button>
+              <button onClick={() => handleDeleteFeature(f.id, version)} className="p-1 rounded bg-red-500/15 text-red-300 hover:bg-red-500/25 transition" title="Sil">
+                <Trash2 size={10} />
+              </button>
+              <span className="text-[8px] text-white/20">{f.votes}</span>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div
-        className="relative max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="relative max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gray-950/90 backdrop-blur px-6 py-4">
           <div>
@@ -186,116 +224,129 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose }) => 
               <Rocket size={20} style={{ color: "var(--accent-2)" }} />
               Güncelleme Yol Haritası
             </h2>
-            <p className="text-[11px] text-white/40 mt-0.5">
-              Nûr Stüdyo — Gelecek planları ve v2-v3 yenilikleri
-            </p>
+            <p className="text-[11px] text-white/40 mt-0.5">Nûr Stüdyo — Gelecek planları ve v2-v3 yenilikleri</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 transition">
-            <X size={18} className="text-white/50" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button onClick={() => setAdminMode(!adminMode)} className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[9px] font-bold transition ${adminMode ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-white/30 hover:bg-white/10"}`}>
+                <Settings size={11} />
+                {adminMode ? "Admin Açık" : "Admin"}
+              </button>
+            )}
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 transition">
+              <X size={18} className="text-white/50" />
+            </button>
+          </div>
         </div>
 
-        <div className="p-6 space-y-8">
+        <div className="p-6 space-y-6">
+          {/* Admin Paneli */}
+          {isAdmin && adminMode && (
+            <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Settings size={13} className="text-amber-400" />
+                <span className="text-[11px] font-bold text-amber-300">Admin Kontrol Paneli</span>
+              </div>
+
+              {/* Oylama Süresi */}
+              <div className="flex items-center gap-2">
+                <Clock size={12} className="text-white/50" />
+                <span className="text-[10px] text-white/60">Oylama Bitiş Tarihi:</span>
+                <input
+                  type="datetime-local"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                  className="rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none"
+                />
+                <button onClick={handleSaveDeadline} className="rounded-lg bg-green-500/20 px-2 py-1 text-[9px] font-bold text-green-300">Kaydet</button>
+                {deadline && (
+                  <button onClick={() => { setDeadline(""); try { localStorage.removeItem(DEADLINE_KEY); } catch {} }} className="rounded-lg bg-white/10 px-2 py-1 text-[9px] text-white/40">Kaldır</button>
+                )}
+              </div>
+              {daysLeft !== null && (
+                <p className="text-[9px] text-white/30">
+                  {isDeadlinePassed ? "⏰ Oylama süresi doldu" : `📅 ${daysLeft} gün kaldı`}
+                </p>
+              )}
+
+              {/* Yeni Özellik Ekleme */}
+              {!showAddForm ? (
+                <button onClick={() => setShowAddForm(true)} className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:bg-white/10 transition">
+                  <Plus size={12} /> Yeni Özellik Ekle
+                </button>
+              ) : (
+                <div className="rounded-lg bg-black/30 p-3 space-y-2">
+                  <div className="flex gap-2">
+                    <select value={newVersion} onChange={e => setNewVersion(e.target.value as "V2" | "V3")} className="rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none">
+                      <option value="V2">V2</option>
+                      <option value="V3">V3</option>
+                    </select>
+                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} className="flex-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Özellik adı (ör: AI Meal Seslendirme)" />
+                  </div>
+                  <input value={newDesc} onChange={e => setNewDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Kısa açıklama (opsiyonel)" />
+                  <div className="flex gap-2">
+                    <button onClick={handleAddFeature} className="rounded-lg bg-green-500/20 px-3 py-1 text-[9px] font-bold text-green-300">Ekle</button>
+                    <button onClick={() => { setShowAddForm(false); setNewTitle(""); setNewDesc(""); }} className="rounded-lg bg-white/10 px-3 py-1 text-[9px] text-white/40">İptal</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Toplu İşlemler */}
+              <div className="flex gap-2 pt-1">
+                <button onClick={handleResetVotes} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1 text-[9px] font-bold text-red-300 hover:bg-red-500/25 transition">
+                  <RotateCcw size={10} /> Oyları Sıfırla
+                </button>
+                <button onClick={() => { save({ v2: DEFAULT_V2.map(f => ({ ...f, votes: 0 })), v3: DEFAULT_V3.map(f => ({ ...f, votes: 0 })) }); setLocalVotes({}); }} className="flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1 text-[9px] text-white/40 hover:bg-white/10 transition">
+                  <RotateCcw size={10} /> Varsayılana Dön
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Oy Sayacı */}
           <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 p-3 text-center">
             <p className="text-[10px] text-amber-300/80 font-bold">
               🗳️ Toplam <span className="text-amber-200 font-black">{totalVotes.toLocaleString("tr-TR")}</span> oy kullanıldı
             </p>
-            <p className="text-[9px] text-white/30 mt-0.5">
-              Hangi özelliği önce istiyorsan oyla — öncelik senin olsun
-            </p>
+            {deadline && !isDeadlinePassed && daysLeft !== null && (
+              <p className="text-[9px] text-white/30 mt-0.5">⏰ {daysLeft} gün kaldı — hangisi önce gelsin sen belirle</p>
+            )}
+            {isDeadlinePassed && (
+              <p className="text-[9px] text-red-400/60 mt-0.5">⏰ Oylama süresi doldu</p>
+            )}
+            {!deadline && (
+              <p className="text-[9px] text-white/30 mt-0.5">Hangi özelliği önce istiyorsan oyla — öncelik senin olsun</p>
+            )}
           </div>
 
-          {/* V2 Section */}
+          {/* V2 */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider" style={{ backgroundColor: "var(--accent-2)", color: "#000" }}>
-                V2
-              </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider" style={{ backgroundColor: "var(--accent-2)", color: "#000" }}>V2</div>
               <span className="text-sm font-bold text-white">Yakında Gelen Güncellemeler</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">
-                {v2Features.length} özellik
-              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">{data.v2.filter(f => f.active).length} özellik</span>
             </div>
             <div className="space-y-2">
-              {v2Features.sort((a, b) => (b.votes || 0) - (a.votes || 0)).map((f, i) => (
-                <div key={f.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/5 hover:border-amber-500/20 transition group">
-                  <div className="mt-0.5 p-1.5 rounded-lg group-hover:scale-110 transition" style={{ backgroundColor: "var(--accent-2)", opacity: 0.15 }}>
-                    <f.icon size={14} style={{ color: "var(--accent-2)" }} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-white">{f.title}</span>
-                      <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">{f.tag}</span>
-                    </div>
-                    <p className="text-[10px] text-white/50 mt-0.5 leading-relaxed">{f.desc}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-0.5 shrink-0">
-                    <button
-                      onClick={() => handleVote(f.id)}
-                      disabled={localVotes[f.id]}
-                      className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? "bg-amber-500/20 text-amber-300" : "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300"}`}
-                    >
-                      <ThumbsUp size={12} />
-                    </button>
-                    <span className={`text-[9px] font-bold ${localVotes[f.id] ? "text-amber-300" : "text-white/25"}`}>
-                      {(f.votes || 0).toLocaleString("tr-TR")}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {data.v2.filter(f => f.active).sort((a, b) => b.votes - a.votes).map(f => renderFeature(f, "V2"))}
             </div>
           </div>
 
-          {/* V3 Section */}
+          {/* V3 */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider bg-purple-500 text-white">
-                V3
-              </div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider bg-purple-500 text-white">V3</div>
               <span className="text-sm font-bold text-white">Uzun Vadeli Planlar</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">
-                {v3Features.length} özellik
-              </span>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">{data.v3.filter(f => f.active).length} özellik</span>
             </div>
             <div className="space-y-2">
-              {v3Features.sort((a, b) => (b.votes || 0) - (a.votes || 0)).map((f, i) => (
-                <div key={f.id} className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.03] opacity-60 hover:opacity-80 transition group">
-                  <div className="mt-0.5 p-1.5 rounded-lg bg-purple-500/10 group-hover:scale-110 transition">
-                    <f.icon size={14} className="text-purple-400" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-white">{f.title}</span>
-                      <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">{f.tag}</span>
-                    </div>
-                    <p className="text-[10px] text-white/40 mt-0.5 leading-relaxed">{f.desc}</p>
-                  </div>
-                  <div className="flex flex-col items-center gap-0.5 shrink-0">
-                    <button
-                      onClick={() => handleVote(f.id)}
-                      disabled={localVotes[f.id]}
-                      className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? "bg-purple-500/20 text-purple-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300"}`}
-                    >
-                      <ThumbsUp size={12} />
-                    </button>
-                    <span className={`text-[9px] font-bold ${localVotes[f.id] ? "text-purple-300" : "text-white/20"}`}>
-                      {(f.votes || 0).toLocaleString("tr-TR")}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              {data.v3.filter(f => f.active).sort((a, b) => b.votes - a.votes).map(f => renderFeature(f, "V3"))}
             </div>
           </div>
 
           {/* Footer */}
           <div className="text-center pt-2 pb-4 space-y-1">
-            <p className="text-[10px] text-white/30">
-              🕌 Nûr Stüdyo — Dünyada tek "Kur'an Video Üreten AI Stüdyo"
-            </p>
-            <p className="text-[9px] text-white/20">
-              Özellikler developmental sırayla eklenecektir
-            </p>
+            <p className="text-[10px] text-white/30">🕌 Nûr Stüdyo — Dünyada tek "Kur'an Video Üreten AI Stüdyo"</p>
+            <p className="text-[9px] text-white/20">Özellikler developmental sırayla eklenecektir</p>
           </div>
         </div>
       </div>

@@ -1648,7 +1648,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       />
 
       {/* V2-V3 YOL HARİTASI */}
-      <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
+      <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} adminEmail={user?.email} />
     </div>
   );
 }
