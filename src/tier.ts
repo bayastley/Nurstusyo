@@ -208,44 +208,52 @@ export interface ConsumeResult {
 }
 
 /**
- * Bir video üretimi harcar.
+ * Video üretimi harcar.
+ * mode: "short" | "long" | "full" — maliyeti belirler.
+ * Kısa=1, Uzun=5, Tam=15 hak harcar.
  * Önce günlük kota kullanılır, kota biterse paket hakkı düşer.
  */
-export function consumeVideo(kind: VideoKind, tier: Tier = getCurrentTier()): ConsumeResult {
+export function consumeVideo(kind: VideoKind, tier: Tier = getCurrentTier(), mode?: "short" | "long" | "full"): ConsumeResult {
+  const cost = mode ? videoMaliyeti(mode, tier) : 1;
   const quotaLeft = getQuotaLeft(kind, tier);
+  const packRights = getPackRights();
 
-  if (quotaLeft > 0) {
-    const usage = readUsage();
-    usage.used[kind] = (usage.used[kind] || 0) + 1;
-    writeUsage(usage);
+  // Gerekli toplam hak
+  const needed = cost;
+  const totalAvail = quotaLeft + packRights[kind];
+
+  if (totalAvail < needed) {
     return {
-      ok: true,
-      source: "kota",
-      quotaLeft: quotaLeft - 1,
-      packLeft: getPackRights()[kind],
-      message: "Günlük hakkınızdan düşüldü",
+      ok: false,
+      source: "yok",
+      quotaLeft,
+      packLeft: packRights[kind],
+      message: `${VIDEO_KIND_LABEL[kind]} için ${needed} hak gerekli. Kalan: ${totalAvail} hak. Paket alarak devam edebilirsiniz.`,
     };
   }
 
-  const rights = getPackRights();
-  if (rights[kind] > 0) {
-    rights[kind] -= 1;
+  // Önce kota harca, sonra pakeTHARCA
+  let remaining = needed;
+  const usage = readUsage();
+  const quotaDeduct = Math.min(quotaLeft, remaining);
+  if (quotaDeduct > 0) {
+    usage.used[kind] = (usage.used[kind] || 0) + quotaDeduct;
+    writeUsage(usage);
+    remaining -= quotaDeduct;
+  }
+
+  if (remaining > 0) {
+    const rights = getPackRights();
+    rights[kind] -= remaining;
     savePackRights(rights);
-    return {
-      ok: true,
-      source: "paket",
-      quotaLeft: 0,
-      packLeft: rights[kind],
-      message: "Paket hakkınızdan düşüldü",
-    };
   }
 
   return {
-    ok: false,
-    source: "yok",
-    quotaLeft: 0,
-    packLeft: 0,
-    message: `Bugünlük ${VIDEO_KIND_LABEL[kind]} hakkınız doldu. Paket alarak devam edebilirsiniz.`,
+    ok: true,
+    source: quotaDeduct > 0 ? "kota" : "paket",
+    quotaLeft: getQuotaLeft(kind, tier),
+    packLeft: getPackRights()[kind],
+    message: `${needed} hak kullanıldı (${quotaDeduct > 0 ? "kota: " + quotaDeduct : "paket"})`,
   };
 }
 
@@ -464,9 +472,19 @@ export const MODE_TO_KIND: Record<"short" | "long" | "full", VideoKind> = {
   full: "tam",
 };
 
-/** ESKİ AD — artık maliyet yok, her üretim 1 haktır */
-export function videoMaliyeti(_mode: "short" | "long" | "full", _tier?: Tier): number {
-  return 1;
+/** Her video türü kaç üretim hakkı harcar:
+ *  Kısa (59 sn) = 1 hak
+ *  Uzun (600 sn) = 5 hak
+ *  Tam Sürüm (45 dk) = 15 hak
+ */
+const VIDEO_COST: Record<"short" | "long" | "full", number> = {
+  short: 1,
+  long: 5,
+  full: 15,
+};
+
+export function videoMaliyeti(mode: "short" | "long" | "full", _tier?: Tier): number {
+  return VIDEO_COST[mode] ?? 1;
 }
 
 /** ESKİ AD — o türden bugün toplam kaç üretim yapılabilir */

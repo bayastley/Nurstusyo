@@ -5,6 +5,7 @@ import {
   LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
+import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft } from "../tier";
@@ -45,6 +46,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
 }) => {
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
+  const [toolsOpen, setToolsOpen] = React.useState(false);
   const updatesTimer = React.useRef<number>(0);
 
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
@@ -271,6 +273,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </div>
                     )}
 
+                    {/* ★ ARAÇLAR — İslami yardımcı araçlar */}
+                    <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <span className="text-base">🤲</span>
+                      <span>Araçlar</span>
+                      <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-bold text-emerald-300">YENİ</span>
+                    </button>
                     <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
@@ -395,6 +403,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           </div>
         </div>
       </header>
+      {/* ★ ARAÇLAR PANELİ */}
+      <IslamicToolsPanel open={toolsOpen} onClose={() => setToolsOpen(false)} />
     </>
   );
 };

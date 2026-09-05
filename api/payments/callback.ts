@@ -303,12 +303,26 @@ export default async function handler(req: any, res: any) {
         if (order) {
           orderProductCode = order.product_code || '';
 
-          // Idempotency: zaten paid ise tekrar hak verme
+          // ★ IDEMPOTENCY + DOUBLE-CHARGE KORUMASI
+          //  Sipariş zaten 'paid' ise → hiçbir şey yapma, sadece redirect et
+          //  Sipariş 'processing' ise → başka bir istek işliyor, bekleme
+          //  Sipariş 'failed' ise → tekrar deneme, kullanıcıya hata dön
           if (order.status === 'paid') {
-            console.log('[callback] Sipariş zaten paid, tekrar işlenmiyor');
+            console.log('[callback] ✅ Sipariş zaten tamamlandı (paid). Çift ücret koruması aktif.');
+            // ★ return 200 — iyzico tekrar tetiklemesin
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, message: 'Already processed' }));
+            return;
           } else if (order.status === 'processing') {
-            // Race condition koruması — başka bir istek işliyor
-            console.log('[callback] Sipariş şu an işleniyor, bekleniyor');
+            console.log('[callback] ⏳ Sipariş başka bir istek tarafından işleniyor, atlanıyor');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, message: 'Already processing' }));
+            return;
+          } else if (order.status === 'failed') {
+            console.log('[callback] ❌ Sipariş daha önce başarısız oldu, tekrar işlenmiyor');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, message: 'Order previously failed' }));
+            return;
           } else {
             // ★ Race condition koruması: pending'i processing'e çevir
             //    Sadece başarılı olan istek devam eder.

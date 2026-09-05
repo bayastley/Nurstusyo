@@ -2,7 +2,7 @@ import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { reciterAudioUrl } from "../reciters";
 import { checkRateLimit } from "../rateLimiter";
-import { JETON, getJeton, setJeton as persistJetonSecure, videoMaliyeti } from "../tier";
+import { JETON, getJeton, setJeton as persistJetonSecure, videoMaliyeti, consumeVideo, MODE_TO_KIND } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync } from "../videoUrl";
@@ -383,9 +383,15 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         setProgress(98);
         if (isGuest) bumpGuestUsed();
         else {
-          const remainingJeton = Math.max(0, getJeton() - totalCost);
-          persistJetonSecure(remainingJeton);
-          setJetonCount(remainingJeton);
+          // ★ Her format üretimi için ayrı ayrı hak harca
+          const kind = MODE_TO_KIND[mode];
+          for (let i = 0; i < formatCount; i++) {
+            consumeVideo(kind, accessTier, mode);
+          }
+          // Güncel jeton sayısını yeniden hesapla
+          const freshJeton = getJeton();
+          persistJetonSecure(freshJeton);
+          setJetonCount(freshJeton);
         }
         charged = true;
       }
