@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { X, Compass, Clock, BookOpen, MapPin, Star, RotateCcw, Moon, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { X, Compass, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════
 // ★ NÛR ARAÇLAR — İslami Araçlar Paneli
@@ -22,79 +22,41 @@ function parsePrayerTimes(data: Record<string, string>): Array<{ name: string; t
   }));
 }
 
-// ─── ZİKİRMATİK ─────────────────────────────────────────
-function Zikirmatic() {
-  const [count, setCount] = useState(0);
-  const [target, setTarget] = useState(33);
-  const presets = [33, 99, 100, 500, 1000];
+// ─── KIBLE HESAPLAMA (modül seviyesi — her yerden kullanılabilir) ───
+const MEKKE_LAT = 21.4225;
+const MEKKE_LON = 39.8262;
 
-  return (
-    <div className="space-y-3">
-      <p className="text-[10px] text-white/50">Hedef: {target}</p>
-      <div className="flex gap-1.5 flex-wrap">
-        {presets.map((p) => (
-          <button
-            key={p}
-            onClick={() => { setTarget(p); setCount(0); }}
-            className={`rounded-lg px-2 py-1 text-[9px] font-bold transition ${target === p ? "bg-amber-500/30 text-amber-300" : "bg-white/5 text-white/40 hover:bg-white/10"}`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
-      <div className="text-center py-4">
-        <div className="text-4xl font-black text-white mb-1">{count}</div>
-        <div className="text-[10px] text-white/40">/ {target}</div>
-        <div className="mt-1 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${Math.min(100, (count / target) * 100)}%`,
-              background: count >= target
-                ? "linear-gradient(90deg, #10b981, #34d399)"
-                : "linear-gradient(90deg, var(--accent), var(--accent-2))",
-            }}
-          />
-        </div>
-        {count >= target && (
-          <p className="mt-2 text-[10px] font-bold text-green-400">✅ Hedef tamamlandı! Elhamdülillah</p>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <button
-          onClick={() => setCount((c) => c + 1)}
-          className="flex-1 rounded-xl py-3 text-[12px] font-black text-black transition active:scale-95"
-          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}
-        >
-          +1
-        </button>
-        <button
-          onClick={() => setCount((c) => Math.max(0, c - 1))}
-          className="rounded-xl bg-white/10 px-4 py-3 text-[12px] font-bold text-white/60 hover:bg-white/15 transition"
-        >
-          −1
-        </button>
-        <button
-          onClick={() => setCount(0)}
-          className="rounded-xl bg-white/5 px-3 py-3 text-white/40 hover:bg-white/10 transition"
-          title="Sıfırla"
-        >
-          <RotateCcw size={14} />
-        </button>
-      </div>
-    </div>
-  );
-}
+const getQiblaForCity = (cityLat: number, cityLon: number) => {
+  const φ1 = cityLat * Math.PI / 180;
+  const λ1 = cityLon * Math.PI / 180;
+  const φ2 = MEKKE_LAT * Math.PI / 180;
+  const λ2 = MEKKE_LON * Math.PI / 180;
+  const Δλ = λ2 - λ1;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  let angle = Math.atan2(y, x) * 180 / Math.PI;
+  return (angle + 360) % 360;
+};
+
+const cities = [
+  { name: "İstanbul", lat: 41.0082, lon: 28.9784, qibla: getQiblaForCity(41.0082, 28.9784) },
+  { name: "Ankara", lat: 39.9334, lon: 32.8597, qibla: getQiblaForCity(39.9334, 32.8597) },
+  { name: "İzmir", lat: 38.4238, lon: 27.1428, qibla: getQiblaForCity(38.4238, 27.1428) },
+  { name: "Konya", lat: 37.8653, lon: 32.4895, qibla: getQiblaForCity(37.8653, 32.4895) },
+  { name: "Adana", lat: 37.0000, lon: 35.3213, qibla: getQiblaForCity(37.0000, 35.3213) },
+  { name: "Mecca", lat: 21.4225, lon: 39.8262, qibla: 0 },
+  { name: "Medina", lat: 24.4672, lon: 39.6112, qibla: getQiblaForCity(24.4672, 39.6112) },
+];
 
 // ─── KIBLE PUSULASI ──────────────────────────────────────
 function QiblaCompass() {
   const [heading, setHeading] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [city, setCity] = useState(cities[0].name);
+  const handlerRef = React.useRef<((e: DeviceOrientationEvent) => void) | null>(null);
 
   useEffect(() => {
-    let watchId: number | null = null;
     if ("geolocation" in navigator && "DeviceOrientationEvent" in window) {
-      // iOS 13+ izin ister
       const handler = (e: DeviceOrientationEvent) => {
         if ((e as any).webkitCompassHeading !== undefined) {
           setHeading((e as any).webkitCompassHeading);
@@ -102,7 +64,8 @@ function QiblaCompass() {
           setHeading(360 - e.alpha);
         }
       };
-      // iOS 13+ izin
+      handlerRef.current = handler;
+
       if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
         (DeviceOrientationEvent as any).requestPermission().then((state: string) => {
           if (state === "granted") {
@@ -115,11 +78,15 @@ function QiblaCompass() {
     } else {
       setError("Cihazınız pusula desteklemiyor");
     }
-    return () => { if (watchId !== null) navigator.geolocation.clearWatch(watchId); };
+    return () => {
+      if (handlerRef.current) {
+        window.removeEventListener("deviceorientation", handlerRef.current);
+      }
+    };
   }, []);
 
-  // Kâbe yönü (Mekke: 21.4225, 39.8262) — basit kuzey referanslı hesaplama
-  const qiblaAngle = 148.5; // Türkiye ortalaması ~148-152 derece
+  const current = cities.find(c => c.name === city) ?? cities[0];
+  const angle = current.qibla - (heading || 0);
 
   return (
     <div className="text-center space-y-3">
@@ -132,7 +99,7 @@ function QiblaCompass() {
             {/* Kâbe yönü oku */}
             <div
               className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1"
-              style={{ transform: `translateX(-50%) rotate(${qiblaAngle - (heading || 0)}deg)`, transformOrigin: "center 64px" }}
+              style={{ transform: `translateX(-50%) rotate(${angle}deg)`, transformOrigin: "center 64px" }}
             >
               <div className="w-0 h-0 border-l-[6px] border-r-[6px] border-b-[14px] border-l-transparent border-r-transparent border-b-amber-400" />
             </div>
@@ -141,7 +108,7 @@ function QiblaCompass() {
               <div className="text-center">
                 <Compass size={24} className="text-amber-400 mx-auto mb-1" />
                 <p className="text-[9px] text-white/50">KÂBE</p>
-                <p className="text-[11px] font-black text-amber-300">148.5°</p>
+                <p className="text-[11px] font-black text-amber-300">{Math.round(current.qibla)}°</p>
               </div>
             </div>
             {/* N */}
@@ -151,6 +118,10 @@ function QiblaCompass() {
             <div className="absolute top-1/2 -right-1 -translate-y-1/2 text-[9px] font-bold text-white/60">D</div>
           </div>
           <p className="text-[9px] text-white/40">Cihazınızı düz tutun · Kıble yönü altın ok ile gösterilir</p>
+          <select value={city} onChange={e => setCity(e.target.value)} className="mt-2 text-left text-[9px] text-white/60 bg-white/5 rounded-lg px-2 py-1">
+            {cities.map((c, i) => <option key={i} value={c.name}>{c.name} — {Math.round(c.qibla)}°</option>)}
+          </select>
+          {current && <p className="text-[9px] text-amber-300/60">{current.name} kıblası: {Math.round(current.qibla)}°</p>}
         </>
       )}
     </div>
@@ -239,7 +210,7 @@ type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua";
 
 const DAILY_DUAS = [
   { title: "Sabah Ezkarı", text: "Allah'ım! Bizi bid'atlerden, fitneden ve mankindan koru. Bize verdiğin ömrün bereketini ihsan eyle. Bizi sırat-ı müstakim üzere sabit kıl. Bizi doğru yola hidayet et. Amin." },
-  { title: "Akşam Ezkarı", text: "Allah'ım! Sen benim Rabbımsın. Senden başka ilah yoktur. Beni yarattın ve ben senin kulunum. Sana olan söz ve ahdim üzere durmaya gücüm yettiğince çalışacağım. Sana sığındığım kötülüklerin şerrinden sana sığınıyorum. Üzerimdeki nimetini ikrar, günahımı da itiraf ediyorum. Çünkü günahı ancak Sen affedersin. Benden başka_affedicikoğlu yoktur. Amin." },
+  { title: "Akşam Ezkarı", text: "Allah'ım! Sen benim Rabbımsın. Senden başka ilah yoktur. Beni yarattın ve ben senin kulunum. Sana olan söz ve ahdim üzere durmaya gücüm yettiğince çalışacağım. Sana sığındığım kötülüklerin şerrinden sana s insanlar. Üzerimdeki nimetini ikrar, günahımı da itiraf ediyorum. Çünkü günahı ancak Sen affedersin. Benden başka_affedicikoğlu yoktur. Amin." },
   { title: "Yemek Duası", text: "Bismillâh. Bize verdiğin rızıkları Helâl kıl, bereketli eyle. Amin." },
   { title: "Uykudan Uyanınca", text: "Elhamdülillah. Allâhım, hamd Senindir. Can da Senindir. Razı olduğun ve hoşnut kaldığın surette canı da senden isterim. Yaşatmak da Senin elindedir, öldürmek de. Hayat da Senin elindedir, ölüm de. Hayat da Senin elindedir, ölüm de." },
   { title: "Yola Çıkınca", text: "Bismillâh, Allahuekber. Allah'ım! Beni bağışla, bana merhamet et, beni hidayet eyle, sağır ve korunmuş olarak kılma. Allah'ım! Şehri şehre, vadiye vadiye,.Handler Thịt御 beni koru." },
@@ -264,10 +235,6 @@ const ZIKIRLER = [
   { name: "Bismillah", count: 100, text: "Rahman ve Rahim Allah'ın adıyla" },
   { name: "Selavat", count: 100, text: "Allah'ım! Peygamberimize salat et, selam gönder" },
   { name: "Tövbe", count: 100, text: "Allah'tan tövbe ederim, O'na yönelirim" },
-  { name: "Sabr", count: 100, text: "Sabır ve şükür dilerim" },
-  { name: "Tevazu", count: 100, text: "Allah'a karşı alçakgönüllü olurum" },
-  { name: "Şükür", count: 100, text: "Allah'a sonsuz şükrederim" },
-  { name: "Sabır", count: 100, text: "Sabır ve dayanma dilerim" },
 ];
 
 export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose }) => {
