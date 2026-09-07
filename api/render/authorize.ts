@@ -98,9 +98,38 @@ function supabaseConfig() {
   return { url, key };
 }
 
+async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+  const sb = supabaseConfig();
+  if (!sb) return null;
+  try {
+    const userResponse = await fetch(
+      `${sb.url}/rest/v1/nur_users?id=eq.${encodeURIComponent(userId)}&select=tier,is_admin`,
+      { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
+    );
+    if (!userResponse.ok) return null;
+    const users = await userResponse.json() as Array<{ tier?: Tier; is_admin?: boolean }>;
+    if (!users[0]) return null;
+
+    const banResponse = await fetch(
+      `${sb.url}/rest/v1/nur_ban_logs?user_id=eq.${encodeURIComponent(userId)}&unbanned=eq.false&select=id&limit=1`,
+      { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
+    );
+    if (!banResponse.ok) return null;
+    const bans = await banResponse.json() as Array<{ id: string }>;
+
+    return {
+      tier: users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free",
+      isAdmin: users[0].is_admin === true,
+      banned: bans.length > 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function consumeVideo(userId: string, videoKind: string, dailyQuota: number) {
   const sb = supabaseConfig();
-  if (!sb) return { ok: true, source: "demo", quota_left: dailyQuota, pack_left: 0, error: null };
+  if (!sb) return { ok: false, source: "none", quota_left: 0, pack_left: 0, error: "QUOTA_BACKEND_UNAVAILABLE" };
   try {
     const res = await fetch(`${sb.url}/rest/v1/rpc/nur_consume_video`, {
       method: "POST",
@@ -111,11 +140,11 @@ async function consumeVideo(userId: string, videoKind: string, dailyQuota: numbe
       },
       body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_daily_quota: dailyQuota }),
     });
-    if (!res.ok) return { ok: true, source: "demo", quota_left: dailyQuota, pack_left: 0, error: null };
+    if (!res.ok) return { ok: false, source: "none", quota_left: 0, pack_left: 0, error: "QUOTA_BACKEND_UNAVAILABLE" };
     const rows = await res.json() as Array<{ ok: boolean; source: string; quota_left: number; pack_left: number; error: string | null }>;
     return rows[0] ?? { ok: false, source: "none", quota_left: 0, pack_left: 0, error: "QUOTA_ERROR" };
   } catch {
-    return { ok: true, source: "demo", quota_left: dailyQuota, pack_left: 0, error: null };
+    return { ok: false, source: "none", quota_left: 0, pack_left: 0, error: "QUOTA_BACKEND_UNAVAILABLE" };
   }
 }
 
@@ -133,6 +162,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
 
+  const access = await loadServerAccess(user.id);
+  if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+  if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
+
   const { mode, formats } = req.body || {};
 
   if (typeof mode !== "string" || !MODE_TO_KIND[mode]) {
@@ -149,17 +182,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const kind = MODE_TO_KIND[mode];
-  const tier: Tier = (user as { tier?: Tier }).tier ?? "free";
+  const tier: Tier = access.isAdmin ? "elit" : access.tier;
   const quota = DAILY_QUOTA[tier][kind];
 
   const backendEnabled = process.env.NUR_QUOTA_BACKEND_ENABLED === "true";
+
+  if (!backendEnabled && (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production")) {
+    return res.status(503).json({ ok: false, error: "Üretim kota servisi yapılandırılmamış" });
+  }
 
   if (backendEnabled) {
     const results = [];
     for (let i = 0; i < uniqueFormats.length; i += 1) {
       const spent = await consumeVideo(user.id, kind, quota);
       if (!spent.ok) {
-        return res.status(402).json({
+        const status = spent.error === "QUOTA_BACKEND_UNAVAILABLE" ? 503 : 402;
+        return res.status(status).json({
           ok: false,
           error: spent.error === "NO_RIGHTS_LEFT"
             ? "Bugünkü üretim hakkınız doldu. Paket alarak devam edebilirsiniz."

@@ -127,13 +127,6 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
       const total = (updated.kisa || 0) + (updated.uzun || 0) + (updated.tam || 0);
       persistJetonSecure(total);
       setJetonCount(total);
-      // Supabase'e yaz (fire-and-forget)
-      fetch("/api/payments/wallet-consume", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind }),
-      }).catch(() => undefined);
       console.log("[wallet] Hak düşürüldü:", kind, "kalan:", newVal, "toplam:", total);
       return updated;
     });

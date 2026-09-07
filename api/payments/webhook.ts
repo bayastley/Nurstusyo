@@ -140,7 +140,7 @@ async function grantProductByOrder(order: any): Promise<void> {
       }
     }
 
-    await sbRequest(`nur_orders?id=eq.${encodeURIComponent(orderId)}&status=eq.pending`, {
+    await sbRequest(`nur_orders?id=eq.${encodeURIComponent(orderId)}&status=eq.processing`, {
       method: "PATCH",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() }),
@@ -195,8 +195,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (order.status === "paid") {
         console.log("[webhook] Sipariş zaten paid, idempotent OK");
       } else {
-        await grantProductByOrder({ orderId, userId: order.user_id, productCode: order.product_code });
-        console.log("[webhook] ✅ Ürün tanımlandı:", order.product_code);
+        const locked = await sbRequest(`nur_orders?id=eq.${encodeURIComponent(orderId)}&status=eq.pending`, {
+          method: "PATCH",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify({ status: "processing", updated_at: new Date().toISOString() }),
+        });
+
+        if (!Array.isArray(locked) || locked.length === 0) {
+          console.log("[webhook] Sipariş başka bir istek tarafından işleniyor");
+        } else {
+          await grantProductByOrder({ orderId, userId: order.user_id, productCode: order.product_code });
+          console.log("[webhook] ✅ Ürün tanımlandı:", order.product_code);
+        }
       }
     }
 

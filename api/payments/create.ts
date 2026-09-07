@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { getSessionUser } from '../_shared/auth.js';
 
 const URI_PATH = '/payment/iyzipos/checkoutform/initialize/auth/ecom';
 
@@ -114,33 +115,16 @@ export default async function handler(req: any, res: any) {
     const city = String(buyer.city || 'Istanbul');
     const address = String(buyer.address || 'Turkiye');
 
-    // ─── Cookie session'dan kullanıcı bilgisi al ───
-    let userId = '';
-    let sessionEmail = '';
-    let sessionName = '';
-    try {
-      const cookies = (req.headers.cookie || '').split(';').reduce((acc: any, c: string) => {
-        const [k, ...v] = c.trim().split('=');
-        if (k) acc[k] = decodeURIComponent(v.join('='));
-        return acc;
-      }, {});
-      const token = cookies['nur_session'] || '';
-      if (token.includes('.')) {
-        const payload = token.split('.')[0];
-        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
-        const pad = normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : '';
-        const user = JSON.parse(Buffer.from(normalized + pad, 'base64').toString('utf8'));
-        if (user.id) userId = String(user.id);
-        if (user.email) sessionEmail = String(user.email);
-        if (user.name) sessionName = String(user.name);
-      }
-    } catch (e) { console.error('[payments/create] Cookie parse hatası:', (e as Error).message); }
-
-    if (!userId) {
+    // Session payload'ını yalnızca HMAC doğrulamasından sonra kullan.
+    const sessionUser = getSessionUser(req);
+    if (!sessionUser) {
       console.error('[payments/create] Oturum bulunamadı');
       res.status(401).json({ error: 'Giriş yapmalısınız' });
       return;
     }
+    const userId = sessionUser.id;
+    const sessionEmail = sessionUser.email;
+    const sessionName = sessionUser.name;
 
     // ─── Supabase'den gerçek kullanıcı bilgilerini çek ───
     // ★ URL NORMALİZASYONU: Supabase panelindeki ".../rest/v1/" biçimindeki

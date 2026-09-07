@@ -1642,10 +1642,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <CookieConsent />
 
       {/* TELİF UYARISI — Kullanıcıları bilgilendir */}
-      <TelifDisclaimer
-        reciterName={reciter.name}
-        telifRiski={reciter.telifRiski}
-      />
+      <TelifDisclaimer />
 
       {/* V2-V3 YOL HARİTASI */}
       <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} adminEmail={user?.email} />

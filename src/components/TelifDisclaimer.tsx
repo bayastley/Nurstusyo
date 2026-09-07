@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle, X, Shield } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react";
 
 interface TelifDisclaimerProps {
   onAccept?: () => void;
-  reciterName?: string;
-  telifRiski?: number;
 }
 
 /**
@@ -12,7 +10,7 @@ interface TelifDisclaimerProps {
  * Kâri seçildiğinde veya video oluşturulurken gösterilir.
  * KVKK/AB uyumlu: Kullanıcı bilgilendirilmeden video oluşturulamaz.
  */
-export function TelifDisclaimer({ onAccept, reciterName, telifRiski }: TelifDisclaimerProps) {
+export function TelifDisclaimer({ onAccept }: TelifDisclaimerProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -25,9 +23,6 @@ export function TelifDisclaimer({ onAccept, reciterName, telifRiski }: TelifDisc
   }, []);
 
   if (!visible) return null;
-
-  const riskColor = (telifRiski ?? 0) > 25 ? "#ef4444" : (telifRiski ?? 0) > 10 ? "#f59e0b" : "#10b981";
-  const riskLabel = (telifRiski ?? 0) > 25 ? "Yüksek" : (telifRiski ?? 0) > 10 ? "Orta" : "Düşük";
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -59,22 +54,8 @@ export function TelifDisclaimer({ onAccept, reciterName, telifRiski }: TelifDisc
             YouTube veya diğer platformlara yüklediğinizde{" "}
             <span className="text-amber-400 font-semibold">Content ID telif uyarısı</span> alabilirsiniz.
           </p>
-          {reciterName && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10">
-              <Shield size={14} className="text-white/40" />
-              <span className="text-xs">
-                Seçili kâri: <span className="text-white font-semibold">{reciterName}</span>
-                {telifRiski !== undefined && (
-                  <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: riskColor + "20", color: riskColor }}>
-                    Telif Riski: %{telifRiski} ({riskLabel})
-                  </span>
-                )}
-              </span>
-            </div>
-          )}
           <p className="text-xs text-white/40">
-            Telif yüzdeleri tahminidir, garanti değildir. YouTube Content ID ses parmak izi tarar
-            ve yüzdelerden bağımsız olarak telif yiyebilirsiniz.
+            YouTube Content ID ses parmak izi tarar; bu nedenle telif uyarısı alabilirsiniz.
           </p>
         </div>
 

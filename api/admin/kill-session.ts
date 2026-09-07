@@ -24,6 +24,32 @@ function getSupabase() {
   return { url, key };
 }
 
+function getVerifiedAdminEmail(req: { headers: Record<string, string | string[] | undefined> }): string | null {
+  const cookieHeader = String(req.headers.cookie || "");
+  const cookie = cookieHeader.split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
+  if (!cookie) return null;
+
+  const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
+  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  if (!payload || !signature || secret.length < 20) return null;
+
+  const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64")
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
+
+  try {
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padding = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+    const session = JSON.parse(Buffer.from(normalized + padding, "base64").toString("utf8")) as { email?: string; verified?: boolean; isAdmin?: boolean; exp?: number };
+    if (!session.email || session.verified !== true || session.isAdmin !== true || !session.exp || session.exp < Math.floor(Date.now() / 1000)) return null;
+    return session.email.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
 // ─── SUPABASE AUTH SESSION REVOKE ──────────────────────────
 async function revokeUserSessions(userId: string): Promise<boolean> {
   const sb = getSupabase();
@@ -171,14 +197,13 @@ export default async function handler(req: any, res: any) {
   }
 
   // Admin yetki kontrolü
-  const adminEmail =
-    (req.headers["x-admin-email"] as string) || (req.body?.adminEmail as string) || "";
-  const allowedAdmins = (process.env.VITE_NUR_ADMIN_EMAIL || "")
+  const adminEmail = getVerifiedAdminEmail(req);
+  const allowedAdmins = (process.env.NUR_ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 
-  if (!adminEmail || !allowedAdmins.includes(adminEmail.toLowerCase())) {
+  if (!adminEmail || !allowedAdmins.includes(adminEmail)) {
     res.status(403).json({ error: "Admin yetkisi yok" });
     return;
   }

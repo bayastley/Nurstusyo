@@ -51,6 +51,29 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
   }
 }
 
+async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^['"]+|['"]+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) return null;
+  try {
+    const headers = { apikey: key, Authorization: `Bearer ${key}` };
+    const userResponse = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(userId)}&select=tier,is_admin`, { headers, cache: "no-store" });
+    if (!userResponse.ok) return null;
+    const users = await userResponse.json() as Array<{ tier?: Tier; is_admin?: boolean }>;
+    if (!users[0]) return null;
+    const banResponse = await fetch(`${url}/rest/v1/nur_ban_logs?user_id=eq.${encodeURIComponent(userId)}&unbanned=eq.false&select=id&limit=1`, { headers, cache: "no-store" });
+    if (!banResponse.ok) return null;
+    const bans = await banResponse.json() as Array<{ id: string }>;
+    return {
+      tier: users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free",
+      isAdmin: users[0].is_admin === true,
+      banned: bans.length > 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
@@ -119,13 +142,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const sessionUser = getSessionUser(req);
     if (!sessionUser) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
+    const access = await loadServerAccess(sessionUser.id);
+    if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+    if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
     const { clipId, pexelsId, cat } = req.body || {};
     if (!isSafeCategory(cat)) return res.status(400).json({ ok: false, error: "Geçersiz veya izinli olmayan kategori" });
 
     const normalizedPexelsId = normalizePexelsId(pexelsId);
     const normalizedClipId = isSafeClipId(clipId) ? clipId : null;
     if (normalizedPexelsId === null && !normalizedClipId) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
-    const userTier: Tier = sessionUser.isAdmin ? "elit" : sessionUser.tier === "pro" || sessionUser.tier === "elit" ? sessionUser.tier : "free";
+    const userTier: Tier = access.isAdmin ? "elit" : access.tier;
     const clipIndex = clipIndexFromId(cat, normalizedClipId);
     if (!canAccessClip(userTier, cat, clipIndex)) return res.status(403).json({ ok: false, error: "Bu içerik için üyelik seviyeniz yetersiz" });
 
