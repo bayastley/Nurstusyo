@@ -28,6 +28,8 @@ export interface HeaderTopBarProps {
   setLangOpen: React.Dispatch<React.SetStateAction<boolean>>;
   nextPrayer: { name: string; key: string; diff: number } | null;
   prayerCity: string;
+  setPrayerCity: (city: string) => void;
+  prayerTimings: Record<string, string> | null;
   formatRemaining: (ms: number) => string;
   t: (key: keyof (typeof T)["tr"]) => string;
   tier?: Tier;

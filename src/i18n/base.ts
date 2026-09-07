@@ -39,7 +39,7 @@ export const LANGS: LangOption[] = [
 ];
 
 export const MEAL_EDITIONS: Record<Lang, string> = {
-  tr: "tr.diyanet",
+  tr: "tr.yazir",
   en: "en.sahih",
   ar: "ar.alafasy",
   de: "de.bubenheim",

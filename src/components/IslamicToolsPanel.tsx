@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, Compass, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════
 // ★ NÛR ARAÇLAR — İslami Araçlar Paneli
@@ -10,16 +10,34 @@ import { X, Compass, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 interface IslamicToolsPanelProps {
   open: boolean;
   onClose: () => void;
+  prayerCity: string;
+  setPrayerCity: (city: string) => void;
+  prayerTimings: Record<string, string> | null;
 }
 
 // ─── NAMAZ VAKİTLERİ ────────────────────────────────────
-const PRAYER_NAMES = ["İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı"];
+const PRAYER_NAMES = [
+  { label: "İmsak", key: "Fajr" },
+  { label: "Güneş", key: "Sunrise" },
+  { label: "Öğle", key: "Dhuhr" },
+  { label: "İkindi", key: "Asr" },
+  { label: "Akşam", key: "Maghrib" },
+  { label: "Yatsı", key: "Isha" },
+];
 
 function parsePrayerTimes(data: Record<string, string>): Array<{ name: string; time: string }> {
-  return PRAYER_NAMES.map((name) => ({
-    name,
-    time: data[name.toLowerCase()] || data[name] || "--:--",
+  return PRAYER_NAMES.map(({ label, key }) => ({
+    name: label,
+    time: data[key] || "--:--",
   }));
+}
+
+const CITY_OPTIONS = ["İstanbul", "Ankara", "İzmir", "Bursa", "Konya", "Adana", "Gaziantep", "Trabzon"];
+
+function minutesFromTime(time: string): number | null {
+  const [hours, minutes] = time.split(":").map(Number);
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
+  return hours * 60 + minutes;
 }
 
 // ─── KIBLE HESAPLAMA (modül seviyesi — her yerden kullanılabilir) ───
@@ -237,9 +255,28 @@ const ZIKIRLER = [
   { name: "Tövbe", count: 100, text: "Allah'tan tövbe ederim, O'na yönelirim" },
 ];
 
-export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose }) => {
+export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings }) => {
   const [activeTab, setActiveTab] = useState<ToolTab>("prayer");
   const [expandedDua, setExpandedDua] = useState<number | null>(null);
+  const [clock, setClock] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(new Date()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const prayerTimes = useMemo(() => parsePrayerTimes(prayerTimings ?? {}), [prayerTimings]);
+  const nextPrayer = useMemo(() => {
+    const now = clock.getHours() * 60 + clock.getMinutes();
+    const upcoming = prayerTimes
+      .map((prayer) => ({ ...prayer, minutes: minutesFromTime(prayer.time) }))
+      .filter((prayer): prayer is typeof prayer & { minutes: number } => prayer.minutes !== null && prayer.minutes > now)
+      .sort((a, b) => a.minutes - b.minutes)[0];
+    const first = prayerTimes.find((prayer) => minutesFromTime(prayer.time) !== null);
+    if (upcoming) return { ...upcoming, remaining: upcoming.minutes - now, tomorrow: false };
+    if (first) return { ...first, remaining: (24 * 60 - now) + (minutesFromTime(first.time) ?? 0), tomorrow: true };
+    return null;
+  }, [clock, prayerTimes]);
 
   if (!open) return null;
 
@@ -270,7 +307,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
         <div className="p-4 space-y-4">
           {/* Tab Bar */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide snap-x">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
@@ -291,21 +328,31 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
           <div className="rounded-xl bg-white/[0.03] border border-white/5 p-4">
             {activeTab === "prayer" && (
               <div className="space-y-3">
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Bugünkü Namaz Vakitleri</p>
-                <div className="text-center py-3">
-                  <p className="text-[9px] text-white/40 mb-2">📍 Konumunuza göre namaz vakitleri yükleniyor...</p>
-                  <p className="text-[9px] text-white/30">Settings uygulamasından konum izni vermeniz gerekir.</p>
-                  <p className="text-[9px] text-amber-300/60 mt-2">💡 Namaz vakitleri için Diyanet İşleri Başkanlığı verileri kullanılır.</p>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Bugünkü Namaz Vakitleri</p>
+                    <p className="text-[9px] text-white/35 mt-1 flex items-center gap-1"><MapPin size={10} />Konumuna göre hesaplanır</p>
+                  </div>
+                  <select value={prayerCity} onChange={(event) => setPrayerCity(event.target.value)} className="max-w-[125px] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] text-white/70 outline-none">
+                    {CITY_OPTIONS.map((city) => <option key={city} value={city}>{city}</option>)}
+                  </select>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {PRAYER_NAMES.map((name) => (
-                    <div key={name} className="rounded-lg bg-white/5 p-2 text-center">
-                      <p className="text-[8px] text-white/40">{name}</p>
-                      <p className="text-[11px] font-bold text-white">--:--</p>
-                    </div>
-                  ))}
+
+                {nextPrayer && (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2.5">
+                    <div className="flex items-center gap-2"><Clock3 size={16} className="text-amber-300" /><div><p className="text-[9px] text-white/45">Sıradaki vakit{nextPrayer.tomorrow ? " · yarın" : ""}</p><p className="text-xs font-black text-amber-200">{nextPrayer.name} · {nextPrayer.time}</p></div></div>
+                    <span className="text-[10px] font-bold text-white/65">{Math.floor(nextPrayer.remaining / 60)} sa {nextPrayer.remaining % 60} dk</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {prayerTimes.map(({ name, time }) => {
+                    const isNext = nextPrayer?.name === name;
+                    return <div key={name} className={`rounded-xl border p-2.5 text-center transition ${isNext ? "border-amber-400/30 bg-amber-400/10" : "border-white/5 bg-white/5"}`}><p className="text-[8px] text-white/45">{name}</p><p className={`mt-1 text-sm font-black ${isNext ? "text-amber-200" : "text-white/85"}`}>{time}</p></div>;
+                  })}
                 </div>
-                <p className="text-[8px] text-white/30 text-center">Vakitler Diyanet İşleri Başkanlığı verilerine göredir.</p>
+                {!prayerTimings && <p className="text-center text-[9px] text-white/35">Vakitler yükleniyor veya konum izni bekleniyor...</p>}
+                <p className="text-center text-[8px] text-white/25">Vakitler Aladhan üzerinden Diyanet metodu ile hesaplanır.</p>
               </div>
             )}
 

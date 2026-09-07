@@ -5,14 +5,16 @@ import type { Announcement } from "../services/adminSyncService";
 import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
+import type { User } from "../types";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
+  user?: User | null;
   onRewardClaimed?: (newJeton: number) => void;
   onTamperAttempt?: (reason: string) => void;
 }
 
-export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewardClaimed, onTamperAttempt }) => {
+export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, onRewardClaimed, onTamperAttempt }) => {
   const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -42,10 +44,15 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
   }, []);
 
   useEffect(() => {
+    if (!user?.isAdmin) {
+      setIsAdmin(false);
+      setAdminPanelOpen(false);
+      return;
+    }
     fetch("/api/admin/session", { cache: "no-store" })
       .then((response) => setIsAdmin(response.ok))
       .catch(() => setIsAdmin(false));
-  }, []);
+  }, [user?.isAdmin]);
 
   useEffect(() => {
     if (announcement?.forceOpen && readId !== announcement.id) setDetailOpen(true);
@@ -69,21 +76,25 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     localStorage.setItem("nur_read_announcement", announcement.id);
   };
 
-  // Cuma hediyesi alindiktan sonra banner kaybolsun
-  if (!announcement && (holyDay.type === "none" || (holyDay.type === "claim" && holyDay.isClaimed)) && !isAdmin) return null;
   const unread = Boolean(announcement && readId !== announcement.id);
 
   return (
     <>
-      <div className="relative z-50 border-b border-amber-400/25 bg-[#111014] px-3 py-2 text-[11px] text-amber-100">
+      <div className={`relative z-50 border-b px-3 py-2 text-[11px] ${announcement ? "border-emerald-400/35 bg-emerald-950/35 text-emerald-100" : "border-white/10 bg-[#111014] text-white/45"}`}>
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-2">
           {announcement && (
-            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-amber-400/35 bg-amber-400/10 px-3 py-1.5 font-black ${unread && announcement.blinking ? "animate-pulse" : ""}`}>
-              <Bell size={12} className={unread ? "text-amber-300" : "text-white/45"} />
-              {unread && <span className="h-1.5 w-1.5 rounded-full bg-red-500" />}
+            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-emerald-300/45 bg-emerald-400/15 px-3 py-1.5 font-black ${announcement.blinking ? "animate-pulse" : ""}`}>
+              <Bell size={12} className="text-emerald-300" />
+              {unread && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
               <span>{announcement.title}</span>
               <span className="max-w-[42vw] truncate font-medium text-white/60">{announcement.message}</span>
             </button>
+          )}
+          {!announcement && (
+            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 font-semibold">
+              <Bell size={12} className="text-white/35" />
+              Duyuru yok · Lütfen takipte kalın
+            </span>
           )}
           {holyDay.type !== "none" && (
             <div className="flex items-center gap-2">

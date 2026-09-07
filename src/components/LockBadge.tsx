@@ -27,7 +27,7 @@ const KIND_META: Record<LockKind, {
   elit: { label: "ELİT", tooltip: "Elit Üyelik Gerekir",    icon: Crown,    gradient: "linear-gradient(135deg,#e8d48a 0%,#8b6914 50%,#d7aa52 100%)", glow: "rgba(232,212,138,.7)", clickable: true },
   v2:   { label: "V2",   tooltip: "V2 Güncellemesi Yakında", icon: Sparkles, gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
   v3:          { label: "V3",      tooltip: "V3 Güncellemesi Yakında", icon: Lock,     gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
-  maintenance: { label: "🔧 BAKIMDA", tooltip: "Bu özellik şu an bakımda",  icon: Lock,     gradient: "linear-gradient(135deg,#f59e0b 0%,#b45309 100%)", glow: "rgba(245,158,11,.5)", clickable: false },
+  maintenance: { label: "🔒 BAKIMDA", tooltip: "Bakımda",  icon: Lock,     gradient: "linear-gradient(135deg,#ffe58a 0%,#f5b400 100%)", glow: "rgba(255,196,44,.65)", clickable: false },
 };
 
 const POSITION_CLASS: Record<NonNullable<LockBadgeProps["position"]>, string> = {
@@ -128,7 +128,7 @@ export const LockedOverlay: React.FC<{ kind: LockKind; onUpgrade?: () => void; r
         e.stopPropagation();
         if (meta.clickable && onUpgrade) onUpgrade();
       }}
-      className={`absolute inset-0 z-10 flex items-center justify-center bg-black/35 backdrop-blur-[1px] transition-colors hover:bg-black/50 ${rounded} ${meta.clickable ? "cursor-pointer" : "cursor-not-allowed"}`}
+      className={`absolute inset-0 z-10 flex items-center justify-center ${kind === "maintenance" ? "bg-black/25" : "bg-black/35 backdrop-blur-[1px]"} transition-colors hover:bg-black/50 ${rounded} ${meta.clickable ? "cursor-pointer" : "cursor-not-allowed"}`}
       style={{ cursor: meta.clickable ? "pointer" : "not-allowed" }}
     >
       <span
@@ -136,7 +136,7 @@ export const LockedOverlay: React.FC<{ kind: LockKind; onUpgrade?: () => void; r
         style={{ background: meta.gradient }}
       >
         <meta.icon size={10} strokeWidth={3} />
-        {meta.tooltip}
+        {kind === "maintenance" ? meta.label : meta.tooltip}
       </span>
     </button>
   );

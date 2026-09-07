@@ -43,7 +43,10 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
-      .then((response) => setIsAdmin(response.ok))
+      .then(async (response) => {
+        const data = await response.json().catch(() => null) as { ok?: boolean; admin?: { email?: string } } | null;
+        setIsAdmin(response.ok && data?.ok === true && Boolean(data.admin?.email));
+      })
       .catch(() => setIsAdmin(false));
   }, []);
 

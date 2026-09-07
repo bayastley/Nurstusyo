@@ -3,7 +3,6 @@
 // Yardımcı fonksiyonlar: fetch, format, mime
 // ════════════════════════════════════════════════════════
 
-import { MEAL_FIXES } from "../meal_fixes";
 import type { SelectedAyah, Aspect } from "../types";
 
 export const fmtDuration = (seconds: number) =>
@@ -109,6 +108,18 @@ const MAX_PARALLEL = 4; // en fazla 4 paralel istek (daha hızlı yükleme)
 const THROTTLE_MS = 250; // her istek arasında minimum 250ms (eskisi 600ms çok yavaştı)
 let lastFetchTime = 0;
 
+export function normalizeTurkishMeal(text: string, edition: string): string {
+  if (!edition.startsWith("tr.")) return text;
+  return text
+    .replace(/\bTanrınız\b/gi, "Allah'ınız")
+    .replace(/\bTanrıdır\b/gi, "Allah'tır")
+    .replace(/\bTanrıya\b/gi, "Allah'a")
+    .replace(/\bTanrının\b/gi, "Allah'ın")
+    .replace(/\bTanrıyı\b/gi, "Allah'ı")
+    .replace(/\bTanrıdan\b/gi, "Allah'tan")
+    .replace(/\bTanr[ıi]\b/gi, "Allah");
+}
+
 function throttle(): Promise<void> {
   const now = Date.now();
   const wait = Math.max(0, THROTTLE_MS - (now - lastFetchTime));
@@ -116,7 +127,7 @@ function throttle(): Promise<void> {
   return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
 }
 
-export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyanet"): Promise<{ ar: string; tr: string }> {
+export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir"): Promise<{ ar: string; tr: string }> {
   const key = `${surah}:${ayah}:${edition}`;
   const cached = ayahCache.get(key);
   if (cached) { if (frameCount++ % 20 === 0) console.log("[fetchAyah] Cache hit:", key); return cached; }
@@ -131,7 +142,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyan
   try {
     const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ text: string }> };
     const ar = (json.data?.[0]?.text ?? "") as string;
-    const tr = (json.data?.[1]?.text ?? "") as string;
+    const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, edition);
     console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
     if (ar || tr) {
       const result = { ar, tr };
@@ -148,7 +159,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.diyan
       fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`),
       fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${edition}`),
     ]) as [{ data?: { text: string } }, { data?: { text: string } }];
-    const result = { ar: (arabic.data?.text ?? "") as string, tr: (translated.data?.text ?? "") as string };
+    const result = { ar: (arabic.data?.text ?? "") as string, tr: normalizeTurkishMeal((translated.data?.text ?? "") as string, edition) };
     console.log("[fetchAyah] Yedek başarılı:", key, "ar:", result.ar.length, "tr:", result.tr.length);
     ayahCache.set(key, result);
     pendingFetches--;
@@ -176,11 +187,10 @@ export async function fetchSurah(surah: number, edition: string): Promise<Array<
     arabic = arabicJson.data?.ayahs ?? [];
     translated = translatedJson.data?.ayahs ?? [];
   }
-  let rows = arabic.map((item, index) => ({ ar: item.text, tr: (translated[index]?.text ?? "") as string }));
-  const unique = new Set(rows.map((row) => row.tr));
-  if (rows.length > 1 && unique.size === 1 && MEAL_FIXES[surah]?.length === rows.length && edition.startsWith("tr.")) {
-    rows = rows.map((row, index) => ({ ...row, tr: MEAL_FIXES[surah][index] }));
-  }
+  const rows = arabic.map((item, index) => ({
+    ar: item.text,
+    tr: normalizeTurkishMeal((translated[index]?.text ?? "") as string, edition),
+  }));
   if (!rows.length) throw new Error("SURAH_EMPTY");
   return rows;
 }

@@ -12,7 +12,7 @@ import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
   fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
-  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah,
+  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah, normalizeTurkishMeal,
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import {
@@ -33,7 +33,6 @@ import {
   genDesc,
   genTitle,
   HASHTAG_POOL,
-  MEAL_FIXES,
   SURAHS,
   THEMES,
   THEME_EMOJI,
@@ -538,7 +537,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setSelected((current) => [...current, placeholder]);
     setVerseIndex(selectedRef.current.length);
     try {
-      let ar = "", tr = knownTranslation ?? "";
+      let ar = "", tr = knownTranslation ? normalizeTurkishMeal(knownTranslation, MEAL_EDITIONS[lang]) : "";
       if (knownTranslation) { const json: any = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
       // ★ Placeholder'ı gerçek veriyle değiştir (boşsa bile güncelle — API çalışmıyorsa boş kalmasın)
@@ -1156,6 +1155,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}
       <AnnouncementBar
         notify={notify}
+        user={user}
         onRewardClaimed={() => {
           syncWallet();
         }}
@@ -1191,6 +1191,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         setLangOpen={setLangOpen}
         nextPrayer={nextPrayer}
         prayerCity={prayerCity}
+        setPrayerCity={setPrayerCity}
+        prayerTimings={prayerTimings}
         setRoadmapOpen={setRoadmapOpen}
         formatRemaining={formatRemaining}
         t={t}

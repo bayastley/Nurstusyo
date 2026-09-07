@@ -111,7 +111,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (action === "set_feature_lock") {
       const featureId = validateId(body.featureId);
       if (!featureId) return res.status(400).json({ ok: false, error: "Geçersiz feature ID" });
-      const lockLevel = ["free", "pro", "elit", "v2", "v3", "off"].includes(body.lockLevel) ? body.lockLevel : "free";
+      const lockLevel = ["free", "pro", "elit", "v2", "v3", "maintenance", "off"].includes(body.lockLevel) ? body.lockLevel : "free";
       await db("nur_feature_locks?on_conflict=feature_id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ feature_id: featureId, lock_level: lockLevel, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }) });
     } else if (action === "change_tier") {
       const email = validateEmail(body.target);

@@ -6,8 +6,8 @@ import { isAdminEmail } from "../tier";
 const ICON_EMOJI: Record<string, string> = {
   ai_meal: "🧠", kendi_ses: "🎤", kelime_video: "✍️", ai_arkaplan: "✨",
   push: "🔔", ucretsiz_deneme: "🎁", referans: "👥", arsiv: "🌐",
-  e_fatura: "💳", meal_dinle: "🎧", mobil: "📱", ses_senkron: "🎵",
-  reklam: "🛡️", coklu_kullanici: "👥", api: "⚡", kurumsal: "👑",
+  e_fatura: "💳", meal_dinle: "🎧", mobil: "📱", koleksiyon: "🔖",
+  notlar: "📝", seriler: "🎬", reklam: "🛡️", coklu_kullanici: "👥", api: "⚡", kurumsal: "👑",
 };
 function getIcon(id: string): string {
   return ICON_EMOJI[id] || "✨";
@@ -30,30 +30,30 @@ interface Feature {
 }
 
 const DEFAULT_V2: Omit<Feature, "votes">[] = [
-  { id: "ai-meal", iconId: "ai_meal", title: "AI Meal Seslendirme", desc: "Kur'an mealini yapay zeka seslendirecek. Telif yok, anında üretim. 22 dilde meal seslendirmesi mümkün olacak.", tag: "V2", active: true },
-  { id: "kendi-ses", iconId: "kendi_ses", title: "Kendi Sesinle Seslendirme", desc: "Hafızlar kendi seslerini kaydedip videolarına entegre edebilecek.", tag: "V2", active: true },
-  { id: "kelime-video", iconId: "kelime_video", title: "Kelime Tabanlı Video Üretimi", desc: "Bir kelime veya cümle yaz, yapay zeka otomatik arka plan ve atmosfer seçsin.", tag: "V2", active: true },
-  { id: "ai-arkaplan", iconId: "ai_arkaplan", title: "AI Arka Plan Üretici", desc: "Yazdığın metne göre yapay zeka kendisi tema ve atmosfer belirleyecek.", tag: "V2", active: true },
-  { id: "push", iconId: "push", title: "Akıllı Push Bildirimi", desc: "Cuma sabahı, kandil geceleri, özel gecelerde otomatik bildirim.", tag: "V2", active: true },
-  { id: "ucretsiz-deneme", iconId: "ucretsiz_deneme", title: "Ücretsiz 7 Gün PRO Denemesi", desc: "Yeni üyelere 7 günlük ücretsiz PRO denemesi. Kredi kartı gerekmez.", tag: "V2", active: true },
-  { id: "referans", iconId: "referans", title: "Referans & Davet Sistemi", desc: "Arkadaşını davet et, her ikisi de kazansın.", tag: "V2", active: true },
-  { id: "arsiv", iconId: "arsiv", title: "Kullanıcı Arşivi", desc: "Ürettiğin tüm videoları kaydet, istediğin zaman indir.", tag: "V2", active: true },
-  { id: "e-fatura", iconId: "e_fatura", title: "Otomatik E-Fatura", desc: "Satın alımlarda otomatik e-fatura.", tag: "V2", active: true },
-  { id: "meal-dinle", iconId: "meal_dinle", title: "Meal Dinleme Modu", desc: "Videoları ses-only modda dinle.", tag: "V2", active: true },
+  { id: "ai-meal", iconId: "ai_meal", title: "AI Meal Seslendirme", desc: "Ayetlerin anlamını doğal bir sesle dinle. Bir sure seç, kendi meal videonu dakikalar içinde hazırla.", tag: "V2", active: true },
+  { id: "kendi-ses", iconId: "kendi_ses", title: "Kendi Sesinle Seslendirme", desc: "Kendi anlatım tarzını videolarına taşı. Sesini seçtiğin ayetlerle buluştur.", tag: "V2", active: true },
+  { id: "kelime-video", iconId: "kelime_video", title: "Kelime Tabanlı Video Üretimi", desc: "Aklındaki tek kelimeyi yaz. Nûr Stüdyo onun etrafında bir atmosfer ve video fikri oluştursun.", tag: "V2", active: true },
+  { id: "ai-arkaplan", iconId: "ai_arkaplan", title: "AI Arka Plan Üretici", desc: "Metnin ruhunu anlayan bir arka plan düşün. Yaz, seç ve ortaya çıkan sahneyi keşfet.", tag: "V2", active: true },
+  { id: "push", iconId: "push", title: "Akıllı Push Bildirimi", desc: "Cuma, kandil ve özel geceleri kaçırma. Doğru zamanda gelen küçük bir hatırlatma.", tag: "V2", active: true },
+  { id: "ucretsiz-deneme", iconId: "ucretsiz_deneme", title: "Ücretsiz 7 Gün PRO Denemesi", desc: "Nûr Stüdyo'nun bütün gücünü keşfet. Başlamak için kredi kartı gerekmez.", tag: "V2", active: true },
+  { id: "referans", iconId: "referans", title: "Davet Ettikçe Büyüyen Topluluk", desc: "Bir arkadaşını davet et. Birlikte ürettikçe ikinize de güzel bir sürpriz gelsin.", tag: "V2", active: true },
+  { id: "e-fatura", iconId: "e_fatura", title: "Satın Alımlarda E-Fatura", desc: "Ödeme sonrası belgelerin otomatik hazırlansın; aradığını tek yerde bul.", tag: "V2", active: true },
+  { id: "meal-dinle", iconId: "meal_dinle", title: "Ekransız Meal Dinleme", desc: "Gözlerini kapat, sadece dinle. Videolarını huzurlu bir ses deneyimine dönüştür.", tag: "V2", active: true },
 ];
 
 const DEFAULT_V3: Omit<Feature, "votes">[] = [
-  { id: "mobil-uygulama", iconId: "mobil", title: "Cebindeki Kur'an Stüdyosu", desc: "Telefonundan üret, indir, paylaş. İnternetsiz çalışsın, bildirim gelsin, her an üretime hazır ol. App Store ve Google Play'de olacak.", tag: "V3", active: true },
-  { id: "ses-senkron", iconId: "ses_senkron", title: "Harika Kelvinlight", desc: "Okunan her kelime altın ışıkla parlayacak. Gözlerin takip edecek, ruhun dinleyecek. Hızlı okuma moduyla ezber bile yapabilirsin.", tag: "V3", active: true },
-  { id: "reklam", iconId: "reklam", title: "Ücretsiz Kullanıcılar İçin Destek", desc: "Reklam geliriyle ücretsiz kullanıcılar da video üretebilecek. Sen seyret, o sana destek olsun. Pro kullanıcılar reklamsız devam edecek.", tag: "V3", active: true },
-  { id: "coklu-kullanici", iconId: "coklu_kullanici", title: "Ailesiyle ve Ekibiyle Üretim", desc: "Tek hesapla karınla, çocuklarınla, ekibinle üret. Aile paketi, ekip paketi. Herkes kendi hesabından ama tek fatura.", tag: "V3", active: true },
-  { id: "api", iconId: "api", title: "Camiler ve Medya İçin Entegrasyon", desc: "Camiler otomatik Cuma videosu üretebilecek. Medya kuruluşları tek tuşla binlerce video oluşturabilecek. API ile her şey otomatik.", tag: "V3", active: true },
-  { id: "kurumsal", iconId: "kurumsal", title: "Ajanslar ve Medya Şirketleri", desc: "Özel logon, özel rengin, sınırsız üretim. Ajanslar ve medya şirketleri için beyaz etiketli çözüm. Senin isminle, senin markanla.", tag: "V3", active: true },
+  { id: "mobil-uygulama", iconId: "mobil", title: "Cebindeki Kur'an Stüdyosu", desc: "İlham nerede gelirse gelsin, üretim orada başlasın. Telefonundan hazırla, indir ve paylaş.", tag: "V3", active: true },
+  { id: "koleksiyonlar", iconId: "koleksiyon", title: "Ayet Koleksiyonların", desc: "Sana dokunan ayetleri tek bir yerde biriktir. Huzur, sabır veya şükür gibi kendi koleksiyonlarını oluştur.", tag: "V3", active: true },
+  { id: "ayet-notlari", iconId: "notlar", title: "Ayetlerin Yanına Notların", desc: "Bir ayeti neden kaydettiğini unutma. Düşüncelerini ekle, zaman içinde kendi manevi arşivini oluştur.", tag: "V3", active: true },
+  { id: "icerik-serileri", iconId: "seriler", title: "Temalı İçerik Serileri", desc: "Tek bir ayetten fazlasını anlat. Sabırdan şükre, her tema için izlenebilir ve paylaşılabilir video serileri hazırla.", tag: "V3", active: true },
+  { id: "reklam", iconId: "reklam", title: "Ücretsiz Üretime Destek", desc: "Daha fazla kişi Nûr Stüdyo'ya ulaşsın, ücretsiz üretim imkânı büyüsün. Pro deneyim ise reklamsız kalsın.", tag: "V3", active: true },
+  { id: "coklu-kullanici", iconId: "coklu_kullanici", title: "Birlikte Üretim Alanı", desc: "Ailen, arkadaşların veya ekibinle aynı üretim alanında buluş. Herkes kendi hesabıyla, ortak bir amaçla.", tag: "V3", active: true },
+  { id: "api", iconId: "api", title: "Toplu İçerik ve API", desc: "Tek tek uğraşmadan yüzlerce içeriği planla. Camiler, yayıncılar ve medya ekipleri için güçlü otomasyon.", tag: "V3", active: true },
 ];
 
 // iconId → emoji tablosu zaten yukarıda ICON_EMOJI olarak tanımlı
 
-const STORAGE_KEY = "nur_roadmap_data";
+const STORAGE_KEY = "nur_roadmap_data_v6";
 const VOTE_KEY = "nur_roadmap_votes";
 const DEADLINE_KEY = "nur_roadmap_deadline";
 
@@ -63,8 +63,8 @@ function loadFeatures(): { v2: Feature[]; v3: Feature[] } {
     if (raw) return JSON.parse(raw);
   } catch {}
   return {
-    v2: DEFAULT_V2.map(f => ({ ...f, votes: 0 })),
-    v3: DEFAULT_V3.map(f => ({ ...f, votes: 0 })),
+    v2: DEFAULT_V2.map((feature) => ({ ...feature, votes: 0 })),
+    v3: DEFAULT_V3.map((feature) => ({ ...feature, votes: 0 })),
   };
 }
 
@@ -114,8 +114,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
       setLocalVotes(newVotes);
       try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
       const v2 = data.v2.map(f => f.id === id ? { ...f, votes: Math.max(0, f.votes - 1) } : f);
-      const v3 = data.v3.map(f => f.id === id ? { ...f, votes: Math.max(0, f.votes - 1) } : f);
-      save({ v2, v3 });
+      save({ ...data, v2 });
       return;
     }
     // Farklı bir FEATURE'a oy verildi — eskisini sil, yenisini ekle
@@ -127,12 +126,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
       if (prevId && f.id === prevId) return { ...f, votes: Math.max(0, f.votes - 1) };
       return f;
     });
-    const v3 = data.v3.map(f => {
-      if (f.id === id) return { ...f, votes: f.votes + 1 };
-      if (prevId && f.id === prevId) return { ...f, votes: Math.max(0, f.votes - 1) };
-      return f;
-    });
-    save({ v2, v3 });
+    save({ ...data, v2 });
   };
 
   const handleResetVotes = () => {
@@ -178,15 +172,15 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
     try { localStorage.setItem(DEADLINE_KEY, deadline); } catch {}
   };
 
-  const totalVotes = [...data.v2, ...data.v3].reduce((sum, f) => sum + f.votes, 0);
+  const totalVotes = data.v2.reduce((sum, f) => sum + f.votes, 0);
 
   const renderFeature = (f: Feature, version: "V2" | "V3") => {
     const isEditing = editingId === f.id;
     const emoji = getIcon(f.iconId);
 
     return (
-      <div key={f.id} className={`flex items-start gap-3 p-3 rounded-xl border transition group ${version === "V2" ? "bg-white/[0.03] border-white/5 hover:border-amber-500/20" : "bg-white/[0.02] border-white/[0.03] opacity-60 hover:opacity-80"}`}>
-        <div className={`mt-0.5 p-1.5 rounded-lg text-sm group-hover:scale-110 transition ${version === "V2" ? "" : "bg-purple-500/10"}`} style={version === "V2" ? { backgroundColor: "var(--accent-2)", opacity: 0.15 } : undefined}>
+      <div key={f.id} className={`flex items-start gap-3 rounded-xl border p-3 transition group ${version === "V2" ? "border-amber-400/20 bg-gradient-to-r from-amber-400/[0.12] to-emerald-400/[0.06] shadow-[0_0_22px_rgba(245,190,70,.06)] hover:border-amber-300/45" : "border-indigo-300/15 bg-gradient-to-r from-slate-800/55 via-indigo-950/45 to-blue-950/45 hover:border-indigo-300/30"}`}>
+        <div className={`mt-0.5 rounded-lg p-1.5 text-sm transition group-hover:scale-110 ${version === "V2" ? "bg-amber-300/15" : "bg-indigo-400/15"}`}>
           {emoji}
         </div>
         <div className="flex-1 min-w-0">
@@ -202,17 +196,17 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-bold text-white">{f.title}</span>
-                <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold ${version === "V2" ? "bg-green-500/15 text-green-400 border border-green-500/20" : "bg-purple-500/15 text-purple-300 border border-purple-500/20"}`}>{f.tag}</span>
+                <span className={`text-[11px] font-bold ${version === "V2" ? "text-white" : "text-indigo-100/85"}`}>{f.title}</span>
+                <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold ${version === "V2" ? "border border-green-500/20 bg-green-500/15 text-green-400" : "border border-indigo-300/20 bg-indigo-400/15 text-indigo-200/75"}`}>{f.tag}</span>
               </div>
-              <p className={`text-[10px] mt-0.5 leading-relaxed ${version === "V2" ? "text-white/50" : "text-white/40"}`}>{f.desc}</p>
+              <p className={`mt-0.5 text-[10px] leading-relaxed ${version === "V2" ? "text-white/65" : "text-indigo-100/48"}`}>{f.desc}</p>
             </>
           )}
         </div>
 
         {/* Oy + Admin Kontrolleri */}
         <div className="flex flex-col items-center gap-0.5 shrink-0">
-          {!adminMode && (
+          {!adminMode && version === "V2" && (
             <>
               <button
                 onClick={() => handleVote(f.id)}
@@ -324,8 +318,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                 <button onClick={handleResetVotes} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1 text-[9px] font-bold text-red-300 hover:bg-red-500/25 transition">
                   <RotateCcw size={10} /> Oyları Sıfırla
                 </button>
-                <button onClick={() => { save({ v2: DEFAULT_V2.map(f => ({ ...f, votes: 0 })), v3: DEFAULT_V3.map(f => ({ ...f, votes: 0 })) }); setLocalVotes({}); }} className="flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1 text-[9px] text-white/40 hover:bg-white/10 transition">
-                  <RotateCcw size={10} /> Varsayılana Dön
+                <button onClick={() => { save({ v2: [], v3: [] }); setLocalVotes({}); }} className="flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1 text-[9px] text-white/40 hover:bg-white/10 transition">
+                  <RotateCcw size={10} /> Planları Temizle
                 </button>
               </div>
             </div>
@@ -350,24 +344,26 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
           {/* V2 */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider" style={{ backgroundColor: "var(--accent-2)", color: "#000" }}>V2</div>
+              <div className="rounded-lg bg-gradient-to-r from-amber-300 to-emerald-300 px-2.5 py-1 text-[10px] font-black tracking-wider text-black shadow-[0_0_16px_rgba(245,190,70,.25)]">V2</div>
               <span className="text-sm font-bold text-white">Yakında Gelen Güncellemeler</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-400 border border-green-500/20">{data.v2.filter(f => f.active).length} özellik</span>
+              <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2 py-0.5 text-[9px] font-bold text-emerald-300">{data.v2.filter(f => f.active).length} özellik · 1 oy seç</span>
             </div>
             <div className="space-y-2">
               {data.v2.filter(f => f.active).sort((a, b) => b.votes - a.votes).map(f => renderFeature(f, "V2"))}
+              {data.v2.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">Henüz V2 planı eklenmedi. İlk fikri sen belirle.</p>}
             </div>
           </div>
 
           {/* V3 */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="px-2.5 py-1 rounded-lg text-[10px] font-black tracking-wider bg-purple-500 text-white">V3</div>
-              <span className="text-sm font-bold text-white">Uzun Vadeli Planlar</span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">{data.v3.filter(f => f.active).length} özellik</span>
+              <div className="rounded-lg border border-indigo-300/25 bg-indigo-500/25 px-2.5 py-1 text-[10px] font-black tracking-wider text-indigo-100">V3</div>
+              <span className="text-sm font-bold text-indigo-100/85">Uzun Vadeli Planlar</span>
+              <span className="rounded-full border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 text-[9px] font-bold text-indigo-200/60">{data.v3.filter(f => f.active).length} özellik · uzun vade</span>
             </div>
             <div className="space-y-2">
               {data.v3.filter(f => f.active).sort((a, b) => b.votes - a.votes).map(f => renderFeature(f, "V3"))}
+              {data.v3.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">Henüz uzun vadeli plan eklenmedi. Birlikte şekillendireceğiz.</p>}
             </div>
           </div>
 

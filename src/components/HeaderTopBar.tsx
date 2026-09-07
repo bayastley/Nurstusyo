@@ -38,6 +38,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   setLangOpen,
   nextPrayer,
   prayerCity,
+  setPrayerCity,
+  prayerTimings,
   formatRemaining,
   t,
   tier,
@@ -150,8 +152,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       </button>
                     ))}
 
-                    {/* ★ GÜNCELLEMELER — HERKES GÖRÜR, SADECE ADMİN AÇAR */}
-                    {user && (
+                    {/* ★ GÜNCELLEMELER — Giriş yapmadan da yol haritası görülebilir */}
                     <div
                       className="relative"
                       onMouseEnter={openUpdates}
@@ -271,7 +272,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </div>
                       )}
                     </div>
-                    )}
 
                     {/* ★ ARAÇLAR — İslami yardımcı araçlar */}
                     <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
@@ -404,7 +404,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
         </div>
       </header>
       {/* ★ ARAÇLAR PANELİ */}
-      <IslamicToolsPanel open={toolsOpen} onClose={() => setToolsOpen(false)} />
+      <IslamicToolsPanel
+        open={toolsOpen}
+        onClose={() => setToolsOpen(false)}
+        prayerCity={prayerCity}
+        setPrayerCity={setPrayerCity}
+        prayerTimings={prayerTimings}
+      />
     </>
   );
 };
