@@ -32,7 +32,7 @@ function adminFromCookie(req: VercelRequest): { email: string; isAdmin: boolean 
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
     const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
     const admin = JSON.parse(Buffer.from(normalized + pad, "base64").toString("utf8"));
-    return admin.isAdmin && admin.verified ? admin : null;
+    return admin.isAdmin && admin.verified && admin.exp >= Math.floor(Date.now() / 1000) ? admin : null;
   } catch {
     return null;
   }

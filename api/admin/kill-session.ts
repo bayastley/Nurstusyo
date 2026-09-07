@@ -182,12 +182,22 @@ async function banUser(
 // ═══════════════════════════════════════════════════════════════
 export default async function handler(req: any, res: any) {
   // CORS
-  res.setHeader("Access-Control-Allow-Origin", process.env.SITE_URL || "*");
+  const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
+  const requestOrigin = String(req.headers.origin || "").replace(/\/$/, "");
+  if (requestOrigin && configuredOrigin && requestOrigin === configuredOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", configuredOrigin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    res.status(200).end();
+    if (requestOrigin && requestOrigin !== configuredOrigin) {
+      res.status(403).end();
+      return;
+    }
+    res.status(204).end();
     return;
   }
 

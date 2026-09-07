@@ -47,6 +47,12 @@ as $$
 declare
   v_remaining integer;
 begin
+  if coalesce(auth.role(), '') <> 'service_role'
+     and (auth.uid() is null or auth.uid()::text <> p_user_id) then
+    return query select false, 0, 'UNAUTHORIZED';
+    return;
+  end if;
+
   if p_amount <= 0 then
     return query select false, 0, 'INVALID_AMOUNT';
     return;
@@ -86,6 +92,11 @@ declare
   v_used integer;
   v_pack integer;
 begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    return query select false, 'none'::text, 0, 0, 'UNAUTHORIZED';
+    return;
+  end if;
+
   if p_video_kind not in ('kisa', 'uzun', 'tam') then
     return query select false, 'none'::text, 0, 0, 'INVALID_KIND';
     return;
@@ -140,6 +151,10 @@ alter table public.nur_video_rights enable row level security;
 
 revoke all on public.nur_daily_usage from anon, authenticated;
 revoke all on public.nur_video_rights from anon, authenticated;
+revoke execute on function public.nur_grant_video_rights(text, text, integer) from public, anon, authenticated;
+grant execute on function public.nur_grant_video_rights(text, text, integer) to service_role;
+revoke execute on function public.nur_consume_video(text, text, integer) from public, anon, authenticated;
+grant execute on function public.nur_consume_video(text, text, integer) to service_role;
 
 -- ─── Eski cüzdan yapısını devre dışı bırak ───────────────
 -- nur_wallets tablosu artık okunmaz. Veri kaybı olmaması için

@@ -239,9 +239,9 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ok: true, alreadyCompleted: true });
     }
 
-    // Pending ise hâlâ ödenmemiş — verify'de hak verme
-    if (orderRow.status === 'pending') {
-      return res.status(202).json({ ok: false, error: 'Ödeme henüz tamamlanmadı' });
+    // Hak tanımlama yalnızca callback tarafından kilitlenen siparişte yapılır.
+    if (orderRow.status !== 'processing') {
+      return res.status(409).json({ ok: false, error: 'Ödeme doğrulama durumu uygun değil' });
     }
 
     // productCode'u siparişten oku (istemciden alma!)

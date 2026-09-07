@@ -152,6 +152,11 @@ as $$
 declare
   v_balance integer;
 begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    return query select false, 0, 'UNAUTHORIZED';
+    return;
+  end if;
+
   if p_amount <= 0 or length(trim(p_reward_key)) < 3 then
     return query select false, 0, 'INVALID_REWARD';
     return;
@@ -194,6 +199,8 @@ revoke all on public.nur_orders from anon, authenticated;
 revoke all on public.nur_ban_logs from anon, authenticated;
 revoke all on public.nur_admin_audit_logs from anon, authenticated;
 revoke all on public.nur_reward_claims from anon, authenticated;
+revoke execute on function public.nur_claim_reward(text, text, integer) from public, anon, authenticated;
+grant execute on function public.nur_claim_reward(text, text, integer) to service_role;
 
 grant select on public.nur_announcements to anon, authenticated;
 grant select on public.nur_feature_locks to anon, authenticated;

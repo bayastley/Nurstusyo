@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { requireAuth } from "../_shared/auth.js";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 // ═══════════════════════════════════════════════════════════════
 // ★ /api/ai/kissa-generate — AI Kıssa Üretimi + TTS Seslendirme
@@ -230,14 +232,23 @@ async function uploadToR2(
 // ═══════════════════════════════════════════════════════════════
 // ★ ANA HANDLER
 // ═══════════════════════════════════════════════════════════════
-export default async function handler(req: any, res: any) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", process.env.SITE_URL || "*");
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
+  const requestOrigin = String(req.headers.origin || "").replace(/\/$/, "");
+  if (requestOrigin && configuredOrigin && requestOrigin === configuredOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", configuredOrigin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Vary", "Origin");
+  }
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    res.status(200).end();
+    if (requestOrigin && requestOrigin !== configuredOrigin) {
+      res.status(403).end();
+      return;
+    }
+    res.status(204).end();
     return;
   }
 
@@ -246,10 +257,13 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  const user = requireAuth(req, res);
+  if (!user) return;
+
   // Rate limit
   const clientIp =
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(clientIp)) {
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || user.id;
+  if (isRateLimited(`${user.id}:${clientIp}`)) {
     res.status(429).json({ error: "Çok fazla istek. Lütfen biraz bekleyin." });
     return;
   }
@@ -267,7 +281,7 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    addRateLimit(clientIp);
+    addRateLimit(`${user.id}:${clientIp}`);
 
     // 1. Kıssa üret
     console.log("[kissa-generate] Kıssa üretiliyor:", prompt.slice(0, 50));
