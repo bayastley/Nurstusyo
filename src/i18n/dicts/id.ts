@@ -24,6 +24,8 @@ export const idDict: Dict = {
   atmoLibrary: "Galeri Atmosfer",
   randomAll: "Acak",
   reciter: "Qari & Audio",
+  kaaba: "Masjid al-Haram / Masjid An-Nabawi",
+  copyright: "Rekitasi Bebas Royalti",
   mode: "Mode Durasi",
   modeShort: "Video Pendek (Shorts / Reel)",
   modeLong: "Video Panjang (600 dtk)",
