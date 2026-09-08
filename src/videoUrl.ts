@@ -13,6 +13,7 @@ const R2_BASE = "https://cdn.nurstudyo.com";
 
 export async function getVideoUrl(clip: VideoClip): Promise<string> {
   // R2 custom domain kullan (hızlı & gizli)
+  if (clip.r2) return clip.r2;
   if (clip.pexelsId && clip.cat) {
     return `${R2_BASE}/videos/${clip.cat}/${clip.pexelsId}.mp4`;
   }
@@ -21,6 +22,7 @@ export async function getVideoUrl(clip: VideoClip): Promise<string> {
 
 export async function getPosterUrl(clip: VideoClip): Promise<string | undefined> {
   // R2 custom domain kullan (hızlı & gizli)
+  if (clip.r2Poster) return clip.r2Poster;
   if (clip.pexelsId && clip.cat) {
     return `${R2_BASE}/posters/${clip.cat}/${clip.pexelsId}.jpg`;
   }
@@ -29,6 +31,7 @@ export async function getPosterUrl(clip: VideoClip): Promise<string | undefined>
 
 export function getVideoUrlSync(clip: VideoClip): string {
   // R2 custom domain kullan (hızlı & gizli)
+  if (clip.r2) return clip.r2;
   if (clip.pexelsId && clip.cat) {
     return `${R2_BASE}/videos/${clip.cat}/${clip.pexelsId}.mp4`;
   }
@@ -37,6 +40,7 @@ export function getVideoUrlSync(clip: VideoClip): string {
 
 export function getPosterUrlSync(clip: VideoClip): string | undefined {
   // R2 custom domain kullan (hızlı & gizli)
+  if (clip.r2Poster) return clip.r2Poster;
   if (clip.pexelsId && clip.cat) {
     return `${R2_BASE}/posters/${clip.cat}/${clip.pexelsId}.jpg`;
   }
