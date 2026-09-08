@@ -69,7 +69,7 @@ import { usePaymentFlow } from "./studio/usePaymentFlow";
 import { useAudioPreview } from "./studio/useAudioPreview";
 import { usePrayerTime } from "./studio/usePrayerTime";
 import { useDailyAyah } from "./studio/useDailyAyah";
-import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl } from "./videoUrl";
+import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { syncUserInDb } from "./components/adminHelpers";
@@ -864,7 +864,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           return;
         }
         getVideoUrl(clip).then((primaryUrl) => {
-          const video = ensureVideo(primaryUrl, clip.src);
+          const video = ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
           if (video.readyState >= 2 && video.videoWidth > 0) {
             try { video.currentTime = 0.05; } catch { /* ignore */ }
             video.play().catch(() => undefined);
@@ -932,7 +932,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             const activeClip = renderClips[idx];
             if (activeClip?.kind === "vid") {
               try {
-                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), activeClip.src);
+                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), isR2Media(activeClip) ? undefined : activeClip.src);
                 const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
                 if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
                   const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));

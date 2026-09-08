@@ -114,7 +114,7 @@ function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
 const ALLOWED_CATEGORIES = new Set<string>(CATEGORY_IDS);
 
 function isSafeCategory(value: unknown): value is CatId {
-  return typeof value === "string" && ALLOWED_CATEGORIES.has(value as CatId);
+  return typeof value === "string" && (ALLOWED_CATEGORIES.has(value as CatId) || /^admin_[a-zA-Z0-9_]{2,100}$/.test(value));
 }
 
 function normalizePexelsId(value: unknown): number | null {
@@ -130,15 +130,6 @@ function isSafeClipId(value: unknown): value is string {
 function clipIndexFromId(cat: string, clipId: string | null): number {
   const match = clipId?.match(new RegExp(`^${cat}-r(\\d+)$`));
   return match ? Math.max(0, Number(match[1]) - 1) : 0;
-}
-
-function cleanPublicUrl(value: string): string {
-  try {
-    const url = new URL(value || "https://nurstudyo.com");
-    return url.protocol === "https:" ? url.origin : "https://nurstudyo.com";
-  } catch {
-    return "https://nurstudyo.com";
-  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -159,6 +150,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const normalizedClipId = isSafeClipId(clipId) ? clipId : null;
     if (normalizedPexelsId === null && !normalizedClipId) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
     const userTier: Tier = access.isAdmin ? "elit" : access.tier;
+    if (!access.isAdmin && typeof cat === "string" && cat.startsWith("admin_") && userTier !== "elit") {
+      return res.status(403).json({ ok: false, error: "Bu içerik yalnızca Elit üyeler içindir" });
+    }
     const clipIndex = clipIndexFromId(cat, normalizedClipId);
     if (!canAccessClip(userTier, cat, clipIndex)) return res.status(403).json({ ok: false, error: "Bu içerik için üyelik seviyeniz yetersiz" });
 
@@ -166,7 +160,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const bucketName = process.env.R2_BUCKET_NAME || "nurstudyo";
     const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || "";
-    const publicUrl = cleanPublicUrl(process.env.R2_PUBLIC_URL || "https://nurstudyo.com");
     const mediaId = normalizedPexelsId !== null ? String(normalizedPexelsId) : normalizedClipId!;
     const videoKey = `videos/${cat}/${mediaId}.mp4`;
     const posterKey = `posters/${cat}/${mediaId}.jpg`;
@@ -179,7 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ ok: true, url: signedVideoUrl, posterUrl: signedPosterUrl, expiresAt: Date.now() + 600 * 1000 });
     }
 
-    return res.status(200).json({ ok: true, url: `${publicUrl}/${videoKey}`, posterUrl: `${publicUrl}/${posterKey}`, expiresAt: Date.now() + 600 * 1000 });
+    return res.status(503).json({ ok: false, error: "R2 medya servisi yapılandırılmamış" });
   } catch (error) {
     console.error("[R2 Presigned URL Error]", error);
     return res.status(500).json({ ok: false, error: "İmzalı video bağlantısı üretilemedi" });

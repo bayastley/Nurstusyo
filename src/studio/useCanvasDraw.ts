@@ -6,7 +6,7 @@
 
 import { useEffect, type RefObject, type MutableRefObject } from "react";
 import { CATEGORY_PALETTE } from "../clips";
-import { getVideoUrlSync, getPosterUrlSync } from "../videoUrl";
+import { getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes } from "../clips";
 import { dimensions } from "./studioHelpers";
 import type { Clip, CatId } from "../clips";
@@ -147,7 +147,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           const zoom = 1.03 + Math.sin(tick / 500) * 0.012;
           if (p.cineFilter.css !== "none") { try { ctx.filter = p.cineFilter.css; } catch { /* ignore */ } }
           if (clip.kind === "vid") {
-            const primaryUrl = getVideoUrlSync(clip), posterUrl = getPosterUrlSync(clip), video = p.ensureVideo(primaryUrl, clip.src);
+            const primaryUrl = getVideoUrlSync(clip), posterUrl = getPosterUrlSync(clip), video = p.ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
             if (video.paused && !video.ended && video.readyState >= 1) { video.play().catch(() => undefined); }
             {
               const nowMs = performance.now(), wd = p.videoWatchdog.current.get(video) ?? { t: -1, at: nowMs };

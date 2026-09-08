@@ -5,7 +5,7 @@ import { checkRateLimit } from "../rateLimiter";
 import { JETON, getJeton, setJeton as persistJetonSecure, videoMaliyeti, consumeVideo, MODE_TO_KIND } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
-import { getPosterUrl, getVideoUrl, getVideoUrlSync } from "../videoUrl";
+import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
 import type { Aspect, Mode, Output, SelectedAyah, User } from "../types";
@@ -249,7 +249,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           return;
         }
         getVideoUrl(clip).then((primaryUrl) => {
-          const video = ensureVideo(primaryUrl, clip.src);
+          const video = ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
           if (video.readyState >= 2 && video.videoWidth > 0) {
             try { video.currentTime = 0.05; } catch { /* ignore */ }
             video.play().catch(() => undefined);
@@ -316,7 +316,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             const activeClip = renderClips[idx];
             if (activeClip?.kind === "vid") {
               try {
-                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), activeClip.src);
+                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), isR2Media(activeClip) ? undefined : activeClip.src);
                 const localTime = Math.max(0, elapsed - (ayahDurations[idx]?.start ?? 0));
                 if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
                   const nextTime = localTime % Math.max(0.5, activeVideo.duration - 0.1);

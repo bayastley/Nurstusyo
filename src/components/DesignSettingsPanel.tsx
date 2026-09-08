@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { SectionTitle, Segmented } from "./UIElements";
 import { LockBadge, LockedOverlay } from "./LockBadge";
-import { getVideoUrlSync, getPosterUrlSync } from "../videoUrl";
+import { getVideoUrl, getPosterUrl, getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { RISK_META } from "../data";
 import { RECITERS } from "../reciters";
 import { T } from "../i18n";
@@ -64,11 +64,26 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   t,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
+  const [backgroundVideoUrl, setBackgroundVideoUrl] = useState("");
+  const [backgroundPosterUrl, setBackgroundPosterUrl] = useState<string | undefined>();
   useEffect(() => {
     const onUpdate = () => setConfigVersion((v) => v + 1);
     window.addEventListener("nur_config_updated", onUpdate);
     return () => window.removeEventListener("nur_config_updated", onUpdate);
   }, []);
+  useEffect(() => {
+    let alive = true;
+    setBackgroundVideoUrl(background?.kind === "vid" ? getVideoUrlSync(background) : "");
+    setBackgroundPosterUrl(background?.kind === "vid" ? getPosterUrlSync(background) : undefined);
+    if (background?.kind !== "vid") return () => { alive = false; };
+    void Promise.all([getVideoUrl(background), getPosterUrl(background)]).then(([videoUrl, posterUrl]) => {
+      if (alive) {
+        setBackgroundVideoUrl(videoUrl);
+        setBackgroundPosterUrl(posterUrl);
+      }
+    }).catch(() => undefined);
+    return () => { alive = false; };
+  }, [background]);
   void configVersion;
   // Video Üret butonu orta panele taşındı — prop uyumu için korunuyor
   void handleGenerate; void generating; void progress;
@@ -85,12 +100,12 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             {background ? (
               background.kind === "vid" ? (
                 <video
-                  src={getVideoUrlSync(background)}
-                  poster={getPosterUrlSync(background) ?? background.poster}
+                  src={backgroundVideoUrl}
+                  poster={backgroundPosterUrl ?? background.poster}
                   muted
                   loop
                   playsInline
-                  onError={(e) => { const v = e.currentTarget; if (v.src !== background.src) v.src = background.src; }}
+                  onError={(e) => { const v = e.currentTarget; if (!isR2Media(background) && v.src !== background.src) v.src = background.src; }}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                 />
               ) : (
