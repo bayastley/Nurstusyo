@@ -86,6 +86,32 @@ async function sbPatch(path: string, body: any) {
   } catch (e) { console.error('[payments/verify] Supabase PATCH hatası:', (e as Error).message); }
 }
 
+async function claimProcessingOrder(orderId: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  try {
+    const response = await fetch(
+      `${sb.url}/rest/v1/nur_orders?id=eq.${encodeURIComponent(orderId)}&status=eq.processing`,
+      {
+        method: 'PATCH',
+        headers: {
+          apikey: sb.key,
+          Authorization: `Bearer ${sb.key}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ status: 'granting', updated_at: new Date().toISOString() }),
+      },
+    );
+    if (!response.ok) return false;
+    const rows = await response.json();
+    return Array.isArray(rows) && rows.length === 1;
+  } catch (error) {
+    console.error('[payments/verify] Sipariş sahiplenme hatası:', (error as Error).message);
+    return false;
+  }
+}
+
 async function sbPost(table: string, body: any) {
   const sb = getSupabase();
   if (!sb) return;
@@ -244,6 +270,10 @@ export default async function handler(req: any, res: any) {
       return res.status(409).json({ ok: false, error: 'Ödeme doğrulama durumu uygun değil' });
     }
 
+    if (!(await claimProcessingOrder(orderId))) {
+      return res.status(409).json({ ok: false, error: 'Ödeme zaten doğrulanıyor' });
+    }
+
     // productCode'u siparişten oku (istemciden alma!)
     const productCode = orderRow.product_code;
     console.log('[verify] İstek:', { userId: user.id, orderId, productCode });
@@ -259,6 +289,10 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ok: true, granted: true });
     }
 
+    await sbPatch(`nur_orders?id=eq.${encodeURIComponent(orderId)}&status=eq.granting`, {
+      status: 'processing',
+      updated_at: new Date().toISOString(),
+    });
     return res.status(200).json({ ok: false, error: 'Ürün tanınamadı' });
   } catch (err: any) {
     console.error('[verify] fatal:', err);

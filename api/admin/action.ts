@@ -47,7 +47,7 @@ interface AdminSession { id: string; email: string; verified: boolean; isAdmin: 
 
 function base64Url(input: Buffer): string { return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, ""); }
 
-function adminFromCookie(req: VercelRequest): AdminSession | null {
+async function adminFromCookie(req: VercelRequest): Promise<AdminSession | null> {
   const cookie = String(req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
   if (!cookie) return null;
   const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
@@ -59,7 +59,15 @@ function adminFromCookie(req: VercelRequest): AdminSession | null {
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
     const pad = normalized.length % 4 ? "=".repeat(4 - normalized.length % 4) : "";
     const admin = JSON.parse(Buffer.from(normalized + pad, "base64").toString("utf8")) as AdminSession;
-    return admin.isAdmin && admin.verified && admin.exp >= Math.floor(Date.now() / 1000) ? admin : null;
+    if (!admin.isAdmin || !admin.verified || admin.exp < Math.floor(Date.now() / 1000)) return null;
+    const { url, key } = config();
+    const response = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(admin.id)}&select=is_admin,tier`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const rows = await response.json() as Array<{ is_admin?: boolean }>;
+    return rows[0]?.is_admin === true ? admin : null;
   } catch { return null; }
 }
 
@@ -84,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  const admin = adminFromCookie(req);
+  const admin = await adminFromCookie(req);
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
   
   // ★ Admin rate limit (dakikada 100 işlem)

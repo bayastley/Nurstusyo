@@ -22,7 +22,7 @@ function base64Url(input: Buffer): string {
   return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function getAdmin(req: VercelRequest): SessionAdmin | null {
+async function getAdmin(req: VercelRequest): Promise<SessionAdmin | null> {
   const rawCookie = String(req.headers.cookie || "");
   const cookie = rawCookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
   if (!cookie) return null;
@@ -40,7 +40,16 @@ function getAdmin(req: VercelRequest): SessionAdmin | null {
   try {
     const admin = JSON.parse(fromBase64Url(payload).toString("utf8")) as SessionAdmin;
     if (!admin.id || !admin.email || !admin.verified || !admin.isAdmin || admin.exp < Math.floor(Date.now() / 1000)) return null;
-    return admin;
+    const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url || !key) return null;
+    const response = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(admin.id)}&select=is_admin`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const rows = await response.json() as Array<{ is_admin?: boolean }>;
+    return rows[0]?.is_admin === true ? admin : null;
   } catch {
     return null;
   }
@@ -65,7 +74,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   if (!allowRequest(req, res)) return;
 
-  const admin = getAdmin(req);
+  const admin = await getAdmin(req);
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
 
   return res.status(200).json({
