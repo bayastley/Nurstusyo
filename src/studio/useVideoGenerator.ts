@@ -126,9 +126,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     const formatCount = Math.max(batchFormats.length, 1);
     const costPerVideo = videoMaliyeti(mode, accessTier);
     const isGuest = !user && !isMasterSürüm;
-    const totalCost = isMasterSürüm || isGuest ? 0 : costPerVideo * formatCount;
+    const isAdmin = user?.isAdmin === true;
+    const totalCost = isMasterSürüm || isGuest || isAdmin ? 0 : costPerVideo * formatCount;
 
-    if (renderAuthLive && !isMasterSürüm && !isGuest) {
+    if (!isMasterSürüm && !isGuest) {
       try {
         const response = await fetch("/api/render/authorize", {
           method: "POST",
@@ -138,10 +139,6 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number } | null;
         if (!response.ok || !data?.ok) {
           notify(data?.error || "Üretim yetkisi doğrulanamadı");
-          return;
-        }
-        if (typeof data.cost === "number" && data.cost !== totalCost) {
-          notify("Üretim maliyeti sunucu doğrulamasıyla uyuşmadı");
           return;
         }
       } catch {
@@ -382,17 +379,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       if (!isMasterSürüm && !userStopped && !charged) {
         setProgress(98);
         if (isGuest) bumpGuestUsed();
-        else {
-          // ★ Her format üretimi için ayrı ayrı hak harca
-          const kind = MODE_TO_KIND[mode];
-          for (let i = 0; i < formatCount; i++) {
-            consumeVideo(kind, accessTier, mode);
-          }
-          // Güncel jeton sayısını yeniden hesapla
-          const freshJeton = getJeton();
-          persistJetonSecure(freshJeton);
-          setJetonCount(freshJeton);
-        }
+        // Authenticated production rights are consumed atomically by /api/render/authorize.
         charged = true;
       }
       if (userStopped) { audioContext.close().catch(() => undefined); return; }

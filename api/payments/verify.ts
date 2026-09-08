@@ -191,27 +191,9 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase();
       const videoCount = parseInt(match[2]);
 
-      const colMap: Record<string, string> = { kisa: 'purchased_kisa', uzun: 'purchased_uzun', tam: 'purchased_tam' };
-      const colName = colMap[videoKind] || 'purchased_kisa';
-
-      const rows = await sbGet(`nur_wallets?user_id=eq.${encodeURIComponent(userId)}&select=*`);
-      const existing = Array.isArray(rows) ? rows[0] : null;
-
-      if (existing) {
-        const currentVal = existing[colName] || 0;
-        await sbPatch(`nur_wallets?user_id=eq.${encodeURIComponent(userId)}`, {
-          [colName]: currentVal + videoCount,
-          purchased_jeton: (existing.purchased_jeton || 0) + videoCount,
-          updated_at: new Date().toISOString(),
-        });
-      } else {
-        const newRow: Record<string, any> = {
-          user_id: userId, sub_jeton: 0, purchased_jeton: videoCount,
-          purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0,
-        };
-        newRow[colName] = videoCount;
-        await sbPost('nur_wallets', newRow);
-      }
+      await sbPost('rpc/nur_grant_video_rights', {
+        p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount,
+      });
       console.log('[verify] ✅ Video kotası:', videoCount, 'x', videoKind);
       return true;
     }

@@ -64,6 +64,22 @@ async function findOrder(conversationId: string) {
   return Array.isArray(rows) ? rows[0] : null;
 }
 
+async function claimPendingOrder(conversationId: string, paymentId: string) {
+  const rows = await sbRequest(
+    `nur_orders?id=eq.${encodeURIComponent(conversationId)}&status=eq.pending`,
+    {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({
+        status: 'processing',
+        payment_id: paymentId,
+        updated_at: new Date().toISOString(),
+      }),
+    },
+  );
+  return Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+}
+
 // Sipariş durumunu güncelle
 async function updateOrderStatus(conversationId: string, status: string, _paymentId?: string) {
   await sbRequest(`nur_orders?id=eq.${encodeURIComponent(conversationId)}`, {
@@ -161,47 +177,10 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase(); // kisa, uzun, tam
       const videoCount = parseInt(match[2]);
 
-      // Doğrudan video sayısını ekle (jeton'a çevirme — sadece sayı)
-      // purchased_kisa, purchased_uzun, purchased_tam sütunlarına yaz
-      const colMap: Record<string, string> = { kisa: 'purchased_kisa', uzun: 'purchased_uzun', tam: 'purchased_tam' };
-      const colName = colMap[videoKind] || 'purchased_kisa';
-
-      // nur_wallets tablosunu güncelle
-      const existing = await sbRequest(
-        `nur_wallets?user_id=eq.${encodeURIComponent(userId)}&select=*`
-      );
-      const rows = Array.isArray(existing) ? existing : [];
-
-      if (rows.length > 0) {
-        const currentVal = rows[0][colName] || 0;
-        await sbRequest(
-          `nur_wallets?user_id=eq.${encodeURIComponent(userId)}`,
-          {
-            method: 'PATCH',
-            headers: { Prefer: 'return=minimal' },
-            body: JSON.stringify({
-              [colName]: currentVal + videoCount,
-              purchased_jeton: (rows[0].purchased_jeton || 0) + videoCount,
-              updated_at: new Date().toISOString(),
-            }),
-          }
-        );
-      } else {
-        const newRow: Record<string, any> = {
-          user_id: userId,
-          sub_jeton: 0,
-          purchased_jeton: videoCount,
-          purchased_kisa: 0,
-          purchased_uzun: 0,
-          purchased_tam: 0,
-        };
-        newRow[colName] = videoCount;
-        await sbRequest('nur_wallets', {
-          method: 'POST',
-          headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify(newRow),
-        });
-      }
+      await sbRequest('rpc/nur_grant_video_rights', {
+        method: 'POST',
+        body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount }),
+      });
 
       console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind}`);
       return true;
@@ -324,26 +303,11 @@ export default async function handler(req: any, res: any) {
             res.end(JSON.stringify({ success: false, message: 'Order previously failed' }));
             return;
           } else {
-            // ★ Race condition koruması: pending'i processing'e çevir
-            //    Sadece başarılı olan istek devam eder.
-            //    payment_id burada kaydedilir → sonraki callback'lerde
-            //    sipariş paymentId ile de bulunabilir.
-            const lockResult = await sbRequest(
-              `nur_orders?id=eq.${encodeURIComponent(conversationId)}&status=eq.pending`,
-              {
-                method: 'PATCH',
-                headers: { Prefer: 'return=minimal' },
-                body: JSON.stringify({
-                  status: 'processing',
-                  payment_id: String(data.paymentId || ''),
-                  updated_at: new Date().toISOString(),
-                }),
-              }
+            // Atomik koşullu PATCH yalnızca pending siparişi sahiplenir.
+            const lockedOrder = await claimPendingOrder(
+              conversationId,
+              String(data.paymentId || ''),
             );
-
-            // Eğer patch başarılıysa (0 row affected değilse) devam et
-            // Supabase PATCH her zaman 200 döner, kontrol etmek için tekrar oku
-            const lockedOrder = await findOrder(conversationId);
             if (!lockedOrder || lockedOrder.status !== 'processing') {
               console.log('[callback] Sipariş başka bir istek tarafından işleniyor');
             } else {

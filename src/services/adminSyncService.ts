@@ -61,6 +61,15 @@ export interface SystemConfig {
   banLogs?: BanLog[];
   announcements: Announcement[];
   featureLocks: Record<string, FeatureLock>;
+  maintenance?: MaintenanceConfig;
+}
+
+export interface MaintenanceConfig {
+  enabled: boolean;
+  startsAt: string;
+  endsAt: string;
+  message: string;
+  updatedAt: string;
 }
 
 const SYNC_CONFIG_KEY = "nur_system_sync_config";
@@ -85,6 +94,13 @@ function normalizeConfig(config?: Partial<SystemConfig> | null): SystemConfig {
     banLogs: Array.isArray(config?.banLogs) ? config.banLogs : [],
     announcements: Array.isArray(config?.announcements) ? config.announcements : [],
     featureLocks: config?.featureLocks && typeof config.featureLocks === "object" ? config.featureLocks : {},
+    maintenance: config?.maintenance ?? {
+      enabled: false,
+      startsAt: "",
+      endsAt: "",
+      message: "Nûr Stüdyo daha güvenli, hızlı ve yeni özelliklerle güncelleniyor. Bakım tamamlandığında site otomatik olarak yeniden açılacaktır.",
+      updatedAt: new Date().toISOString(),
+    },
   };
 }
 

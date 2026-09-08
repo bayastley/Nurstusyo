@@ -144,15 +144,15 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">Şablon görseller V2 güncellemesinde açılacak</p>}
       </div>
 
-      {/* İNDİRME KLASÖRÜ — en fazla 3 output gözükür, gizli olanlar Toplu İndir ile iner */}
+      {/* İNDİRME KLASÖRÜ — üç satır görünür, aşağı kaydırınca diğer çıktılar açılır */}
       {outputs.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
           <div className="mb-1.5 flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü</p>
             <span className="text-[8px] text-white/40">{outputs.length} video</span>
           </div>
-          <div className="grid gap-1">
-            {outputs.slice(0, 3).map((output, idx) => (
+          <div className="grid max-h-[126px] gap-1 overflow-y-auto pr-1">
+            {outputs.map((output, idx) => (
               <div key={output.id} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition ${output.id === activeOutput?.id ? "bg-white/[.06] border border-white/10" : "hover:bg-white/[.03]"}`}>
                 <button onClick={() => setActiveOutputId(output.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[8px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
                   {idx + 1}
@@ -167,22 +167,30 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               </div>
             ))}
           </div>
-          {/* Toplu İndir Butonu — 3'ten fazla video varsa gizli olanları da indirir */}
+          {/* Toplu İndir: her dosyayı tamamen aldıktan sonra sıradakine geçer */}
           {outputs.length > 1 && (
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (!user) { setLoginTab("register"); setModal("login"); return; }
-                outputs.forEach((output, idx) => {
-                  setTimeout(() => {
+                try {
+                  for (const [idx, output] of outputs.entries()) {
+                    const response = await fetch(output.url);
+                    if (!response.ok) throw new Error(`İndirme başarısız (${response.status})`);
+                    const blob = await response.blob();
                     const a = document.createElement("a");
-                    a.href = output.url;
+                    const objectUrl = URL.createObjectURL(blob);
+                    a.href = objectUrl;
                     a.download = `nur-studyo-${idx + 1}.${output.ext}`;
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-                  }, idx * 800);
-                });
-                notify(`${outputs.length} video sırayla indiriliyor...`);
+                    URL.revokeObjectURL(objectUrl);
+                  }
+                  notify(`${outputs.length} video sırayla indirildi.`);
+                } catch (error) {
+                  console.error("[Toplu indirme]", error);
+                  notify("İndirme sırasında bir video alınamadı.");
+                }
               }}
               className="mt-1.5 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[9px] font-black text-black"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}

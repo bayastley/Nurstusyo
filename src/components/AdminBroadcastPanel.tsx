@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Bell, LockKeyhole, Save, Send, Trash2 } from "lucide-react";
-import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock } from "../services/adminSyncService";
+import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, type MaintenanceConfig } from "../services/adminSyncService";
 import { RECITERS } from "../reciters";
 
 interface AdminBroadcastPanelProps {
@@ -78,6 +78,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [selectedReciter, setSelectedReciter] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [lockStatus, setLockStatus] = useState("");
+  const [maintenance, setMaintenance] = useState<MaintenanceConfig>(() => getSystemConfig().maintenance!);
 
   const publish = async () => {
     if (!title.trim() || !message.trim()) { notify("Başlık ve kısa mesaj zorunlu"); return; }
@@ -130,6 +131,19 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
   };
 
+  const saveMaintenance = async () => {
+    if (maintenance.startsAt && maintenance.endsAt && new Date(maintenance.endsAt) <= new Date(maintenance.startsAt)) {
+      notify("Bakım bitiş saati başlangıçtan sonra olmalı");
+      return;
+    }
+    const next = { ...maintenance, updatedAt: new Date().toISOString() };
+    const cfg = getSystemConfig();
+    cfg.maintenance = next;
+    saveSystemConfig(cfg);
+    const ok = await adminAction({ action: "set_maintenance", enabled: next.enabled, startsAt: next.startsAt, endsAt: next.endsAt, message: next.message });
+    notify(ok ? "✅ Bakım planı kaydedildi" : "⚠️ Bakım planı cihazda kaydedildi; sunucuya yazılamadı");
+  };
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-2xl border border-amber-400/25 bg-black/35 p-4">
@@ -163,6 +177,19 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             <Trash2 size={13} /> Tüm Duyuruları Kaldır
           </button>
         </div>
+      </section>
+      <section className="rounded-2xl border border-red-400/25 bg-red-950/10 p-4">
+        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Site Bakım Modu</h4>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white sm:col-span-2">
+            <input type="checkbox" checked={maintenance.enabled} onChange={(e) => setMaintenance((v) => ({ ...v, enabled: e.target.checked }))} />
+            Siteyi bakım moduna al
+          </label>
+          <label className="text-[10px] text-white/60">Başlangıç<input type="datetime-local" value={maintenance.startsAt ? maintenance.startsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, startsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
+          <label className="text-[10px] text-white/60">Bitiş<input type="datetime-local" value={maintenance.endsAt ? maintenance.endsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, endsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
+        </div>
+        <textarea value={maintenance.message} onChange={(e) => setMaintenance((v) => ({ ...v, message: e.target.value }))} rows={2} maxLength={300} placeholder="Bakım mesajı" className="glass-soft mt-2 w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
+        <button onClick={saveMaintenance} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-red-400 py-2.5 text-xs font-black text-black"><Save size={13} /> Bakım Planını Kaydet</button>
       </section>
 
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">

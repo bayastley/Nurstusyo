@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import type { User } from "../types";
-import { getCurrentTier, setCurrentTier, type Tier } from "../tier";
+import type { User } from "./types";
+import { getCurrentTier, setCurrentTier, type Tier } from "./tier";
 
 interface UsePaymentFlowOptions {
   setUser: (u: User | null) => void;

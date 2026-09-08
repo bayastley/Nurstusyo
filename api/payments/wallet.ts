@@ -74,7 +74,7 @@ export default async function handler(req: any, res: any) {
     let wallet: any = { sub_jeton: 0, purchased_jeton: 0, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
     try {
       const walletRes = await fetch(
-        `${sbUrl}/rest/v1/nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=*`,
+        `${sbUrl}/rest/v1/nur_video_rights?user_id=eq.${encodeURIComponent(user.id)}&select=video_kind,remaining`,
         {
           headers: {
             apikey: sbKey,
@@ -83,8 +83,12 @@ export default async function handler(req: any, res: any) {
         }
       );
       if (walletRes.ok) {
-        const rows = await walletRes.json() as any[];
-        wallet = rows?.[0] || wallet;
+        const rows = await walletRes.json() as Array<{ video_kind: string; remaining: number }>;
+        for (const row of rows) {
+          if (row.video_kind === "kisa") wallet.purchased_kisa = row.remaining;
+          if (row.video_kind === "uzun") wallet.purchased_uzun = row.remaining;
+          if (row.video_kind === "tam") wallet.purchased_tam = row.remaining;
+        }
       } else {
         console.warn('[wallet] Supabase cevabı:', walletRes.status, await walletRes.text().catch(() => ''));
       }

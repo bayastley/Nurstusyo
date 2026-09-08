@@ -118,25 +118,10 @@ async function grantProductByOrder(order: any): Promise<void> {
       if (match) {
         const videoKind = match[1].toLowerCase();
         const videoCount = parseInt(match[2]);
-        const colMap: Record<string, string> = { kisa: "purchased_kisa", uzun: "purchased_uzun", tam: "purchased_tam" };
-        const colName = colMap[videoKind] || "purchased_kisa";
-        const rows = (await sbRequest(`nur_wallets?user_id=eq.${encodeURIComponent(userId)}&select=*`)) as any[] | null;
-        const existing = Array.isArray(rows) ? rows[0] : null;
-        if (existing) {
-          await sbRequest(`nur_wallets?user_id=eq.${encodeURIComponent(userId)}`, {
-            method: "PATCH",
-            headers: { Prefer: "return=minimal" },
-            body: JSON.stringify({
-              [colName]: (existing[colName] || 0) + videoCount,
-              purchased_jeton: (existing.purchased_jeton || 0) + videoCount,
-              updated_at: new Date().toISOString(),
-            }),
-          });
-        } else {
-          const newRow: Record<string, any> = { user_id: userId, sub_jeton: 0, purchased_jeton: videoCount, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
-          newRow[colName] = videoCount;
-          await sbRequest("nur_wallets", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify(newRow) });
-        }
+        await sbRequest("rpc/nur_grant_video_rights", {
+          method: "POST",
+          body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount }),
+        });
       }
     }
 

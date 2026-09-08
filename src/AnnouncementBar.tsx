@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Bell, CheckCircle, Gift, Sparkles, X, Trash2 } from "lucide-react";
-import { checkRateLimit } from "../rateLimiter";
-import type { Announcement } from "../services/adminSyncService";
-import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService";
-import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
-import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
+import { checkRateLimit } from "./rateLimiter";
+import type { Announcement } from "./services/adminSyncService";
+import { getSystemConfig, saveSystemConfig } from "./services/adminSyncService";
+import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "./services/holidayCalendar";
+import { AdminBroadcastPanel } from "./components/AdminBroadcastPanel";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
@@ -54,11 +54,11 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
     if (announcement?.forceOpen && readId !== announcement.id) setDetailOpen(true);
   }, [announcement, readId]);
 
-  const claim = () => {
+  const claim = async () => {
     const limit = checkRateLimit("general");
     if (!limit.allowed) return notify("Lutfen butona bu kadar hizli basmayin");
     if (!holyDay.canClaim) return;
-    const result = claimHolyDayReward(holyDay.eventKey, holyDay.rewardAmount);
+    const result = await claimHolyDayReward(holyDay.eventKey, holyDay.rewardKind, holyDay.rewardAmount);
     notify(result.message);
     if (result.ok) onRewardClaimed?.(result.newJeton);
     // Guvenlik tamper tetikleme kaldırıldı — ban uygulamıyor

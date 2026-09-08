@@ -162,6 +162,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     } else if (action === "clear_all_announcements") {
       await db("nur_announcements?active=eq.true", { method: "PATCH", body: JSON.stringify({ active: false }) });
+    } else if (action === "set_maintenance") {
+      const startsAt = typeof body.startsAt === "string" ? body.startsAt.slice(0, 40) : "";
+      const endsAt = typeof body.endsAt === "string" ? body.endsAt.slice(0, 40) : "";
+      const message = sanitize(body.message, 300) || "Nûr Stüdyo daha güvenli, hızlı ve yeni özelliklerle güncelleniyor. Bakım tamamlandığında site otomatik olarak yeniden açılacaktır.";
+      if (body.enabled !== true && body.enabled !== false) return res.status(400).json({ ok: false, error: "Bakım durumu geçersiz" });
+      if (startsAt && Number.isNaN(Date.parse(startsAt))) return res.status(400).json({ ok: false, error: "Başlangıç zamanı geçersiz" });
+      if (endsAt && Number.isNaN(Date.parse(endsAt))) return res.status(400).json({ ok: false, error: "Bitiş zamanı geçersiz" });
+      if (startsAt && endsAt && new Date(endsAt) <= new Date(startsAt)) return res.status(400).json({ ok: false, error: "Bitiş zamanı başlangıçtan sonra olmalı" });
+      await db("nur_site_settings?on_conflict=key", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ key: "maintenance", value: { enabled: body.enabled, startsAt, endsAt, message }, updated_by: admin.email, updated_at: new Date().toISOString() }),
+      });
     } else if (action === "reset_rights") {
       // ★ TÜM HAKLARI SIFIRLA — tier, cüzdan, abonelik hepsini temizle
       const email = validateEmail(body.target);
@@ -189,7 +202,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const subs = await db<any[]>(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=product_code,status,expires_at,created_at&order=created_at.desc&limit=5`);
       return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
-    await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || "") }) }).catch(() => null);
+    await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || ""), metadata: { ip: String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 300) } }) }).catch(() => null);
     return res.status(200).json({ ok: true });
   } catch (error) {
     console.error("[Admin Action Error]", error);

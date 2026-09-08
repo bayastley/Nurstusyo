@@ -185,6 +185,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const tier: Tier = access.isAdmin ? "elit" : access.tier;
   const quota = DAILY_QUOTA[tier][kind];
 
+  // Admin üretimleri sınırsızdır; kota/hak tablolarına dokunulmaz.
+  if (access.isAdmin) {
+    return res.status(200).json({
+      ok: true, unlimited: true, userId: user.id, kind, mode,
+      formats: uniqueFormats, source: "admin", quotaLeft: null, packLeft: null,
+    });
+  }
+
   const backendEnabled = process.env.NUR_QUOTA_BACKEND_ENABLED === "true";
 
   if (!backendEnabled && (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production")) {
@@ -221,14 +229,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  // Demo mod: istemci tarafındaki kota takibi geçerli
-  return res.status(200).json({
-    ok: true,
-    demo: true,
-    userId: user.id,
-    kind,
-    mode,
-    formats: uniqueFormats,
-    dailyQuota: quota,
-  });
+  return res.status(503).json({ ok: false, error: "Üretim kota servisi yapılandırılmamış" });
 }

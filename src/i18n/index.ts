@@ -7,8 +7,7 @@ export { LANGS, MEAL_EDITIONS } from "./base";
 
 import type { Lang, Dict } from "./base";
 import {
-  trDict, enDict, arDict, deDict, ruDict, frDict, esDict,
-  idDict, urDict, faDict, bnDict, msDict, hiDict, swDict,
+  trDict, enDict, arDict, idDict, urDict,
 } from "./dicts";
 
 /**
@@ -20,17 +19,8 @@ export const T: Record<Lang, Dict> = {
   tr: trDict,
   en: enDict,
   ar: arDict,
-  de: deDict,
-  ru: ruDict,
-  fr: frDict,
-  es: esDict,
   id: idDict,
   ur: urDict,
-  fa: faDict,
-  bn: bnDict,
-  ms: msDict,
-  hi: hiDict,
-  sw: swDict,
 };
 
 /**

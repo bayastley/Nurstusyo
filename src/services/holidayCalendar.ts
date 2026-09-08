@@ -7,8 +7,7 @@
 // ════════════════════════════════════════════════════════════════
 
 import { serverDateISO, serverDayOfWeek } from "../serverTime";
-import { secureGet, secureSet } from "../secureStore";
-import { HEDIYE, grantPack, VIDEO_KIND_LABEL, type VideoKind } from "../tier";
+import { HEDIYE, VIDEO_KIND_LABEL, type VideoKind } from "../tier";
 
 export interface HolyDayBannerState {
   type: "notice" | "claim" | "none";
@@ -24,45 +23,39 @@ export interface HolyDayBannerState {
 }
 
 const CLAIMED_KEYS_PREFIX = "nur_claimed_gift_";
+const claimedInSession = new Set<string>();
 
 /** Bu hediye daha önce alındı mı — HMAC imzalı zarftan doğrulanır */
 export function isRewardClaimed(eventKey: string): boolean {
   if (typeof window === "undefined") return false;
-  // Hem secure hem plain kontrol — her ikisi de çalışsın
-  if (secureGet<boolean>(CLAIMED_KEYS_PREFIX + eventKey, false)) return true;
-  try { if (localStorage.getItem(CLAIMED_KEYS_PREFIX + eventKey + "_plain") === "1") return true; } catch {}
-  return false;
+  return claimedInSession.has(eventKey) || localStorage.getItem(`${CLAIMED_KEYS_PREFIX}${eventKey}`) === "1";
 }
 
 /**
  * Hediye üretim hakkını tanımlar.
  * Aynı gün için ikinci kez alınamaz.
  */
-export function claimHolyDayReward(
+export async function claimHolyDayReward(
   eventKey: string,
   kindOrAmount: VideoKind | number,
   amount?: number,
-): { ok: boolean; message: string; newJeton: number } {
+): Promise<{ ok: boolean; message: string; newJeton: number }> {
   const kind: VideoKind = typeof kindOrAmount === "number" ? "kisa" : kindOrAmount;
   const giftAmount = Math.max(0, Math.floor(typeof kindOrAmount === "number" ? kindOrAmount : amount ?? 0));
-  if (isRewardClaimed(eventKey)) {
-    return {
-      ok: false,
-      message: "🚨 Bu hediye bu gün için zaten alındı.",
-      newJeton: 0,
-    };
+  if (isRewardClaimed(eventKey)) return { ok: false, message: "🚨 Bu hediye bu gün için zaten alındı.", newJeton: 0 };
+  try {
+    const response = await fetch("/api/rewards/claim", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ eventKey, kind, amount: giftAmount }),
+    });
+    const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+    if (!response.ok || !data?.ok) return { ok: false, message: data?.error === "ALREADY_CLAIMED" ? "🚨 Bu hediye bu gün için zaten alındı." : "Hediye şu anda alınamadı.", newJeton: 0 };
+    claimedInSession.add(eventKey);
+    localStorage.setItem(`${CLAIMED_KEYS_PREFIX}${eventKey}`, "1");
+    return { ok: true, message: `🎉 Tebrikler! ${giftAmount} adet ${VIDEO_KIND_LABEL[kind]} üretim hakkı hesabınıza tanımlandı.`, newJeton: giftAmount };
+  } catch {
+    return { ok: false, message: "Hediye servisine ulaşılamadı.", newJeton: 0 };
   }
-
-  grantPack(kind, giftAmount);
-  secureSet(CLAIMED_KEYS_PREFIX + eventKey, true);
-  // Ekstra koruma — secureStore bozulsa bile banner kaybolsun
-  try { localStorage.setItem(CLAIMED_KEYS_PREFIX + eventKey + "_plain", "1"); } catch {}
-
-  return {
-    ok: true,
-    message: `🎉 Tebrikler! ${giftAmount} adet ${VIDEO_KIND_LABEL[kind]} üretim hakkı hesabınıza tanımlandı.`,
-    newJeton: giftAmount,
-  };
 }
 
 /** Sunucu saatine göre anlık manevi takvim durumu */

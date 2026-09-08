@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, type Tier } from "../tier";
-import { secureGet, secureSet, secureRemove } from "../secureStore";
-import { syncUserInDb } from "../components/adminHelpers";
-import type { User, LoginTab } from "../types";
+import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, type Tier } from "./tier";
+import { secureGet, secureSet, secureRemove } from "./secureStore";
+import { syncUserInDb } from "./components/adminHelpers";
+import type { User, LoginTab } from "./types";
 
 interface UseAuthOptions {
   isMasterSürüm: boolean;

@@ -1,123 +1,31 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
-const COOKIE_NAME = 'nur_session';
-
-function parseCookies(req: any): Record<string, string> {
-  const header = req.headers.cookie || '';
-  return header.split(';').reduce((acc: Record<string, string>, part: string) => {
-    const [key, ...rest] = part.trim().split('=');
-    if (!key) return acc;
-    acc[key] = decodeURIComponent(rest.join('='));
-    return acc;
-  }, {});
-}
-
-function base64Url(input: Buffer | string): string {
-  const raw = Buffer.isBuffer(input) ? input : Buffer.from(input, 'utf8');
-  return raw.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function fromBase64Url(input: string): Buffer {
-  const normalized = input.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : '';
-  return Buffer.from(normalized + pad, 'base64');
-}
-
-function sessionSecret(): string {
-  return process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
-}
-
-function signPayload(payload: string): string {
-  return base64Url(crypto.createHmac('sha256', sessionSecret()).update(payload).digest());
-}
-
-function getUser(req: any): any | null {
+function userFromSession(req: any): { id: string } | null {
   try {
-    const token = parseCookies(req)[COOKIE_NAME];
-    if (!token || !token.includes('.')) return null;
-    const [payload, sig] = token.split('.');
-    if (!payload || !sig) return null;
-    const expected = signPayload(payload);
-    const sigBuf = Buffer.from(sig);
-    const expectedBuf = Buffer.from(expected);
-    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-    const user = JSON.parse(fromBase64Url(payload).toString('utf8'));
-    if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
-    return user;
+    const token = String(req.headers.cookie || "").split(";").map((x) => x.trim()).find((x) => x.startsWith("nur_session="))?.slice(12);
+    const [payload, signature] = decodeURIComponent(token || "").split(".");
+    const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+    const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64url");
+    if (!payload || signature !== expected) return null;
+    const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return user.id && user.exp >= Math.floor(Date.now() / 1000) ? { id: user.id } : null;
   } catch { return null; }
 }
 
 export default async function handler(req: any, res: any) {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ ok: false, error: 'POST only' });
-  }
-
-  try {
-    const user = getUser(req);
-    if (!user) {
-      return res.status(401).json({ ok: false, error: 'Giriş yapın' });
-    }
-
-    let body: any = {};
-    try { body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {}); } catch { body = {}; }
-
-    const { kind } = body;
-    if (!kind || !['kisa', 'uzun', 'tam'].includes(kind)) {
-      return res.status(400).json({ ok: false, error: 'Geçersiz video türü: kisa/uzun/tam' });
-    }
-
-    const colMap: Record<string, string> = { kisa: 'purchased_kisa', uzun: 'purchased_uzun', tam: 'purchased_tam' };
-    const colName = colMap[kind];
-
-    // ★ URL NORMALİZASYONU (fetch failed çözümü)
-    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim().replace(/^["']+|["']+$/g, '').replace(/\/rest\/v1\/?$/i, '').replace(/\/+$/, '');
-    const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-    if (!sbUrl || !sbKey) {
-      return res.status(200).json({ ok: true, skipped: true });
-    }
-
-    // Mevcut hakları oku
-    const walletRes = await fetch(
-      `${sbUrl}/rest/v1/nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=*`,
-      { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` } }
-    );
-    const rows = await walletRes.json() as any[];
-    const wallet = rows?.[0];
-
-    if (!wallet) {
-      return res.status(200).json({ ok: true, skipped: true, reason: 'cüzdan bulunamadı' });
-    }
-
-    const currentVal = wallet[colName] || 0;
-    if (currentVal <= 0) {
-      return res.status(400).json({ ok: false, error: `${kind} hakkı kalmadı` });
-    }
-
-    // Hak düşür
-    await fetch(
-      `${sbUrl}/rest/v1/nur_wallets?user_id=eq.${encodeURIComponent(user.id)}`,
-      {
-        method: 'PATCH',
-        headers: {
-          apikey: sbKey,
-          Authorization: `Bearer ${sbKey}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=minimal',
-        },
-        body: JSON.stringify({
-          [colName]: currentVal - 1,
-          updated_at: new Date().toISOString(),
-        }),
-      }
-    );
-
-    console.log('[wallet-consume] ✅', kind, 'düşürüldü:', currentVal, '→', currentVal - 1);
-    return res.status(200).json({ ok: true, kind, remaining: currentVal - 1 });
-  } catch (err: any) {
-    console.error('[wallet-consume] fatal:', err);
-    return res.status(500).json({ ok: false, error: err?.message });
-  }
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "POST only" });
+  const user = userFromSession(req);
+  if (!user) return res.status(401).json({ ok: false, error: "Giriş yapın" });
+  const kind = String(req.body?.kind || "");
+  if (!["kisa", "uzun", "tam"].includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz video türü" });
+  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  if (!url || !key) return res.status(503).json({ ok: false, error: "Kota servisi kullanılamıyor" });
+  const response = await fetch(`${url}/rest/v1/rpc/nur_consume_video`, {
+    method: "POST", headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_user_id: user.id, p_video_kind: kind, p_daily_quota: kind === "kisa" ? 3 : 0 }),
+  });
+  const row = ((await response.json()) as Array<{ ok: boolean; quota_left: number; pack_left: number; error?: string }>)[0];
+  if (!response.ok || !row?.ok) return res.status(402).json({ ok: false, error: row?.error || "NO_RIGHTS_LEFT" });
+  return res.status(200).json({ ok: true, kind, remaining: row.quota_left + row.pack_left });
 }

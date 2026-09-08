@@ -58,11 +58,11 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     if (announcement?.forceOpen && readId !== announcement.id) setDetailOpen(true);
   }, [announcement, readId]);
 
-  const claim = () => {
+  const claim = async () => {
     const limit = checkRateLimit("general");
     if (!limit.allowed) return notify("Lutfen butona bu kadar hizli basmayin");
     if (!holyDay.canClaim) return;
-    const result = claimHolyDayReward(holyDay.eventKey, holyDay.rewardAmount);
+    const result = await claimHolyDayReward(holyDay.eventKey, holyDay.rewardKind, holyDay.rewardAmount);
     notify(result.message);
     if (result.ok) onRewardClaimed?.(result.newJeton);
     // Guvenlik tamper tetikleme kaldırıldı — ban uygulamıyor

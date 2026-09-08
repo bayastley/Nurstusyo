@@ -73,7 +73,7 @@ import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl } from "./
 import { checkRateLimit } from "./rateLimiter";
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { syncUserInDb } from "./components/adminHelpers";
-import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs } from "./services/adminSyncService";
+import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
 import type { SelectedAyah, SearchHit, Output, DailyAyah, User, Mode, Aspect, ModalName, LoginTab } from "./types";
 
 void SES_TARZI_ORDER; void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
@@ -93,6 +93,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // Payment flow → usePaymentFlow hook'unda
 
   const [adminGodMode, setAdminGodMode] = useState(() => false);  // ★ Sunucudan gelen isAdmin'e güven, localStorage'a değil
+  const [maintenance, setMaintenance] = useState<MaintenanceConfig>(() => getSystemConfig().maintenance!);
   const isDevMaster = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && developerMaster);
   const [isMasterSürüm, setIsMasterSürüm] = useState(isDevMaster || adminGodMode);
 
@@ -130,7 +131,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, []);
 
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
-  const [lang, setLang] = useState<Lang>(() => (localStorage.getItem("nur_lang") as Lang) || "tr");
+  const [lang, setLang] = useState<Lang>(() => {
+    const saved = localStorage.getItem("nur_lang");
+    return LANGS.some((item) => item.code === saved) ? saved as Lang : "tr";
+  });
   const [themeId, setThemeId] = useState(() => localStorage.getItem("nur_theme") || "nur");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
@@ -376,6 +380,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => { const interval = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(interval); }, []);
+  useEffect(() => {
+    const refreshMaintenance = () => setMaintenance(getSystemConfig().maintenance!);
+    window.addEventListener("nur_config_updated", refreshMaintenance);
+    return () => window.removeEventListener("nur_config_updated", refreshMaintenance);
+  }, []);
 
   useEffect(() => {
     if (window.location.pathname === ADMIN_SECRET_PATH) setAdminAuthOpen(true);
@@ -492,7 +501,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
     showArapca, showSubMeal, accessTier, arabicFontCss, textSizeMul, shimmerCfg, cardBg, textOffset,
-    cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, user,
+    cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
   });
 
   // Canvas draw kodu useCanvasDraw hook'una taşındı
@@ -759,8 +768,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const costPerVideo = videoMaliyeti(mode, accessTier);
     const isGuest = !user && !isMasterSürüm;
     // God Mode ve misafir deneme videolarında jeton harcanmaz
-    const totalCost = isMasterSürüm || isGuest ? 0 : costPerVideo * formatCount;
-    if (RENDER_AUTH_LIVE && !isMasterSürüm && !isGuest) {
+    const isAdmin = user?.isAdmin === true;
+    const totalCost = isMasterSürüm || isGuest || isAdmin ? 0 : costPerVideo * formatCount;
+    if (!isMasterSürüm && !isGuest) {
       try {
         const response = await fetch("/api/render/authorize", {
           method: "POST",
@@ -770,10 +780,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number } | null;
         if (!response.ok || !data?.ok) {
           notify(data?.error || "Üretim yetkisi doğrulanamadı");
-          return;
-        }
-        if (typeof data.cost === "number" && data.cost !== totalCost) {
-          notify("Üretim maliyeti sunucu doğrulamasıyla uyuşmadı");
           return;
         }
       } catch {
@@ -984,15 +990,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         if (isGuest) {
           // ★ Misafir: jeton düşmez, sadece deneme hakkı azalır
           bumpGuestUsed();
-        } else {
-          const remainingJeton = Math.max(0, getJeton() - totalCost);
-          persistJetonSecure(remainingJeton);
-          setJetonCount(remainingJeton);
         }
         jetonCharged = true;
-        // ★ Hak düşür — ilgili video türünden 1 hak azalt
-        const videoKind = mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam";
-        consumeRight(videoKind as "kisa" | "uzun" | "tam");
+        // Authenticated production rights are consumed atomically by /api/render/authorize.
       }
       if (userStopped) { audioContext.close().catch(() => undefined); return; }
       audioContext.close().catch(() => undefined); setProgress(100);
@@ -1161,6 +1161,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   return (
     <div className="relative min-h-screen overflow-x-hidden text-[13px]" style={{ color: "var(--text)" }}>
+      {maintenance.enabled && (!maintenance.startsAt || Date.now() >= new Date(maintenance.startsAt).getTime()) && (!maintenance.endsAt || Date.now() < new Date(maintenance.endsAt).getTime()) && !isMasterSürüm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-6 text-center">
+          <div className="max-w-md rounded-3xl border border-amber-300/30 bg-white/[.05] p-8 shadow-2xl">
+            <div className="mb-4 text-4xl">🔧</div>
+            <h1 className="text-xl font-black text-white">Nûr Stüdyo kısa süreli bakımda</h1>
+            <p className="mt-3 text-sm leading-relaxed text-white/65">{maintenance.message}</p>
+            {maintenance.endsAt && <p className="mt-4 text-xs font-bold text-amber-200">Tahmini bitiş: {new Date(maintenance.endsAt).toLocaleString("tr-TR")}</p>}
+            <p className="mt-5 text-[10px] text-white/35">Güncelleme tamamlandığında site otomatik olarak açılacaktır.</p>
+          </div>
+        </div>
+      )}
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%),var(--page)` }} />
 
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}

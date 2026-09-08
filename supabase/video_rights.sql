@@ -145,6 +145,51 @@ begin
 end;
 $$;
 
+-- ─── Manevi gün hediyesi: idempotent, yalnızca sunucu çağırabilir ──
+create or replace function public.nur_claim_video_reward(
+  p_user_id text,
+  p_reward_key text,
+  p_video_kind text,
+  p_amount integer
+)
+returns table(ok boolean, remaining integer, error text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_remaining integer;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    return query select false, 0, 'UNAUTHORIZED';
+    return;
+  end if;
+  if p_video_kind not in ('kisa', 'uzun', 'tam') or p_amount <= 0
+     or length(trim(p_reward_key)) < 3 then
+    return query select false, 0, 'INVALID_REWARD';
+    return;
+  end if;
+  insert into public.nur_reward_claims(user_id, reward_key, amount)
+  values (p_user_id, p_reward_key, p_amount)
+  on conflict (user_id, reward_key) do nothing;
+  if not found then
+    select coalesce(remaining, 0) into v_remaining
+    from public.nur_video_rights
+    where user_id = p_user_id and video_kind = p_video_kind;
+    return query select false, coalesce(v_remaining, 0), 'ALREADY_CLAIMED';
+    return;
+  end if;
+  insert into public.nur_video_rights(user_id, video_kind, remaining)
+  values (p_user_id, p_video_kind, p_amount)
+  on conflict (user_id, video_kind) do update
+    set remaining = public.nur_video_rights.remaining + excluded.remaining,
+        updated_at = now();
+  select remaining into v_remaining from public.nur_video_rights
+    where user_id = p_user_id and video_kind = p_video_kind;
+  return query select true, v_remaining, null::text;
+end;
+$$;
+
 -- ─── Güvenlik ────────────────────────────────────────────
 alter table public.nur_daily_usage enable row level security;
 alter table public.nur_video_rights enable row level security;
@@ -155,6 +200,8 @@ revoke execute on function public.nur_grant_video_rights(text, text, integer) fr
 grant execute on function public.nur_grant_video_rights(text, text, integer) to service_role;
 revoke execute on function public.nur_consume_video(text, text, integer) from public, anon, authenticated;
 grant execute on function public.nur_consume_video(text, text, integer) to service_role;
+revoke execute on function public.nur_claim_video_reward(text, text, text, integer) from public, anon, authenticated;
+grant execute on function public.nur_claim_video_reward(text, text, text, integer) to service_role;
 
 -- ─── Eski cüzdan yapısını devre dışı bırak ───────────────
 -- nur_wallets tablosu artık okunmaz. Veri kaybı olmaması için

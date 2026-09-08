@@ -38,6 +38,9 @@ interface CanvasDrawParams {
   brandSignature: string;
   brandPos: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt";
   previewFps: number;
+  previewTime: number;
+  previewDuration: number;
+  previewIsSurah: boolean;
   user: unknown;
 }
 
@@ -213,8 +216,15 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
-                const wordDuration = 80; // her kelime ~80 frame parlıyor (yaklaşık 1.3 saniye @60fps)
-                const activeIdx = totalWords > 0 ? Math.floor((tick / wordDuration) % totalWords) : -1;
+                // Kelime vurgusu bağımsız animasyonla değil, gerçek ses konumuyla ilerler.
+                const playbackDuration = currentAyah.s === 0 ? 0 : Math.max(0.01, p.previewDuration);
+                const ayahDuration = p.previewIsSurah ? playbackDuration / Math.max(currentItems.length, 1) : playbackDuration;
+                const ayahOffset = p.previewIsSurah ? (currentIndex * ayahDuration) : 0;
+                const localPlaybackTime = Math.max(0, p.previewTime - ayahOffset);
+                const wordDuration = p.previewTime > 0 && totalWords > 0
+                  ? Math.max(0.05, (Number.isFinite(ayahDuration) ? ayahDuration : 0) / totalWords)
+                  : 0;
+                const activeIdx = totalWords > 0 && wordDuration > 0 ? Math.min(totalWords - 1, Math.floor(localPlaybackTime / wordDuration)) : -1;
                 arabicLines.forEach((line) => {
                   const words = line.split(/\s+/).filter(Boolean);
                   const globalStart = allArabicWords.indexOf(words[0]);
@@ -293,5 +303,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.textSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.textSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
 }
