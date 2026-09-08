@@ -500,7 +500,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               AtmosphereCard yerine SADECE isim + kilit rozeti gösteren, tıklanamaz
               "yakında" kartları kullanılıyor. Gerçek görseller yüklenince bu
               blok gerçek kategorilerle değiştirilecek. */}
-          {!isMasterSürüm && (
+          {!isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
                 <Lock size={11} /> Yakında: 78 Yeni Kur'an Temalı Atmosfer Kategorisi (V2/V3)
