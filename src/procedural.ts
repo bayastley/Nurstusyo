@@ -1,7 +1,7 @@
 // ════════════════════════════════════════════════════════
-// PROCEDURAL.TS — Ağsız, anında 4K kategori sahneleri.
+// PROCEDURAL.TS — Ağsız, anında 1080p kategori sahneleri.
 // Her seed: farklı arketip + farklı ışık modu → 50 kartın 50'si farklı.
-// İnsan figürü YOK, başka din sembolü YOK. Vektör → 4K keskin.
+// İnsan figürü YOK, başka din sembolü YOK. Vektör → 1080p keskin.
 // ════════════════════════════════════════════════════════
 import type { CatId } from "./clips";
 

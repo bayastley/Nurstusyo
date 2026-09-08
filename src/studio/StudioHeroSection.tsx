@@ -1,7 +1,7 @@
 import { Sparkles } from "lucide-react";
 
 const TAGLINES = [
-  "⚡ 1080p ve 4K Ultra HD çözünürlükte, sıfır kayıpsız sinematik render gücü.",
+  "⚡ 1080p çözünürlükte, sıfır kayıpsız sinematik render gücü.",
   "🤖 Yeni nesil AI asistanı ile otomatik SEO başlığı, açıklama ve viral hashtag üretimi.",
   "🎯 Küresel dil paketleri (i18n) ile tüm dünyaya hitap eden çok dilli içerik fabrikası.",
   "🎵 Mücevved ve Murattal kâri tilavetleriyle milisaniyelik karaoke tarzı altyazı senkronizasyonu.",

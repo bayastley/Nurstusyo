@@ -10,6 +10,7 @@ import {
   KAR_DATA, SEHIR_DATA, CAMI_DATA, DESEN_DATA, GOL_DATA, BULUT_DATA,
   CENNET_DATA, DAGLAR_DATA,
 } from "./clips-data";
+import { ADMIN_MOTION_CLIPS, ADMIN_TEMPLATE_CLIPS } from "./adminMediaManifest";
 
 export type CatId =
   | "yuklenenler" | "namaz"  | "musaf"    | "cicekler"
@@ -126,6 +127,8 @@ export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
 };
 
 export const TEMPLATE_CLIPS_PLACEHOLDER = true;
+// Local preview mode: expose every atmosphere while the new R2 library is tested.
+export const ATMOSPHERE_PREVIEW_UNLOCKED = true;
 
 // ─── URL jeneratörler ─────────────────────────────────
 const pv = (id: number, fps = 30) =>
@@ -208,7 +211,12 @@ export const TEMPLATE_CLIPS: Clip[] = (() => {
   return out;
 })();
 
-export const ALL_CLIPS: Clip[] = [...MOTION_CLIPS, ...TEMPLATE_CLIPS];
+export const ALL_CLIPS: Clip[] = [
+  ...MOTION_CLIPS,
+  ...TEMPLATE_CLIPS,
+  ...ADMIN_MOTION_CLIPS,
+  ...ADMIN_TEMPLATE_CLIPS,
+];
 
 export function randomClip(kind: "img" | "vid"): Clip {
   const sameKind = ALL_CLIPS.filter((c) => c.kind === kind);

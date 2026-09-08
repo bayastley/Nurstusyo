@@ -21,6 +21,7 @@ import {
   CATEGORIES,
   MOTION_CLIPS,
   TEMPLATE_CLIPS,
+  ATMOSPHERE_PREVIEW_UNLOCKED,
   KATEGORI_TIER,
   FREE_VIDEOS_PER_CATEGORY,
   CATEGORY_PALETTE,
@@ -317,7 +318,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const videoWatchdog = useRef(new Map<HTMLVideoElement, { t: number; at: number }>());
 
   const combinedAllClips = useMemo(
-    () => (QURAN_CLIPS.length ? [...QURAN_CLIPS, ...TEMPLATE_CLIPS] : [...ALL_CLIPS, ...QURAN_CLIPS]),
+    () => [...ALL_CLIPS, ...QURAN_CLIPS],
     []
   );
 
@@ -603,7 +604,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [libType, libEmotion, libSearch]);
 
   const isClipAccessible = useCallback((clip: Clip): boolean => {
-    if (isMasterSürüm) return true;
+    if (isMasterSürüm || ATMOSPHERE_PREVIEW_UNLOCKED) return true;
     const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
     if (!tierAtLeast(accessTier, catTier)) return false;
     const sameCat = combinedAllClips.filter((c) => c.cat === clip.cat && c.kind === clipKind);
@@ -1653,4 +1654,3 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 }
 
 declare global { interface Window { webkitAudioContext: typeof AudioContext } }
-

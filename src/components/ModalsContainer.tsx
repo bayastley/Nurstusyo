@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   X, Hourglass, Shield, Search, FolderUp, Shuffle, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
-  Image as ImageIcon, Film,
+  Image as ImageIcon, Film, Sparkles,
 } from "lucide-react";
 import { LegalModal } from "./LegalModal";
 import { Modal, Segmented } from "./UIElements";
@@ -10,7 +10,7 @@ import { PremiumModal } from "./PremiumModal";
 import { ZipExplorer } from "./ZipExplorer";
 import { AtmosphereCard } from "./AtmosphereCard";
 import { AdminDashboardModal } from "./AdminDashboardModal";
-import { CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
+import { ATMOSPHERE_PREVIEW_UNLOCKED, CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
 import { secureGet, secureSet } from "../secureStore";
@@ -21,6 +21,7 @@ import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
 import { GoogleIcon, randomPkceVerifier, pkceChallenge, COMING_SOON_ATMOSPHERES } from "./modalHelpers";
+import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 
 const PRAYERS: Array<[string, string]> = [
   ["İmsak", "Fajr"], ["Güneş", "Sunrise"], ["Öğle", "Dhuhr"],
@@ -423,7 +424,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         <Modal title={t("atmoLibrary")} sub={pickingFor ? `${t("pickForAyah")}: ${pickingFor}` : t("hoverPreview")} onClose={() => { setModal(null); setPickingFor(null); }} wide>
           <div className="mb-3 flex flex-wrap gap-2">
             <div className="w-44">
-              <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm) return; setClipKind(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+              <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED) return; setClipKind(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
             </div>
             <div className="relative min-w-48 flex-1">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
@@ -441,12 +442,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
           {/* Categories bar */}
           <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-            {CATEGORIES.map((category) => {
-              const CatIcon = CATEGORY_ICONS[category.id];
+            {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES].map((category) => {
+              const CatIcon = CATEGORY_ICONS[category.id] ?? Sparkles;
               const active = atmosCategory === category.id;
               const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
-              const lockLevel = CATEGORY_LOCK_LEVEL[category.id] ?? "V2";
-              const hardLocked = !isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id);
+              const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
+              const lockLevel = isAdminAtmosphere ? "V3" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
+              const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)));
               return (
                 <div key={category.id} className="relative">
                   <button
@@ -479,9 +481,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               const sameCat = combinedAllClips.filter(c => c.cat === clip.cat && c.kind === clipKind);
               const idx = sameCat.findIndex(c => c.id === clip.id);
               const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
-              const catLocked = maintenanceLocked || !tierAtLeast(accessTier, catTier);
+              const catLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (maintenanceLocked || !tierAtLeast(accessTier, catTier));
               const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
-              const videoLocked = !catLocked && idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier);
+              const videoLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && !catLocked && idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier);
               const locked = catLocked || videoLocked;
               const lockKind = maintenanceLocked ? "maintenance" : catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
               return (
