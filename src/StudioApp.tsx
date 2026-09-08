@@ -15,6 +15,7 @@ import {
   pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah, normalizeTurkishMeal,
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
+import { ADMIN_AI_KEYWORDS, ADMIN_MOTION_CLIPS } from "./adminMediaManifest";
 import {
   ACTIVE_CATEGORIES,
   ALL_CLIPS,
@@ -515,6 +516,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       }
     }
     if (matched) return matched;
+
+    const adminMediaCategories = new Set(ADMIN_MOTION_CLIPS.map((clip) => clip.cat));
+    for (const [category, keywords] of Object.entries(ADMIN_AI_KEYWORDS)) {
+      if (!adminMediaCategories.has(category as CatId)) continue;
+      const match = keywords
+        .split(/\s+/)
+        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
+      if (match) return category as CatId;
+    }
 
     // ★ ÇEŞİTLİLİK MOTORU — eşleşme yoksa artık HER ZAMAN "musaf" (Kur'an) dönmüyor.
     //   Ayet metninden üretilen stabil hash ile estetik kategoriler arasında dağıtılır.

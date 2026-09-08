@@ -9,7 +9,14 @@ const CATEGORY_IDS = [
 ] as const;
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elit: 2 };
 const FREE_VIDEOS_PER_CATEGORY = 5;
-const CATEGORY_TIER: Partial<Record<CatId, Tier>> = {};
+const CATEGORY_TIER: Record<CatId, Tier> = {
+  namaz: "free", musaf: "free", cicekler: "free", yildizlar: "free",
+  deniz: "free", gunbatimi: "free", gece: "free", orman: "free",
+  cami: "free", gol: "free", bulut: "free", desen: "free",
+  selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
+  cennet: "elit", col: "elit", ates: "elit",
+  cehennem: "elit", hurma: "elit", ari: "elit", karinca: "elit",
+};
 const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
 const HITS = new Map<string, number[]>();
 
@@ -94,7 +101,7 @@ function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
 }
 
 function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
-  const catTier = CATEGORY_TIER[cat] ?? "free";
+  const catTier = CATEGORY_TIER[cat];
   if (catTier === "elit" && TIER_RANK[userTier] < TIER_RANK.elit) return false;
   if (TIER_RANK[userTier] < TIER_RANK[catTier]) return false;
   if (clipIndex >= FREE_VIDEOS_PER_CATEGORY) {
