@@ -177,12 +177,17 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase(); // kisa, uzun, tam
       const videoCount = parseInt(match[2]);
 
-      await sbRequest('rpc/nur_grant_video_rights', {
+      const result = await sbRequest('rpc/nur_grant_video_rights', {
         method: 'POST',
         body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount }),
       });
+      const row = Array.isArray(result) ? result[0] : null;
+      if (!row?.ok) {
+        console.error('[callback] ❌ RPC hak tanımlamadı:', JSON.stringify(result).slice(0, 300), '| RPC eksikse supabase/video_rights.sql calistirilmali');
+        return false;
+      }
 
-      console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind}`);
+      console.log(`[callback] ✅ Video kotası eklendi: ${videoCount}x ${videoKind} | kalan: ${row.remaining}`);
       return true;
     }
 

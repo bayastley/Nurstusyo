@@ -112,11 +112,11 @@ async function claimProcessingOrder(orderId: string): Promise<boolean> {
   }
 }
 
-async function sbPost(table: string, body: any) {
+async function sbPost(table: string, body: any): Promise<boolean> {
   const sb = getSupabase();
-  if (!sb) return;
+  if (!sb) return false;
   try {
-    await fetch(`${sb.url}/rest/v1/${table}`, {
+    const response = await fetch(`${sb.url}/rest/v1/${table}`, {
       method: 'POST',
       headers: {
         apikey: sb.key,
@@ -126,7 +126,13 @@ async function sbPost(table: string, body: any) {
       },
       body: JSON.stringify(body),
     });
-  } catch (e) { console.error('[payments/verify] Supabase INSERT hatası:', (e as Error).message); }
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      console.error(`[payments/verify] Supabase ${response.status}:`, text.slice(0, 200));
+      return false;
+    }
+    return true;
+  } catch (e) { console.error('[payments/verify] Supabase INSERT hatası:', (e as Error).message); return false; }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -191,9 +197,13 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase();
       const videoCount = parseInt(match[2]);
 
-      await sbPost('rpc/nur_grant_video_rights', {
+      const grantRes = await sbPost('rpc/nur_grant_video_rights', {
         p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount,
       });
+      if (!grantRes) {
+        console.error('[verify] RPC yaniti yok — supabase/video_rights.sql calistirilmis olmali');
+        return false;
+      }
       console.log('[verify] ✅ Video kotası:', videoCount, 'x', videoKind);
       return true;
     }
