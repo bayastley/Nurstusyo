@@ -370,7 +370,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             })()}
             {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("login")}
+              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("premium")}
             </button>
             <div className="relative">
               <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>
