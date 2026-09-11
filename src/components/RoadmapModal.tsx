@@ -43,8 +43,8 @@ const DEFAULT_V2: Omit<Feature, "votes">[] = [
 
 const DEFAULT_V3: Omit<Feature, "votes">[] = [
   { id: "mobil-uygulama", iconId: "mobil", title: "Cebindeki Kur'an Stüdyosu", desc: "İlham nerede gelirse gelsin, üretim orada başlasın. Telefonundan hazırla, indir ve paylaş.", tag: "V3", active: true },
-  { id: "koleksiyonlar", iconId: "koleksiyon", title: "Ayet Koleksiyonların", desc: "Sana dokunan ayetleri tek bir yerde biriktir. Huzur, sabır veya şükür gibi kendi koleksiyonlarını oluştur.", tag: "V3", active: true },
-  { id: "ayet-notlari", iconId: "notlar", title: "Ayetlerin Yanına Notların", desc: "Bir ayeti neden kaydettiğini unutma. Düşüncelerini ekle, zaman içinde kendi manevi arşivini oluştur.", tag: "V3", active: true },
+  { id: "koleksiyonlar", iconId: "koleksiyon", title: "Ayet Koleksiyonları", desc: "Sana dokunan ayetleri tek bir yerde biriktir. Huzur, sabır veya şükür gibi kendi koleksiyonlarını oluştur.", tag: "V3", active: true },
+  { id: "ayet-notlari", iconId: "notlar", title: "Ayetlere Not Ekleme", desc: "Bir ayeti neden kaydettiğini unutma. Düşüncelerini ekle, zaman içinde kendi manevi arşivini oluştur.", tag: "V3", active: true },
   { id: "icerik-serileri", iconId: "seriler", title: "Temalı İçerik Serileri", desc: "Tek bir ayetten fazlasını anlat. Sabırdan şükre, her tema için izlenebilir ve paylaşılabilir video serileri hazırla.", tag: "V3", active: true },
   { id: "reklam", iconId: "reklam", title: "Ücretsiz Üretime Destek", desc: "Daha fazla kişi Nûr Stüdyo'ya ulaşsın, ücretsiz üretim imkânı büyüsün. Pro deneyim ise reklamsız kalsın.", tag: "V3", active: true },
   { id: "coklu-kullanici", iconId: "coklu_kullanici", title: "Birlikte Üretim Alanı", desc: "Ailen, arkadaşların veya ekibinle aynı üretim alanında buluş. Herkes kendi hesabıyla, ortak bir amaçla.", tag: "V3", active: true },
@@ -53,7 +53,7 @@ const DEFAULT_V3: Omit<Feature, "votes">[] = [
 
 // iconId → emoji tablosu zaten yukarıda ICON_EMOJI olarak tanımlı
 
-const STORAGE_KEY = "nur_roadmap_data_v6";
+const STORAGE_KEY = "nur_roadmap_data_v7";
 const VOTE_KEY = "nur_roadmap_votes";
 const DEADLINE_KEY = "nur_roadmap_deadline";
 

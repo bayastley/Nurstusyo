@@ -117,13 +117,47 @@ function ayahMoodParagraph(surahName: string, s: number, a: number, lang: string
 // ANA ÜRETİCİ FONKSİYONLAR
 // ════════════════════════════════════════════════════════
 
+/** Özel filtreleme: Kategori bazlı kısıtlama yaparak alakasız clickbaitleri önler */
+function filterTemplatesByMeal(tpl: string, meal: string): boolean {
+  if (!meal) return true;
+  const m = meal.toLowerCase();
+  
+  if (tpl.includes("Kaygı") || tpl.includes("endişe") || tpl.includes("😰")) {
+    return ["kaygı", "endişe", "korku", "üzüntü", "hüzün", "keder", "sıkıntı", "darlık", "göğüs", "ferah", "kalp", "gönül", "ruh", "akıl", "nefis", "huzur", "ferahlık"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Hamile") || tpl.includes("🤰")) {
+    return ["gebe", "hamile", "çocuk", "evlat", "doğum", "bebek", "anne", "kadın", "rahim", "doğur", "nesil", "zürriyet"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Kabir") || tpl.includes("⚰️") || tpl.includes("azap")) {
+    return ["kabir", "ölüm", "ölü", "kıyamet", "azap", "cehennem", "toprak", "hesap", "kabre", "ölünce", "ahiret"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Rızık") || tpl.includes("💰") || tpl.includes("bolluk")) {
+    return ["rızık", "bolluk", "nimet", "para", "zengin", "mülk", "verdi", "besle", "harca", "rızıklandır", "infak"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Nazar") || tpl.includes("🛡️") || tpl.includes("koruyan")) {
+    return ["nazar", "koru", "sığın", "şer", "kötü", "şeytan", "vesvese", "hased", "haset", "koruyucu", "felak", "nas"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Sabr") || tpl.includes("sabır") || tpl.includes("sabreyle")) {
+    return ["sabır", "sabret", "sabreyle", "sıkıntı", "imtihan", "sabr", "sabreden"].some(w => m.includes(w));
+  }
+  if (tpl.includes("Kırık kalp") || tpl.includes("💔")) {
+    return ["kalp", "gönül", "şifa", "üzüntü", "kırık", "hüzün", "ruh", "dert", "sıkıntı"].some(w => m.includes(w));
+  }
+  return true; 
+}
+
 /** Çok dilli başlık üretici — havuzdan rastgele seçer */
-export function genTitle(surahName = "Bakara", s = 2, a = 255, lang = "tr"): string {
-  const pool = [
+export function genTitle(surahName = "Bakara", s = 2, a = 255, lang = "tr", meal = ""): string {
+  const basePool = [
     ...ayahMoodTitle(surahName, s, a, lang),
     ...titlePool(lang),
     ...(EMOTIONAL_TITLE_TEMPLATES[lang] ?? EMOTIONAL_TITLE_TEMPLATES.en),
   ];
+  
+  // Meale sadık kalmak için filtre uyguluyoruz
+  let pool = basePool.filter(tpl => filterTemplatesByMeal(tpl, meal));
+  if (pool.length === 0) pool = basePool; // Fallback
+  
   const tpl = pool[Math.floor(Math.random() * pool.length)];
   return tpl.replace("{S}", surahName).replace("{N}", String(s)).replace("{A}", String(a));
 }

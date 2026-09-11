@@ -135,8 +135,14 @@ export function useCanvasDraw(p: CanvasDrawParams) {
       lastPreviewDraw = nowFrame;
       const canvas = p.canvasRef.current;
       if (canvas) {
-        const [width, height] = dimensions(p.aspectRef.current);
-        if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+        // Önizleme ve render boyutlarını dinamik yönet
+        const [targetW, targetH] = dimensions(p.aspectRef.current);
+        if (canvas.width === 0 || canvas.height === 0) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+        const width = canvas.width;
+        const height = canvas.height;
         const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
         if (ctx) {
           tick += 1;
@@ -189,6 +195,11 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               const onlyMeal = !p.showArapca && p.showSubMeal, currentAspect = p.aspectRef.current;
               const safeTop = height * (onlyMeal ? 0.34 : 0.163), safeBottom = height * (onlyMeal ? 0.74 : 0.905), safeH = safeBottom - safeTop;
               const arMaxW = width * 0.80, trMaxW = width * (currentAspect === "16:9" ? 0.56 : currentAspect === "1:1" ? 0.70 : 0.78);
+              const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
+              if (p.showArapca) {
+                try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
+              }
+
               let arabicSize = 0, arabicHeight = 0, translationSize = 0, arabicLines: string[] = [], translationLines: string[] = [], sepH = 0, totalH = 0;
               for (let step = 0; step < 22; step += 1) {
                 const shrink = Math.pow(0.96, step);
@@ -211,8 +222,6 @@ export function useCanvasDraw(p: CanvasDrawParams) {
 
               if (p.showArapca && arabicLines.length > 0) {
                 ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 10;
-                const prevDir = (ctx as CanvasRenderingContext2D & { direction?: string }).direction;
-                try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
                 // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
@@ -224,8 +233,15 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 const wordDuration = p.previewTime > 0 && totalWords > 0
                   ? Math.max(0.05, (Number.isFinite(ayahDuration) ? ayahDuration : 0) / totalWords)
                   : 0;
-                const activeIdx = totalWords > 0 && wordDuration > 0 ? Math.min(totalWords - 1, Math.floor(localPlaybackTime / wordDuration)) : -1;
+                const activeIdx = totalWords > 0 && wordDuration > 0 && p.previewTime > 0 ? Math.min(totalWords - 1, Math.floor(localPlaybackTime / wordDuration)) : -1;
                 arabicLines.forEach((line) => {
+                  if (activeIdx === -1) {
+                    // Sadece tam satırı çiz (Safari ve tüm mobil tarayıcılar için kusursuz birleşik Arapça harfler)
+                    ctx.fillText(line, width / 2 + ox, y + arabicSize * 0.8);
+                    y += arabicHeight;
+                    return;
+                  }
+
                   const words = line.split(/\s+/).filter(Boolean);
                   const globalStart = allArabicWords.indexOf(words[0]);
                   // Kelimeleri sağdan sola (RTL) sırala ve çiz

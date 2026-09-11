@@ -81,22 +81,25 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
   }
 }
 
-function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-    return false;
-  }
-  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
+const USER_HITS = new Map<string, number[]>();
+
+function checkRateLimits(ip: string, userId: string): boolean {
   const now = Date.now();
-  const hits = (HITS.get(ip) || []).filter((hit) => hit >= now - 60_000);
-  if (hits.length >= 120) {
-    res.setHeader("Retry-After", "60");
-    res.status(429).json({ ok: false, error: "İstek işlenemedi" });
-    return false;
+  
+  // 1. IP Limit (dakikada en fazla 15 imzalama isteği)
+  const ipHits = (HITS.get(ip) || []).filter((hit) => now - hit < 60000);
+  if (ipHits.length >= 15) return false;
+  ipHits.push(now);
+  HITS.set(ip, ipHits);
+  
+  // 2. Kullanıcı ID Limit (dakikada en fazla 15 imzalama isteği)
+  if (userId) {
+    const userHits = (USER_HITS.get(userId) || []).filter((hit) => now - hit < 60000);
+    if (userHits.length >= 15) return false;
+    userHits.push(now);
+    USER_HITS.set(userId, userHits);
   }
-  hits.push(now);
-  HITS.set(ip, hits);
+  
   return true;
 }
 
@@ -135,10 +138,24 @@ function clipIndexFromId(cat: string, clipId: string | null): number {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!allowRequest(req, res)) return;
+
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  }
+
+  const sessionUser = getSessionUser(req);
+  if (!sessionUser) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
+
+  // Çok sıkı IP/Kullanıcı Rate Limit (Scraping Engelleme)
+  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
+  if (!checkRateLimits(ip, sessionUser.id)) {
+    res.setHeader("Retry-After", "60");
+    return res.status(429).json({ ok: false, error: "İstek limitini aştınız. Lütfen dakikada en fazla 15 video imzalayın." });
+  }
 
   try {
-    const sessionUser = getSessionUser(req);
+    const access = await loadServerAccess(sessionUser.id);
     if (!sessionUser) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
     const access = await loadServerAccess(sessionUser.id);
     if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });

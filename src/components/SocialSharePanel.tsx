@@ -74,7 +74,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
   return (
     <>
       <section className="mx-auto max-w-[1500px] px-4 pb-5">
-        <div className="glass grid gap-5 rounded-2xl p-5 lg:grid-cols-[1fr_340px_320px]">
+        <div className={`glass grid gap-5 rounded-2xl p-5 ${isMasterSürüm ? "lg:grid-cols-[1fr_320px]" : "lg:grid-cols-[1fr]"}`}>
           <div>
             <SectionTitle icon={Share2} title={t("shareTitle")} />
             
@@ -143,12 +143,47 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
             </div>
 
             {/* SATIR 2: Rastgele + Hashtag */}
-            <div className="mt-1 flex flex-wrap items-center gap-1">
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-black hover:opacity-90" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
                 <RefreshCw size={9} />Rastgele Açıklama
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; if (!cur) { notify("Önce ayet seçin"); return; } let yeniBaslik = genTitle(cur.sName, cur.s, cur.a); let tries = 0; while (yeniBaslik === lastTitleRef.current && tries < 6) { yeniBaslik = genTitle(cur.sName, cur.s, cur.a); tries += 1; } lastTitleRef.current = yeniBaslik; setShareTitle(yeniBaslik); }} className="flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-black hover:opacity-90" style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>
+              <button onClick={async () => {
+                if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; }
+                const cur = selected[verseIndex] || selected[0];
+                if (!cur) { notify("Önce ayet seçin"); return; }
+                notify("AI başlığı üretiliyor...");
+                try {
+                  const res = await fetch("/api/ai/title-generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      surahName: cur.sName,
+                      s: cur.s,
+                      a: cur.a,
+                      meal: cur.tr,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data && data.success && data.title) {
+                    setShareTitle(data.title);
+                    lastTitleRef.current = data.title;
+                    notify("✨ Sahih AI Başlığı üretildi!");
+                    return;
+                  }
+                } catch (err) {
+                  console.error("AI başlık üretilemedi, lokale geçiliyor:", err);
+                }
+                let yeniBaslik = genTitle(cur.sName, cur.s, cur.a, "tr", cur.tr);
+                let tries = 0;
+                while (yeniBaslik === lastTitleRef.current && tries < 6) {
+                  yeniBaslik = genTitle(cur.sName, cur.s, cur.a, "tr", cur.tr);
+                  tries += 1;
+                }
+                lastTitleRef.current = yeniBaslik;
+                setShareTitle(yeniBaslik);
+                notify("Rastgele başlık seçildi.");
+              }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
                 <RefreshCw size={9} />Rastgele Başlık
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
@@ -189,7 +224,8 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
           </div>
 
           {/* ZIP Explorer card */}
-          <div className="flex flex-col">
+          {isMasterSürüm && (
+            <div className="flex flex-col animate-fadeIn">
             <div className={`relative flex h-[270px] flex-none flex-col rounded-2xl border border-white/5 bg-black/30 p-3 ${isMasterSürüm ? "" : "opacity-70"}`}>
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -220,9 +256,9 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                   <p className="mt-1 text-[9px] text-white/25">ZIP, video, görsel ve ses ekleme</p>
                 </div>
               </button>
-              {!isMasterSürüm && <LockBadge kind="v3" position="top-right" size="md" tooltipText="V3 Güncellemesi Yakında" />}
             </div>
           </div>
+          )}
         </div>
       </section>
 

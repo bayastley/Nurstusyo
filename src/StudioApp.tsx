@@ -162,6 +162,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
 
+  // ★ ENGELLEYİCİ: Üretim (render) sırasında sayfanın kapatılmasını/yenilenmesini engelle
+  useEffect(() => {
+    if (!generating) return;
+    const preventClose = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Video üretimi devam ediyor. Sekmeyi kapatırsanız üretim yarıda kesilir ve jetonunuz boşa gidebilir.";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", preventClose);
+    return () => window.removeEventListener("beforeunload", preventClose);
+  }, [generating]);
+
   // ★ Admin email tanındığında master modu aktifle
   useEffect(() => {
     if (user?.email && isAdminEmail(user.email) && !isMasterSürüm) {
@@ -369,13 +381,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
 
   useEffect(() => {
+    if (generating) return;
     aspectRef.current = aspect;
     const cv = canvasRef.current;
     if (cv) {
       const [w, h] = dimensions(aspect);
       if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     }
-  }, [aspect]);
+  }, [aspect, generating]);
   useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem("nur_theme", theme.id); }, [theme]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
@@ -577,7 +590,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       const quranClips = MOTION_CLIPS.filter((clip) => clip.cat === "musaf");
       if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
-      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
+      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
     } catch (e) {
       console.error("[addAyah] fetch hatası:", e);
       // ★ HATA: Placeholder'ı listeden çıkar
@@ -795,6 +808,24 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let jetonCharged = false;
     let userStopped = false;
     silenceAllAudio();
+
+    // ★ BELLEK OPTİMİZASYONU: Eski/Düşük RAM'li cihazlar için preloaded video ve resimleri temizle
+    if (renderQuality.low) {
+      try {
+        videoCache.current.forEach((video) => {
+          try {
+            video.pause();
+            video.removeAttribute("src");
+            video.load();
+          } catch {}
+        });
+        videoCache.current.clear();
+        imageCache.current.clear();
+      } catch (err) {
+        console.warn("Bellek temizleme hatası:", err);
+      }
+    }
+
     setGenerating(true); setProgress(2);
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext, audioContext = new AudioContextClass();
@@ -884,7 +915,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       await new Promise((resolve) => window.setTimeout(resolve, 1200));
       const formats = batchFormats.length ? batchFormats : [aspect];
       for (let formatIndex = 0; formatIndex < formats.length; formatIndex += 1) {
-        const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect; const [width, height] = dimensions(outputAspect); canvas.width = width; canvas.height = height;
+        const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect;
+        let [width, height] = dimensions(outputAspect);
+        if (renderQuality.low) {
+          width = Math.round(width * 0.66);
+          height = Math.round(height * 0.66);
+        }
+        canvas.width = width; canvas.height = height;
         verseIndexRef.current = 0;
         setVerseIndex(0);
         await new Promise((resolve) => window.setTimeout(resolve, 240));
@@ -1385,6 +1422,61 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         shareToInstagram={shareToInstagram}
         pickDesc={genDesc}
       />
+
+      {/* 🎬 TAM SAYFA VİDEO RENDER ENGELLEME VE BİLGİLENDİRME EKRANI */}
+      {generating && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 p-6 backdrop-blur-md text-center select-none modal-in">
+          <div className="max-w-md w-full rounded-3xl border border-gold/30 bg-slate-950/80 p-8 shadow-2xl space-y-5">
+            {/* Altın renkli lüks parlayan yükleme efekti */}
+            <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/10 border border-gold/30 text-gold shadow-xl">
+              <span className="absolute inset-0 rounded-3xl border-2 border-gold border-t-transparent animate-spin"></span>
+              <span className="text-xl font-bold animate-pulse">🎬</span>
+            </div>
+
+            <div className="space-y-2">
+              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-red-300 animate-pulse">
+                SİSTEM AKTİF RENDER MODUNDA
+              </span>
+              <h2 className="font-display text-lg font-black text-white leading-normal">
+                LÜTFEN BU SEKMEYİ KAPATMAYIN VEYA ARKA PLANA ALMAYIN
+              </h2>
+            </div>
+
+            <p className="text-[11.5px] leading-relaxed text-white/70">
+              Tarayıcı tabanlı video birleştirme işlemi başladığı için, başka bir sekmeye geçmek veya uygulamayı arka plana almak tarayıcının işlemi askıya almasına ve <b className="text-gold">videonun donmasına/bozulmasına</b> neden olur.
+            </p>
+
+            {/* İlerleme çubuğu */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex justify-between text-[10px] font-bold text-white/50">
+                <span>Video İşleniyor...</span>
+                <span className="text-gold font-black font-mono">%{progress}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300 shadow-[0_0_10px_rgba(217,119,6,0.5)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  stopGenerationRef.current?.();
+                  notify("Üretim kullanıcı tarafından iptal edildi");
+                }}
+                className="w-full rounded-xl bg-red-500/10 border border-red-500/30 py-3 text-[11px] font-bold text-red-300 transition hover:bg-red-500/20 active:scale-98"
+              >
+                Üretimi İptal Et
+              </button>
+              <p className="text-[9.5px] text-white/35 font-medium leading-normal">
+                İptal ettiğinizde üretim hakkı (jeton) hesabınızdan düşmez.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
 
 
