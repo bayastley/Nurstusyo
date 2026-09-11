@@ -118,6 +118,23 @@ async function grantProductByOrder(order: any): Promise<void> {
       if (match) {
         const videoKind = match[1].toLowerCase();
         const videoCount = parseInt(match[2]);
+
+        // Kullanıcı var mı?
+        const existing = await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}&select=id`);
+        if (!Array.isArray(existing) || existing.length === 0) {
+          await sbRequest("nur_users", {
+            method: "POST",
+            headers: { Prefer: "return=minimal" },
+            body: JSON.stringify({
+              id: userId,
+              email: userId.includes("@") ? userId : userId + "@nurstudyo.com",
+              tier: "free",
+              created_at: new Date().toISOString(),
+            }),
+          });
+          console.log(`[webhook] 🆕 Paket satın alan yeni kullanıcı nur_users tablosuna 'free' olarak eklendi: ${userId}`);
+        }
+
         await sbRequest("rpc/nur_grant_video_rights", {
           method: "POST",
           body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount }),

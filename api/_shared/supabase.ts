@@ -84,6 +84,21 @@ export async function grantProductToUser(data: {
   // ★ Paket ürünü: kullanıcıya belirli sayıda video üretim hizmeti tanımlanır.
   //   Bakiye yüklemesi DEĞİLDİR; para birimi tutulmaz.
   if (data.videoKind && data.videoCount) {
+    // Önce kullanıcının nur_users tablosunda olduğundan emin olalım (foreign key hatasını önlemek için)
+    const existing = await getUser(data.userId);
+    if (!existing) {
+      await request("nur_users", {
+        method: "POST",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({
+          id: data.userId,
+          email: data.userId.includes("@") ? data.userId : data.userId + "@nurstudyo.com",
+          tier: "free",
+        }),
+      });
+      console.log(`[_shared/supabase] 🆕 Paket satın alan yeni kullanıcı nur_users tablosuna 'free' olarak eklendi: ${data.userId}`);
+    }
+
     await request("rpc/nur_grant_video_rights", {
       method: "POST",
       body: JSON.stringify({

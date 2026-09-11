@@ -177,6 +177,22 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase(); // kisa, uzun, tam
       const videoCount = parseInt(match[2]);
 
+      // ★ Kullanıcının nur_users tablosunda olduğundan emin ol (foreign key hatasını önlemek için)
+      const existingUser = await sbRequest(`nur_users?id=eq.${encodeURIComponent(userId)}&select=id`);
+      if (!existingUser || (Array.isArray(existingUser) && existingUser.length === 0)) {
+        await sbRequest('nur_users', {
+          method: 'POST',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            id: userId,
+            email: userId.includes('@') ? userId : userId + '@nurstudyo.com',
+            tier: 'free',
+            created_at: new Date().toISOString(),
+          }),
+        });
+        console.log(`[callback] 🆕 Paket satın alan yeni kullanıcı nur_users tablosuna 'free' olarak eklendi: ${userId}`);
+      }
+
       const result = await sbRequest('rpc/nur_grant_video_rights', {
         method: 'POST',
         body: JSON.stringify({ p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount }),

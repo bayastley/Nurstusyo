@@ -197,6 +197,18 @@ async function grantProduct(userId: string, productCode: string) {
       const videoKind = match[1].toLowerCase();
       const videoCount = parseInt(match[2]);
 
+      // ★ Kullanıcının nur_users tablosunda olduğundan emin ol (foreign key hatasını önlemek için)
+      const existingUser = await sbGet(`nur_users?id=eq.${encodeURIComponent(userId)}&select=id`);
+      if (!existingUser || (Array.isArray(existingUser) && existingUser.length === 0)) {
+        await sbPost('nur_users', {
+          id: userId,
+          email: userId.includes('@') ? userId : userId + '@nurstudyo.com',
+          tier: 'free',
+          created_at: new Date().toISOString(),
+        });
+        console.log(`[verify] 🆕 Paket satın alan yeni kullanıcı nur_users'a 'free' olarak eklendi: ${userId}`);
+      }
+
       const grantRes = await sbPost('rpc/nur_grant_video_rights', {
         p_user_id: userId, p_video_kind: videoKind, p_amount: videoCount,
       });
