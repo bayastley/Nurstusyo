@@ -156,8 +156,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const access = await loadServerAccess(sessionUser.id);
-    if (!sessionUser) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
-    const access = await loadServerAccess(sessionUser.id);
     if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
     if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
     const { clipId, pexelsId, cat } = req.body || {};

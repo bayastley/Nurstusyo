@@ -441,38 +441,65 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           </div>
 
           {/* Categories bar */}
-          <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5">
-            {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES].map((category) => {
-              const CatIcon = CATEGORY_ICONS[category.id] ?? Sparkles;
-              const active = atmosCategory === category.id;
-              const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
-              const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
-              const lockLevel = isAdminAtmosphere ? "V3" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
-              const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)));
-              return (
-                <div key={category.id} className="relative">
-                  <button
-                    type="button"
-                    onMouseEnter={() => { if (hardLocked) setLockTip(`cat-${category.id}`); }}
-                    onMouseLeave={() => { if (hardLocked) setLockTip((cur) => (cur === `cat-${category.id}` ? null : cur)); }}
-                    onClick={() => { if (hardLocked && !isMasterSürüm) return; setAtmosCategory(category.id); }}
-                    className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : "glass-soft text-white/70 hover:text-white"}`}
-                    style={!hardLocked && active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))", borderColor: "var(--accent)" } : undefined}
-                  >
-                    {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
-                    {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : "var(--accent)" }} /> : null}
-                    <span className="px-1 text-center text-[8px] font-bold leading-tight">{category.label}</span>
-                    <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : "text-white/25"}`}>{count} içerik</span>
-                  </button>
-                  {hardLocked && lockTip === `cat-${category.id}` && (
-                    <span className="pointer-events-none absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-black text-black shadow-lg" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                      <Lock size={9} className="mr-1 inline" />{lockLevel} Güncellemesi Yakında
-                    </span>
-                  )}
+          {atmosCategory !== "all" ? (
+            <div className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold shadow-md">
+                  {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 18 })}
+                </span>
+                <div>
+                  <h4 className="text-[11.5px] font-black text-white uppercase tracking-wider">
+                    {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}
+                  </h4>
+                  <p className="text-[9.5px] text-white/40">
+                    {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} muhteşem atmosfer listeleniyor
+                  </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+              <button
+                onClick={() => setAtmosCategory("all")}
+                className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 text-[10px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
+              >
+                ◀ Kategorilere Geri Dön
+              </button>
+            </div>
+          ) : (
+            <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 animate-fadeIn">
+              {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES].map((category) => {
+                const CatIcon = CATEGORY_ICONS[category.id] ?? Sparkles;
+                const active = atmosCategory === category.id;
+                const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
+                const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
+                const lockLevel = isAdminAtmosphere ? "V3" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
+                const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)));
+                return (
+                  <div key={category.id} className="relative">
+                    <button
+                      type="button"
+                      onMouseEnter={() => { if (hardLocked) setLockTip(`cat-${category.id}`); }}
+                      onMouseLeave={() => { if (hardLocked) setLockTip((cur) => (cur === `cat-${category.id}` ? null : cur)); }}
+                      onClick={() => {
+                        if (hardLocked && !isMasterSürüm) return;
+                        setAtmosCategory(category.id);
+                      }}
+                      className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : "glass-soft text-white/70 hover:text-white"}`}
+                      style={!hardLocked && active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))", borderColor: "var(--accent)" } : undefined}
+                    >
+                      {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
+                      {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : "var(--accent)" }} /> : null}
+                      <span className="px-1 text-center text-[8px] font-bold leading-tight">{category.label}</span>
+                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : "text-white/25"}`}>{count} içerik</span>
+                    </button>
+                    {hardLocked && lockTip === `cat-${category.id}` && (
+                      <span className="pointer-events-none absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-black text-black shadow-lg" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                        <Lock size={9} className="mr-1 inline" />{lockLevel} Güncellemesi Yakında
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           <div className={`grid gap-3 ${clipKind === "img" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}>
             {filteredClips.map((clip) => {
