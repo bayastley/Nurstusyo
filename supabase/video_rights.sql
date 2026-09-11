@@ -69,9 +69,9 @@ begin
   set remaining = public.nur_video_rights.remaining + excluded.remaining,
       updated_at = now();
 
-  select remaining into v_remaining
-  from public.nur_video_rights
-  where user_id = p_user_id and video_kind = p_video_kind;
+  select n.remaining into v_remaining
+  from public.nur_video_rights n
+  where n.user_id = p_user_id and n.video_kind = p_video_kind;
 
   return query select true, v_remaining, null::text;
 end;
@@ -173,9 +173,9 @@ begin
   values (p_user_id, p_reward_key, p_amount)
   on conflict (user_id, reward_key) do nothing;
   if not found then
-    select coalesce(remaining, 0) into v_remaining
-    from public.nur_video_rights
-    where user_id = p_user_id and video_kind = p_video_kind;
+    select coalesce(n.remaining, 0) into v_remaining
+    from public.nur_video_rights n
+    where n.user_id = p_user_id and n.video_kind = p_video_kind;
     return query select false, coalesce(v_remaining, 0), 'ALREADY_CLAIMED';
     return;
   end if;
@@ -184,8 +184,8 @@ begin
   on conflict (user_id, video_kind) do update
     set remaining = public.nur_video_rights.remaining + excluded.remaining,
         updated_at = now();
-  select remaining into v_remaining from public.nur_video_rights
-    where user_id = p_user_id and video_kind = p_video_kind;
+  select n.remaining into v_remaining from public.nur_video_rights n
+    where n.user_id = p_user_id and n.video_kind = p_video_kind;
   return query select true, v_remaining, null::text;
 end;
 $$;

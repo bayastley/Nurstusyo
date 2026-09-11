@@ -40,6 +40,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return res.status(503).json({ ok: false, error: "Hediye servisi kullanılamıyor" });
+
+  // ★ Kullanıcının nur_users tablosunda olduğundan emin ol (foreign key hatasını önlemek için)
+  try {
+    const userCheckRes = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(user.id)}&select=id`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+    });
+    const existingUser = userCheckRes.ok ? await userCheckRes.json().catch(() => []) : [];
+    if (!Array.isArray(existingUser) || existingUser.length === 0) {
+      await fetch(`${url}/rest/v1/nur_users`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          id: user.id,
+          email: user.id.includes("@") ? user.id : user.id + "@nurstudyo.com",
+          tier: "free",
+          created_at: new Date().toISOString(),
+        }),
+      });
+      console.log(`[claim] 🆕 Yeni kullanıcı nur_users tablosuna 'free' olarak eklendi: ${user.id}`);
+    }
+  } catch (err: any) {
+    console.error("[claim] User existence check error:", err?.message);
+  }
+
   const response = await fetch(`${url}/rest/v1/rpc/nur_claim_video_reward`, {
     method: "POST",
     headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
