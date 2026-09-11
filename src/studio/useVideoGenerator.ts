@@ -93,14 +93,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     }
 
     if (!user && !isMasterSürüm) {
-      const used = getGuestUsed();
-      if (used >= GUEST_FREE_VIDEOS) {
-        notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol");
-        setLoginTab("register");
-        setModal("login");
-        return;
-      }
-      notify(`👋 Misafir denemesi ${used + 1}/${GUEST_FREE_VIDEOS} · indirmek için üyelik gerekir`);
+      notify("🎁 Video üretmek için lütfen Google ile 3 saniyede ücretsiz üye olun, +20 ücretsiz jeton kazanın");
+      setLoginTab("register");
+      setModal("login");
+      return;
     }
 
     const rl = checkRateLimit("video");

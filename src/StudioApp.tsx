@@ -735,16 +735,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const handleGenerate = useCallback(async () => {
     if (generating) { stopGenerationRef.current(); return; }
-    // ★ MİSAFİR MODU — üye olmadan 2 deneme videosu üretilebilir, indirme üyelik ister
     if (!user && !isMasterSürüm) {
-      const used = getGuestUsed();
-      if (used >= GUEST_FREE_VIDEOS) {
-        notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +20 jeton kazan");
-        setLoginTab("register");
-        setModal("login");
-        return;
-      }
-      notify(`👋 Misafir denemesi ${used + 1}/${GUEST_FREE_VIDEOS} · indirmek için üyelik gerekir`);
+      notify("🎁 Video üretmek için lütfen Google ile 3 saniyede ücretsiz üye olun, +20 ücretsiz jeton kazanın");
+      setLoginTab("register");
+      setModal("login");
+      return;
     }
     const rl = checkRateLimit("video");
     if (!rl.allowed) {
