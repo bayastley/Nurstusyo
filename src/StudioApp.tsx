@@ -162,18 +162,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
 
-  // ★ ENGELLEYİCİ: Üretim (render) sırasında sayfanın kapatılmasını/yenilenmesini engelle
-  useEffect(() => {
-    if (!generating) return;
-    const preventClose = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "Video üretimi devam ediyor. Sekmeyi kapatırsanız üretim yarıda kesilir ve jetonunuz boşa gidebilir.";
-      return e.returnValue;
-    };
-    window.addEventListener("beforeunload", preventClose);
-    return () => window.removeEventListener("beforeunload", preventClose);
-  }, [generating]);
-
   // ★ Admin email tanındığında master modu aktifle
   useEffect(() => {
     if (user?.email && isAdminEmail(user.email) && !isMasterSürüm) {
@@ -389,6 +377,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
     }
   }, [aspect, generating]);
+
+  // ★ ENGELLEYİCİ: Üretim (render) sırasında sayfanın kapatılmasını/yenilenmesini engelle
+  useEffect(() => {
+    if (!generating) return;
+    const preventClose = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "Video üretimi devam ediyor. Sekmeyi kapatırsanız üretim yarıda kesilir ve jetonunuz boşa gidebilir.";
+      return e.returnValue;
+    };
+    window.addEventListener("beforeunload", preventClose);
+    return () => window.removeEventListener("beforeunload", preventClose);
+  }, [generating]);
+
   useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem("nur_theme", theme.id); }, [theme]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
