@@ -51,22 +51,22 @@ function money(v: any, fallback: string) {
 const PRODUCT_CATALOG: Record<string, { price: string; name: string; kind: string }> = {
   // Aylık abonelikler
   SUB_PRO_1M:  { price: '149.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
-  SUB_ELIT_1M: { price: '300.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
+  SUB_ELIT_1M: { price: '250.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
   // Yıllık abonelikler
   SUB_PRO_1Y:  { price: '1609.20', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
-  SUB_ELIT_1Y: { price: '2880.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
+  SUB_ELIT_1Y: { price: '2400.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
   // Kısa video paketleri
   PK_KISA_15:  { price: '35.00',  name: '15 Kısa Video',  kind: 'package' },
   PK_KISA_35:  { price: '69.00',  name: '35 Kısa Video',  kind: 'package' },
   PK_KISA_70:  { price: '119.00', name: '70 Kısa Video',  kind: 'package' },
   // Uzun video paketleri
   PK_UZUN_8:   { price: '45.00',  name: '8 Uzun Video',   kind: 'package' },
-  PK_UZUN_20:  { price: '99.00',  name: '20 Uzun Video',  kind: 'package' },
-  PK_UZUN_40:  { price: '169.00', name: '40 Uzun Video',  kind: 'package' },
+  PK_UZUN_20:  { price: '89.00',  name: '20 Uzun Video',  kind: 'package' },
+  PK_UZUN_40:  { price: '149.00', name: '40 Uzun Video',  kind: 'package' },
   // Tam sürüm paketleri
-  PK_TAM_2:    { price: '79.00',  name: '2 Tam Sürüm',    kind: 'package' },
-  PK_TAM_5:    { price: '179.00', name: '5 Tam Sürüm',    kind: 'package' },
-  PK_TAM_10:   { price: '299.00', name: '10 Tam Sürüm',   kind: 'package' },
+  PK_TAM_2:    { price: '39.00',  name: '2 Tam Sürüm',    kind: 'package' },
+  PK_TAM_5:    { price: '89.00',  name: '5 Tam Sürüm',    kind: 'package' },
+  PK_TAM_10:   { price: '159.00', name: '10 Tam Sürüm',   kind: 'package' },
 };
 
 export default async function handler(req: any, res: any) {
