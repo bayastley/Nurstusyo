@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* ★ ALTIN RENK PALETİ — bg-gold, text-gold, border-gold, gold-light, gold/15 vb.
+   bütün sınıflar bunlarla üretilir (tanımsızken butonlar gri/siyah görünüyordu) */
+@theme {
+  --color-gold: #d7aa52;
+  --color-gold-light: #f5dda6;
+  --color-gold-dark: #a8823a;
+}
+
 @layer base {
   :root {
     --accent: #d7aa52;
