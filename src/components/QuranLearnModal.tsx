@@ -83,6 +83,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ OTOMATİK OKU: açıkken ayet biter bitmez sıradaki ayeti okur; kelimeye tıklayınca
   //    o kelime (yoksa o ayet) okunur ve okuma kaldığı yerden devam eder.
   const [autoRead, setAutoRead] = useState(false);
+  // ★ SURE AKIŞI: oynatınca ayetler arkasına arkasına okunur, ekran okunan ayeti izler
+  const [flowPlaying, setFlowPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -265,8 +267,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.loop = false;
       if (onEnded) {
         a.onended = onEnded;
-      } else if (autoRead) {
-        // Otomatik oku: ayet bitince sıradaki ayete geç (sure sonunda durur)
+      } else if (autoRead || flowPlaying) {
+        // Sure akışı: ayet bitince sıradaki ayete geç (sure sonunda durur)
         a.onended = () => {
           const { s: sRef, a: aRef } = ayahPosRef.current;
           const total = SURAHS_DATA.find(x => x.n === sRef)?.ayahs ?? aRef;
@@ -274,15 +276,18 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             setAyahNo(aRef + 1);
             setActiveWord(null);
           } else {
-            setAutoRead(false);
+            setFlowPlaying(false); setAutoRead(false); setIsPlaying(false);
           }
         };
       } else {
         a.onended = null;
       }
     }
-    a.play().catch(() => undefined);
+    a.play().then(() => setIsPlaying(true)).catch(() => undefined);
   };
+  // En güncel playAyahAudio'ya ref — ayet listesinden tıklayınca kullanılır
+  const playAyahRef = useRef(playAyahAudio);
+  useEffect(() => { playAyahRef.current = playAyahAudio; });
 
   const replayAyah = () => playAyahAudio();
 
@@ -294,14 +299,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     setActiveWord(null);
   }, [surahNo, ayahNo]);
 
-  // Ayet değişince otomatik oku modundaysa yeni ayeti başlat
+  // Ayet değişince akış/otomatik oku açıksa yeni ayeti başlat
   useEffect(() => {
-    if (open && mode === "learn" && autoRead && ayahNo > 0) {
+    if (open && mode === "learn" && (autoRead || flowPlaying) && ayahNo > 0) {
       const t = setTimeout(() => playAyahAudio(), 200);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ayahNo, autoRead, open, mode]);
+  }, [ayahNo, autoRead, flowPlaying, open, mode]);
 
   // ── Dinle modu ──
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
@@ -363,7 +368,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const stopListening = () => { stopAudio(); setIsPlaying(false); };
 
   // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
-  const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); };
+  const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); setFlowPlaying(false); };
+
+  // ★ ORTADAKİ SURE LİSTESİ: okunan ayet görünür pencerede kendiliğinden kayar
+  const centerListRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    centerListRef.current?.querySelector("[data-current]")?.scrollIntoView({ block: "nearest" });
+  }, [ayahNo, ayahs.length, open, mode]);
 
   // ★ HOCA OKURKEN KELİME TAKİBİ: ses çalarken currentTime/duration oranıyla
   //    o an okunan kelimeyi sarı yakar — words her değiştiğinde taze bağlanır.
@@ -540,9 +551,16 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 <div className="flex w-full flex-col items-center gap-4 overflow-y-auto border-white/10 p-4 lg:w-[47%] lg:border-r scrollbar-thin">
                   <p className="self-start text-[8px] font-black uppercase tracking-widest text-white/30">Kelime Seçim Alanı</p>
                   <div className="w-full rounded-3xl border border-white/10 bg-[#131322] p-4">
-                    <div className="text-center">
-                      <h4 className="font-arabic text-sm text-[#f5dda6]">سُورَةُ {surah.name}</h4>
-                      <p className="mt-0.5 font-mono text-[10px] text-white/40">{surah.n}. {surah.name} Suresi — {ayahNo}. Ayet · {surah.type} · Cüz {ayah?.juz} · Sayfa {ayah?.page}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="w-20 shrink-0" />
+                      <div className="text-center">
+                        <h4 className="font-arabic text-sm text-[#f5dda6]">سُورَةُ {surah.name}</h4>
+                        <p className="mt-0.5 font-mono text-[10px] text-white/40">{surah.n}. {surah.name} Suresi — {ayahNo}. Ayet · {surah.type} · Cüz {ayah?.juz} · Sayfa {ayah?.page}</p>
+                      </div>
+                      <div className="w-20 shrink-0 text-right">
+                        <p className="text-[9px] font-black tracking-widest text-gold">NURSTUDYO</p>
+                        <p className="text-[8px] text-white/40">{surah.name} suresi</p>
+                      </div>
                     </div>
                     {/* Kelimeler */}
                     <div className="mt-3 w-full rounded-xl border border-white/10 bg-black/20 p-3">
@@ -567,7 +585,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
                     {/* ★ KONTROLLER — prototipteki gibi kartın içinde, tek satır */}
                     <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-1.5">
-                      <button onClick={() => playAyahAudio()} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-3 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.3)] transition hover:brightness-110 active:scale-95">
+                      <button onClick={() => { setFlowPlaying(true); playAyahAudio(); }} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-3 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.3)] transition hover:brightness-110 active:scale-95">
                         <Volume2 size={10} /> Ayeti Dinle
                       </button>
                       <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-white/80 ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95">
@@ -606,18 +624,16 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     </div>
                   ) : null}
 
-                  {/* ★ KOMŞU AYETLER — ortada, prototip dışı ama akışı bozmuyor */}
+                  {/* ★ SURENİN TAMAMI — ~7 ayet görünür, okunan yanar, akışla kayar, tıklayınca o ayet okunur */}
                   <div className="w-full rounded-2xl border border-white/10 bg-[#161622] p-3">
-                    <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-white/35">Suredeki Ayetler — birine tıkla, oralara atla</p>
-                    <div className="flex flex-col gap-1.5">
-                      {ayahs
-                        .slice(Math.max(0, ayahNo - 3), ayahNo + 2)
-                        .map(a => (
-                          <button key={a.n} onClick={() => { setAyahNo(a.n); setActiveWord(null); }} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-right transition ${a.n === ayahNo ? "bg-[#3D342B] ring-1 ring-[#D7AA41]/60" : "hover:bg-white/[.04]"}`}>
-                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${a.n === ayahNo ? "bg-[#D7AA41] text-[#151020]" : "bg-white/10 text-white/50"}`} dir="ltr">{a.n}</span>
-                            <span className={`flex-1 truncate font-arabic text-sm leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-white/70"}`} dir="rtl">{a.ar}</span>
-                          </button>
-                        ))}
+                    <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-white/35">Suredeki Ayetler — okunan yanar, birine tıklarsan o okunur</p>
+                    <div ref={centerListRef} className="flex max-h-[300px] flex-col gap-1.5 overflow-y-auto scrollbar-thin">
+                      {ayahs.map(a => (
+                        <button key={a.n} data-current={a.n === ayahNo || undefined} onClick={() => { setFlowPlaying(false); setAyahNo(a.n); setActiveWord(null); setTimeout(() => playAyahRef.current(), 350); }} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-right transition ${a.n === ayahNo ? "bg-[#3D342B] ring-1 ring-[#D7AA41]/60 shadow-[0_0_14px_rgba(215,170,82,.25)]" : "hover:bg-white/[.04]"}`}>
+                          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${a.n === ayahNo ? "bg-[#D7AA41] text-[#151020]" : "bg-white/10 text-white/50"}`} dir="ltr">{a.n}</span>
+                          <span className={`flex-1 truncate font-arabic text-sm leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-white/70"}`} dir="rtl">{a.ar}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
