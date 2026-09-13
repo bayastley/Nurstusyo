@@ -189,7 +189,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   const stopAudio = useCallback(() => {
     const a = audioRef.current; if (!a) return;
-    a.pause(); a.onended = null;
+    a.pause(); a.onended = null; a.ontimeupdate = null;
   }, []);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
@@ -240,6 +240,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     stopAudio();
     a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
+    // ★ KELİME TAKİBİ: sesin süresi boyunca kelime kelime sarı yansıt —
+    //    currentTime/duration oranıyla anlık senkron (milisaniye hassasiyetli takip)
+    a.ontimeupdate = () => {
+      if (!a.duration || words.length === 0) return;
+      const idx = Math.min(words.length - 1, Math.floor((a.currentTime / a.duration) * words.length));
+      setActiveWord(idx);
+    };
     if (loopAyah) {
       a.loop = true;
     } else {
@@ -348,7 +355,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex flex-col bg-slate-950/98 animate-fadeIn">
+    <div className="fixed inset-0 z-[80] flex flex-col animate-fadeIn bg-gradient-to-b from-[#0d1017] via-[#0b0e15] to-[#090b10]">
       {/* ÜST BAR */}
       <div className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-[#161622] px-4">
         <div className="flex items-center gap-2">
@@ -432,7 +439,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <>
                 {/* SOL: kelime kartı */}
                 <div className="flex w-full flex-col gap-4 overflow-y-auto border-white/10 p-4 lg:w-[28%] lg:border-r scrollbar-thin">
-                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gold">Mahreç & Kelime Kartı</h3>
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gold">Ayetin Bütünü</h3>
+                  <div className="rounded-2xl border border-gold/25 bg-[#12151f] p-4 text-center">
+                    <p className="font-arabic text-2xl leading-loose text-white/95" dir="rtl">{ayah?.ar}</p>
+                    <p className="mt-1 text-[9px] italic text-white/35">Ortadaki kelimelere tıkla — seçtiğin kelime sarı yansır ve okunur</p>
+                  </div>
                   {activeWord !== null && words[activeWord] ? (
                     <div className="rounded-2xl border border-gold/25 bg-gold/5 p-5 text-center animate-fadeIn">
                       <p className="font-arabic text-4xl leading-relaxed text-gold-light">{words[activeWord].ar}</p>
@@ -463,6 +474,19 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <span className="text-[9px] font-bold uppercase tracking-widest text-white/35">Ayet Meali</span>
                     <p className="mt-2 text-[12px] leading-relaxed text-white/75">{ayah?.tr}</p>
                     <span className="mt-2 block text-right text-[8px] font-bold text-white/25">{MEALS.find(m => m.id === mealId)?.name}</span>
+                  </div>
+
+                  {/* Sure ayetleri — birkaç ayet görünür, kaydır; tıklayınca o ayete atlar */}
+                  <div className="rounded-2xl border border-white/10 bg-[#12151f] p-2">
+                    <span className="px-2 text-[9px] font-bold uppercase tracking-widest text-white/35">{surah.name} — Ayetler</span>
+                    <div className="mt-1 max-h-56 overflow-y-auto scrollbar-thin">
+                      {ayahs.map(a => (
+                        <button key={a.n} onClick={() => { setAyahNo(a.n); setActiveWord(null); }} className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition ${a.n === ayahNo ? "bg-gold/15" : "hover:bg-white/[.04]"}`}>
+                          <span className={`w-6 shrink-0 text-[9px] font-black ${a.n === ayahNo ? "text-gold" : "text-white/30"}`}>{a.n}</span>
+                          <span className="truncate font-arabic text-sm text-white/80" dir="rtl">{a.ar}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Kontroller */}
@@ -501,7 +525,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <h4 className="font-arabic text-xl text-gold-light">سُورَةُ {surah.name}</h4>
                     <p className="mt-0.5 font-mono text-[10px] text-white/40">{surah.n}. {surah.name} Suresi — {ayahNo}. Ayet · {surah.type} · Cüz {ayah?.juz} · Sayfa {ayah?.page}</p>
                   </div>
-                  <div className="w-full rounded-2xl border border-gold/20 bg-gradient-to-b from-[#1a1720] to-black/50 p-6 shadow-[inset_0_0_40px_rgba(215,170,82,.05)]">
+                  <div className="w-full rounded-2xl border border-gold/25 bg-[#12151f] p-6">
                     {wordLoading ? (
                       <div className="flex items-center justify-center gap-2 py-4"><Loader2 size={18} className="animate-spin text-gold" /> <span className="text-[11px] text-white/40">kelimeler yükleniyor…</span></div>
                     ) : words.length > 0 ? (
@@ -510,7 +534,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                           <button
                             key={w.i}
                             onClick={() => clickWord(w.i)}
-                            className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 bg-gold font-black text-slate-950 shadow-[0_0_22px_rgba(215,170,82,.65)]" : "text-white/90 hover:bg-gold/15 hover:text-gold-light hover:shadow-[0_0_10px_rgba(215,170,82,.25)]"}`}
+                            className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 bg-gold/25 font-black text-gold-light ring-1 ring-gold/70 shadow-[0_0_28px_rgba(245,221,166,.5)]" : "text-white/90 hover:bg-gold/15 hover:text-gold-light hover:shadow-[0_0_10px_rgba(215,170,82,.25)]"}`}
                           >
                             {w.ar}
                           </button>
@@ -531,7 +555,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 {/* SAĞ: kelime tablosu */}
                 <div className="flex w-full flex-col overflow-y-auto p-4 lg:w-[25%] scrollbar-thin">
                   <h3 className="mb-2 text-[10px] font-black uppercase tracking-widest text-gold">Kelime Kelime Çözüm</h3>
-                  <div className="overflow-hidden rounded-xl border border-white/10">
+                  <div className="overflow-hidden rounded-xl border border-white/10 bg-[#12151f]">
                     {wordLoading ? (
                       <div className="flex items-center justify-center gap-2 p-4 text-[11px] text-white/40"><Loader2 size={13} className="animate-spin" /> kelimeler…</div>
                     ) : words.map((w, i) => (
@@ -541,6 +565,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                         <span className="font-arabic text-lg text-gold-light">{w.ar}</span>
                       </button>
                     ))}
+                  </div>
+                  {/* Kaynak referansı */}
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-[#12151f] p-3 text-center">
+                    <p className="text-[8px] font-black uppercase tracking-widest text-gold">Resmî Sahih Kaynak Referansı</p>
+                    <p className="mt-1 text-[9px] font-bold text-white/70">T.C. Diyanet İşleri Başkanlığı</p>
+                    <p className="mt-0.5 text-[8px] text-white/35">Mealler: Diyanet · Öztürk · Gölpınarlı · Elmalılı — Kelimeler: quran.com — Ses: everyayah.com</p>
                   </div>
                 </div>
               </>
