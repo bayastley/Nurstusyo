@@ -202,6 +202,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ GÜNCEL AYET REFİ: ses her zaman EKRANDAKİ ayeti okur (eski closure taşımaz)
   const ayahPosRef = useRef({ s: surahNo, a: ayahNo });
   useEffect(() => { ayahPosRef.current = { s: surahNo, a: ayahNo }; }, [surahNo, ayahNo]);
+  // ★ GÜNCEL KELİME REFİ: ses konumu → kelime eşlemesi her zaman taze listeyle
+  const wordsRef = useRef(words);
+  useEffect(() => { wordsRef.current = words; }, [words]);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
   //    ve altın vurgu her koşulda çalışır; ses olarak ayet sesi okunur.
@@ -284,6 +287,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       }
     }
     a.play().then(() => setIsPlaying(true)).catch(() => undefined);
+    // ★ CANLI KELİME TAKİBİ: ses kendisi konum bildirir, kelime sırayla sarı yanar
+    a.ontimeupdate = () => {
+      if (!a.duration || Number.isNaN(a.duration)) return;
+      const ws = wordsRef.current;
+      if (ws.length === 0) return;
+      const idx = Math.min(ws.length - 1, Math.floor((a.currentTime / a.duration) * ws.length));
+      setActiveWord(idx);
+    };
   };
   // En güncel playAyahAudio'ya ref — ayet listesinden tıklayınca kullanılır
   const playAyahRef = useRef(playAyahAudio);
@@ -379,20 +390,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     centerListRef.current?.querySelector("[data-current]")?.scrollIntoView({ block: "nearest" });
   }, [ayahNo, ayahs.length, open, mode]);
 
-  // ★ HOCA OKURKEN KELİME TAKİBİ: ses çalarken currentTime/duration oranıyla
-  //    o an okunan kelimeyi sarı yakar — words her değiştiğinde taze bağlanır.
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a || !isPlaying || mode !== "learn") return;
-    const onTime = () => {
-      if (!a.duration || words.length === 0) return;
-      const idx = Math.min(words.length - 1, Math.floor((a.currentTime / a.duration) * words.length));
-      setActiveWord(idx);
-    };
-    a.ontimeupdate = onTime;
-    onTime();
-    return () => { a.ontimeupdate = null; };
-  }, [isPlaying, mode, words]);
+  // (kelime takibi artık playAyahAudio içinde doğrudan ses'e bağlı — state beklemez,
+  //   akış modunda bile kopmaz)
 
   useEffect(() => { if (!open) { stopAudio(); setIsPlaying(false); } }, [open, stopAudio]);
 
