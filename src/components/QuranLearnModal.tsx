@@ -189,6 +189,16 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.pause(); a.onended = null;
   }, []);
 
+  // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
+  //    ve altın vurgu her koşulda çalışır; ses olarak ayet sesi okunur.
+  useEffect(() => {
+    if (!open || mode !== "learn" || wordLoading || words.length > 0) return;
+    const text = ayah?.ar?.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, "").trim();
+    if (!text) return;
+    const parts = text.split(/\s+/).filter(Boolean);
+    if (parts.length > 0) setWords(parts.map((ar, i) => ({ i, ar, tr: "—", translit: "", audio: "" })));
+  }, [open, mode, wordLoading, words.length, ayah?.ar]);
+
   // ★ KELİMEYE TIKLA: kelimeyi parlat + seçilen hocanın sesiyle O KELİMEYİ oku
   //   (qurancdn kelime sesleri tek okuyuculu; ayet sesi hoca seçiminden gelir.
   //    "Kelimeyi seçilen hoca okusun" için: hoca ayet mp3'ünü kelime konumundan başlatamayız
@@ -206,7 +216,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const playWordAudio = (i: number) => {
     const a = audioRef.current; if (!a || !words[i]) return;
     stopAudio();
-    a.src = words[i].audio;
+    if (words[i].audio) {
+      a.src = words[i].audio;
+    } else {
+      // Kelime sesi yoksa (yedek mod) ayet sesini çal
+      a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
+    }
     a.playbackRate = speed;
     a.play().catch(() => undefined);
     if (repeatWord) {
@@ -446,21 +461,23 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <h4 className="font-arabic text-xl text-gold-light">سُورَةُ {surah.name}</h4>
                     <p className="mt-0.5 font-mono text-[10px] text-white/40">{surah.n}. {surah.name} Suresi — {ayahNo}. Ayet · {surah.type} · Cüz {ayah?.juz} · Sayfa {ayah?.page}</p>
                   </div>
-                  <div className="flex w-full flex-wrap items-center justify-center gap-x-3 gap-y-3 rounded-2xl border border-white/10 bg-black/30 p-5">
+                  <div className="w-full rounded-2xl border border-gold/20 bg-gradient-to-b from-[#1a1720] to-black/50 p-6 shadow-[inset_0_0_40px_rgba(215,170,82,.05)]">
                     {wordLoading ? (
-                      <Loader2 size={18} className="animate-spin text-gold" />
+                      <div className="flex items-center justify-center gap-2 py-4"><Loader2 size={18} className="animate-spin text-gold" /> <span className="text-[11px] text-white/40">kelimeler yükleniyor…</span></div>
                     ) : words.length > 0 ? (
-                      words.map((w) => (
-                        <button
-                          key={w.i}
-                          onClick={() => clickWord(w.i)}
-                          className={`rounded-xl px-2.5 py-1 font-arabic text-2xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "bg-gold font-black text-slate-950 shadow-[0_0_14px_rgba(215,170,82,.45)]" : "text-white/85 hover:bg-gold/10 hover:text-gold"}`}
-                        >
-                          {w.ar}
-                        </button>
-                      ))
+                      <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-4 gap-y-4" dir="rtl">
+                        {words.map((w) => (
+                          <button
+                            key={w.i}
+                            onClick={() => clickWord(w.i)}
+                            className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 bg-gold font-black text-slate-950 shadow-[0_0_22px_rgba(215,170,82,.65)]" : "text-white/90 hover:bg-gold/15 hover:text-gold-light hover:shadow-[0_0_10px_rgba(215,170,82,.25)]"}`}
+                          >
+                            {w.ar}
+                          </button>
+                        ))}
+                      </div>
                     ) : (
-                      <p className="text-[11px] text-white/40">{ayah?.ar}</p>
+                      <p className="py-4 text-center font-arabic text-3xl leading-relaxed text-white/90" dir="rtl">{ayah?.ar}</p>
                     )}
                   </div>
                   {/* Ayet gezinme */}
