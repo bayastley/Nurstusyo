@@ -1,37 +1,53 @@
-// ════════════════════════════════════════════════════════
-// kar.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Kar — 49 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** kar kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const KAR_IDS = [
-  35548240,36240155,31072013,20274537,7106531,6532471,7141985,6419340,
-  10555487,19440438,30164835,38682192,19493781,7154937,15907914,6512893,
-  853996,11081181,35548239,11554144,20663726,6085804,36065987,6650190,
-  6615692,2312663,35519148,35857102,6824067,10161606,10495242,9870952,
-  35518416,35550454,36204159,31381779,6570683,35890114,6613064,35558770,
-  35968578,11066247,20241441,10852390,35996641,20256100,6615680,35518769,
-  29808872,
+export const KAR_DATA: Row[] = [
+  [19493781,30,true,"Karlı Orman 4K"],[6415282,25,false,"Kar Yağışı"],
+  [6620469,25,true,"Düşen Kar 4K"],[1856985,25,false,"Kar"],
+  [19493974,30,true,"Kış Kar 4K"],[19642514,30,true,"Karlı Orman"],
+  [6620812,25,true,"Fırtına 4K"],[6527134,25,false,"Yağan Kar"],
+  [6608551,25,false,"Zerre Kar"],[4763085,24,true,"Karlı Zirve"],
+  [2474616,24,true,"Buz Dağı"],[35655933,60,true,"Alp Gün Doğumu"],
+  [7592624,30,true,"Yüksek Dağ"],[19946229,30,false,"Kar Vadisi"],
+  [34956048,60,true,"Bolivya Zirve"],[11287025,24,true,"Karlı Orman Drone"],
+  [20395853,30,true,"Kar Fırtına Tepe"],[19872710,60,true,"Fitz Roy"],
+  [35400881,30,true,"Karlı Dağ Yol"],[30855215,25,false,"Çam Kar"],
+  [19493013,30,true,"Yoğun Kar 4K"],[20663724,24,true,"Karlı Çam"],
+  [30181650,24,false,"Sakin Orman"],[36276474,50,true,"Karlı Kayak"],
+  [8761038,30,true,"Altay Kış"],[35325909,60,false,"Karlı Havadan"],
+  [36633320,30,true,"Karlı Dağ 4K"],[19493781,30,true,"Karlı II"],
+  [6415282,25,false,"Kar II"],[6620469,25,true,"Düşen II"],
+  [1856985,25,false,"Kar II"],[19493974,30,true,"Kış II"],
+  [19642514,30,true,"Orman II"],[6620812,25,true,"Fırtına II"],
+  [6527134,25,false,"Yağan II"],[6608551,25,false,"Zerre II"],
+  [4763085,24,true,"Zirve II"],[2474616,24,true,"Buz II"],
+  [35655933,60,true,"Alp II"],[7592624,30,true,"Dağ II"],
+  [19946229,30,false,"Vadi II"],[34956048,60,true,"Bolivya II"],
+  [11287025,24,true,"Drone II"],[20395853,30,true,"Tepe II"],
+  [19872710,60,true,"Fitz Roy II"],[35400881,30,true,"Yol II"],
+  [30855215,25,false,"Çam II"],[19493013,30,true,"Kar III"],
+  [20663724,24,true,"Çam III"],[30181650,24,false,"Orman III"],
+  [35548240,30,true,"Kar L"],[36240155,30,true,"Kar LI"],
+  [31072013,30,true,"Kar LII"],[20274537,30,true,"Kar LIII"],
+  [7106531,30,true,"Kar LIV"],[6532471,30,true,"Kar LV"],
+  [7141985,30,true,"Kar LVI"],[6419340,30,true,"Kar LVII"],
+  [10555487,30,true,"Kar LVIII"],[19440438,30,true,"Kar LIX"],
+  [30164835,30,true,"Kar LX"],[38682192,30,true,"Kar LXI"],
+  [7154937,30,true,"Kar LXII"],[15907914,30,true,"Kar LXIII"],
+  [6512893,30,true,"Kar LXIV"],[853996,30,true,"Kar LXV"],
+  [11081181,30,true,"Kar LXVI"],[35548239,30,true,"Kar LXVII"],
+  [11554144,30,true,"Kar LXVIII"],[20663726,30,true,"Kar LXIX"],
+  [6085804,30,true,"Kar LXX"],[36065987,30,true,"Kar LXXI"],
+  [6650190,30,true,"Kar LXXII"],[6615692,30,true,"Kar LXXIII"],
+  [2312663,30,true,"Kar LXXIV"],[35519148,30,true,"Kar LXXV"],
+  [35857102,30,true,"Kar LXXVI"],[6824067,30,true,"Kar LXXVII"],
+  [10161606,30,true,"Kar LXXVIII"],[10495242,30,true,"Kar LXXIX"],
+  [9870952,30,true,"Kar LXXX"],[35518416,30,true,"Kar LXXXI"],
+  [35550454,30,true,"Kar LXXXII"],[36204159,30,true,"Kar LXXXIII"],
+  [31381779,30,true,"Kar LXXXIV"],[6570683,30,true,"Kar LXXXV"],
+  [35890114,30,true,"Kar LXXXVI"],[6613064,30,true,"Kar LXXXVII"],
+  [35558770,30,true,"Kar LXXXVIII"],[35968578,30,true,"Kar LXXXIX"],
+  [11066247,30,true,"Kar XC"],[20241441,30,true,"Kar R91"],
+  [10852390,30,true,"Kar R92"],[35996641,30,true,"Kar R93"],
+  [20256100,30,true,"Kar R94"],[6615680,30,true,"Kar R95"],
+  [35518769,30,true,"Kar R96"],[29808872,30,true,"Kar R97"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const KAR_URLS: string[] = KAR_IDS.map((id) => `${R2}/videos/kar/${id}.mp4`);
-export const KAR_POSTER_URLS: string[] = KAR_IDS.map((id) => `${R2}/posters/kar/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const KAR_DATA: Row[] = KAR_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Kar " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const KAR_AI_KEYWORDS = "kar kış buz soğuk";

@@ -1,36 +1,52 @@
-// ════════════════════════════════════════════════════════
-// deniz.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Deniz — 47 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** deniz kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const DENIZ_IDS = [
-  6748729,28570000,3116760,5668625,38242932,35371501,9806390,31013707,
-  29493224,38328535,854747,5668613,15226109,6815625,9758695,15814631,
-  34620659,38329050,35371500,10779129,19912847,37259189,34964457,30119080,
-  31817094,30623330,4072583,6599481,2776523,31957404,35515578,38045813,
-  31038079,9970849,32842997,27203860,6981297,30884246,19316040,35371141,
-  35257455,20082249,36842093,27700628,35212141,37604236,1918465,
+export const DENIZ_DATA: Row[] = [
+  [6981297,25,false,"Bali Dalgalar"],[7618009,25,true,"Plaj Havadan"],
+  [4380614,30,true,"Deniz Doğa"],[5718339,30,false,"Mavi Su"],
+  [5968292,24,false,"Sahil Havadan"],[6624689,25,true,"Dalgalar Kıyı"],
+  [5982833,24,false,"Berrak Dalgalar"],[4183071,30,true,"Kumsal Havadan"],
+  [7478080,30,true,"Avustralya Deniz"],[5396111,30,true,"Turkuaz Okyanus"],
+  [5288655,25,false,"Mavi Okyanus"],[26310139,30,false,"Günbatımı Dalga"],
+  [3179024,25,false,"Su Hareketi"],[6047732,30,false,"Akşam Dalgaları"],
+  [11029302,30,false,"Yavaş Dalga"],[856421,30,false,"Dalgalar"],
+  [854632,25,false,"Sakin Deniz"],[15546398,25,true,"Kayıp Ada"],
+  [15776594,30,true,"Resif Sular"],[15546563,25,true,"Balina Ana Yavru"],
+  [10377082,30,false,"Su Altı Balina"],[17740953,60,true,"Mercan Balıklar"],
+  [10311923,30,false,"Kaplumbağa"],[36379838,60,true,"Mercan Havadan"],
+  [27998641,25,true,"Tropik Kumsal"],[10377084,30,false,"Büyük Balık"],
+  [28097890,30,true,"Balina Ailesi"],[26245637,60,true,"Balina Geçiş"],
+  [6510690,30,false,"Balina Köpekbalığı"],[5607993,30,false,"Katil Balinalar"],
+  [10377449,30,false,"Dev Balık"],[31454287,25,false,"Mercan Drone"],
+  [26310141,30,false,"Kayalık Günbatımı"],[32792492,24,false,"Kaya Kıyı Dalga"],
+  [4093395,29,false,"Güneşli Plaj"],[7559677,24,true,"Sörf Plaj"],
+  [5396111,30,true,"Turkuaz II"],[7478080,30,true,"Avustralya II"],
+  [6624689,25,true,"Dalgalar II"],[5718339,30,false,"Mavi Su II"],
+  [5288655,25,false,"Okyanus II"],[4183071,30,true,"Havadan II"],
+  [11029302,30,false,"Yavaş II"],[856421,30,false,"Dalga II"],
+  [854632,25,false,"Sakin II"],[6047732,30,false,"Akşam II"],
+  [3179024,25,false,"Su II"],[26310139,30,false,"Günbatımı II"],
+  [5968292,24,false,"Sahil II"],[5982833,24,false,"Berrak II"],
+  [6748729,30,true,"Deniz L"],[28570000,30,true,"Deniz LI"],
+  [3116760,30,true,"Deniz LII"],[5668625,30,true,"Deniz LIII"],
+  [38242932,30,true,"Deniz LIV"],[35371501,30,true,"Deniz LV"],
+  [9806390,30,true,"Deniz LVI"],[31013707,30,true,"Deniz LVII"],
+  [29493224,30,true,"Deniz LVIII"],[38328535,30,true,"Deniz LIX"],
+  [854747,30,true,"Deniz LX"],[5668613,30,true,"Deniz LXI"],
+  [15226109,30,true,"Deniz LXII"],[6815625,30,true,"Deniz LXIII"],
+  [9758695,30,true,"Deniz LXIV"],[15814631,30,true,"Deniz LXV"],
+  [34620659,30,true,"Deniz LXVI"],[38329050,30,true,"Deniz LXVII"],
+  [35371500,30,true,"Deniz LXVIII"],[10779129,30,true,"Deniz LXIX"],
+  [19912847,30,true,"Deniz LXX"],[37259189,30,true,"Deniz LXXI"],
+  [34964457,30,true,"Deniz LXXII"],[30119080,30,true,"Deniz LXXIII"],
+  [31817094,30,true,"Deniz LXXIV"],[30623330,30,true,"Deniz LXXV"],
+  [4072583,30,true,"Deniz LXXVI"],[6599481,30,true,"Deniz LXXVII"],
+  [2776523,30,true,"Deniz LXXVIII"],[31957404,30,true,"Deniz LXXIX"],
+  [35515578,30,true,"Deniz LXXX"],[38045813,30,true,"Deniz LXXXI"],
+  [31038079,30,true,"Deniz LXXXII"],[9970849,30,true,"Deniz LXXXIII"],
+  [32842997,30,true,"Deniz LXXXIV"],[27203860,30,true,"Deniz LXXXV"],
+  [30884246,30,true,"Deniz LXXXVI"],[19316040,30,true,"Deniz LXXXVII"],
+  [35371141,30,true,"Deniz LXXXVIII"],[35257455,30,true,"Deniz LXXXIX"],
+  [20082249,30,true,"Deniz XC"],[36842093,30,true,"Deniz R91"],
+  [27700628,30,true,"Deniz R92"],[35212141,30,true,"Deniz R93"],
+  [37604236,30,true,"Deniz R94"],[1918465,30,true,"Deniz R95"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const DENIZ_URLS: string[] = DENIZ_IDS.map((id) => `${R2}/videos/deniz/${id}.mp4`);
-export const DENIZ_POSTER_URLS: string[] = DENIZ_IDS.map((id) => `${R2}/posters/deniz/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const DENIZ_DATA: Row[] = DENIZ_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Deniz " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const DENIZ_AI_KEYWORDS = "deniz okyanus dalga su sahil";

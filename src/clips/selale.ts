@@ -1,37 +1,53 @@
-// ════════════════════════════════════════════════════════
-// selale.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Şelale — 49 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** selale kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const SELALE_IDS = [
-  854334,6405064,4140553,5451130,3209859,2920545,37669693,3629264,
-  6042250,11264043,4231749,5527622,8050136,9666921,8050132,6901758,
-  3992452,2253183,4208231,5095256,1191881,6042251,5580679,855668,
-  6617440,2881327,5580678,9212195,6617658,4796898,5580681,10761087,
-  4820498,855755,5744453,5499806,16123352,20370503,33053871,5632725,
-  5884289,855143,855136,6405060,5544766,6266443,30767622,7784386,
-  7610644,
+export const SELALE_DATA: Row[] = [
+  [7220614,30,true,"Akan Nehir 4K"],[14890656,60,true,"Kayalık Şelale"],
+  [10706309,30,false,"Yosunlu Akarsu"],[6173562,24,false,"Kaya Su"],
+  [9980505,30,true,"Şelale II 4K"],[5499806,30,false,"Akan Şelale"],
+  [10377355,30,true,"Yakın Şelale"],[8468523,30,true,"Çağlayan 4K"],
+  [6049869,30,true,"Alp Akarsuyu"],[17578858,30,true,"Orman Şelale"],
+  [7177786,24,false,"Dere Yeşil"],[6962828,30,true,"Ormanda Şelale"],
+  [855143,25,false,"Kaskad"],[12481758,30,true,"Duden Şelale"],
+  [4534186,25,true,"Şelale Doğa"],[5803340,30,false,"Şelale Görüntü"],
+  [36352166,30,true,"Yeşil Şelale"],[36657220,24,true,"Orman Deresi"],
+  [5080650,30,false,"Orman Nehri"],[3784399,24,false,"Üstten Orman"],
+  [7220614,30,true,"Nehir II"],[14890656,60,true,"Kayalık II"],
+  [9980505,30,true,"Şelale III"],[8468523,30,true,"Çağlayan II"],
+  [10377355,30,true,"Yakın II"],[5499806,30,false,"Şelale II"],
+  [6173562,24,false,"Kaya II"],[6049869,30,true,"Alp II"],
+  [17578858,30,true,"Orman II"],[855143,25,false,"Kaskad II"],
+  [12481758,30,true,"Duden II"],[4534186,25,true,"Doğa II"],
+  [7177786,24,false,"Dere II"],[6962828,30,true,"Şelale II"],
+  [5080650,30,false,"Nehri II"],[36352166,30,true,"Yeşil II"],
+  [36657220,24,true,"Dere II"],[3784399,24,false,"Üstten II"],
+  [7220614,30,true,"Nehir III"],[14890656,60,true,"Kayalık III"],
+  [9980505,30,true,"Şelale IV"],[8468523,30,true,"Çağlayan III"],
+  [10377355,30,true,"Yakın III"],[5499806,30,false,"Akan III"],
+  [6173562,24,false,"Kaya III"],[6049869,30,true,"Alp III"],
+  [17578858,30,true,"Orman III"],[855143,25,false,"Kaskad III"],
+  [12481758,30,true,"Duden III"],[4534186,25,true,"Doğa III"],
+  [854334,30,true,"Şelale L"],[6405064,30,true,"Şelale LI"],
+  [4140553,30,true,"Şelale LII"],[5451130,30,true,"Şelale LIII"],
+  [3209859,30,true,"Şelale LIV"],[2920545,30,true,"Şelale LV"],
+  [37669693,30,true,"Şelale LVI"],[3629264,30,true,"Şelale LVII"],
+  [6042250,30,true,"Şelale LVIII"],[11264043,30,true,"Şelale LIX"],
+  [4231749,30,true,"Şelale LX"],[5527622,30,true,"Şelale LXI"],
+  [8050136,30,true,"Şelale LXII"],[9666921,30,true,"Şelale LXIII"],
+  [8050132,30,true,"Şelale LXIV"],[6901758,30,true,"Şelale LXV"],
+  [3992452,30,true,"Şelale LXVI"],[2253183,30,true,"Şelale LXVII"],
+  [4208231,30,true,"Şelale LXVIII"],[5095256,30,true,"Şelale LXIX"],
+  [1191881,30,true,"Şelale LXX"],[6042251,30,true,"Şelale LXXI"],
+  [5580679,30,true,"Şelale LXXII"],[855668,30,true,"Şelale LXXIII"],
+  [6617440,30,true,"Şelale LXXIV"],[2881327,30,true,"Şelale LXXV"],
+  [5580678,30,true,"Şelale LXXVI"],[9212195,30,true,"Şelale LXXVII"],
+  [6617658,30,true,"Şelale LXXVIII"],[4796898,30,true,"Şelale LXXIX"],
+  [5580681,30,true,"Şelale LXXX"],[10761087,30,true,"Şelale LXXXI"],
+  [4820498,30,true,"Şelale LXXXII"],[855755,30,true,"Şelale LXXXIII"],
+  [5744453,30,true,"Şelale LXXXIV"],[16123352,30,true,"Şelale LXXXV"],
+  [20370503,30,true,"Şelale LXXXVI"],[33053871,30,true,"Şelale LXXXVII"],
+  [5632725,30,true,"Şelale LXXXVIII"],[5884289,30,true,"Şelale LXXXIX"],
+  [855136,30,true,"Şelale XC"],[6405060,30,true,"Şelale R91"],
+  [5544766,30,true,"Şelale R92"],[6266443,30,true,"Şelale R93"],
+  [30767622,30,true,"Şelale R94"],[7784386,30,true,"Şelale R95"],
+  [7610644,30,true,"Şelale R96"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const SELALE_URLS: string[] = SELALE_IDS.map((id) => `${R2}/videos/selale/${id}.mp4`);
-export const SELALE_POSTER_URLS: string[] = SELALE_IDS.map((id) => `${R2}/posters/selale/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const SELALE_DATA: Row[] = SELALE_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Şelale " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const SELALE_AI_KEYWORDS = "şelale çağlayan su akar nehir";

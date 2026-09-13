@@ -1,37 +1,51 @@
-// ════════════════════════════════════════════════════════
-// yildizlar.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Yıldız — 49 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** yildizlar kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const YILDIZLAR_IDS = [
-  18358235,28180439,12336972,18997337,10719866,857134,30262970,8644889,
-  28112530,27700964,12999252,27303243,25621510,19223486,9341351,16923263,
-  13423306,27442169,32920021,9340918,13322952,29434738,11929270,9940664,
-  16544208,32901084,26957579,10650636,10039362,14191491,9341428,9341049,
-  30928256,12467968,25921138,12043830,10477097,32063954,12182831,33205246,
-  27693875,8144359,27254149,9129751,5338469,5651047,11892760,10001215,
-  6867012,
+export const YILDIZLAR_DATA: Row[] = [
+  [15289793,60,false,"Renkli Uzay"],[34053971,30,false,"Nebula I"],
+  [34053541,30,false,"Nebula II"],[34054569,30,false,"Nebula Timelapse"],
+  [3194277,30,false,"Dış Uzay"],[34075476,24,true,"Renkli Nebula 4K"],
+  [34054307,30,false,"Yıldız Bulutu"],[36747759,30,false,"Işıldayan Nebula"],
+  [30442061,30,false,"Galaktik Nebula"],[3222269,24,false,"Kuzey Işıkları"],
+  [14947495,30,false,"Aurora Göl"],[20601649,25,false,"Güney Aurora"],
+  [28180439,30,true,"Galaksi Gece"],[17808869,30,true,"Samanyolu Göl"],
+  [27394420,24,false,"Ay Yıldız Gece"],[27442169,24,true,"Macellan Bulutu"],
+  [6867012,24,false,"Kayan Yıldız"],[16544208,24,false,"Orman Yıldız"],
+  [1309051,24,false,"Gece Yıldız"],[29994297,30,true,"Tarantula Nebula"],
+  [31084223,25,true,"Derin Uzay 4K"],[36748811,30,false,"Canlı Uzay"],
+  [36755080,30,false,"Orion Bulutsusu"],[27775202,25,false,"Samanyolu"],
+  [27700964,10,false,"Gece Galaksi"],[34567729,30,false,"Mor Pembe Dalgalar"],
+  [30050720,30,false,"Parçacık Dalgaları"],[5561376,25,false,"Dijital Soyut"],
+  [34551087,30,false,"Animasyon Dalga"],[10296170,25,false,"Altın Parıltı"],
+  [34128867,30,true,"Bokeh 4K"],[4218117,25,false,"Bokeh Işık"],
+  [33785528,60,false,"Kaleydoskop Altın"],[33785521,60,false,"Geometrik Zümrüt"],
+  [33830905,30,false,"Altın Tünel"],[25798722,24,false,"CG Geometrik"],
+  [34645505,30,false,"3D Soyut"],[11354070,60,false,"Futuristik Tünel"],
+  [29918667,30,false,"Parçacık"],[34549010,30,false,"Altın Bokeh"],
+  [38556266,24,false,"Sakin Animasyon"],[19759482,24,false,"Sıcak CG"],
+  [12546959,60,false,"Işık Hüzme"],[33997984,60,false,"Mandala"],
+  [856813,30,false,"Kaleydoskop"],[34645311,30,true,"Ambiyans 4K"],
+  [35728942,30,false,"Parıltı"],[1730397,25,false,"Bokeh Renkli"],
+  [18442968,60,false,"Işık Çizgi"],[29918667,30,false,"Zerreler"],
+  [18358235,30,true,"Yıldız L"],[12336972,30,true,"Yıldız LI"],
+  [18997337,30,true,"Yıldız LII"],[10719866,30,true,"Yıldız LIII"],
+  [857134,30,true,"Yıldız LIV"],[30262970,30,true,"Yıldız LV"],
+  [8644889,30,true,"Yıldız LVI"],[28112530,30,true,"Yıldız LVII"],
+  [12999252,30,true,"Yıldız LVIII"],[27303243,30,true,"Yıldız LIX"],
+  [25621510,30,true,"Yıldız LX"],[19223486,30,true,"Yıldız LXI"],
+  [9341351,30,true,"Yıldız LXII"],[16923263,30,true,"Yıldız LXIII"],
+  [13423306,30,true,"Yıldız LXIV"],[32920021,30,true,"Yıldız LXV"],
+  [9340918,30,true,"Yıldız LXVI"],[13322952,30,true,"Yıldız LXVII"],
+  [29434738,30,true,"Yıldız LXVIII"],[11929270,30,true,"Yıldız LXIX"],
+  [9940664,30,true,"Yıldız LXX"],[32901084,30,true,"Yıldız LXXI"],
+  [26957579,30,true,"Yıldız LXXII"],[10650636,30,true,"Yıldız LXXIII"],
+  [10039362,30,true,"Yıldız LXXIV"],[14191491,30,true,"Yıldız LXXV"],
+  [9341428,30,true,"Yıldız LXXVI"],[9341049,30,true,"Yıldız LXXVII"],
+  [30928256,30,true,"Yıldız LXXVIII"],[12467968,30,true,"Yıldız LXXIX"],
+  [25921138,30,true,"Yıldız LXXX"],[12043830,30,true,"Yıldız LXXXI"],
+  [10477097,30,true,"Yıldız LXXXII"],[32063954,30,true,"Yıldız LXXXIII"],
+  [12182831,30,true,"Yıldız LXXXIV"],[33205246,30,true,"Yıldız LXXXV"],
+  [27693875,30,true,"Yıldız LXXXVI"],[8144359,30,true,"Yıldız LXXXVII"],
+  [27254149,30,true,"Yıldız LXXXVIII"],[9129751,30,true,"Yıldız LXXXIX"],
+  [5338469,30,true,"Yıldız XC"],[5651047,30,true,"Yıldız R91"],
+  [11892760,30,true,"Yıldız R92"],[10001215,30,true,"Yıldız R93"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const YILDIZLAR_URLS: string[] = YILDIZLAR_IDS.map((id) => `${R2}/videos/yildizlar/${id}.mp4`);
-export const YILDIZLAR_POSTER_URLS: string[] = YILDIZLAR_IDS.map((id) => `${R2}/posters/yildizlar/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const YILDIZLAR_DATA: Row[] = YILDIZLAR_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Yıldız " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const YILDIZLAR_AI_KEYWORDS = "yıldız gökyüzü gece yıldızlar evren";

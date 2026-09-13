@@ -1,37 +1,52 @@
-// ════════════════════════════════════════════════════════
-// cami.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Cami — 50 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** cami kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const CAMI_IDS = [
-  37662251,36192723,31717823,34712372,31197788,35081857,35081860,35081873,
-  36178659,35081854,35081870,36190791,20357855,36190790,36192728,35489216,
-  30567547,10783644,36178460,20347209,34800248,36192725,36178467,10844827,
-  35081858,16192401,20671535,35081865,36190780,35098702,34712371,34800576,
-  36190786,10724507,34800573,11596886,35081861,20347205,36177743,34632951,
-  10779965,10786003,34712374,35098709,19819594,15816542,34883358,8488768,
-  36178468,3309014,
+export const CAMI_DATA: Row[] = [
+  [35110882,60,true,"Kâbe I"],[35110822,60,true,"Kâbe II"],
+  [35098709,60,true,"Haram İçi"],[35098707,60,true,"Haram Havadan"],
+  [36129822,30,false,"Haram Geniş"],[35743721,30,false,"Haram Gece"],
+  [34041443,30,true,"Altın Kubbe"],[35619112,30,true,"İslam Mim."],
+  [36223422,25,true,"Minareler"],[34127022,50,true,"Kubbe Alac."],
+  [31802391,60,true,"Sultanahmet"],[36192726,60,true,"Osmanlı Kubbe"],
+  [37662251,59,true,"Avizeli Cami"],[37646178,30,false,"Hat Kubbe"],
+  [15816542,30,true,"Putra Malezya"],[38530728,30,true,"Ayasofya"],
+  [8165466,25,true,"Tavan Sanat"],[35082008,30,false,"Modern Cami"],
+  [35081870,30,false,"Şık İçi"],[34799745,30,false,"Minareler II"],
+  [35110882,60,true,"Kâbe III"],[35110822,60,true,"Kâbe IV"],
+  [35098709,60,true,"Haram II"],[35098707,60,true,"Haram II"],
+  [36129822,30,false,"Haram II"],[35743721,30,false,"Haram II"],
+  [34041443,30,true,"Kubbe II"],[35619112,30,true,"Mim. II"],
+  [36223422,25,true,"Minare II"],[34127022,50,true,"Alac. II"],
+  [36192726,60,true,"Osmanlı II"],[37662251,59,true,"Avize II"],
+  [37646178,30,false,"Hat II"],[15816542,30,true,"Malezya II"],
+  [38530728,30,true,"Ayasofya II"],[8165466,25,true,"Tavan II"],
+  [35082008,30,false,"Modern II"],[35081870,30,false,"İçi II"],
+  [34799745,30,false,"Minare III"],[31802391,60,true,"Sultan. II"],
+  [35110882,60,true,"Kâbe V"],[35110822,60,true,"Kâbe VI"],
+  [35098709,60,true,"Haram III"],[35098707,60,true,"Haram III"],
+  [36129822,30,false,"Haram III"],[34041443,30,true,"Kubbe III"],
+  [35619112,30,true,"Mim. III"],[36223422,25,true,"Minare III"],
+  [34127022,50,true,"Alac. III"],[36192726,60,true,"Osmanlı III"],
+  [36192723,30,true,"Cami L"],[31717823,30,true,"Cami LI"],
+  [34712372,30,true,"Cami LII"],[31197788,30,true,"Cami LIII"],
+  [35081857,30,true,"Cami LIV"],[35081860,30,true,"Cami LV"],
+  [35081873,30,true,"Cami LVI"],[36178659,30,true,"Cami LVII"],
+  [35081854,30,true,"Cami LVIII"],[36190791,30,true,"Cami LIX"],
+  [20357855,30,true,"Cami LX"],[36190790,30,true,"Cami LXI"],
+  [36192728,30,true,"Cami LXII"],[35489216,30,true,"Cami LXIII"],
+  [30567547,30,true,"Cami LXIV"],[10783644,30,true,"Cami LXV"],
+  [36178460,30,true,"Cami LXVI"],[20347209,30,true,"Cami LXVII"],
+  [34800248,30,true,"Cami LXVIII"],[36192725,30,true,"Cami LXIX"],
+  [36178467,30,true,"Cami LXX"],[10844827,30,true,"Cami LXXI"],
+  [35081858,30,true,"Cami LXXII"],[16192401,30,true,"Cami LXXIII"],
+  [20671535,30,true,"Cami LXXIV"],[35081865,30,true,"Cami LXXV"],
+  [36190780,30,true,"Cami LXXVI"],[35098702,30,true,"Cami LXXVII"],
+  [34712371,30,true,"Cami LXXVIII"],[34800576,30,true,"Cami LXXIX"],
+  [36190786,30,true,"Cami LXXX"],[10724507,30,true,"Cami LXXXI"],
+  [34800573,30,true,"Cami LXXXII"],[11596886,30,true,"Cami LXXXIII"],
+  [35081861,30,true,"Cami LXXXIV"],[20347205,30,true,"Cami LXXXV"],
+  [36177743,30,true,"Cami LXXXVI"],[34632951,30,true,"Cami LXXXVII"],
+  [10779965,30,true,"Cami LXXXVIII"],[10786003,30,true,"Cami LXXXIX"],
+  [34712374,30,true,"Cami XC"],[19819594,30,true,"Cami R91"],
+  [34883358,30,true,"Cami R92"],[8488768,30,true,"Cami R93"],
+  [36178468,30,true,"Cami R94"],[3309014,30,true,"Cami R95"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const CAMI_URLS: string[] = CAMI_IDS.map((id) => `${R2}/videos/cami/${id}.mp4`);
-export const CAMI_POSTER_URLS: string[] = CAMI_IDS.map((id) => `${R2}/posters/cami/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const CAMI_DATA: Row[] = CAMI_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Cami " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const CAMI_AI_KEYWORDS = "cami mescid minare kubbe";

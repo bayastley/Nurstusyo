@@ -1,37 +1,53 @@
-// ════════════════════════════════════════════════════════
-// sehir.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Şehir — 50 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** sehir kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const SEHIR_IDS = [
-  34962045,30692203,35345603,31822001,35345598,37716487,38234014,8940772,
-  38031807,37802625,36892796,35345666,38593622,37204184,29401379,25551992,
-  15331024,19671347,37717589,19389777,35486685,38464829,13701719,37717586,
-  33703980,7056651,35813233,17980079,37920018,16224290,37800288,34432938,
-  20684428,28941863,35424780,38118221,19009052,34433049,35460568,17995284,
-  36330770,18943732,37002151,37420111,30209847,12302396,38551285,34962046,
-  37419492,37716478,
+export const SEHIR_DATA: Row[] = [
+  [34432938,24,true,"İstanbul Cami"],[36330770,30,true,"İstanbul Silüet"],
+  [16224290,30,true,"Boğaz Şehir"],[38031807,50,true,"Galata Köprüsü"],
+  [30209847,30,false,"Süleymaniye"],[31802391,60,true,"Sultanahmet"],
+  [12302081,30,false,"Boğaz"],[20349623,60,true,"Mavi Cami"],
+  [17991656,30,false,"İstanbul Gece"],[10023682,30,true,"Asılı Fener"],
+  [35222108,24,true,"Gece Fener"],[34432938,24,true,"İstanbul II"],
+  [36330770,30,true,"Silüet II"],[16224290,30,true,"Boğaz II"],
+  [38031807,50,true,"Galata II"],[30209847,30,false,"Süleymaniye II"],
+  [31802391,60,true,"Sultanahmet II"],[12302081,30,false,"Boğaz III"],
+  [20349623,60,true,"Mavi II"],[17991656,30,false,"Gece II"],
+  [10023682,30,true,"Fener II"],[35222108,24,true,"Gece II"],
+  [34432938,24,true,"İstanbul III"],[36330770,30,true,"Silüet III"],
+  [16224290,30,true,"Boğaz IV"],[38031807,50,true,"Galata III"],
+  [30209847,30,false,"Süleymaniye III"],[31802391,60,true,"Sultanahmet III"],
+  [12302081,30,false,"Boğaz V"],[20349623,60,true,"Mavi III"],
+  [17991656,30,false,"Gece III"],[10023682,30,true,"Fener III"],
+  [35222108,24,true,"Fener IV"],[34432938,24,true,"İstanbul IV"],
+  [36330770,30,true,"Silüet IV"],[16224290,30,true,"Boğaz VI"],
+  [38031807,50,true,"Galata IV"],[30209847,30,false,"Süleymaniye IV"],
+  [31802391,60,true,"Sultanahmet IV"],[12302081,30,false,"Boğaz VII"],
+  [20349623,60,true,"Mavi IV"],[17991656,30,false,"Gece IV"],
+  [10023682,30,true,"Fener V"],[35222108,24,true,"Fener V"],
+  [34432938,24,true,"İstanbul V"],[36330770,30,true,"Silüet V"],
+  [16224290,30,true,"Boğaz VIII"],[38031807,50,true,"Galata V"],
+  [30209847,30,false,"Süleymaniye V"],[31802391,60,true,"Sultanahmet V"],
+  [12302081,30,false,"Boğaz IX"],[20349623,60,true,"Mavi V"],
+  [34962045,30,true,"Şehir LII"],[30692203,30,true,"Şehir LIII"],
+  [35345603,30,true,"Şehir LIV"],[31822001,30,true,"Şehir LV"],
+  [35345598,30,true,"Şehir LVI"],[37716487,30,true,"Şehir LVII"],
+  [38234014,30,true,"Şehir LVIII"],[8940772,30,true,"Şehir LIX"],
+  [37802625,30,true,"Şehir LX"],[36892796,30,true,"Şehir LXI"],
+  [35345666,30,true,"Şehir LXII"],[38593622,30,true,"Şehir LXIII"],
+  [37204184,30,true,"Şehir LXIV"],[29401379,30,true,"Şehir LXV"],
+  [25551992,30,true,"Şehir LXVI"],[15331024,30,true,"Şehir LXVII"],
+  [19671347,30,true,"Şehir LXVIII"],[37717589,30,true,"Şehir LXIX"],
+  [19389777,30,true,"Şehir LXX"],[35486685,30,true,"Şehir LXXI"],
+  [38464829,30,true,"Şehir LXXII"],[13701719,30,true,"Şehir LXXIII"],
+  [37717586,30,true,"Şehir LXXIV"],[33703980,30,true,"Şehir LXXV"],
+  [7056651,30,true,"Şehir LXXVI"],[35813233,30,true,"Şehir LXXVII"],
+  [17980079,30,true,"Şehir LXXVIII"],[37920018,30,true,"Şehir LXXIX"],
+  [37800288,30,true,"Şehir LXXX"],[20684428,30,true,"Şehir LXXXI"],
+  [28941863,30,true,"Şehir LXXXII"],[35424780,30,true,"Şehir LXXXIII"],
+  [38118221,30,true,"Şehir LXXXIV"],[19009052,30,true,"Şehir LXXXV"],
+  [34433049,30,true,"Şehir LXXXVI"],[35460568,30,true,"Şehir LXXXVII"],
+  [17995284,30,true,"Şehir LXXXVIII"],[18943732,30,true,"Şehir LXXXIX"],
+  [37002151,30,true,"Şehir XC"],[37420111,30,true,"Şehir R91"],
+  [12302396,30,true,"Şehir R92"],[38551285,30,true,"Şehir R93"],
+  [34962046,30,true,"Şehir R94"],[37419492,30,true,"Şehir R95"],
+  [37716478,30,true,"Şehir R96"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const SEHIR_URLS: string[] = SEHIR_IDS.map((id) => `${R2}/videos/sehir/${id}.mp4`);
-export const SEHIR_POSTER_URLS: string[] = SEHIR_IDS.map((id) => `${R2}/posters/sehir/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const SEHIR_DATA: Row[] = SEHIR_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Şehir " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const SEHIR_AI_KEYWORDS = "şehir bina gece ışıklar";

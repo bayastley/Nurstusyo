@@ -1,36 +1,52 @@
-// ════════════════════════════════════════════════════════
-// cicekler.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Çiçek — 48 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** cicekler kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const CICEKLER_IDS = [
-  11598545,13968701,37239549,4284994,5056537,35895692,6929139,5056531,
-  13963629,37570648,16681525,16508157,11556241,12657354,37239462,5271930,
-  12657353,25559415,38307931,16681526,16681528,6319631,17540697,12767090,
-  31590042,5372326,10470716,10616117,856152,31936102,27742254,4428855,
-  25559414,12417948,9034600,38407032,35665352,12417999,6441720,38647895,
-  11637843,37642461,12657349,31936085,13961911,31289523,32317926,12608122,
+export const CICEKLER_DATA: Row[] = [
+  [7934058,30,false,"Kırmızı Gül Tarlası"],[16457006,30,true,"Renkli Laleler"],
+  [852430,25,false,"Lale Tarlası"],[32005870,25,false,"Kırmızı Sarı Lale"],
+  [31601973,30,true,"Bahar Lale 4K"],[31828649,24,true,"Botanik Bahçe"],
+  [856152,30,false,"Çiçek Tarlası"],[4321750,25,true,"Çiçek Atmosfer"],
+  [38462325,25,false,"Güneşli Laleler"],[31936102,24,true,"İstanbul Laleler"],
+  [9196256,25,true,"Gül Yaprak Makro"],[4754481,24,false,"Kırmızı Çiçek"],
+  [855976,25,false,"Açan Kırmızı Gül"],[4184106,25,false,"Yağmur Damlalı Gül"],
+  [10586800,30,false,"Gül Filizi"],[37100531,50,true,"Papatya 4K"],
+  [1494279,24,false,"Gül Bahçesi"],[36834092,25,true,"Kiraz Çiçeği"],
+  [15363929,30,true,"Renkli Çiçek Pan."],[8012363,30,true,"Bahar Parkı"],
+  [27523243,24,false,"Turuncu Çiçek"],[1689827,24,false,"Gül Serası"],
+  [12709029,60,true,"Güle Yakınlaş"],[7174859,30,true,"Arı Kovanı"],
+  [10082786,30,false,"Bal Arıları"],[12142327,24,true,"Kovan Makro"],
+  [9806340,30,false,"Arı Sürüsü"],[7844265,24,false,"Uçan Arı"],
+  [36834095,25,true,"Kiraz Çiçeği II"],[27775202,25,false,"Orman Çiçeği"],
+  [18209572,30,true,"Güneş Orman 4K"],[27921683,30,true,"Yaprak Güneş"],
+  [6206933,25,false,"Doğa Görüntüsü"],[7645660,30,false,"Orman Zemini"],
+  [6249996,25,false,"Yaprak Yakın"],[11265968,25,false,"Orman Işığı"],
+  [38518979,50,true,"Yeşil Ağaç 4K"],[5899473,30,false,"Güneş Işını"],
+  [27065367,24,true,"Ağaç Güneş 4K"],[3150369,25,true,"Orman Süzme 4K"],
+  [6962828,30,true,"Ormanda Şelale"],[7177786,24,false,"Orman Dere"],
+  [855143,25,false,"Şelale Kaskad"],[5080650,30,false,"Orman Nehri"],
+  [36657220,24,true,"Orman Deresi 4K"],[36352166,30,true,"Yeşil Şelale"],
+  [4534186,25,true,"Şelale Doğa"],[5803340,30,false,"Şelale Görüntü"],
+  [2680346,30,false,"Sisli Ağaçlar"],[5710740,25,false,"Orman Işık"],
+  [11598545,30,true,"Çiçek L"],[13968701,30,true,"Çiçek LI"],
+  [37239549,30,true,"Çiçek LII"],[4284994,30,true,"Çiçek LIII"],
+  [5056537,30,true,"Çiçek LIV"],[35895692,30,true,"Çiçek LV"],
+  [6929139,30,true,"Çiçek LVI"],[5056531,30,true,"Çiçek LVII"],
+  [13963629,30,true,"Çiçek LVIII"],[37570648,30,true,"Çiçek LIX"],
+  [16681525,30,true,"Çiçek LX"],[16508157,30,true,"Çiçek LXI"],
+  [11556241,30,true,"Çiçek LXII"],[12657354,30,true,"Çiçek LXIII"],
+  [37239462,30,true,"Çiçek LXIV"],[5271930,30,true,"Çiçek LXV"],
+  [12657353,30,true,"Çiçek LXVI"],[25559415,30,true,"Çiçek LXVII"],
+  [38307931,30,true,"Çiçek LXVIII"],[16681526,30,true,"Çiçek LXIX"],
+  [16681528,30,true,"Çiçek LXX"],[6319631,30,true,"Çiçek LXXI"],
+  [17540697,30,true,"Çiçek LXXII"],[12767090,30,true,"Çiçek LXXIII"],
+  [31590042,30,true,"Çiçek LXXIV"],[5372326,30,true,"Çiçek LXXV"],
+  [10470716,30,true,"Çiçek LXXVI"],[10616117,30,true,"Çiçek LXXVII"],
+  [27742254,30,true,"Çiçek LXXVIII"],[4428855,30,true,"Çiçek LXXIX"],
+  [25559414,30,true,"Çiçek LXXX"],[12417948,30,true,"Çiçek LXXXI"],
+  [9034600,30,true,"Çiçek LXXXII"],[38407032,30,true,"Çiçek LXXXIII"],
+  [35665352,30,true,"Çiçek LXXXIV"],[12417999,30,true,"Çiçek LXXXV"],
+  [6441720,30,true,"Çiçek LXXXVI"],[38647895,30,true,"Çiçek LXXXVII"],
+  [11637843,30,true,"Çiçek LXXXVIII"],[37642461,30,true,"Çiçek LXXXIX"],
+  [12657349,30,true,"Çiçek XC"],[31936085,30,true,"Çiçek R91"],
+  [13961911,30,true,"Çiçek R92"],[31289523,30,true,"Çiçek R93"],
+  [32317926,30,true,"Çiçek R94"],[12608122,30,true,"Çiçek R95"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const CICEKLER_URLS: string[] = CICEKLER_IDS.map((id) => `${R2}/videos/cicekler/${id}.mp4`);
-export const CICEKLER_POSTER_URLS: string[] = CICEKLER_IDS.map((id) => `${R2}/posters/cicekler/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const CICEKLER_DATA: Row[] = CICEKLER_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Çiçek " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const CICEKLER_AI_KEYWORDS = "çiçek bahar gül lale tabiat";

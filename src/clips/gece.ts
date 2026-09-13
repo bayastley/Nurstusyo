@@ -1,37 +1,55 @@
-// ════════════════════════════════════════════════════════
-// gece.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Gece — 50 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** gece kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const GECE_IDS = [
-  30583218,15615248,16111978,29983163,36492194,4342868,19549054,30124245,
-  5251546,6960054,2895754,3878209,11319504,10895330,7615707,3765589,
-  9997825,30785084,854739,13684588,11376802,36492190,12987909,4221509,
-  3847942,31042748,4084070,12987907,18681279,12635749,37171416,5746484,
-  30784872,11669489,13573278,12496956,14019782,30295405,7615706,1326148,
-  12495590,29454195,12831115,12987908,6960047,11884322,4126488,8909881,
-  12578298,11374206,
+export const GECE_DATA: Row[] = [
+  [3222269,24,false,"Kuzey Işıkları"],[14947495,30,false,"Aurora Göl"],
+  [20601649,25,false,"Güney Aurora"],[28180439,30,true,"Galaksi Gece"],
+  [17808869,30,true,"Samanyolu Göl"],[6867012,24,false,"Kayan Yıldız"],
+  [16544208,24,false,"Orman Yıldız"],[27394420,24,false,"Ay Yıldız"],
+  [1309051,24,false,"Gece Manzara"],[27700964,10,false,"Samanyolu"],
+  [31084223,25,true,"Nebula 4K"],[34075476,24,true,"Kozmik Renk"],
+  [1730397,25,false,"Bokeh Gece"],[29992735,24,true,"Yağmur Bokeh"],
+  [35728942,30,false,"Altın Parçacık"],[34645311,30,true,"Ambiyans"],
+  [29918667,30,false,"Parçacık Anim."],[35222108,24,true,"Kırmızı Fener"],
+  [30209847,30,false,"Cami Günbatımı"],[17991656,30,false,"İstanbul Gece"],
+  [3222269,24,false,"Aurora II"],[14947495,30,false,"Aurora Göl II"],
+  [20601649,25,false,"Güney II"],[28180439,30,true,"Galaksi II"],
+  [17808869,30,true,"Samanyolu II"],[6867012,24,false,"Yıldız II"],
+  [16544208,24,false,"Orman II"],[27394420,24,false,"Ay II"],
+  [27442169,24,true,"Macellan"],[36748811,30,false,"Derin Uzay"],
+  [36755080,30,false,"Orion"],[29994297,30,true,"Tarantula"],
+  [34053971,30,false,"Nebula I"],[34053541,30,false,"Nebula II"],
+  [34054569,30,false,"Nebula III"],[34054307,30,false,"Nebula IV"],
+  [36747759,30,false,"Nebula V"],[30442061,30,false,"Galaktik"],
+  [15289793,60,false,"Renkli Uzay"],[31084223,25,true,"Nebula 4K"],
+  [34075476,24,true,"Renkli 4K"],[3194277,30,false,"Kozmik"],
+  [3222269,24,false,"Aurora III"],[14947495,30,false,"Aurora III"],
+  [20601649,25,false,"Aurora IV"],[28180439,30,true,"Galaksi III"],
+  [17808869,30,true,"Samanyolu III"],[6867012,24,false,"Yıldız III"],
+  [16544208,24,false,"Orman III"],[27394420,24,false,"Ay III"],
+  [29918667,30,false,"Zerreler Gece"],[34645311,30,true,"Ambiyans II"],
+  [30583218,30,true,"Gece LII"],[15615248,30,true,"Gece LIII"],
+  [16111978,30,true,"Gece LIV"],[29983163,30,true,"Gece LV"],
+  [36492194,30,true,"Gece LVI"],[4342868,30,true,"Gece LVII"],
+  [19549054,30,true,"Gece LVIII"],[30124245,30,true,"Gece LIX"],
+  [5251546,30,true,"Gece LX"],[6960054,30,true,"Gece LXI"],
+  [2895754,30,true,"Gece LXII"],[3878209,30,true,"Gece LXIII"],
+  [11319504,30,true,"Gece LXIV"],[10895330,30,true,"Gece LXV"],
+  [7615707,30,true,"Gece LXVI"],[3765589,30,true,"Gece LXVII"],
+  [9997825,30,true,"Gece LXVIII"],[30785084,30,true,"Gece LXIX"],
+  [854739,30,true,"Gece LXX"],[13684588,30,true,"Gece LXXI"],
+  [11376802,30,true,"Gece LXXII"],[36492190,30,true,"Gece LXXIII"],
+  [12987909,30,true,"Gece LXXIV"],[4221509,30,true,"Gece LXXV"],
+  [3847942,30,true,"Gece LXXVI"],[31042748,30,true,"Gece LXXVII"],
+  [4084070,30,true,"Gece LXXVIII"],[12987907,30,true,"Gece LXXIX"],
+  [18681279,30,true,"Gece LXXX"],[12635749,30,true,"Gece LXXXI"],
+  [37171416,30,true,"Gece LXXXII"],[5746484,30,true,"Gece LXXXIII"],
+  [30784872,30,true,"Gece LXXXIV"],[11669489,30,true,"Gece LXXXV"],
+  [13573278,30,true,"Gece LXXXVI"],[12496956,30,true,"Gece LXXXVII"],
+  [14019782,30,true,"Gece LXXXVIII"],[30295405,30,true,"Gece LXXXIX"],
+  [7615706,30,true,"Gece XC"],[1326148,30,true,"Gece R91"],
+  [12495590,30,true,"Gece R92"],[29454195,30,true,"Gece R93"],
+  [12831115,30,true,"Gece R94"],[12987908,30,true,"Gece R95"],
+  [6960047,30,true,"Gece R96"],[11884322,30,true,"Gece R97"],
+  [4126488,30,true,"Gece R98"],[8909881,30,true,"Gece R99"],
+  [12578298,30,true,"Gece R100"],[11374206,30,true,"Gece R101"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const GECE_URLS: string[] = GECE_IDS.map((id) => `${R2}/videos/gece/${id}.mp4`);
-export const GECE_POSTER_URLS: string[] = GECE_IDS.map((id) => `${R2}/posters/gece/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const GECE_DATA: Row[] = GECE_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Gece " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const GECE_AI_KEYWORDS = "gece ay karanlık yıldız";

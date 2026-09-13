@@ -1,37 +1,54 @@
-// ════════════════════════════════════════════════════════
-// gunbatimi.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Gün Batımı — 49 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** gunbatimi kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const GUNBATIMI_IDS = [
-  36466614,7619849,854638,32792492,38593622,953885,856432,854632,
-  33892499,6047732,34413592,16102069,856421,5967986,6966408,28940311,
-  1074320,981493,6943290,13104541,6901759,32623431,10979589,33251608,
-  3937533,27925016,20528581,32100438,38425806,35840602,856419,13204328,
-  38207118,38250127,5624755,856161,37992899,27298467,17041739,3997161,
-  15991889,11335978,856430,30125345,11704448,30738680,11633115,36439974,
-  38329627,
+export const GUNBATIMI_DATA: Row[] = [
+  [11806938,25,false,"Bulut Günbatımı"],[10221670,30,true,"Bulutlu 4K"],
+  [13667758,30,true,"Timelapse 4K"],[4364527,24,false,"Güzel Günbatımı"],
+  [4110700,30,true,"Timelapse 4K II"],[6052121,30,false,"Manzara"],
+  [4364528,24,false,"Dramatik"],[29521019,60,true,"Okyanus 4K"],
+  [33916737,24,true,"Altın 4K"],[30233251,60,false,"Dramatik Bulut"],
+  [6279022,24,true,"Kızıl Timelapse"],[855946,30,true,"Batan Güneş"],
+  [4607304,25,true,"Bulut 4K"],[5683621,30,false,"Ufuk"],
+  [36347310,50,false,"Ağaç Günbatımı"],[36298494,50,false,"Silüet"],
+  [3973660,24,false,"Huzurlu"],[4422123,25,false,"Zaman Akış"],
+  [26310139,30,false,"Okyanus Dalga"],[6052121,30,false,"Gökyüzü II"],
+  [11806938,25,false,"Bulut II"],[10221670,30,true,"Bulutlu II"],
+  [13667758,30,true,"Timelapse II"],[4364527,24,false,"Altın Saat"],
+  [4110700,30,true,"Timelapse III"],[29521019,60,true,"Plaj Dramatik"],
+  [33916737,24,true,"Altın II"],[30233251,60,false,"Karanlık Bulut"],
+  [6279022,24,true,"Kızıl II"],[855946,30,true,"Güneş II"],
+  [4607304,25,true,"Bulut III"],[5683621,30,false,"Ufuk II"],
+  [36347310,50,false,"Ağaç II"],[36298494,50,false,"Silüet II"],
+  [3973660,24,false,"Huzur II"],[4422123,25,false,"Akış II"],
+  [4364528,24,false,"Dramatik II"],[6052121,30,false,"Gökyüzü III"],
+  [11806938,25,false,"Bulut IV"],[10221670,30,true,"Bulutlu IV"],
+  [13667758,30,true,"Timelapse IV"],[4364527,24,false,"Saat III"],
+  [4110700,30,true,"Timelapse V"],[29521019,60,true,"Plaj III"],
+  [33916737,24,true,"Altın III"],[30233251,60,false,"Bulut III"],
+  [6279022,24,true,"Kızıl III"],[855946,30,true,"Güneş III"],
+  [4607304,25,true,"Bulut V"],[5683621,30,false,"Ufuk III"],
+  [36466614,30,true,"Gün Batımı L"],[7619849,30,true,"Gün Batımı LI"],
+  [854638,30,true,"Gün Batımı LII"],[32792492,30,true,"Gün Batımı LIII"],
+  [38593622,30,true,"Gün Batımı LIV"],[953885,30,true,"Gün Batımı LV"],
+  [856432,30,true,"Gün Batımı LVI"],[854632,30,true,"Gün Batımı LVII"],
+  [33892499,30,true,"Gün Batımı LVIII"],[6047732,30,true,"Gün Batımı LIX"],
+  [34413592,30,true,"Gün Batımı LX"],[16102069,30,true,"Gün Batımı LXI"],
+  [856421,30,true,"Gün Batımı LXII"],[5967986,30,true,"Gün Batımı LXIII"],
+  [6966408,30,true,"Gün Batımı LXIV"],[28940311,30,true,"Gün Batımı LXV"],
+  [1074320,30,true,"Gün Batımı LXVI"],[981493,30,true,"Gün Batımı LXVII"],
+  [6943290,30,true,"Gün Batımı LXVIII"],[13104541,30,true,"Gün Batımı LXIX"],
+  [6901759,30,true,"Gün Batımı LXX"],[32623431,30,true,"Gün Batımı LXXI"],
+  [10979589,30,true,"Gün Batımı LXXII"],[33251608,30,true,"Gün Batımı LXXIII"],
+  [3937533,30,true,"Gün Batımı LXXIV"],[27925016,30,true,"Gün Batımı LXXV"],
+  [20528581,30,true,"Gün Batımı LXXVI"],[32100438,30,true,"Gün Batımı LXXVII"],
+  [38425806,30,true,"Gün Batımı LXXVIII"],[35840602,30,true,"Gün Batımı LXXIX"],
+  [856419,30,true,"Gün Batımı LXXX"],[13204328,30,true,"Gün Batımı LXXXI"],
+  [38207118,30,true,"Gün Batımı LXXXII"],[38250127,30,true,"Gün Batımı LXXXIII"],
+  [5624755,30,true,"Gün Batımı LXXXIV"],[856161,30,true,"Gün Batımı LXXXV"],
+  [37992899,30,true,"Gün Batımı LXXXVI"],[27298467,30,true,"Gün Batımı LXXXVII"],
+  [17041739,30,true,"Gün Batımı LXXXVIII"],[3997161,30,true,"Gün Batımı LXXXIX"],
+  [15991889,30,true,"Gün Batımı XC"],[11335978,30,true,"Gün Batımı R91"],
+  [856430,30,true,"Gün Batımı R92"],[30125345,30,true,"Gün Batımı R93"],
+  [11704448,30,true,"Gün Batımı R94"],[30738680,30,true,"Gün Batımı R95"],
+  [11633115,30,true,"Gün Batımı R96"],[36439974,30,true,"Gün Batımı R97"],
+  [38329627,30,true,"Gün Batımı R98"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const GUNBATIMI_URLS: string[] = GUNBATIMI_IDS.map((id) => `${R2}/videos/gunbatimi/${id}.mp4`);
-export const GUNBATIMI_POSTER_URLS: string[] = GUNBATIMI_IDS.map((id) => `${R2}/posters/gunbatimi/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const GUNBATIMI_DATA: Row[] = GUNBATIMI_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Gün Batımı " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const GUNBATIMI_AI_KEYWORDS = "gün batımı gün doğumu akşam günbatımı";

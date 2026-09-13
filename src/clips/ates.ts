@@ -1,37 +1,29 @@
-// ════════════════════════════════════════════════════════
-// ates.ts — R2 CDN gerçek video/poster kütüphanesi
-// Kategori: Ateş — 50 video (Cloudflare R2'de birebir doğrulanmış)
-// ════════════════════════════════════════════════════════
-
 import type { Row } from "../clips-data";
 
-/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
-const R2 = "https://cdn.nurstudyo.com";
-
-const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
-
-/** ates kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
-const ATES_IDS = [
-  9667144,25754152,14071614,856295,32632823,18991921,27436235,24826314,
-  9667214,7285454,11804373,8828898,5659685,9667286,32549181,5968828,
-  11216732,8828892,6250403,5659686,5659678,9508953,20706788,1789834,
-  6122140,4109280,32548923,855587,6167493,6103751,8946944,20025239,
-  8828894,3877152,5596915,5659688,11025391,12701904,15327193,1856918,
-  6122142,6158921,28802354,9508330,5592479,9667210,946600,6282533,
-  9667146,9667213,
+export const ATES_DATA: Row[] = [
+  [9667144,30,true,"Ateş I"],[25754152,30,true,"Ateş II"],
+  [14071614,30,true,"Ateş III"],[856295,30,true,"Ateş IV"],
+  [32632823,30,true,"Ateş V"],[18991921,30,true,"Ateş VI"],
+  [27436235,30,true,"Ateş VII"],[24826314,30,true,"Ateş VIII"],
+  [9667214,30,true,"Ateş IX"],[7285454,30,true,"Ateş X"],
+  [11804373,30,true,"Ateş XI"],[8828898,30,true,"Ateş XII"],
+  [5659685,30,true,"Ateş XIII"],[9667286,30,true,"Ateş XIV"],
+  [32549181,30,true,"Ateş XV"],[5968828,30,true,"Ateş XVI"],
+  [11216732,30,true,"Ateş XVII"],[8828892,30,true,"Ateş XVIII"],
+  [6250403,30,true,"Ateş XIX"],[5659686,30,true,"Ateş XX"],
+  [5659678,30,true,"Ateş XXI"],[9508953,30,true,"Ateş XXII"],
+  [20706788,30,true,"Ateş XXIII"],[1789834,30,true,"Ateş XXIV"],
+  [6122140,30,true,"Ateş XXV"],[4109280,30,true,"Ateş XXVI"],
+  [32548923,30,true,"Ateş XXVII"],[855587,30,true,"Ateş XXVIII"],
+  [6167493,30,true,"Ateş XXIX"],[6103751,30,true,"Ateş XXX"],
+  [8946944,30,true,"Ateş XXXI"],[20025239,30,true,"Ateş XXXII"],
+  [8828894,30,true,"Ateş XXXIII"],[3877152,30,true,"Ateş XXXIV"],
+  [5596915,30,true,"Ateş XXXV"],[5659688,30,true,"Ateş XXXVI"],
+  [11025391,30,true,"Ateş XXXVII"],[12701904,30,true,"Ateş XXXVIII"],
+  [15327193,30,true,"Ateş XXXIX"],[1856918,30,true,"Ateş XL"],
+  [6122142,30,true,"Ateş XLI"],[6158921,30,true,"Ateş XLII"],
+  [28802354,30,true,"Ateş XLIII"],[9508330,30,true,"Ateş XLIV"],
+  [5592479,30,true,"Ateş XLV"],[9667210,30,true,"Ateş XLVI"],
+  [946600,30,true,"Ateş XLVII"],[6282533,30,true,"Ateş XLVIII"],
+  [9667146,30,true,"Ateş XLIX"],[9667213,30,true,"Ateş L"]
 ];
-
-// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
-export const ATES_URLS: string[] = ATES_IDS.map((id) => `${R2}/videos/ates/${id}.mp4`);
-export const ATES_POSTER_URLS: string[] = ATES_IDS.map((id) => `${R2}/posters/ates/${id}.jpg`);
-
-/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
-export const ATES_DATA: Row[] = ATES_IDS.map((id, i) => [
-  id,
-  30,
-  true,
-  "Ateş " + (ROMAN[i + 1] ?? "R" + (i + 1)),
-]);
-
-/** AI arama anahtar kelimeleri */
-export const ATES_AI_KEYWORDS = "ateş alev kor yan";
