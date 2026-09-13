@@ -181,6 +181,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         purchased_tam: (w.purchased_tam ?? 0) + tam,
         updated_at: new Date().toISOString(),
       }) });
+      // ★ KRİTİK: Üretim yetkisi nur_video_rights tablosundan okunuyor (wallet + consume RPC).
+      //   Hediye oraya da yazılmalı yoksa kullanıcı hakki olduğu halde üretemez.
+      //   Jeton = kısa video hakkı olarak işlenir; kisa/uzun/tam doğrudan kendi türüne eklenir.
+      const sb = config();
+      if (sb) {
+        const grants: Array<[string, number]> = [["kisa", kisa + deltaJeton], ["uzun", uzun], ["tam", tam]];
+        for (const [kind, amount] of grants) {
+          if (amount <= 0) continue;
+          await fetch(`${sb.url}/rest/v1/rpc/nur_grant_video_rights`, {
+            method: "POST",
+            headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ p_user_id: uid, p_video_kind: kind, p_amount: amount }),
+          }).catch(() => null);
+        }
+      }
       await db("nur_admin_audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action: "gift_rights", target: email, created_at: new Date().toISOString() }) }).catch(() => null);
     } else if (action === "ban_user") {
       const email = validateEmail(body.target);
