@@ -26,11 +26,27 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     let alive = true;
     const refresh = async () => {
       const response = await fetch("/api/config", { cache: "no-store" }).catch(() => null);
-      const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }> } | null : null;
+      const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }>; maintenance?: { enabled?: boolean; startsAt?: string; endsAt?: string; message?: string; updated_at?: string } | null } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());
         const item = data?.announcement;
         setAnnouncement(item ? { id: item.id, title: item.title, message: item.message, detail: item.detail, kind: item.kind, active: item.active, blinking: item.blinking, startsAt: item.starts_at, endsAt: item.ends_at, updatedAt: item.updated_at, forceOpen: item.force_open, requireAck: item.require_ack } : null);
+        // ★ Bakım planı sunucudan gelirse yerel ayara yaz — bütün site aynı anda bakıma girer
+        if (data?.maintenance && typeof data.maintenance === "object") {
+          const m = data.maintenance;
+          const cfg = getSystemConfig();
+          const serverUpdatedAt = m.updated_at ?? "";
+          if (serverUpdatedAt !== cfg.maintenance?.updatedAt) {
+            cfg.maintenance = {
+              enabled: Boolean(m.enabled),
+              startsAt: m.startsAt ?? "",
+              endsAt: m.endsAt ?? "",
+              message: m.message ?? cfg.maintenance?.message ?? "",
+              updatedAt: serverUpdatedAt || new Date().toISOString(),
+            };
+            saveSystemConfig(cfg);
+          }
+        }
         if (Array.isArray(data?.featureLocks)) {
           const cfg = getSystemConfig();
           for (const lock of data.featureLocks) cfg.featureLocks[lock.feature_id] = lock.lock_level;

@@ -19,13 +19,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   try {
     const now = encodeURIComponent(new Date().toISOString());
-    const [announcements, featureLocks] = await Promise.all([
+    const [announcements, featureLocks, siteSettings] = await Promise.all([
       query<any[]>(`nur_announcements?active=eq.true&starts_at=lte.${now}&ends_at=gte.${now}&order=updated_at.desc&limit=1&select=*`),
       query<any[]>("nur_feature_locks?active=eq.true&select=feature_id,lock_level,updated_at"),
+      query<any[]>("nur_site_settings?key=eq.maintenance&select=value,updated_at").catch(() => [] as any[]),
     ]);
-    return res.status(200).json({ ok: true, announcement: announcements[0] ?? null, featureLocks });
+    const maintenanceRow = Array.isArray(siteSettings) ? siteSettings[0] : null;
+    const maintenanceValue = maintenanceRow?.value && typeof maintenanceRow.value === "object" ? { ...maintenanceRow.value, updated_at: maintenanceRow.updated_at } : null;
+    return res.status(200).json({
+      ok: true,
+      announcement: announcements[0] ?? null,
+      featureLocks,
+      maintenance: maintenanceValue,
+    });
   } catch (error) {
     console.error("[Public Config Error]", error);
-    return res.status(200).json({ ok: true, announcement: null, featureLocks: [] });
+    return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null });
   }
 }
