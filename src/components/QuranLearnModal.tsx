@@ -226,12 +226,19 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
     }
     a.playbackRate = speed;
+    // ★ SÜREKLİ: kelime sonsuz döngüde çalar (loop=true en güvenilir yöntem)
+    a.loop = repeatWord;
+    a.onended = null;
     a.play().catch(() => undefined);
-    if (repeatWord) {
-      a.onended = () => { a.play().catch(() => undefined); };
-    } else {
-      a.onended = null;
-    }
+  };
+
+  // SÜREKLİ düğmesi: açınca mevcut kelimeyi hemen döngüye al, kapatınca durdur
+  const toggleRepeatWord = () => {
+    const nv = !repeatWord;
+    setRepeatWord(nv);
+    const a = audioRef.current;
+    if (a) a.loop = nv && activeWord !== null;
+    if (nv && activeWord !== null) playWordAudio(activeWord);
   };
 
   // Ayeti sesli dinle (hoca seçimiyle, tekrar çal opsiyonu) — everyayah ayet dosyası
@@ -444,7 +451,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <p className="mt-1 text-[9px] italic text-white/35">Ortadaki kelimelere tıkla — seçtiğin kelime sarı yansır ve okunur</p>
                   </div>
                   {activeWord !== null && words[activeWord] ? (
-                    <div className="rounded-2xl border border-gold/25 bg-gold/5 p-5 text-center animate-fadeIn">
+                    <div className="rounded-2xl border border-[#d7aa52]/50 bg-[#d7aa52]/10 p-5 text-center shadow-[0_0_24px_rgba(215,170,82,.15)] animate-fadeIn">
                       <p className="font-arabic text-4xl leading-relaxed text-gold-light">{words[activeWord].ar}</p>
                       {words[activeWord].translit && <p className="mt-1 text-[10px] italic text-white/40">{words[activeWord].translit}</p>}
                       <p className="mt-2 text-[13px] font-bold text-white">{words[activeWord].tr}</p>
@@ -454,9 +461,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                           <RotateCcw size={11} /> Kelimeyi Tekrar Oku
                         </button>
                         <button
-                          onClick={() => setRepeatWord(v => !v)}
+                          onClick={toggleRepeatWord}
                           className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[9px] font-black transition ${repeatWord ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-white/50"}`}
-                          title="Kelime sürekli tekrar eder"
+                          title="Kelime sürekli tekrar eder — basınca hemen dönmeye başlar"
                         >
                           <Repeat size={10} /> SÜREKLİ
                         </button>
@@ -533,7 +540,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                           <button
                             key={w.i}
                             onClick={() => clickWord(w.i)}
-                            className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 bg-gold/25 font-black text-gold-light ring-1 ring-gold/70 shadow-[0_0_28px_rgba(245,221,166,.5)]" : "text-white/90 hover:bg-gold/15 hover:text-gold-light hover:shadow-[0_0_10px_rgba(215,170,82,.25)]"}`}
+                            className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 rounded-lg bg-[#d7aa52] font-black text-[#151020] shadow-[0_0_34px_rgba(245,221,166,.75)] ring-2 ring-[#f5dda6]" : "text-white/90 hover:bg-gold/20 hover:text-[#f5dda6] hover:shadow-[0_0_14px_rgba(215,170,82,.35)]"}`}
                           >
                             {w.ar}
                           </button>
@@ -558,10 +565,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     {wordLoading ? (
                       <div className="flex items-center justify-center gap-2 p-4 text-[11px] text-white/40"><Loader2 size={13} className="animate-spin" /> kelimeler…</div>
                     ) : words.map((w, i) => (
-                      <button key={w.i} onClick={() => clickWord(i)} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left transition last:border-0 ${activeWord === i ? "bg-gold/15" : "hover:bg-white/[.04]"}`}>
-                        <span className="w-5 text-[9px] font-black text-white/30">{i + 1}</span>
-                        <span className="flex-1 truncate text-[10px] font-bold text-white/75">{w.tr}</span>
-                        <span className="font-arabic text-lg text-gold-light">{w.ar}</span>
+                      <button key={w.i} onClick={() => clickWord(i)} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left transition last:border-0 ${activeWord === i ? "bg-[#d7aa52]/25 ring-1 ring-inset ring-[#d7aa52]/50" : "hover:bg-white/[.04]"}`}>
+                        <span className={`w-5 text-[9px] font-black ${activeWord === i ? "text-[#f5dda6]" : "text-white/30"}`}>{i + 1}</span>
+                        <span className={`flex-1 truncate text-[10px] font-bold ${activeWord === i ? "text-[#f5dda6]" : "text-white/75"}`}>{w.tr}</span>
+                        <span className="font-arabic text-lg text-[#f5dda6]">{w.ar}</span>
                       </button>
                     ))}
                   </div>
