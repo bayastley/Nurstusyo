@@ -911,24 +911,36 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               </label>
             </div>
 
-            {/* ★ OKUNAN AYET EKRANI — prototip gibi: Arapça büyük + meal altında,
-                kelimeler okundukça altın yanar */}
-            <div className="mt-4 flex min-h-[150px] flex-col items-center justify-center gap-3 rounded-2xl border border-gold/20 bg-gradient-to-b from-[#161622] to-[#12101c] p-5 text-center shadow-[0_0_24px_rgba(215,170,82,.08)]">
-              {isPlaying && listenAyahData ? (
-                <>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
-                  <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
-                    {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
-                      <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#d8cfae]"}`}>{wd}</span>
-                    ))}
-                  </div>
-                  <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-[#a8a184]" dir="auto">“{listenAyahData.tr}”</p>
-                </>
-              ) : isPlaying ? (
-                <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-[#8f8870]">ayet yükleniyor…</span></div>
-              ) : (
-                <p className="text-[11px] text-[#7a745f]">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
-              )}
+            {/* ★ OKUNAN AYET EKRANI — arkasında yıldız takımyıldızı şablonu (R2),
+                üstünde karartma perdesi + Arapça büyük + meal; kelimeler okundukça altın yanar */}
+            <div
+              className="relative mt-4 flex min-h-[190px] flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-gold/20 p-5 text-center shadow-[0_0_24px_rgba(215,170,82,.08)]"
+              style={{
+                backgroundImage: "url('https://cdn.nurstudyo.com/templates/takimyildiz/81310.jpg'), linear-gradient(180deg,#161622,#12101c)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            >
+              {/* Karartma perdesi — yazılar her zaman okunaklı kalsın */}
+              <div className="pointer-events-none absolute inset-0 bg-[#0d0b16]/72" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d0b16]/85 via-transparent to-[#0d0b16]/40" />
+              <div className="relative z-10 flex w-full flex-col items-center gap-3">
+                {isPlaying && listenAyahData ? (
+                  <>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
+                    <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
+                      {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
+                        <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#e8dfc0]"}`}>{wd}</span>
+                      ))}
+                    </div>
+                    <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-[#c9c0a0]" dir="auto">“{listenAyahData.tr}”</p>
+                  </>
+                ) : isPlaying ? (
+                  <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-[#b8b093]">ayet yükleniyor…</span></div>
+                ) : (
+                  <p className="text-[11px] text-[#8f8870]">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
+                )}
+              </div>
             </div>
 
             {/* Kontroller */}
