@@ -123,6 +123,36 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [reciter, setReciter] = useState("ar.alafasy");
   const [wordLoading, setWordLoading] = useState(false);
 
+  // ── AYET İÇİ KELİME ARAMA: "rahmet" yazınca rahmet geçen ayetler listelenir ──
+  const [ayahResults, setAyahResults] = useState<{ s: number; sn: string; a: number; text: string }[]>([]);
+  const [searching, setSearching] = useState(false);
+  useEffect(() => {
+    const q = query.trim();
+    if (!open || mode !== "learn" || q.length < 2) { setAyahResults([]); setSearching(false); return; }
+    let live = true;
+    setSearching(true);
+    const t = setTimeout(() => {
+      // Arapça harf varsa Osmanlı metninde, yoksa seçili mealette ara
+      const isArabic = /[\u0600-\u06FF]/.test(q);
+      const edition = isArabic ? "quran-uthmani" : mealId;
+      fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/${edition}`)
+        .then(r => r.json())
+        .then((d: any) => {
+          if (!live) return;
+          setSearching(false);
+          const ms = d.code === 200 && Array.isArray(d.data?.matches) ? d.data.matches : [];
+          setAyahResults(ms.slice(0, 12).map((m: any) => ({
+            s: m.surah.number,
+            sn: m.surah.name,
+            a: m.numberInSurah,
+            text: String(m.text || "").slice(0, 90),
+          })));
+        })
+        .catch(() => { if (live) { setSearching(false); setAyahResults([]); } });
+    }, 400);
+    return () => { live = false; clearTimeout(t); };
+  }, [query, mealId, mode, open]);
+
   // ── Dinle state ──
   const [listenSurah, setListenSurah] = useState(36);
   const [listenReciter, setListenReciter] = useState("ar.alafasy");
@@ -333,15 +363,27 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
-                placeholder="Sure ara (fatiha, bakara, mülk...)"
+                placeholder="Sure ara veya ayette kelime ara (rahmet, sabır, نور...)"
                 className="h-8 w-full rounded-xl border border-white/10 bg-black/40 pl-8 pr-3 text-[11px] outline-none placeholder:text-white/25 focus:border-gold/50"
               />
-              {searchOpen && filteredSurahs.length > 0 && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-52 overflow-y-auto rounded-xl border border-gold/30 bg-slate-900 p-1 shadow-2xl scrollbar-thin">
+              {searchOpen && (filteredSurahs.length > 0 || ayahResults.length > 0 || searching) && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-gold/30 bg-slate-900 p-1 shadow-2xl scrollbar-thin">
+                  {filteredSurahs.length > 0 && (
+                    <p className="px-2.5 pt-1.5 pb-1 text-[8px] font-black uppercase tracking-widest text-white/30">Sureler</p>
+                  )}
                   {filteredSurahs.map(s => (
-                    <button key={s.n} onClick={() => { setSurahNo(s.n); setQuery(""); setSearchOpen(false); }} className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] transition hover:bg-gold/10">
+                    <button key={s.n} onClick={() => { setSurahNo(s.n); setQuery(""); setSearchOpen(false); setAyahResults([]); }} className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] transition hover:bg-gold/10">
                       <span className="font-bold text-white/85">{s.n}. {s.name} <span className="font-normal text-white/35">· {s.ayahs} ayet · {s.type}</span></span>
                       <span className="font-arabic text-sm text-gold-light">سورة {s.name}</span>
+                    </button>
+                  ))}
+                  {(ayahResults.length > 0 || searching) && (
+                    <p className="px-2.5 pt-2 pb-1 text-[8px] font-black uppercase tracking-widest text-white/30">{searching ? "Ayetler aranıyor…" : "Ayetlerde geçen kelimeler"}</p>
+                  )}
+                  {ayahResults.map((r, idx) => (
+                    <button key={`${r.s}:${r.a}:${idx}`} onClick={() => { setSurahNo(r.s); setAyahNo(r.a); setActiveWord(null); setQuery(""); setSearchOpen(false); setAyahResults([]); }} className="flex w-full flex-col gap-0.5 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-gold/10">
+                      <span className="text-[10px] font-bold text-gold">{r.s}. {r.sn} — {r.a}. ayet</span>
+                      <span className="line-clamp-2 text-[10px] text-white/55" dir="auto">{r.text}…</span>
                     </button>
                   ))}
                 </div>
