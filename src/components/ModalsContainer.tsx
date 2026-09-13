@@ -457,8 +457,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </button>
           </div>
 
-          {/* Categories bar — Şablon (img) modunda grid her zaman açık,
-              Hareketli (vid) modunda klasik: all → grid, kategori → şerit */}
+          {/* ★ R2 KLASÖR ŞABLONLARI: id'si "-tpl-" olan klipler kod listesinden gelir (ADMIN_TEMPLATE_CLIPS)
+              ve R2'deki templates/<klasör>/ gerçek dosyalarla birebir eşleşir.
+              Eski (id'siz) klipler için ise Pexels video posterleri üzerinden türetilir. */}
           {clipKind === "vid" && atmosCategory !== "all" ? (
             <div id="atmos-active-banner" data-hero-banner className="mb-3 flex items-center gap-2 animate-fadeIn">
               <button
