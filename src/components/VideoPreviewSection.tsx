@@ -148,12 +148,11 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       {outputs.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
           <div className="mb-1.5 flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü</p>
-            <span className="text-[8px] text-white/40">{outputs.length} video</span>
+            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü <span className="rounded-full bg-white/[.07] px-1.5 py-px text-[8px] font-black text-white/50">{outputs.length}</span></p>
           </div>
-          <div className="grid max-h-[126px] gap-1 overflow-y-auto pr-1">
+          <div className="scrollbar-thin grid max-h-[132px] gap-1 overflow-y-auto pr-0.5">
             {outputs.map((output, idx) => (
-              <div key={output.id} className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition ${output.id === activeOutput?.id ? "bg-white/[.06] border border-white/10" : "hover:bg-white/[.03]"}`}>
+              <div key={output.id} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition ${output.id === activeOutput?.id ? "border-white/15 bg-white/[.06]" : "border-transparent hover:bg-white/[.03]"}`}>
                 <button onClick={() => setActiveOutputId(output.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[8px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
                   {idx + 1}
                 </button>
@@ -192,7 +191,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                   notify("İndirme sırasında bir video alınamadı.");
                 }
               }}
-              className="mt-1.5 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[9px] font-black text-black"
+              className="mt-2 flex w-full items-center justify-center gap-1 rounded-xl py-2 text-[9.5px] font-black text-black transition active:scale-[.98]"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
               <Download size={10} />{outputs.length} Videoyu İndir

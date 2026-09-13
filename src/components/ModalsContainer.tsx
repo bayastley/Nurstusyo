@@ -447,26 +447,22 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           {/* Categories bar — Şablon (img) modunda grid her zaman açık,
               Hareketli (vid) modunda klasik: all → grid, kategori → şerit */}
           {clipKind === "vid" && atmosCategory !== "all" ? (
-            <div id="atmos-active-banner" data-hero-banner className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold shadow-md">
-                  {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 18 })}
-                </span>
-                <div>
-                  <h4 className="text-[11.5px] font-black text-white uppercase tracking-wider">
-                    {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}
-                  </h4>
-                  <p className="text-[9.5px] text-white/40">
-                    {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} muhteşem atmosfer listeleniyor
-                  </p>
-                </div>
-              </div>
+            <div id="atmos-active-banner" data-hero-banner className="mb-3 flex items-center gap-2 animate-fadeIn">
               <button
                 onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
-                className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 text-[10px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full glass-soft text-white/60 transition hover:text-white active:scale-90"
+                title="Kategorilere dön"
               >
-                ◀ Kategorilere Geri Dön
+                ◀
               </button>
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                <h4 className="truncate text-[12px] font-black tracking-wide text-white">
+                  {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}
+                </h4>
+                <span className="shrink-0 text-[9px] font-bold text-white/35">
+                  {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} içerik
+                </span>
+              </div>
             </div>
           ) : (
             <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 animate-fadeIn">
