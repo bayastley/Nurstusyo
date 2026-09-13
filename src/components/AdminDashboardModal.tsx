@@ -336,26 +336,40 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const target = email.trim().toLowerCase();
     if (!isValidEmail(target)) { notify("⚠️ Geçerli bir e-posta adresi gir"); return; }
     const safeAmount = clampNumber(amount, 0, 100000);
-    // Önce tier değiştir (eğer belirtildiyse)
-    if (newTier) {
-      const tierState = await serverManage("change_tier", { email: target, tier: newTier });
-      if (tierState === "error") return;
+    // ★ TEK ATOMİK İSTEK: tier + jeton hediyesi sunucuda bir arada (satın alınanlara dokunmaz)
+    const state = await serverManage("gift_rights", { email: target, tier: newTier, deltaJeton: safeAmount });
+    if (state === "error") return;
+    if (state === "fallback") {
+      // sunucu erişilemez → yerel kayıt (offline dev)
+      const result = giftRightsToUser(target, safeAmount, newTier);
+      if (!result.ok) { notify(`❌ ${target} bulunamadı`); return; }
+      setSysConfig(getSystemConfig());
+      onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
+      setEmailSearchResult(result.user);
     }
-    // Sonra jeton ekle
-    const currentState = users.find((u) => u.email.toLowerCase() === target);
-    const newTotal = Math.max(0, (currentState?.jeton ?? 0) + safeAmount);
-    const jetonState = await serverManage("change_jeton", { email: target, total: newTotal });
-    if (jetonState === "error") return;
-    // Başarılıysa localStorage'ı güncelle
-    const result = giftRightsToUser(target, safeAmount, newTier);
-    if (!result.ok) {
-      notify(`❌ ${target} bulunamadı`);
-      return;
-    }
-    setSysConfig(getSystemConfig());
-    onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
-    notify(`🎁 ${result.user.email} · +${result.deltaJeton} ⚡ Üretim hakkı hediye edildi · tier: ${result.user.tier.toUpperCase()}`);
-    setEmailSearchResult(result.user);
+    const refreshed = await refreshUserFromServer(target);
+    const shownTier = (refreshed?.tier ?? newTier ?? "free").toUpperCase();
+    notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi · tier: ${shownTier}${refreshed ? ` · bakiye: ${refreshed.jeton} ⚡` : ""}`);
+    if (refreshed) setEmailSearchResult(refreshed);
+  };
+
+  // Sunucudan kullanıcı güncel bakiyesini çeker (hediye sonrası doğrulama)
+  const refreshUserFromServer = async (email: string): Promise<ManagedUser | null> => {
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_users" }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; users?: Array<{ id: string; email: string; name: string; tier: string; is_admin: boolean; wallet?: { sub_jeton?: number; purchased_jeton?: number } | null }> } | null;
+      if (!data?.ok || !data.users) return null;
+      const u = data.users.find((x) => x.email.toLowerCase() === email.toLowerCase());
+      if (!u) return null;
+      const jeton = (u.wallet?.sub_jeton ?? 0) + (u.wallet?.purchased_jeton ?? 0);
+      const synced = syncUserInDb(u.email, u.name, (u.tier || "free") as Tier, jeton);
+      setSysConfig(getSystemConfig());
+      onUpdateUser(u.email, (u.tier || "free") as Tier, jeton);
+      return synced;
+    } catch { return null; }
   };
 
   const handleSetTierViaEmail = async (email: string, newTier: Tier) => {

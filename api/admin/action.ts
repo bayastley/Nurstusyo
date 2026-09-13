@@ -142,7 +142,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const total = Math.max(0, Math.min(1000000, Number(body.total) || 0));
       const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
       if (!users[0]) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı" });
-      await db(`nur_wallets?user_id=eq.${encodeURIComponent(users[0].id)}`, { method: "PATCH", body: JSON.stringify({ sub_jeton: total, purchased_jeton: 0, updated_at: new Date().toISOString() }) });
+      const uid = users[0].id as string;
+      // ★ Cüzdan yoksa OLUŞTUR (PATCH 0 satır günceller ve sessizce başarısız olurdu)
+      await db("nur_wallets?on_conflict=user_id", { method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify({ user_id: uid }) }).catch(() => null);
+      // ★ HEDİYE MODU: mevcut bakiyenin ÜZERİNE ekler, satın alınan jetonlara DOKUNMAZ.
+      //   set: total = mutlak değer; gift: delta = eklenecek miktar
+      if (body.mode === "gift") {
+        const delta = Math.max(0, Math.min(1000000, Number(body.delta) || 0));
+        const wallets = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=sub_jeton`);
+        const current = wallets[0]?.sub_jeton ?? 0;
+        await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ sub_jeton: current + delta, updated_at: new Date().toISOString() }) });
+      } else {
+        await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ sub_jeton: total, updated_at: new Date().toISOString() }) });
+      }
+    } else if (action === "gift_rights") {
+      // ★ TEK İSTEKLE TAM HEDİYE: tier + jeton + (opsiyonel) üretim hakları — atomik
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const tier = body.tier ? validateTier(body.tier) : null;
+      if (body.tier && !tier) return res.status(400).json({ ok: false, error: "Geçersiz tier" });
+      const deltaJeton = Math.max(0, Math.min(1000000, Number(body.deltaJeton) || 0));
+      const kisa = Math.max(0, Math.min(10000, Number(body.kisa) || 0));
+      const uzun = Math.max(0, Math.min(10000, Number(body.uzun) || 0));
+      const tam = Math.max(0, Math.min(10000, Number(body.tam) || 0));
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+      if (!users[0]) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı — önce siteye girsin" });
+      const uid = users[0].id as string;
+      if (tier) {
+        await db(`nur_users?id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ tier, updated_at: new Date().toISOString() }) });
+      }
+      await db("nur_wallets?on_conflict=user_id", { method: "POST", headers: { Prefer: "resolution=ignore-duplicates,return=minimal" }, body: JSON.stringify({ user_id: uid }) }).catch(() => null);
+      const wallets = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=sub_jeton,purchased_kisa,purchased_uzun,purchased_tam`);
+      const w = wallets[0] ?? { sub_jeton: 0, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
+      await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({
+        sub_jeton: (w.sub_jeton ?? 0) + deltaJeton,
+        purchased_kisa: (w.purchased_kisa ?? 0) + kisa,
+        purchased_uzun: (w.purchased_uzun ?? 0) + uzun,
+        purchased_tam: (w.purchased_tam ?? 0) + tam,
+        updated_at: new Date().toISOString(),
+      }) });
+      await db("nur_admin_audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action: "gift_rights", target: email, created_at: new Date().toISOString() }) }).catch(() => null);
     } else if (action === "ban_user") {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });

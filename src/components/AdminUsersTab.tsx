@@ -98,6 +98,16 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               >
                 ELİT YAP
               </button>
+              <select
+                value={giftTier}
+                onChange={(e) => setGiftTier(e.target.value as Tier)}
+                className="rounded-lg bg-white/10 px-1.5 py-1 text-[9px] font-bold text-white outline-none"
+                title="Hediye ile birlikte verilecek üyelik seviyesi"
+              >
+                <option value="free">FREE</option>
+                <option value="pro">PRO</option>
+                <option value="elit">ELİT</option>
+              </select>
               <input
                 type="number"
                 value={giftAmount}
@@ -108,6 +118,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <button
                 onClick={() => handleGiftRights(emailSearchResult.email, giftAmount, giftTier)}
                 className="rounded-lg bg-emerald-500/25 px-2 py-1 text-[9px] font-bold text-emerald-200 hover:bg-emerald-500/35"
+                title={`+${giftAmount} ⚡ jeton ve ${giftTier.toUpperCase()} üyelik olarak hediye edilir`}
               >
                 HAK HEDİYE ET
               </button>
