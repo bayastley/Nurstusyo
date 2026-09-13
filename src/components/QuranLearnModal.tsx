@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
+// İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
 // ══════════════════════════════════════════════════════════════
 // QuranLearnModal — "Kur'an Öğreniyorum" + "Kur'an Dinliyorum"
@@ -346,6 +347,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   const stopListening = () => { stopAudio(); setIsPlaying(false); };
 
+  // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
+  const stopAyahPlayback = () => { stopAudio(); };
+
   useEffect(() => { if (!open) { stopAudio(); setIsPlaying(false); } }, [open, stopAudio]);
 
   const filteredSurahs = useMemo(() => {
@@ -523,34 +527,41 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       <p className="py-4 text-center font-arabic text-3xl leading-relaxed text-white/90" dir="rtl">{ayah?.ar}</p>
                     )}
                   </div>
-                  {/* Ayet gezinme */}
-                  <div className="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/[.03] px-3 py-2">
-                    <button onClick={() => { setAyahNo(n => Math.max(1, n - 1)); setActiveWord(null); }} disabled={ayahNo <= 1} className="rounded-lg px-2.5 py-1 text-[10px] font-bold text-white/60 transition hover:text-white disabled:opacity-30">◀ Önceki Ayet</button>
-                    <span className="text-[10px] font-bold text-gold">{ayahNo} / {surah.ayahs}</span>
-                    <button onClick={() => { setAyahNo(n => Math.min(surah.ayahs, n + 1)); setActiveWord(null); }} disabled={ayahNo >= surah.ayahs} className="rounded-lg px-2.5 py-1 text-[10px] font-bold text-white/60 transition hover:text-white disabled:opacity-30">Sonraki Ayet ▶</button>
+                  {/* ★ GEZİNME: ortada BÜYÜK oynat/durdur, yanlarda yön okları */}
+                  <div className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#12151f] px-4 py-2.5">
+                    <button onClick={() => { setAyahNo(n => Math.max(1, n - 1)); setActiveWord(null); }} disabled={ayahNo <= 1} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.07] text-lg text-white/75 transition hover:bg-white/15 active:scale-90 disabled:opacity-25" title="Önceki ayet">◀</button>
+                    {isPlaying ? (
+                      <button onClick={stopAyahPlayback} className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-slate-950 shadow-[0_0_26px_rgba(215,170,82,.55)] transition hover:brightness-110 active:scale-90" title="Durdur">
+                        <Pause size={26} />
+                      </button>
+                    ) : (
+                      <button onClick={() => playAyahAudio()} className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-slate-950 shadow-[0_0_26px_rgba(215,170,82,.55)] transition hover:brightness-110 active:scale-90" title="Ayeti Dinle">
+                        <Play size={26} />
+                      </button>
+                    )}
+                    <button onClick={() => { setAyahNo(n => Math.min(surah.ayahs, n + 1)); setActiveWord(null); }} disabled={ayahNo >= surah.ayahs} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.07] text-lg text-white/75 transition hover:bg-white/15 active:scale-90 disabled:opacity-25" title="Sonraki ayet">▶</button>
                   </div>
 
-                  {/* ★ KONTROL ÇUBUĞU — prototipteki gibi ayetin hemen altında */}
-                  <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#12151f] px-4 py-3">
-                    <button onClick={() => playAyahAudio()} className="flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[11px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"><Volume2 size={12} /> Ayeti Dinle</button>
-                    <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-white/[.07] px-3 py-2 text-[10px] font-bold text-white/75 transition hover:bg-white/12"><RotateCcw size={12} /> Tekrar Çal</button>
+                  {/* ★ KONTROL ÇUBUĞU — altın vurgulu: Tekrar Çal · DÖNGÜ · OTOMATİK OKU · hız */}
+                  <div className="flex w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-[#d7aa52]/30 bg-[#171410] px-4 py-3">
+                    <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-[#d7aa52] px-3 py-1.5 text-[10px] font-black text-[#151020] transition hover:brightness-110 active:scale-95"><RotateCcw size={12} /> Tekrar Çal</button>
                     <button
                       onClick={() => setLoopAyah(v => !v)}
-                      className={`rounded-lg border px-2.5 py-2 text-[10px] font-black transition ${loopAyah ? "border-gold/50 bg-gold/20 text-gold" : "border-white/10 bg-white/[.04] text-white/50"}`}
+                      className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black transition ${loopAyah ? "border-[#f5dda6] bg-[#d7aa52]/30 text-[#f5dda6]" : "border-[#d7aa52]/40 bg-[#d7aa52]/10 text-[#e8c87a]"}`}
                       title="Ayet sürekli döner"
                     >
-                      <Repeat size={11} className="inline" /> DÖNGÜ
+                      🔁 DÖNGÜ {loopAyah ? "AÇIK" : ""}
                     </button>
                     <button
                       onClick={() => setAutoRead(v => !v)}
-                      className={`rounded-lg border px-2.5 py-2 text-[10px] font-black transition ${autoRead ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/50"}`}
+                      className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-black transition ${autoRead ? "border-[#f5dda6] bg-[#d7aa52]/30 text-[#f5dda6]" : "border-[#d7aa52]/40 bg-[#d7aa52]/10 text-[#e8c87a]"}`}
                       title="Açıkken: ayet bitince sıradaki ayet kendiliğinden okunur"
                     >
-                      OTOMATİK OKU {autoRead ? "AÇIK" : "KAPALI"}
+                      📢 OTOMATİK OKU {autoRead ? "AÇIK" : "KAPALI"}
                     </button>
-                    <div className="ml-1 flex items-center gap-0.5 rounded-xl border border-white/10 bg-black/40 p-0.5 text-[10px] font-bold">
+                    <div className="ml-1 flex items-center gap-0.5 rounded-xl border border-[#d7aa52]/40 bg-[#0d0b08] p-0.5 text-[10px] font-bold">
                       {[0.75, 1, 1.25].map(v => (
-                        <button key={v} onClick={() => setSpeed(v)} className={`rounded px-2.5 py-1 transition ${speed === v ? "bg-gold text-slate-950" : "text-white/50 hover:text-white"}`}>{v}x</button>
+                        <button key={v} onClick={() => setSpeed(v)} className={`rounded px-2.5 py-1 transition ${speed === v ? "bg-[#d7aa52] text-[#151020]" : "text-[#e8c87a]/70 hover:text-[#f5dda6]"}`}>{v}x</button>
                       ))}
                     </div>
                   </div>
