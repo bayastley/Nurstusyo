@@ -487,6 +487,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
                 const lockLevel = isAdminAtmosphere ? "V3" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
                 const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)));
+                // ★ Arama kutusuna yazınca eşleşen KLASÖR sarı yanar — yerini gösterir
+                const q = atmosQuery.trim().toLocaleLowerCase("tr");
+                const searchHit = q.length >= 2 && !active && category.label.toLocaleLowerCase("tr").includes(q);
                 return (
                   <div key={category.id} className="relative">
                     <button
@@ -500,13 +503,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                         setHeroSpotlight(spotlight);
                         setAtmosCategory(category.id);
                       }}
-                      className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : "glass-soft text-white/70 hover:text-white"}`}
-                      style={!hardLocked && active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))", borderColor: "var(--accent)" } : undefined}
+                      className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : searchHit ? "text-[#151020]" : "glass-soft text-white/70 hover:text-white"}`}
+                      style={!hardLocked && active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))", borderColor: "var(--accent)" } : searchHit ? { background: "#D7AA41", borderColor: "#f5dda6", boxShadow: "0 0 14px rgba(215,170,82,.5)" } : undefined}
                     >
                       {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
-                      {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : "var(--accent)" }} /> : null}
+                      {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : searchHit ? "#151020" : "var(--accent)" }} /> : null}
                       <span className="px-1 text-center text-[8px] font-bold leading-tight">{category.label}</span>
-                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : "text-white/25"}`}>{count} içerik</span>
+                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : searchHit ? "text-[#151020]/70" : "text-white/25"}`}>{count} içerik</span>
                     </button>
                     {hardLocked && lockTip === `cat-${category.id}` && (
                       <span className="pointer-events-none absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-black text-black shadow-lg" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>

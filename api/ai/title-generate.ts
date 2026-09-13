@@ -64,15 +64,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 GÖREVİN: Sana verilen surenin, ayetin numarası ve orijinal mealine (anlamına) %100 SADIK KALARAK, o ayetin konusunu yansıtan, duygusal, merak uyandırıcı ve ilgi çekici bir sosyal medya başlığı (kanca) üretmektir.
 
-KRİTİK GÜVENLİK KURALLARI:
-1. Kesinlikle ayetin konusunu uydurma (halüsinasyon yapma). Örneğin, kitap ehli ile ilgili bir ayete "kaygı gideren ayet" deme!
-2. Ayetin orijinal mealini oku, konusunu çıkar (örn: sabır, rızık, tevhid, ahiret, kitap ehli, infak vs.) ve sadece bu konuyu işleyen bir duygu başlığı yaz.
-3. Meal metnine kesinlikle sadık kalacaksın. Uydurma, asılsız veya alakasız clickbait başlık yazmak yasaktır.
-4. Çıktı sadece tek bir başlık cümlesi olmalıdır. Yanında emoji bulunabilir. Sonuna " — {S} {N}:{A}" formatını eklemeyi unutma.
+DİNİ GÜVENLİK KURALLARI (EN KRİTİK):
+1. UYDURMA HADİS YASAK: Başlıkta "Peygamber Efendimiz şöyle buyurdu", hadis cite eden veya hadismiş gibi sunulan hiçbir ifade OLMAYACAK. Sen hadis kaynaklarına erişemiyorsun; hadis uydurmak büyük hatadır.
+2. "Şu hastalığa şifa olan ayet", "bereket ayeti", "kaygı gideren ayet" gibi ayetin konusu OLMAYAN rastgele nitelendirmeler YASAK — bunlar uydurma dini hükümdür.
+3. Nitelendirmeler SADECE bilinen, meşhur ve sahih kaynaklı tefsir/hadis bilgi birikimine dayanabilir. Emin olmadığın hiçbir dini özelliği ekleme; o zaman sadece ayetin kendi konusundan (sabır, rızık, tevhid, ahiret, infak vs.) duygu üret.
+4. Ayetin mealine sadık kal. Uydurma, asılsız veya alakasız clickbait başlık yasaktır.
+5. İstisna — MEŞHUR VE SAHİH olanlar bilinebilir: Ayetü'l-Kürsî (Bakara 255, koruma ayeti), Bakara sonu (Buhârî, Müslim), Felak-Nâs (sığınma sureleri), Yâsîn'in "Kur'an'ın kalbi" olması (Tirmizî, Fezâil), Kehf'in Cuma/hafıza fazileti (Müslim, Hâkim), Mülk'ün kabir azabından sığınma (Tirmizî, Ahmed), İhlâs'ın üçte bir meselâsı (Buhârî, Müslim), Muavvizeteyn'in sığınma mahiyeti, Rahmân-Vâkıa'nın cennet/azap tasvirleri (meşhur tefsir bilgisi). Bunların DIŞINDA ayete özel "şifa/fazilet" yakıştırma YAPMA.
+6. Çıktı sadece tek bir başlık cümlesi olmalıdır. Yanında emoji bulunabilir. Sonuna " — {S} {N}:{A}" formatını eklemeyi unutma.
 
 ÖRNEK:
 - Girdi: "Bakara 153", Meal: "Ey iman edenler! Sabır ve namazla yardım dileyin. Şüphesiz Allah sabredenlerin yanındadır."
 - Çıktı: "🤍 Zor zamanlarda sabretmeyi fısıldayan o ayet — Bakara 2:153"
+- Girdi: "Bakara 255", Meal: "Allah, kendisinden başka ilah olmayandır..."
+- Çıktı: "🛡️ Ayetü'l-Kürsî: Korunmak için okunan o büyük ayet — Bakara 2:255"
 
 Şimdi aşağıdaki ayet için en uygun, duygusal ve %100 sahih başlığı üret.`;
 

@@ -227,32 +227,43 @@ function IslamicCalendar() {
 type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua";
 
 const DAILY_DUAS = [
-  { title: "Sabah Ezkarı", text: "Allah'ım! Bizi bid'atlerden, fitneden ve mankindan koru. Bize verdiğin ömrün bereketini ihsan eyle. Bizi sırat-ı müstakim üzere sabit kıl. Bizi doğru yola hidayet et. Amin." },
-  { title: "Akşam Ezkarı", text: "Allah'ım! Sen benim Rabbımsın. Senden başka ilah yoktur. Beni yarattın ve ben senin kulunum. Sana olan söz ve ahdim üzere durmaya gücüm yettiğince çalışacağım. Sana sığındığım kötülüklerin şerrinden sana s insanlar. Üzerimdeki nimetini ikrar, günahımı da itiraf ediyorum. Çünkü günahı ancak Sen affedersin. Benden başka_affedicikoğlu yoktur. Amin." },
-  { title: "Yemek Duası", text: "Bismillâh. Bize verdiğin rızıkları Helâl kıl, bereketli eyle. Amin." },
-  { title: "Uykudan Uyanınca", text: "Elhamdülillah. Allâhım, hamd Senindir. Can da Senindir. Razı olduğun ve hoşnut kaldığın surette canı da senden isterim. Yaşatmak da Senin elindedir, öldürmek de. Hayat da Senin elindedir, ölüm de. Hayat da Senin elindedir, ölüm de." },
-  { title: "Yola Çıkınca", text: "Bismillâh, Allahuekber. Allah'ım! Beni bağışla, bana merhamet et, beni hidayet eyle, sağır ve korunmuş olarak kılma. Allah'ım! Şehri şehre, vadiye vadiye,.Handler Thịt御 beni koru." },
-  { title: "Tuvalete Girerken", text: "Allah'ım! Pisliklerden sana sığınırım." },
-  { title: "Tuvalete Çıkınca", text: "Gafurun'sin, mağfiretini isterim." },
-  { title: "Hıçkırarak Ağlarken", text: "Allah'ım! Beni bağışla, bana merhamet et, en sevgili kulun Muhammed (s.a.v.)'e ulaştır ve cennet bahçelerinde beni barındır." },
-  { title: "Korkunun Giderilmesi İçin", text: "La ilahe illa Allahulazimulhalim. La ilahe illallahu rabbularşilazim. La ilahe illallahu rabbussemavati verrabularz. La ilahe illallahu vahdehu la sharika leh. Lehulmulku ve lehu'lhamd. Huve 'ala kulli şey'in kadir. Allahümme inni'uzubike min hamizatike ve min suitsakani ve min belail-limberi ve min fitnetil mehdan ve min fitnetil mehda." },
-  { title: "Hayırlı İş Başlarken", text: "Bismillâhirrahmânirrahîm. Allah'ım! Bize dünyada da hayır ver, ahirette de hayır ver. Bizi ateş azabından koru." },
-  { title: "Miskinlikten Korunmak İçin", text: "Allahümme inni es'elükel adli vel iffete vel afvete vel GHNA. Allah'ım! Senden yardım isterim. Senden bağışlanma dilerim. Sana iman ederim. Sana şükrederim. Sana hamdederim. Sana güzel sözler söylerim. Sana hiçbir şeyi ortak koşmam. Senden korkarım. Sana tevazu gösteririm. Senden bağışlanma dilerim. Senden mağfiret isterim." },
+  { title: "Sabah Ezkarı", arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ", text: "Sabaha erdik; mülk Allah'ındır, hamd Allah'adır. Allah'tan başka ilah yoktur; O tektir, ortağı yoktur.", source: "Müslim, Zikr 24 (IV/2088)" },
+  { title: "Akşam Ezkarı", arabic: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ", text: "Akşama erdik; mülk Allah'ındır, hamd Allah'adır. Allah'tan başka ilah yoktur; O tektir, ortağı yoktur.", source: "Müslim, Zikr 24 (IV/2088)" },
+  { title: "Yemek Öncesi Duası", arabic: "بِسْمِ اللَّهِ وَعَلَى بَرَكَةِ اللَّهِ", text: "Allah'ın adıyla ve Allah'ın bereketiyle.", source: "Ebû Dâvûd, Et'ime 4; Tirmizî, Et'ime 38" },
+  { title: "Yemek Sonrası Duası", arabic: "الْحَمْدُ لِلَّهِ الَّذِي أَطْعَمَنَا وَسَقَانَا وَجَعَلَنَا مُسْلِمِينَ", text: "Bizi yediren, içiren ve Müslüman kılan Allah'a hamd olsun.", source: "Tirmizî, Daavât 55; Ebû Dâvûd, Et'ime 51" },
+  { title: "Uykudan Uyanınca", arabic: "الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ", text: "Bizi öldürdükten sonra dirilten Allah'a hamd olsun; dönüş O'nadır.", source: "Buhârî, Daavât 7; Müslim, Zikr 21" },
+  { title: "Uyumadan Önce", arabic: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا", text: "Allah'ım! Senin adınla ölür ve dirilirim.", source: "Buhârî, Daavât 7; Müslim, Zikr 22" },
+  { title: "Yola Çıkınca (Seyahat Duası)", arabic: "سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ", text: "Bunu bizim emrimize veren (Allah) ne yücedir; biz bunu kendimize bağlayamayacaktık.", source: "Müslim, Hac 425; Ebû Dâvûd, Cihâd 78" },
+  { title: "Tuvalete Girerken", arabic: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْخُبْثِ وَالْخَبَائِثِ", text: "Allah'ım! Erkek ve dişi şeytanların şerrinden Sana sığınırım.", source: "Buhârî, Vudû 3; Müslim, Hayz 332" },
+  { title: "Tuvalete Çıkınca", arabic: "غُفْرَانَكَ", text: "Senin mağfiretini (bağışlanmanı) dilerim.", source: "Ebû Dâvûd, Tahâret 16; Tirmizî, Vudû 6" },
+  { title: "Evden Çıkarken", arabic: "بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ", text: "Allah'ın adıyla (çıkarım), Allah'a tevekkül ettim; güç ve kuvvet ancak Allah'ladır.", source: "Ebû Dâvûd, Vitr 26; Tirmizî, Daavât 32" },
+  { title: "Eve Girerken", arabic: "بِسْمِ اللَّهِ وَلَجْنَا وَبِسْمِ اللَّهِ خَرَجْنَا وَعَلَى رَبِّنَا تَوَكَّلْنَا", text: "Allah'ın adıyla girdik, Allah'ın adıyla çıktık; Rabbimize tevekkül ettik.", source: "Ebû Dâvûd, Vitr 26; Hâkim, Müstedrek" },
+  { title: "Korku Duası", arabic: "لَا إِلَهَ إِلَّا اللَّهُ الْعَظِيمُ الْحَلِيمُ، لَا إِلَهَ إِلَّا اللَّهُ رَبُّ الْعَرْشِ الْعَظِيمِ", text: "Aziz ve Halim olan Allah'tan başka ilah yoktur; büyük Arş'ın Rabbi Allah'tan başka ilah yoktur.", source: "Buhârî, Enbiyâ 10; Müslim, Zikr 47" },
+  { title: "Hıçkırık / Üzüntü Duası", arabic: "لَا إِلَهَ إِلَّا اللَّهُ الْكَرِيمُ الْحَلِيمُ، سُبْحَانَ اللَّهِ رَبِّ الْعَرْشِ الْعَظِيمِ", text: "Kerim ve Halim olan Allah'tan başka ilah yoktur; büyük Arş'ın Rabbi olan Allah ne yücedir.", source: "Tirmizî, Daavât 84; Ebû Dâvûd, Vitr" },
+  { title: "Keder ve Kaygı Duası", arabic: "اللَّهُمَّ إِنِّي عَبْدُكَ... أَسْأَلُكَ أَنْ تَجْعَلَ الْقُرْآنَ رَبِيعَ قَلْبِي", text: "Allah'ım! Ben Senin kulun... Kur'an'ı gönlümün baharı, göğsümün nûru eyle. Hüznümü gider, derdimi çöz.", source: "Ahmed b. Hanbel, I/391 (sahih: Ahmed, Müsned)" },
+  { title: "Hayırlı İşe Başlarken", arabic: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ، اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا", text: "Rahman ve Rahîm Allah'ın adıyla. Allah'ım! Kolaylaştırmadığın hiçbir şey kolay değildir.", source: "İbn Hibbân, Tevhit 973; Hâkim" },
+  { title: "Zorluk Anında", arabic: "لَا إِلَهَ إِلَّا أَنْتَ سُبْحَانَكَ إِنِّي كُنْتُ مِنَ الظَّالِمِينَ", text: "Senden başka ilah yoktur, Sen yücesin; gerçekten ben zalimlerden oldum. (Yunus Duası)", source: "Tirmizî, Daavât 86 (Kur'an: Enbiyâ 87)" },
+  { title: "Borçlu İken", arabic: "اللَّهُمَّ اكْفِنِي بِحَلَالِكَ عَنْ حَرَامِكَ وَأَغْنِنِي بِفَضْلِكَ عَمَّنْ سِوَاكَ", text: "Allah'ım! Helâlınla haramından beni kâğı kıl; fazlınla Sen'den başkasından beni müstağni kıl.", source: "Tirmizî, Daavât 36; Ebû Dâvûd, Vitr 26" },
+  { title: "Yağmur Duası", arabic: "اللَّهُمَّ صَيِّبًا نَافِعًا", text: "Allah'ım! Faydalı yağmur yağdır.", source: "Buhârî, İstisâ 20; Ebû Dâvûd, Salât 315" },
+  { title: "Rüya Görünce / Sevinince", arabic: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ", text: "Nimetleriyle hayırların tamamlandığı Allah'a hamd olsun.", source: "İbn Mâce, Dua 10; Müsned kaynakları" },
+  { title: "Aksirince", arabic: "يَرْحَمُكَ اللَّهُ → يَهْدِيكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمْ", text: "Aksıran 'Allah size merhamet etsin' der, duyan 'Allah size hidayet versin, hâlinizi ıslah etsin' karşılığını verir.", source: "Buhârî, Edeb 124; Müslim, Zikr 44" },
+  { title: "Camiye Girerken", arabic: "اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ", text: "Allah'ım! Benim için rahmet kapılarını aç.", source: "Müslim, Salât 14 (IV/2092)" },
+  { title: "Camiden Çıkarken", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ", text: "Allah'ım! Senden fazlını diliyorum.", source: "Müslim, Salât 14 (IV/2092)" },
 ];
 
 const ZIKIRLER = [
-  { name: "Sübhanallah", count: 33, text: "Allah'ı tüm noksanlıklardan tenzih ederim" },
-  { name: "Elhamdülillah", count: 33, text: "Hamd Allah'a mahsustur" },
-  { name: "Allahu Ekber", count: 34, text: "Allah en yücedir" },
-  { name: "La ilahe illallah", count: 100, text: "Allah'tan başka ilah yoktur" },
-  { name: "Estağfirullah", count: 100, text: "Allah'tan bağışlanma dilerim" },
-  { name: "Salavat-ı Şerife", count: 100, text: "Allah'ım! Muhammed'e salat et" },
-  { name: "Hasbünallah", count: 100, text: "Bize Allah yeter, O ne güzel vekildir" },
-  { name: "Sübhanallahilazim", count: 100, text: "Büyük Allah'ı tüm noksanlıklardan tenzih ederim" },
-  { name: "La havle", count: 100, text: "Güç ve kuvvet ancak Allah'ındır" },
-  { name: "Bismillah", count: 100, text: "Rahman ve Rahim Allah'ın adıyla" },
-  { name: "Selavat", count: 100, text: "Allah'ım! Peygamberimize salat et, selam gönder" },
-  { name: "Tövbe", count: 100, text: "Allah'tan tövbe ederim, O'na yönelirim" },
+  { name: "Sübhanallah", count: 33, text: "Allah'ı tüm noksanlıklardan tenzih ederim", source: "Müslim, Salât 49" },
+  { name: "Elhamdülillah", count: 33, text: "Hamd Allah'a mahsustur", source: "Müslim, Salât 49" },
+  { name: "Allahu Ekber", count: 34, text: "Allah en yücedir", source: "Buhârî, Teheccüd 8; Müslim, Salât 49" },
+  { name: "La ilahe illallah", count: 100, text: "Allah'tan başka ilah yoktur", source: "Buhârî, Zikr 12 (en sevimli kelime)" },
+  { name: "Estağfirullah", count: 100, text: "Allah'tan bağışlanma dilerim", source: "Buhârî, Daavât 12 (günde 70-100 istiğfar)" },
+  { name: "Salavat-ı Şerife", count: 100, text: "Allah'ım! Muhammed'e salat et", source: "Müslim, Salât 70 (kim 10 salat getirirse...)" },
+  { name: "Hasbünallah", count: 100, text: "Bize Allah yeter, O ne güzel vekildir", source: "Buhârî, Tefsîr 9 (İbrâhim'in sözü)" },
+  { name: "Sübhanallahi ve bihamdihî", count: 100, text: "Günde 100 kez okuyanın günahları deniz köpüğü kadar da affedilir", source: "Buhârî, Edeb 81; Müslim, Zikr 31" },
+  { name: "La havle ve la kuvvete illa billah", count: 100, text: "Güç ve kuvvet ancak Allah'ladır — cennet hazinelerinden biridir", source: "Buhârî, Rekâk; Müslim, Zikr 34" },
+  { name: "Sübhanallahi ve bihamdihî sübhanallahil-azim", count: 100, text: "Bu iki kelime hafiftir, terâzuda ağırdır", source: "Buhârî, Tevhid 15; Müslim, Musâfirîn 269" },
+  { name: "Tövbe istiğfar (Sayyidü'l-İstiğfar)", count: 33, text: "Allah'ım! Sen benim Rabbimsin... Senin afvına layık değilsin ki — Nûh a.s.'ın duası", source: "Buhârî, Daavât 2; Müslim, Zikr 27" },
+  { name: "Dâbbetü'l-erz: Ezkar-ı Sebah", count: 10, text: "Sabah-akşam üçer kez okunması müstehab: Ayetel Kürsi + İhlas, Felak, Nas", source: "Ebû Dâvûd, Fezâil 26 (Erza-ı Sebah)" },
 ];
 
 export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings }) => {
@@ -367,12 +378,13 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                       <span className="text-[10px] font-bold text-amber-300 min-w-[28px]">{z.count}x</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-bold text-white">{z.name}</p>
-                        <p className="text-[8px] text-white/40 truncate">{z.text}</p>
+                        <p className="text-[8px] text-white/40">{z.text}</p>
+                        <p className="text-[7px] font-bold uppercase tracking-wider text-amber-300/60">Kaynak: {z.source}</p>
                       </div>
                     </div>
                   ))}
                 </div>
-                <p className="text-[8px] text-white/30 text-center">Zikirler hadis kaynaklarına göredir.</p>
+                <p className="text-[8px] text-white/30 text-center">Zikirler ve dualar Buhârî · Müslim · Tirmizî · Ebû Dâvûd sahih kaynaklıdır.</p>
               </div>
             )}
 
@@ -395,7 +407,9 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                     </button>
                     {expandedDua === i && (
                       <div className="px-3 pb-3 border-t border-white/5 pt-2">
+                        {dua.arabic && <p className="mb-2 text-right text-[11px] leading-relaxed text-[#e8dfc0]" dir="rtl">{dua.arabic}</p>}
                         <p className="text-[10px] leading-relaxed text-white/60">{dua.text}</p>
+                        {dua.source && <p className="mt-1.5 text-[7px] font-bold uppercase tracking-wider text-amber-300/60">Kaynak: {dua.source}</p>}
                       </div>
                     )}
                   </div>

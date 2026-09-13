@@ -16,7 +16,7 @@ interface SocialSharePanelProps {
   selected: SelectedAyah[];
   verseIndex: number;
   reciterName: string;
-  genTitle: (sName?: string, s?: number, a?: number) => string;
+  genTitle: (sName?: string, s?: number, a?: number, lang?: string, meal?: string) => string;
   lastDescRef: React.MutableRefObject<string>;
   lastTitleRef: React.MutableRefObject<string>;
   notify: (msg: string) => void;
