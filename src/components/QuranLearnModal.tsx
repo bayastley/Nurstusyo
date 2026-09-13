@@ -258,12 +258,27 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // Ayeti sesli dinle (hoca seçimiyle, tekrar çal opsiyonu) — everyayah ayet dosyası
   // ★ src ve devam mantığı REF'ten okunur: hangi ayet ekrandaysa O çalar,
   //   ayet değişince eski ses zaten stopAudio ile kesiliyor (alttaki efekt).
+  // ★ ÖĞREN MODU ÖN YÜKLEME: sıradaki ayeti arka planda ısıtır (geç açılma yok)
+  const learnPreloadRef = useRef("");
+  const preloadLearnNext = useCallback((sNow: number, aNow: number) => {
+    const total = SURAHS_DATA.find(x => x.n === sNow)?.ayahs ?? 0;
+    if (aNow + 1 > total) return;
+    const url = `https://everyayah.com/data/${reciter}/${String(sNow).padStart(3, "0")}${String(aNow + 1).padStart(3, "0")}.mp3`;
+    if (learnPreloadRef.current === url) return;
+    learnPreloadRef.current = url;
+    const p = new Audio();
+    p.preload = "auto";
+    p.src = url;
+  }, [reciter]);
+
   const playAyahAudio = (onEnded?: () => void) => {
     const a = audioRef.current; if (!a) return;
     stopAudio();
     const { s: sNow, a: aNow } = ayahPosRef.current;
     a.src = `https://everyayah.com/data/${reciter}/${String(sNow).padStart(3, "0")}${String(aNow).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
+    a.preload = "auto";
+    preloadLearnNext(sNow, aNow);
     if (loopAyah) {
       a.loop = true;
     } else {
@@ -355,12 +370,27 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const ayahUrl = useCallback((sN: number, aN: number) =>
     `https://everyayah.com/data/${listenReciter}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [listenReciter]);
 
+  // ★ SIRADAKİ AYETİ ÖNCE İNDİR: çalarken arka planda ısıtıyoruz —
+  //    ayet değişince sessiz bekleme olmaz, anında devam eder
+  const preloadedRef = useRef<string>("");
+  const preloadNextAyah = useCallback((sN: number, ayahIdx: number) => {
+    const total = SURAHS_DATA.find(s => s.n === sN)?.ayahs ?? 0;
+    if (ayahIdx + 2 > total) return;
+    const url = ayahUrl(sN, ayahIdx + 2);
+    if (preloadedRef.current === url) return;
+    preloadedRef.current = url;
+    const p = new Audio();
+    p.preload = "auto";
+    p.src = url;
+  }, [ayahUrl]);
+
   const playAt = useCallback((sN: number, ayahIdx: number) => {
     const a = audioRef.current; if (!a) return;
     setListenAyahIdx(ayahIdx);
     a.src = ayahUrl(sN, ayahIdx + 1);
     a.playbackRate = speed;
     a.loop = false;
+    a.preload = "auto";
     // ★ DİNLEDE KELİME TAKİBİ: ses konumu → kelime sayısı, okundukça yanar
     a.ontimeupdate = () => {
       const ay = listenAyahDataRef.current;
@@ -369,8 +399,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       if (parts.length === 0) return;
       setListenWordProgress(Math.min(parts.length - 1, Math.floor((a.currentTime / a.duration) * parts.length)));
     };
-    a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-  }, [ayahUrl, speed]);
+    a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, ayahIdx); }).catch(() => setIsPlaying(false));
+  }, [ayahUrl, speed, preloadNextAyah]);
 
   const startListening = useCallback((fromIdx = 0) => {
     stopAudio();
@@ -381,10 +411,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.src = ayahUrl(sN, fromIdx + 1);
     a.playbackRate = speed;
     a.loop = false;
-    a.play().then(() => setIsPlaying(true)).catch(() => {
+    a.preload = "auto";
+    a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, fromIdx); }).catch(() => {
       setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
     });
-  }, [wholeQuran, listenSurah, ayahUrl, speed, stopAudio]);
+  }, [wholeQuran, listenSurah, ayahUrl, speed, stopAudio, preloadNextAyah]);
 
   useEffect(() => {
     // ★ SADECE DİNLE MODUNDA: bu dinleyici ÖĞREN modunda da çalışıp sesi
