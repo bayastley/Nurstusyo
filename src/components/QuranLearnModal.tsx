@@ -345,6 +345,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [wholeQuran, listenSurah, ayahUrl, speed, stopAudio]);
 
   useEffect(() => {
+    // ★ SADECE DİNLE MODUNDA: bu dinleyici ÖĞREN modunda da çalışıp sesi
+    //   Dinle sekmesinin suresine kaçırıyordu (Fatiha ekranda, Yasin çalıyordu)
+    if (mode !== "listen") return;
     const a = audioRef.current; if (!a) return;
     const onEnded = () => {
       if (loopAyahListen) { a.currentTime = 0; a.play().catch(() => undefined); return; }
@@ -363,7 +366,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     };
     a.addEventListener("ended", onEnded);
     return () => a.removeEventListener("ended", onEnded);
-  }, [loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs]);
+  }, [mode, loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs]);
 
   const stopListening = () => { stopAudio(); setIsPlaying(false); };
 
