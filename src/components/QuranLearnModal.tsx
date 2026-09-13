@@ -529,10 +529,27 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     return () => a.removeEventListener("ended", onEnded);
   }, [mode, loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs, listenReciter]);
 
-  const stopListening = () => { stopAudio(); setIsPlaying(false); };
+  const stopListening = () => { stopAudio(); setIsPlaying(false); setPaused(false); };
 
   // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
-  const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); setFlowPlaying(false); };
+  const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); setFlowPlaying(false); setPaused(false); };
+
+  // ★ DONDUR / DEVAM + İLERİ-GERİ SARMA + ÖNCEKİ/SONRAKİ AYET
+  const [paused, setPaused] = useState(false);
+  const pauseAyah = () => { const a = audioRef.current; if (!a) return; a.pause(); setPaused(true); };
+  const resumeAyah = () => { const a = audioRef.current; if (!a) return; a.play().then(() => setPaused(false)).catch(() => undefined); };
+  const seekAyah = (delta: number) => {
+    const a = audioRef.current; if (!a || !a.duration || Number.isNaN(a.duration)) return;
+    a.currentTime = Math.max(0, Math.min(a.duration - 0.15, a.currentTime + delta));
+  };
+  const prevAyahLearn = () => {
+    if (ayahNo <= 1) return;
+    stopAudio(); setPaused(false); setFlowPlaying(true); setAyahNo(ayahNo - 1); setActiveWord(null);
+  };
+  const nextAyahLearn = () => {
+    if (ayahNo >= surah.ayahs) { stopAyahPlayback(); return; }
+    stopAudio(); setPaused(false); setFlowPlaying(true); setAyahNo(ayahNo + 1); setActiveWord(null);
+  };
 
   // ★ ORTADAKİ SURE LİSTESİ: okunan ayet görünür pencerede kendiliğinden kayar
   const centerListRef = useRef<HTMLDivElement>(null);
@@ -737,8 +754,33 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
                     {/* ★ KONTROLLER — prototipteki gibi kartın içinde, tek satır */}
                     <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-1.5">
-                      <button onClick={() => { setFlowPlaying(true); playAyahAudio(); }} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-3 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.3)] transition hover:brightness-110 active:scale-95">
+                      <button onClick={() => { setPaused(false); setFlowPlaying(true); playAyahAudio(); }} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-3 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.3)] transition hover:brightness-110 active:scale-95">
                         <Volume2 size={10} /> Ayeti Dinle
+                      </button>
+                      {/* ★ DONDUR / DEVAM — ses çalarken duraklat, kaldığı yerden sürdür */}
+                      {isPlaying && !paused && (
+                        <button onClick={pauseAyah} className="flex items-center gap-1.5 rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95" title="Sesi dondur">
+                          ⏸ Dondur
+                        </button>
+                      )}
+                      {paused && (
+                        <button onClick={resumeAyah} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41]/80 px-2.5 py-1.5 text-[9px] font-black text-[#151020] transition hover:brightness-110 active:scale-95" title="Kaldığı yerden devam">
+                          ▶ Devam
+                        </button>
+                      )}
+                      {/* ★ İLERİ / GERİ SARMA (5 saniye) */}
+                      <button onClick={() => seekAyah(-5)} disabled={!isPlaying} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="5 saniye geri sar">
+                        ⏪ 5sn
+                      </button>
+                      <button onClick={() => seekAyah(5)} disabled={!isPlaying} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="5 saniye ileri sar">
+                        5sn ⏩
+                      </button>
+                      {/* ★ ÖNCEKİ / SONRAKİ AYET */}
+                      <button onClick={prevAyahLearn} disabled={ayahNo <= 1} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="Önceki ayet">
+                        ◀ Ayet
+                      </button>
+                      <button onClick={nextAyahLearn} disabled={ayahNo >= surah.ayahs} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="Sonraki ayet">
+                        Ayet ▶
                       </button>
                       <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95">
                         <RotateCcw size={10} /> Tekrar Çal
