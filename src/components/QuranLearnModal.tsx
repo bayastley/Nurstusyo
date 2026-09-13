@@ -320,6 +320,29 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [ayahNo, autoRead, flowPlaying, open, mode]);
 
   // ── Dinle modu ──
+  // ★ DİNLE EKRANI AYETİ: o an okunan ayetin Arapça metni + Türkçe meali
+  //   (her ayet değişiminde ekranda da değişir, kelimeler okundukça altın yanar)
+  const [listenAyahData, setListenAyahData] = useState<{ ar: string; tr: string; n: number } | null>(null);
+  const [listenWordProgress, setListenWordProgress] = useState<number>(-1);
+  const listenAyahDataRef = useRef(listenAyahData);
+  useEffect(() => { listenAyahDataRef.current = listenAyahData; }, [listenAyahData]);
+  useEffect(() => {
+    if (mode !== "listen") { setListenAyahData(null); return; }
+    const sNow = wholeQuran ? wholeIdx.s : listenSurah;
+    const aNow = wholeQuran ? wholeIdx.a : listenAyahIdx + 1;
+    let live = true;
+    fetch(`https://api.alquran.cloud/v1/surah/${sNow}/editions/quran-uthmani,tr.diyanet`)
+      .then(r => r.json())
+      .then((d: any) => {
+        if (!live || d.code !== 200) return;
+        const ar = d.data[0].ayahs[aNow - 1]?.text ?? "";
+        const tr = d.data[1].ayahs[aNow - 1]?.text ?? "";
+        setListenAyahData({ ar, tr, n: aNow });
+        setListenWordProgress(-1);
+      })
+      .catch(() => { if (live) setListenAyahData(null); });
+    return () => { live = false; };
+  }, [mode, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
   // Hoca arama kutusu — "mahir", "husari" yaz, liste anında filtrelenir
   const [reciterSearch, setReciterSearch] = useState("");
@@ -338,6 +361,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.src = ayahUrl(sN, ayahIdx + 1);
     a.playbackRate = speed;
     a.loop = false;
+    // ★ DİNLEDE KELİME TAKİBİ: ses konumu → kelime sayısı, okundukça yanar
+    a.ontimeupdate = () => {
+      const ay = listenAyahDataRef.current;
+      if (!a.duration || Number.isNaN(a.duration) || !ay) return;
+      const parts = ay.ar.split(/\s+/).filter(Boolean);
+      if (parts.length === 0) return;
+      setListenWordProgress(Math.min(parts.length - 1, Math.floor((a.currentTime / a.duration) * parts.length)));
+    };
     a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
   }, [ayahUrl, speed]);
 
@@ -706,14 +737,21 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               </label>
             </div>
 
-            {/* Görsel durum */}
-            <div className="mt-4 flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#1E293B] p-4 text-center">
-              {isPlaying ? (
+            {/* ★ OKUNAN AYET EKRANI — prototip gibi: Arapça büyük + meal altında,
+                kelimeler okundukça altın yanar */}
+            <div className="mt-4 flex min-h-[150px] flex-col items-center justify-center gap-3 rounded-2xl border border-gold/20 bg-gradient-to-b from-[#161622] to-[#12101c] p-5 text-center shadow-[0_0_24px_rgba(215,170,82,.08)]">
+              {isPlaying && listenAyahData ? (
                 <>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Çalıyor {wholeQuran ? "· KOMPLE KUR'AN" : nextSurahAuto ? "· SIRADAKİ SURE" : ""}</span>
-                  <p className="font-arabic text-lg text-gold-light">سُورَةُ {(SURAHS_DATA.find(s => s.n === (wholeQuran ? wholeIdx.s : listenSurah)) ?? listenSurahInfo).name}</p>
-                  <p className="text-[10px] text-white/45">{(wholeQuran ? wholeIdx.a : listenAyahIdx + 1)}. ayet · {(RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
+                  <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
+                  <div className="flex w-full flex-row-reverse flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
+                    {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
+                      <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i <= listenWordProgress ? "bg-gold/25 text-[#f5dda6] shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-white/85"}`}>{wd}</span>
+                    ))}
+                  </div>
+                  <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-white/60" dir="auto">“{listenAyahData.tr}”</p>
                 </>
+              ) : isPlaying ? (
+                <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-white/50">ayet yükleniyor…</span></div>
               ) : (
                 <p className="text-[11px] text-white/40">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
               )}
