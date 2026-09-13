@@ -159,11 +159,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [open, mode, surahNo, mealId]);
 
   // Kelime verisini çek (quran.com — kelime + TR meal + kelime sesi)
+  // ★ 6 sn zaman aşımı: quran.com takılırsa yedek kelime bölme devreye girsin
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
-    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani&translations=${QCOM_TR_WORD_TRANS}`)
+    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani&translations=${QCOM_TR_WORD_TRANS}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then((d: any) => {
         if (!live) return;
@@ -177,8 +180,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         })));
         setWordLoading(false);
       })
-      .catch(() => { if (live) setWordLoading(false); });
-    return () => { live = false; };
+      .catch(() => { if (live) setWordLoading(false); })
+      .finally(() => clearTimeout(timer));
+    return () => { live = false; clearTimeout(timer); ctrl.abort(); };
   }, [open, mode, surahNo, ayahNo]);
 
   // Global ayet sırası (audio için)
@@ -192,6 +196,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     const a = audioRef.current; if (!a) return;
     a.pause(); a.onended = null; a.ontimeupdate = null;
   }, []);
+
+  // ★ GÜNCEL AYET REFİ: ses her zaman EKRANDAKİ ayeti okur (eski closure taşımaz)
+  const ayahPosRef = useRef({ s: surahNo, a: ayahNo });
+  useEffect(() => { ayahPosRef.current = { s: surahNo, a: ayahNo }; }, [surahNo, ayahNo]);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
   //    ve altın vurgu her koşulda çalışır; ses olarak ayet sesi okunur.
@@ -243,10 +251,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   };
 
   // Ayeti sesli dinle (hoca seçimiyle, tekrar çal opsiyonu) — everyayah ayet dosyası
+  // ★ src ve devam mantığı REF'ten okunur: hangi ayet ekrandaysa O çalar,
+  //   ayet değişince eski ses zaten stopAudio ile kesiliyor (alttaki efekt).
   const playAyahAudio = (onEnded?: () => void) => {
     const a = audioRef.current; if (!a) return;
     stopAudio();
-    a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
+    const { s: sNow, a: aNow } = ayahPosRef.current;
+    a.src = `https://everyayah.com/data/${reciter}/${String(sNow).padStart(3, "0")}${String(aNow).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
     if (loopAyah) {
       a.loop = true;
@@ -257,8 +268,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       } else if (autoRead) {
         // Otomatik oku: ayet bitince sıradaki ayete geç (sure sonunda durur)
         a.onended = () => {
-          if (ayahNo < surah.ayahs) {
-            setAyahNo(ayahNo + 1);
+          const { s: sRef, a: aRef } = ayahPosRef.current;
+          const total = SURAHS_DATA.find(x => x.n === sRef)?.ayahs ?? aRef;
+          if (aRef < total) {
+            setAyahNo(aRef + 1);
             setActiveWord(null);
           } else {
             setAutoRead(false);
@@ -268,14 +281,23 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         a.onended = null;
       }
     }
+    a.play().catch(() => undefined);
   };
 
   const replayAyah = () => playAyahAudio();
 
+  // ★ AYET/SURE DEĞİŞİNCE: eski sesi HEMEN kes, ekranla ses aynı ayete gelsin
+  //   (otomatik oku modundaysa aşağıdaki efekt yeni ayeti zaten başlatacak)
+  useEffect(() => {
+    if (!open || mode !== "learn") return;
+    stopAudio();
+    setActiveWord(null);
+  }, [surahNo, ayahNo]);
+
   // Ayet değişince otomatik oku modundaysa yeni ayeti başlat
   useEffect(() => {
     if (open && mode === "learn" && autoRead && ayahNo > 0) {
-      const t = setTimeout(() => playAyahAudio(), 150);
+      const t = setTimeout(() => playAyahAudio(), 200);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -461,7 +483,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-white/35">Ayetin Bütünü (Sol)</p>
                     <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
                       {(words.length > 0 ? words.map(w => w.ar) : (ayah?.ar ?? "").split(/\s+/)).map((ar, i) => (
-                        <button key={i} onClick={() => { if (words.length > 0) clickWord(Math.min(i, words.length - 1)); }} className={`rounded-md px-1 font-arabic text-xl leading-loose transition-all active:scale-95 ${activeWord === i ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.7)]" : "text-white/85 hover:bg-gold/15 hover:text-[#f5dda6]"}`}>{ar}</button>
+                        <button key={i} onClick={() => { if (words.length > 0) clickWord(Math.min(i, words.length - 1)); }} className={`rounded-md px-1 font-arabic text-base leading-loose transition-all active:scale-95 ${activeWord === i ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.7)]" : "text-white/85 hover:bg-gold/15 hover:text-[#f5dda6]"}`}>{ar}</button>
                       ))}
                     </div>
                     <p className="mt-2 text-[8px] italic text-white/30">"Soldaki veya ortadaki kelimelerden dilediğinize tıklayabilirsiniz; ikisi de eşzamanlı olarak parlayıp çalacaktır!"</p>
@@ -469,8 +491,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
                   {/* Kelime Kartı — seçili kelime büyür */}
                   {activeWord !== null && words[activeWord] ? (
-                    <div className="rounded-2xl border border-[#D7AA41]/50 bg-[#1d1a14] p-5 text-center shadow-[0_0_28px_rgba(215,170,82,.2)] animate-fadeIn">
-                      <p className="font-arabic text-5xl leading-relaxed text-[#f5dda6]">{words[activeWord].ar}</p>
+                    <div className="rounded-2xl border border-[#D7AA41]/50 bg-[#1d1a14] p-4 text-center shadow-[0_0_28px_rgba(215,170,82,.2)] animate-fadeIn">
+                      <p className="font-arabic text-3xl leading-relaxed text-[#f5dda6]">{words[activeWord].ar}</p>
                       {words[activeWord].translit && <p className="mt-1 text-[11px] italic text-white/40">{words[activeWord].translit}</p>}
                       <p className="mt-2 text-[14px] font-black text-white">{words[activeWord].tr}</p>
                       <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/30">Kelime {activeWord + 1} / {words.length} · {surah.name} {ayahNo}. Ayet</p>
@@ -515,31 +537,31 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 </div>
 
                 {/* ORTA: prototip düzeni — ayet kartı (içinde kontroller) + kelime analizi */}
-                <div className="flex w-full flex-col items-center gap-4 overflow-y-auto border-white/10 p-5 lg:w-[47%] lg:border-r scrollbar-thin">
+                <div className="flex w-full flex-col items-center gap-4 overflow-y-auto border-white/10 p-4 lg:w-[47%] lg:border-r scrollbar-thin">
                   <p className="self-start text-[8px] font-black uppercase tracking-widest text-white/30">Kelime Seçim Alanı</p>
-                  <div className="w-full rounded-3xl border border-white/10 bg-[#131322] p-6">
+                  <div className="w-full rounded-3xl border border-white/10 bg-[#131322] p-4">
                     <div className="text-center">
-                      <h4 className="font-arabic text-xl text-[#f5dda6]">سُورَةُ {surah.name}</h4>
+                      <h4 className="font-arabic text-sm text-[#f5dda6]">سُورَةُ {surah.name}</h4>
                       <p className="mt-0.5 font-mono text-[10px] text-white/40">{surah.n}. {surah.name} Suresi — {ayahNo}. Ayet · {surah.type} · Cüz {ayah?.juz} · Sayfa {ayah?.page}</p>
                     </div>
                     {/* Kelimeler */}
-                    <div className="mt-5 w-full rounded-2xl border border-white/10 bg-black/20 p-6">
+                    <div className="mt-5 w-full rounded-2xl border border-white/10 bg-black/20 p-4">
                       {wordLoading ? (
                         <div className="flex items-center justify-center gap-2 py-4"><Loader2 size={18} className="animate-spin text-[#D7AA41]" /> <span className="text-[11px] text-white/40">kelimeler yükleniyor…</span></div>
                       ) : words.length > 0 ? (
-                        <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-4 gap-y-4" dir="rtl">
+                        <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-3 gap-y-2" dir="rtl">
                           {words.map((w) => (
                             <button
                               key={w.i}
                               onClick={() => clickWord(w.i)}
-                              className={`rounded-xl px-3 py-1.5 font-arabic text-3xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 rounded-lg bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_34px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : "text-white/90 hover:bg-gold/20 hover:text-[#f5dda6] hover:shadow-[0_0_14px_rgba(215,170,82,.35)]"}`}
+                              className={`rounded-xl px-3 py-1.5 font-arabic text-2xl leading-relaxed transition-all active:scale-95 ${activeWord === w.i ? "scale-110 rounded-lg bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_34px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : "text-white/90 hover:bg-gold/20 hover:text-[#f5dda6] hover:shadow-[0_0_14px_rgba(215,170,82,.35)]"}`}
                             >
                               {w.ar}
                             </button>
                           ))}
                         </div>
                       ) : (
-                        <p className="py-4 text-center font-arabic text-3xl leading-relaxed text-white/90" dir="rtl">{ayah?.ar}</p>
+                        <p className="py-4 text-center font-arabic text-xl leading-relaxed text-white/90" dir="rtl">{ayah?.ar}</p>
                       )}
                     </div>
 
@@ -570,12 +592,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
                   {/* ★ KELİME ANALİZ PANELİ — prototipteki "Kelime Meali & Telaffuz Analizi" */}
                   {activeWord !== null && words[activeWord] ? (
-                    <div className="w-full rounded-2xl border border-[#D7AA41]/30 bg-[#141a2b] p-5 animate-fadeIn">
+                    <div className="w-full rounded-2xl border border-[#D7AA41]/30 bg-[#141a2b] p-4 animate-fadeIn">
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-[#e8c87a]">🔊 Kelime Meali & Telaffuz Analizi (Hız: {speed}x )</span>
                         <button onClick={() => setActiveWord(null)} className="text-[10px] text-white/40 transition hover:text-white">✕ Kapat</button>
                       </div>
-                      <p className="mt-2 text-[20px] font-black text-[#f5dda6]">
+                      <p className="mt-2 text-[15px] font-black text-[#f5dda6]">
                         {words[activeWord].tr}{" "}
                         <span className="text-[13px] font-normal text-white/50">( <span className="font-arabic text-lg text-white/80">{words[activeWord].ar}</span> · {words[activeWord].translit || "—"} )</span>
                       </p>
@@ -593,7 +615,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                         .map(a => (
                           <button key={a.n} onClick={() => { setAyahNo(a.n); setActiveWord(null); }} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-right transition ${a.n === ayahNo ? "bg-[#3D342B] ring-1 ring-[#D7AA41]/60" : "hover:bg-white/[.04]"}`}>
                             <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${a.n === ayahNo ? "bg-[#D7AA41] text-[#151020]" : "bg-white/10 text-white/50"}`} dir="ltr">{a.n}</span>
-                            <span className={`flex-1 truncate font-arabic text-xl leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-white/70"}`} dir="rtl">{a.ar}</span>
+                            <span className={`flex-1 truncate font-arabic text-sm leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-white/70"}`} dir="rtl">{a.ar}</span>
                           </button>
                         ))}
                     </div>
@@ -629,7 +651,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
       {/* ══════════ DİNLE MODU ══════════ */}
       {mode === "listen" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-6 scrollbar-thin">
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-4 scrollbar-thin">
           <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#161622] p-7 shadow-2xl">
             <span className="text-[9px] font-bold uppercase tracking-widest text-gold">Kesintisiz Ayet Ayet Oynatıcı</span>
             {/* ★ DİNLEME KAPSAMI */}
@@ -667,11 +689,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             </div>
 
             {/* Görsel durum */}
-            <div className="mt-4 flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#1E293B] p-5 text-center">
+            <div className="mt-4 flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-[#1E293B] p-4 text-center">
               {isPlaying ? (
                 <>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Çalıyor {wholeQuran ? "· KOMPLE KUR'AN" : nextSurahAuto ? "· SIRADAKİ SURE" : ""}</span>
-                  <p className="font-arabic text-2xl text-gold-light">سُورَةُ {(SURAHS_DATA.find(s => s.n === (wholeQuran ? wholeIdx.s : listenSurah)) ?? listenSurahInfo).name}</p>
+                  <p className="font-arabic text-lg text-gold-light">سُورَةُ {(SURAHS_DATA.find(s => s.n === (wholeQuran ? wholeIdx.s : listenSurah)) ?? listenSurahInfo).name}</p>
                   <p className="text-[10px] text-white/45">{(wholeQuran ? wholeIdx.a : listenAyahIdx + 1)}. ayet · {(RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
                 </>
               ) : (
