@@ -644,7 +644,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <h3 className="text-[10px] font-black uppercase tracking-widest text-gold">Mahrec & Arapça Okuyuş</h3>
                   <div className="rounded-2xl border border-white/10 bg-[#161622] p-4 text-center">
                     <p className="mb-1 text-[8px] font-black uppercase tracking-widest text-[#6e6853]">Ayetin Bütünü (Sol)</p>
-                    <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
+                    <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
                       {(words.length > 0 ? words.map(w => w.ar) : (ayah?.ar ?? "").split(/\s+/)).map((ar, i) => (
                         <button key={i} onClick={() => { if (words.length > 0) clickWord(Math.min(i, words.length - 1)); }} className={`rounded-md px-1 font-arabic text-base leading-loose transition-all active:scale-95 ${activeWord === i ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.7)]" : "text-[#d8cfae] hover:bg-gold/15 hover:text-[#f5dda6]"}`}>{ar}</button>
                       ))}
@@ -719,7 +719,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       {wordLoading ? (
                         <div className="flex items-center justify-center gap-2 py-4"><Loader2 size={18} className="animate-spin text-[#D7AA41]" /> <span className="text-[11px] text-[#7a745f]">kelimeler yükleniyor…</span></div>
                       ) : words.length > 0 ? (
-                        <div className="flex flex-row-reverse flex-wrap items-center justify-center gap-x-3 gap-y-2" dir="rtl">
+                        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2" dir="rtl">
                           {words.map((w) => (
                             <button
                               key={w.i}
@@ -874,7 +874,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               {isPlaying && listenAyahData ? (
                 <>
                   <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
-                  <div className="flex w-full flex-row-reverse flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
+                  <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
                     {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
                       <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#d8cfae]"}`}>{wd}</span>
                     ))}
