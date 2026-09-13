@@ -248,13 +248,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     stopAudio();
     a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
-    // ★ KELİME TAKİBİ: sesin süresi boyunca kelime kelime sarı yansıt —
-    //    currentTime/duration oranıyla anlık senkron (milisaniye hassasiyetli takip)
-    a.ontimeupdate = () => {
-      if (!a.duration || words.length === 0) return;
-      const idx = Math.min(words.length - 1, Math.floor((a.currentTime / a.duration) * words.length));
-      setActiveWord(idx);
-    };
     if (loopAyah) {
       a.loop = true;
     } else {
@@ -348,7 +341,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const stopListening = () => { stopAudio(); setIsPlaying(false); };
 
   // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
-  const stopAyahPlayback = () => { stopAudio(); };
+  const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); };
+
+  // ★ HOCA OKURKEN KELİME TAKİBİ: ses çalarken currentTime/duration oranıyla
+  //    o an okunan kelimeyi sarı yakar — words her değiştiğinde taze bağlanır.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a || !isPlaying || mode !== "learn") return;
+    const onTime = () => {
+      if (!a.duration || words.length === 0) return;
+      const idx = Math.min(words.length - 1, Math.floor((a.currentTime / a.duration) * words.length));
+      setActiveWord(idx);
+    };
+    a.ontimeupdate = onTime;
+    onTime();
+    return () => { a.ontimeupdate = null; };
+  }, [isPlaying, mode, words]);
 
   useEffect(() => { if (!open) { stopAudio(); setIsPlaying(false); } }, [open, stopAudio]);
 
@@ -460,7 +468,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       <p className="mt-2 text-[13px] font-bold text-white">{words[activeWord].tr}</p>
                       <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/30">Kelime {activeWord + 1} / {words.length} · {surah.name} {ayahNo}. Ayet</p>
                       <div className="mt-3 flex items-center justify-center gap-2">
-                        <button onClick={() => playWordAudio(activeWord)} className="flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-[10px] font-black text-slate-950 transition hover:brightness-110 active:scale-95">
+                        <button onClick={() => playWordAudio(activeWord)} className="flex items-center gap-1.5 rounded-lg bg-[#d7aa52] px-3 py-1.5 text-[10px] font-black text-[#151020] shadow-[0_0_16px_rgba(215,170,82,.45)] transition hover:brightness-110 active:scale-95">
                           <RotateCcw size={11} /> Kelimeyi Tekrar Oku
                         </button>
                         <button
@@ -530,12 +538,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <div className="flex w-full items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#1a1e2b] px-4 py-2.5">
                     <button onClick={() => { setAyahNo(n => Math.max(1, n - 1)); setActiveWord(null); }} disabled={ayahNo <= 1} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.07] text-lg text-white/75 transition hover:bg-white/15 active:scale-90 disabled:opacity-25" title="Önceki ayet">◀</button>
                     {isPlaying ? (
-                      <button onClick={stopAyahPlayback} className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-slate-950 shadow-[0_0_26px_rgba(215,170,82,.55)] transition hover:brightness-110 active:scale-90" title="Durdur">
-                        <Pause size={26} />
+                      <button onClick={stopAyahPlayback} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#d7aa52] text-[#151020] shadow-[0_0_34px_rgba(245,221,166,.85)] ring-2 ring-[#f5dda6] transition hover:brightness-110 active:scale-90" title="Durdur">
+                        <Pause size={28} strokeWidth={2.5} />
                       </button>
                     ) : (
-                      <button onClick={() => playAyahAudio()} className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-slate-950 shadow-[0_0_26px_rgba(215,170,82,.55)] transition hover:brightness-110 active:scale-90" title="Ayeti Dinle">
-                        <Play size={26} />
+                      <button onClick={() => playAyahAudio()} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#d7aa52] text-[#151020] shadow-[0_0_34px_rgba(245,221,166,.85)] ring-2 ring-[#f5dda6] transition hover:brightness-110 active:scale-90" title="Ayeti Dinle">
+                        <Play size={28} strokeWidth={2.5} />
                       </button>
                     )}
                     <button onClick={() => { setAyahNo(n => Math.min(surah.ayahs, n + 1)); setActiveWord(null); }} disabled={ayahNo >= surah.ayahs} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.07] text-lg text-white/75 transition hover:bg-white/15 active:scale-90 disabled:opacity-25" title="Sonraki ayet">▶</button>
