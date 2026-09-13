@@ -442,7 +442,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
           {/* Categories bar */}
           {atmosCategory !== "all" ? (
-            <div className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
+            <div id="atmos-active-banner" className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold shadow-md">
                   {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 18 })}

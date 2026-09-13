@@ -6,6 +6,8 @@ interface VideoClip {
   pexelsId?: number;
   r2?: string;
   r2Poster?: string;
+  /** Sayısal kimliği olmayan R2 dosyalarının gerçek dosya adı (örn. blind_deaf_mute_r3) */
+  clipFile?: string;
 }
 
 type SignedMedia = { url: string; expiresAt: number };
@@ -13,6 +15,7 @@ const signedCache = new Map<string, SignedMedia>();
 
 function mediaKey(clip: VideoClip): string | null {
   if (!clip.cat) return null;
+  if (clip.clipFile) return `${clip.cat}:${clip.clipFile}`;
   if (clip.pexelsId) return `${clip.cat}:${clip.pexelsId}`;
   const match = clip.id.match(/^[a-zA-Z0-9_-]+-r\d+$/);
   return match ? `${clip.cat}:${clip.id}` : null;
@@ -33,7 +36,7 @@ async function sign(clip: VideoClip, media: "video" | "poster"): Promise<string>
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "same-origin",
-    body: JSON.stringify({ cat: clip.cat, clipId: clip.id, pexelsId: clip.pexelsId }),
+    body: JSON.stringify({ cat: clip.cat, clipId: clip.id, pexelsId: clip.pexelsId, clipFile: clip.clipFile }),
   });
   const data = await response.json().catch(() => null) as { ok?: boolean; url?: string; posterUrl?: string; expiresAt?: number } | null;
   const url = media === "video" ? data?.url : data?.posterUrl;
@@ -46,7 +49,16 @@ export async function getVideoUrl(clip: VideoClip): Promise<string> {
   return sign(clip, "video");
 }
 
+// ★ Performans: galeride onlarca kart görünür olunca her biri için imza isteği
+// atmak API limitini (15/dk) dolduruyor ve sekmeyi kilitliyordu. Poster herkese açık
+// olduğu için önce doğrudan public CDN adresi denenir; olmazsa imzaya düşer.
 export async function getPosterUrl(clip: VideoClip): Promise<string | undefined> {
+  if (isR2Media(clip) && clip.cat) {
+    const idPart = clip.clipFile ?? (clip.pexelsId !== undefined ? String(clip.pexelsId) : null);
+    if (idPart) {
+      return `https://cdn.nurstudyo.com/posters/${clip.cat}/${idPart}.jpg`;
+    }
+  }
   return sign(clip, "poster");
 }
 

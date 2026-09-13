@@ -89,19 +89,28 @@ function scanFiles(categories, turkishNames) {
     const key = getFolderName(cat.folder, turkishNames);
     const videoIds = [];
     const templateIds = [];
+    let rVideoNames = [];
     
     // Scan videos
     const videoPath = path.join(VIDEO_ROOT, cat.folder);
     if (fs.existsSync(videoPath)) {
       const files = fs.readdirSync(videoPath);
+      const rNames = [];
       for (const file of files) {
         const ext = path.extname(file).toLowerCase();
         if ([".mp4", ".mov", ".webm", ".m4v"].includes(ext)) {
           const name = path.basename(file, ext);
           if (/^\d+$/.test(name)) {
             videoIds.push(parseInt(name, 10));
+          } else if (/_r\d+$/.test(name)) {
+            // KlasorAdi_rN.mp4 bicimi — sayisal kimlik yok, dosya adinin kendisi kimlik
+            rNames.push(name);
           }
         }
+      }
+      if (rNames.length && !videoIds.length) {
+        rNames.sort((a, b) => parseInt(a.match(/_r(\d+)$/)[1], 10) - parseInt(b.match(/_r(\d+)$/)[1], 10));
+        rVideoNames = rNames;
       }
     }
     
@@ -127,6 +136,7 @@ function scanFiles(categories, turkishNames) {
     mediaMap[cat.id] = {
       key,
       videoIds,
+      rVideoNames,
       templateIds
     };
   }
@@ -155,8 +165,8 @@ import { ADMIN_ATMOSPHERE_CATEGORIES } from "./adminAtmosphereCategories";
 
 const R2 = "https://cdn.nurstudyo.com";
 export const ADMIN_AI_KEYWORDS: Record<string, string> = ${JSON.stringify(keywords)};
-const ADMIN_MEDIA: Record<string, { key: string; videoIds: number[]; templateIds: number[] }> = ${JSON.stringify(mediaMap)};
-export const ADMIN_MOTION_CLIPS: Clip[] = ADMIN_ATMOSPHERE_CATEGORIES.flatMap((category) => { const media=ADMIN_MEDIA[category.id]; return media ? media.videoIds.map((id,index)=>({ id:\`\${category.id}-\${index+1}\`, label:\`\${category.label} \${index+1}\`, cat:category.id, kind:"vid" as const, src:\`\${R2}/videos/\${media.key}/\${id}.mp4\`, r2:\`\${R2}/videos/\${media.key}/\${id}.mp4\`, r2Poster:media.templateIds[index] ? \`\${R2}/templates/\${media.key}/\${media.templateIds[index]}.jpg\` : undefined, pexelsId:id })) : []; });
+const ADMIN_MEDIA: Record<string, { key: string; videoIds: number[]; rVideoNames?: string[]; templateIds: number[] }> = ${JSON.stringify(mediaMap)};
+export const ADMIN_MOTION_CLIPS: Clip[] = ADMIN_ATMOSPHERE_CATEGORIES.flatMap((category) => { const media=ADMIN_MEDIA[category.id]; if (!media) return []; const numeric = media.videoIds.map((id,index)=>({ id:\`\${category.id}-\${index+1}\`, label:\`\${category.label} \${index+1}\`, cat:category.id, kind:"vid" as const, src:\`\${R2}/videos/\${media.key}/\${id}.mp4\`, r2:\`\${R2}/videos/\${media.key}/\${id}.mp4\`, r2Poster:media.templateIds[index] ? \`\${R2}/templates/\${media.key}/\${media.templateIds[index]}.jpg\` : undefined, pexelsId:id })); const named=(media.rVideoNames||[]).map((name,index)=>({ id:\`\${category.id}-r\${index+1}\`, label:\`\${category.label} \${index+1}\`, cat:category.id, kind:"vid" as const, src:\`\${R2}/videos/\${media.key}/\${name}.mp4\`, r2:\`\${R2}/videos/\${media.key}/\${name}.mp4\`, clipFile:name })); return [...numeric, ...named]; });
 export const ADMIN_TEMPLATE_CLIPS: Clip[] = ADMIN_ATMOSPHERE_CATEGORIES.flatMap((category) => { const media=ADMIN_MEDIA[category.id]; return media ? media.templateIds.map((id,index)=>({ id:\`\${category.id}-tpl-\${index+1}\`, label:\`\${category.label} \${index+1}\`, cat:category.id, kind:"img" as const, src:\`\${R2}/templates/\${media.key}/\${id}.jpg\`, r2Poster:\`\${R2}/templates/\${media.key}/\${id}.jpg\`, pexelsId:id })) : []; });
 `;
 

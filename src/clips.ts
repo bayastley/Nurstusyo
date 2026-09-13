@@ -30,6 +30,8 @@ export interface Clip {
   pexelsId?: number;
   r2?: string;
   r2Poster?: string;
+  /** Sayısal kimliği olmayan R2 dosyaları için gerçek dosya adı (örn. blind_deaf_mute_r3) */
+  clipFile?: string;
 }
 
 // ★ R2 custom domain — videoUrl.ts ile aynı olmalı

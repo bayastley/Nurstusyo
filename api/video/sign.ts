@@ -130,6 +130,11 @@ function isSafeClipId(value: unknown): value is string {
   return typeof value === "string" && /^[a-zA-Z0-9_-]{2,80}$/.test(value);
 }
 
+// Sayısal kimliği olmayan R2 dosyaları: KlasorAdi_rN bicimi (örn. blind_deaf_mute_r3)
+function isSafeClipFile(value: unknown): value is string {
+  return typeof value === "string" && /^[a-zA-Z0-9]+[_-][a-zA-Z0-9_-]*_r\d{1,4}$/.test(value) && value.length <= 120;
+}
+
 function clipIndexFromId(cat: string, clipId: string | null): number {
   const match = clipId?.match(new RegExp(`^${cat}-r(\\d+)$`));
   return match ? Math.max(0, Number(match[1]) - 1) : 0;
@@ -158,12 +163,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const access = await loadServerAccess(sessionUser.id);
     if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
     if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
-    const { clipId, pexelsId, cat } = req.body || {};
+    const { clipId, pexelsId, cat, clipFile } = req.body || {};
     if (!isSafeCategory(cat)) return res.status(400).json({ ok: false, error: "Geçersiz veya izinli olmayan kategori" });
 
     const normalizedPexelsId = normalizePexelsId(pexelsId);
     const normalizedClipId = isSafeClipId(clipId) ? clipId : null;
-    if (normalizedPexelsId === null && !normalizedClipId) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
+    const normalizedClipFile = isSafeClipFile(clipFile) ? clipFile : null;
+    if (normalizedPexelsId === null && !normalizedClipId && !normalizedClipFile) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
     const userTier: Tier = access.isAdmin ? "elit" : access.tier;
     if (!access.isAdmin && typeof cat === "string" && cat.startsWith("admin_") && userTier !== "elit") {
       return res.status(403).json({ ok: false, error: "Bu içerik yalnızca Elit üyeler içindir" });
@@ -175,7 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const bucketName = process.env.R2_BUCKET_NAME || "nurstudyo";
     const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || "";
-    const mediaId = normalizedPexelsId !== null ? String(normalizedPexelsId) : normalizedClipId!;
+    const mediaId = normalizedClipFile ?? (normalizedPexelsId !== null ? String(normalizedPexelsId) : normalizedClipId!);
     const videoKey = `videos/${cat}/${mediaId}.mp4`;
     const posterKey = `posters/${cat}/${mediaId}.jpg`;
 

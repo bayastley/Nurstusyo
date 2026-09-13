@@ -8,17 +8,17 @@
 const R2 = "https://cdn.nurstudyo.com";
 
 /** Bir kategorinin pexelsId listesinden any[] üretir — URL'ler R2 kalıbından türer. */
-const mk = (cat: string, label: string, ids: number[]): any[] =>
-  ids.map((id, i) => ({
+const mk = (cat: string, label: string, pexelsIds: number[]): any[] =>
+  pexelsIds.map((pexelsId, i) => ({
     id: `${cat}-r${i + 1}`,
     label: `${label} ${i + 1}`,
     cat,
     kind: "vid" as const,
-    src: `${R2}/videos/${cat}/${id}.mp4`,
-    poster: `${R2}/posters/${cat}/${id}.jpg`,
-    pexelsId: id,
-    r2: `${R2}/videos/${cat}/${id}.mp4`,
-    r2Poster: `${R2}/posters/${cat}/${id}.jpg`,
+    src: `${R2}/videos/${cat}/${pexelsId}.mp4`,
+    poster: `${R2}/posters/${cat}/${pexelsId}.jpg`,
+    pexelsId,
+    r2: `${R2}/videos/${cat}/${pexelsId}.mp4`,
+    r2Poster: `${R2}/posters/${cat}/${pexelsId}.jpg`,
   }));
 
 // ─── ID HAVUZLARI (kategori bazlı) ────────────────────────
