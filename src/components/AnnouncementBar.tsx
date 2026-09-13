@@ -83,9 +83,9 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
       <div className={`relative z-50 border-b px-3 py-2 text-[11px] ${announcement ? "border-emerald-400/35 bg-emerald-950/35 text-emerald-100" : "border-white/10 bg-[#111014] text-white/45"}`}>
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-2">
           {announcement && (
-            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-emerald-300/45 bg-emerald-400/15 px-3 py-1.5 font-black ${announcement.blinking ? "animate-pulse" : ""}`}>
-              <Bell size={12} className="text-emerald-300" />
-              {unread && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
+            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-emerald-300/45 bg-emerald-400/15 px-3 py-1.5 font-black transition-opacity duration-700 ${announcement.blinking && unread ? "animate-pulse" : "opacity-90"}`}>
+              <Bell size={12} className={`text-emerald-300 transition-opacity duration-700 ${unread ? "" : "opacity-50"}`} />
+              {unread && <span className="h-1.5 w-1.5 animate-ping rounded-full bg-emerald-300 transition-opacity duration-700" />}
               <span>{announcement.title}</span>
               <span className="max-w-[42vw] truncate font-medium text-white/60">{announcement.message}</span>
             </button>
