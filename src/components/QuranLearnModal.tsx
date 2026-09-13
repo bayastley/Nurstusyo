@@ -752,38 +752,39 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       )}
                     </div>
 
-                    {/* ★ KONTROLLER — prototipteki gibi kartın içinde, tek satır */}
-                    <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-1.5">
-                      <button onClick={() => { setPaused(false); setFlowPlaying(true); playAyahAudio(); }} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-3 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.3)] transition hover:brightness-110 active:scale-95">
-                        <Volume2 size={10} /> Ayeti Dinle
+                    {/* ★ KONTROLLER — sol ok · DONDUR/BAŞLAT · sağ ok (prototip düzeni) */}
+                    <div className="mt-3 flex w-full flex-wrap items-center justify-center gap-2">
+                      {/* ★ SOL OK — önceki ayete gider, tıklayınca hemen okur */}
+                      <button onClick={prevAyahLearn} disabled={ayahNo <= 1} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1E293B] text-[15px] font-black text-[#f5dda6] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-90 disabled:opacity-30" title="Önceki ayet">
+                        ◀
                       </button>
-                      {/* ★ DONDUR / DEVAM — ses çalarken duraklat, kaldığı yerden sürdür */}
-                      {isPlaying && !paused && (
-                        <button onClick={pauseAyah} className="flex items-center gap-1.5 rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95" title="Sesi dondur">
-                          ⏸ Dondur
-                        </button>
-                      )}
-                      {paused && (
-                        <button onClick={resumeAyah} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41]/80 px-2.5 py-1.5 text-[9px] font-black text-[#151020] transition hover:brightness-110 active:scale-95" title="Kaldığı yerden devam">
-                          ▶ Devam
-                        </button>
-                      )}
-                      {/* ★ İLERİ / GERİ SARMA (5 saniye) */}
+                      {/* ★ ORTADA BÜYÜK DONDUR/BAŞLAT düğmesi */}
+                      {(() => {
+                        const audio = audioRef.current;
+                        const showPause = isPlaying && !paused;
+                        return (
+                          <button
+                            onClick={() => { if (showPause) pauseAyah(); else if (paused) resumeAyah(); else { setPaused(false); setFlowPlaying(true); playAyahAudio(); } }}
+                            className={`flex h-14 w-14 items-center justify-center rounded-full text-[20px] font-black transition active:scale-90 ${showPause ? "bg-[#D7AA41] text-[#151020] shadow-[0_0_18px_rgba(215,170,82,.45)] hover:brightness-110" : "bg-[#D7AA41] text-[#151020] shadow-[0_0_18px_rgba(215,170,82,.45)] ring-2 ring-[#f5dda6]/70 hover:brightness-110"}`}
+                            title={showPause ? "Dondur" : paused ? "Devam et" : "Başlat"}
+                          >
+                            {showPause ? "⏸" : "▶"}
+                          </button>
+                        );
+                      })()}
+                      {/* ★ SAĞ OK — sonraki ayete gider, tıklayınca hemen okur */}
+                      <button onClick={nextAyahLearn} disabled={ayahNo >= surah.ayahs} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1E293B] text-[15px] font-black text-[#f5dda6] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-90 disabled:opacity-30" title="Sonraki ayet">
+                        ▶
+                      </button>
+                      {/* ★ 5 SN SARMA */}
                       <button onClick={() => seekAyah(-5)} disabled={!isPlaying} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="5 saniye geri sar">
-                        ⏪ 5sn
+                        ⏪5sn
                       </button>
                       <button onClick={() => seekAyah(5)} disabled={!isPlaying} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="5 saniye ileri sar">
-                        5sn ⏩
-                      </button>
-                      {/* ★ ÖNCEKİ / SONRAKİ AYET */}
-                      <button onClick={prevAyahLearn} disabled={ayahNo <= 1} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="Önceki ayet">
-                        ◀ Ayet
-                      </button>
-                      <button onClick={nextAyahLearn} disabled={ayahNo >= surah.ayahs} className="rounded-lg bg-[#1E293B] px-2 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95 disabled:opacity-40" title="Sonraki ayet">
-                        Ayet ▶
+                        5sn⏩
                       </button>
                       <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95">
-                        <RotateCcw size={10} /> Tekrar Çal
+                        <RotateCcw size={10} /> Tekrar
                       </button>
                       <button onClick={stopAyahPlayback} className="rounded-lg bg-[#1E293B] px-2.5 py-1.5 text-[9px] font-bold text-[#cfc6a4] ring-1 ring-white/10 transition hover:bg-[#243449] active:scale-95">
                         Sıfırla
