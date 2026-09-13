@@ -264,9 +264,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     playWordAudio(i);
   };
 
+  // ★ SES MODU BAYRAĞI: element üzerinde hangi tür içerik çalıyor (ayah = kelime takibi var,
+  //   word = birebir kelime sesi — takip ASLA karışmaz)
+  const audioModeRef = useRef<"ayah" | "word">("ayah");
+
   const playWordAudio = (i: number) => {
     const a = audioRef.current; if (!a || !words[i]) return;
     stopAudio();
+    audioModeRef.current = "word";
+    // ★ KELİME TIKLAMASINDA takip tamamen KAPANIR — kelime sesi kısa olduğu için
+    //   ontimeupdate oranı yanlış kelimeye atlardı (4 kelime geriden ses gelmesi Buydu)
+    a.ontimeupdate = null;
     if (words[i].audio) {
       a.src = words[i].audio;
     } else {
@@ -340,8 +348,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       }
     }
     a.play().then(() => setIsPlaying(true)).catch(() => undefined);
+    audioModeRef.current = "ayah";
     // ★ CANLI KELİME TAKİBİ: ses kendisi konum bildirir, kelime sırayla sarı yanar
     a.ontimeupdate = () => {
+      if (audioModeRef.current !== "ayah") return; // kelime sesi çalarken takip kapalı
       if (!a.duration || Number.isNaN(a.duration)) return;
       const ws = wordsRef.current;
       if (ws.length === 0) return;
