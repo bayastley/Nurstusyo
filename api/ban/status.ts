@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { rateLimit } from "../_shared/rateLimit";
 
 // Supabase ban sorgusu — fail-safe
 function supabaseConfig() {
@@ -11,6 +12,8 @@ function supabaseConfig() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
+  // ★ Dakikada 30 sorgu — e-posta tahmin/spam taramasını yavaşlatır
+  if (!rateLimit(req, res, "ban:status", 30, 60_000)) return;
 
   try {
     const email = String(req.body?.email || req.query?.email || "").trim().toLowerCase();

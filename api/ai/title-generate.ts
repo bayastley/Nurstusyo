@@ -33,6 +33,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = requireAuth(req, res);
   if (!user) return;
 
+  // ★ Basit rate limit — dakikada 10 istek (OpenAI maliyet koruması)
+  const rlBuckets = (globalThis as unknown as { __titleRl?: Map<string, number[]> }).__titleRl ?? new Map<string, number[]>();
+  (globalThis as unknown as { __titleRl?: Map<string, number[]> }).__titleRl = rlBuckets;
+  const rlKey = user.id;
+  const now = Date.now();
+  const recent = (rlBuckets.get(rlKey) ?? []).filter((t: number) => t >= now - 60_000);
+  if (recent.length >= 10) {
+    res.status(429).json({ error: "Çok fazla istek. Lütfen biraz bekleyin." });
+    return;
+  }
+  recent.push(now);
+  rlBuckets.set(rlKey, recent);
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     res.status(500).json({ error: "OPENAI_API_KEY sunucuda tanımlı değil" });
