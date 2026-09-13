@@ -444,8 +444,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </button>
           </div>
 
-          {/* Categories bar */}
-          {atmosCategory !== "all" ? (
+          {/* Categories bar — Şablon (img) modunda grid her zaman açık,
+              Hareketli (vid) modunda klasik: all → grid, kategori → şerit */}
+          {clipKind === "vid" && atmosCategory !== "all" ? (
             <div id="atmos-active-banner" data-hero-banner className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold shadow-md">
@@ -505,6 +506,30 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {clipKind === "img" && atmosCategory !== "all" && (
+            <div id="atmos-active-banner" className="mb-3 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-2.5 animate-fadeIn">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/10 text-gold">
+                  {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 16 })}
+                </span>
+                <div>
+                  <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
+                    {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory} · Şablonlar
+                  </h4>
+                  <p className="text-[9px] text-white/40">
+                    {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} şablon listeleniyor · kategori değiştirmek için yukarıdaki klasörlerden seç
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
+                className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-[9.5px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
+              >
+                ✕ Seçimi Kaldır
+              </button>
             </div>
           )}
 
