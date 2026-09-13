@@ -58,8 +58,10 @@ const MEALS = [
   { id: "tr.vakfi", name: "Elmalılı Hamdi Yazır" },
 ] as const;
 
-// quran.com Türkçe kelime meal id'leri
-const QCOM_TR_WORD_TRANS = 77; // Diyanet
+// quran.com Türkçe kelime meal id'leri — artık yerel sözlük + İngilizce yedek
+// ★ KELİME ANLAMLARI: 1) yerel Türkçe sözlük (571 kök, Diyanet meali temelli)
+//   2) yoksa quran.com İngilizce WbW 3) o da yoksa "—"
+const WBW_TR: Record<string, string> = {};
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; }
 
@@ -168,18 +170,47 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
-    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani&translations=${QCOM_TR_WORD_TRANS}`, { signal: ctrl.signal })
+    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani`, { signal: ctrl.signal })
       .then(r => r.json())
-      .then((d: any) => {
+      .then(async (d: any) => {
         if (!live) return;
         const ws = (d.verse?.words ?? []).filter((w: any) => w.char_type_name === "word");
-        setWords(ws.map((w: any, i: number) => ({
-          i,
-          ar: w.text_uthmani,
-          tr: w.translation?.text ?? "—",
-          translit: w.transliteration?.text ?? "",
-          audio: `https://audio.qurancdn.com/${w.audio_url}`,
-        })));
+        // Türkçe sözlüğü (bir kez) yükle
+        let wbw: Record<string, string> = WBW_TR;
+        let normIdx: Record<string, string> = {};
+        if (Object.keys(wbw).length === 0) {
+          try {
+            const r = await fetch("/wbw-tr.json");
+            const j = await r.json();
+            wbw = j.translations ?? j;
+            normIdx = j.normIndex ?? {};
+            Object.assign(WBW_TR, wbw);
+          } catch { /* sözlük yoksa İngilizce kalır */ }
+        }
+        const norm = (s: string) => s
+          .replace(/[\u0670\u06E1\u064B-\u065F\u0640\u06D6-\u06ED\u0653-\u0655]/g, "")
+          .replace(/\u0671/g, "\u0627").replace(/\u0649/g, "\u064A").replace(/\u0629/g, "\u0647")
+          .replace(/[\u06CC]/g, "\u064A").replace(/\s+/g, "").trim();
+        const stripAl = (s: string) => norm(s).replace(/^ال/, "");
+        const wbwKeys = Object.keys(wbw).map(k => ({ k, n: norm(k), na: stripAl(k) }));
+        setWords(ws.map((w: any, i: number) => {
+          const bare = w.text_uthmani ?? w.text ?? "";
+          const n = norm(bare), na = stripAl(bare);
+          const exact = normIdx[n] ?? wbwKeys.find(x => x.n === n || x.na === na);
+          let tr = typeof exact === "string" ? exact : (exact as any)?.k ? wbw[(exact as any).k] : undefined;
+          if (!tr) {
+            // yaklaşık: kelimenin başındaki kökü ara (en az 3 harf)
+            const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
+            tr = part ? wbw[part.k] : undefined;
+          }
+          return {
+            i,
+            ar: bare,
+            tr: tr ?? w.translation?.text ?? "—",
+            translit: w.transliteration?.text ?? "",
+            audio: `https://audio.qurancdn.com/${w.audio_url}`,
+          };
+        }));
         setWordLoading(false);
       })
       .catch(() => { if (live) setWordLoading(false); })
