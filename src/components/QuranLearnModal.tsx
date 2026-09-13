@@ -53,9 +53,12 @@ const RECITERS: Reciter[] = [
 
 const MEALS = [
   { id: "tr.diyanet", name: "Diyanet İşleri Başkanlığı" },
-  { id: "tr.ozturk", name: "Yaşar Nuri Öztürk" },
+  { id: "tr.vakfi", name: "Elmalılı Hamdi Yazır (Truefed)" },
+  { id: "tr.yazir", name: "Elmalılı Hamdi Yazır (Hak Dini)" },
   { id: "tr.golpinarli", name: "Abdulbaki Gölpınarlı" },
-  { id: "tr.vakfi", name: "Elmalılı Hamdi Yazır" },
+  { id: "tr.yildirim", name: "Suat Yıldırım" },
+  { id: "tr.bulac", name: "Ali Bulaç" },
+  { id: "tr.ates", name: "Süleyman Ateş" },
 ] as const;
 
 // quran.com Türkçe kelime meal id'leri — artık yerel sözlük + İngilizce yedek
@@ -751,7 +754,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <div className="mt-3 rounded-2xl border border-white/10 bg-[#161622] p-3 text-center">
                     <p className="text-[8px] font-black uppercase tracking-widest text-gold">Resmî Sahih Kaynak Referansı</p>
                     <p className="mt-1 text-[9px] font-bold text-white/70">T.C. Diyanet İşleri Başkanlığı</p>
-                    <p className="mt-0.5 text-[8px] text-white/35">Mealler: Diyanet · Öztürk · Gölpınarlı · Elmalılı — Kelimeler: quran.com — Ses: everyayah.com</p>
+                    <p className="mt-0.5 text-[8px] text-white/35">Mealler: Diyanet · Elmalılı (2 versiyon) · Gölpınarlı · Yıldırım · Bulaç · Ateş — Kelimeler: quran.com — Ses: everyayah.com</p>
                   </div>
                 </div>
               </>
