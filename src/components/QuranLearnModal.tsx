@@ -807,7 +807,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
                   <div className="flex w-full flex-row-reverse flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
                     {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
-                      <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i <= listenWordProgress ? "bg-gold/25 text-[#f5dda6] shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-white/85"}`}>{wd}</span>
+                      <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-white/85"}`}>{wd}</span>
                     ))}
                   </div>
                   <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-white/60" dir="auto">“{listenAyahData.tr}”</p>
