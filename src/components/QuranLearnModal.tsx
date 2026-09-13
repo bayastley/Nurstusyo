@@ -79,6 +79,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeWord, setActiveWord] = useState<number | null>(null);
+  // ★ OTOMATİK OKU: açıkken ayet biter bitmez sıradaki ayeti okur; kelimeye tıklayınca
+  //    o kelime (yoksa o ayet) okunur ve okuma kaldığı yerden devam eder.
+  const [autoRead, setAutoRead] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("ar.alafasy");
   const [wordLoading, setWordLoading] = useState(false);
@@ -115,7 +118,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   // ── Dinle state ──
   const [listenSurah, setListenSurah] = useState(36);
-  const [listenReciter, setListenReciter] = useState("ar.alafasy");
+  const [listenReciter, setListenReciter] = useState("Alafasy_128kbps");
   const [isPlaying, setIsPlaying] = useState(false);
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
   const [nextSurahAuto, setNextSurahAuto] = useState(true);
@@ -242,6 +245,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     } else {
       a.loop = false;
       if (onEnded) a.onended = onEnded;
+      else if (autoRead) {
+        // Otomatik oku: ayet bitince sıradaki ayet (sure sonunda durur)
+        a.onended = () => {
+          if (ayahNo < surah.ayahs) {
+            setAyahNo(ayahNo + 1);
+            setActiveWord(null);
+          } else {
+            setAutoRead(false);
+          }
+        };
+      }
     }
     // Tarayıcı ses engellemesine karşı: ilk deneme başarısızsa 250ms sonra bir kez daha dene
     a.play().catch(() => {
@@ -250,6 +264,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   };
 
   const replayAyah = () => playAyahAudio();
+
+  // Ayet değişince otomatik oku modundaysa yeni ayeti başlat
+  useEffect(() => {
+    if (open && mode === "learn" && autoRead && ayahNo > 0) {
+      const t = setTimeout(() => playAyahAudio(), 150);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ayahNo, autoRead, open, mode]);
 
   // ── Dinle modu ──
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
@@ -446,6 +469,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <div className="flex flex-wrap items-center gap-2">
                     <button onClick={() => playAyahAudio()} className="flex items-center gap-1.5 rounded-lg bg-gold px-3 py-1.5 text-[10px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"><Volume2 size={11} /> Ayeti Dinle</button>
                     <button onClick={replayAyah} className="flex items-center gap-1.5 rounded-lg bg-white/[.06] px-2.5 py-1.5 text-[10px] font-bold text-white/70 transition hover:bg-white/10"><RotateCcw size={11} /> Tekrar Çal</button>
+                    <button
+                      onClick={() => setAutoRead(v => !v)}
+                      className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[9px] font-black transition ${autoRead ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/50"}`}
+                      title="Açıkken: ayet bitince sıradaki ayet kendiliğinden okunur; kelimeye tıklayınca o ses çalar, okuma kaldığı yerden sürer"
+                    >
+                      <Volume2 size={10} /> OTOMATİK OKU {autoRead ? "AÇIK" : "KAPALI"}
+                    </button>
                     <button
                       onClick={() => setLoopAyah(v => !v)}
                       className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[9px] font-black transition ${loopAyah ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-white/50"}`}
