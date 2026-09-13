@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   X, Hourglass, Shield, Search, FolderUp, Shuffle, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
   Image as ImageIcon, Film, Sparkles,
@@ -134,9 +134,21 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
   const [heroSpotlight, setHeroSpotlight] = useState<Clip | null>(null);
-  // ★ Performans: kategori başına sadece 10 kart bas; gerisi "Daha Fazla Yükle" ile
+  // ★ Performans + sonsuz kaydırma: kategori başına 10 kartla başlar; kullanıcı
+  //    aşağı indikçe kendiliğinden +10 yüklenir (eski cihazlar donmaz, buton yok).
   const [visibleCount, setVisibleCount] = useState(10);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => { setVisibleCount(10); }, [atmosCategory, clipKind, atmosQuery]);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || atmosCategory === "all") return;
+    const io = new IntersectionObserver(
+      (entries) => { if (entries[0]?.isIntersecting) setVisibleCount((c) => c + 10); },
+      { rootMargin: "600px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [atmosCategory, clipKind, atmosQuery]);
   useEffect(() => {
     const onUpdate = () => setConfigVersion((v) => v + 1);
     window.addEventListener("nur_config_updated", onUpdate);
@@ -558,13 +570,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           </div>
 
           {atmosCategory !== "all" && visibleCount < filteredClips.length && (
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={() => setVisibleCount((c) => c + 10)}
-                className="rounded-xl border border-gold/30 bg-gold/10 px-5 py-2.5 text-[11px] font-black text-gold transition hover:bg-gold/20 active:scale-95"
-              >
-                Daha Fazla Yükle ({filteredClips.length - visibleCount} kaldı)
-              </button>
+            <div ref={loadMoreRef} className="flex h-10 items-center justify-center gap-2 text-[10px] font-bold text-white/35">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
+              Daha fazla yükleniyor…
             </div>
           )}
 

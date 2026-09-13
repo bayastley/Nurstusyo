@@ -5,7 +5,7 @@ import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volum
 // QuranLearnModal — "Kur'an Öğreniyorum" + "Kur'an Dinliyorum"
 // Veri: api.alquran.cloud (114 sure, Arapça + 4 Türkçe meal)
 // Kelime: api.quran.com (kelime kelime Arapça + TR meal + kelime sesi)
-// Ses: cdn.islamic.network (ayet) + audio.qurancdn.com (kelime) + everyayah.com (tam sure)
+// Ses: everyayah.com (ayet bazlı, 30 kari) + audio.qurancdn.com (kelime)
 // ══════════════════════════════════════════════════════════════
 
 type Mode = "learn" | "listen" | null;
@@ -118,18 +118,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [listenReciter, setListenReciter] = useState("ar.alafasy");
   const [isPlaying, setIsPlaying] = useState(false);
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
-  const [continuous, setContinuous] = useState(true);
+  const [nextSurahAuto, setNextSurahAuto] = useState(true);
+  const [wholeQuran, setWholeQuran] = useState(false);
+  const [wholeIdx, setWholeIdx] = useState({ s: 1, a: 1 });
   const [loopAyah, setLoopAyah] = useState(false);
+  const [loopAyahListen, setLoopAyahListen] = useState(false);
   const [repeatWord, setRepeatWord] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
 
-  const SURAHS = useMemo(() => SURAH_LIST, []);
-  const surah = SURAHS.find(s => s.n === surahNo) ?? SURAHS[0];
+  const surah = SURAHS_DATA.find(s => s.n === surahNo) ?? SURAHS_DATA[0];
   const ayah = ayahs.find(a => a.n === ayahNo);
-
-  // Sure listesi (114 sure sabit veri)
-  function SURAH_LIST(): SurahInfo[] { return SURAHS_DATA; }
 
   // Ayetleri çek
   useEffect(() => {
@@ -217,11 +216,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     }
   };
 
-  // Ayeti sesli dinle (hoca seçimiyle, tekrar çal opsiyonu)
+  // Ayeti sesli dinle (hoca seçimiyle, tekrar çal opsiyonu) — everyayah ayet dosyası
   const playAyahAudio = (onEnded?: () => void) => {
     const a = audioRef.current; if (!a) return;
     stopAudio();
-    a.src = `https://cdn.islamic.network/quran/audio/128/${reciter}/${globalAyahNo}.mp3`;
+    a.src = `https://everyayah.com/data/${reciter}/${String(surahNo).padStart(3, "0")}${String(ayahNo).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
     if (loopAyah) {
       a.loop = true;
@@ -243,44 +242,46 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!q) return RECITERS;
     return RECITERS.filter(r => r.name.toLocaleLowerCase("tr").includes(q));
   }, [reciterSearch]);
-  const listenGlobal = useMemo(() => {
-    let g = 0;
-    for (const s of SURAHS_DATA) { if (s.n < listenSurah) g += s.ayahs; }
-    return g;
-  }, [listenSurah]);
+  // ★ Ayet mp3 yolu — everyayah (30 kari, hepsi ayet bazlı, tek tek test edildi)
+  const ayahUrl = useCallback((sN: number, aN: number) =>
+    `https://everyayah.com/data/${listenReciter}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [listenReciter]);
 
-  // mp3quran karileri tam-sure mp3 çalar (001.mp3…114.mp3); ar.* kariler ayet-ayet
-  const isSurahReciter = false;
-
-  const startListening = useCallback((fromIdx = 0) => {
+  const playAt = useCallback((sN: number, ayahIdx: number) => {
     const a = audioRef.current; if (!a) return;
-    setListenAyahIdx(fromIdx);
-    stopAudio();
-    if (false) {
-      // mp3quran: tam sure tek dosya
-      const [server] = listenReciter.split("|");
-      a.src = `${server}${String(listenSurah).padStart(3, "0")}.mp3`;
-    } else {
-      a.src = `https://cdn.islamic.network/quran/audio/128/${listenReciter}/${listenGlobal + fromIdx + 1}.mp3`;
-    }
+    setListenAyahIdx(ayahIdx);
+    a.src = ayahUrl(sN, ayahIdx + 1);
     a.playbackRate = speed;
     a.loop = false;
     a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-  }, [listenGlobal, listenReciter, listenSurah, speed, stopAudio]);
+  }, [ayahUrl, speed]);
+
+  const startListening = useCallback((fromIdx = 0) => {
+    stopAudio();
+    const sN = wholeQuran ? 1 : listenSurah;
+    if (wholeQuran) { setWholeIdx({ s: 1, a: fromIdx + 1 }); setListenSurah(1); }
+    playAt(sN, fromIdx);
+  }, [wholeQuran, listenSurah, playAt, stopAudio]);
 
   useEffect(() => {
     const a = audioRef.current; if (!a) return;
     const onEnded = () => {
-      if (false) { setIsPlaying(false); return; } // tam sure bitti
-      if (mode === "listen" && continuous && listenAyahIdx < listenSurahInfo.ayahs - 1) {
-        startListening(listenAyahIdx + 1);
-      } else {
-        setIsPlaying(false);
+      if (loopAyahListen) { a.currentTime = 0; a.play().catch(() => undefined); return; }
+      const sNow = wholeQuran ? wholeIdx.s : listenSurah;
+      const total = SURAHS_DATA.find(s => s.n === sNow)?.ayahs ?? listenSurahInfo.ayahs;
+      if (listenAyahIdx + 1 < total) { playAt(sNow, listenAyahIdx + 1); return; }
+      // Sure bitti → KOMPLE KUR'AN ya da SIRADAKİ SURE açıksa bir sonraki sureye geç
+      const next = SURAHS_DATA.find(s => s.n === sNow + 1);
+      if ((wholeQuran || nextSurahAuto) && next) {
+        if (wholeQuran) setWholeIdx({ s: next.n, a: 1 });
+        setListenSurah(next.n);
+        playAt(next.n, 0);
+        return;
       }
+      setIsPlaying(false);
     };
     a.addEventListener("ended", onEnded);
     return () => a.removeEventListener("ended", onEnded);
-  }, [mode, continuous, listenAyahIdx, listenReciter, listenSurahInfo.ayahs, startListening]);
+  }, [loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs]);
 
   const stopListening = () => { stopAudio(); setIsPlaying(false); };
 
@@ -496,6 +497,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-6 scrollbar-thin">
           <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#161622] p-7 shadow-2xl">
             <span className="text-[9px] font-bold uppercase tracking-widest text-gold">Kesintisiz Ayet Ayet Oynatıcı</span>
+            {/* ★ DİNLEME KAPSAMI */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(false); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && !nextSurahAuto ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-white/50"}`}>Tek Sure</button>
+              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(true); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && nextSurahAuto ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/50"}`} title="Seçtiğin sure bitince sıradaki sureye otomatik geçer">Sıradaki Sureye Geç</button>
+              <button onClick={() => { setWholeQuran(true); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${wholeQuran ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/50"}`} title="Fâtiha'dan Nâs'a 6236 ayet, sureler arası kesintisiz">📖 KOMPLE KUR'AN</button>
+            </div>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
                 <span className="text-[9px] font-bold uppercase text-white/40">Sure</span>
@@ -528,9 +535,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             <div className="mt-4 flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/40 p-5 text-center">
               {isPlaying ? (
                 <>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Çalıyor</span>
-                  <p className="font-arabic text-2xl text-gold-light">سُورَةُ {listenSurahInfo.name}</p>
-                  <p className="text-[10px] text-white/45">{listenAyahIdx + 1}. ayet · {(RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Çalıyor {wholeQuran ? "· KOMPLE KUR'AN" : nextSurahAuto ? "· SIRADAKİ SURE" : ""}</span>
+                  <p className="font-arabic text-2xl text-gold-light">سُورَةُ {(SURAHS_DATA.find(s => s.n === (wholeQuran ? wholeIdx.s : listenSurah)) ?? listenSurahInfo).name}</p>
+                  <p className="text-[10px] text-white/45">{(wholeQuran ? wholeIdx.a : listenAyahIdx + 1)}. ayet · {(RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
                 </>
               ) : (
                 <p className="text-[11px] text-white/40">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
@@ -545,24 +552,20 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 ))}
               </div>
               <div className="flex items-center gap-3">
-                {!isSurahReciter && (
-                  <button onClick={() => startListening(Math.max(0, listenAyahIdx - 1))} className="rounded-full bg-white/[.06] p-2.5 text-white/70 transition hover:bg-white/10 active:scale-95" title="Önceki ayet">⏮</button>
-                )}
+                <button onClick={() => startListening(Math.max(0, listenAyahIdx - 1))} className="rounded-full bg-white/[.06] p-2.5 text-white/70 transition hover:bg-white/10 active:scale-95" title="Önceki ayet">⏮</button>
                 {isPlaying ? (
                   <button onClick={stopListening} className="rounded-full bg-gold p-4 text-slate-950 shadow-lg shadow-gold/20 transition hover:brightness-110 active:scale-90"><Pause size={22} /></button>
                 ) : (
                   <button onClick={() => startListening(listenAyahIdx)} className="rounded-full bg-gold p-4 text-slate-950 shadow-lg shadow-gold/20 transition hover:brightness-110 active:scale-90"><Play size={22} /></button>
                 )}
-                {!isSurahReciter && (
-                  <button onClick={() => startListening(Math.min(listenSurahInfo.ayahs - 1, listenAyahIdx + 1))} className="rounded-full bg-white/[.06] p-2.5 text-white/70 transition hover:bg-white/10 active:scale-95" title="Sonraki ayet">⏭</button>
-                )}
+                <button onClick={() => startListening(Math.min(listenSurahInfo.ayahs - 1, listenAyahIdx + 1))} className="rounded-full bg-white/[.06] p-2.5 text-white/70 transition hover:bg-white/10 active:scale-95" title="Sonraki ayet">⏭</button>
               </div>
-              <button onClick={() => setContinuous(c => !c)} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[9px] font-black transition ${continuous ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/40"}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${continuous ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
-                SÜREKLİ {continuous ? "AÇIK" : "KAPALI"}
+              <button onClick={() => setLoopAyahListen(v => !v)} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[9px] font-black transition ${loopAyahListen ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-white/40"}`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${loopAyahListen ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
+                AYET DÖNGÜSÜ {loopAyahListen ? "AÇIK" : "KAPALI"}
               </button>
             </div>
-            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-white/25">241 kari (mp3quran.net) · ayet ayet akış · kaynak: islamic.network</p>
+            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-white/25">30 kari · ayet ayet akış · Komple Kur'an: 6236 ayet · kaynak: everyayah.com</p>
           </div>
         </div>
       )}

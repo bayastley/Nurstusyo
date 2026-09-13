@@ -1,7 +1,7 @@
 import React from "react";
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
-  Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette,
+  Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette, Headphones,
   LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
