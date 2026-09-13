@@ -116,6 +116,9 @@ function canAccessClip(userTier: Tier, cat: CatId, clipIndex: number): boolean {
 
 const ALLOWED_CATEGORIES = new Set<string>(CATEGORY_IDS);
 
+// ★ admin_* kategorilerin R2'deki GERCEK klasor adlari (key) — src/adminMediaManifest.ts ile senkron
+const ADMIN_R2_KEYS: Record<string, string> = {"admin_adiyat_war_horses":"atlar","admin_aging_elderly_man":"yasli-adam","admin_ancient_city_walls":"surlar","admin_ancient_egypt_pyramids":"piramit","admin_ancient_ruins_stone":"harabeler","admin_aurora_borealis_sky":"kutupisigi","admin_belkis_throne_kingdom":"taht","admin_black_hole_space":"karadelik","admin_blind_deaf_mute":"engelli","admin_boiling_sulfur_springs":"kukurt","admin_cargo_ships_sea":"gemiler","admin_collapsing_star":"cokenyildiz","admin_constellation_stars":"takimyildiz","admin_cooked_mud_pottery":"comlek","admin_darkness_to_light":"nur","admin_date_palm_branches":"zeytin","admin_deep_canyon_passages":"kanyon","admin_desert_oasis_sources":"vaha","admin_earth_crust_layers":"yerkabugu","admin_earthquake_shaking_ground":"deprem","admin_embryo_human_creation":"yaratilis","admin_flying_crow_raven":"karga","admin_glacier_iceberg_melting":"buzdagi","admin_grazing_cattle_sheep":"hayvanlar","admin_gushing_spring_river":"caglayan","admin_hadid_iron_metal":"demir","admin_hands_praying_sky":"dua","admin_heaven_pomegranate_fruits":"nar","admin_hellfire_volcano_lava":"lav","admin_honeybee_hive_comb":"petek","admin_hudhud_water_suleyman_hoopoe_bird":"hudhud","admin_iron_shield_armor":"zirh","admin_joseph_deep_well":"kuyu","admin_justice_scales_balance":"adalet","admin_kahf_cave_zara_bowl":"magara","admin_karun_treasures_gold":"karun","admin_liquid_copper_spring":"bakir","admin_lizard_in_desert":"kertenkele","admin_locust_swarm_flying":"cekirge","admin_lunar_phases_orbit":"ay","admin_luxury_palace_interior":"saray","admin_mahshar_wavy_people":"mahser","admin_market_place_trade":"pazar","admin_meteor_shower_stars":"meteor","admin_molten_iron_ore":"cevher","admin_mountains_wool_dust":"daglar","admin_mud_fertile_soil":"toprak","admin_mustard_seed_macro":"hardal","admin_night_sleep_death":"uyku","admin_olive_grove_trees":"zeytin","admin_paradise_garden_palace":"cennet","admin_paradise_rivers_milk":"nehirler","admin_pearl_coral_diving":"mercan","admin_pen_ink_writing":"kalem","admin_praying_hands_islamic":"ibadet","admin_regret_sadness_face":"pismanlik","admin_rock_carved_houses":"kayalar","admin_seven_layers_atmosphere":"atmosfer","admin_shining_faces_joy":"sevinc","admin_silk_fabric_textile":"ipek","admin_silver_goblets_crystal":"kadehler","admin_sky_ripping_open":"gokyuzu","admin_smoke_fog_sky":"sis","admin_solar_eclipse_sun":"tutulma","admin_spider_rotten_nest":"orumcek","admin_sprouting_seed_soil":"filiz","admin_stormy_sea_boat":"firtina","admin_stratosphere_clouds_heavy":"stratosfer","admin_swarming_gnats_mosquito":"sivrisinek","admin_tectonic_plates_fault":"fay","admin_two_sea_merging":"birlesme","admin_underground_cave":"magara2","admin_underwater_currents_dark":"akinti","admin_universe_expansion":"evren","admin_water_well_depth":"kuyu2","admin_water_cycle_cloud_formation":"dongu","admin_withered_dry_grass":"kuraklik","admin_wolf_howling_night":"kurt","admin_zaqqum_tree_hell":"zakkum"};
+
 function isSafeCategory(value: unknown): value is CatId {
   return typeof value === "string" && (ALLOWED_CATEGORIES.has(value as CatId) || /^admin_[a-zA-Z0-9_]{2,100}$/.test(value));
 }
@@ -182,8 +185,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const accessKeyId = process.env.R2_ACCESS_KEY_ID || "";
     const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY || "";
     const mediaId = normalizedClipFile ?? (normalizedPexelsId !== null ? String(normalizedPexelsId) : normalizedClipId!);
-    const videoKey = `videos/${cat}/${mediaId}.mp4`;
-    const posterKey = `posters/${cat}/${mediaId}.jpg`;
+    // ★ admin_* kategoriler R2'de kisa klasor adlariyla durur (orn. videos/hayvanlar/)
+    const r2Folder = ADMIN_R2_KEYS[String(cat)] ?? String(cat);
+    const videoKey = `videos/${r2Folder}/${mediaId}.mp4`;
+    const posterKey = `posters/${r2Folder}/${mediaId}.jpg`;
 
     if (accountId && accessKeyId && secretAccessKey) {
       if (!/^[a-zA-Z0-9]{16,64}$/.test(accountId)) return res.status(500).json({ ok: false, error: "R2 hesap yapılandırması geçersiz" });

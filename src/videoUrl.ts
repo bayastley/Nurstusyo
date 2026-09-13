@@ -53,6 +53,8 @@ export async function getVideoUrl(clip: VideoClip): Promise<string> {
 // atmak API limitini (15/dk) dolduruyor ve sekmeyi kilitliyordu. Poster herkese açık
 // olduğu için önce doğrudan public CDN adresi denenir; olmazsa imzaya düşer.
 export async function getPosterUrl(clip: VideoClip): Promise<string | undefined> {
+  // ★ Bilinen R2 yolu varsa (örn. admin kategoriler templates/ altında) direkt onu kullan
+  if (clip.r2Poster) return clip.r2Poster;
   if (isR2Media(clip) && clip.cat) {
     const idPart = clip.clipFile ?? (clip.pexelsId !== undefined ? String(clip.pexelsId) : null);
     if (idPart) {
