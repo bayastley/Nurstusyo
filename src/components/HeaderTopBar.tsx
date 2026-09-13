@@ -145,6 +145,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </button>
                     {[
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
+                      { icon: BookOpen, label: "Kur'an Öğreniyorum", target: "quranLearn" as ModalName },
                     ].map((item) => (
                       <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
@@ -392,6 +393,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
               <span>🎁</span>Hediye Kodu
             </span>
+            {/* ★ KUR'AN ÖĞRENIYORUM */}
+            <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
+              <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an Öğreniyorum
+            </button>
+            {/* ★ KUR'AN DINLIYORUM */}
+            <button onClick={() => setModal("quranListen")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70 transition hover:scale-105 md:flex">
+              <Headphones size={11} style={{ color: "var(--accent)" }} />Kur'an Dinliyorum
+            </button>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />

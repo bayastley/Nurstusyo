@@ -10,6 +10,7 @@ import { PremiumModal } from "./PremiumModal";
 import { ZipExplorer } from "./ZipExplorer";
 import { AtmosphereCard } from "./AtmosphereCard";
 import { AdminDashboardModal } from "./AdminDashboardModal";
+import QuranLearnModal from "./QuranLearnModal";
 import { ATMOSPHERE_PREVIEW_UNLOCKED, CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
@@ -595,6 +596,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           )}
         </Modal>
       )}
+
+      {/* QURAN LEARN / LISTEN MODAL */}
+      <QuranLearnModal open={modal === "quranLearn"} onClose={() => setModal(null)} initialMode="learn" />
+      <QuranLearnModal open={modal === "quranListen"} onClose={() => setModal(null)} initialMode="listen" />
 
       {/* LIBRARY MODAL */}
       {modal === "library" && (

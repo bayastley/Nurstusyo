@@ -49,5 +49,5 @@ export interface User {
 
 export type Mode = "short" | "long" | "full";
 export type Aspect = "9:16" | "1:1" | "16:9" | "4:5";
-export type ModalName = "atmos" | "themes" | "prayer" | "history" | "guide" | "stories" | "contact" | "login" | "library" | "zip" | "adminDashboard" | null;
+export type ModalName = "atmos" | "themes" | "prayer" | "history" | "guide" | "stories" | "contact" | "login" | "library" | "zip" | "adminDashboard" | "quranLearn" | "quranListen" | null;
 export type LoginTab = "login" | "register" | "forgot" | "verify";
