@@ -16,6 +16,7 @@ import {
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import { ADMIN_AI_KEYWORDS, ADMIN_MOTION_CLIPS } from "./adminMediaManifest";
+import { CLIP_AI_KEYWORDS } from "./clips/index";
 import {
   ACTIVE_CATEGORIES,
   ALL_CLIPS,
@@ -146,7 +147,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [background, setBackground] = useState<Clip>(MOTION_CLIPS[0]);
   const [ayahBackgrounds, setAyahBackgrounds] = useState<Record<string, Clip>>({});
   const [clipKind, setClipKind] = useState<"img" | "vid">("vid");
-  const [atmosCategory, setAtmosCategory] = useState<CatId | "all">(ACTIVE_CATEGORIES[0]);
+  const [atmosCategory, setAtmosCategory] = useState<CatId | "all">("all");
   const [atmosQuery, setAtmosQuery] = useState("");
   const [pickingFor, setPickingFor] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>("short");
@@ -543,6 +544,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const adminMediaCategories = new Set(ADMIN_MOTION_CLIPS.map((clip) => clip.cat));
     for (const [category, keywords] of Object.entries(ADMIN_AI_KEYWORDS)) {
       if (!adminMediaCategories.has(category as CatId)) continue;
+      const match = keywords
+        .split(/\s+/)
+        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
+      if (match) return category as CatId;
+    }
+
+    // ★ Ana R2 kategorileri için akıllı eşleşme (23 kategori: namaz, deniz, daglar...)
+    for (const [category, keywords] of Object.entries(CLIP_AI_KEYWORDS)) {
       const match = keywords
         .split(/\s+/)
         .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
@@ -1061,19 +1070,26 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (atmosCategory !== "all") { pool = pool.filter((clip) => clip.cat === atmosCategory); }
     const value = atmosQuery.trim().toLocaleLowerCase("tr");
     if (value) { pool = pool.filter((clip) => clip.label.toLocaleLowerCase("tr").includes(value)); }
-    return [...pool].sort((a, b) => {
-      const sameCatA = combinedAllClips.filter(c => c.cat === a.cat && c.kind === clipKind);
-      const sameCatB = combinedAllClips.filter(c => c.cat === b.cat && c.kind === clipKind);
-      const idxA = sameCatA.findIndex(c => c.id === a.id);
-      const idxB = sameCatB.findIndex(c => c.id === b.id);
-      const catTierA = KATEGORI_TIER[a.cat as CatId] ?? "free";
-      const catTierB = KATEGORI_TIER[b.cat as CatId] ?? "free";
-      const nextTierA: Tier = catTierA === "free" ? "pro" : catTierA === "pro" ? "elit" : "elit";
-      const nextTierB: Tier = catTierB === "free" ? "pro" : catTierB === "pro" ? "elit" : "elit";
-      const lockedA = (!tierAtLeast(accessTier, catTierA)) || (tierAtLeast(accessTier, catTierA) && idxA >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTierA));
-      const lockedB = (!tierAtLeast(accessTier, catTierB)) || (tierAtLeast(accessTier, catTierB) && idxB >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTierB));
-      return Number(lockedA) - Number(lockedB);
-    });
+    // ★ Performans: eski karşılaştırıcı her adımda tüm arşivi tarıyordu (O(n²)) ve
+    //   mobilde/site genelinde donmaya yol açıyordu. Kilit durumu tek geçişte hesaplanıyor (O(n)).
+    const idxMap = new Map<string, number>();
+    const seen = new Map<string, number>();
+    for (const clip of pool) {
+      const key = clip.cat as string;
+      const n = seen.get(key) ?? 0;
+      idxMap.set(clip.id, n);
+      seen.set(key, n + 1);
+    }
+    const lockMap = new Map<string, number>();
+    for (const clip of pool) {
+      const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
+      const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
+      const unlocked = tierAtLeast(accessTier, catTier);
+      const idx = idxMap.get(clip.id) ?? 0;
+      const locked = !unlocked || (idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier));
+      lockMap.set(clip.id, locked ? 1 : 0);
+    }
+    return [...pool].sort((a, b) => (lockMap.get(a.id) ?? 0) - (lockMap.get(b.id) ?? 0));
   }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier]);
 
   const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);

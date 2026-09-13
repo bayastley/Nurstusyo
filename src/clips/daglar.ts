@@ -1,30 +1,37 @@
+// ════════════════════════════════════════════════════════
+// daglar.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Dağ — 49 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const DAGLAR_DATA: Row[] = [
-  [13883796,24,true,"Tepe Kuş Bakış"],[18757923,60,true,"Utah 4K"],
-  [35325909,60,false,"Karlı Havadan"],[13875350,24,true,"Orman Dağ"],
-  [35741880,25,true,"Silsile 4K"],[35632406,30,true,"Sis Dağ"],
-  [8761038,30,true,"Kış Drone"],[29136298,60,true,"Arnavutluk"],
-  [36633320,30,true,"Karlı 4K"],[8303161,30,true,"Drone Bulut"],
-  [4763085,24,true,"Karlı Zirve"],[2474616,24,true,"Buz Dağı"],
-  [35655933,60,true,"Alp Gün Doğ."],[7592624,30,true,"Yüksek Dağ"],
-  [19946229,30,false,"Kar Vadisi"],[34956048,60,true,"Bolivya"],
-  [28492303,24,true,"Dolomit"],[7593620,30,true,"Sisli Dağ"],
-  [9980505,30,true,"Şelale"],[8468523,30,true,"Çağlayan"],
-  [37590733,30,true,"Drone Zirve"],[13883796,24,true,"Tepe II"],
-  [18757923,60,true,"Utah II"],[13875350,24,true,"Orman II"],
-  [35741880,25,true,"Silsile II"],[35632406,30,true,"Sis II"],
-  [8761038,30,true,"Kış II"],[29136298,60,true,"Alps II"],
-  [36633320,30,true,"Karlı II"],[8303161,30,true,"Drone II"],
-  [4763085,24,true,"Zirve II"],[2474616,24,true,"Buz II"],
-  [35655933,60,true,"Alp II"],[7592624,30,true,"Dağ II"],
-  [19946229,30,false,"Vadi II"],[34956048,60,true,"Bolivya II"],
-  [28492303,24,true,"Dolomit II"],[7593620,30,true,"Sisli II"],
-  [9980505,30,true,"Şelale II"],[8468523,30,true,"Çağlayan II"],
-  [37590733,30,true,"Zirve III"],[13883796,24,true,"Tepe III"],
-  [18757923,60,true,"Utah III"],[13875350,24,true,"Orman III"],
-  [35741880,25,true,"Silsile III"],[35632406,30,true,"Sis III"],
-  [8761038,30,true,"Kış III"],[29136298,60,true,"Alps III"],
-  [36633320,30,true,"Karlı III"],[8303161,30,true,"Drone III"],
-  [4763085,24,true,"Zirve IV"],[2474616,24,true,"Buz III"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** daglar kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const DAGLAR_IDS = [
+  32045863,29443420,11494523,4763085,35742080,35655933,11449150,6650215,
+  5700535,32045933,34532365,35741880,18757923,27872156,6693764,16562834,
+  35632406,28891493,13883796,28891490,19146803,37609572,34505196,34798290,
+  36690240,37329538,8761038,11273071,30849291,8189761,28638515,3217373,
+  1439950,10267216,19859606,16707745,7593620,10178127,35741877,37984254,
+  37984247,8761173,12612370,17855449,36633320,37014696,10070444,20583716,
+  27658737,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const DAGLAR_URLS: string[] = DAGLAR_IDS.map((id) => `${R2}/videos/daglar/${id}.mp4`);
+export const DAGLAR_POSTER_URLS: string[] = DAGLAR_IDS.map((id) => `${R2}/posters/daglar/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const DAGLAR_DATA: Row[] = DAGLAR_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Dağ " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const DAGLAR_AI_KEYWORDS = "dağ zirve tepe manzara kar";

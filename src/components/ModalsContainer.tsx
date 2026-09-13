@@ -132,6 +132,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   lang,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
+  const [heroSpotlight, setHeroSpotlight] = useState<Clip | null>(null);
+  // ★ Performans: kategori başına sadece 10 kart bas; gerisi "Daha Fazla Yükle" ile
+  const [visibleCount, setVisibleCount] = useState(10);
+  useEffect(() => { setVisibleCount(10); }, [atmosCategory, clipKind, atmosQuery]);
   useEffect(() => {
     const onUpdate = () => setConfigVersion((v) => v + 1);
     window.addEventListener("nur_config_updated", onUpdate);
@@ -442,7 +446,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
           {/* Categories bar */}
           {atmosCategory !== "all" ? (
-            <div id="atmos-active-banner" className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
+            <div id="atmos-active-banner" data-hero-banner className="mb-4 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-3 animate-fadeIn">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold/10 text-gold shadow-md">
                   {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 18 })}
@@ -457,7 +461,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 </div>
               </div>
               <button
-                onClick={() => setAtmosCategory("all")}
+                onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
                 className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 text-[10px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
               >
                 ◀ Kategorilere Geri Dön
@@ -480,6 +484,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                       onMouseLeave={() => { if (hardLocked) setLockTip((cur) => (cur === `cat-${category.id}` ? null : cur)); }}
                       onClick={() => {
                         if (hardLocked && !isMasterSürüm) return;
+                        const candidates = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind);
+                        const spotlight = candidates[Math.floor(Math.random() * candidates.length)] ?? null;
+                        setHeroSpotlight(spotlight);
                         setAtmosCategory(category.id);
                       }}
                       className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : "glass-soft text-white/70 hover:text-white"}`}
@@ -502,7 +509,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           )}
 
           <div className={`grid gap-3 ${clipKind === "img" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}>
-            {filteredClips.map((clip) => {
+            {(atmosCategory === "all"
+              ? []
+              : (heroSpotlight
+                  ? [heroSpotlight, ...filteredClips.filter((clip) => clip.id !== heroSpotlight.id)]
+                  : filteredClips
+                ).slice(0, visibleCount)
+            ).map((clip) => {
               const dynamicLock = getFeatureLock(clip.cat as string, "free");
               const catTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : (KATEGORI_TIER[clip.cat as CatId] ?? "free");
               const sameCat = combinedAllClips.filter(c => c.cat === clip.cat && c.kind === clipKind);
@@ -521,6 +534,17 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               );
             })}
           </div>
+
+          {atmosCategory !== "all" && visibleCount < filteredClips.length && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => setVisibleCount((c) => c + 10)}
+                className="rounded-xl border border-gold/30 bg-gold/10 px-5 py-2.5 text-[11px] font-black text-gold transition hover:bg-gold/20 active:scale-95"
+              >
+                Daha Fazla Yükle ({filteredClips.length - visibleCount} kaldı)
+              </button>
+            </div>
+          )}
 
           {/* ★ MERAK UYANDIRAN TEASER — R2'ye hazırlanan 78 yeni atmosfer
               kategorisi için henüz gerçek görsel bağlanmadı; bu yüzden gerçek

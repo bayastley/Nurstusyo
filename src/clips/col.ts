@@ -1,29 +1,37 @@
+// ════════════════════════════════════════════════════════
+// col.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Çöl — 50 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const COL_DATA: Row[] = [
-  [4797157,24,true,"Çöl Deve 4K"],[2055060,25,false,"Deve Kervanı"],
-  [33273198,30,true,"Kum Tepeleri"],[19069013,30,false,"Çöl Akşamı"],
-  [7518067,25,false,"Develer Saha"],[27322340,50,true,"Çöl Günbatımı"],
-  [15405842,50,false,"Deve Sahil I"],[15405840,50,false,"Deve Sahil II"],
-  [12119036,50,false,"Deve Yürüyüş"],[10229375,30,false,"Ateş Kıvılcım"],
-  [6900893,30,false,"Kamp Ateşi"],[4777136,24,false,"Yanan Odun"],
-  [8371512,24,true,"Kor 4K"],[5596915,24,true,"Karanlık Ateş"],
-  [34210241,24,true,"Gece Ateş 4K"],[28802354,30,true,"Alev Dans 4K"],
-  [5155376,25,true,"Kıvılcım 4K"],[30669823,30,true,"Doğal Ateş"],
-  [4797157,24,true,"Deve II"],[2055060,25,false,"Kervan II"],
-  [33273198,30,true,"Kum II"],[19069013,30,false,"Akşam II"],
-  [7518067,25,false,"Deve III"],[27322340,50,true,"Günbatımı II"],
-  [15405842,50,false,"Sahil III"],[15405840,50,false,"Sahil IV"],
-  [12119036,50,false,"Yürüyüş II"],[10229375,30,false,"Kıvılcım II"],
-  [6900893,30,false,"Ateş II"],[4777136,24,false,"Odun II"],
-  [8371512,24,true,"Köz II"],[5596915,24,true,"Ateş III"],
-  [34210241,24,true,"Gece II"],[28802354,30,true,"Alev II"],
-  [5155376,25,true,"Kıvılcım III"],[30669823,30,true,"Ateş IV"],
-  [4797157,24,true,"Deve IV"],[2055060,25,false,"Kervan III"],
-  [33273198,30,true,"Kum III"],[19069013,30,false,"Çöl III"],
-  [7518067,25,false,"Deve V"],[27322340,50,true,"Gün III"],
-  [10229375,30,false,"Kıvılcım IV"],[6900893,30,false,"Ateş V"],
-  [4777136,24,false,"Odun III"],[8371512,24,true,"Köz III"],
-  [5596915,24,true,"Ateş VI"],[34210241,24,true,"Gece III"],
-  [28802354,30,true,"Alev III"],[30669823,30,true,"Ateş VII"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** col kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const COL_IDS = [
+  2055056,17833698,33170755,5442713,33665977,8865223,16905150,30791936,
+  18762628,6573930,8865773,8865761,16381948,20081119,35296750,8397874,
+  26346980,34162348,17833699,5922887,855673,16017101,5442785,33549992,
+  35309672,8865227,28427111,8865816,10682457,35296754,17833704,19745264,
+  28782169,33418729,33911366,7670919,34162311,28427109,17584730,16381944,
+  8865359,11943651,35101190,29660253,30791919,28916862,33284824,34535419,
+  5728372,30240507,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const COL_URLS: string[] = COL_IDS.map((id) => `${R2}/videos/col/${id}.mp4`);
+export const COL_POSTER_URLS: string[] = COL_IDS.map((id) => `${R2}/posters/col/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const COL_DATA: Row[] = COL_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Çöl " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const COL_AI_KEYWORDS = "çöl kum kurak vaha";

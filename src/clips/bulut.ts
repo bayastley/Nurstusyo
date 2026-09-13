@@ -1,30 +1,37 @@
+// ════════════════════════════════════════════════════════
+// bulut.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Bulut — 50 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const BULUT_DATA: Row[] = [
-  [11806938,25,false,"Bulut Günbatımı"],[10221670,30,true,"Bulutlu 4K"],
-  [13667758,30,true,"Timelapse 4K"],[4110700,30,true,"Sunset 4K"],
-  [11519743,50,false,"Gökyüzü"],[14309781,30,false,"Bulutlar"],
-  [33227529,30,true,"Sakin 4K"],[5326623,30,false,"Timelapse"],
-  [12854830,30,true,"Beyaz 4K"],[11115722,30,true,"Akan 4K"],
-  [12634422,30,true,"Dağ 4K"],[13141635,30,true,"Rüzgar 4K"],
-  [33916737,24,true,"Altın 4K"],[30233251,60,false,"Dramatik"],
-  [11806938,25,false,"Bulut II"],[10221670,30,true,"Bulutlu II"],
-  [13667758,30,true,"Timelapse II"],[4110700,30,true,"Sunset II"],
-  [11519743,50,false,"Gökyüzü II"],[14309781,30,false,"Bulut II"],
-  [33227529,30,true,"Sakin II"],[5326623,30,false,"Timelapse II"],
-  [12854830,30,true,"Beyaz II"],[11115722,30,true,"Akan II"],
-  [12634422,30,true,"Dağ II"],[13141635,30,true,"Rüzgar II"],
-  [33916737,24,true,"Altın II"],[30233251,60,false,"Dramatik II"],
-  [11806938,25,false,"Bulut III"],[10221670,30,true,"Bulutlu III"],
-  [13667758,30,true,"Timelapse III"],[4110700,30,true,"Sunset III"],
-  [11519743,50,false,"Gökyüzü III"],[14309781,30,false,"Bulut III"],
-  [33227529,30,true,"Sakin III"],[5326623,30,false,"Timelapse III"],
-  [12854830,30,true,"Beyaz III"],[11115722,30,true,"Akan III"],
-  [12634422,30,true,"Dağ III"],[13141635,30,true,"Rüzgar III"],
-  [33916737,24,true,"Altın III"],[30233251,60,false,"Dramatik III"],
-  [11806938,25,false,"Bulut IV"],[10221670,30,true,"Bulutlu IV"],
-  [13667758,30,true,"Timelapse IV"],[4110700,30,true,"Sunset IV"],
-  [11519743,50,false,"Gökyüzü IV"],[14309781,30,false,"Bulut IV"],
-  [33227529,30,true,"Sakin IV"],[5326623,30,false,"Timelapse IV"],
-  [12854830,30,true,"Beyaz IV"],[11115722,30,true,"Akan IV"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** bulut kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const BULUT_IDS = [
+  2865145,9540152,11519743,6772577,4123185,33227529,27896296,12854830,
+  11115722,4364654,33723664,17302276,13236825,4525344,5019813,12634422,
+  14940844,13141635,14309781,27877603,4858774,4570131,17824025,33409722,
+  5304548,6459951,4703568,4364658,5326623,4027276,9010840,30872234,
+  8025546,19985528,6580066,3027189,4060762,9010839,5304547,4355463,
+  4103458,4377446,30094989,5148195,12047275,7680846,13293952,10348810,
+  33957426,34724497,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const BULUT_URLS: string[] = BULUT_IDS.map((id) => `${R2}/videos/bulut/${id}.mp4`);
+export const BULUT_POSTER_URLS: string[] = BULUT_IDS.map((id) => `${R2}/posters/bulut/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const BULUT_DATA: Row[] = BULUT_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Bulut " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const BULUT_AI_KEYWORDS = "bulut gökyüzü hava yağmur";

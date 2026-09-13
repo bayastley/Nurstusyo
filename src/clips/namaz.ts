@@ -1,29 +1,37 @@
+// ════════════════════════════════════════════════════════
+// namaz.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Kâbe & Namaz — 50 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const NAMAZ_DATA: Row[] = [
-  [35110882,60,true,"Kâbe Havadan 4K I"],[35110822,60,true,"Kâbe Havadan 4K II"],
-  [35110842,60,true,"Hac Tavaf 4K"],[35110879,60,true,"Kâbe Yakın 4K"],
-  [35110833,60,true,"Mescid-i Haram"],[35098709,60,true,"Mescid-i Haram İçi"],
-  [35098707,60,true,"Haram Havadan"],[36129822,30,false,"Haram Geniş"],
-  [35743721,30,false,"Haram Gece"],[38255868,60,true,"Hac Tavaf II"],
-  [13643568,24,true,"Kur'an ve Tesbih"],[13643582,24,true,"Kur'an Ahşap Tesbih"],
-  [13643567,24,true,"Mushaf Sayfa Makro"],[13643571,24,true,"Kur'an Siyah Tesbih"],
-  [13643577,24,true,"Kur'an Boncuklar"],[8165476,25,true,"Açık Mushaf 4K"],
-  [8165780,25,true,"Mushaf Detayı"],[4243571,30,false,"Kur'an Tilavet"],
-  [9015573,30,false,"Seccadede Kur'an"],[34041443,30,true,"Altın Kubbeli Cami"],
-  [35619112,30,true,"İslam Mimarisi"],[36223422,25,true,"İstanbul Minareleri"],
-  [34127022,50,true,"Cami Kubbe Alacakaranlık"],[31802391,60,true,"Sultanahmet Drone"],
-  [36192726,60,true,"Osmanlı Kubbe Tavanı"],[37662251,59,true,"Avizeli Cami İçi"],
-  [37646178,30,false,"Hat Yazılı Kubbe"],[15816542,30,true,"Putra Camii Malezya"],
-  [38530728,30,true,"Ayasofya Işığı"],[8165466,25,true,"Tavan Sanatı"],
-  [35082008,30,false,"Modern Cami"],[35081870,30,false,"Şık Cami İçi"],
-  [34799745,30,false,"Cami Minareler"],[6576070,30,true,"Cami Drone"],
-  [10023682,30,true,"Asılı Fenerler"],[35222108,24,true,"Gece Fenerler"],
-  [30567547,30,true,"Muhteşem Avize"],[30209847,30,false,"Süleymaniye"],
-  [12302081,30,false,"Boğaz Cami"],[20349623,60,true,"Mavi Cami"],
-  [33830905,30,false,"Altın İslami Tünel"],[25798722,24,false,"Geometrik Nur"],
-  [12546959,60,false,"Işık Hüzmeleri"],[35728942,30,false,"Zerre Işıltısı"],
-  [29918667,30,false,"Altın Zerreler"],[1730397,25,false,"Renkli Bokeh"],
-  [34645311,30,true,"İpek Işık"],[11354070,60,false,"Nur Tüneli"],
-  [38556266,24,false,"Sakin Animasyon"],[18442968,60,false,"Işık Çizgileri"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** namaz kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const NAMAZ_IDS = [
+  29107904,35098658,35110834,35216059,35110822,36592381,36592378,35098661,
+  35098689,38255871,27132027,35110835,35098680,35110839,38255868,35110882,
+  36592377,35098691,35098688,35110837,35110842,38255864,35110846,27411334,
+  35098687,31673508,35110830,35098708,35098667,35098702,35098674,35110840,
+  36592373,31208756,35110833,35110831,5798349,35110887,35098672,9250953,
+  35110879,35743721,35098709,36129822,31427887,35110829,35098698,35098703,
+  35110881,35098700,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const NAMAZ_URLS: string[] = NAMAZ_IDS.map((id) => `${R2}/videos/namaz/${id}.mp4`);
+export const NAMAZ_POSTER_URLS: string[] = NAMAZ_IDS.map((id) => `${R2}/posters/namaz/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const NAMAZ_DATA: Row[] = NAMAZ_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Kâbe & Namaz " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const NAMAZ_AI_KEYWORDS = "namaz kabe mescid hac tavaf cami ibadet secde";

@@ -1,30 +1,37 @@
+// ════════════════════════════════════════════════════════
+// gece.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Gece — 50 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const GECE_DATA: Row[] = [
-  [3222269,24,false,"Kuzey Işıkları"],[14947495,30,false,"Aurora Göl"],
-  [20601649,25,false,"Güney Aurora"],[28180439,30,true,"Galaksi Gece"],
-  [17808869,30,true,"Samanyolu Göl"],[6867012,24,false,"Kayan Yıldız"],
-  [16544208,24,false,"Orman Yıldız"],[27394420,24,false,"Ay Yıldız"],
-  [1309051,24,false,"Gece Manzara"],[27700964,10,false,"Samanyolu"],
-  [31084223,25,true,"Nebula 4K"],[34075476,24,true,"Kozmik Renk"],
-  [1730397,25,false,"Bokeh Gece"],[29992735,24,true,"Yağmur Bokeh"],
-  [35728942,30,false,"Altın Parçacık"],[34645311,30,true,"Ambiyans"],
-  [29918667,30,false,"Parçacık Anim."],[35222108,24,true,"Kırmızı Fener"],
-  [30209847,30,false,"Cami Günbatımı"],[17991656,30,false,"İstanbul Gece"],
-  [3222269,24,false,"Aurora II"],[14947495,30,false,"Aurora Göl II"],
-  [20601649,25,false,"Güney II"],[28180439,30,true,"Galaksi II"],
-  [17808869,30,true,"Samanyolu II"],[6867012,24,false,"Yıldız II"],
-  [16544208,24,false,"Orman II"],[27394420,24,false,"Ay II"],
-  [27442169,24,true,"Macellan"],[36748811,30,false,"Derin Uzay"],
-  [36755080,30,false,"Orion"],[29994297,30,true,"Tarantula"],
-  [34053971,30,false,"Nebula I"],[34053541,30,false,"Nebula II"],
-  [34054569,30,false,"Nebula III"],[34054307,30,false,"Nebula IV"],
-  [36747759,30,false,"Nebula V"],[30442061,30,false,"Galaktik"],
-  [15289793,60,false,"Renkli Uzay"],[31084223,25,true,"Nebula 4K"],
-  [34075476,24,true,"Renkli 4K"],[3194277,30,false,"Kozmik"],
-  [3222269,24,false,"Aurora III"],[14947495,30,false,"Aurora III"],
-  [20601649,25,false,"Aurora IV"],[28180439,30,true,"Galaksi III"],
-  [17808869,30,true,"Samanyolu III"],[6867012,24,false,"Yıldız III"],
-  [16544208,24,false,"Orman III"],[27394420,24,false,"Ay III"],
-  [29918667,30,false,"Zerreler Gece"],[34645311,30,true,"Ambiyans II"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** gece kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const GECE_IDS = [
+  30583218,15615248,16111978,29983163,36492194,4342868,19549054,30124245,
+  5251546,6960054,2895754,3878209,11319504,10895330,7615707,3765589,
+  9997825,30785084,854739,13684588,11376802,36492190,12987909,4221509,
+  3847942,31042748,4084070,12987907,18681279,12635749,37171416,5746484,
+  30784872,11669489,13573278,12496956,14019782,30295405,7615706,1326148,
+  12495590,29454195,12831115,12987908,6960047,11884322,4126488,8909881,
+  12578298,11374206,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const GECE_URLS: string[] = GECE_IDS.map((id) => `${R2}/videos/gece/${id}.mp4`);
+export const GECE_POSTER_URLS: string[] = GECE_IDS.map((id) => `${R2}/posters/gece/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const GECE_DATA: Row[] = GECE_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Gece " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const GECE_AI_KEYWORDS = "gece ay karanlık yıldız";

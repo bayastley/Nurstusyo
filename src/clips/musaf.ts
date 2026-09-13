@@ -1,29 +1,37 @@
+// ════════════════════════════════════════════════════════
+// musaf.ts — R2 CDN gerçek video/poster kütüphanesi
+// Kategori: Kur'an & Mushaf — 50 video (Cloudflare R2'de birebir doğrulanmış)
+// ════════════════════════════════════════════════════════
+
 import type { Row } from "../clips-data";
 
-export const MUSAF_DATA: Row[] = [
-  [13643568,24,true,"Kur'an Tesbih I"],[13643582,24,true,"Kur'an Tesbih II"],
-  [13643567,24,true,"Mushaf Sayfa I"],[13643571,24,true,"Mushaf Sayfa II"],
-  [13643577,24,true,"Kur'an Boncuklar"],[8165476,25,true,"Açık Mushaf 4K"],
-  [8165780,25,true,"Mushaf Detay"],[4243571,30,false,"Kur'an Tilavet"],
-  [9015573,30,false,"Seccade Kur'an"],[33830905,30,false,"Altın Tünel"],
-  [25798722,24,false,"Geometrik Nur"],[34645505,30,false,"3D Altın"],
-  [29918667,30,false,"Altın Zerreler"],[34549010,30,false,"Altın Bokeh"],
-  [38556266,24,false,"Sakin Döngü"],[12546959,60,false,"Hüzmeler"],
-  [33997984,60,false,"Mandala"],[34645311,30,true,"İpek Işık"],
-  [35728942,30,false,"Parıltı"],[18442968,60,false,"Işık Çizgi"],
-  [11354070,60,false,"Nur Tüneli"],[35222108,24,true,"Kandiller"],
-  [1730397,25,false,"Bokeh Renkli"],[36192726,60,true,"Osmanlı Kubbe"],
-  [37662251,59,true,"Avizeli Cami"],[30567547,30,true,"Avize Cami"],
-  [8165466,25,true,"Tavan Motif"],[38530728,30,true,"Ayasofya"],
-  [37646178,30,false,"Hat Kubbe"],[15816542,30,true,"Putra Cami"],
-  [34041443,30,true,"Altın Kubbe"],[35619112,30,true,"İslam Mim."],
-  [36223422,25,true,"Minareler"],[34127022,50,true,"Kubbe Gece"],
-  [34799745,30,false,"Minareler II"],[35082008,30,false,"Modern Cami"],
-  [35081870,30,false,"Şık İçi"],[6576070,30,true,"Drone Cami"],
-  [31802391,60,true,"Sultanahmet"],[20349623,60,true,"Mavi Cami"],
-  [30209847,30,false,"Süleymaniye"],[17991656,30,false,"İstanbul Gece"],
-  [16224290,30,true,"Boğaz Şehir"],[38031807,50,true,"Galata Köprüsü"],
-  [12302081,30,false,"Boğaz Geçiş"],[35110882,60,true,"Kâbe Gece"],
-  [35110822,60,true,"Kâbe Genel"],[35098709,60,true,"Haram İçi"],
-  [36129822,30,false,"Haram Geniş"],[35743721,30,false,"Haram Gece"],
+/** R2 özel domain — tüm URL'ler bu kökten üretilir ve buraya YAZILIR */
+const R2 = "https://cdn.nurstudyo.com";
+
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI","XXII","XXIII","XXIV","XXV","XXVI","XXVII","XXVIII","XXIX","XXX","XXXI","XXXII","XXXIII","XXXIV","XXXV","XXXVI","XXXVII","XXXVIII","XXXIX","XL","XLI","XLII","XLIII","XLIV","XLV","XLVI","XLVII","XLVIII","XLIX","L","LI","LII","LIII","LIV","LV","LVI","LVII","LVIII","LIX","LX","LXI","LXII","LXIII","LXIV","LXV","LXVI","LXVII","LXVIII","LXIX","LXX","LXXI","LXXII","LXXIII","LXXIV","LXXV","LXXVI","LXXVII","LXXVIII","LXXIX","LXXX","LXXXI","LXXXII","LXXXIII","LXXXIV","LXXXV","LXXXVI","LXXXVII","LXXXVIII","LXXXIX","XC"];
+
+/** musaf kategorisinin R2'deki gerçek Pexels dosya kimlikleri */
+const MUSAF_IDS = [
+  13643581,13643573,4715216,8165467,13643583,13643584,32470282,8165469,
+  10662285,36072618,5788681,37471903,37471902,8165474,13643582,9015573,
+  8488770,13643567,8165172,13643568,36072617,13643578,10816965,8165476,
+  7248990,13643571,14513399,10661535,9509138,7249561,4353784,4750055,
+  13643580,8165772,7249004,8165780,13643586,13643576,13643585,13643574,
+  8969565,20358431,4243571,4750050,7401908,13643570,8488700,8165468,
+  9201796,8165470,
 ];
+
+// ── TAM R2 URL LİSTESİ (her kayıt = 1 video + 1 poster) ──
+export const MUSAF_URLS: string[] = MUSAF_IDS.map((id) => `${R2}/videos/musaf/${id}.mp4`);
+export const MUSAF_POSTER_URLS: string[] = MUSAF_IDS.map((id) => `${R2}/posters/musaf/${id}.jpg`);
+
+/** Uygulamanın kullandığı satır biçimi: [pexelsId, fps, uhd, etiket] */
+export const MUSAF_DATA: Row[] = MUSAF_IDS.map((id, i) => [
+  id,
+  30,
+  true,
+  "Kur'an & Mushaf " + (ROMAN[i + 1] ?? "R" + (i + 1)),
+]);
+
+/** AI arama anahtar kelimeleri */
+export const MUSAF_AI_KEYWORDS = "kuran mushaf ayet sure tilavet kitap vahiy";
