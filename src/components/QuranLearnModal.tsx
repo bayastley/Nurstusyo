@@ -83,7 +83,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //    o kelime (yoksa o ayet) okunur ve okuma kaldığı yerden devam eder.
   const [autoRead, setAutoRead] = useState(false);
   const [speed, setSpeed] = useState(1);
-  const [reciter, setReciter] = useState("ar.alafasy");
+  const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
 
   // ── AYET İÇİ KELİME ARAMA: "rahmet" yazınca rahmet geçen ayetler listelenir ──
@@ -251,9 +251,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.loop = true;
     } else {
       a.loop = false;
-      if (onEnded) a.onended = onEnded;
-      else if (autoRead) {
-        // Otomatik oku: ayet bitince sıradaki ayet (sure sonunda durur)
+      if (onEnded) {
+        a.onended = onEnded;
+      } else if (autoRead) {
+        // Otomatik oku: ayet bitince sıradaki ayete geç (sure sonunda durur)
         a.onended = () => {
           if (ayahNo < surah.ayahs) {
             setAyahNo(ayahNo + 1);
@@ -262,12 +263,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             setAutoRead(false);
           }
         };
+      } else {
+        a.onended = null;
       }
     }
-    // Tarayıcı ses engellemesine karşı: ilk deneme başarısızsa 250ms sonra bir kez daha dene
-    a.play().catch(() => {
-      setTimeout(() => { a.play().catch(() => setError("Ses başlatılamadı — bir kez daha tıkla.")); }, 250);
-    });
   };
 
   const replayAyah = () => playAyahAudio();
