@@ -243,7 +243,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.loop = false;
       if (onEnded) a.onended = onEnded;
     }
-    a.play().catch(() => setError("Ses başlatılamadı."));
+    // Tarayıcı ses engellemesine karşı: ilk deneme başarısızsa 250ms sonra bir kez daha dene
+    a.play().catch(() => {
+      setTimeout(() => { a.play().catch(() => setError("Ses başlatılamadı — bir kez daha tıkla.")); }, 250);
+    });
   };
 
   const replayAyah = () => playAyahAudio();
@@ -274,8 +277,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     stopAudio();
     const sN = wholeQuran ? 1 : listenSurah;
     if (wholeQuran) { setWholeIdx({ s: 1, a: fromIdx + 1 }); setListenSurah(1); }
-    playAt(sN, fromIdx);
-  }, [wholeQuran, listenSurah, playAt, stopAudio]);
+    const a = audioRef.current; if (!a) return;
+    setListenAyahIdx(fromIdx);
+    a.src = ayahUrl(sN, fromIdx + 1);
+    a.playbackRate = speed;
+    a.loop = false;
+    a.play().then(() => setIsPlaying(true)).catch(() => {
+      setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
+    });
+  }, [wholeQuran, listenSurah, ayahUrl, speed, stopAudio]);
 
   useEffect(() => {
     const a = audioRef.current; if (!a) return;
