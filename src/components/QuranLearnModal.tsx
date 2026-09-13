@@ -277,6 +277,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     // ★ SÜREKLİ: kelime sonsuz döngüde çalar (loop=true en güvenilir yöntem)
     a.loop = repeatWord;
     a.onended = null;
+    // ★ HATA DÜZELTME: src değişince load() şart — yoksa tarayıcı eski buffer'ı
+    //   çalabiliyor (ekranda 'annekum' yazarken önceki 'Allah' sesi duyuluyordu)
+    a.load();
     a.play().catch(() => undefined);
   };
 
@@ -312,6 +315,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.src = `https://everyayah.com/data/${reciter}/${String(sNow).padStart(3, "0")}${String(aNow).padStart(3, "0")}.mp3`;
     a.playbackRate = speed;
     a.preload = "auto";
+    a.load(); // ★ src değişince eski buffer temizlenir — yanlış ses düzeltmesi
     preloadLearnNext(sNow, aNow);
     if (loopAyah) {
       a.loop = true;
@@ -425,6 +429,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.playbackRate = speed;
     a.loop = false;
     a.preload = "auto";
+    a.load(); // ★ eski buffer temizle
     // ★ DİNLEDE KELİME TAKİBİ: ses konumu → kelime sayısı, okundukça yanar
     a.ontimeupdate = () => {
       const ay = listenAyahDataRef.current;
@@ -446,6 +451,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.playbackRate = speed;
     a.loop = false;
     a.preload = "auto";
+    a.load(); // ★ eski buffer temizle
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, fromIdx); }).catch(() => {
       setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
     });
