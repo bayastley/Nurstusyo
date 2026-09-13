@@ -14,59 +14,41 @@ interface Reciter { id: string; name: string; everyayah?: string; }
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 interface Word { i: number; ar: string; tr: string; translit: string; audio: string; }
 
-// ★ YEDEK kari listesi — mp3quran.net API'si (241 kari) erişilemezse bu devreye girer.
-// Normalde liste canlı olarak https://mp3quran.net/api/v3/reciters?language=ar'dan gelir.
-const FALLBACK_RECITERS: Reciter[] = [
-  { id: "ar.alafasy", name: "Mishary Rashid Al-Afasy" },
-  { id: "ar.mahermuaiqly", name: "Mahir el-Muaykli (Kabe İmamı)" },
-  { id: "ar.abdulbasitmurattal", name: "Abdulbasit Abdussamed (Murattal)" },
-  { id: "ar.abdulbasitmujawwad", name: "Abdulbasit Abdussamed (Mücavved)" },
-  { id: "ar.husary", name: "Mahmud Halil el-Husari (Murattal)" },
-  { id: "ar.husarymujawwad", name: "Mahmud Halil el-Husari (Mücavved)" },
-  { id: "ar.minshawi", name: "Muhammed Siddik el-Minşavi (Murattal)" },
-  { id: "ar.minshawimujawwad", name: "Muhammed Siddik el-Minşavi (Mücavved)" },
-  { id: "ar.abdurrahmaansudais", name: "Abdurrahman es-Sudeys (Kabe İmamı)" },
-  { id: "ar.saoodshuraym", name: "Sud bin İbrahim eş-Şuraym (Kabe İmamı)" },
-  { id: "ar.shaatree", name: "Ebu Bekir eş-Şatri" },
-  { id: "ar.ahmedajamy", name: "Ahmed el-Acemi" },
-  { id: "ar.hanirifai", name: "Hani er-Rifai" },
-  { id: "ar.hudhaify", name: "Ali el-Hudaifi (Medine)" },
-  { id: "ar.abdullahbasfar", name: "Abdullah Basfar" },
-  { id: "ar.abdulsamad", name: "Abdussamed (tercihli)" },
-  { id: "ar.ibrahimakhbar", name: "İbrahim El-Ehdar" },
-  { id: "ar.muhammadayyoub", name: "Muhammed Eyyub" },
-  { id: "ar.muhammadjibreel", name: "Muhammed Cibril" },
-  { id: "ar.abdulazizazzahrani", name: "Abdulaziz ez-Zehrani" },
-  { id: "ar.abdulbariaththubaity", name: "Abdulbari es-Subeysi" },
-  { id: "ar.abdullahalmatrood", name: "Abdullah el-Matrood" },
-  { id: "ar.abdullahawadaljuhani", name: "Abdullah Avad el-Cuhani" },
-  { id: "ar.abdullahkhayat", name: "Abdullah Hayyat" },
-  { id: "ar.abdulmohsenalharthy", name: "Abdulmuhsin el-Harsi" },
-  { id: "ar.adilkalbani", name: "Adil el-Kalbani" },
-  { id: "ar.ahmadalhawashy", name: "Ahmed el-Havaşi" },
-  { id: "ar.ahmedalajmi", name: "Ahmed el-Acemi (net)" },
-  { id: "ar.ahmedalhammad", name: "Ahmed el-Hammad" },
-  { id: "ar.ahmedalmisbahi", name: "Ahmed el-Misbahi" },
-  { id: "ar.ahmedamir", name: "Ahmed Emir" },
-  { id: "ar.alafasy-2", name: "Mishary Al-Afasy (64kbps)" },
-  { id: "ar.aymanswoaid", name: "Eyman Svaid" },
-  { id: "ar.faresabbad", name: "Fares Abbad" },
-  { id: "ar.mahmoudalialbanna", name: "Mahmud Ali el-Benna" },
-  { id: "ar.mustafaismail", name: "Mustafa İsmail" },
-  { id: "ar.nasseralqatami", name: "Nasser el-Katami" },
-  { id: "ar.sahlyasin", name: "Sahl Yasin" },
-  { id: "ar.salahalbudair", name: "Salah el-Budeyr" },
-  { id: "ar.saudalshuraim", name: "Saud eş-Şuraym" },
-  { id: "ar.yasseraldossari", name: "Yaser ed-Dossari" },
-  { id: "ar.muhammadalluhaidan", name: "Muhammed el-Luhaydan" },
+// ★ KARİ LİSTESİ — everyayah.com AYET BAZLI sesler (her hoca, her ayet için ayrı mp3:
+//    001001.mp3 = 1. sure 1. ayet). Kelime/ayet tekrar sistemi bu yüzden tam-sure değil
+//    ayet-ayet dosyalarla çalışır. 30 kari tek tek test edildi (hepsi 200 OK).
+const RECITERS: Reciter[] = [
+  { id: "Alafasy_128kbps", name: "Mishary Rashid Al-Afasy" },
+  { id: "MaherAlMuaiqly128kbps", name: "Mahir el-Muaykli (Kabe İmamı)" },
+  { id: "Abdul_Basit_Murattal_192kbps", name: "Abdulbasit Abdussamed (Murattal)" },
+  { id: "Abdul_Basit_Mujawwad_128kbps", name: "Abdulbasit Abdussamed (Mücavved)" },
+  { id: "Husary_128kbps", name: "Mahmud Halil el-Husari (Murattal)" },
+  { id: "Husary_Mujawwad_64kbps", name: "Mahmud Halil el-Husari (Mücavved)" },
+  { id: "Minshawy_Murattal_128kbps", name: "Muhammed Siddik el-Minşavi (Murattal)" },
+  { id: "Minshawy_Mujawwad_192kbps", name: "Muhammed Siddik el-Minşavi (Mücavved)" },
+  { id: "Menshawi_16kbps", name: "Muhammed Siddik el-Minşavi (Eski Kayıt)" },
+  { id: "Ghamadi_40kbps", name: "Saad el-Gamidi" },
+  { id: "Abu_Bakr_Ash-Shaatree_128kbps", name: "Ebu Bekir eş-Şatri" },
+  { id: "Akram_AlAlaqimy_128kbps", name: "Ekrem el-Alakmi" },
+  { id: "Ali_Jaber_64kbps", name: "Ali Cabir (Mescid-i Haram)" },
+  { id: "Ayman_Sowaid_64kbps", name: "Eyman es-Suvayd" },
+  { id: "Fares_Abbad_64kbps", name: "Fares Abbad" },
+  { id: "Hani_Rifai_192kbps", name: "Hani er-Rifai" },
+  { id: "Hudhaify_128kbps", name: "Ali el-Hudaifi (Medine)" },
+  { id: "Ibrahim_Akhdar_32kbps", name: "İbrahim El-Ehdar" },
+  { id: "Mahmoud_Ali_Al_Banna_32kbps", name: "Mahmud Ali el-Benna" },
+  { id: "Mohammad_al_Tablaway_128kbps", name: "Muhammed et-Tablavi" },
+  { id: "Muhammad_Ayyoub_128kbps", name: "Muhammed Eyyub (Medine)" },
+  { id: "Muhammad_Jibreel_64kbps", name: "Muhammed Cibril" },
+  { id: "Muhsin_Al_Qasim_192kbps", name: "Muhsin el-Kasım (Medine)" },
+  { id: "Mustafa_Ismail_48kbps", name: "Mustafa İsmail" },
+  { id: "Nasser_Alqatami_128kbps", name: "Nasser el-Katami" },
+  { id: "Sahl_Yassin_128kbps", name: "Sehl Yasin (Medine)" },
+  { id: "Salah_Al_Budair_128kbps", name: "Salah el-Budeyr" },
+  { id: "Saood_ash-Shuraym_128kbps", name: "Sud eş-Şuraym (Kabe İmamı)" },
+  { id: "Yasser_Ad-Dussary_128kbps", name: "Yaser ed-Dossari" },
+  { id: "Abdullah_Matroud_128kbps", name: "Abdullah el-Metroud" },
 ];
-
-// ★ everyayah.com klasör adları — tam sure okuması için (kestirme mp3, surah bazlı değil)
-// Ayet sesleri zaten islamic.network'ten geliyor; kelime sesleri qurancdn'den.
-// Bu yüzden everyayah'a gerek yok — ayet bazlı okuma tüm hocalarda mevcut.
-
-// Öğren modundaki ayet-bazlı sesler bu listeden (cdn.islamic.network — ayet ayet mp3).
-const RECITERS = FALLBACK_RECITERS;
 
 const MEALS = [
   { id: "tr.diyanet", name: "Diyanet İşleri Başkanlığı" },
@@ -85,28 +67,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   // Header'dan hangi sekmeyle açıldıysa o modda başla
   useEffect(() => { if (open && initialMode) setMode(initialMode); }, [open, initialMode]);
-
-  // ── CANLI KARİ LİSTESİ (mp3quran.net — 241 hoca, Türkçe/Arapça isim) ──
-  const [apiReciters, setApiReciters] = useState<Reciter[]>(FALLBACK_RECITERS);
-  useEffect(() => {
-    if (!open) return;
-    let live = true;
-    fetch("https://mp3quran.net/api/v3/reciters?language=ar")
-      .then(r => r.json())
-      .then((d: any) => {
-        if (!live || !Array.isArray(d.reciters)) return;
-        const list: Reciter[] = [];
-        for (const r of d.reciters) {
-          // Her hocanın birinci mushafı (murattal) dinleme sürümü olarak alınır
-          const m = (r.moshaf ?? []).find((x: any) => /مرتل/.test(x.name || "")) ?? r.moshaf?.[0];
-          if (!m?.server) continue;
-          list.push({ id: `${m.server.replace(/\/$/, "")}|${r.name}|${m.name || ""}`, name: `${r.name}${m.name ? " · " + m.name : ""}` });
-        }
-        if (list.length > 0) setApiReciters(list);
-      })
-      .catch(() => undefined);
-    return () => { live = false; };
-  }, [open]);
 
   // ── Öğren state ──
   const [surahNo, setSurahNo] = useState(1);
@@ -276,6 +236,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   // ── Dinle modu ──
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
+  // Hoca arama kutusu — "mahir", "husari" yaz, liste anında filtrelenir
+  const [reciterSearch, setReciterSearch] = useState("");
+  const filteredReciters = useMemo(() => {
+    const q = reciterSearch.trim().toLocaleLowerCase("tr");
+    if (!q) return RECITERS;
+    return RECITERS.filter(r => r.name.toLocaleLowerCase("tr").includes(q));
+  }, [reciterSearch]);
   const listenGlobal = useMemo(() => {
     let g = 0;
     for (const s of SURAHS_DATA) { if (s.n < listenSurah) g += s.ayahs; }
@@ -283,13 +250,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [listenSurah]);
 
   // mp3quran karileri tam-sure mp3 çalar (001.mp3…114.mp3); ar.* kariler ayet-ayet
-  const isSurahReciter = listenReciter.includes("|");
+  const isSurahReciter = false;
 
   const startListening = useCallback((fromIdx = 0) => {
     const a = audioRef.current; if (!a) return;
     setListenAyahIdx(fromIdx);
     stopAudio();
-    if (listenReciter.includes("|")) {
+    if (false) {
       // mp3quran: tam sure tek dosya
       const [server] = listenReciter.split("|");
       a.src = `${server}${String(listenSurah).padStart(3, "0")}.mp3`;
@@ -304,7 +271,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     const a = audioRef.current; if (!a) return;
     const onEnded = () => {
-      if (listenReciter.includes("|")) { setIsPlaying(false); return; } // tam sure bitti
+      if (false) { setIsPlaying(false); return; } // tam sure bitti
       if (mode === "listen" && continuous && listenAyahIdx < listenSurahInfo.ayahs - 1) {
         startListening(listenAyahIdx + 1);
       } else {
@@ -537,10 +504,23 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 </select>
               </label>
               <label className="flex flex-col gap-1.5">
-                <span className="text-[9px] font-bold uppercase text-white/40">Okuyan Hoca (Kari) — {apiReciters.length} kari</span>
-                <select value={listenReciter} onChange={(e) => { setListenReciter(e.target.value); stopListening(); }} className="h-11 rounded-xl border border-white/10 bg-black/40 px-3 text-[12px] font-semibold outline-none focus:border-gold/50">
-                  {apiReciters.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+                <span className="text-[9px] font-bold uppercase text-white/40">Okuyan Hoca (Kari) — {reciterSearch.trim() ? `${filteredReciters.length} bulundu` : `${RECITERS.length} kari`}</span>
+                <input
+                  value={reciterSearch}
+                  onChange={(e) => setReciterSearch(e.target.value)}
+                  placeholder="Hoca ara (mahir, husari, minşavi...)"
+                  className="h-8 w-full rounded-xl border border-white/10 bg-black/40 px-3 text-[11px] outline-none placeholder:text-white/25 focus:border-gold/50"
+                />
+                <div className="h-44 overflow-y-auto rounded-xl border border-white/10 bg-black/40 scrollbar-thin">
+                  {filteredReciters.length === 0 ? (
+                    <p className="p-3 text-center text-[10px] text-white/35">Bu isimle kari bulunamadı.</p>
+                  ) : filteredReciters.map(r => (
+                    <button key={r.id} onClick={() => { setListenReciter(r.id); stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${listenReciter === r.id ? "bg-gold/15 text-gold" : "text-white/70 hover:bg-white/[.05]"}`}>
+                      <span className="truncate font-semibold">{r.name}</span>
+                      {listenReciter === r.id && <span className="text-[9px] font-black">✓ SEÇİLİ</span>}
+                    </button>
+                  ))}
+                </div>
               </label>
             </div>
 
@@ -550,7 +530,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 <>
                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Çalıyor</span>
                   <p className="font-arabic text-2xl text-gold-light">سُورَةُ {listenSurahInfo.name}</p>
-                  <p className="text-[10px] text-white/45">{isSurahReciter ? "tam sure · " : `${listenAyahIdx + 1}. ayet · `}{(apiReciters.find(r => r.id === listenReciter)?.name ?? RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
+                  <p className="text-[10px] text-white/45">{listenAyahIdx + 1}. ayet · {(RECITERS.find(r => r.id === listenReciter)?.name ?? "")}</p>
                 </>
               ) : (
                 <p className="text-[11px] text-white/40">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
