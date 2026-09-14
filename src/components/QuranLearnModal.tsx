@@ -175,7 +175,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   "quran" → Suudi resmî Quran TV (sürekli Kur'an tilaveti, arada Mekke görüntüsü)
   //   "live"  → AlQuran4K Mekke HD kamera (Kâbe yakın plan, 7/24 canlı)
   const KABE_HLS = "/api/live/kabe?type=playlist";
-  const KABE_YT_LIVE = "iWJ6jDXGiFY"; // AlQuran4K canlı (test edildi: canlı, Mescid-i Haram)
+  const KABE_YT_LIVE = "3okI2NUZllk"; // AlQuran4K canlı — makkah.live'ın da embed ettiği ID (iWJ6jDXGiFY 153 hatası veriyordu: embed izni yoktu)
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
