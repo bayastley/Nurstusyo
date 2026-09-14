@@ -1121,9 +1121,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => setKabeLive(false)} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
             </div>
             <div className="aspect-video w-full bg-black">
-              {/* Mescid-i Haram 7/24 resmî yayın akışı (YouTube canlı kanal embed) */}
+              {/* Mescid-i Haram 7/24 resmî canlı yayın akışı (doğrudan canlı video embed — kanal embed'i bazı tarayıcılarda engelleniyor) */}
               <iframe
-                src="https://www.youtube.com/embed/live_stream?channel=UCos52azQNBgW63_9uDJoPDA&autoplay=0&rel=0"
+                src="https://www.youtube.com/embed/eC4LfEVxvKg?autoplay=0&rel=0&modestbranding=1"
                 title="Kâbe Canlı Yayın"
                 allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
