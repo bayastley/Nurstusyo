@@ -239,7 +239,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       hls.loadSource(KABE_HLS);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.volume = kabeVolume;
         video.play().catch(() => undefined);
       });
       hls.on(Hls.Events.ERROR, (_e, data) => {
@@ -248,12 +247,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari doğrudan HLS oynatır
       video.src = KABE_HLS;
-      video.volume = kabeVolume;
       video.play().catch(() => undefined);
     } else {
       setKabeStatus("error");
     }
-  }, [kabeVolume]);
+  }, []); // ★ BAĞIMLILIK YOK: ses aç/kapa yayını yeniden BAĞLAMAMALI — ses kontrolü video elemanı üzerinden yapılır
 
   // Modal açılınca yayına bağlan, kapatınca temizle
   useEffect(() => {
@@ -1191,15 +1189,26 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <button onClick={() => { setKabeStatus("loading"); startKabeHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
                 </div>
               )}
-              {/* ★ SES KONTROLÜ — sağ altta: aç/kapa + kaydırıcılı seviye */}
+              {/* ★ SES KONTROLÜ — sağ altta: aç/kapa + kaydırıcılı seviye (yayını KESMEDEN çalışır) */}
               {kabeStatus === "playing" && (
                 <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
-                  <button onClick={() => setKabeMuted(m => !m)} className="text-[13px] leading-none text-white/90 transition hover:text-gold" title={kabeMuted ? "Sesi aç" : "Sesi kapat"}>
+                  <button onClick={() => setKabeMuted(m => {
+                    const nm = !m;
+                    const v = kabeVideoRef.current;
+                    if (v) { v.muted = nm; v.volume = nm ? 0 : kabeVolume; }
+                    return nm;
+                  })} className="text-[13px] leading-none text-white/90 transition hover:text-gold" title={kabeMuted ? "Sesi aç" : "Sesi kapat"}>
                     {kabeMuted || kabeVolume === 0 ? "🔇" : kabeVolume < 0.5 ? "🔉" : "🔊"}
                   </button>
                   <input
                     type="range" min={0} max={1} step={0.05} value={kabeMuted ? 0 : kabeVolume}
-                    onChange={(e) => { const v = Number(e.target.value); setKabeVolume(v); setKabeMuted(v === 0); if (kabeVideoRef.current) kabeVideoRef.current.volume = v; }}
+                    onChange={(e) => {
+                      const vol = Number(e.target.value);
+                      setKabeVolume(vol);
+                      setKabeMuted(vol === 0);
+                      const v = kabeVideoRef.current;
+                      if (v) { v.volume = vol; v.muted = vol === 0; }
+                    }}
                     className="h-1 w-16 cursor-pointer accent-[#D7AA41]"
                     title="Ses seviyesi"
                   />
