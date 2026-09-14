@@ -1192,10 +1192,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               ) : (
                 <iframe
                   key={kabeTab}
-                  src={`https://www.youtube.com/embed/${KABE_YT_LIVE}?autoplay=1&mute=${kabeMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1`}
-                  title="Mekke HD Kamera Canlı"
-                  allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                  src={`https://www.youtube.com/embed/${KABE_YT_LIVE}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`}
+                  title="Makkah Live Stream"
+                  allow="autoplay; encrypted-media; picture-in-picture"
                   allowFullScreen
+                  loading="lazy"
                   className="h-full w-full"
                 />
               )}
