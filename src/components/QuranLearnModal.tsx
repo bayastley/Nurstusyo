@@ -170,12 +170,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
-  const [kabeTab, setKabeTab] = useState<"quran" | "live">("quran"); // ★ 1) Kur'an TV 2) Mekke HD kamera
+  const [kabeTab, setKabeTab] = useState<"quran" | "live">("quran"); // ★ 1) Suudi Quran TV 2) Katar Quran TV HD
   // ★ KÂBE CANLI — iki kanal:
   //   "quran" → Suudi resmî Quran TV (sürekli Kur'an tilaveti, arada Mekke görüntüsü)
   //   "live"  → AlQuran4K Mekke HD kamera (Kâbe yakın plan, 7/24 canlı)
-  const KABE_HLS = "/api/live/kabe?type=playlist";
-  const KABE_YT_LIVE = "3okI2NUZllk"; // AlQuran4K canlı — makkah.live'ın da embed ettiği ID (iWJ6jDXGiFY 153 hatası veriyordu: embed izni yoktu)
+  // ★ YouTube TAMAMEN atlandı — hata 153 bir daha asla çıkmaz. İki kanal da kendi proxy'mizden:
+  //   "quran" → Suudi Quran TV (Mekke, kesintisiz tilavet)
+  //   "live"  → Katar Quran TV (HD 576p, kesintisiz tilavet — YouTube'sız Akamai CDN)
+  const KABE_HLS = "/api/live/kabe?src=kabe&type=playlist";
+  const QURAN_HD_HLS = "/api/live/kabe?src=quran&type=playlist";
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -238,7 +241,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (Hls.isSupported()) {
       const hls = new Hls({ lowLatencyMode: true, backBufferLength: 30 });
       kabeHlsRef.current = hls;
-      hls.loadSource(KABE_HLS);
+      hls.loadSource(kabeTab === "quran" ? KABE_HLS : QURAN_HD_HLS);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => undefined);
@@ -248,12 +251,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari doğrudan HLS oynatır
-      video.src = KABE_HLS;
+      video.src = kabeTab === "quran" ? KABE_HLS : QURAN_HD_HLS;
       video.play().catch(() => undefined);
     } else {
       setKabeStatus("error");
     }
-  }, []); // ★ BAĞIMLILIK YOK: ses aç/kapa yayını yeniden BAĞLAMAMALI — ses kontrolü video elemanı üzerinden yapılır
+  }, [kabeTab]); // ★ yalnız sekme değişince yeniden bağlanır; ses aç/kapa asla yayını kesmez
 
   // Modal açılınca yayına bağlan, kapatınca temizle (yalnız Kur'an TV sekmesinde HLS çalışır)
   useEffect(() => {
@@ -1174,46 +1177,36 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Suudi resmî Quran TV — sürekli Kur'an tilaveti">
                 📖 KUR'AN TV
               </button>
-              <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="AlQuran4K — Kâbe yakın plan HD kamera, 7/24 canlı">
-                🕌 MEKKE HD KAMERA
+              <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
+                📖 KUR'AN TV HD
               </button>
             </div>
             <div className="relative aspect-video w-full bg-black">
-              {kabeTab === "quran" ? (
-                <video
-                  ref={kabeVideoRef}
-                  autoPlay
-                  muted={kabeMuted}
-                  playsInline
-                  className="h-full w-full"
-                  onPlaying={() => setKabeStatus("playing")}
-                  onError={() => setKabeStatus("error")}
-                />
-              ) : (
-                <iframe
-                  key={kabeTab}
-                  src={`https://www.youtube.com/embed/${KABE_YT_LIVE}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`}
-                  title="Makkah Live Stream"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                  loading="lazy"
-                  className="h-full w-full"
-                />
-              )}
-              {kabeTab === "quran" && kabeStatus === "loading" && (
+              {/* ★ Her iki kanal da YouTube'suz kendi proxy'mizden HLS oynar — hata 153 tarihe karıştı */}
+              <video
+                ref={kabeVideoRef}
+                key={kabeTab}
+                autoPlay
+                muted={kabeMuted}
+                playsInline
+                className="h-full w-full"
+                onPlaying={() => setKabeStatus("playing")}
+                onError={() => setKabeStatus("error")}
+              />
+              {kabeStatus === "loading" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
                   <p className="text-[10px] font-bold text-gold/70">Canlı yayına bağlanıyor…</p>
                 </div>
               )}
-              {kabeTab === "quran" && kabeStatus === "error" && (
+              {kabeStatus === "error" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <p className="text-[11px] font-black text-[#f5dda6]">Yayın şu an açılamadı</p>
                   <button onClick={() => { setKabeStatus("loading"); startKabeHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
                 </div>
               )}
               {/* ★ SES KONTROLÜ — sağ altta: aç/kapa + kaydırıcılı seviye (yayını KESMEDEN çalışır) */}
-              {kabeStatus === "playing" && kabeTab === "quran" && (
+              {kabeStatus === "playing" && (
                 <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
                   <button onClick={() => setKabeMuted(m => {
                     const nm = !m;
@@ -1239,7 +1232,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               )}
             </div>
             <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">
-              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti (ses düğmesi sağ altta)" : "🕌 AlQuran4K — Kâbe yakın plan 7/24 canlı kamera · ses için oynatıcıdaki 🔊 simgesini kullan"}
+              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti (ses düğmesi sağ altta)" : "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)"}
             </p>
           </div>
         </div>
