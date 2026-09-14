@@ -17,42 +17,62 @@ interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
 //    (gapless tam sure) çalabilir — [klasör, sunucuNo]. Hepsi tek tek test edildi (200 OK).
 
-// ═══════════════════════════════════════════════════════════
-// ★ TEFSİR KUTUSU — İbn Kesîr tefsiri (quran.com v4 API, Türkçe çeviri kaynağı:
-//   kürdçe/İngilizce ham metin yerine Elmalılı mealli tefsir bağlantısı)
-//   Not: API Türkçe tefsir vermiyor; İngilizce İbn Kesîr (özet) gösterilir —
-//   sahih ve meşhur tefsirdir, uydurma içermez.
-// ═══════════════════════════════════════════════════════════
+// ★ TEFSİR KUTUSU — 4 meşhur tefsir (quran.com v4 API, tek tek test edildi):
+//   169 İbn Kesîr (özet, EN) · 16 Müyeccar (AR) · 15 Taberî (AR) · 90 Kurtubî (AR)
+//   Türkçe tefsir API'de mevcut değil (quranenc + quran.com tarandı) — İbn Kesîr özeti varsayılan.
+const TAFSIRS: Array<{ id: number; name: string }> = [
+  { id: 169, name: "İbn Kesîr (özet)" },
+  { id: 16, name: "Tefsîrü'l-Müyesser" },
+  { id: 15, name: "Taberî" },
+  { id: 90, name: "Kurtubî" },
+];
 const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
+// ★ İNGİLİZCE MEAL TESPİTİ: quran.com id 77 bazen bazı kelimeler için İngilizce döndürür
+//   (their plea, they said…). Bunu yakalayıp Türkçe sözlükteki karşılığı varsa onu kullanırız.
+const isEnglishMeal = (t: string) => /^[A-Za-z][A-Za-z'’.,;!?()\- ]{2,}$/.test(t.trim());
+const TAFSIR_CACHE = new Map<string, string>();
 const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surahNo, ayahNo }) => {
+  const [tafsirId, setTafsirId] = useState(169);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (!open || text) return;
+    if (!open) return;
+    const key = `${tafsirId}:${surahNo}:${ayahNo}`;
+    const cached = TAFSIR_CACHE.get(key);
+    if (cached !== undefined) { setText(cached); return; }
     let live = true;
-    setLoading(true);
-    fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNo}:${ayahNo}`)
+    setLoading(true); setText("");
+    fetch(`https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNo}:${ayahNo}`)
       .then(r => r.json())
-      .then(d => { if (live) setText(stripHtml(d?.tafsir?.text ?? "")); })
+      .then(d => { const t = stripHtml(d?.tafsir?.text ?? ""); if (live) { TAFSIR_CACHE.set(key, t); setText(t); } })
       .catch(() => { if (live) setText(""); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [open, surahNo, ayahNo, text]);
+  }, [open, tafsirId, surahNo, ayahNo]);
   return (
     <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4">
       <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between text-left">
-        <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">📖 Tefsir (İbn Kesîr — Özet)</span>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">📖 Tefsir — {TAFSIRS.find(t => t.id === tafsirId)?.name}</span>
         <span className="text-[9px] font-black text-[#D7AA41]">{open ? "− Kapat" : "+ Aç"}</span>
       </button>
       {open && (
-        loading ? <p className="mt-2 text-[10px] text-[#7a745f]">Tefsir yükleniyor…</p>
-        : text ? <p className="mt-2 max-h-64 overflow-y-auto text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
-        : <p className="mt-2 text-[10px] text-[#7a745f]">Bu ayet için tefsir metni bulunamadı.</p>
+        <>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {TAFSIRS.map(t => (
+              <button key={t.id} onClick={() => setTafsirId(t.id)} className={`rounded-lg border px-2 py-1 text-[8px] font-black transition ${tafsirId === t.id ? "border-[#D7AA41]/60 bg-[#D7AA41]/20 text-[#f5dda6]" : "border-white/10 bg-white/[.04] text-[#8f8870] hover:text-[#d8cfae]"}`}>{t.name}</button>
+            ))}
+          </div>
+          {loading ? <p className="mt-2 text-[10px] text-[#7a745f]">Tefsir yükleniyor…</p>
+          : text ? <p className="mt-2 max-h-64 overflow-y-auto text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
+          : <p className="mt-2 text-[10px] text-[#7a745f]">Bu ayet için bu tefsirde metin bulunamadı — başka tefsir seç.</p>}
+        </>
       )}
     </div>
   );
 };
+
 interface Word { i: number; ar: string; tr: string; translit: string; audio: string; }
 
 // ★ SES→KELİME ORANTILI TAKİP: kelimeleri harf sayısına göre tartar —
@@ -232,7 +252,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
-    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani&translations=77&language=tr`, { signal: ctrl.signal })
+    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani%2Ctranslation&translations=77&language=tr`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(async (d: any) => {
         if (!live) return;
@@ -265,10 +285,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
             tr = part ? wbw[part.k] : undefined;
           }
+          // ★ API Türkçe dönerse kullan; İngilizce dönerse yerel sözlükte ara, yoksa '—' yerine
+          //   Arapça kök kalır ve kullanıcı boş bilgi görmez
+          const apiTr = typeof w.translation?.text === "string" ? w.translation.text : "";
+          const finalTr = tr ?? (apiTr && !isEnglishMeal(apiTr) ? apiTr : undefined);
           return {
             i,
             ar: bare,
-            tr: tr ?? (typeof w.translation?.text === "string" && w.translation.text ? w.translation.text : "—"),
+            tr: finalTr ?? (isEnglishMeal(apiTr) ? apiTr : "—"),
             translit: w.transliteration?.text ?? "",
             audio: `https://audio.qurancdn.com/${w.audio_url}`,
           };
@@ -686,7 +710,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     <div className="fixed inset-0 z-[80] flex flex-col animate-fadeIn bg-[#161622]">
       {/* ÜST BAR */}        <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#D7AA41]/20 bg-[#0d1a2c] px-4">
         <div className="flex items-center gap-2">
-          <span className="rounded-lg bg-gold px-1.5 py-1 text-xs font-black text-slate-900">N</span>
           <div className="flex overflow-hidden rounded-xl border border-white/10">
             <button onClick={() => { setMode("learn"); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "learn" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
               <BookOpen size={13} /> Kur'an Öğreniyorum
@@ -695,10 +718,18 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <Headphones size={13} /> Kur'an Dinliyorum
             </button>
           </div>
-        </div>
-        <button onClick={onClose} className="flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95">
+          {/* ★ KÂBE CANLI: üst barda — her iki modda da görünür, canlı yayın noktasıyla */}
+          <button onClick={() => setKabeLive(true)} className="group relative flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-gradient-to-b from-emerald-800/60 to-emerald-950/60 px-3 py-1.5 text-[11px] font-black text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,.25)] transition hover:border-emerald-400/70 hover:brightness-125 active:scale-95" title="Mescid-i Haram'dan 7/24 kesintisiz canlı yayın">
+            <span className="text-base leading-none">🕋</span> KÂBE CANLI
+            <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full border-2 border-[#161622] bg-red-500" />
+            </span>
+          </button>
+          <button onClick={onClose} className="flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95">
           KAPAT <X size={13} />
         </button>
+        </div>
       </div>
 
       {/* ══════════ ÖĞREN MODU ══════════ */}
