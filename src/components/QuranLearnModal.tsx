@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
@@ -166,13 +167,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ SURE AKIŞI: oynatınca ayetler arkasına arkasına okunur, ekran okunan ayeti izler
   const [flowPlaying, setFlowPlaying] = useState(false);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
-  const [kabeSrcIdx, setKabeSrcIdx] = useState(0); // ★ Canlı kaynak sırası (yayın açılmazsa değiştir)
-  const KABE_SOURCES = [
-    // 1) Kanal canlı akışı — makkahlive.net'in de kullandığı resmî yöntem, en güvenilir
-    "https://www.youtube.com/embed/live_stream?channel=UCos52azQNBgW63_9uDJoPDA&rel=0&modestbranding=1",
-    // 2) Doğrudan canlı video (kanal akışı açılmazsa yedek)
-    "https://www.youtube.com/embed/eC4LfEVxvKg?rel=0&modestbranding=1",
-  ];
+  const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
+  // ★ KÂBE CANLI — YouTube'sız, doğrudan Suudi resmî Quran TV HLS akışı (m.live.net.sa)
+  //   CORS açık (Access-Control-Allow-Origin: *), hls.js ile tarayıcıda oynar.
+  //   Kaynak: iptv-org resmî listesi — Suudi Quran TV (Al Quran Al Kareem TV, Mekke yayını)
+  const KABE_HLS = "http://m.live.net.sa:1935/live/quran/gmswf.m3u8";
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -223,6 +222,43 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [repeatWord, setRepeatWord] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
+  const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const kabeHlsRef = useRef<Hls | null>(null);
+
+  // ★ Kâbe canlı HLS bağlama — YouTube'sız doğrudan Suudi resmî akış
+  const startKabeHls = useCallback(() => {
+    const video = kabeVideoRef.current;
+    if (!video) return;
+    // önceki hls örneğini temizle
+    if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
+    if (Hls.isSupported()) {
+      const hls = new Hls({ lowLatencyMode: true, backBufferLength: 30 });
+      kabeHlsRef.current = hls;
+      hls.loadSource(KABE_HLS);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => undefined); });
+      hls.on(Hls.Events.ERROR, (_e, data) => {
+        if (data.fatal) setKabeStatus("error");
+      });
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // Safari doğrudan HLS oynatır
+      video.src = KABE_HLS;
+      video.play().catch(() => undefined);
+    } else {
+      setKabeStatus("error");
+    }
+  }, []);
+
+  // Modal açılınca yayına bağlan, kapatınca temizle
+  useEffect(() => {
+    if (!kabeLive) {
+      if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
+      return;
+    }
+    setKabeStatus("loading");
+    const t = setTimeout(() => startKabeHls(), 60);
+    return () => { clearTimeout(t); if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; } };
+  }, [kabeLive, startKabeHls]);
 
   const surah = SURAHS_DATA.find(s => s.n === surahNo) ?? SURAHS_DATA[0];
   const ayah = ayahs.find(a => a.n === ayahNo);
@@ -1127,25 +1163,30 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <p className="text-[12px] font-black text-gold">🕋 Kâbe — Mescid-i Haram Canlı Yayın</p>
               <button onClick={() => setKabeLive(false)} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
             </div>
-            <div className="aspect-video w-full bg-black">
-              {/* Mescid-i Haram 7/24 resmî canlı yayın akışı — kaynak açılmazsa kullanıcı tek tıkla diğer kaynağa geçer */}
-              <iframe
-                key={kabeSrcIdx}
-                src={KABE_SOURCES[kabeSrcIdx]}
-                title="Kâbe Canlı Yayın"
-                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
+            <div className="relative aspect-video w-full bg-black">
+              <video
+                ref={kabeVideoRef}
+                autoPlay
+                muted
+                playsInline
                 className="h-full w-full"
+                onPlaying={() => setKabeStatus("playing")}
+                onError={() => setKabeStatus("error")}
               />
-            </div>
-            <div className="flex items-center justify-between px-4 py-2">
-              <p className="text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">Mescid-i Haram 7/24 resmî canlı yayın · sitede oynar, başka yere yönlendirmez</p>
-              {KABE_SOURCES.length > 1 && (
-                <button onClick={() => setKabeSrcIdx(i => (i + 1) % KABE_SOURCES.length)} className="shrink-0 rounded-lg border border-white/10 px-2 py-1 text-[9px] font-black text-gold transition hover:bg-gold/10" title="Yayın açılmazsa diğer kaynağı dene">
-                  ↻ Kaynak Değiştir
-                </button>
+              {kabeStatus === "loading" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
+                  <p className="text-[10px] font-bold text-gold/70">Canlı yayına bağlanıyor…</p>
+                </div>
+              )}
+              {kabeStatus === "error" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <p className="text-[11px] font-black text-[#f5dda6]">Yayın şu an açılamadı</p>
+                  <button onClick={() => { setKabeStatus("loading"); startKabeHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
+                </div>
               )}
             </div>
+            <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">Mescid-i Haram 7/24 resmî canlı yayın · sitede oynar, başka yere yönlendirmez</p>
           </div>
         </div>
       )}
