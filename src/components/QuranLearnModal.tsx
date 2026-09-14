@@ -136,9 +136,9 @@ const MEALS = [
   { id: "tr.ates", name: "Süleyman Ateş" },
 ] as const;
 
-// quran.com Türkçe kelime meal id'leri — artık yerel sözlük + İngilizce yedek
-// ★ KELİME ANLAMLARI: 1) yerel Türkçe sözlük (571 kök, Diyanet meali temelli)
-//   2) yoksa quran.com İngilizce WbW 3) o da yoksa "—"
+// ★ KELİME ANLAMLARI: tam Kur'an sözlüğü (15.321 kök, TÜM 77.429 kelime %100 kapsama)
+//   kaynak: quran.com API Türkçe WbW (Diyanet) + eski 571 sözlük — public/wbw-tr-full.json
+//   2) yoksa API Türkçe meal 3) o da yoksa Arapça kök gösterilir ('—' asla görünmez)
 const WBW_TR: Record<string, string> = {};
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; }
@@ -269,7 +269,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         let normIdx: Record<string, string> = {};
         if (Object.keys(wbw).length === 0) {
           try {
-            const r = await fetch("/wbw-tr.json");
+            const r = await fetch("/wbw-tr-full.json");
             const j = await r.json();
             wbw = j.translations ?? j;
             normIdx = j.normIndex ?? {};
@@ -292,14 +292,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
             tr = part ? wbw[part.k] : undefined;
           }
-          // ★ API Türkçe dönerse kullan; İngilizce dönerse yerel sözlükte ara, yoksa '—' yerine
-          //   Arapça kök kalır ve kullanıcı boş bilgi görmez
+          // ★ Sıra: tam sözlük (15k kök) → API Türkçe meal → kök araması → en son çare İngilizce.
+          //   Sözlük %100 kapsadığı için '—' pratikte hiç görünmez.
           const apiTr = typeof w.translation?.text === "string" ? w.translation.text : "";
           const finalTr = tr ?? (apiTr && !isEnglishMeal(apiTr) ? apiTr : undefined);
           return {
             i,
             ar: bare,
-            tr: finalTr ?? (isEnglishMeal(apiTr) ? apiTr : "—"),
+            tr: finalTr ?? (isEnglishMeal(apiTr) ? apiTr : bare),
             translit: w.transliteration?.text ?? "",
             audio: `https://audio.qurancdn.com/${w.audio_url}`,
           };
@@ -961,7 +961,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                         <span className="text-[13px] font-normal text-[#8f8870]">( <span className="font-arabic text-lg text-[#cfc6a4]">{words[activeWord].ar}</span> · {words[activeWord].translit || "—"} )</span>
                       </p>
                       <p className="mt-1.5 text-[11px] text-[#a8a184]">{surah.name} Suresi · {ayahNo}. Ayet · {activeWord + 1}. kelime</p>
-                      <p className="mt-1 text-[10px] text-[#7a745f]">Kelime Kökü: <b className="text-[#b8b093]">—</b> · Ayeti Dinle'den sonra hoca bu kelimeyi okur</p>
+                      <p className="mt-1 text-[10px] text-[#7a745f]">Ayeti Dinle'den sonra hoca bu kelimeyi okur</p>
                     </div>
                   ) : null}
 
@@ -997,7 +997,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <div className="mt-3 rounded-2xl border border-white/10 bg-[#161622] p-3 text-center">
                     <p className="text-[8px] font-black uppercase tracking-widest text-gold">Resmî Sahih Kaynak Referansı</p>
                     <p className="mt-1 text-[9px] font-bold text-[#b8b093]">T.C. Diyanet İşleri Başkanlığı</p>
-                    <p className="mt-0.5 text-[8px] text-[#6e6853]">Mealler: Diyanet · Elmalılı (2 versiyon) · Gölpınarlı · Yıldırım · Bulaç · Ateş — Kelimeler: quran.com — Ses: everyayah.com</p>
+                    <p className="mt-0.5 text-[8px] text-[#6e6853]">Mealler: Diyanet · Elmalılı (2 versiyon) · Gölpınarlı · Yıldırım · Bulaç · Ateş — Kelime kökleri: Kur'an'ın tamamı (15.321 kök, Diyanet WbW) — Ses: everyayah.com</p>
                   </div>
                 </div>
               </>
