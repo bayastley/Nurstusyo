@@ -168,6 +168,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [flowPlaying, setFlowPlaying] = useState(false);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
+  const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
+  const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
   // ★ KÂBE CANLI — YouTube'sız, doğrudan Suudi resmî Quran TV HLS akışı (m.live.net.sa)
   //   CORS açık (Access-Control-Allow-Origin: *), hls.js ile tarayıcıda oynar.
   //   Kaynak: iptv-org resmî listesi — Suudi Quran TV (Al Quran Al Kareem TV, Mekke yayını)
@@ -236,18 +238,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       kabeHlsRef.current = hls;
       hls.loadSource(KABE_HLS);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => { video.play().catch(() => undefined); });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.volume = kabeVolume;
+        video.play().catch(() => undefined);
+      });
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (data.fatal) setKabeStatus("error");
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari doğrudan HLS oynatır
       video.src = KABE_HLS;
+      video.volume = kabeVolume;
       video.play().catch(() => undefined);
     } else {
       setKabeStatus("error");
     }
-  }, []);
+  }, [kabeVolume]);
 
   // Modal açılınca yayına bağlan, kapatınca temizle
   useEffect(() => {
@@ -1167,7 +1173,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <video
                 ref={kabeVideoRef}
                 autoPlay
-                muted
+                muted={kabeMuted}
                 playsInline
                 className="h-full w-full"
                 onPlaying={() => setKabeStatus("playing")}
@@ -1183,6 +1189,20 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <p className="text-[11px] font-black text-[#f5dda6]">Yayın şu an açılamadı</p>
                   <button onClick={() => { setKabeStatus("loading"); startKabeHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
+                </div>
+              )}
+              {/* ★ SES KONTROLÜ — sağ altta: aç/kapa + kaydırıcılı seviye */}
+              {kabeStatus === "playing" && (
+                <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
+                  <button onClick={() => setKabeMuted(m => !m)} className="text-[13px] leading-none text-white/90 transition hover:text-gold" title={kabeMuted ? "Sesi aç" : "Sesi kapat"}>
+                    {kabeMuted || kabeVolume === 0 ? "🔇" : kabeVolume < 0.5 ? "🔉" : "🔊"}
+                  </button>
+                  <input
+                    type="range" min={0} max={1} step={0.05} value={kabeMuted ? 0 : kabeVolume}
+                    onChange={(e) => { const v = Number(e.target.value); setKabeVolume(v); setKabeMuted(v === 0); if (kabeVideoRef.current) kabeVideoRef.current.volume = v; }}
+                    className="h-1 w-16 cursor-pointer accent-[#D7AA41]"
+                    title="Ses seviyesi"
+                  />
                 </div>
               )}
             </div>
