@@ -171,7 +171,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ KÂBE CANLI — YouTube'sız, doğrudan Suudi resmî Quran TV HLS akışı (m.live.net.sa)
   //   CORS açık (Access-Control-Allow-Origin: *), hls.js ile tarayıcıda oynar.
   //   Kaynak: iptv-org resmî listesi — Suudi Quran TV (Al Quran Al Kareem TV, Mekke yayını)
-  const KABE_HLS = "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8";
+  const KABE_HLS = "/api/live/kabe?type=playlist";
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
