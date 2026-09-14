@@ -166,6 +166,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ SURE AKIŞI: oynatınca ayetler arkasına arkasına okunur, ekran okunan ayeti izler
   const [flowPlaying, setFlowPlaying] = useState(false);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
+  const [kabeSrcIdx, setKabeSrcIdx] = useState(0); // ★ Canlı kaynak sırası (yayın açılmazsa değiştir)
+  const KABE_SOURCES = [
+    // 1) Kanal canlı akışı — makkahlive.net'in de kullandığı resmî yöntem, en güvenilir
+    "https://www.youtube.com/embed/live_stream?channel=UCos52azQNBgW63_9uDJoPDA&rel=0&modestbranding=1",
+    // 2) Doğrudan canlı video (kanal akışı açılmazsa yedek)
+    "https://www.youtube.com/embed/eC4LfEVxvKg?rel=0&modestbranding=1",
+  ];
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -1121,16 +1128,24 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => setKabeLive(false)} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
             </div>
             <div className="aspect-video w-full bg-black">
-              {/* Mescid-i Haram 7/24 resmî canlı yayın akışı (doğrudan canlı video embed — kanal embed'i bazı tarayıcılarda engelleniyor) */}
+              {/* Mescid-i Haram 7/24 resmî canlı yayın akışı — kaynak açılmazsa kullanıcı tek tıkla diğer kaynağa geçer */}
               <iframe
-                src="https://www.youtube.com/embed/eC4LfEVxvKg?autoplay=0&rel=0&modestbranding=1"
+                key={kabeSrcIdx}
+                src={KABE_SOURCES[kabeSrcIdx]}
                 title="Kâbe Canlı Yayın"
                 allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
                 allowFullScreen
                 className="h-full w-full"
               />
             </div>
-            <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">Kaynak: Saudi Quran TV resmî canlı kanalı · Yayın kesilirse birkaç sn sonra kendiliğinden devam eder</p>
+            <div className="flex items-center justify-between px-4 py-2">
+              <p className="text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">Mescid-i Haram 7/24 resmî canlı yayın · sitede oynar, başka yere yönlendirmez</p>
+              {KABE_SOURCES.length > 1 && (
+                <button onClick={() => setKabeSrcIdx(i => (i + 1) % KABE_SOURCES.length)} className="shrink-0 rounded-lg border border-white/10 px-2 py-1 text-[9px] font-black text-gold transition hover:bg-gold/10" title="Yayın açılmazsa diğer kaynağı dene">
+                  ↻ Kaynak Değiştir
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
