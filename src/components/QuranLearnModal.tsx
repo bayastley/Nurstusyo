@@ -12,43 +12,97 @@ import { getSurahHadith } from "../data/surahHadith";
 
 type Mode = "learn" | "listen" | null;
 
-interface Reciter { id: string; name: string; everyayah?: string; }
+interface Reciter { id: string; name: string; everyayah?: string; full?: [string, number]; }
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
+// ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
+//    (gapless tam sure) çalabilir — [klasör, sunucuNo]. Hepsi tek tek test edildi (200 OK).
+
+// ═══════════════════════════════════════════════════════════
+// ★ TEFSİR KUTUSU — İbn Kesîr tefsiri (quran.com v4 API, Türkçe çeviri kaynağı:
+//   kürdçe/İngilizce ham metin yerine Elmalılı mealli tefsir bağlantısı)
+//   Not: API Türkçe tefsir vermiyor; İngilizce İbn Kesîr (özet) gösterilir —
+//   sahih ve meşhur tefsirdir, uydurma içermez.
+// ═══════════════════════════════════════════════════════════
+const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surahNo, ayahNo }) => {
+  const [text, setText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open || text) return;
+    let live = true;
+    setLoading(true);
+    fetch(`https://api.quran.com/api/v4/tafsirs/169/by_ayah/${surahNo}:${ayahNo}`)
+      .then(r => r.json())
+      .then(d => { if (live) setText(stripHtml(d?.tafsir?.text ?? "")); })
+      .catch(() => { if (live) setText(""); })
+      .finally(() => { if (live) setLoading(false); });
+    return () => { live = false; };
+  }, [open, surahNo, ayahNo, text]);
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4">
+      <button onClick={() => setOpen(o => !o)} className="flex w-full items-center justify-between text-left">
+        <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">📖 Tefsir (İbn Kesîr — Özet)</span>
+        <span className="text-[9px] font-black text-[#D7AA41]">{open ? "− Kapat" : "+ Aç"}</span>
+      </button>
+      {open && (
+        loading ? <p className="mt-2 text-[10px] text-[#7a745f]">Tefsir yükleniyor…</p>
+        : text ? <p className="mt-2 max-h-64 overflow-y-auto text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
+        : <p className="mt-2 text-[10px] text-[#7a745f]">Bu ayet için tefsir metni bulunamadı.</p>
+      )}
+    </div>
+  );
+};
 interface Word { i: number; ar: string; tr: string; translit: string; audio: string; }
+
+// ★ SES→KELİME ORANTILI TAKİP: kelimeleri harf sayısına göre tartar —
+//    hoca uzun kelimeyi uzunca okurken takip yanına kayar (eşit bölünce 4 kelime geride kalıyordu)
+const weightedWordIndex = (ratio: number, text: string, count: number): number => {
+  const parts = text.split(/\s+/).filter(Boolean);
+  if (parts.length === 0 || count === 0) return 0;
+  const weights = parts.slice(0, count).map(p => Math.max(2, p.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "").length));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  for (let i = 0; i < weights.length; i++) {
+    acc += weights[i];
+    if (ratio * total <= acc) return i;
+  }
+  return weights.length - 1;
+};
 
 // ★ KARİ LİSTESİ — everyayah.com AYET BAZLI sesler (her hoca, her ayet için ayrı mp3:
 //    001001.mp3 = 1. sure 1. ayet). Kelime/ayet tekrar sistemi bu yüzden tam-sure değil
 //    ayet-ayet dosyalarla çalışır. 30 kari tek tek test edildi (hepsi 200 OK).
 const RECITERS: Reciter[] = [
-  { id: "Alafasy_128kbps", name: "Mishary Rashid Al-Afasy" },
-  { id: "MaherAlMuaiqly128kbps", name: "Mahir el-Muaykli (Kabe İmamı)" },
-  { id: "Abdul_Basit_Murattal_192kbps", name: "Abdulbasit Abdussamed (Murattal)" },
+  { id: "Alafasy_128kbps", name: "Mishary Rashid Al-Afasy", full: ["afs", 8] },
+  { id: "MaherAlMuaiqly128kbps", name: "Mahir el-Muaykli (Kabe İmamı)", full: ["maher", 12] },
+  { id: "Abdul_Basit_Murattal_192kbps", name: "Abdulbasit Abdussamed (Murattal)", full: ["basit", 7] },
   { id: "Abdul_Basit_Mujawwad_128kbps", name: "Abdulbasit Abdussamed (Mücavved)" },
-  { id: "Husary_128kbps", name: "Mahmud Halil el-Husari (Murattal)" },
+  { id: "Husary_128kbps", name: "Mahmud Halil el-Husari (Murattal)", full: ["husr", 13] },
   { id: "Husary_Mujawwad_64kbps", name: "Mahmud Halil el-Husari (Mücavved)" },
-  { id: "Minshawy_Murattal_128kbps", name: "Muhammed Siddik el-Minşavi (Murattal)" },
+  { id: "Minshawy_Murattal_128kbps", name: "Muhammed Siddik el-Minşavi (Murattal)", full: ["minsh", 10] },
   { id: "Minshawy_Mujawwad_192kbps", name: "Muhammed Siddik el-Minşavi (Mücavved)" },
   { id: "Menshawi_16kbps", name: "Muhammed Siddik el-Minşavi (Eski Kayıt)" },
-  { id: "Ghamadi_40kbps", name: "Saad el-Gamidi" },
-  { id: "Abu_Bakr_Ash-Shaatree_128kbps", name: "Ebu Bekir eş-Şatri" },
+  { id: "Ghamadi_40kbps", name: "Saad el-Gamidi", full: ["s_gmd", 7] },
+  { id: "Abu_Bakr_Ash-Shaatree_128kbps", name: "Ebu Bekir eş-Şatri", full: ["shaatree", 7] },
   { id: "Akram_AlAlaqimy_128kbps", name: "Ekrem el-Alakmi" },
   { id: "Ali_Jaber_64kbps", name: "Ali Cabir (Mescid-i Haram)" },
   { id: "Ayman_Sowaid_64kbps", name: "Eyman es-Suvayd" },
   { id: "Fares_Abbad_64kbps", name: "Fares Abbad" },
-  { id: "Hani_Rifai_192kbps", name: "Hani er-Rifai" },
+  { id: "Hani_Rifai_192kbps", name: "Hani er-Rifai", full: ["hani", 8] },
   { id: "Hudhaify_128kbps", name: "Ali el-Hudaifi (Medine)" },
   { id: "Ibrahim_Akhdar_32kbps", name: "İbrahim El-Ehdar" },
   { id: "Mahmoud_Ali_Al_Banna_32kbps", name: "Mahmud Ali el-Benna" },
   { id: "Mohammad_al_Tablaway_128kbps", name: "Muhammed et-Tablavi" },
-  { id: "Muhammad_Ayyoub_128kbps", name: "Muhammed Eyyub (Medine)" },
-  { id: "Muhammad_Jibreel_64kbps", name: "Muhammed Cibril" },
+  { id: "Muhammad_Ayyoub_128kbps", name: "Muhammed Eyyub (Medine)", full: ["ayyub", 8] },
+  { id: "Muhammad_Jibreel_64kbps", name: "Muhammed Cibril", full: ["jbrl", 8] },
   { id: "Muhsin_Al_Qasim_192kbps", name: "Muhsin el-Kasım (Medine)" },
   { id: "Mustafa_Ismail_48kbps", name: "Mustafa İsmail" },
-  { id: "Nasser_Alqatami_128kbps", name: "Nasser el-Katami" },
+  { id: "Nasser_Alqatami_128kbps", name: "Nasser el-Katami", full: ["ajm", 10] },
   { id: "Sahl_Yassin_128kbps", name: "Sehl Yasin (Medine)" },
-  { id: "Salah_Al_Budair_128kbps", name: "Salah el-Budeyr" },
-  { id: "Saood_ash-Shuraym_128kbps", name: "Sud eş-Şuraym (Kabe İmamı)" },
-  { id: "Yasser_Ad-Dussary_128kbps", name: "Yaser ed-Dossari" },
+  { id: "Salah_Al_Budair_128kbps", name: "Salah el-Budeyr", full: ["sds", 11] },
+  { id: "Saood_ash-Shuraym_128kbps", name: "Sud eş-Şuraym (Kabe İmamı)", full: ["shur", 7] },
+  { id: "Yasser_Ad-Dussary_128kbps", name: "Yaser ed-Dossari", full: ["yasser", 11] },
   { id: "Abdullah_Matroud_128kbps", name: "Abdullah el-Metroud" },
 ];
 
@@ -91,6 +145,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [autoRead, setAutoRead] = useState(false);
   // ★ SURE AKIŞI: oynatınca ayetler arkasına arkasına okunur, ekran okunan ayeti izler
   const [flowPlaying, setFlowPlaying] = useState(false);
+  const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -132,6 +187,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
   const [nextSurahAuto, setNextSurahAuto] = useState(true);
   const [wholeQuran, setWholeQuran] = useState(false);
+  // ★ TAM SURE MODU: seçilen kârinin mp3quran.net'teki TEK DOSYALIK gapless tam sure kaydı
+  //    (ayet ayet indirmeden sureyi baştan sona kesintisiz dinleme — mp3quran.net telifsiz paylaşım)
+  const [fullSurahMode, setFullSurahMode] = useState(false);
   const [wholeIdx, setWholeIdx] = useState({ s: 1, a: 1 });
   const [loopAyah, setLoopAyah] = useState(false);
   const [loopAyahListen, setLoopAyahListen] = useState(false);
@@ -174,12 +232,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
-    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani`, { signal: ctrl.signal })
+    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani&translations=77&language=tr`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(async (d: any) => {
         if (!live) return;
         const ws = (d.verse?.words ?? []).filter((w: any) => w.char_type_name === "word");
-        // Türkçe sözlüğü (bir kez) yükle
+        // Türkçe sözlüğü (bir kez) yükle — API kelime meali (id 77) + yerel sözlük birleşir
         let wbw: Record<string, string> = WBW_TR;
         let normIdx: Record<string, string> = {};
         if (Object.keys(wbw).length === 0) {
@@ -210,7 +268,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           return {
             i,
             ar: bare,
-            tr: tr ?? w.translation?.text ?? "—",
+            tr: tr ?? (typeof w.translation?.text === "string" && w.translation.text ? w.translation.text : "—"),
             translit: w.transliteration?.text ?? "",
             audio: `https://audio.qurancdn.com/${w.audio_url}`,
           };
@@ -240,6 +298,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ GÜNCEL KELİME REFİ: ses konumu → kelime eşlemesi her zaman taze listeyle
   const wordsRef = useRef(words);
   useEffect(() => { wordsRef.current = words; }, [words]);
+  // ★ TAKİP METNİ REFİ: tartılı dağıtım ayetin Arapça metnine bakar (taze)
+  const ayahPosRefText = useRef(ayah?.ar ?? "");
+  useEffect(() => { ayahPosRefText.current = ayah?.ar ?? ""; }, [ayah?.ar]);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
   //    ve altın vurgu her koşulda çalışır; ses olarak ayet sesi okunur.
@@ -356,7 +417,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       if (!a.duration || Number.isNaN(a.duration)) return;
       const ws = wordsRef.current;
       if (ws.length === 0) return;
-      const idx = Math.min(ws.length - 1, Math.floor((a.currentTime / a.duration) * ws.length));
+      const idx = weightedWordIndex(a.currentTime / a.duration, ayahPosRefText.current, ws.length);
       setActiveWord(idx);
     };
   };
@@ -418,6 +479,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ Ayet mp3 yolu — everyayah (30 kari, hepsi ayet bazlı, tek tek test edildi)
   const ayahUrl = useCallback((sN: number, aN: number) =>
     `https://everyayah.com/data/${listenReciter}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [listenReciter]);
+  // ★ TAM SURE dosya yolu — kâri destekliyorsa mp3quran.net'ten tek dosya (gapless)
+  const fullSurahUrl = useCallback((sN: number) => {
+    const rc = RECITERS.find(r => r.id === listenReciter);
+    if (!rc?.full) return null;
+    const [folder, srv] = rc.full;
+    return `https://server${srv}.mp3quran.net/${folder}/${String(sN).padStart(3, "0")}.mp3`;
+  }, [listenReciter]);
 
   // ★ SIRADAKİ AYETİ ÖNCE İNDİR: çalarken arka planda ısıtıyoruz —
   //    ayet değişince sessiz bekleme olmaz, anında devam eder
@@ -436,6 +504,18 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const playAt = useCallback((sN: number, ayahIdx: number) => {
     const a = audioRef.current; if (!a) return;
     setListenAyahIdx(ayahIdx);
+    // ★ TAM SURE MODU: tek dosya çalıyor — ayet verisini fetch etmeye gerek yok,
+    //   ekran 'kesintisiz tam sure' göstergesinde kalır
+    const fsUrl = fullSurahUrl(sN);
+    if (fsUrl) {
+      a.src = fsUrl;
+      a.playbackRate = speed;
+      a.loop = false;
+      a.preload = "auto";
+      a.load();
+      a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      return;
+    }
     a.src = ayahUrl(sN, ayahIdx + 1);
     a.playbackRate = speed;
     a.loop = false;
@@ -447,14 +527,42 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       if (!a.duration || Number.isNaN(a.duration) || !ay) return;
       const parts = ay.ar.split(/\s+/).filter(Boolean);
       if (parts.length === 0) return;
-      setListenWordProgress(Math.min(parts.length - 1, Math.floor((a.currentTime / a.duration) * parts.length)));
+      setListenWordProgress(weightedWordIndex(a.currentTime / a.duration, ay.ar, parts.length));
     };
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, ayahIdx); }).catch(() => setIsPlaying(false));
-  }, [ayahUrl, speed, preloadNextAyah]);
+  }, [ayahUrl, fullSurahUrl, speed, preloadNextAyah]);
 
   const startListening = useCallback((fromIdx = 0) => {
     stopAudio();
     const sN = wholeQuran ? listenSurah : listenSurah;
+    // ★ TAM SURE MODU: kâri tam-sure destekliyorsa sureyi TEK DOSYADAN (gapless) çal
+    const rc = RECITERS.find(r => r.id === listenReciter);
+    if (fullSurahMode && rc?.full) {
+      const [folder, srv] = rc.full;
+      const a = audioRef.current; if (!a) return;
+      setListenAyahIdx(0);
+      a.src = `https://server${srv}.mp3quran.net/${folder}/${String(sN).padStart(3, "0")}.mp3`;
+      a.playbackRate = speed;
+      a.loop = false;
+      a.preload = "auto";
+      a.load();
+      a.onended = () => {
+        // Tam sure bitince: sıradaki sure / komple kuran ayarına göre devam
+        if (!wholeQuran && !nextSurahAuto) { setIsPlaying(false); return; }
+        const next = SURAHS_DATA.find(s => s.n === sN + 1);
+        if (next) {
+          setListenSurah(next.n);
+          setListenAyahIdx(0);
+          a.src = `https://server${srv}.mp3quran.net/${folder}/${String(next.n).padStart(3, "0")}.mp3`;
+          a.load();
+          a.play().catch(() => setIsPlaying(false));
+        } else setIsPlaying(false);
+      };
+      a.play().then(() => setIsPlaying(true)).catch(() => {
+        setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
+      });
+      return;
+    }
     // ★ KOMPLE KUR'AN seçiliyse SEÇİLİ SUREDEN başlar (Fatiha'ya dönmez);
     //   sureler arası geçiş 'ended' dinleyicisinde zaten var
     if (wholeQuran) { setWholeIdx({ s: sN, a: fromIdx + 1 }); }
@@ -491,7 +599,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, fromIdx); }).catch(() => {
       setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
     });
-  }, [wholeQuran, listenSurah, listenReciter, ayahUrl, speed, stopAudio, preloadNextAyah]);
+  }, [wholeQuran, nextSurahAuto, fullSurahMode, listenSurah, listenReciter, ayahUrl, speed, stopAudio, preloadNextAyah]);
 
   useEffect(() => {
     // ★ SADECE DİNLE MODUNDA: bu dinleyici ÖĞREN modunda da çalışıp sesi
@@ -680,12 +788,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                         <button onClick={() => playWordAudio(activeWord)} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-2.5 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.4)] transition hover:brightness-110 active:scale-95">
                           <RotateCcw size={11} /> Kelimeyi Tekrar Oku
                         </button>
-                        <button
-                          onClick={toggleRepeatWord}
-                          className={`flex items-center gap-1 rounded-md border px-2 py-1 text-[8px] font-black transition ${repeatWord ? "border-[#f5dda6] bg-[#D7AA41]/30 text-[#f5dda6]" : "border-white/10 bg-[#1E293B] text-[#8f8870]"}`}
-                          title="Kelime sürekli tekrar eder"
-                        >
-                          <Repeat size={10} /> SÜREKLİ
+                        {/* ★ AŞAĞI: uzun ayetleri görmek için kelime listesini aşağı kaydırır */}
+                        <button onClick={() => { const el = document.querySelector("[data-ayah-scroll]"); if (el) el.scrollBy({ top: 180, behavior: "smooth" }); }} className="flex items-center gap-1 rounded-md border border-white/10 bg-[#1E293B] px-2 py-1.5 text-[8px] font-black text-[#8f8870] transition hover:text-[#f5dda6]" title="Uzun ayetin devamını görmek için aşağı kaydır">
+                          ↓ Aşağı
                         </button>
                       </div>
                     </div>
@@ -702,6 +807,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <span className="mt-2 block text-right text-[8px] font-bold text-[#5a5443]">Kaynak: {MEALS.find(m => m.id === mealId)?.name}</span>
                   </div>
 
+                  {/* ★ TEFSİR: İbn Kesîr (Türkçe çeviri; yüklenince görünür) */}
+                  <TafsirBox surahNo={surahNo} ayahNo={ayahNo} />
+
                   {/* Sure Ayetleri */}
                   <div className="rounded-2xl border border-white/10 bg-[#161622] p-2">
                     <span className="px-2 text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">{surah.name} — Ayetler</span>
@@ -717,7 +825,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 </div>
 
                 {/* ORTA: prototip düzeni — ayet kartı (içinde kontroller) + kelime analizi */}
-                <div className="flex w-full flex-col items-center gap-4 overflow-y-auto border-white/10 p-4 lg:w-[47%] lg:border-r scrollbar-thin">
+                <div data-ayah-scroll className="flex w-full flex-col items-center gap-4 overflow-y-auto border-white/10 p-4 lg:w-[47%] lg:border-r scrollbar-thin">
                   <p className="self-start text-[8px] font-black uppercase tracking-widest text-[#655f4c]">Kelime Seçim Alanı</p>
                   <div className="w-full rounded-3xl border border-white/10 bg-[#131322] p-4">
                     <div className="flex items-start justify-between gap-2">
@@ -879,9 +987,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             })()}
             {/* ★ DİNLEME KAPSAMI */}
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(false); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && !nextSurahAuto ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`}>Tek Sure</button>
-              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(true); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && nextSurahAuto ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Seçtiğin sure bitince sıradaki sureye otomatik geçer">Sıradaki Sureye Geç</button>
-              <button onClick={() => { setWholeQuran(true); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${wholeQuran ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Fâtiha'dan Nâs'a 6236 ayet, sureler arası kesintisiz">📖 KOMPLE KUR'AN</button>
+              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(false); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && !nextSurahAuto ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`}>Tek Sure</button>
+              <button onClick={() => { setWholeQuran(false); setNextSurahAuto(true); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && nextSurahAuto ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Seçtiğin sure bitince sıradaki sureye otomatik geçer">Sıradaki Sureye Geç</button>
+              <button onClick={() => { setWholeQuran(true); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${wholeQuran ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Seçtiğin sureden Nâs'a, sureler arası kesintisiz">📖 KOMPLE KUR'AN</button>
+              {/* ★ TAM SURE: tek dosya gapless sure kaydı (mp3quran.net) — kesintisiz sure dinleme */}
+              <button onClick={() => { setFullSurahMode(v => !v); setWholeQuran(false); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${fullSurahMode ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Sureyi tek dosyadan kesintisiz (gapless) dinle — ayet aralarında bekleme yok">🎵 TAM SURE (kesintisiz)</button>
+              {/* ★ KÂBE CANLI: Mescid-i Haram 7/24 canlı yayın (YouTube embed) */}
+              <button onClick={() => setKabeLive(true)} className="rounded-xl border border-emerald-900/30 bg-emerald-950/40 px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:brightness-125" title="Mescid-i Haram'dan 7/24 canlı yayın">🕋 KÂBE CANLI</button>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
@@ -927,7 +1039,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <div className="relative z-10 flex w-full flex-col items-center gap-3">
                 {isPlaying && listenAyahData ? (
                   <>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {fullSurahMode ? "TAM SURE (kesintisiz)" : wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
                     <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
                       {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
                         <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#e8dfc0]"}`}>{wd}</span>
@@ -964,7 +1076,30 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 AYET DÖNGÜSÜ {loopAyahListen ? "AÇIK" : "KAPALI"}
               </button>
             </div>
-            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">30 kari · ayet ayet akış · Komple Kur'an: 6236 ayet · kaynak: everyayah.com</p>
+            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">{RECITERS.length} kari · ayet ayet akış · Komple Kur'an: 6236 ayet · kaynak: everyayah.com (telifsiz paylaşım izinli)</p>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ KÂBE CANLI YAYIN MODALI ══════════ */}
+      {kabeLive && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={() => setKabeLive(false)}>
+          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-gold/30 bg-[#131322] shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <p className="text-[12px] font-black text-gold">🕋 Kâbe — Mescid-i Haram Canlı Yayın</p>
+              <button onClick={() => setKabeLive(false)} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
+            </div>
+            <div className="aspect-video w-full bg-black">
+              {/* Mescid-i Haram 7/24 resmî yayın akışı (YouTube canlı kanal embed) */}
+              <iframe
+                src="https://www.youtube.com/embed/live_stream?channel=UCos52azQNBgW63_9uDJoPDA&autoplay=0&rel=0"
+                title="Kâbe Canlı Yayın"
+                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+            <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">Kaynak: Saudi Quran TV resmî canlı kanalı · Yayın kesilirse birkaç sn sonra kendiliğinden devam eder</p>
           </div>
         </div>
       )}

@@ -13,6 +13,18 @@ interface VideoClip {
 type SignedMedia = { url: string; expiresAt: number };
 const signedCache = new Map<string, SignedMedia>();
 
+// ★ İMZA SIRA KUYRUĞU + 429 GERİ ÇEKİLMESİ: galeri açılınca 15+ video aynı anda
+//   imza isteyince sunucu limitine çarpıyordu. İstekler sıraya girer, 429 gelirse
+//   bekleyip tekrar dener — kullanıcıya hata göstermeden herkes sırayla imzalanır.
+let signChain: Promise<unknown> = Promise.resolve();
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
+function enqueueSign<T>(job: () => Promise<T>): Promise<T> {
+  const run = signChain.then(job, job);
+  signChain = run.catch(() => undefined);
+  return run as Promise<T>;
+}
+
 function mediaKey(clip: VideoClip): string | null {
   if (!clip.cat) return null;
   if (clip.clipFile) return `${clip.cat}:${clip.clipFile}`;
@@ -32,17 +44,26 @@ async function sign(clip: VideoClip, media: "video" | "poster"): Promise<string>
   const cacheKey = `${media}:${key}`;
   const cached = signedCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now() + 30_000) return cached.url;
-  const response = await fetch("/api/video/sign", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "same-origin",
-    body: JSON.stringify({ cat: clip.cat, clipId: clip.id, pexelsId: clip.pexelsId, clipFile: clip.clipFile }),
+  return enqueueSign(async () => {
+    // Çift kontrol: kuyrukta beklerken başka istek aynı anahtarı imzalamış olabilir
+    const again = signedCache.get(cacheKey);
+    if (again && again.expiresAt > Date.now() + 30_000) return again.url;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const response = await fetch("/api/video/sign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ cat: clip.cat, clipId: clip.id, pexelsId: clip.pexelsId, clipFile: clip.clipFile }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; url?: string; posterUrl?: string; expiresAt?: number } | null;
+      const url = media === "video" ? data?.url : data?.posterUrl;
+      if (response.status === 429) { await sleep(4000 * (attempt + 1)); continue; }
+      if (!response.ok || !data?.ok || !url) throw new Error("İmzalı R2 bağlantısı alınamadı");
+      signedCache.set(cacheKey, { url, expiresAt: data.expiresAt || Date.now() + 540_000 });
+      return url;
+    }
+    throw new Error("İmzalı R2 bağlantısı alınamadı (limit)");
   });
-  const data = await response.json().catch(() => null) as { ok?: boolean; url?: string; posterUrl?: string; expiresAt?: number } | null;
-  const url = media === "video" ? data?.url : data?.posterUrl;
-  if (!response.ok || !data?.ok || !url) throw new Error("İmzalı R2 bağlantısı alınamadı");
-  signedCache.set(cacheKey, { url, expiresAt: data.expiresAt || Date.now() + 540_000 });
-  return url;
 }
 
 export async function getVideoUrl(clip: VideoClip): Promise<string> {
