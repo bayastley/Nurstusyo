@@ -5,7 +5,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 const UPSTREAMS: Record<string, string> = {
   kabe: "https://media2.streambrothers.com:1936/8122/8122/",
-  quran: "https://qatartv.akamaized.net/hls/live/20000612/qtvquran/",
+  quran: "https://qatartv.akamaized.net/hls/live/20000612/qtvquran/", // ★ playlist DEĞİL master.m3u8 kökü — 502 fix (2026-09)
 };
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
@@ -78,7 +78,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const base = UPSTREAMS[src];
   if (!base) { res.status(400).json({ ok: false, error: "gecersiz_kanal" }); return; }
   try {
-    if (type === "playlist") { await pipe(res, base + "playlist.m3u8", true); return; }
+    if (type === "playlist") {
+      // ★ Katar master.m3u8 kullanıyor; Suudiplaylist.m3u8. Doğru giriş dosyasını seç:
+      const entry = src === "quran" ? "master.m3u8" : "playlist.m3u8";
+      await pipe(res, base + entry, true); return;
+    }
     const u = safePath(String(req.query.u ?? ""));
     if (!u) { res.status(400).json({ ok: false, error: "gecersiz_yol" }); return; }
     if (type === "chunk") { await pipe(res, base + u, true); return; }
