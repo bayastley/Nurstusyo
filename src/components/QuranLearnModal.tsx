@@ -231,6 +231,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
   const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
   const kabeHlsRef = useRef<Hls | null>(null);
+  const kabeWrapRef = useRef<HTMLDivElement | null>(null); // ★ tam ekran kapsayıcısı
 
   // ★ Kâbe canlı HLS bağlama — YouTube'sız doğrudan Suudi resmî akış
   const startKabeHls = useCallback(() => {
@@ -1184,7 +1185,20 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 🕌 MEKKE HD KAMERA
               </button>
             </div>
-            <div className="relative aspect-video w-full bg-black">
+            <div ref={kabeWrapRef} className="relative aspect-video w-full bg-black [&:fullscreen]:aspect-auto [&:fullscreen]:h-full [&:fullscreen]:w-full">
+              {/* ★ TAM EKRAN BUTONU — sağ üstte, üç kanalda da çalışır */}
+              <button
+                onClick={() => {
+                  const el = kabeWrapRef.current;
+                  if (!el) return;
+                  if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
+                  else el.requestFullscreen().catch(() => undefined);
+                }}
+                className="absolute right-2 top-2 z-20 rounded-lg bg-black/70 px-2.5 py-1.5 text-[13px] leading-none text-white/90 backdrop-blur-sm transition hover:bg-black/90 hover:text-gold"
+                title="Tam ekran (çıkmak için tekrar bas veya ESC)"
+              >
+                ⛶
+              </button>
               {/* ★ MEKKE HD KAMERA — makkah.live iframe (embed izni açık, header doğrulandı) */}
               {kabeTab === "mekke" ? (
                 <iframe
