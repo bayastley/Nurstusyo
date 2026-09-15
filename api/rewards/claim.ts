@@ -21,14 +21,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   const user = userFromSession(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
-  const body = (req.body || {}) as { eventKey?: string; kind?: Kind; amount?: number };
+  const body = (req.body || {}) as { eventKey?: string; kind?: Kind };
   const eventKey = String(body.eventKey || "");
   const kind = body.kind;
-  const amount = Math.floor(Number(body.amount));
+  // ★ GÜVENLİK: miktar İSTEMCİDEN ALINMAZ. Sunucu, olay türüne göre miktarı
+  //   kendisi belirler — aksi halde kullanıcı amount göndererek hediye kotasını
+  //   50 katına çıkarabilir. (Cuma=1 kısa; diğer manevi günler=1 kısa.)
   if (!/^(cuma|kandil|kadir|bayram|ramazan)-\d{4}-\d{2}-\d{2}$/.test(eventKey) ||
-      !["kisa", "uzun", "tam"].includes(String(kind)) || amount < 1 || amount > 50) {
+      !["kisa", "uzun", "tam"].includes(String(kind))) {
     return res.status(400).json({ ok: false, error: "Geçersiz hediye" });
   }
+  const amount = 1;
   const match = eventKey.match(/^([a-z]+)-(\d{4}-\d{2}-\d{2})$/);
   const eventType = match?.[1] || "";
   const dateText = match?.[2] || "";

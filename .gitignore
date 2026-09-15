@@ -36,3 +36,18 @@ logs/
 *.log
 npm-debug.log*
 .aider*
+
+# Bot / script çalışma zamanı çıktıları (ürününe dokunulmaz, yalnızca izlenmez)
+scripts/debug-*.png
+scripts/debug-*.txt
+scripts/debug-*.json
+scripts/bot-durum.txt
+scripts/bot-harita.json
+scripts/bot-kilit.txt
+scripts/*-cikti.log
+scripts/bekci.log
+scripts/inceleme.json
+scripts/plan.json
+scripts/indir-cikti.log
+scripts/topla-gecici/
+instagram-auto-poster/queue-state.json

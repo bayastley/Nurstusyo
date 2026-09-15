@@ -133,7 +133,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
         if (users[0]?.id) {
           await db(`nur_wallets?user_id=eq.${encodeURIComponent(users[0].id)}`, { method: "PATCH", body: JSON.stringify({ purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0, sub_jeton: 0, purchased_jeton: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
-          await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(users[0].id)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancelled_at: new Date().toISOString() }) }).catch(() => null);
+          await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(users[0].id)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }).catch(() => null);
         }
       }
     } else if (action === "change_jeton") {
@@ -265,7 +265,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // 3) Cüzdanı tamamen sıfırla
         await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0, sub_jeton: 0, purchased_jeton: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
         // 4) Aktif aboneliği iptal et
-        await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled", cancelled_at: new Date().toISOString() }) }).catch(() => null);
+        await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }).catch(() => null);
       }
     } else if (action === "user_history") {
       // ★ KULLANICI GEÇMİŞİ — Email ile gir, son 10 siparişi + cüzdan durumunu gör

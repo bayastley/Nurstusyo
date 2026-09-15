@@ -62,11 +62,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const lang = sanitize(body.lang, 10);
 
     // ★ KVKK dostu: IP adresi doğrudan saklanmaz, geri döndürülemez bir
-    //   hash olarak tutulur (günlük bazda dönen tuz ile) — kişi
-    //   tanımlanamaz, sadece "aynı gün aynı cihaz mı" ayrımı yapılabilir.
+    //   hash olarak tutulur. Hash'e GİZLİ bir tuz (env) karışır — tuz olmazsa
+    //   saldırgan IP uzayını deneyerek hash'ten IP'yi geri çıkarabilir.
     const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || "unknown";
     const daySalt = new Date().toISOString().slice(0, 10);
-    const visitorHash = crypto.createHash("sha256").update(`${ip}:${userAgent}:${daySalt}`).digest("hex").slice(0, 24);
+    const secretSalt = process.env.NUR_ANALYTICS_SALT || process.env.NUR_SESSION_SECRET || "";
+    if (!secretSalt) {
+      // Tuz tanımlı değilse anonim sayaç yazmak yerine sessizce atla —
+      // geri çözülebilir sahte-anonim veri tutmayalım.
+      return res.status(200).json({ ok: true, logged: false, skipped: "no-salt" });
+    }
+    const visitorHash = crypto.createHash("sha256").update(`${ip}:${userAgent}:${daySalt}:${secretSalt}`).digest("hex").slice(0, 24);
 
     const response = await fetch(`${cfg.url}/rest/v1/nur_page_views`, {
       method: "POST",

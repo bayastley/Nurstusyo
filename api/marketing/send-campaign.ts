@@ -38,6 +38,23 @@ function adminFromCookie(req: VercelRequest): { email: string; isAdmin: boolean 
   }
 }
 
+// ★ Admin DB TEYİDİ: JWT iddiası yetmez — yetkisi alınan adminin eski
+//   token'ı 7 gün geçerli kalmasın.
+async function verifyAdminInDb(email: string): Promise<boolean> {
+  try {
+    const { url, key } = supabaseConfig();
+    const response = await fetch(`${url}/rest/v1/nur_users?email=eq.${encodeURIComponent(email)}&select=is_admin`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return false;
+    const rows = (await response.json()) as Array<{ is_admin?: boolean }>;
+    return rows[0]?.is_admin === true;
+  } catch {
+    return false;
+  }
+}
+
 function supabaseConfig() {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
@@ -66,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
 
   const admin = adminFromCookie(req);
-  if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
+  if (!admin || !(await verifyAdminInDb(admin.email))) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
 
   const resendKey = process.env.RESEND_API_KEY || "";
   if (!resendKey) {

@@ -16,6 +16,7 @@ interface SocialSharePanelProps {
   selected: SelectedAyah[];
   verseIndex: number;
   reciterName: string;
+  // Gerçek imza src/data/titleTemplates.ts ile aynıdır (5 parametre).
   genTitle: (sName?: string, s?: number, a?: number, lang?: string, meal?: string) => string;
   lastDescRef: React.MutableRefObject<string>;
   lastTitleRef: React.MutableRefObject<string>;

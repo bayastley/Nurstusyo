@@ -50,6 +50,24 @@ function getVerifiedAdminEmail(req: { headers: Record<string, string | string[] 
   }
 }
 
+// ★ Admin DB TEYİDİ: JWT iddiası yetmez — yetkisi alınan adminin eski
+//   token'ı 7 gün geçerli kalmasın. Supabase'den canlı is_admin kontrolü.
+async function verifyAdminInDb(email: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  try {
+    const res = await fetch(`${sb.url}/rest/v1/nur_users?email=eq.${encodeURIComponent(email)}&select=is_admin`, {
+      headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return false;
+    const rows = (await res.json()) as Array<{ is_admin?: boolean }>;
+    return rows[0]?.is_admin === true;
+  } catch {
+    return false;
+  }
+}
+
 // ─── SUPABASE AUTH SESSION REVOKE ──────────────────────────
 async function revokeUserSessions(userId: string): Promise<boolean> {
   const sb = getSupabase();
@@ -131,8 +149,10 @@ async function banUser(
       return false;
     }
 
-    // Ban kaydı ekle
-    const banRes = await fetch(`${sb.url}/rest/v1/nur_bans`, {
+    // Ban kaydı ekle — ★ Uygulamanın okuduğu tablo nur_ban_logs'tur
+    // (me.ts, ban/status.ts, video/sign.ts, render/authorize.ts).
+    // Eski nur_bans tablosunu okuyan hiçbir kod yok — yazmak boşunadır.
+    const banRes = await fetch(`${sb.url}/rest/v1/nur_ban_logs`, {
       method: "POST",
       headers: {
         apikey: sb.key,
@@ -142,15 +162,14 @@ async function banUser(
       },
       body: JSON.stringify({
         user_id: user.id,
-        email: targetEmail,
+        user_email: targetEmail.toLowerCase(),
         reason: reason.slice(0, 300),
         banned_by: adminEmail,
-        banned_at: new Date().toISOString(),
-        permanent: true,
+        is_auto: false,
       }),
     });
 
-    if (!banRes.ok && banRes.status !== 409) {
+    if (!banRes.ok) {
       console.error("[kill-session] Ban kaydı oluşturulamadı:", banRes.status);
     }
 
@@ -165,9 +184,25 @@ async function banUser(
           "Content-Type": "application/json",
           Prefer: "return=minimal",
         },
-        body: JSON.stringify({ tier: "free" }),
+        body: JSON.stringify({ tier: "free", updated_at: new Date().toISOString() }),
       }
     );
+
+    // ★ Aktif aboneliği de iptal et — yalnızca tier düşürmek yetmez,
+    //   subscription kaydı aktif kalırsa ayrıcalıklar devam eder.
+    await fetch(
+      `${sb.url}/rest/v1/nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active`,
+      {
+        method: "PATCH",
+        headers: {
+          apikey: sb.key,
+          Authorization: `Bearer ${sb.key}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({ status: "cancelled" }),
+      }
+    ).catch(() => undefined);
 
     return true;
   } catch (err: unknown) {
@@ -206,14 +241,14 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  // Admin yetki kontrolü
+  // Admin yetki kontrolü — JWT + env listesi + DB teyidi (üçlü kontrol)
   const adminEmail = getVerifiedAdminEmail(req);
   const allowedAdmins = (process.env.NUR_ADMIN_EMAILS || "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 
-  if (!adminEmail || !allowedAdmins.includes(adminEmail)) {
+  if (!adminEmail || !allowedAdmins.includes(adminEmail) || !(await verifyAdminInDb(adminEmail))) {
     res.status(403).json({ error: "Admin yetkisi yok" });
     return;
   }

@@ -13,7 +13,12 @@ function parseCookies(req: VercelRequest): Record<string, string> {
   return header.split(";").reduce<Record<string, string>>((acc, part) => {
     const [key, ...rest] = part.trim().split("=");
     if (!key) return acc;
-    acc[key] = decodeURIComponent(rest.join("="));
+    // Bozuk kodlanmış çerezler isteği 500'e düşürmesin.
+    try {
+      acc[key] = decodeURIComponent(rest.join("="));
+    } catch {
+      acc[key] = rest.join("=");
+    }
     return acc;
   }, {});
 }
@@ -77,10 +82,22 @@ async function db<T>(path: string, init: RequestInit = {}): Promise<T> {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
-  // Basit origin kontrolü
-  const origin = req.headers.origin || req.headers.referer || "";
-  const allowed = ["nurstudyo.com", "www.nurstudyo.com"];
-  if (origin && !allowed.some((a) => origin.includes(a))) {
+  // ★ Origin kontrolü — TAM eşleşme. (includes() kullanmak "evil-nurstudyo.com.attacker.io"
+  //   gibi alan adlarını da kabul ederdi — bypass açığıydı.)
+  const ALLOWED_ORIGINS = new Set([
+    "https://nurstudyo.com",
+    "https://www.nurstudyo.com",
+    "http://localhost:5173",
+    "http://localhost:5174",
+  ]);
+  const originHeader = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const refererHeader = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  let refererOrigin = "";
+  if (refererHeader) {
+    try { refererOrigin = new URL(refererHeader).origin; } catch { /* ignore */ }
+  }
+  const hasOrigin = Boolean(originHeader || refererOrigin);
+  if (hasOrigin && !ALLOWED_ORIGINS.has(originHeader) && !ALLOWED_ORIGINS.has(refererOrigin)) {
     return res.status(403).json({ ok: false, error: "Origin not allowed" });
   }
 

@@ -226,6 +226,23 @@ async function grantProduct(userId: string, productCode: string) {
   }
 }
 
+// ─── Rate limit — dakikada 15 istek ───
+const RATE_HITS = new Map<string, number[]>();
+
+function allowRequest(req: any, res: any): boolean {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const hits = (RATE_HITS.get(ip) || []).filter((hit) => hit >= now - 60_000);
+  if (hits.length >= 15) {
+    res.setHeader('Retry-After', '60');
+    res.status(429).json({ ok: false, error: 'Çok fazla istek, lütfen biraz bekleyin' });
+    return false;
+  }
+  hits.push(now);
+  RATE_HITS.set(ip, hits);
+  return true;
+}
+
 // ═══════════════════════════════════════════════════════════════
 // ANA HANDLER — Kullanıcı sayfaya döndüğünde çağrılır
 // ═══════════════════════════════════════════════════════════════
@@ -234,7 +251,7 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ ok: false, error: 'POST only' });
   }
 
-  // ★ Rate limit — dakikada 15 istek
+  if (!allowRequest(req, res)) return;
 
   try {
     const user = getUser(req);

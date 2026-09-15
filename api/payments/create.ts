@@ -90,6 +90,23 @@ const PRODUCT_CATALOG: Record<string, { price: string; name: string; kind: strin
   PK_TAM_10:   { price: '159.00', name: '10 Tam Sürüm',   kind: 'package' },
 };
 
+// ─── Rate limit — dakikada 10 istek (bot/spam koruması) ───
+const RATE_HITS = new Map<string, number[]>();
+
+function allowRequest(req: any, res: any): boolean {
+  const ip = String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const now = Date.now();
+  const hits = (RATE_HITS.get(ip) || []).filter((hit) => hit >= now - 60_000);
+  if (hits.length >= 10) {
+    res.setHeader('Retry-After', '60');
+    res.status(429).json({ error: 'Çok fazla istek, lütfen biraz bekleyin' });
+    return false;
+  }
+  hits.push(now);
+  RATE_HITS.set(ip, hits);
+  return true;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -100,7 +117,7 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  // ★ Rate limit — dakikada 10 istek (bot/spam koruması)
+  if (!allowRequest(req, res)) return;
 
   try {
     let body = req.body || {};
@@ -188,7 +205,8 @@ export default async function handler(req: any, res: any) {
     const buyerCity = String(buyer.city || 'İstanbul');
     const buyerAddress = String(buyer.address || buyer.registrationAddress || 'Türkiye');
 
-    console.log('[payments/create] Buyer:', { name, surname, email: buyerEmail, city: buyerCity, sandbox: isSandbox });
+    // ★ GİZLİLİK: e-posta/adres gibi PII loglanmaz — yalnızca şehir ve ortam.
+    console.log('[payments/create] Buyer:', { city: buyerCity, sandbox: isSandbox });
 
     const request = {
       locale: 'tr',
@@ -239,6 +257,7 @@ export default async function handler(req: any, res: any) {
     const auth = buildAuth(bodyString);
 
     console.log('[payments/create] İstek:', { price, planName, conversationId, sandbox: process.env.IYZICO_SANDBOX });
+    // (PII — e-posta/isim — bilinçli olarak loglanmıyor)
 
     // Supabase'e sipariş kaydı (callback bulacak)
     try {

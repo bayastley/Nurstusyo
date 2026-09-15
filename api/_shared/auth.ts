@@ -42,7 +42,12 @@ function parseCookies(req: VercelRequest): Record<string, string> {
   return header.split(";").reduce<Record<string, string>>((acc, part) => {
     const [key, ...rest] = part.trim().split("=");
     if (!key) return acc;
-    acc[key] = decodeURIComponent(rest.join("="));
+    // Bozuk kodlanmış çerezler (%zz vb.) tüm isteği 500'e düşürmesin.
+    try {
+      acc[key] = decodeURIComponent(rest.join("="));
+    } catch {
+      acc[key] = rest.join("=");
+    }
     return acc;
   }, {});
 }
