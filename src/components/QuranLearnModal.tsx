@@ -181,7 +181,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   tarayıcı doğrudan bağlanır, Vercel proxy'si devre dışı → 502 tarih oldu.
   //   Proxy yalnızca yedek: doğrudan kaynak patlarsa otomatik geçilir.
   const KABE_SOURCES = [
-    "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8",
+    "https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8", // ★ Suudi resmî Quran TV (Kur'an tilaveti + Mekke/Medine ibadet görüntüleri) — https, CORS açık
+    "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8", // yedek: Makkah TV
     "/api/live/kabe?src=kabe&type=playlist",
   ];
   const QURAN_HD_SOURCES = [
@@ -1200,7 +1201,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             </div>
             {/* ★ KANAL SEKMELERİ */}
             <div className="flex gap-2 border-b border-white/10 px-4 py-2">
-              <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Suudi resmî Quran TV — sürekli Kur'an tilaveti">
+              <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Suudi resmî Quran TV — kesintisiz Kur'an tilaveti ve Mekke/Medine ibadet görüntüleri">
                 📖 KUR'AN TV
               </button>
               <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
@@ -1274,7 +1275,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               )}
             </div>
             <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">
-              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti (ses düğmesi sağ altta)" : kabeTab === "live" ? "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)" : "🕌 Mescid-i Nebi — Medine canlı yayın, Suudi Sunnah TV (ses düğmesi sağ altta)"}
+              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti + Mekke/Medine ibadet görüntüleri (ses düğmesi sağ altta)" : kabeTab === "live" ? "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)" : "🕌 Mescid-i Nebi — Medine canlı yayın, Suudi Sunnah TV (ses düğmesi sağ altta)"}
             </p>
           </div>
         </div>
