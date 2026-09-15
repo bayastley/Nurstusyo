@@ -184,19 +184,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // ★ KRİTİK: Üretim yetkisi nur_video_rights tablosundan okunuyor (wallet + consume RPC).
       //   Hediye oraya da yazılmalı yoksa kullanıcı hakki olduğu halde üretemez.
       //   Jeton = kısa video hakkı olarak işlenir; kisa/uzun/tam doğrudan kendi türüne eklenir.
+      // ★ DOĞRULAMalı SÜRÜM: RPC hataları artık sessizce yutulmaz — sonuçlar yanıtta döner.
       const sb = config();
+      const warnings: string[] = [];
       if (sb) {
         const grants: Array<[string, number]> = [["kisa", kisa + deltaJeton], ["uzun", uzun], ["tam", tam]];
         for (const [kind, amount] of grants) {
           if (amount <= 0) continue;
-          await fetch(`${sb.url}/rest/v1/rpc/nur_grant_video_rights`, {
-            method: "POST",
-            headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ p_user_id: uid, p_video_kind: kind, p_amount: amount }),
-          }).catch(() => null);
+          try {
+            const rpcRes = await fetch(`${sb.url}/rest/v1/rpc/nur_grant_video_rights`, {
+              method: "POST",
+              headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ p_user_id: uid, p_video_kind: kind, p_amount: amount }),
+            });
+            if (!rpcRes.ok) {
+              const errText = await rpcRes.text().catch(() => "");
+              warnings.push(`${kind}: RPC ${rpcRes.status} ${errText.slice(0, 120)}`);
+            }
+          } catch (e) {
+            warnings.push(`${kind}: RPC ağ hatası`);
+          }
         }
+      } else {
+        warnings.push("Supabase yapılandırması eksik — üretim hakları yazılamadı");
       }
       await db("nur_admin_audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action: "gift_rights", target: email, created_at: new Date().toISOString() }) }).catch(() => null);
+      // ★ Sonucu geri oku: cüzdan + video hakları — panel gerçek durumu görsün
+      const walletsAfter = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=sub_jeton,purchased_jeton`).catch(() => [] as any[]);
+      const rightsAfter = await db<any[]>(`nur_video_rights?user_id=eq.${encodeURIComponent(uid)}&select=video_kind,remaining`).catch(() => [] as any[]);
+      const rightsMap: Record<string, number> = { kisa: 0, uzun: 0, tam: 0 };
+      for (const r of rightsAfter) rightsMap[r.video_kind] = r.remaining;
+      return res.status(200).json({
+        ok: warnings.length === 0,
+        balance: (walletsAfter[0]?.sub_jeton ?? 0) + (walletsAfter[0]?.purchased_jeton ?? 0),
+        rights: rightsMap,
+        warnings,
+      });
     } else if (action === "ban_user") {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });

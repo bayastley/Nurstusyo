@@ -336,21 +336,41 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const target = email.trim().toLowerCase();
     if (!isValidEmail(target)) { notify("⚠️ Geçerli bir e-posta adresi gir"); return; }
     const safeAmount = clampNumber(amount, 0, 100000);
-    // ★ TEK ATOMİK İSTEK: tier + jeton hediyesi sunucuda bir arada (satın alınanlara dokunmaz)
-    const state = await serverManage("gift_rights", { email: target, tier: newTier, deltaJeton: safeAmount });
-    if (state === "error") return;
-    if (state === "fallback") {
-      // sunucu erişilemez → yerel kayıt (offline dev)
-      const result = giftRightsToUser(target, safeAmount, newTier);
-      if (!result.ok) { notify(`❌ ${target} bulunamadı`); return; }
-      setSysConfig(getSystemConfig());
-      onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
-      setEmailSearchResult(result.user);
+    if (safeAmount <= 0) { notify("⚠️ Hediye miktarı 0'dan büyük olmalı"); return; }
+    // ★ DOĞRULAMalı İSTEK: sunucudan gerçek bakiye + hak durumu + uyarılar döner
+    let giftResult: { ok?: boolean; balance?: number; rights?: Record<string, number>; warnings?: string[] } | null = null;
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "gift_rights", target, tier: newTier, deltaJeton: safeAmount }),
+      });
+      const data = await response.json().catch(() => null);
+      if (response.status === 503) {
+        // sunucu erişilemez → yerel kayıt (offline dev)
+        const result = giftRightsToUser(target, safeAmount, newTier);
+        if (!result.ok) { notify(`❌ ${target} bulunamadı`); return; }
+        setSysConfig(getSystemConfig());
+        onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
+        setEmailSearchResult(result.user);
+        notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi (yerel)`);
+        return;
+      }
+      if (!response.ok || !data?.ok) {
+        notify(`❌ Hediye tamamlanamadı: ${data?.error || "bilinmeyen hata"}`);
+        return;
+      }
+      giftResult = data;
+    } catch {
+      notify("❌ Sunucuya ulaşılamadı — hediye tamamlanamadı");
+      return;
     }
     const refreshed = await refreshUserFromServer(target);
     const shownTier = (refreshed?.tier ?? newTier ?? "free").toUpperCase();
-    notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi · tier: ${shownTier}${refreshed ? ` · bakiye: ${refreshed.jeton} ⚡` : ""}`);
+    const shownBalance = giftResult?.balance ?? refreshed?.jeton ?? 0;
+    const warnMsg = giftResult?.warnings?.length ? ` · ⚠️ ${giftResult.warnings.join(" | ")}` : "";
+    notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi · tier: ${shownTier} · bakiye: ${shownBalance} ⚡${warnMsg}`);
     if (refreshed) setEmailSearchResult(refreshed);
+    if (giftResult?.warnings?.length) console.warn("[gift_rights uyarıları]", giftResult.warnings);
   };
 
   // Sunucudan kullanıcı güncel bakiyesini çeker (hediye sonrası doğrulama)
