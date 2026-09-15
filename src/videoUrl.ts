@@ -93,7 +93,14 @@ export async function getPosterUrl(clip: VideoClip): Promise<string | undefined>
   if (isR2Media(clip) && clip.cat) {
     const idPart = clip.clipFile ?? (clip.pexelsId !== undefined ? String(clip.pexelsId) : null);
     if (idPart) {
-      return `https://cdn.nurstudyo.com/posters/${clip.cat}/${idPart}.jpg`;
+      // ★ CDN posteri sync önbelleğe de yaz — canvas senkron okuduğu için seçim ANINDA
+      //   poster ekranda olsun, imza sonrası değil (önizlemede boş/kaleydoskop kalmaması için)
+      const key = mediaKey(clip);
+      const cdnUrl = `https://cdn.nurstudyo.com/posters/${clip.cat}/${idPart}.jpg`;
+      if (key && !signedCache.has(`poster:${key}`)) {
+        signedCache.set(`poster:${key}`, { url: cdnUrl, expiresAt: Date.now() + 3_600_000 });
+      }
+      return cdnUrl;
     }
   }
   return sign(clip, "poster");

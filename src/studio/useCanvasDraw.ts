@@ -166,8 +166,17 @@ export function useCanvasDraw(p: CanvasDrawParams) {
             }
             if (video.readyState >= 1 && video.videoWidth > 0) painted = cover(ctx, video, width, height, 1.015);
             if (!painted && clip.poster) {
-              const poster = p.ensureImage(posterUrl ?? clip.poster);
-              if (poster.complete && poster.naturalWidth > 0) painted = cover(ctx, poster, width, height, zoom);
+              // ★ HIZLI POSTER: imza henüz yoksa CDN'den açık poster yolunu SYNk dene —
+              //   seçim anında boş ekran/kaleydoskop yerine gerçek kare düşer
+              let posterUrlFast = posterUrl;
+              if (!posterUrlFast && isR2Media(clip) && clip.cat) {
+                const idPart = clip.clipFile ?? (clip.pexelsId !== undefined ? String(clip.pexelsId) : (/^[a-zA-Z0-9_-]+-r\d+$/.test(clip.id) ? clip.id : null));
+                if (idPart) posterUrlFast = `https://cdn.nurstudyo.com/posters/${clip.cat}/${idPart}.jpg`;
+              }
+              if (posterUrlFast) {
+                const poster = p.ensureImage(posterUrlFast);
+                if (poster.complete && poster.naturalWidth > 0) painted = cover(ctx, poster, width, height, zoom);
+              }
               if (!painted) { const p2 = p.ensureImage(clip.poster); if (p2.complete && p2.naturalWidth > 0) painted = cover(ctx, p2, width, height, zoom); }
             }
           } else {
