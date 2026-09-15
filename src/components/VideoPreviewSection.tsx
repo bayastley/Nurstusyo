@@ -127,7 +127,11 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
       <div className="mx-auto flex items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
         <button disabled={verseIndex <= 0} onClick={() => { verseAudioRef.current?.pause(); setPreviewTime(0); setVerseIndex((index) => Math.max(0, index - 1)); }} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04] disabled:opacity-30"><ChevronLeft size={18} /></button>
-        <button disabled={!selected.length} onClick={() => setPreviewPlaying((value) => !value)} className="flex h-12 w-12 items-center justify-center rounded-full text-black disabled:opacity-40" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{previewPlaying ? <Pause size={18} fill="black" /> : <Play size={18} fill="black" />}</button>
+        <button disabled={!selected.length} onClick={() => setPreviewPlaying((value) => {
+          // ★ Önizleme HER ZAMAN ilk seçilen ayetten başlar — son seçilenden değil
+          if (!value) { setVerseIndex(0); setPreviewTime(0); }
+          return !value;
+        })} className="flex h-12 w-12 items-center justify-center rounded-full text-black disabled:opacity-40" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{previewPlaying ? <Pause size={18} fill="black" /> : <Play size={18} fill="black" />}</button>
         <button disabled={verseIndex >= selected.length - 1} onClick={() => { verseAudioRef.current?.pause(); setPreviewTime(0); setVerseIndex((index) => Math.min(selected.length - 1, index + 1)); }} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04] disabled:opacity-30"><ChevronRight size={18} /></button>
         <button onClick={() => randomizeBackgrounds()} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04]"><Shuffle size={14} /></button>
       </div>
