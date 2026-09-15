@@ -177,9 +177,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ YouTube TAMAMEN atlandı — hata 153 bir daha asla çıkmaz. İki kanal da kendi proxy'mizden:
   //   "quran" → Suudi Quran TV (Mekke, kesintisiz tilavet)
   //   "live"  → Katar Quran TV (HD 576p, kesintisiz tilavet — YouTube'sız Akamai CDN)
-  const KABE_HLS = "/api/live/kabe?src=kabe&type=playlist";
-  const QURAN_HD_HLS = "/api/live/kabe?src=quran&type=playlist";
-  const SUNNAH_HLS = "/api/live/kabe?src=sunnah&type=playlist"; // ★ Mescid-i Nebi (Medine)
+  // ★ DOĞRUDAN KAYNAK: üç kanalın da CORS'u açık (Access-Control-Allow-Origin: *) —
+  //   tarayıcı doğrudan bağlanır, Vercel proxy'si devre dışı → 502 tarih oldu.
+  //   Proxy yalnızca yedek: doğrudan kaynak patlarsa otomatik geçilir.
+  const KABE_SOURCES = [
+    "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8",
+    "/api/live/kabe?src=kabe&type=playlist",
+  ];
+  const QURAN_HD_SOURCES = [
+    "https://qatartv.akamaized.net/hls/live/20000612/qtvquran/master.m3u8",
+    "/api/live/kabe?src=quran&type=playlist",
+  ];
+  const SUNNAH_SOURCES = [
+    "https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8",
+    "/api/live/kabe?src=sunnah&type=playlist",
+  ];
+  const kabeSourcesFor = (tab: string) => (tab === "quran" ? KABE_SOURCES : tab === "mekke" ? SUNNAH_SOURCES : QURAN_HD_SOURCES);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -234,26 +247,37 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const kabeHlsRef = useRef<Hls | null>(null);
   const kabeWrapRef = useRef<HTMLDivElement | null>(null); // ★ tam ekran kapsayıcısı
 
-  // ★ Kâbe canlı HLS bağlama — YouTube'sız doğrudan Suudi resmî akış
+  // ★ Kâbe canlı HLS bağlama — doğrudan kaynak + başarısızlıkta proxy yedeği
   const startKabeHls = useCallback(() => {
     const video = kabeVideoRef.current;
     if (!video) return;
     // önceki hls örneğini temizle
     if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
+    const sources = kabeSourcesFor(kabeTab);
+    let srcIdx = 0;
     if (Hls.isSupported()) {
       const hls = new Hls({ lowLatencyMode: true, backBufferLength: 30 });
       kabeHlsRef.current = hls;
-      hls.loadSource(kabeTab === "quran" ? KABE_HLS : kabeTab === "mekke" ? SUNNAH_HLS : QURAN_HD_HLS);
+      hls.loadSource(sources[srcIdx]);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => undefined);
       });
       hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (data.fatal) setKabeStatus("error");
+        if (!data.fatal) return;
+        // ★ Kaynak patladı → sıradaki kaynağa (proxy yedeği) otomatik geç
+        srcIdx += 1;
+        if (srcIdx < sources.length) {
+          setKabeStatus("loading");
+          hls.loadSource(sources[srcIdx]);
+          hls.startLoad();
+        } else {
+          setKabeStatus("error");
+        }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari doğrudan HLS oynatır
-      video.src = kabeTab === "quran" ? KABE_HLS : kabeTab === "mekke" ? SUNNAH_HLS : QURAN_HD_HLS;
+      video.src = sources[0];
       video.play().catch(() => undefined);
     } else {
       setKabeStatus("error");
