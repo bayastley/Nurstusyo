@@ -254,12 +254,18 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                     const ww = ctx.measureText(word).width;
                     wordX -= ww;
                     if (isActive) {
-                      // Aktif kelime: SENKRONIZE ALTIN PARLAMA — sadece bu kelime yanar
+                      // Aktif kelime: HAFİF SARI IŞIK — okunan kelime yumuşak sarı parlar,
+                      // parıltı rengi seçili temanın vurgu rengine göre tonlanır
                       ctx.save();
-                      ctx.shadowColor = "#ffd700";
-                      ctx.shadowBlur = 24;
-                      ctx.fillStyle = "#ffffff";
-                      ctx.font = `700 ${Math.round(arabicSize * 1.15)}px ${p.arabicFontCss}`;
+                      ctx.shadowColor = currentTheme.acc || "#ffd700";
+                      ctx.shadowBlur = 22;
+                      ctx.fillStyle = "#fff7c2"; // hafif sarı ton (koyu temalarda bile okunur)
+                      ctx.font = `700 ${Math.round(arabicSize * 1.08)}px ${p.arabicFontCss}`;
+                      ctx.fillText(word, wordX, y + arabicSize * 0.8);
+                      // ikinci geçiş: sarı sıcaklığı için ince altın katman
+                      ctx.shadowColor = "rgba(255, 215, 0, .55)";
+                      ctx.shadowBlur = 12;
+                      ctx.fillStyle = "rgba(255, 240, 170, .35)";
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       ctx.restore();
                       // Normal boyuta dön — diğer kelimeler sabit beyaz
