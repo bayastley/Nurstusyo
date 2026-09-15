@@ -8,6 +8,7 @@ const ICON_EMOJI: Record<string, string> = {
   push: "🔔", ucretsiz_deneme: "🎁", referans: "👥", arsiv: "🌐",
   e_fatura: "💳", meal_dinle: "🎧", mobil: "📱", koleksiyon: "🔖",
   notlar: "📝", seriler: "🎬", reklam: "🛡️", coklu_kullanici: "👥", api: "⚡", kurumsal: "👑",
+  namaz_bildirim: "🕌", zikirmatik: "📿", hatim: "📖", seri_uretim: "⚡", uyku_tilaveti: "🌙", kandil: "🌟",
 };
 function getIcon(id: string): string {
   return ICON_EMOJI[id] || "✨";
@@ -30,6 +31,14 @@ interface Feature {
 }
 
 const DEFAULT_V2: Omit<Feature, "votes">[] = [
+  // ★ V2 ÖNCELİKLİ PAKET — günlük dönüş + sadaka-i cariye motoru (en başta gösterilir)
+  { id: "namaz-bildirim", iconId: "namaz_bildirim", title: "Namaz Vakti Hatırlatıcısı", desc: "Şehrini seç, vakit gelince tarayıcından nazik bir hatırlatma al. Siteye hiç girmeden çalışır.", tag: "V2", active: true },
+  { id: "zikirmatik", iconId: "zikirmatik", title: "Zikirmatik ve Topluluk Sayacı", desc: "Salavatını, tespihini siteden çek. Toplulukla birleşen sayı ekranda canlı büyüsün.", tag: "V2", active: true },
+  { id: "hatim-takibi", iconId: "hatim", title: "Hatim ve Sure Takibi", desc: "Okuduğun sureleri işaretle, Kur'an ilerlemenı yüzde olarak gör. Hatim yolculuğun kayıt altında.", tag: "V2", active: true },
+  { id: "uyku-tilaveti", iconId: "uyku_tilaveti", title: "Uyku Tilaveti (Zamanlayıcılı Dinleme)", desc: "Yatarken sure seç, zamanlayıcıyı kur, sessizce dinle. Uyku öncesi huzurlu bir refakatçi.", tag: "V2", active: true },
+  { id: "seri-uretim", iconId: "seri_uretim", title: "Seri Üretim (Çoklu Ayet Videosu)", desc: "Onlarca ayet seç, hepsine tek tasarımı uygula, videolar sırayla kendiliğinden hazır olsun.", tag: "V2", active: true },
+  { id: "kandil-sayfasi", iconId: "kandil", title: "Kandil ve Özel Geceler Sayfası", desc: "Kandil gecelerinde site otomatik süslenir: o geceye özel sure, dua ve ibadet önerisi hazır gelir.", tag: "V2", active: true },
+  // ─── Mevcut V2 listesi ───
   { id: "ai-meal", iconId: "ai_meal", title: "AI Meal Seslendirme", desc: "Ayetlerin anlamını doğal bir sesle dinle. Bir sure seç, kendi meal videonu dakikalar içinde hazırla.", tag: "V2", active: true },
   { id: "kendi-ses", iconId: "kendi_ses", title: "Kendi Sesinle Seslendirme", desc: "Kendi anlatım tarzını videolarına taşı. Sesini seçtiğin ayetlerle buluştur.", tag: "V2", active: true },
   { id: "kelime-video", iconId: "kelime_video", title: "Kelime Tabanlı Video Üretimi", desc: "Aklındaki tek kelimeyi yaz. Nûr Stüdyo onun etrafında bir atmosfer ve video fikri oluştursun.", tag: "V2", active: true },

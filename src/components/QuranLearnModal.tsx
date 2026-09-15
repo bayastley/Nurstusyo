@@ -166,6 +166,41 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [autoRead, setAutoRead] = useState(false);
   // ★ SURE AKIŞI: oynatınca ayetler arkasına arkasına okunur, ekran okunan ayeti izler
   const [flowPlaying, setFlowPlaying] = useState(false);
+  // ★ UYKU TİLAVETİ: zamanlayıcı dolunca ses durur — yatarken dinleme için
+  const [uykuTimer, setUykuTimer] = useState<number | null>(null); // dakika; null = kapalı
+  const [uykuKalan, setUykuKalan] = useState<number | null>(null); // saniye
+  const [uykuMenu, setUykuMenu] = useState(false);
+  const uykuTimerRef = useRef<number | null>(null);
+
+  // Uyku zamanlayıcısı kur / kaldır
+  const kurUykuZamanlayici = (dakika: number | null) => {
+    if (uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
+    setUykuTimer(dakika);
+    setUykuKalan(dakika !== null ? dakika * 60 : null);
+    setUykuMenu(false);
+    if (dakika === null) return;
+    uykuTimerRef.current = window.setInterval(() => {
+      setUykuKalan((kalan) => {
+        if (kalan === null) return null;
+        if (kalan <= 1) {
+          // süre doldu → sesi durdur
+          try { audioRef.current?.pause(); } catch {}
+          try { kabeVideoRef.current?.pause(); } catch {}
+          setIsPlaying(false);
+          setFlowPlaying(false);
+          if (uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
+          setUykuTimer(null);
+          return null;
+        }
+        return kalan - 1;
+      });
+    }, 1000);
+  };
+
+  // Modal kapanınca zamanlayıcıyı temizle
+  useEffect(() => {
+    if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
+  }, [open]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
@@ -1104,6 +1139,19 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => { setFullSurahMode(v => !v); setWholeQuran(false); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${fullSurahMode ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Sureyi tek dosyadan kesintisiz (gapless) dinle — ayet aralarında bekleme yok">🎵 TAM SURE (kesintisiz)</button>
               {/* ★ KÂBE CANLI: Mescid-i Haram 7/24 canlı yayın (YouTube embed) */}
               <button onClick={() => setKabeLive(true)} className="rounded-xl border border-emerald-900/30 bg-emerald-950/40 px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:brightness-125" title="Mescid-i Haram'dan 7/24 canlı yayın">🕋 KÂBE CANLI</button>
+              {/* ★ UYKU TİLAVETİ: seçilen süre sonunda ses kendiliğinden durur */}
+              <button onClick={() => setUykuMenu(v => !v)} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${uykuTimer ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Yatarken dinle: süre dolunca ses kendiliğinden durur">🌙 UYKU TİLAVETİ{uykuKalan !== null ? ` · ${Math.floor(uykuKalan / 60)}:${String(uykuKalan % 60).padStart(2, "0")}` : ""}</button>
+              {uykuMenu && (
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-2">
+                  <span className="text-[9px] font-bold text-white/50">Süre dolunca ses durur:</span>
+                  {[15, 30, 45, 60, 90, 120].map((dk) => (
+                    <button key={dk} onClick={() => kurUykuZamanlayici(dk)} className="rounded-lg bg-white/10 px-2.5 py-1 text-[9px] font-black text-indigo-200 transition hover:bg-indigo-500/30">{dk} dk</button>
+                  ))}
+                  {uykuTimer !== null && (
+                    <button onClick={() => kurUykuZamanlayici(null)} className="rounded-lg bg-red-500/20 px-2.5 py-1 text-[9px] font-black text-red-300 transition hover:bg-red-500/30">İptal</button>
+                  )}
+                </div>
+              )}
             </div>
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">

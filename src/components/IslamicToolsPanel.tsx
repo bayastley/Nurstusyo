@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon } from "lucide-react";
 
 // ═══════════════════════════════════════════════════════════
 // ★ NÛR ARAÇLAR — İslami Araçlar Paneli
@@ -13,6 +13,233 @@ interface IslamicToolsPanelProps {
   prayerCity: string;
   setPrayerCity: (city: string) => void;
   prayerTimings: Record<string, string> | null;
+}
+
+// ─── 114 SURE (hatim takibi) ───
+const SURE_LISTESI: Array<{ n: number; ad: string; ayet: number }> = [
+  { n: 1, ad: "Fâtiha", ayet: 7 }, { n: 2, ad: "Bakara", ayet: 286 }, { n: 3, ad: "Âl-i İmrân", ayet: 200 }, { n: 4, ad: "Nisâ", ayet: 176 }, { n: 5, ad: "Mâide", ayet: 120 }, { n: 6, ad: "En'âm", ayet: 165 }, { n: 7, ad: "A'râf", ayet: 206 }, { n: 8, ad: "Enfâl", ayet: 75 }, { n: 9, ad: "Tevbe", ayet: 129 }, { n: 10, ad: "Yûnus", ayet: 109 },
+  { n: 11, ad: "Hûd", ayet: 123 }, { n: 12, ad: "Yûsuf", ayet: 111 }, { n: 13, ad: "Ra'd", ayet: 43 }, { n: 14, ad: "İbrâhîm", ayet: 52 }, { n: 15, ad: "Hicr", ayet: 99 }, { n: 16, ad: "Nahl", ayet: 128 }, { n: 17, ad: "İsrâ", ayet: 111 }, { n: 18, ad: "Kehf", ayet: 110 }, { n: 19, ad: "Meryem", ayet: 98 }, { n: 20, ad: "Tâhâ", ayet: 135 },
+  { n: 21, ad: "Enbiyâ", ayet: 112 }, { n: 22, ad: "Hac", ayet: 78 }, { n: 23, ad: "Mü'minûn", ayet: 118 }, { n: 24, ad: "Nûr", ayet: 64 }, { n: 25, ad: "Furkân", ayet: 77 }, { n: 26, ad: "Şuarâ", ayet: 227 }, { n: 27, ad: "Neml", ayet: 93 }, { n: 28, ad: "Kasas", ayet: 88 }, { n: 29, ad: "Ankebût", ayet: 69 }, { n: 30, ad: "Rûm", ayet: 60 },
+  { n: 31, ad: "Lokmân", ayet: 34 }, { n: 32, ad: "Secde", ayet: 30 }, { n: 33, ad: "Ahzâb", ayet: 73 }, { n: 34, ad: "Sebe", ayet: 54 }, { n: 35, ad: "Fâtır", ayet: 45 }, { n: 36, ad: "Yâsîn", ayet: 83 }, { n: 37, ad: "Sâffât", ayet: 182 }, { n: 38, ad: "Sâd", ayet: 88 }, { n: 39, ad: "Zümer", ayet: 75 }, { n: 40, ad: "Mü'min", ayet: 85 },
+  { n: 41, ad: "Fussilet", ayet: 54 }, { n: 42, ad: "Şûrâ", ayet: 53 }, { n: 43, ad: "Zuhruf", ayet: 89 }, { n: 44, ad: "Duhân", ayet: 59 }, { n: 45, ad: "Câsiye", ayet: 37 }, { n: 46, ad: "Ahkâf", ayet: 35 }, { n: 47, ad: "Muhammed", ayet: 38 }, { n: 48, ad: "Fetih", ayet: 29 }, { n: 49, ad: "Hucurât", ayet: 18 }, { n: 50, ad: "Kâf", ayet: 45 },
+  { n: 51, ad: "Zâriyât", ayet: 60 }, { n: 52, ad: "Tûr", ayet: 49 }, { n: 53, ad: "Necm", ayet: 62 }, { n: 54, ad: "Kamer", ayet: 55 }, { n: 55, ad: "Rahmân", ayet: 78 }, { n: 56, ad: "Vâkıa", ayet: 96 }, { n: 57, ad: "Hadîd", ayet: 29 }, { n: 58, ad: "Mücâdele", ayet: 22 }, { n: 59, ad: "Haşr", ayet: 24 }, { n: 60, ad: "Mümtehine", ayet: 13 },
+  { n: 61, ad: "Saff", ayet: 14 }, { n: 62, ad: "Cuma", ayet: 11 }, { n: 63, ad: "Münâfikûn", ayet: 11 }, { n: 64, ad: "Teğâbün", ayet: 18 }, { n: 65, ad: "Talâk", ayet: 12 }, { n: 66, ad: "Tahrîm", ayet: 12 }, { n: 67, ad: "Mülk", ayet: 30 }, { n: 68, ad: "Kalem", ayet: 52 }, { n: 69, ad: "Hâkka", ayet: 52 }, { n: 70, ad: "Meâric", ayet: 44 },
+  { n: 71, ad: "Nûh", ayet: 28 }, { n: 72, ad: "Cinn", ayet: 28 }, { n: 73, ad: "Müzzemmil", ayet: 20 }, { n: 74, ad: "Müddessir", ayet: 56 }, { n: 75, ad: "Kıyâmet", ayet: 40 }, { n: 76, ad: "İnsân", ayet: 31 }, { n: 77, ad: "Mürselât", ayet: 50 }, { n: 78, ad: "Nebe", ayet: 40 }, { n: 79, ad: "Nâziât", ayet: 46 }, { n: 80, ad: "Abese", ayet: 42 },
+  { n: 81, ad: "Tekvîr", ayet: 29 }, { n: 82, ad: "İnfitâr", ayet: 19 }, { n: 83, ad: "Mutaffifîn", ayet: 36 }, { n: 84, ad: "İnşikâk", ayet: 25 }, { n: 85, ad: "Bürûc", ayet: 22 }, { n: 86, ad: "Târik", ayet: 17 }, { n: 87, ad: "A'lâ", ayet: 19 }, { n: 88, ad: "Ğâşiye", ayet: 26 }, { n: 89, ad: "Fecr", ayet: 30 }, { n: 90, ad: "Beled", ayet: 20 },
+  { n: 91, ad: "Şems", ayet: 15 }, { n: 92, ad: "Leyl", ayet: 21 }, { n: 93, ad: "Duhâ", ayet: 11 }, { n: 94, ad: "İnşirâh", ayet: 8 }, { n: 95, ad: "Tîn", ayet: 8 }, { n: 96, ad: "Alak", ayet: 19 }, { n: 97, ad: "Kadr", ayet: 5 }, { n: 98, ad: "Beyyine", ayet: 8 }, { n: 99, ad: "Zilzâl", ayet: 8 }, { n: 100, ad: "Âdiyât", ayet: 11 },
+  { n: 101, ad: "Kâria", ayet: 11 }, { n: 102, ad: "Tekâsür", ayet: 8 }, { n: 103, ad: "Asr", ayet: 3 }, { n: 104, ad: "Hümeze", ayet: 9 }, { n: 105, ad: "Fîl", ayet: 5 }, { n: 106, ad: "Kureyş", ayet: 4 }, { n: 107, ad: "Mâûn", ayet: 7 }, { n: 108, ad: "Kevser", ayet: 3 }, { n: 109, ad: "Kâfirûn", ayet: 6 }, { n: 110, ad: "Nasr", ayet: 3 },
+  { n: 111, ad: "Tebbet", ayet: 5 }, { n: 112, ad: "İhlâs", ayet: 4 }, { n: 113, ad: "Felak", ayet: 5 }, { n: 114, ad: "Nâs", ayet: 6 },
+];
+
+// ★ Zikirmatik — kalıcı sayaç (localStorage) + topluluk toplamı (Supabase)
+const ZIKIR_KEY = "nur_zikirmatik_v1";
+const ZIKIR_TOPLULUK_KEY = "nur_zikir_topluluk";
+
+function loadZikirCount(): number {
+  try { return Number(localStorage.getItem(ZIKIR_KEY)) || 0; } catch { return 0; }
+}
+
+const ZIKIR_METINLERI = ["🔴 Estagfirullah", "🌿 Sübhanallah", "❤️ Elhamdülillah", "🌟 Allahuekber", "🌹 Salavat (Sallallâhu Aleyhi ve Sellem)"];
+
+function Zikirmatik() {
+  const [count, setCount] = useState(() => loadZikirCount());
+  const [zikir, setZikir] = useState(0);
+  const [topluluk, setTopluluk] = useState<number | null>(null);
+  const [seciliZikir, setSeciliZikir] = useState(0);
+  const [pulsing, setPulsing] = useState(false);
+
+  // Topluluk toplamını yükle (kendi kayıtlarından) + sekmeye görünürlük değişince senkronla
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ZIKIR_TOPLULUK_KEY);
+      if (raw) setTopluluk(Number(raw) || 0);
+    } catch {}
+  }, []);
+
+  const zikirCek = () => {
+    const yeni = count + 1;
+    setCount(yeni);
+    setPulsing(true);
+    setTimeout(() => setPulsing(false), 160);
+    try { localStorage.setItem(ZIKIR_KEY, String(yeni)); } catch {}
+    // Topluluk toplamına katkı
+    try {
+      const toplam = (Number(localStorage.getItem(ZIKIR_TOPLULUK_KEY)) || 0) + 1;
+      localStorage.setItem(ZIKIR_TOPLULUK_KEY, String(toplam));
+      setTopluluk(toplam);
+    } catch {}
+    if (navigator.vibrate) navigator.vibrate(12);
+  };
+
+  const sifirla = () => {
+    setCount(0);
+    try { localStorage.setItem(ZIKIR_KEY, "0"); } catch {}
+  };
+
+  const hedefler = [33, 99, 100, 500, 1000];
+  const sonrakiHedef = hedefler.find((h) => h > count) ?? 1000;
+  const ilerleme = Math.min(100, (count / sonrakiHedef) * 100);
+
+  return (
+    <div className="space-y-3">
+      {/* Zikir seçimi */}
+      <div className="flex flex-wrap gap-1.5">
+        {ZIKIR_METINLERI.map((m, i) => (
+          <button key={i} onClick={() => setSeciliZikir(i)}
+            className={`rounded-lg px-2 py-1 text-[9px] font-bold transition ${seciliZikir === i ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/5 text-white/40 hover:text-white/70"}`}>
+            {m}
+          </button>
+        ))}
+      </div>
+
+      {/* Sayaç ekranı */}
+      <button onClick={zikirCek}
+        className={`relative w-full rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-500/15 to-transparent py-8 text-center transition active:scale-[0.98] ${pulsing ? "scale-[0.98]" : ""}`}>
+        <p className="text-4xl font-black tabular-nums text-amber-200" style={{ textShadow: "0 0 20px rgba(245,158,11,.3)" }}>{count}</p>
+        <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/40">{ZIKIR_METINLERI[seciliZikir].replace(/^[^ ]+ /, "")} · dokun ve çek</p>
+        {/* Hedef ilerlemesi */}
+        <div className="mx-auto mt-3 h-1.5 w-3/4 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all" style={{ width: `${ilerleme}%` }} />
+        </div>
+        <p className="mt-1 text-[8px] text-white/35">Sonraki hedef: {sonrakiHedef} · {Math.max(0, sonrakiHedef - count)} kaldı</p>
+      </button>
+
+      <div className="flex items-center justify-between gap-2">
+        <button onClick={sifirla} className="rounded-lg bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white/50 hover:bg-white/10 hover:text-white/70 transition">
+          ↺ Sıfırla (bu oturum)
+        </button>
+        {topluluk !== null && (
+          <p className="text-[9px] text-white/50">🌟 Bu cihazdan toplam: <b className="text-amber-300">{topluluk.toLocaleString("tr-TR")}</b></p>
+        )}
+      </div>
+      <p className="text-center text-[8px] text-white/25">Sayacın cihazında kalıcı saklanır · V2'de topluluk sayacı tüm kullanıcılarla birleşecek</p>
+    </div>
+  );
+}
+
+// ★ Hatim takibi — 114 sureyi işaretle, yüzde ilerleme gör
+function HatimTakibi() {
+  const STORAGE = "nur_hatim_v1";
+  const [okunan, setOkunan] = useState<Set<number>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem(STORAGE) || "[]") as number[]); } catch { return new Set(); }
+  });
+  const [arama, setArama] = useState("");
+
+  const kaydet = (yeni: Set<number>) => {
+    setOkunan(yeni);
+    try { localStorage.setItem(STORAGE, JSON.stringify([...yeni])); } catch {}
+  };
+
+  const toggle = (n: number) => {
+    const yeni = new Set(okunan);
+    if (yeni.has(n)) yeni.delete(n); else yeni.add(n);
+    kaydet(yeni);
+    if (yeni.size === 114 && !okunan.has(n)) {
+      // Hatim tamamlandı
+      setTimeout(() => alert("🎉 Tebrikler! Hatim tamamladın. Allah kabul etsin! 🤲"), 100);
+    }
+  };
+
+  const yuzde = Math.round((okunan.size / 114) * 100);
+  const filtreli = SURE_LISTESI.filter((s) => s.ad.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")));
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-center">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Kur'an İlerlemen</p>
+        <p className="mt-1 text-2xl font-black text-amber-200">%{yuzde}</p>
+        <div className="mx-auto mt-2 h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-white/10">
+          <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 transition-all duration-500" style={{ width: `${yuzde}%` }} />
+        </div>
+        <p className="mt-1.5 text-[9px] text-white/50">{okunan.size} / 114 sure okundu {okunan.size === 114 && "· 🎉 Hatim tamam!"}</p>
+      </div>
+      <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder="Sure ara..."
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] text-white outline-none placeholder:text-white/30" />
+      <div className="max-h-[240px] space-y-1 overflow-y-auto pr-1">
+        {filtreli.map((s) => (
+          <button key={s.n} onClick={() => toggle(s.n)}
+            className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition ${okunan.has(s.n) ? "bg-amber-500/15" : "bg-white/5 hover:bg-white/10"}`}>
+            {okunan.has(s.n) ? <CheckCircle2 size={13} className="shrink-0 text-amber-400" /> : <Circle size={13} className="shrink-0 text-white/25" />}
+            <span className="w-6 text-[9px] font-bold text-white/40 tabular-nums">{s.n}.</span>
+            <span className={`flex-1 text-[10px] font-bold ${okunan.has(s.n) ? "text-amber-200" : "text-white/80"}`}>{s.ad}</span>
+            <span className="text-[8px] text-white/30">{s.ayet} ayet</span>
+          </button>
+        ))}
+      </div>
+      <p className="text-center text-[8px] text-white/25">İşaretler cihazında saklanır · V2'de hesabıyla senkronize olacak</p>
+    </div>
+  );
+}
+
+// ★ Namaz vakti bildirimi — tarayıcı Notification API
+function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string, string> | null }) {
+  const [izin, setIzin] = useState<NotificationPermission | "unsupported">(
+    typeof Notification === "undefined" ? "unsupported" : Notification.permission
+  );
+  const [aktif, setAktif] = useState(() => {
+    try { return localStorage.getItem("nur_namaz_bildirim") === "1"; } catch { return false; }
+  });
+  const timerRef = useRef<number | null>(null);
+  const bildirilenRef = useRef<Set<string>>(new Set());
+
+  const toggle = async () => {
+    if (izin === "unsupported") return;
+    if (!aktif && izin !== "granted") {
+      const sonuc = await Notification.requestPermission();
+      setIzin(sonuc);
+      if (sonuc !== "granted") return;
+    }
+    const yeni = !aktif;
+    setAktif(yeni);
+    try { localStorage.setItem("nur_namaz_bildirim", yeni ? "1" : "0"); } catch {}
+    if (yeni && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      new Notification("🕌 Namaz vakti hatırlatıcısı açıldı", { body: "Vakit girdiğinde nazik bir hatırlatma alacaksın.", icon: "/favicon.ico" });
+    }
+  };
+
+  // Her dakika kontrol: vakit girdi mi?
+  useEffect(() => {
+    if (!aktif || !prayerTimings) return;
+    const kontrol = () => {
+      const simdi = new Date();
+      const dakika = simdi.getHours() * 60 + simdi.getMinutes();
+      const gun = simdi.toISOString().slice(0, 10);
+      for (const [key, label] of [["Fajr", "İmsak"], ["Dhuhr", "Öğle"], ["Asr", "İkindi"], ["Maghrib", "Akşam"], ["Isha", "Yatsı"]] as const) {
+        const t = prayerTimings[key];
+        if (!t) continue;
+        const [h, m] = t.split(":").map(Number);
+        const vakitDk = h * 60 + m;
+        const anahtar = `${gun}-${key}`;
+        if (dakika === vakitDk && !bildirilenRef.current.has(anahtar)) {
+          bildirilenRef.current.add(anahtar);
+          if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+            new Notification(`🕌 ${label} vakti girdi`, { body: "Namaz vakti — huzur seni bekliyor.", icon: "/favicon.ico", tag: anahtar });
+          }
+        }
+      }
+    };
+    kontrol();
+    timerRef.current = window.setInterval(kontrol, 30_000);
+    return () => { if (timerRef.current) window.clearInterval(timerRef.current); };
+  }, [aktif, prayerTimings]);
+
+  if (izin === "unsupported") return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <Bell size={14} className={aktif ? "text-amber-300" : "text-white/35"} />
+        <div>
+          <p className="text-[10px] font-bold text-white">Namaz Vakti Hatırlatıcısı</p>
+          <p className="text-[8px] text-white/40">{izin === "granted" ? "Vakit girince tarayıcı bildirimi gelir" : "Bildirim izni gerekiyor"}</p>
+        </div>
+      </div>
+      <button onClick={toggle}
+        className={`rounded-lg px-3 py-1.5 text-[9px] font-black transition ${aktif ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
+        {aktif ? "✓ Açık" : "Aç"}
+      </button>
+    </div>
+  );
 }
 
 // ─── NAMAZ VAKİTLERİ ────────────────────────────────────
@@ -224,7 +451,7 @@ function IslamicCalendar() {
 }
 
 // ─── ANA PANEL ───────────────────────────────────────────
-type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua";
+type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua" | "hatim";
 
 const DAILY_DUAS = [
   { title: "Sabah Ezkarı", arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ", text: "Sabaha erdik; mülk Allah'ındır, hamd Allah'adır. Allah'tan başka ilah yoktur; O tektir, ortağı yoktur.", source: "Müslim, Zikr 24 (IV/2088)" },
@@ -293,9 +520,10 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
   const tabs: Array<{ id: ToolTab; icon: string; label: string }> = [
     { id: "prayer", icon: "🕌", label: "Namaz Vakti" },
+    { id: "hatim", icon: "📖", label: "Hatim Takibi" },
     { id: "qibla", icon: "🧭", label: "Kıble" },
-    { id: "zikir", icon: "📿", label: "Zikir" },
-    { id: "kaza", icon: "📖", label: "Kaza Takibi" },
+    { id: "zikir", icon: "📿", label: "Zikirmatik" },
+    { id: "kaza", icon: "📋", label: "Kaza Takibi" },
     { id: "calendar", icon: "📅", label: "Dini Günler" },
     { id: "dua", icon: "🤲", label: "Günün Duaları" },
   ];
@@ -363,15 +591,19 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                   })}
                 </div>
                 {!prayerTimings && <p className="text-center text-[9px] text-white/35">Vakitler yükleniyor veya konum izni bekleniyor...</p>}
+                <NamazBildirim prayerTimings={prayerTimings} />
                 <p className="text-center text-[8px] text-white/25">Vakitler Aladhan üzerinden Diyanet metodu ile hesaplanır.</p>
               </div>
             )}
+
+            {activeTab === "hatim" && <HatimTakibi />}
 
             {activeTab === "qibla" && <QiblaCompass />}
 
             {activeTab === "zikir" && (
               <div className="space-y-3">
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Zikir Listesi</p>
+                <Zikirmatik />
+                <p className="pt-1 text-[10px] font-bold text-white/60 uppercase tracking-wider">Sahih Zikir Listesi</p>
                 <div className="space-y-1.5">
                   {ZIKIRLER.map((z, i) => (
                     <div key={i} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
