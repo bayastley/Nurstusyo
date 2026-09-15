@@ -1113,7 +1113,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);
 
-  const pickClip = (clip: Clip) => { if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip); notify(`Atmosfer seçildi: ${clip.label}`); setModal(null); setPickingFor(null); };
+  const pickClip = (clip: Clip) => {
+    // ★ TIKLAMA ANINDA ÖN İMZA: useEffect render'ı bekler, biz beklemeden imzayı
+    //   kuyruğun en önüne şimdi atıyoruz — seçim ile imza isteği aynı milisaniyede başlar.
+    if (clip.kind === "vid" && isR2Media(clip) && !getVideoUrlSync(clip)) {
+      getVideoUrl(clip, true).then((url) => { if (url) ensureVideo(url, clip.src); }).catch(() => undefined);
+      void getPosterUrl(clip).catch(() => undefined);
+    }
+    if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip);
+    notify(`Atmosfer seçildi: ${clip.label}`);
+    setModal(null);
+    setPickingFor(null);
+  };
 
   const handleLoginSubmit = () => {
     const rl = checkRateLimit("auth");
