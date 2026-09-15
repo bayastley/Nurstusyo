@@ -6,6 +6,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const UPSTREAMS: Record<string, string> = {
   kabe: "https://media2.streambrothers.com:1936/8122/8122/",
   quran: "https://qatartv.akamaized.net/hls/live/20000612/qtvquran/", // ★ playlist DEĞİL master.m3u8 kökü — 502 fix (2026-09)
+  sunnah: "https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/", // ★ Mescid-i Nebi (Medine) — https, YouTube'suz
 };
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
@@ -45,7 +46,7 @@ async function pipe(res: VercelResponse, target: string, isPlaylist: boolean): P
         let sub = abs.pathname.startsWith(prefix) ? abs.pathname.slice(prefix.length) : abs.pathname.replace(/^\//, "");
         sub = safePath(sub);
         if (!sub) return line;
-        const src = new URL(base).pathname.includes("/qtvquran/") ? "quran" : "kabe";
+        const src = new URL(base).pathname.includes("/qtvquran/") ? "quran" : new URL(base).pathname.includes("/saudi_sunnah/") ? "sunnah" : "kabe";
         if (sub.endsWith(".m3u8")) return `/api/live/kabe?src=${src}&type=chunk&u=${encodeURIComponent(sub)}`;
         if (sub.endsWith(".ts")) return `/api/live/kabe?src=${src}&type=seg&u=${encodeURIComponent(sub)}`;
         return line;
@@ -58,18 +59,22 @@ async function pipe(res: VercelResponse, target: string, isPlaylist: boolean): P
   res.status(200);
   const ct = upstream.headers.get("content-type");
   if (ct) res.setHeader("Content-Type", ct);
-  const reader = upstream.body.getReader();
-  const chunks: Uint8Array[] = [];
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
+  const cl = upstream.headers.get("content-length");
+  if (cl) res.setHeader("Content-Length", cl);
+  // ★ Doğrudan aktarım: segmenti bellekte biriktirmeden akıt — Vercel 502/zaman aşımı fix
+  if (upstream.body && typeof (res as unknown as { write?: unknown }).write === "function") {
+    const reader = upstream.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value as unknown as Buffer);
+    }
+    res.end();
+    return;
   }
-  const total = chunks.reduce((s, c) => s + c.length, 0);
-  const merged = new Uint8Array(total);
-  let off = 0;
-  for (const c of chunks) { merged.set(c, off); off += c.length; }
-  res.send(Buffer.from(merged));
+  // yedek: akış desteklenmiyorsa tamponla gönder
+  const ab = await upstream.arrayBuffer();
+  res.send(Buffer.from(ab));
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
@@ -79,7 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   if (!base) { res.status(400).json({ ok: false, error: "gecersiz_kanal" }); return; }
   try {
     if (type === "playlist") {
-      // ★ Katar master.m3u8 kullanıyor; Suudiplaylist.m3u8. Doğru giriş dosyasını seç:
+      // ★ Katar master.m3u8 kullanıyor; Suudi/Medine playlist.m3u8. Doğru giriş dosyasını seç:
       const entry = src === "quran" ? "master.m3u8" : "playlist.m3u8";
       await pipe(res, base + entry, true); return;
     }

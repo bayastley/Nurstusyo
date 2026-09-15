@@ -170,7 +170,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
-  const [kabeTab, setKabeTab] = useState<"quran" | "live" | "mekke">("quran"); // ★ 1) Suudi Quran TV 2) Katar Quran TV HD 3) Mekke HD kamera (makkah.live)
+  const [kabeTab, setKabeTab] = useState<"quran" | "live" | "mekke">("quran"); // ★ 1) Suudi Quran TV 2) Katar Quran TV HD 3) Mescid-i Nebi (Medine)
   // ★ KÂBE CANLI — iki kanal:
   //   "quran" → Suudi resmî Quran TV (sürekli Kur'an tilaveti, arada Mekke görüntüsü)
   //   "live"  → AlQuran4K Mekke HD kamera (Kâbe yakın plan, 7/24 canlı)
@@ -179,6 +179,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   "live"  → Katar Quran TV (HD 576p, kesintisiz tilavet — YouTube'sız Akamai CDN)
   const KABE_HLS = "/api/live/kabe?src=kabe&type=playlist";
   const QURAN_HD_HLS = "/api/live/kabe?src=quran&type=playlist";
+  const SUNNAH_HLS = "/api/live/kabe?src=sunnah&type=playlist"; // ★ Mescid-i Nebi (Medine)
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -242,7 +243,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (Hls.isSupported()) {
       const hls = new Hls({ lowLatencyMode: true, backBufferLength: 30 });
       kabeHlsRef.current = hls;
-      hls.loadSource(kabeTab === "quran" ? KABE_HLS : QURAN_HD_HLS);
+      hls.loadSource(kabeTab === "quran" ? KABE_HLS : kabeTab === "mekke" ? SUNNAH_HLS : QURAN_HD_HLS);
       hls.attachMedia(video);
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => undefined);
@@ -252,7 +253,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Safari doğrudan HLS oynatır
-      video.src = kabeTab === "quran" ? KABE_HLS : QURAN_HD_HLS;
+      video.src = kabeTab === "quran" ? KABE_HLS : kabeTab === "mekke" ? SUNNAH_HLS : QURAN_HD_HLS;
       video.play().catch(() => undefined);
     } else {
       setKabeStatus("error");
@@ -261,7 +262,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   // Modal açılınca yayına bağlan, kapatınca temizle (yalnız Kur'an TV sekmesinde HLS çalışır)
   useEffect(() => {
-    if (!kabeLive || kabeTab === "mekke") { // ★ mekke sekmesi iframe ile akar, HLS gerekmez
+    if (!kabeLive) { // ★ üç kanal da HLS — sekme değişince yeniden bağlan
       if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
       return;
     }
@@ -1181,8 +1182,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
                 📖 KUR'AN TV HD
               </button>
-              <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Mekke HD kamera — Kâbe yakın plan 7/24 canlı (makkah.live kaynağı)">
-                🕌 MEKKE HD KAMERA
+              <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Mescid-i Nebi (Medine) resmî Suudi Sunnah TV — kesintisiz yayın, YouTube'suz">
+                🕌 MEDİNE CANLI
               </button>
             </div>
             <div ref={kabeWrapRef} className="relative aspect-video w-full bg-black [&:fullscreen]:aspect-auto [&:fullscreen]:h-full [&:fullscreen]:w-full">
@@ -1199,18 +1200,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               >
                 ⛶
               </button>
-              {/* ★ MEKKE HD KAMERA — makkah.live iframe (embed izni açık, header doğrulandı) */}
-              {kabeTab === "mekke" ? (
-                <iframe
-                  key="mekke-live"
-                  src="https://makkah.live/makkah-live"
-                  title="Mekke — Mescid-i Haram HD canlı kamera"
-                  className="h-full w-full"
-                  allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                  allowFullScreen
-                  referrerPolicy="origin"
-                />
-              ) : (
+              {/* ★ ÜÇ KANAL DA YouTube'suz kendi proxy'mizden HLS oynar — hata 153 ve iframe kalıntısı yok */}
               <video
                 ref={kabeVideoRef}
                 key={kabeTab}
@@ -1221,7 +1211,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 onPlaying={() => setKabeStatus("playing")}
                 onError={() => setKabeStatus("error")}
               />
-              )}
               {kabeStatus === "loading" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
@@ -1261,7 +1250,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               )}
             </div>
             <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">
-              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti (ses düğmesi sağ altta)" : kabeTab === "live" ? "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)" : "🕌 Mekke HD kamera — Kâbe yakın plan 7/24 canlı, kaynağı makkah.live"}
+              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti (ses düğmesi sağ altta)" : kabeTab === "live" ? "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)" : "🕌 Mescid-i Nebi — Medine canlı yayın, Suudi Sunnah TV (ses düğmesi sağ altta)"}
             </p>
           </div>
         </div>
