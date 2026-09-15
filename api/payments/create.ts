@@ -1,5 +1,26 @@
 import crypto from 'crypto';
-import { getSessionUser } from '../_shared/auth.js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+// Self-contained oturum doğrulama — _shared importları Vercel'de paketlenmediği için gömüldü
+interface SessionUser { id: string; sub: string; email: string; name: string; verified: boolean; exp: number }
+function getSessionUser(req: VercelRequest): SessionUser | null {
+  const cookie = String(req.headers.cookie || '').split(';').map((p) => p.trim()).find((p) => p.startsWith('nur_session='));
+  if (!cookie) return null;
+  const token = decodeURIComponent(cookie.slice('nur_session='.length));
+  const [payload, signature] = token.split('.');
+  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+  if (!payload || !signature || secret.length < 20) return null;
+  const expected = crypto.createHmac('sha256', secret).update(payload).digest().toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  const sigBuf = Buffer.from(signature);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
+  try {
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const user = JSON.parse(Buffer.from(normalized + (normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : ''), 'base64').toString('utf8')) as SessionUser;
+    if (!user.id || !user.email || user.verified !== true || !user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
+    return user;
+  } catch { return null; }
+}
 
 const URI_PATH = '/payment/iyzipos/checkoutform/initialize/auth/ecom';
 
