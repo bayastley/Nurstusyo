@@ -354,7 +354,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
                 <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
                 <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
-                  {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">⚡ ENERJİ</span>
+                  {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">🎓 ÜRETİM HAKKI</span>
                 </span>
               </div>
 
