@@ -274,10 +274,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id,email,name,tier,created_at,updated_at`);
       if (!users[0]) return res.status(200).json({ ok: true, user: null, orders: [], wallet: null });
       const uid = users[0].id;
-      const orders = await db<any[]>(`nur_orders?user_id=eq.${encodeURIComponent(uid)}&select=id,product_code,conversation_id,status,payment_id,created_at&order=created_at.desc&limit=10`);
-      const wallets = await db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=purchased_kisa,purchased_uzun,purchased_tam,sub_jeton,purchased_jeton,updated_at`);
-      const subs = await db<any[]>(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=product_code,status,expires_at,created_at&order=created_at.desc&limit=5`);
-      return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs });
+      // ★ Tablodaki gerçek kolonlar: id, product_code, amount_minor, currency, provider, status, paid_at, created_at
+      //   (olmayan kolon istenirse PostgREST 400 döner ve tüm geçmiş çökerdi)
+      const [orders, wallets, subs, auditLogs] = await Promise.all([
+        db<any[]>(`nur_orders?user_id=eq.${encodeURIComponent(uid)}&select=id,product_code,amount_minor,currency,provider,status,paid_at,created_at&order=created_at.desc&limit=10`).catch(() => [] as any[]),
+        db<any[]>(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}&select=purchased_kisa,purchased_uzun,purchased_tam,sub_jeton,purchased_jeton,updated_at`).catch(() => [] as any[]),
+        db<any[]>(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&select=product_code,status,expires_at,created_at&order=created_at.desc&limit=5`).catch(() => [] as any[]),
+        db<any[]>(`nur_admin_audit_logs?target=eq.${encodeURIComponent(email)}&select=action,admin_email,created_at&order=created_at.desc&limit=10`).catch(() => [] as any[]),
+      ]);
+      return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs, auditLogs });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || ""), metadata: { ip: String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 300) } }) }).catch(() => null);
     return res.status(200).json({ ok: true });

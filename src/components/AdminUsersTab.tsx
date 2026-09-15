@@ -225,8 +225,8 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                             <span className="font-bold text-white">{order.product_code}</span>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-white/50">{order.amount ? `${order.amount}₺` : "—"}</span>
-                            <span className={order.status === "completed" ? "text-green-400 font-bold" : order.status === "pending" ? "text-yellow-400" : "text-red-400"}>
+                            <span className="text-white/50">{order.amount_minor ? `${(order.amount_minor / 100).toFixed(2)}${order.currency === "TRY" ? "₺" : " " + order.currency}` : "—"}</span>
+                            <span className={order.status === "paid" ? "text-green-400 font-bold" : order.status === "pending" ? "text-yellow-400" : "text-red-400"}>
                               {order.status}
                             </span>
                             <span className="text-white/30">
@@ -240,6 +240,23 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 ) : (
                   <div className="text-center text-[10px] text-white/30 py-2">
                     Henüz sipariş kaydı yok
+                  </div>
+                )}
+
+                {/* Admin İşlem Geçmişi (hediye, tier değişikliği, ban vb.) */}
+                {userHistory.auditLogs?.length > 0 && (
+                  <div className="mt-2 rounded-lg bg-blue-500/10 border border-blue-500/20 p-2">
+                    <div className="mb-1 flex items-center gap-1">
+                      <History size={11} className="text-blue-400" />
+                      <span className="text-[10px] font-bold text-blue-300">Admin İşlemleri (son 10)</span>
+                    </div>
+                    {userHistory.auditLogs.map((log: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-[9px] text-white/60">
+                        <span className="font-bold text-white/80">{log.action}</span>
+                        <span className="text-white/40">{log.admin_email}</span>
+                        <span className="text-white/30">{log.created_at ? new Date(log.created_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </>
