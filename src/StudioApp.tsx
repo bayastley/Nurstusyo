@@ -515,13 +515,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ SEÇİLEN ATMOSFERİ ANINDA HAZIRLA: R2 klipler imza korumalı, canvas imzalı adresi
   //   senkron okuyor. Seçim anında imza yoksa tuvale poster/kaleydoskop düşüyor, video
   //   "geç" yansıyordu. Artık seçilince imza arka planda alınır ve video önceden ısıtılır.
+  // ★ ÖNCELİK: seçili arka plan (background) imzası kuyruğun ÖnÜNE alınır — galerinin
+  //   diğer 15+ klibinin arkasında beklemez. Ayet atamaları normal sıradan devam eder.
   useEffect(() => {
     const candidates = [background, ...Object.values(ayahBackgrounds)];
     for (const clip of candidates) {
       if (!clip || clip.kind !== "vid" || !isR2Media(clip)) continue;
+      const isPrimary = clip === background;
       const cached = getVideoUrlSync(clip);
       if (cached) { ensureVideo(cached, isR2Media(clip) ? undefined : clip.src); continue; }
-      getVideoUrl(clip)
+      getVideoUrl(clip, isPrimary)
         .then((url) => { if (url) ensureVideo(url, clip.src); })
         .catch(() => undefined);
       void getPosterUrl(clip).catch(() => undefined);

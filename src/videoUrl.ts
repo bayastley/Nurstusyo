@@ -16,11 +16,25 @@ const signedCache = new Map<string, SignedMedia>();
 // ★ İMZA SIRA KUYRUĞU + 429 GERİ ÇEKİLMESİ: galeri açılınca 15+ video aynı anda
 //   imza isteyince sunucu limitine çarpıyordu. İstekler sıraya girer, 429 gelirse
 //   bekleyip tekrar dener — kullanıcıya hata göstermeden herkes sırayla imzalanır.
+// ★ ÖNCELİKLİ İSTEK: kullanıcı bir atmosfer seçince o klibin imzası kuyruğun
+//   ÖNÜNE atlanır — galerinin geri kalanının arkasında beklemez, anında açılır.
 let signChain: Promise<unknown> = Promise.resolve();
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
 
-function enqueueSign<T>(job: () => Promise<T>): Promise<T> {
-  const run = signChain.then(job, job);
+function enqueueSign<T>(job: () => Promise<T>, priority = false): Promise<T> {
+  if (!priority) {
+    const run = signChain.then(job, job);
+    signChain = run.catch(() => undefined);
+    return run as Promise<T>;
+  }
+  // öncelikli: yeni işi mevcut zincirin önüne koy (çalışanı bölmez)
+  const before = signChain;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  signChain = before.then(() => gate).catch(() => undefined);
+  release(); // hemen aç → işimiz sıradaki çalışacak olan olur
+  const run = gate.then(job, job);
+  // normal zincir, bizim işimizin bitmesini de beklesin (sıra bozulmasın)
   signChain = run.catch(() => undefined);
   return run as Promise<T>;
 }
@@ -37,7 +51,7 @@ export function isR2Media(clip: VideoClip): boolean {
   return Boolean(clip.r2 || clip.r2Poster || clip.pexelsId);
 }
 
-async function sign(clip: VideoClip, media: "video" | "poster"): Promise<string> {
+async function sign(clip: VideoClip, media: "video" | "poster", priority = false): Promise<string> {
   if (!isR2Media(clip)) return media === "video" ? clip.src : clip.poster;
   const key = mediaKey(clip);
   if (!key) throw new Error("R2 medya kimliği eksik");
@@ -66,8 +80,8 @@ async function sign(clip: VideoClip, media: "video" | "poster"): Promise<string>
   });
 }
 
-export async function getVideoUrl(clip: VideoClip): Promise<string> {
-  return sign(clip, "video");
+export async function getVideoUrl(clip: VideoClip, priority = false): Promise<string> {
+  return sign(clip, "video", priority);
 }
 
 // ★ Performans: galeride onlarca kart görünür olunca her biri için imza isteği

@@ -58,10 +58,18 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
   }
 }
 
+// ★ YETKİ ÖNBELLEĞİ: her imza isteğinde 2 Supabase sorgusu atmak önizlemeyi
+//   300-600ms geciktiriyordu. Sonuç 60 sn önbelleğe alınır; ban anında uygulanır
+//   (en fazla 60 sn gecikmeyle), tier değişimi de en geç 60 sn'de yansır.
+const ACCESS_CACHE = new Map<string, { data: { tier: Tier; isAdmin: boolean; banned: boolean }; at: number }>();
+const ACCESS_TTL_MS = 60_000;
+
 async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^['"]+|['"]+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return null;
+  const cached = ACCESS_CACHE.get(userId);
+  if (cached && Date.now() - cached.at < ACCESS_TTL_MS) return cached.data;
   try {
     const headers = { apikey: key, Authorization: `Bearer ${key}` };
     const userResponse = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(userId)}&select=tier,is_admin`, { headers, cache: "no-store" });
@@ -71,11 +79,14 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
     const banResponse = await fetch(`${url}/rest/v1/nur_ban_logs?user_id=eq.${encodeURIComponent(userId)}&unbanned=eq.false&select=id&limit=1`, { headers, cache: "no-store" });
     if (!banResponse.ok) return null;
     const bans = await banResponse.json() as Array<{ id: string }>;
-    return {
-      tier: users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free",
+    const tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
+    const data: { tier: Tier; isAdmin: boolean; banned: boolean } = {
+      tier,
       isAdmin: users[0].is_admin === true,
       banned: bans.length > 0,
     };
+    ACCESS_CACHE.set(userId, { data, at: Date.now() });
+    return data;
   } catch {
     return null;
   }
