@@ -1,8 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Ana sayfa — stüdyo + Kur'an medya laboratuvarı -->
   <url>
     <loc>https://nurstudyo.com/</loc>
+    <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+  </url>
+
+  <!-- Kur'an dinleme & öğrenme bölümü (ana sayfa içi bölüm — #kuran) -->
+  <url>
+    <loc>https://nurstudyo.com/#kuran-dinle</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Canlı Kâbe & Mescid-i Nebi yayını -->
+  <url>
+    <loc>https://nurstudyo.com/#kabe-canli</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Nûr Araçlar: namaz vakitleri, zikirmatik, hatim takibi, kıble -->
+  <url>
+    <loc>https://nurstudyo.com/#islami-araclar</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Ayet & dua kütüphanesi -->
+  <url>
+    <loc>https://nurstudyo.com/#ayet-kutuphanesi</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Fiyatlandırma / üretim paketleri -->
+  <url>
+    <loc>https://nurstudyo.com/#fiyatlandirma</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Güncelleme yol haritası -->
+  <url>
+    <loc>https://nurstudyo.com/#yol-haritasi</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 </urlset>

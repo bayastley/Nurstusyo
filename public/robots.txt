@@ -6,4 +6,9 @@ Allow: /
 Disallow: /api/
 Disallow: /admin
 
+# Servis worker ve manifest tarayıcı içindir, arama sonucu değildir
+Disallow: /sw.js
+Disallow: /manifest.json
+
+# Tüm arama motorlarına site haritası
 Sitemap: https://nurstudyo.com/sitemap.xml
