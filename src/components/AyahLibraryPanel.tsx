@@ -147,9 +147,11 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
           </select>
         </div>
 
-        {/* Ayah list */}
+        {/* Ayah list — sure seçilmemişse liste gösterme */}
         <div className="glass-soft mb-2 max-h-[350px] overflow-y-auto rounded-xl p-1.5 scrollbar-thin">
-          {Array.from({ length: SURAHS[Number(surah) - 1].count }, (_, i) => i + 1).map((number) => {
+          {!surah ? (
+            <p className="px-2 py-6 text-center text-[10px] text-white/35">Önce yukarıdan bir sure seç</p>
+          ) : Array.from({ length: SURAHS[Number(surah) - 1].count }, (_, i) => i + 1).map((number) => {
             const isSelected = selected.some(x => x.id === `${surah}:${number}`);
             return (
               <button

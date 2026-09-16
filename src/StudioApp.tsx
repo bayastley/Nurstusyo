@@ -140,8 +140,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
-  const [surah, setSurah] = useState("1");
-  const [ayah, setAyah] = useState("1");
+  // ★ Açılışta hiçbir sure/ayet seçili olmasın — kullanıcı kendisi seçsin
+  const [surah, setSurah] = useState("");
+  const [ayah, setAyah] = useState("");
   const [selected, setSelected] = useState<SelectedAyah[]>([]);
   const [verseIndex, setVerseIndex] = useState(0);
   const [background, setBackground] = useState<Clip>(MOTION_CLIPS[0]);
@@ -640,7 +641,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [addAyah]);
 
   const addWholeSurah = useCallback(async () => {
-    const number = Number(surah); notify(t("loading"));
+    const number = Number(surah);
+    if (!number || number < 1) { notify("Önce bir sure seç"); return; }
     try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(`${meta.name} Suresi tamamı eklendi (${rows.length} ayet)`); }
     catch { notify(t("renderServerError")); }
   }, [surah, lang, notify]);
