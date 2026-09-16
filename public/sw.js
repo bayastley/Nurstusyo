@@ -6,8 +6,9 @@
 // varlıklar cache-first. Kur'an/API istekleri ASLA önbelleklenmez.
 // ═══════════════════════════════════════════════════════════
 
-const CACHE = "nurstudyo-v1";
-const SHELL = ["/", "/logo.png", "/manifest.json"];
+// ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
+const CACHE = "nurstudyo-v2";
+const SHELL = ["/logo.png", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -31,8 +32,22 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
-  // Statik varlıklar: cache-first
-  if (/\.(png|jpg|jpeg|svg|ico|woff2?|css|js|json|webmanifest)$/.test(url.pathname) || url.pathname === "/") {
+  // ★ Ana sayfa: NETWORK-FIRST — yeni deploy anında kullanıcıya ulaşsın.
+  //   (Eskiden cache-first idi; güncellemeler önbellekte takılı kalıyordu.)
+  if (url.pathname === "/") {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        const kopya = res.clone();
+        caches.open(CACHE).then((cache) => cache.put("/", kopya));
+        return res;
+      }).catch(() => caches.match("/") || fetch(event.request))
+    );
+    return;
+  }
+
+  // Statik varlıklar (hash'li dosya adları): cache-first
+  // Not: index.html referansı değişince hash değişir, bu yüzden güvenli.
+  if (/\.(png|jpg|jpeg|svg|ico|woff2?|css|js|json|webmanifest)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then((hit) => {
         if (hit) return hit;
