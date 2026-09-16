@@ -1116,7 +1116,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       {/* ══════════ DİNLE MODU ══════════ */}
       {mode === "listen" && (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 overflow-y-auto p-4 scrollbar-thin">
-          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#161622] p-7 shadow-2xl">
+          <div className="w-full max-w-2xl rounded-3xl border border-white/10 bg-[#161622] p-4 sm:p-7 shadow-2xl mx-2">
             <span className="text-[9px] font-bold uppercase tracking-widest text-gold">Kesintisiz Ayet Ayet Oynatıcı</span>
             {/* ★ SAHİH HADİS: seçili sureyle ilgili Buhârî/Müslim kaynaklı hadis */}
             {(() => {

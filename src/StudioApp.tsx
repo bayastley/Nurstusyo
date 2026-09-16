@@ -1306,7 +1306,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <StudioHeroSection />
 
       {/* MAIN 3 GRID */}
-      <main className="mx-auto grid max-w-[1500px] gap-4 px-4 py-6 lg:grid-cols-[300px_280px_1fr]">
+      <main className="mx-auto grid max-w-[1500px] gap-4 px-2 sm:px-4 py-6 grid-cols-1 lg:grid-cols-[300px_280px_1fr]">
         {/* LEFT: AYAH LIBRARY PANEL */}
         <AyahLibraryPanel
           query={query}

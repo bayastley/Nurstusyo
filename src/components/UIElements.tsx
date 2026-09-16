@@ -135,7 +135,7 @@ export const Modal: React.FC<ModalProps> = ({
       onMouseDown={onClose}
     >
       <div
-        className={`glass modal-in relative w-full max-h-[85vh] flex flex-col rounded-2xl p-5 shadow-2xl ${
+        className={`glass modal-in relative w-full max-h-[90vh] mx-2 sm:mx-auto flex flex-col rounded-2xl p-4 sm:p-5 shadow-2xl ${
           wide ? "max-w-4xl" : "max-w-lg"
         }`}
         onMouseDown={(e) => e.stopPropagation()}

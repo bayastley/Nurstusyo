@@ -513,7 +513,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="glass modal-in relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl shadow-2xl"
+        className="glass modal-in relative flex max-h-[92vh] w-full max-w-3xl mx-2 sm:mx-auto flex-col overflow-hidden rounded-3xl shadow-2xl"
         style={{ border: "1px solid rgba(215,170,82,.4)" }}
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}

@@ -439,7 +439,7 @@ function KazaTracker() {
   return (
     <div className="space-y-2">
       <p className="text-[9px] text-white/40">Kıldığınız her kaza namazını işaretleyin · Allah kabul etsin</p>
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
         {months.map((m, i) => (
           <div key={i} className="rounded-lg bg-white/5 p-2 text-center">
             <p className="text-[8px] text-white/50 mb-1">{m}</p>
@@ -578,7 +578,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
   return (
     <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative max-w-lg w-full max-h-[85vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="relative max-w-lg w-full max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl mx-2 sm:mx-auto" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gray-950/90 backdrop-blur px-6 py-4">
           <div>
@@ -594,7 +594,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
         <div className="p-4 space-y-4">
           {/* Tab Bar */}
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide snap-x">
+          <div className="flex flex-wrap gap-1.5 pb-1">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
