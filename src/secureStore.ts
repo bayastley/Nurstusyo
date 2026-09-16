@@ -14,10 +14,13 @@ const RAW_KEY = CryptoJS.SHA256(ENV_KEY + "::" + (typeof window !== "undefined" 
 // başka cihaza kopyalayıp yapıştıramaz.
 function fingerprint(): string {
   if (typeof window === "undefined") return "ssr";
+  // ★ EKRAN ÖLÇÜSÜ ÇIKARILDI: telefon tarayıcıları adres çubuğu gizle/göster
+  //   yaptıkça screen.height'ı değiştiriyor → fingerprint değişiyor → oturum
+  //   verisi okunamıyor → kullanıcı yenileyince giriş yapmak zorunda kalıyordu.
+  //   Artık yalnızca cihaz tipini AYIRT EDİCİ olmayan sabit bilgiler kullanılıyor.
   const parts = [
     navigator.userAgent || "",
     navigator.language || "",
-    String(screen.width || 0) + "x" + String(screen.height || 0),
     String(new Date().getTimezoneOffset()),
   ].join("|");
   return CryptoJS.SHA256(parts).toString().slice(0, 16);

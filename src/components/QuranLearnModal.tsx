@@ -611,9 +611,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [reciterSearch, setReciterSearch] = useState("");
   const filteredReciters = useMemo(() => {
     const q = reciterSearch.trim().toLocaleLowerCase("tr");
-    if (!q) return RECITERS;
-    return RECITERS.filter(r => r.name.toLocaleLowerCase("tr").includes(q));
-  }, [reciterSearch]);
+    let liste = RECITERS;
+    if (q) liste = RECITERS.filter(r => r.name.toLocaleLowerCase("tr").includes(q));
+    // ★ SEÇİLİ KARİ EN ÜSTTE — kullanıcı kendi seçimini kaybetmesin
+    return [...liste].sort((a, b) => (a.id === listenReciter ? -1 : b.id === listenReciter ? 1 : 0));
+  }, [reciterSearch, listenReciter]);
   // ★ Ayet mp3 yolu — everyayah (30 kari, hepsi ayet bazlı, tek tek test edildi)
   const ayahUrl = useCallback((sN: number, aN: number) =>
     `https://everyayah.com/data/${listenReciter}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [listenReciter]);
