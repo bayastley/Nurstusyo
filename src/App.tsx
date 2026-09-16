@@ -1,4 +1,6 @@
 import { lazy, Suspense } from "react";
+import OfflineBar from "./components/OfflineBar";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 const StudioApp = lazy(() => import("./StudioApp"));
 
@@ -17,8 +19,11 @@ function LoadingScreen() {
 
 export default function App() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <StudioApp isMasterSürüm={isMasterSürüm} />
-    </Suspense>
+    <ErrorBoundary label="Nur Studyo">
+      <OfflineBar />
+      <Suspense fallback={<LoadingScreen />}>
+        <StudioApp isMasterSürüm={isMasterSürüm} />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
