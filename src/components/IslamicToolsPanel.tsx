@@ -460,19 +460,14 @@ function KazaTracker() {
 
 // ─── DİNİ GÜNLER TAKVİMİ ────────────────────────────────
 function IslamicCalendar() {
+  // ★ Diyanet 2026-2027 takvimi — tarihler geçtikçe liste otomatik güncellenir
   const events = [
-    { name: "Mevlid Kandili", date: "2025-09-05", emoji: "🕌" },
-    { name: "Regaib Kandili", date: "2026-01-15", emoji: "🌙" },
-    { name: "Miraç Kandili", date: "2026-01-22", emoji: "✨" },
-    { name: "Berat Kandili", date: "2026-02-06", emoji: "🌟" },
-    { name: "Ramazan Başlangıcı", date: "2026-02-18", emoji: "🌙" },
-    { name: "Kadir Gecesi", date: "2026-03-15", emoji: "⭐" },
-    { name: "Ramazan Bayramı", date: "2026-03-20", emoji: "🎉" },
-    { name: "Arife", date: "2026-05-26", emoji: "🕋" },
-    { name: "Kurban Bayramı", date: "2026-05-27", emoji: "🎊" },
-    { name: "Hicri Yılbaşı", date: "2026-07-08", emoji: "📅" },
-    { name: "Aşure Günü", date: "2026-07-16", emoji: "🍯" },
-    { name: "Mevlid Kandili", date: "2026-08-25", emoji: "🕌" },
+    { name: "Ramazan Bayramı", date: "2027-03-10", emoji: "🎉" },
+    { name: "Arefe", date: "2027-05-16", emoji: "🕋" },
+    { name: "Kurban Bayramı", date: "2027-05-17", emoji: "🎊" },
+    { name: "Hicri Yılbaşı", date: "2027-06-26", emoji: "📅" },
+    { name: "Aşure Günü", date: "2027-07-05", emoji: "🍯" },
+    { name: "Mevlid Kandili", date: "2027-08-15", emoji: "🕌" },
   ];
 
   const today = new Date();
@@ -498,7 +493,7 @@ function IslamicCalendar() {
           </div>
         );
       })}
-      {upcoming.length === 0 && <p className="text-[10px] text-white/30 text-center py-2">Takvim yükleniyor...</p>}
+      {upcoming.length === 0 && <p className="text-[10px] text-white/30 text-center py-2">Yaklaşan dini gün yok — takvim güncellenecek</p>}
     </div>
   );
 }
