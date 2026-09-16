@@ -8,7 +8,7 @@ import type { Lang } from "../i18n/base";
 
 interface UseDailyAyahOptions {
   lang: Lang;
-  setSelected: (fn: (prev: SelectedAyah[]) => SelectedAyah[]) => void;
+  setSelected?: (fn: (prev: SelectedAyah[]) => SelectedAyah[]) => void;
 }
 
 interface UseDailyAyahReturn {
@@ -18,7 +18,7 @@ interface UseDailyAyahReturn {
   daily: DailyAyah | null;
 }
 
-export function useDailyAyah({ lang, setSelected }: UseDailyAyahOptions): UseDailyAyahReturn {
+export function useDailyAyah({ lang }: UseDailyAyahOptions): UseDailyAyahReturn {
   const [dailyPool, setDailyPool] = useState<DailyAyah[]>([]);
   const [dailyIndex, setDailyIndex] = useState(0);
   const [dailyPaused] = useState(false);
@@ -47,13 +47,8 @@ export function useDailyAyah({ lang, setSelected }: UseDailyAyahOptions): UseDai
           )
         );
         available.push(...(items.filter(Boolean) as DailyAyah[]));
-        if (available.length && !selectedRef.current.length) {
-          const first = available[0];
-          setSelected((prev) => {
-            if (prev.length > 0) return prev;
-            return [{ id: `${first.s}:${first.a}`, s: first.s, a: first.a, sName: SURAHS[first.s - 1].name, ar: first.ar, tr: first.tr }];
-          });
-        }
+        // ★ Otomatik ön seçim kaldırıldı: açılışta Fatiha 1 yerine hiçbir ayet seçili olmasın.
+        //   Kullanıcı istediğini seçince selected dolacak.
       }
       if (live) setDailyPool(available);
     })();
