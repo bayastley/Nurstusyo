@@ -308,6 +308,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         db<any[]>(`nur_admin_audit_logs?target=eq.${encodeURIComponent(email)}&select=action,admin_email,created_at&order=created_at.desc&limit=10`).catch(() => [] as any[]),
       ]);
       return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs, auditLogs });
+    } else if (action === "list_errors") {
+      // ★ HATA LOGLARI — son 50 frontend hatası + 24 saatlik istatistik
+      const [rows, stats] = await Promise.all([
+        db<any[]>("nur_error_logs?select=id,message,stack,path,source,user_agent,fingerprint,created_at&order=created_at.desc&limit=50").catch(() => [] as any[]),
+        db<any[]>("nur_error_logs?select=fingerprint,created_at&created_at=gte." + new Date(Date.now() - 24 * 3600_000).toISOString()).catch(() => [] as any[]),
+      ]);
+      // 24 saatlik özet: toplam + benzersiz hata sayısı
+      const toplam24 = stats.length;
+      const benzersiz = new Set(stats.map((r) => r.fingerprint)).size;
+      return res.status(200).json({ ok: true, errors: rows, stats: { total24h: toplam24, unique24h: benzersiz } });
+    } else if (action === "clear_errors") {
+      // ★ HATA LOGLARINI TEMİZLE — 30 günden eski kayıtları sil
+      await db(`nur_error_logs?created_at=lt.${new Date(Date.now() - 30 * 24 * 3600_000).toISOString()}`, { method: "DELETE" }).catch(() => null);
+      return res.status(200).json({ ok: true });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || ""), metadata: { ip: String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 300) } }) }).catch(() => null);
     return res.status(200).json({ ok: true });

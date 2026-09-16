@@ -30,7 +30,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "modules" | "sync">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "modules" | "sync">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -44,6 +44,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [historyEmail, setHistoryEmail] = useState("");
   // ★ Ödeme RPC sağlık durumu — panel açılışında kontrol edilir
   const [rpcHealth, setRpcHealth] = useState<{ ok: boolean; detail: string } | null>(null);
+  // ★ Hata logları — Hata Logları sekmesi için
+  const [errorLogs, setErrorLogs] = useState<any[]>([]);
+  const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number } | null>(null);
+  const [errorLoading, setErrorLoading] = useState(false);
 
   // Panel açılırken ödeme RPC'sini kontrol et — hakları yazmayan sistem sessizce para kaybettirir
   useEffect(() => {
@@ -125,6 +129,31 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const users = sysConfig.users;
   const selectedUser = users.find((u) => u.email.toLowerCase() === selectedEmail.toLowerCase()) || users[0];
+
+  // ★ Hata loglarını sunucudan getir
+  const loadErrorLogs = async () => {
+    setErrorLoading(true);
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_errors" }),
+      });
+      const data = await response.json().catch(() => null) as any;
+      if (data?.ok) {
+        setErrorLogs(data.errors || []);
+        setErrorStats(data.stats || null);
+      } else notify(data?.error || "Hata logları alınamadı");
+    } catch { notify("Sunucuya ulaşılamadı"); }
+    finally { setErrorLoading(false); }
+  };
+
+  // Hata Logları sekmesine ilk geçişte yükle
+  useEffect(() => {
+    if (activeTab === "errors" && errorLogs.length === 0 && !errorLoading) loadErrorLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   const assertAdminAction = async (action: string, target?: string, reason?: string): Promise<boolean> => {
     try {
@@ -551,6 +580,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             <Lightbulb size={13} className={banLogs.length > 0 ? "animate-pulse text-amber-300" : ""} fill={banLogs.length > 0 ? "currentColor" : "none"} />
             <span>Ban & Siber Denetim ({banLogs.length})</span>
           </button>
+          <button
+            onClick={() => setActiveTab("errors")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap relative ${
+              activeTab === "errors" ? "text-black font-black" : "text-amber-300 hover:text-white"
+            }`}
+            style={activeTab === "errors" ? { background: "linear-gradient(135deg,#fbbf24,#d97706)" } : { background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)" }}
+          >
+            ⚠️
+            <span>Hata Logları{errorStats ? ` (${errorStats.total24h})` : ""}</span>
+          </button>
         </div>
 
         {/* Content Body */}
@@ -666,6 +705,72 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: HATA LOGLARI */}
+          {activeTab === "errors" && (
+            <div className="space-y-4">
+              {/* İstatistik özeti */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
+                  <p className="text-2xl font-black text-amber-300">{errorStats?.total24h ?? "—"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Son 24 saat · toplam</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                  <p className="text-2xl font-black text-white">{errorStats?.unique24h ?? "—"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Benzersiz hata</p>
+                </div>
+              </div>
+
+              {/* Yenile / temizle */}
+              <div className="flex gap-2">
+                <button onClick={loadErrorLogs} disabled={errorLoading}
+                  className="flex-1 rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
+                  {errorLoading ? "Yükleniyor…" : "↻ Yenile"}
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!confirm("30 günden eski hata kayıtları silinsin mi?")) return;
+                    await fetch("/api/admin/action", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clear_errors" }) });
+                    notify("Eski kayıtlar temizlendi");
+                    loadErrorLogs();
+                  }}
+                  className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-[10px] font-bold text-red-300 transition hover:bg-red-500/20">
+                  🗑 Eskileri temizle
+                </button>
+              </div>
+
+              {/* Liste */}
+              <div className="space-y-2">
+                {errorLogs.length > 0 ? errorLogs.map((log) => {
+                  const cihaz = String(log.user_agent || "");
+                  const cihazKisa = cihaz.includes("Mobile") ? "📱 Mobil" : cihaz.includes("Tablet") ? "📟 Tablet" : "💻 Masaüstü";
+                  const tarayici = cihaz.includes("Edg/") ? "Edge" : cihaz.includes("Chrome/") ? "Chrome" : cihaz.includes("Firefox/") ? "Firefox" : cihaz.includes("Safari/") ? "Safari" : "Diğer";
+                  return (
+                    <div key={log.id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-[10.5px] space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-amber-300 truncate" title={log.message}>{log.message}</span>
+                        <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{log.source}</span>
+                      </div>
+                      {log.stack && (
+                        <details className="text-white/40">
+                          <summary className="cursor-pointer text-[9px] hover:text-white/70">Yığın izi (stack)</summary>
+                          <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-black/60 p-2 text-[8.5px] text-white/50">{log.stack}</pre>
+                        </details>
+                      )}
+                      <div className="flex items-center justify-between text-[8.5px] text-white/40 pt-1 border-t border-white/5">
+                        <span>{cihazKisa} · {tarayici} · {log.path || "/"}</span>
+                        <span>{new Date(log.created_at).toLocaleString("tr-TR")}</span>
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <p className="p-6 text-center text-[10px] text-white/40 italic">
+                    {errorLoading ? "Yükleniyor…" : "Henüz hata kaydı yok — sistem temiz çalışıyor ✨"}
+                  </p>
+                )}
               </div>
             </div>
           )}
