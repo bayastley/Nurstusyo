@@ -220,7 +220,6 @@ export const EMOTIONAL_TITLE_TEMPLATES: Record<string, string[]> = {
     "Bu ayeti bilen cehennemden kurtulur... 🔥",
     "Allah'ın rahmeti hiçbir zaman kesilmez... 🌊",
     "Bu gece bu ayetle Rabbine yakınlaş... 🤲",
-    "Sana en yakın olan ayet bu... 🫀",
     "Bu ayeti duyup da kalbi yumuşamayan bir daha dinlesin... 🤍",
     "Sabah bu ayetle başla, akşam bu ayetle bitir... 🌅🌙",
     "Bir an dur ve bu ayeti kalbinle dinle... 🤫",
