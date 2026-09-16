@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon } from "lucide-react";
+import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon, BellRing } from "lucide-react";
+import { pushAboneOl, pushAbonelikIptal, pushAbonelikDurumu, pushDestekliyor, iosUyarisi } from "../utils/pushClient";
 
 // ═══════════════════════════════════════════════════════════
 // ★ NÛR ARAÇLAR — İslami Araçlar Paneli
@@ -171,9 +172,61 @@ function HatimTakibi() {
   );
 }
 
+// ★ ÖĞÜT VAKTİ — PWA push ile günde 4 sahih hadis bildirimi (sekme kapalıyken bile)
+function OgutVakti() {
+  const [aktif, setAktif] = useState(() => pushAbonelikDurumu());
+  const [yukleniyor, setYukleniyor] = useState(false);
+  const [mesaj, setMesaj] = useState("");
+  const destek = pushDestekliyor();
+  const iosUyari = iosUyarisi();
+
+  const toggle = async () => {
+    if (yukleniyor) return;
+    setYukleniyor(true);
+    setMesaj("");
+    if (aktif) {
+      await pushAbonelikIptal();
+      setAktif(false);
+      setMesaj("Bildirimler kapatıldı");
+    } else {
+      const sonuc = await pushAboneOl();
+      if (sonuc.ok) {
+        setAktif(true);
+        setMesaj("Açık — günde 4 kısa hadis gelecek 🌙");
+        try {
+          new Notification("🌱 Hoş geldin — Öğüt Vakti açıldı", { body: "Günde 4 kısa sahih hadis hatırlatması alacaksın.", icon: "/logo.png", tag: "ogut-hosgeldin" });
+        } catch { /* some platforms need SW showNotification */ }
+      } else {
+        setMesaj(sonuc.error || "Abonelik kurulamadı");
+      }
+    }
+    setYukleniyor(false);
+  };
+
+  if (!destek) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.07] px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <BellRing size={14} className={aktif ? "text-amber-300" : "text-white/35"} />
+        <div>
+          <p className="text-[10px] font-bold text-white">Öğüt Vakti 🌙</p>
+          <p className="text-[8px] text-white/40">
+            {iosUyari && !aktif ? "iPhone: önce \"Ana Ekrana Ekle\" gerekli" : aktif ? "Günde 4 sahih hadis · sekme kapalıyken de gelir" : "Günde 4 kısa sahih hadis bildirimi"}
+          </p>
+          {mesaj && <p className="text-[8px] text-amber-300/80">{mesaj}</p>}
+        </div>
+      </div>
+      <button onClick={toggle} disabled={yukleniyor}
+        className={`rounded-lg px-3 py-1.5 text-[9px] font-black transition disabled:opacity-50 ${aktif ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
+        {yukleniyor ? "…" : aktif ? "✓ Açık" : "Aç"}
+      </button>
+    </div>
+  );
+}
+
 // ★ Namaz vakti bildirimi — tarayıcı Notification API
-function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string, string> | null }) {
-  const [izin, setIzin] = useState<NotificationPermission | "unsupported">(
+function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string, string> | null }) {  const [izin, setIzin] = useState<NotificationPermission | "unsupported">(
     typeof Notification === "undefined" ? "unsupported" : Notification.permission
   );
   const [aktif, setAktif] = useState(() => {
@@ -592,6 +645,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 </div>
                 {!prayerTimings && <p className="text-center text-[9px] text-white/35">Vakitler yükleniyor veya konum izni bekleniyor...</p>}
                 <NamazBildirim prayerTimings={prayerTimings} />
+                <OgutVakti />
                 <p className="text-center text-[8px] text-white/25">Vakitler Aladhan üzerinden Diyanet metodu ile hesaplanır.</p>
               </div>
             )}

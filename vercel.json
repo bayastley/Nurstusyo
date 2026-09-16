@@ -8,7 +8,9 @@
       "maxDuration": 60
     }
   },
-  "regions": ["fra1"],
+  "regions": [
+    "fra1"
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -52,6 +54,24 @@
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/push/send",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/push/send",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/push/send",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/push/send",
+      "schedule": "0 17 * * *"
     }
   ]
 }
