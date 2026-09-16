@@ -103,6 +103,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = req.body || {};
   const action = String(body.action || "").slice(0, 32);
   try {
+    // ★ Ödeme RPC sağlık kontrolü: nur_grant_video_rights fonksiyonu var mı?
+    //   Yoksa admin panele uyarı gider — lansmanda ilk ödeme hakkı yazılamaz diye.
+    if (action === "check_rpc_health") {
+      let rpcOk = false;
+      let rpcDetail = "";
+      try {
+        const probe = await db<any>("rpc/nur_grant_video_rights", {
+          method: "POST",
+          body: JSON.stringify({ p_user_id: "00000000-0000-0000-0000-000000000000", p_rights: {} }),
+        });
+        rpcOk = true; // 200 döndüyse fonksiyon mevcut (kullanıcı bulunamadı hatası bile olsa RPC çalışıyor demektir)
+        rpcDetail = typeof probe === "object" ? JSON.stringify(probe).slice(0, 200) : "ok";
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        // PostgREST 404 = fonksiyon yok; diğer hatalar RPC var demektir
+        if (msg.includes("404") || msg.includes("Could not find the function")) {
+          rpcOk = false;
+          rpcDetail = "RPC bulunamadı — supabase/video_rights.sql çalıştırılmalı";
+        } else {
+          rpcOk = true;
+          rpcDetail = msg.slice(0, 200);
+        }
+      }
+      return res.status(200).json({ ok: true, rpc: { ok: rpcOk, detail: rpcDetail } });
+    }
     if (action === "list_users") {
       const users = await db<any[]>("nur_users?select=id,email,name,tier,is_admin,updated_at&order=updated_at.desc");
       const wallets = await db<any[]>("nur_wallets?select=user_id,sub_jeton,purchased_jeton");

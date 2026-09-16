@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NÛR STÜDYO — İslamî Video Üretici & Kur'an Medya Lab</title>
+    <meta name="description" content="Ayetleri dakikalar içinde sinematik Kur'an videolarına dönüştür; ücretsiz Kur'an dinle, öğren, hatim takip et, Kâbe'yi canlı izle. Telifsiz, helal içerik."
+    />
+    <meta name="keywords" content="kuran dinle, kuran videoları, ayet videoları, islami video üretici, kabe canlı, hatim takibi, zikirmatik, kuran öğren" />
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0c0d12" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Nûr Stüdyo" />
 
     <!-- Favicon & Touch Icon -->
     <link rel="icon" type="image/png" href="/logo.png" />
@@ -13,8 +22,11 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://nurstudyo.com" />
     <meta property="og:title" content="NÛR STÜDYO — İslamî Video Üretici & Kur'an Medya Lab" />
-    <meta property="og:description" content="1 dakikada profesyonel, telifsiz ve sinematik Kur'an videoları tasarlayın ve paylaşın." />
+    <meta property="og:description" content="Ayetleri dakikalar içinde sinematik Kur'an videolarına dönüştür; ücretsiz Kur'an dinle, öğren, hatim takip et, Kâbe'yi canlı izle." />
     <meta property="og:image" content="https://nurstudyo.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Nûr Stüdyo" />
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -56,5 +68,13 @@
   <body class="bg-[#0c0d12] text-gray-100 antialiased selection:bg-[#d7aa52]/30 selection:text-[#f5dda6]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // PWA Service Worker kaydı — sadece https/localhost'ta
+      if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("/sw.js").catch(function () { /* sessiz — PWA kritik değil */ });
+        });
+      }
+    </script>
   </body>
 </html>
