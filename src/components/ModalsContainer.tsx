@@ -603,13 +603,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 {COMING_SOON_ATMOSPHERES.map((item) => (
                   <div
                     key={item.id}
-                    className="glass-soft relative flex h-16 cursor-not-allowed flex-col items-center justify-center gap-1 rounded-xl opacity-50 saturate-50"
+                    className="glass-soft relative flex h-16 cursor-not-allowed flex-col items-center justify-center gap-1 overflow-hidden rounded-xl"
+                    style={item.img ? { backgroundImage: `linear-gradient(rgba(13,11,22,.55),rgba(13,11,22,.75)), url('${item.img}')`, backgroundSize: "cover", backgroundPosition: "center" } : { opacity: 0.5, filter: "saturate(0.5)" }}
                   >
                     <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                       {item.lock}
                     </span>
-                    <span className="text-[15px]">{item.emoji}</span>
-                    <span className="px-1 text-center text-[7.5px] font-bold leading-tight text-white/60">{item.label}</span>
+                    <span className={`text-[15px] ${item.img ? "drop-shadow" : ""}`}>{item.emoji}</span>
+                    <span className={`px-1 text-center text-[7.5px] font-bold leading-tight ${item.img ? "text-white/90" : "text-white/60"}`}>{item.label}</span>
                   </div>
                 ))}
               </div>
