@@ -626,21 +626,41 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [listenWordProgress, setListenWordProgress] = useState<number>(-1);
   const listenAyahDataRef = useRef(listenAyahData);
   useEffect(() => { listenAyahDataRef.current = listenAyahData; }, [listenAyahData]);
+  // ★ SURE ÖNBELLEĞİ: surenin ayetleri BİR KEZ çekilir, her ayet geçişinde cache'den
+  //   anında okunur. Eski kod HER ayet geçişinde surenin tamamını yeniden indiriyordu —
+  //   API yavaşlayınca/hata dönünce meal 1. ayette takılıyordu, ses ilerliyordu.
+  const listenSurahCacheRef = useRef<{ s: number; ar: string[]; tr: string[] } | null>(null);
+  // ★ EN GÜNCEL KONUM REFİ: gecikmeli yanıt eski ayete yazmasın (stale yazma koruması)
+  const listenPosRef = useRef({ s: 0, a: 1 });
+  useEffect(() => {
+    listenPosRef.current = { s: wholeQuran ? wholeIdx.s : listenSurah, a: wholeQuran ? wholeIdx.a : listenAyahIdx + 1 };
+  }, [wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
   useEffect(() => {
     if (mode !== "listen") { setListenAyahData(null); return; }
     const sNow = wholeQuran ? wholeIdx.s : listenSurah;
     const aNow = wholeQuran ? wholeIdx.a : listenAyahIdx + 1;
+    // Önbellek isabeti → istek YOK, meal anında güncellenir
+    const c = listenSurahCacheRef.current;
+    if (c && c.s === sNow && c.ar[aNow - 1]) {
+      setListenAyahData({ ar: c.ar[aNow - 1], tr: c.tr[aNow - 1], n: aNow });
+      setListenWordProgress(-1);
+      return;
+    }
     let live = true;
     fetch(`https://api.alquran.cloud/v1/surah/${sNow}/editions/quran-uthmani,tr.diyanet`)
       .then(r => r.json())
       .then((d: any) => {
-        if (!live || d.code !== 200) return;
-        const ar = d.data[0].ayahs[aNow - 1]?.text ?? "";
-        const tr = d.data[1].ayahs[aNow - 1]?.text ?? "";
-        setListenAyahData({ ar, tr, n: aNow });
+        if (!live || d.code !== 200 || !Array.isArray(d.data?.[0]?.ayahs)) return;
+        const ars: string[] = d.data[0].ayahs.map((x: any) => x.text ?? "");
+        const trs: string[] = d.data[1].ayahs.map((x: any) => x.text ?? "");
+        listenSurahCacheRef.current = { s: sNow, ar: ars, tr: trs };
+        // Yanıt gecikirse ayet değişmiş olabilir → ref'ten GÜNCEL konumu yaz
+        const pos = listenPosRef.current;
+        if (pos.s !== sNow || !ars[pos.a - 1]) return;
+        setListenAyahData({ ar: ars[pos.a - 1], tr: trs[pos.a - 1], n: pos.a });
         setListenWordProgress(-1);
       })
-      .catch(() => { if (live) setListenAyahData(null); });
+      .catch(() => { /* önbellek sonraki denemede devreye girer */ });
     return () => { live = false; };
   }, [mode, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
