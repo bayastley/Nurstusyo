@@ -376,3 +376,13 @@ input[type="range"].timeline::-webkit-slider-thumb {
     min-height: 30px;
   }
 }
+
+/* ═══ Ayet ekranı mobil metin kaydırma (hayalet oklar) ═══ */
+/* İç alan kayarken SAYFA kaymasın: dokunma olayını içeri kilitle */
+.listen-ayah-scroll {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* firefox'ta kaydırma çubuğu gizli — oklar var */
+}
+.listen-ayah-scroll::-webkit-scrollbar { display: none; }

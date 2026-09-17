@@ -310,6 +310,31 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
           </div>
+          {/* ★ MOBİL HAK GÖSTERGESİ: masaüstündeki jeton/üyelik rozetleri sm:flex ile gizliydi —
+              telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır */}
+          {user && (
+            <div className="absolute right-2 flex items-center gap-1.5 sm:hidden">
+              <button
+                onClick={() => openPremium("jeton")}
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tabular-nums"
+                style={{ background: "rgba(215,170,82,.12)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)", color: "var(--accent-2)" }}
+                title="Üretim hakların"
+              >
+                <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                  <Coins size={8} className="text-black" strokeWidth={3} />
+                </span>
+                {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "∞" : jetonCount}
+              </button>
+              <button
+                onClick={() => openPremium("uyelik")}
+                className="flex items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-bold"
+                style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.30)", color: "var(--accent-2)" }}
+                title="Üyelik durumu"
+              >
+                <Gem size={10} style={{ color: "var(--accent)" }} />{TIER_LABEL[tier || "free"] || "Free"}
+              </button>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             {user && (isAdminEmail(user.email) || isMasterSürüm) && (

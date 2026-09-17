@@ -129,8 +129,9 @@ export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
 };
 
 export const TEMPLATE_CLIPS_PLACEHOLDER = true;
-// Local preview mode: expose every atmosphere while the new R2 library is tested.
-export const ATMOSPHERE_PREVIEW_UNLOCKED = true;
+// ★ KİLİT SİSTEMİ AKTİF: false = tier kilitleri (free/pro/elit/V2) herkese görünür
+//   (misafir dahil). Test için geçici true yapılmıştı — canlıda false kalmalı.
+export const ATMOSPHERE_PREVIEW_UNLOCKED = false;
 
 // ─── URL jeneratörler ─────────────────────────────────
 const pv = (id: number, fps = 30) =>

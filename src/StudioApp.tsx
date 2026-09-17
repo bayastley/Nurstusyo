@@ -137,6 +137,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const saved = localStorage.getItem("nur_lang");
     return LANGS.some((item) => item.code === saved) ? saved as Lang : "tr";
   });
+  // ★ Tema HESABA ÖZEL (aşağıda user tanımlandıktan sonra hesap anahtarına bağlanır)
   const [themeId, setThemeId] = useState(() => localStorage.getItem("nur_theme") || "nur");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchHit[]>([]);
@@ -164,6 +165,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
+
+  // ★ Tema HESABA ÖZEL: anahtar email içerir — bir hesapta mavi seçince başka hesaba taşınmaz.
+  //   Misafir için ortak anahtar; giriş yapınca o hesabın kayıtlı temasına otomatik geçilir.
+  const themeKey = user?.email ? `nur_theme:${user.email.toLowerCase()}` : "nur_theme";
+  useEffect(() => { setThemeId(localStorage.getItem(themeKey) || "nur"); }, [themeKey]);
 
   // ★ Admin email tanındığında master modu aktifle
   useEffect(() => {
@@ -393,7 +399,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return () => window.removeEventListener("beforeunload", preventClose);
   }, [generating]);
 
-  useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem("nur_theme", theme.id); }, [theme]);
+  useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem(themeKey, theme.id); }, [theme, themeKey]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => { const interval = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(interval); }, []);

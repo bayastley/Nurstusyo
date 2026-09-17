@@ -298,6 +298,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [loopAyahListen, setLoopAyahListen] = useState(false);
   const [repeatWord, setRepeatWord] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // ★ Mobil metin kaydırma alanı — hayalet ok butonları bunu kaydırır (sayfa sabit)
+  const listenScrollRef = useRef<HTMLDivElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
   const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
   const kabeHlsRef = useRef<Hls | null>(null);
@@ -1260,12 +1262,33 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 {isPlaying && listenAyahData ? (
                   <>
                     <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {fullSurahMode ? "TAM SURE (kesintisiz)" : wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
-                    <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
-                      {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
-                        <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#e8dfc0]"}`}>{wd}</span>
-                      ))}
+                    {/* ★ MOBİL KAYDIRMA: uzun ayet ekrana sığmayınca parmakla sayfayı oynatmak yerine
+                        buradaki hayalet oklarla ARAPÇA + MEAL birlikte kaydırılır (sayfa sabit kalır).
+                        Masaüstünde fare kartın üstüne gelince oklar belirir, çekince kaybolur. */}
+                    <div className="group relative w-full">
+                      <div ref={listenScrollRef} className="listen-ayah-scroll max-h-[46vh] overflow-y-auto scroll-smooth px-1 scrollbar-thin">
+                        <div className="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1" dir="rtl">
+                          {listenAyahData.ar.split(/\s+/).filter(Boolean).map((wd, i) => (
+                            <span key={i} className={`rounded px-1 font-arabic text-xl leading-loose transition-all duration-200 ${i === listenWordProgress ? "scale-110 bg-[#D7AA41] font-black text-[#151020] shadow-[0_0_16px_rgba(245,221,166,.8)] ring-2 ring-[#f5dda6]" : i < listenWordProgress ? "text-[#f5dda6]/60" : "text-[#e8dfc0]"}`}>{wd}</span>
+                          ))}
+                        </div>
+                        <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-[#c9c0a0]" dir="auto">“{listenAyahData.tr}”</p>
+                      </div>
+                      {/* Hayalet oklar: yukarı */}
+                      <button
+                        type="button"
+                        onClick={() => listenScrollRef.current?.scrollBy({ top: -120, behavior: "smooth" })}
+                        className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
+                        title="Metni yukarı kaydır"
+                      >▲</button>
+                      {/* Hayalet oklar: aşağı */}
+                      <button
+                        type="button"
+                        onClick={() => listenScrollRef.current?.scrollBy({ top: 120, behavior: "smooth" })}
+                        className="pointer-events-auto absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
+                        title="Metni aşağı kaydır"
+                      >▼</button>
                     </div>
-                    <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-[#c9c0a0]" dir="auto">“{listenAyahData.tr}”</p>
                   </>
                 ) : isPlaying ? (
                   <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-[#b8b093]">ayet yükleniyor…</span></div>
