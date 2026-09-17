@@ -311,9 +311,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
           </div>
           {/* ★ MOBİL HAK GÖSTERGESİ: masaüstündeki jeton/üyelik rozetleri sm:flex ile gizliydi —
-              telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır */}
+              telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır.
+              NOT: absolute değil — akış içinde, dil/imsak butonlarıyla ÇAKIŞMAZ */}
           {user && (
-            <div className="absolute right-2 flex items-center gap-1.5 sm:hidden">
+            <div className="flex items-center gap-1.5 sm:hidden">
               <button
                 onClick={() => openPremium("jeton")}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tabular-nums"
@@ -336,7 +337,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             {user && (isAdminEmail(user.email) || isMasterSürüm) && (
               <>
                 <button

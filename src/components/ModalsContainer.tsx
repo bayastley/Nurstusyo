@@ -443,7 +443,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         <Modal title={t("atmoLibrary")} sub={pickingFor ? `${t("pickForAyah")}: ${pickingFor}` : t("hoverPreview")} onClose={() => { setModal(null); setPickingFor(null); }} wide>
           <div className="mb-3 flex flex-wrap gap-2">
             <div className="w-44">
-              <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED) return; setClipKind(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+              <Segmented value={clipKind} onChange={(kind) => setClipKind(kind)} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
             </div>
             <div className="relative min-w-48 flex-1">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
@@ -482,7 +482,22 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </div>
           ) : (
             <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 animate-fadeIn">
-              {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES].map((category) => {
+              {/* ★ SIRALAMA: önce AÇIK kategoriler, sonra tier kilitliler, en sonda V2 vitrini
+                  (gizliler yalnızca adminde en sonda görünür) — açık/kilitli karışması bitti */}
+              {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES]
+                .filter((category) => isMasterSürüm || !ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id) || getAdminCatAccess(category.id) !== "hidden")
+                .sort((a, b) => {
+                  const w = (c: (typeof CATEGORIES)[number]) => {
+                    if (!ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === c.id)) return 0;
+                    const acc = getAdminCatAccess(c.id);
+                    if (acc === "hidden") return 3;
+                    if (acc === "v2") return 2;
+                    if (acc === "pro" || acc === "elit") return 1;
+                    return 0;
+                  };
+                  return w(a) - w(b);
+                })
+                .map((category) => {
                 const CatIcon = CATEGORY_ICONS[category.id] ?? Sparkles;
                 const active = atmosCategory === category.id;
                 const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
@@ -512,7 +527,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                         setHeroSpotlight(spotlight);
                         setAtmosCategory(category.id);
                       }}
-                      className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-40 saturate-50 glass-soft text-white/40" : active ? "text-black" : searchHit ? "text-[#151020]" : "glass-soft text-white/70 hover:text-white"}`}
+                      className={`relative flex h-16 w-full flex-col items-center justify-center gap-1 rounded-xl border transition ${hardLocked ? "opacity-45 saturate-[.35] glass-soft text-white/40 border-dashed" : active ? "text-black" : searchHit ? "text-[#151020]" : "glass-soft text-white/70 hover:text-white"}`}
                       style={!hardLocked && active ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))", borderColor: "var(--accent)" } : searchHit ? { background: "#D7AA41", borderColor: "#f5dda6", boxShadow: "0 0 14px rgba(215,170,82,.5)" } : undefined}
                     >
                       {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
