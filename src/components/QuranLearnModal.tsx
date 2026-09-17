@@ -141,6 +141,26 @@ const MEALS = [
 //   kaynak: quran.com API Türkçe WbW (Diyanet) + eski 571 sözlük — public/wbw-tr-full.json
 //   2) yoksa API Türkçe meal 3) o da yoksa Arapça kök gösterilir ('—' asla görünmez)
 const WBW_TR: Record<string, string> = {};
+// ★ SÖZLÜK YÜKLEME DURUMU: quran.com API'si çökse bile sözlük bir kez yüklensin —
+//   eski kodda sözlük SADECE API başarılı olunca çekiliyordu, API takılınca kelimeler '—' oluyordu.
+let WBW_LOADED = false;
+let WBW_NORM_IDX: Record<string, string> = {};
+let WBW_LOADING: Promise<void> | null = null;
+async function ensureWbwLoaded(): Promise<void> {
+  if (WBW_LOADED) return;
+  if (!WBW_LOADING) {
+    WBW_LOADING = fetch("/wbw-tr-full.json")
+      .then(r => r.json())
+      .then(j => {
+        const t = j.translations ?? j;
+        Object.assign(WBW_TR, t);
+        WBW_NORM_IDX = j.normIndex ?? {};
+        WBW_LOADED = Object.keys(WBW_TR).length > 0;
+      })
+      .catch(() => { WBW_LOADING = null; /* başarısızsa tekrar denenebilir */ });
+  }
+  await WBW_LOADING;
+}
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; }
 
@@ -360,29 +380,24 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   // Kelime verisini çek (quran.com — kelime + TR meal + kelime sesi)
   // ★ 6 sn zaman aşımı: quran.com takılırsa yedek kelime bölme devreye girsin
+  // ★ SÖZLÜK API'DEN BAĞIMSIZ: /wbw-tr-full.json önce paralel yüklenir — API çökse bile
+  //   Türkçe anlamlar sözlükten dolar ('—' sorunu kökten çözüldü)
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
+    const sozlukHazir = ensureWbwLoaded(); // yerel dosya — hızlı ve bağımsız
     fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani%2Ctranslation&translations=77&language=tr`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(async (d: any) => {
         if (!live) return;
+        await sozlukHazir; // sözlük API'den bağımsız hazır olsun
         const ws = (d.verse?.words ?? []).filter((w: any) => w.char_type_name === "word");
         // Türkçe sözlüğü (bir kez) yükle — API kelime meali (id 77) + yerel sözlük birleşir
         let wbw: Record<string, string> = WBW_TR;
-        let normIdx: Record<string, string> = {};
-        if (Object.keys(wbw).length === 0) {
-          try {
-            const r = await fetch("/wbw-tr-full.json");
-            const j = await r.json();
-            wbw = j.translations ?? j;
-            normIdx = j.normIndex ?? {};
-            Object.assign(WBW_TR, wbw);
-          } catch { /* sözlük yoksa İngilizce kalır */ }
-        }
+        let normIdx: Record<string, string> = WBW_NORM_IDX;
         const norm = (s: string) => s
           .replace(/[\u0670\u06E1\u064B-\u065F\u0640\u06D6-\u06ED\u0653-\u0655]/g, "")
           .replace(/\u0671/g, "\u0627").replace(/\u0649/g, "\u064A").replace(/\u0629/g, "\u0647")
@@ -441,13 +456,35 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => { ayahPosRefText.current = ayah?.ar ?? ""; }, [ayah?.ar]);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
-  //    ve altın vurgu her koşulda çalışır; ses olarak ayet sesi okunur.
+  //    ve altın vurgu her koşulda çalışır; anlamlar yerel sözlükten dolar (API gerekmez).
   useEffect(() => {
     if (!open || mode !== "learn" || wordLoading || words.length > 0) return;
     const text = ayah?.ar?.replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/, "").trim();
     if (!text) return;
     const parts = text.split(/\s+/).filter(Boolean);
-    if (parts.length > 0) setWords(parts.map((ar, i) => ({ i, ar, tr: "—", translit: "", audio: "" })));
+    if (parts.length === 0) return;
+    // Yerel sözlük hazır değilse yükle — sonra kelimeleri sözlükten doldur
+    let live = true;
+    ensureWbwLoaded().then(() => {
+      if (!live) return;
+      const norm = (s: string) => s
+        .replace(/[\u0670\u06E1\u064B-\u065F\u0640\u06D6-\u06ED\u0653-\u0655]/g, "")
+        .replace(/\u0671/g, "\u0627").replace(/\u0649/g, "\u064A").replace(/\u0629/g, "\u0647")
+        .replace(/[\u06CC]/g, "\u064A").replace(/\s+/g, "").trim();
+      const stripAl = (s: string) => norm(s).replace(/^ال/, "");
+      const wbwKeys = Object.keys(WBW_TR).map(k => ({ k, n: norm(k), na: stripAl(k) }));
+      setWords(parts.map((ar, i) => {
+        const n = norm(ar), na = stripAl(ar);
+        const exact = WBW_NORM_IDX[n] ?? wbwKeys.find(x => x.n === n || x.na === na);
+        let tr = typeof exact === "string" ? exact : (exact as any)?.k ? WBW_TR[(exact as any).k] : undefined;
+        if (!tr) {
+          const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
+          tr = part ? WBW_TR[part.k] : undefined;
+        }
+        return { i, ar, tr: tr ?? "—", translit: "", audio: "" };
+      }));
+    });
+    return () => { live = false; };
   }, [open, mode, wordLoading, words.length, ayah?.ar]);
 
   // ★ KELİMEYE TIKLA: kelimeyi parlat + seçilen hocanın sesiyle O KELİMEYİ oku
