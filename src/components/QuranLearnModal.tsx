@@ -747,9 +747,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     setListenAyahIdx(fromIdx);
     // ★ BESMELE: Fatiha ve Tevbe hariç her sure besmeleyle başlar (sünnet);
     //   sadece ilk ayet başlarken çalar, sonraki ayetlerde çalmaz.
-    //   Besmele dosyası: 100001.mp3 (her kari için mevcut — test edildi)
+    //   ★ BESMELE DOSYASI: 001001.mp3 = Fâtiha 1. ayet = Bismillâhirrahmânirrahîm.
+    //   ⚠️ HATA DÜZELTİLDİ: eskiden 100001.mp3 kullanılıyordu — everyayah adlandırması
+    //   3 haneli sure + 3 haneli ayet olduğundan 100001 = Âdiyât 100:1 'Vel âdiyâti dabhâ'
+    //   çalıyordu (ekran Yasin gösterirken 'vel âdiyat' sesi gelmesinin sebebi buydu)
     const isBesmeleSurah = sN === 1 || sN === 9; // Fâtiha'nın kendisi besmele, Tevbe'de besmele yok
-    const besmeleUrl = `https://everyayah.com/data/${listenReciter}/100001.mp3`;
+    const besmeleUrl = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
     if (fromIdx === 0 && !isBesmeleSurah) {
       // Önce besmele, bittikten sonra 1. ayet
       a.src = besmeleUrl;
@@ -800,7 +803,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             a.onended = null;
             playAt(next.n, 0);
           };
-          a.src = `https://everyayah.com/data/${listenReciter}/100001.mp3`;
+          a.src = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
           a.load();
           a.play().catch(() => playAt(next.n, 0));
           return;
