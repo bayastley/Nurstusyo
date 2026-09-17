@@ -556,9 +556,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           )}
 
           <div className={`grid gap-3 ${clipKind === "img" ? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"}`}>
-            {(atmosCategory === "all"
-              ? []
-              : (heroSpotlight
+            {((heroSpotlight
                   ? [heroSpotlight, ...filteredClips.filter((clip) => clip.id !== heroSpotlight.id)]
                   : filteredClips
                 ).slice(0, visibleCount)
@@ -582,7 +580,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             })}
           </div>
 
-          {atmosCategory !== "all" && visibleCount < filteredClips.length && (
+          {visibleCount < filteredClips.length && (
             <div ref={loadMoreRef} className="flex h-10 items-center justify-center gap-2 text-[10px] font-bold text-white/35">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
               Daha fazla yükleniyor…

@@ -1099,6 +1099,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let pool = combinedAllClips;
     pool = pool.filter((clip) => clip.kind === clipKind);
     if (atmosCategory !== "all") { pool = pool.filter((clip) => clip.cat === atmosCategory); }
+    else { pool = pool.filter((clip) => isClipAccessible(clip)); } // ★ "Tümü": sadece erişilebilir (kullanıcının açabildiği) klipler — boş grid olmasın
     const value = atmosQuery.trim().toLocaleLowerCase("tr");
     if (value) { pool = pool.filter((clip) => clip.label.toLocaleLowerCase("tr").includes(value)); }
     // ★ Performans: eski karşılaştırıcı her adımda tüm arşivi tarıyordu (O(n²)) ve
@@ -1121,7 +1122,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       lockMap.set(clip.id, locked ? 1 : 0);
     }
     return [...pool].sort((a, b) => (lockMap.get(a.id) ?? 0) - (lockMap.get(b.id) ?? 0));
-  }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier]);
+  }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier, isClipAccessible]);
 
   const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);
 
