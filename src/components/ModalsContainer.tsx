@@ -482,17 +482,18 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </div>
           ) : (
             <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 animate-fadeIn">
-              {/* ★ SIRALAMA: önce AÇIK kategoriler, sonra tier kilitliler, en sonda V2 vitrini
-                  (gizliler yalnızca adminde en sonda görünür) — açık/kilitli karışması bitti */}
+              {/* ★ SIRALAMA: önce AÇIK kategoriler, sonra PRO, sonra ELİT, en sonda V2 vitrini
+                  (gizliler yalnızca adminde en sonda görünür) — ömer'in istediği katman sırası */}
               {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES]
                 .filter((category) => isMasterSürüm || !ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id) || getAdminCatAccess(category.id) !== "hidden")
                 .sort((a, b) => {
                   const w = (c: (typeof CATEGORIES)[number]) => {
                     if (!ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === c.id)) return 0;
                     const acc = getAdminCatAccess(c.id);
-                    if (acc === "hidden") return 3;
-                    if (acc === "v2") return 2;
-                    if (acc === "pro" || acc === "elit") return 1;
+                    if (acc === "hidden") return 4;
+                    if (acc === "v2") return 3;
+                    if (acc === "elit") return 2;
+                    if (acc === "pro") return 1;
                     return 0;
                   };
                   return w(a) - w(b);

@@ -125,7 +125,7 @@ export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
   cami:"Ücretsiz", gol:"Ücretsiz", bulut:"Ücretsiz", desen:"Ücretsiz",
   selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
   cennet:"Elit", col:"Elit", ates:"Elit",
-  yuklenenler:"V3", ari:"V2", cehennem:"V3", hurma:"V3", karinca:"V3",
+  yuklenenler:"V2", ari:"V2", cehennem:"V2", hurma:"V2", karinca:"V2",
 };
 
 export const TEMPLATE_CLIPS_PLACEHOLDER = true;
