@@ -26,7 +26,7 @@ interface AdminDashboardModalProps {
 
 export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onClose,
-  currentUserEmail = "kayaom1233@gmail.com",
+  currentUserEmail = "",
   onUpdateUser,
   notify,
 }) => {
@@ -537,7 +537,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </span>
               </div>
               <p className="text-[10px] text-white/50 mt-0.5">
-                Kurucu Hesabı: <b style={{ color: "var(--accent-2)" }}>kayaom1233@gmail.com</b>
+                Oturum: <b style={{ color: "var(--accent-2)" }}>{currentUserEmail || "Admin"}</b>
               </p>
             </div>
           </div>

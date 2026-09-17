@@ -389,10 +389,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {modal === "adminDashboard" && serverAdminVerified && (
         <AdminDashboardModal
           onClose={() => setModal(null)}
-          currentUserEmail={phone.includes("@") ? phone : "kayaom1233@gmail.com"}
+          currentUserEmail={phone.includes("@") ? phone : ""}
           onUpdateUser={(email, newTier, newJeton) => {
             // Eğer güncellenen hesap şu anki oturum sahibi ise, canlı state'leri güncelle
-            if (phone.toLowerCase() === email.toLowerCase() || email.toLowerCase() === "kayaom1233@gmail.com") {
+            if (phone.toLowerCase() === email.toLowerCase()) {
               setTier(newTier);
               setCurrentTier(newTier);
               setJetonCount(newJeton);
