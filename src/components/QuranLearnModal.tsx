@@ -105,7 +105,7 @@ const RECITERS: Reciter[] = [
   { id: "Minshawy_Mujawwad_192kbps", name: "Muhammed Siddik el-Minşavi (Mücavved)" },
   { id: "Menshawi_16kbps", name: "Muhammed Siddik el-Minşavi (Eski Kayıt)" },
   { id: "Ghamadi_40kbps", name: "Saad el-Gamidi", full: ["s_gmd", 7] },
-  { id: "Abu_Bakr_Ash-Shaatree_128kbps", name: "Ebu Bekir eş-Şatri", full: ["shaatree", 7] },
+  { id: "Abu_Bakr_Ash-Shaatree_128kbps", name: "Ebu Bekir eş-Şatri", full: ["shatri", 11] },
   { id: "Akram_AlAlaqimy_128kbps", name: "Ekrem el-Alakmi" },
   { id: "Ali_Jaber_64kbps", name: "Ali Cabir (Mescid-i Haram)" },
   { id: "Ayman_Sowaid_64kbps", name: "Eyman es-Suvayd" },
@@ -118,7 +118,7 @@ const RECITERS: Reciter[] = [
   { id: "Muhammad_Ayyoub_128kbps", name: "Muhammed Eyyub (Medine)", full: ["ayyub", 8] },
   { id: "Muhammad_Jibreel_64kbps", name: "Muhammed Cibril", full: ["jbrl", 8] },
   { id: "Muhsin_Al_Qasim_192kbps", name: "Muhsin el-Kasım (Medine)" },
-  { id: "Mustafa_Ismail_48kbps", name: "Mustafa İsmail" },
+  // Mustafa İsmail çıkarıldı: everyayah kopyasında birçok surenin ayet dosyası eksik (404) — sessiz kalıyordu
   { id: "Nasser_Alqatami_128kbps", name: "Nasser el-Katami", full: ["ajm", 10] },
   { id: "Sahl_Yassin_128kbps", name: "Sehl Yasin (Medine)" },
   { id: "Salah_Al_Budair_128kbps", name: "Salah el-Budeyr", full: ["sds", 11] },
