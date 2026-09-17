@@ -16,6 +16,7 @@ import {
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import { ADMIN_AI_KEYWORDS, ADMIN_MOTION_CLIPS } from "./adminMediaManifest";
+import { adminCatUsable } from "./adminCategoryAccess";
 import { CLIP_AI_KEYWORDS } from "./clips/index";
 import {
   ACTIVE_CATEGORIES,
@@ -668,6 +669,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const isClipAccessible = useCallback((clip: Clip): boolean => {
     if (isMasterSürüm || ATMOSPHERE_PREVIEW_UNLOCKED) return true;
+    // ★ ADMIN KATEGORİ PLANI: onaylı dağıtıma göre (pro/elit tier kilidi,
+    //   v2 kilitli, hidden admin-only) — adminCategoryAccess.ts okur
+    if (clip.cat.startsWith("admin_")) return adminCatUsable(clip.cat, accessTier);
     const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
     if (!tierAtLeast(accessTier, catTier)) return false;
     const sameCat = combinedAllClips.filter((c) => c.cat === clip.cat && c.kind === clipKind);

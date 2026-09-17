@@ -23,6 +23,8 @@ import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
 import { GoogleIcon, randomPkceVerifier, pkceChallenge, COMING_SOON_ATMOSPHERES } from "./modalHelpers";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
+import { getAdminCatAccess, adminCatVisible } from "../adminCategoryAccess";
+import { ADMIN_V2_COUNT, ADMIN_V2_TOTAL } from "../adminCategoryAccess";
 
 const PRAYERS: Array<[string, string]> = [
   ["İmsak", "Fajr"], ["Güneş", "Sunrise"], ["Öğle", "Dhuhr"],
@@ -485,8 +487,15 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const active = atmosCategory === category.id;
                 const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
                 const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
-                const lockLevel = isAdminAtmosphere ? "V3" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
-                const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)));
+                // ★ TIER PLANI: admin kategorileri onaylı dağıtıma göre kilidlenir
+                //   (pro/elit = tier kilidi, v2 = "Yakında" rozeti, hidden = SADECE admin görür)
+                const adminAcc = isAdminAtmosphere ? getAdminCatAccess(category.id) : null;
+                const adminHidden = adminAcc === "hidden";
+                if (adminHidden && !isMasterSürüm) return null; // gizli klasör: admin dışına görünmez
+                const adminLocked = adminAcc === "v2" || adminAcc === "pro" || adminAcc === "elit";
+                const adminUsable = !isAdminAtmosphere || adminAcc === null ? true : (adminAcc === "v2" ? false : (adminAcc === "pro" ? (accessTier === "pro" || accessTier === "elit") : adminAcc === "elit" ? accessTier === "elit" : true));
+                const lockLevel = adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
+                const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (adminLocked ? !adminUsable : (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id))));
                 // ★ Arama kutusuna yazınca eşleşen KLASÖR sarı yanar — yerini gösterir
                 const q = atmosQuery.trim().toLocaleLowerCase("tr");
                 const searchHit = q.length >= 2 && !active && category.label.toLocaleLowerCase("tr").includes(q);
@@ -580,15 +589,15 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             </div>
           )}
 
-          {/* ★ MERAK UYANDIRAN TEASER — R2'ye hazırlanan 78 yeni atmosfer
-              kategorisi için henüz gerçek görsel bağlanmadı; bu yüzden gerçek
-              AtmosphereCard yerine SADECE isim + kilit rozeti gösteren, tıklanamaz
-              "yakında" kartları kullanılıyor. Gerçek görseller yüklenince bu
-              blok gerçek kategorilerle değiştirilecek. */}
+          {/* ★ MERAK UYANDIRAN TEASER — onaylı V2 vitrini (10 gerçek R2 kategorisi)
+              + kalan V3 takvimi. V2 kilitli kategoriler R2'de HAZIR ve test edildi
+              (1438/1438 dosya OK) — V2 günü adminCategoryAccess'te "v2"→"elit"
+              yapıldığında gerçek klasörler açılır; teaser kartlarıyla birlikte
+              "devasa güncelleme" görüntüsü verir. */}
           {!isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
-                <Lock size={11} /> Yakında: 78 Yeni Kur'an Temalı Atmosfer Kategorisi (V2/V3)
+                <Lock size={11} /> Yakında: V2 ile 10 Yeni Kategori Açılıyor ({ADMIN_V2_COUNT} kategori · {ADMIN_V2_TOTAL}+ içerik hazır)
               </p>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
                 {COMING_SOON_ATMOSPHERES.map((item) => (
