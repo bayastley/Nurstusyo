@@ -1351,6 +1351,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setShowArapca={setShowArapca}
           showSubMeal={showSubMeal}
           setShowSubMeal={setShowSubMeal}
+          setTextOffset={setTextOffset}
           selected={selected}
           verseIndex={verseIndex}
           setVerseIndex={setVerseIndex}

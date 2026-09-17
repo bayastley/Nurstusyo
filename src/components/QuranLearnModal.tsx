@@ -626,6 +626,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   (her ayet değişiminde ekranda da değişir, kelimeler okundukça altın yanar)
   const [listenAyahData, setListenAyahData] = useState<{ ar: string; tr: string; n: number } | null>(null);
   const [listenWordProgress, setListenWordProgress] = useState<number>(-1);
+  // ★ BESMELE GÖSTERGESİ: besmele mp3'ü çalarken ekranda "Yasin 1. Ayet" değil,
+  //   BİSMILLÂH metni + "Besmele" etiketi görünür (ses-ekran uyumsuzluğu bitti)
+  const [besmelePlaying, setBesmelePlaying] = useState(false);
+  const BESMELE_AR = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
+  const BESMELE_TR = "Rahmân ve Rahîm olan Allah'ın adıyla.";
   const listenAyahDataRef = useRef(listenAyahData);
   useEffect(() => { listenAyahDataRef.current = listenAyahData; }, [listenAyahData]);
   // ★ SURE ÖNBELLEĞİ: surenin ayetleri BİR KEZ çekilir, her ayet geçişinde cache'den
@@ -776,10 +781,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     const isBesmeleSurah = sN === 1 || sN === 9; // Fâtiha'nın kendisi besmele, Tevbe'de besmele yok
     const besmeleUrl = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
     if (fromIdx === 0 && !isBesmeleSurah) {
-      // Önce besmele, bittikten sonra 1. ayet
+      // Önce besmele, bittikten sonra 1. ayet — EKRANDA DA BESMELE gösterilir
+      setListenAyahData({ ar: BESMELE_AR, tr: BESMELE_TR, n: 0 });
+      setListenWordProgress(-1);
+      setBesmelePlaying(true);
       a.src = besmeleUrl;
       a.onended = () => {
         a.onended = null;
+        setBesmelePlaying(false);
         a.src = ayahUrl(sN, 1);
         a.load();
         a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, 0); }).catch(() => setIsPlaying(false));
@@ -820,9 +829,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         if (wholeQuran) setWholeIdx({ s: next.n, a: 1 });
         setListenSurah(next.n);
         if (next.n !== 1 && next.n !== 9) {
-          // besmele çal, bitince 1. ayet
+          // besmele çal, bitince 1. ayet — EKRANDA DA BESMELE gösterilir
+          setListenAyahData({ ar: BESMELE_AR, tr: BESMELE_TR, n: 0 });
+          setListenWordProgress(-1);
+          setBesmelePlaying(true);
           a.onended = () => {
             a.onended = null;
+            setBesmelePlaying(false);
             playAt(next.n, 0);
           };
           a.src = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
@@ -839,7 +852,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     return () => a.removeEventListener("ended", onEnded);
   }, [mode, loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs, listenReciter]);
 
-  const stopListening = () => { stopAudio(); setIsPlaying(false); setPaused(false); };
+  const stopListening = () => { stopAudio(); setIsPlaying(false); setPaused(false); setBesmelePlaying(false); };
 
   // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
   const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); setFlowPlaying(false); setPaused(false); };
@@ -1261,7 +1274,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <div className="relative z-10 flex w-full flex-col items-center gap-3">
                 {isPlaying && listenAyahData ? (
                   <>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {fullSurahMode ? "TAM SURE (kesintisiz)" : wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {listenAyahData.n}. Ayet</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {besmelePlaying ? "BESMELE" : fullSurahMode ? "TAM SURE (kesintisiz)" : wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {besmelePlaying ? "Sure Başlangıcı" : `${listenAyahData.n}. Ayet`}</span>
                     {/* ★ MOBİL KAYDIRMA: uzun ayet ekrana sığmayınca parmakla sayfayı oynatmak yerine
                         buradaki hayalet oklarla ARAPÇA + MEAL birlikte kaydırılır (sayfa sabit kalır).
                         Masaüstünde fare kartın üstüne gelince oklar belirir, çekince kaybolur. */}
@@ -1274,20 +1287,24 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                         </div>
                         <p className="mt-1 max-w-xl text-[11px] italic leading-relaxed text-[#c9c0a0]" dir="auto">“{listenAyahData.tr}”</p>
                       </div>
-                      {/* Hayalet oklar: yukarı */}
+                      {/* Hayalet oklar: yukarı — besmelede gerek yok ama zararsız */}
+                      {!besmelePlaying && (
                       <button
                         type="button"
                         onClick={() => listenScrollRef.current?.scrollBy({ top: -120, behavior: "smooth" })}
                         className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
                         title="Metni yukarı kaydır"
                       >▲</button>
+                      )}
                       {/* Hayalet oklar: aşağı */}
+                      {!besmelePlaying && (
                       <button
                         type="button"
                         onClick={() => listenScrollRef.current?.scrollBy({ top: 120, behavior: "smooth" })}
                         className="pointer-events-auto absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
                         title="Metni aşağı kaydır"
                       >▼</button>
+                      )}
                     </div>
                   </>
                 ) : isPlaying ? (

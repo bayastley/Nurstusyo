@@ -15,6 +15,7 @@ interface VideoPreviewSectionProps {
   setShowArapca: (value: boolean) => void;
   showSubMeal: boolean;
   setShowSubMeal: (value: boolean) => void;
+  setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
   selected: SelectedAyah[];
   verseIndex: number;
   setVerseIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -75,7 +76,7 @@ function lowPowerDevice(): boolean {
 export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) => {
   const {
     canvasRef, previewWidth, previewMaximized, setPreviewMaximized, showArapca, setShowArapca,
-    showSubMeal, setShowSubMeal, selected, verseIndex, setVerseIndex, verseAudioRef,
+    showSubMeal, setShowSubMeal, setTextOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
     previewPlaying, setPreviewPlaying, setPreviewTime, randomizeBackgrounds, previewDuration,
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
@@ -123,6 +124,15 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="mx-auto flex w-full gap-1.5" style={{ maxWidth: previewWidth }}>
         <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? "Arapça Çıkar" : "Arapça Ekle"}</button>
         <button onClick={() => setShowSubMeal(!showSubMeal)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showSubMeal ? "Meal Çıkar" : "Meal Ekle"}</button>
+      </div>
+
+      {/* ★ METİN KONUMU — Arapça/meal yazısını yukarı-aşağı kaydırma butonları.
+          Önizlemenin hemen altında, herkes görür; tasarım panelindeki elit kilidine gerek kalmadan */}
+      <div className="mx-auto flex w-full items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/40">Metin Konumu</span>
+        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-white/60 transition hover:text-white active:scale-90" title="Yazıları yukarı kaydır">↑</button>
+        <button onClick={() => setTextOffset({ x: 0, y: 0 })} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-[10px] font-black text-[color:var(--accent)] transition hover:brightness-125 active:scale-90" title="Ortala (sıfırla)">⟲</button>
+        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-white/60 transition hover:text-white active:scale-90" title="Yazıları aşağı kaydır">↓</button>
       </div>
 
       <div className="mx-auto flex items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
