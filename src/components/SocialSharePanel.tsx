@@ -2,6 +2,7 @@ import React from "react";
 import { Share2, RefreshCw, Copy, Check, Shuffle, FolderUp } from "lucide-react";
 import { SectionTitle } from "./UIElements";
 import { LockBadge } from "./LockBadge";
+import { FeedbackBox } from "./FeedbackBox";
 import { T } from "../i18n";
 import type { SelectedAyah, ModalName, Tier } from "../types";
 
@@ -295,6 +296,8 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
             >
               <span>🔗</span> Satın Alma & İade Koşulları
             </button>
+            <span className="hidden text-white/10 sm:inline">•</span>
+            <FeedbackBox />
           </div>
 
           <p className="font-display text-[10.5px] font-medium tracking-[.06em] text-white/40">
