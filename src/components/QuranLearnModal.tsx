@@ -625,6 +625,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ DİNLE EKRANI AYETİ: o an okunan ayetin Arapça metni + Türkçe meali
   //   (her ayet değişiminde ekranda da değişir, kelimeler okundukça altın yanar)
   const [listenAyahData, setListenAyahData] = useState<{ ar: string; tr: string; n: number } | null>(null);
+  // ★ TAM SURE senkronunda güncel ayet indeksi (closure taşımaması için ref)
+  const listenAyahIdxRef = useRef(0);
+  useEffect(() => { listenAyahIdxRef.current = listenAyahIdx; }, [listenAyahIdx]);
   const [listenWordProgress, setListenWordProgress] = useState<number>(-1);
   // ★ BESMELE GÖSTERGESİ: besmele mp3'ü çalarken ekranda "Yasin 1. Ayet" değil,
   //   BİSMILLÂH metni + "Besmele" etiketi görünür (ses-ekran uyumsuzluğu bitti)
@@ -754,6 +757,40 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.loop = false;
       a.preload = "auto";
       a.load();
+      // ★ TAM SURE SES-EKRAN SENKRONU: tek dosyada ayet arası boşluk yoktur ama
+      //   ekran yine de okunan ayeti göstermeli. Süre oranı → tartılı ayet indeksi.
+      //   Ekran ayet değişince listenAyahIdx güncellenir → mevcut fetch efekti
+      //   (listenAyahIdx bağımlılığı) o ayetin metnini + mealini anında getirir.
+      a.ontimeupdate = () => {
+        if (!a.duration || Number.isNaN(a.duration) || a.duration <= 0) return;
+        const ratio = a.currentTime / a.duration;
+        const surahInfo = SURAHS_DATA.find(s => s.n === sN);
+        const totalAyah = surahInfo?.ayahs ?? 0;
+        if (totalAyah <= 0) return;
+        // Sure metni cache'de varsa TARTILI takip (uzun ayetler daha uzun okunur):
+        const cache = listenSurahCacheRef.current;
+        let yeniIdx: number;
+        if (cache && cache.s === sN && cache.ar.length === totalAyah) {
+          const metaText = cache.ar[Math.min(Math.floor(ratio * totalAyah), totalAyah - 1)];
+          yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
+          // Tartılı düzeltme: harf ağırlığına göre hassas konum
+          yeniIdx = weightedWordIndex(ratio, cache.ar.join(" "), totalAyah);
+          if (metaText) { /* tartılı hesap yeterli */ }
+        } else {
+          yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
+        }
+        if (yeniIdx !== listenAyahIdxRef.current) {
+          setListenAyahIdx(yeniIdx);
+          setListenWordProgress(-1);
+        } else {
+          // Aynı ayet içindeyken kelime vurgusunu da sürdür
+          const cache2 = listenSurahCacheRef.current;
+          if (cache2 && cache2.s === sN && cache2.ar[yeniIdx]) {
+            const ayRatio = (ratio * totalAyah) - yeniIdx;
+            setListenWordProgress(weightedWordIndex(ayRatio, cache2.ar[yeniIdx], 999));
+          }
+        }
+      };
       a.onended = () => {
         // Tam sure bitince: sıradaki sure / komple kuran ayarına göre devam
         if (!wholeQuran && !nextSurahAuto) { setIsPlaying(false); return; }
