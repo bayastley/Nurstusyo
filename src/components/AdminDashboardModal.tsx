@@ -30,7 +30,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "modules" | "sync">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -48,6 +48,32 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number } | null>(null);
   const [errorLoading, setErrorLoading] = useState(false);
+  // ★ Geri bildirimler — Geri Bildirimler sekmesi için
+  const [feedbackList, setFeedbackList] = useState<any[]>([]);
+  const [feedbackStats, setFeedbackStats] = useState<{ turDagilimi: Record<string, number>; puanDagilimi: Record<number, number>; puanOrtalama: number; toplam: number } | null>(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+
+  const loadFeedback = async () => {
+    setFeedbackLoading(true);
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_feedback" }),
+      });
+      const data = await response.json().catch(() => null) as any;
+      if (data?.ok) {
+        setFeedbackList(data.feedback || []);
+        setFeedbackStats({ turDagilimi: data.turDagilimi || {}, puanDagilimi: data.puanDagilimi || {}, puanOrtalama: data.puanOrtalama || 0, toplam: data.toplam || 0 });
+      } else notify(data?.error || "Geri bildirimler alınamadı");
+    } catch { notify("Sunucuya ulaşılamadı"); }
+    finally { setFeedbackLoading(false); }
+  };
+
+  // Geri Bildirimler sekmesine ilk geçişte yükle
+  useEffect(() => {
+    if (activeTab === "feedback" && feedbackList.length === 0 && !feedbackLoading) loadFeedback();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // Panel açılırken ödeme RPC'sini kontrol et — hakları yazmayan sistem sessizce para kaybettirir
   useEffect(() => {
@@ -590,6 +616,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             ⚠️
             <span>Hata Logları{errorStats ? ` (${errorStats.total24h})` : ""}</span>
           </button>
+          <button
+            onClick={() => setActiveTab("feedback")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap relative ${
+              activeTab === "feedback" ? "text-black font-black" : "text-emerald-300 hover:text-white"
+            }`}
+            style={activeTab === "feedback" ? { background: "linear-gradient(135deg,#34d399,#059669)" } : { background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}
+          >
+            💬
+            <span>Geri Bildirim{feedbackStats ? ` (${feedbackStats.toplam})` : ""}</span>
+          </button>
         </div>
 
         {/* Content Body */}
@@ -710,6 +746,78 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           )}
 
           {/* TAB 5: HATA LOGLARI */}
+          {activeTab === "feedback" && (
+            <div className="space-y-4">
+              {/* Özet: toplam + ortalama puan */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
+                  <p className="text-2xl font-black text-emerald-300">{feedbackStats?.toplam ?? "—"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Toplam görüş</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                  <p className="text-2xl font-black text-amber-300">{feedbackStats?.puanOrtalama ? `${feedbackStats.puanOrtalama} ⭐` : "—"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Ortalama puan</p>
+                </div>
+              </div>
+
+              {/* Tür dağılımı */}
+              {feedbackStats && (
+                <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/45">Tür dağılımı</p>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-lg bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-300">💡 Öneri: {feedbackStats.turDagilimi.oneri ?? 0}</span>
+                    <span className="rounded-lg bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300">✨ Özellik: {feedbackStats.turDagilimi.ozellik ?? 0}</span>
+                    <span className="rounded-lg bg-red-500/15 px-2.5 py-1 text-[10px] font-bold text-red-300">😔 Şikayet: {feedbackStats.turDagilimi.sikayet ?? 0}</span>
+                    <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/60">✉️ Diğer: {feedbackStats.turDagilimi.diger ?? 0}</span>
+                  </div>
+                  <p className="mb-2 mt-3 text-[9px] font-bold uppercase tracking-widest text-white/45">Puan dağılımı</p>
+                  {[5, 4, 3, 2, 1].map((n) => {
+                    const adet = feedbackStats.puanDagilimi[n] ?? 0;
+                    const yuzde = feedbackStats.toplam ? Math.round((adet / feedbackStats.toplam) * 100) : 0;
+                    return (
+                      <div key={n} className="mb-1 flex items-center gap-2">
+                        <span className="w-8 text-[10px] text-white/50">{n} ⭐</span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+                          <div className="h-full rounded-full" style={{ width: `${yuzde}%`, background: "linear-gradient(90deg,#fbbf24,#d97706)" }} />
+                        </div>
+                        <span className="w-8 text-right text-[10px] text-white/50">{adet}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Yenile */}
+              <button onClick={loadFeedback} disabled={feedbackLoading}
+                className="w-full rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
+                {feedbackLoading ? "Yükleniyor…" : "↻ Yenile"}
+              </button>
+
+              {/* Mesaj listesi */}
+              <div className="space-y-2">
+                {feedbackList.length > 0 ? feedbackList.map((fb) => {
+                  const turRenk = fb.tur === "sikayet" ? "text-red-300" : fb.tur === "ozellik" ? "text-sky-300" : fb.tur === "oneri" ? "text-amber-300" : "text-white/60";
+                  const turEtiket = fb.tur === "sikayet" ? "😔 Şikayet" : fb.tur === "ozellik" ? "✨ Özellik" : fb.tur === "oneri" ? "💡 Öneri" : "✉️ Diğer";
+                  return (
+                    <div key={fb.id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-[10.5px] space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className={`font-bold ${turRenk}`}>{turEtiket}{fb.puan ? ` · ${"⭐".repeat(fb.puan)}` : ""}</span>
+                        <span className="shrink-0 text-[8.5px] text-white/40">{new Date(fb.created_at).toLocaleString("tr-TR")}</span>
+                      </div>
+                      <p className="whitespace-pre-wrap text-white/80">{fb.mesaj}</p>
+                      <div className="border-t border-white/5 pt-1 text-[8.5px] text-white/40">
+                        {fb.user_name || fb.user_email ? `${fb.user_name ? fb.user_name + " · " : ""}${fb.user_email || ""}` : "👻 Misafir kullanıcı"}
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <p className="p-6 text-center text-[10px] text-white/40 italic">
+                    {feedbackLoading ? "Yükleniyor…" : "Henüz geri bildirim yok — kutu footer'da 💬"}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
           {activeTab === "errors" && (
             <div className="space-y-4">
               {/* İstatistik özeti */}

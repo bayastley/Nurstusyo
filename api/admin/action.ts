@@ -318,6 +318,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const toplam24 = stats.length;
       const benzersiz = new Set(stats.map((r) => r.fingerprint)).size;
       return res.status(200).json({ ok: true, errors: rows, stats: { total24h: toplam24, unique24h: benzersiz } });
+    } else if (action === "list_feedback") {
+      // ★ GERİ BİLDİRİMLER — son 50 mesaj + tür/puan dağılımı (sadece admin)
+      const [rows, turRows, puanRows] = await Promise.all([
+        db<any[]>("nur_feedback?select=id,user_name,user_email,tur,puan,mesaj,created_at&order=created_at.desc&limit=50").catch(() => [] as any[]),
+        db<any[]>("nur_feedback?select=tur").catch(() => [] as any[]),
+        db<any[]>("nur_feedback?select=puan&puan=not.is.null").catch(() => [] as any[]),
+      ]);
+      const turDagilimi: Record<string, number> = { oneri: 0, ozellik: 0, sikayet: 0, diger: 0 };
+      for (const r of turRows) { const t = String(r.tur || "diger"); turDagilimi[t] = (turDagilimi[t] || 0) + 1; }
+      const puanDagilimi: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const r of puanRows) { const p = Number(r.puan); if (p >= 1 && p <= 5) puanDagilimi[p] += 1; }
+      const puanlanan = puanRows.length;
+      const ortalama = puanlanan ? puanRows.reduce((s, r) => s + Number(r.puan || 0), 0) / puanlanan : 0;
+      return res.status(200).json({
+        ok: true,
+        feedback: rows,
+        turDagilimi,
+        puanDagilimi,
+        puanOrtalama: Math.round(ortalama * 10) / 10,
+        toplam: turRows.length,
+      });
     } else if (action === "clear_errors") {
       // ★ HATA LOGLARINI TEMİZLE — 30 günden eski kayıtları sil
       await db(`nur_error_logs?created_at=lt.${new Date(Date.now() - 30 * 24 * 3600_000).toISOString()}`, { method: "DELETE" }).catch(() => null);
