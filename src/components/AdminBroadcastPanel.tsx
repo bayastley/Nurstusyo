@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, LockKeyhole, Save, Send, Trash2 } from "lucide-react";
+import { Bell, LockKeyhole, Mail, Save, Send, Trash2 } from "lucide-react";
 import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, type MaintenanceConfig } from "../services/adminSyncService";
 import { RECITERS } from "../reciters";
 
@@ -131,6 +131,31 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
   };
 
+  // ★ E-POSTA KAMPANYASI — onay veren kullanıcılara mail gönder (Resend)
+  const [mailSubject, setMailSubject] = useState("");
+  const [mailBody, setMailBody] = useState("");
+  const [mailSending, setMailSending] = useState(false);
+  const sendCampaign = async () => {
+    if (!mailSubject.trim() || !mailBody.trim()) { notify("Konu ve içerik gerekli"); return; }
+    setMailSending(true);
+    try {
+      const res = await fetch("/api/marketing/send-campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: mailSubject.trim(),
+          html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#141414;color:#fff;border-radius:12px"><div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #333"><h2 style="color:#d7aa52;margin:0">🌙 Nûr Stüdyo</h2></div><div style="padding:16px 0;line-height:1.7;font-size:14px">${mailBody.trim().replace(/\n/g, "<br/>")}</div><div style="padding-top:16px;border-top:1px solid #333;font-size:11px;color:#888;text-align:center">Bu e-postayı aldınız çünkü Nûr Stüdyo'da e-posta bildirimlerine izin verdiniz. <a href="https://nurstudyo.com" style="color:#d7aa52">nurstudyo.com</a></div></div>`,
+        }),
+      });
+      const data = await res.json().catch(() => null) as any;
+      if (data?.ok) {
+        notify(`✉️ ${data.sent}/${data.total} kullaniciya gönderildi`);
+        setMailSubject(""); setMailBody("");
+      } else notify(data?.error || "Gönderim başarısız");
+    } catch { notify("Sunucuya ulaşılamadı"); }
+    finally { setMailSending(false); }
+  };
+
   const saveMaintenance = async () => {
     if (maintenance.startsAt && maintenance.endsAt && new Date(maintenance.endsAt) <= new Date(maintenance.startsAt)) {
       notify("Bakım bitiş saati başlangıçtan sonra olmalı");
@@ -190,6 +215,18 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
         </div>
         <textarea value={maintenance.message} onChange={(e) => setMaintenance((v) => ({ ...v, message: e.target.value }))} rows={2} maxLength={300} placeholder="Bakım mesajı" className="glass-soft mt-2 w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
         <button onClick={saveMaintenance} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-red-400 py-2.5 text-xs font-black text-black"><Save size={13} /> Bakım Planını Kaydet</button>
+      </section>
+
+      <section className="rounded-2xl border border-sky-400/25 bg-black/35 p-4 lg:col-span-2">
+        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Mail size={15} /> E-posta Kampanyası (Yeni Özellik Duyurusu)</h4>
+        <p className="mb-3 text-[9px] text-white/40">Yalnızca giriş sayfasında "e-posta almak istiyorum" kutusunu işaretleyen kullanıcılara gider (KVKK uyumlu). Ücretsiz Resend planı: ayda 3.000 mail.</p>
+        <div className="space-y-2">
+          <input value={mailSubject} onChange={(e) => setMailSubject(e.target.value)} placeholder="Mail konusu (örn: 🌙 V2 Güncellemesi Geldi!)" className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <textarea value={mailBody} onChange={(e) => setMailBody(e.target.value)} placeholder="Mail içeriği (düz metin, satır sonları korunur)" rows={4} className="glass-soft w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <button onClick={sendCampaign} disabled={mailSending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-xs font-black text-black disabled:opacity-50">
+            <Send size={13} /> {mailSending ? "Gönderiliyor…" : "✉️ Onay Verenlere Gönder"}
+          </button>
+        </div>
       </section>
 
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
