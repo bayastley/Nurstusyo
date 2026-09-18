@@ -135,6 +135,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   lang,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
+  // ★ Destek Merkezi yıldız puanı (opsiyonel 1-5, veritabanına kaydedilir)
+  const [contactPuan, setContactPuan] = useState<number | null>(null);
   const [heroSpotlight, setHeroSpotlight] = useState<Clip | null>(null);
   // ★ Performans + sonsuz kaydırma: kategori başına 10 kartla başlar; kullanıcı
   //    aşağı indikçe kendiliğinden +10 yüklenir (eski cihazlar donmaz, buton yok).
@@ -755,7 +757,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* CONTACT & SUPPORT MODAL */}
+      {/* CONTACT & SUPPORT MODAL — ★ Artık veritabanına da kaydediyor + yıldız puanı */}
       {modal === "contact" && (
         <Modal title="Destek & Bildirim Merkezi" sub="Öneri, soru veya sorunlarınızı destek ekibimize doğrudan iletin." onClose={() => setModal(null)}>
           <div className="mb-3">
@@ -768,6 +770,18 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               ]}
             />
           </div>
+          {/* ★ YILDIZ PUANI — opsiyonel, admin paneldeki puan dağılımına düşer */}
+          <div className="mb-3 flex items-center justify-center gap-1.5 rounded-xl bg-white/5 py-2">
+            <span className="text-[10px] text-white/50">Sitemizi puanla:</span>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => setContactPuan(contactPuan === n ? null : n)}
+                className={`text-lg transition ${contactPuan && n <= contactPuan ? "grayscale-0" : "opacity-30 grayscale hover:opacity-60"}`}
+                aria-label={`${n} yıldız`}
+              >⭐</button>
+            ))}
+          </div>
           <textarea
             value={contactMessage}
             onChange={(event) => setContactMessage(event.target.value)}
@@ -776,16 +790,27 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             className="glass-soft mb-3 w-full resize-none rounded-xl px-3.5 py-3 text-[11px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-[color:var(--accent)]"
           />
           <button
-            onClick={() => {
+            onClick={async () => {
               if (!contactMessage.trim()) {
                 notify("Lütfen göndermek istediğiniz mesajı yazınız.");
                 return;
               }
+              // ★ VERİTABANI KAYDI — mesaj admin panelin Geri Bildirim sekmesine düşer.
+              //   Kimlik bilgisi sunucu oturumundan gelir (istemciden gönderilmez).
+              try {
+                await fetch("/api/marketing/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ tur: contactType, puan: contactPuan, mesaj: contactMessage.trim() }),
+                });
+              } catch { /* DB yazımı başarısız olsa da mail akışı bozulmasın */ }
+              // E-posta akışı aynen korunur — destekte kalıcı kayıt mailde de durur
               const subject = encodeURIComponent(contactType === "oneri" ? "Nûr Stüdyo — Öneri / Talep Bildirimi" : "Nûr Stüdyo — Destek & Sorun Bildirimi");
-              const body = encodeURIComponent(`Nûr Stüdyo Destek Birimine:\n\n${contactMessage.trim()}\n\n---\nTarih: ${new Date().toLocaleString("tr-TR")}`);
+              const body = encodeURIComponent(`Nûr Stüdyo Destek Birimine:\n\n${contactMessage.trim()}\n\n---\nPuan: ${contactPuan ? contactPuan + " ⭐" : "verilmedi"}\nTarih: ${new Date().toLocaleString("tr-TR")}`);
               window.open(`mailto:destek@nurstudyo.com?subject=${subject}&body=${body}`, "_blank");
-              notify("✉️ Destek mesajınız oluşturuldu, yönlendiriliyorsunuz...");
+              notify("✉️ Mesajınız iletildi — görüşünüz için teşekkürler 🌙");
               setContactMessage("");
+              setContactPuan(null);
               setModal(null);
             }}
             className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-black shadow-lg transition hover:brightness-110 active:scale-95 cursor-pointer"
