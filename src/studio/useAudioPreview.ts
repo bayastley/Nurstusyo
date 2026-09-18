@@ -30,6 +30,9 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
   const reciterPreviewRef = useRef<HTMLAudioElement | null>(null);
   const previewTimerRef = useRef<number>(0);
   const verseIndexRef = useRef(verseIndex);
+  // ★ onabort koruması için güncel oynatma durumu (closure taşımasın)
+  const previewPlayingRef = useRef(false);
+  useEffect(() => { previewPlayingRef.current = previewPlaying; }, [previewPlaying]);
 
   const reciter = RECITERS.find((item) => item.id === reciterId) ?? RECITERS[0];
 
@@ -118,13 +121,30 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
       audio.onerror = () => {
         if (destroyed) return;
         cleanup();
-        setPreviewPlaying(false);
-        notify("⚠️ Bu kârinin ses kaydı yüklenemedi · ayet konumu korundu");
+        // ★ DONMA DÜZELTMESİ: ses dosyası yüklenemediyse DURMA — sonraki ayete geç.
+        //   Eskisi previewPlaying'i kapatıyordu → kullanıcı 2. ayete geçemiyordu.
+        if (verseIndex < selected.length - 1) {
+          notify("⚠️ Bu ayetin sesi yüklenemedi · sıradaki ayete geçiliyor");
+          setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400);
+        } else {
+          setVerseIndex(selected.length - 1);
+          setPreviewPlaying(false);
+          notify("⚠️ Son ayetin sesi yüklenemedi · önizleme durduruldu");
+        }
       };
       audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
-      audio.onabort = () => { if (!destroyed) setPreviewPlaying(false); };
+      // ★ onabort DÜZELTMESİ: sekme arka plana geçince tarayıcı bazen abort atar —
+      //   oynatmayı KAPATMA (eskisi önizlemeyi yanlışlıkla donduruyordu); sadece sessizce
+      //   tekrar dene. Gerçek durdurma sadece kullanıcı butonundan olur.
+      audio.onabort = () => { if (!destroyed && previewPlayingRef.current) audio.play().catch(() => undefined); };
     }
-    const safetyTimer = window.setTimeout(() => { if (!destroyed && audio.readyState < 2) { cleanup(); setPreviewPlaying(false); } }, 9000);
+    // ★ GÜVENLİK ZAMANLAYICISI — yavaş ağda 9 sn yetmezdi: 2. ayetin sesi gelmeden
+    //   cleanup + durdurma oluyordu ("1. ayetten sonra dondu"). Süre 20 sn'ye çıktı +
+    //   sadece ses BAŞLAMAMISSA (readyState=0) devreye girer; load ediyorsa bekle.
+    const safetyTimer = window.setTimeout(() => { if (!destroyed && audio.readyState < 1) { cleanup();
+      if (verseIndex < selected.length - 1) { notify("⏳ Bağlantı yavaş · sıradaki ayete geçiliyor"); setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400); }
+      else setPreviewPlaying(false);
+    } }, 20000);
     verseAudioRef.current = audio;
     audio.play().catch(() => { if (!destroyed) { cleanup(); setPreviewPlaying(false); } });
     return () => { destroyed = true; cleanup(); };

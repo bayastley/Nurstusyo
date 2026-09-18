@@ -97,18 +97,18 @@ const USER_HITS = new Map<string, number[]>();
 function checkRateLimits(ip: string, userId: string): boolean {
   const now = Date.now();
   
-  // 1. IP Limit (dakikada en fazla 40 imzalama isteği — galeri 15+ videoyu
-  //    aynı anda imzaladığı için 15 limiti meşru kullanıcıyı 429'a boğuyordu;
-  //    oturum + origin doğrulaması zaten var, limit yine scraping'e takılır)
+  // 1. IP Limit (dakikada en fazla 60 imzalama isteği — tam sure seçilince 52 ayetin
+  //    klibi + posterleri tek seferde imzalanıyor; 40 limiti meşru kullanıcıyı 429'a
+  //    boğup önizlemeyi donduruyordu. Oturum + origin doğrulaması zaten var.)
   const ipHits = (HITS.get(ip) || []).filter((hit) => now - hit < 60000);
-  if (ipHits.length >= 40) return false;
+  if (ipHits.length >= 60) return false;
   ipHits.push(now);
   HITS.set(ip, ipHits);
   
-  // 2. Kullanıcı ID Limit (dakikada en fazla 30 imzalama isteği)
+  // 2. Kullanıcı ID Limit (dakikada en fazla 45 imzalama isteği)
   if (userId) {
     const userHits = (USER_HITS.get(userId) || []).filter((hit) => now - hit < 60000);
-    if (userHits.length >= 30) return false;
+    if (userHits.length >= 45) return false;
     userHits.push(now);
     USER_HITS.set(userId, userHits);
   }
