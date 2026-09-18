@@ -644,6 +644,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
   useEffect(() => {
     if (mode !== "listen") { setListenAyahData(null); return; }
+    // ★ BESMELE KORUMASI: besmele çalarken fetch efekti ekrandaki besmele metnini
+    //   1. ayetle DEĞİŞTİRMESİN — ses besmele derken ekranda besmele kalsın.
+    //   Besmele bitince state false olur → efekt yeniden koşar → 1. ayet gelir.
+    if (besmelePlaying) return;
     const sNow = wholeQuran ? wholeIdx.s : listenSurah;
     const aNow = wholeQuran ? wholeIdx.a : listenAyahIdx + 1;
     // Önbellek isabeti → istek YOK, meal anında güncellenir
@@ -669,7 +673,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       })
       .catch(() => { /* önbellek sonraki denemede devreye girer */ });
     return () => { live = false; };
-  }, [mode, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
+  }, [mode, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx, besmelePlaying]);
   const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
   // Hoca arama kutusu — "mahir", "husari" yaz, liste anında filtrelenir
   const [reciterSearch, setReciterSearch] = useState("");

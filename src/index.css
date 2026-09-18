@@ -386,3 +386,22 @@ input[type="range"].timeline::-webkit-slider-thumb {
   scrollbar-width: none; /* firefox'ta kaydırma çubuğu gizli — oklar var */
 }
 .listen-ayah-scroll::-webkit-scrollbar { display: none; }
+
+/* ═══ Hayalet metin konumu okları — önizleme içinde ═══
+   3 saniyede bir nazikçe ışıldar (sürekli dikkat dağıtmaz),
+   fare/dokunuşla tam görünür. Mobilde sürekli %70 soluk durur. */
+@keyframes ghostArrowPulse {
+  0%, 82%, 100% { opacity: 0; }
+  90% { opacity: .85; }
+}
+.group\/arrows > button {
+  animation: ghostArrowPulse 3s ease-in-out infinite;
+}
+.group\/arrows:hover > button,
+.group\/arrows:active > button {
+  animation: none;
+  opacity: 1;
+}
+@media (max-width: 767px) {
+  .group\/arrows > button { animation: none; opacity: .7; }
+}

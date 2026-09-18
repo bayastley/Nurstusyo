@@ -16,6 +16,7 @@ interface VideoPreviewSectionProps {
   showSubMeal: boolean;
   setShowSubMeal: (value: boolean) => void;
   setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
+  textOffset: { x: number; y: number };
   selected: SelectedAyah[];
   verseIndex: number;
   setVerseIndex: React.Dispatch<React.SetStateAction<number>>;
@@ -76,7 +77,7 @@ function lowPowerDevice(): boolean {
 export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) => {
   const {
     canvasRef, previewWidth, previewMaximized, setPreviewMaximized, showArapca, setShowArapca,
-    showSubMeal, setShowSubMeal, setTextOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
+    showSubMeal, setShowSubMeal, setTextOffset, textOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
     previewPlaying, setPreviewPlaying, setPreviewTime, randomizeBackgrounds, previewDuration,
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
@@ -115,6 +116,44 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <div className="preview-frame glass relative mx-auto overflow-hidden rounded-2xl p-1.5">
           <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: aspectCss }}>
             <canvas ref={canvasRef} className="absolute inset-0 h-full w-full object-cover" />
+            {/* ★ HAYALET METİN KONUMU OKLARI — önizlemenin İÇİNDE.
+                Beyaz ışıltı, 3 saniyede bir yanıp söner (reklam gibi sürekli değil),
+                fare/dokunuş yaklaşınca tam görünür ve o yöne tıklayınca Arapça + meal
+                önizlemede o yöne kayar. Mobilde soluk görünür (70%), dokununca tam. */}
+            <div className="group/arrows pointer-events-none absolute inset-0 z-10">
+              {/* Sol */}
+              <button
+                onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-30, o.x - 5) }))}
+                className="pointer-events-auto absolute left-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
+                title="Yazıları sola kaydır"
+              >◀</button>
+              {/* Sağ */}
+              <button
+                onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(30, o.x + 5) }))}
+                className="pointer-events-auto absolute right-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
+                title="Yazıları sağa kaydır"
+              >▶</button>
+              {/* Yukarı */}
+              <button
+                onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))}
+                className="pointer-events-auto absolute left-1/2 top-1.5 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
+                title="Yazıları yukarı kaydır"
+              >▲</button>
+              {/* Aşağı */}
+              <button
+                onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))}
+                className="pointer-events-auto absolute bottom-1.5 left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
+                title="Yazıları aşağı kaydır"
+              >▼</button>
+              {/* Ortala — sadece ofset varken görünür */}
+              {(textOffset.x !== 0 || textOffset.y !== 0) && (
+                <button
+                  onClick={() => setTextOffset({ x: 0, y: 0 })}
+                  className="pointer-events-auto absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[11px] font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,.95)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-80 active:scale-90"
+                  title="Ortala (sıfırla)"
+                >⟲</button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -124,15 +163,6 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="mx-auto flex w-full gap-1.5" style={{ maxWidth: previewWidth }}>
         <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? "Arapça Çıkar" : "Arapça Ekle"}</button>
         <button onClick={() => setShowSubMeal(!showSubMeal)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showSubMeal ? "Meal Çıkar" : "Meal Ekle"}</button>
-      </div>
-
-      {/* ★ METİN KONUMU — Arapça/meal yazısını yukarı-aşağı kaydırma butonları.
-          Önizlemenin hemen altında, herkes görür; tasarım panelindeki elit kilidine gerek kalmadan */}
-      <div className="mx-auto flex w-full items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
-        <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/40">Metin Konumu</span>
-        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-white/60 transition hover:text-white active:scale-90" title="Yazıları yukarı kaydır">↑</button>
-        <button onClick={() => setTextOffset({ x: 0, y: 0 })} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-[10px] font-black text-[color:var(--accent)] transition hover:brightness-125 active:scale-90" title="Ortala (sıfırla)">⟲</button>
-        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} className="glass-soft flex h-7 w-8 items-center justify-center rounded-lg text-white/60 transition hover:text-white active:scale-90" title="Yazıları aşağı kaydır">↓</button>
       </div>
 
       <div className="mx-auto flex items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
