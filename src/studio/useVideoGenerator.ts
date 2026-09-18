@@ -302,6 +302,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         let saveHandle: FileSystemFileHandle | null = null;
         let dumpedBytes = 0;
         let dumpChain: Promise<void> = Promise.resolve();
+        // ★ İptal/işlem tamamlanmama bilinci: kullanıcı kaydet penceresini kapatırsa
+        //   RAM moduna düştüğünü BİLSİN — uzun üretimde RAM dolabilir uyarısıyla.
+        let saveDeclined = false;
+        let dumpFailed = false;
         if (useStreamDump) {
           try {
             savePicker?.({ suggestedName: `nurstudyo-${usedItems[0]?.sName || "sure"}-${Math.round(total / 60)}dk.webm`, types: [{ description: "Video", accept: { "video/webm": [".webm"] } }] })
@@ -309,8 +313,12 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
                 saveHandle = handle;
                 dumpStream = await handle.createWritable();
               })
-              .catch(() => { /* kullanıcı iptal etti — RAM moduna düş */ });
-          } catch { /* desteklenmiyor */ }
+              .catch(() => {
+                // kullanıcı iptal etti — RAM moduna düş, ama haber ver
+                saveDeclined = true;
+                notify(`ℹ️ Dosya kaydetme iptal edildi · üretim tarayıcı belleğinde devam ediyor${total >= 30 ? " — uzun üretimde bellek dolarsa kesilebilir" : ""}`);
+              });
+          } catch { saveDeclined = true; /* desteklenmiyor */ }
         }
         recorder.ondataavailable = (event) => {
           if (!event.data.size) return;
@@ -320,7 +328,14 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             dumpChain = dumpChain
               .then(() => dumpStream!.write(piece))
               .then(() => { dumpedBytes += piece.size; })
-              .catch(() => { chunks.push(piece); }); // disk yazımı patlarsa RAM'e düş
+              .catch(() => {
+                // disk yazımı patladı (disk dolu, dosya kilidi vs.) — RAM'e düş
+                if (!dumpFailed) {
+                  dumpFailed = true;
+                  notify("⚠️ Diske yazım kesildi · üretim tarayıcı belleğinde sürüyor — bitince dosyayı hemen indirin");
+                }
+                chunks.push(piece);
+              });
           } else {
             chunks.push(event.data);
           }
@@ -408,6 +423,14 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           } catch { /* dosya okunamadıysa aşağıdaki bildirim düşer */ }
           notify(`✅ ${Math.round(total / 60)} dakikalık video diske kaydedildi (${Math.round(dumpedBytes / 1e6)} MB)`);
           continue;
+        }
+        // ★ RAM'e düşülen durumlar: bitişte kullanıcıya bellek durumu net söylensin
+        if (saveDeclined && chunks.length > 0) {
+          setProgress(98);
+          notify(`ℹ️ Video tarayıcı belleğinde üretildi (${Math.round(chunks.reduce((s, c) => s + c.size, 0) / 1e6)} MB) — dosyayı kaydetmek için indir butonunu kullanın`);
+        } else if (dumpFailed && dumpedBytes > 0 && chunks.length > 0) {
+          setProgress(98);
+          notify(`⚠️ Üretim yarı diske yarı belleğe yazıldı — video hazır, indir butonuyla kaydedin`);
         }
 
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
