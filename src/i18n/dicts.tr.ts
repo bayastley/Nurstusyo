@@ -143,7 +143,7 @@ export const trDict: Dict = {
   purchasedPackagesTitle: "Satın Alınan Paketler",
   shortVideoLabel: "Kısa Video (59sn)",
   longVideoLabel: "Uzun Video (600sn)",
-  fullVideoLabel: "Tam Sürüm (45dk)",
+  fullVideoLabel: "Tam Sürüm (90dk)",
   rightsRemainingSuffix: "hak kaldı",
   packageRightsNote: "Haklar süresizdir, üretildikçe azalır",
   monthlyMembershipTab: "Aylık Üyelik",

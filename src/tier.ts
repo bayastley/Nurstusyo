@@ -19,13 +19,13 @@ export type VideoKind = "kisa" | "uzun" | "tam";
 export const VIDEO_KIND_LABEL: Record<VideoKind, string> = {
   kisa: "Kısa Video (59 sn)",
   uzun: "Uzun Video (600 sn)",
-  tam: "Tam Sürüm (45 dk)",
+  tam: "Tam Sürüm (90 dk)",
 };
 
 export const VIDEO_KIND_SECONDS: Record<VideoKind, number> = {
   kisa: 59,
   uzun: 600,
-  tam: 45 * 60,
+  tam: 90 * 60,
 };
 
 export const CURRENT_TIER_KEY = "nur_tier";
@@ -475,7 +475,7 @@ export const MODE_TO_KIND: Record<"short" | "long" | "full", VideoKind> = {
 /** Her video türü kaç üretim hakkı harcar:
  *  Kısa (59 sn) = 1 hak
  *  Uzun (600 sn) = 5 hak
- *  Tam Sürüm (45 dk) = 15 hak
+ *  Tam Sürüm (90 dk) = 15 hak
  */
 const VIDEO_COST: Record<"short" | "long" | "full", number> = {
   short: 1,

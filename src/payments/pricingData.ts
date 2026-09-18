@@ -186,12 +186,12 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     active: true,
   },
 
-  // ─── Tam sürüm paketleri (45 dk) ───
+  // ─── Tam sürüm paketleri (90 dk) ───
   PK_TAM_2: {
     code: "PK_TAM_2",
     kind: "package",
     title: "2 Tam Sürüm Video Üretim Hizmeti",
-    description: "45 dakikaya kadar 2 adet video üretim hizmeti.",
+    description: "90 dakikaya kadar 2 adet video üretim hizmeti.",
     amountMinor: 3900,
     currency: "TRY",
     videoKind: "tam",
@@ -202,7 +202,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     code: "PK_TAM_5",
     kind: "package",
     title: "5 Tam Sürüm Video Üretim Hizmeti",
-    description: "45 dakikaya kadar 5 adet video üretim hizmeti.",
+    description: "90 dakikaya kadar 5 adet video üretim hizmeti.",
     amountMinor: 8900,
     currency: "TRY",
     videoKind: "tam",
@@ -213,7 +213,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     code: "PK_TAM_10",
     kind: "package",
     title: "10 Tam Sürüm Video Üretim Hizmeti",
-    description: "45 dakikaya kadar 10 adet video üretim hizmeti.",
+    description: "90 dakikaya kadar 10 adet video üretim hizmeti.",
     amountMinor: 15900,
     currency: "TRY",
     videoKind: "tam",
@@ -247,7 +247,7 @@ export const PACKAGE_CODES: Record<VideoKind, readonly string[]> = {
 export const PACKAGE_GROUP_META: Record<VideoKind, { label: string; sub: string; emoji: string; accent: string }> = {
   kisa: { label: "Kısa Video", sub: "59 saniye · Reels & Shorts", emoji: "🎬", accent: "#34d399" },
   uzun: { label: "Uzun Video", sub: "600 saniye · Derin anlatım", emoji: "🎞️", accent: "#60a5fa" },
-  tam: { label: "Tam Sürüm", sub: "45 dakikaya kadar · Tam sure", emoji: "🎥", accent: "#f5dda6" },
+  tam: { label: "Tam Sürüm", sub: "90 dakikaya kadar · Tam sure", emoji: "🎥", accent: "#f5dda6" },
 };
 
 // ════════════════════════════════════════════════════════

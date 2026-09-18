@@ -249,7 +249,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 )}
                 {pr.tam > 0 && (
                   <div className="flex items-center justify-between rounded-xl bg-white/5 px-3 py-2">
-                    <span className="text-[10px] font-bold text-white/70">🎥 Tam Sürüm (45dk)</span>
+                    <span className="text-[10px] font-bold text-white/70">🎥 Tam Sürüm (90dk)</span>
                     <span className="font-mono text-[12px] font-black text-purple-400">{pr.tam} hak kaldı</span>
                   </div>
                 )}
