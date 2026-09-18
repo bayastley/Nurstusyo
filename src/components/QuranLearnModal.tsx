@@ -740,6 +740,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       if (parts.length === 0) return;
       setListenWordProgress(weightedWordIndex(a.currentTime / a.duration, ay.ar, parts.length));
     };
+    a.onended = null; // ★ ESKİ onended TEMİZLE — besmele handler'ı yeni ayeti ezmesin
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, ayahIdx); }).catch(() => setIsPlaying(false));
   }, [ayahUrl, fullSurahUrl, speed, preloadNextAyah]);
 
@@ -812,13 +813,23 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     //   sureler arası geçiş 'ended' dinleyicisinde zaten var
     if (wholeQuran) { setWholeIdx({ s: sN, a: fromIdx + 1 }); }
     const a = audioRef.current; if (!a) return;
+    // ★ SURE DEĞİŞİMİ DÜZELTMESİ: setListenAyahIdx(fromIdx) TEK BAŞINA YETERSİZ —
+    //   React state güncellemesi ESRİK (asenkron). a.src = ayahUrl(sN, fromIdx+1)
+    //   yeni sureyi KURAR ama eski closure'daki onended/ontimeupdate hâlâ eski sureye
+    //   bakabiliyordu → "Fatiha seçtim, Enfâl seçtim, hâlâ Fatiha okuyor".
+    //   ÇÖZÜM: src'yi YENİ sureyle kur + onended'i TEMİZ kur (aşağıdaki ended dinleyici
+   //   effect'i zaten listenSurah'a bağlı yeniden bağlanıyor).
     setListenAyahIdx(fromIdx);
+    setListenWordProgress(-1);
     // ★ BESMELE: Fatiha ve Tevbe hariç her sure besmeleyle başlar (sünnet);
     //   sadece ilk ayet başlarken çalar, sonraki ayetlerde çalmaz.
     //   ★ BESMELE DOSYASI: 001001.mp3 = Fâtiha 1. ayet = Bismillâhirrahmânirrahîm.
     //   ⚠️ HATA DÜZELTİLDİ: eskiden 100001.mp3 kullanılıyordu — everyayah adlandırması
     //   3 haneli sure + 3 haneli ayet olduğundan 100001 = Âdiyât 100:1 'Vel âdiyâti dabhâ'
     //   çalıyordu (ekran Yasin gösterirken 'vel âdiyat' sesi gelmesinin sebebi buydu)
+    //   ★ ÇİFTE BESMELE DÜZELTİLDİ: Fâtiha'nın 1. ayeti ZATEN besmeledir (001001.mp3 =
+    //   Bismillâh). Ayrı besmele dosyası çalmak → Fatiha'da besmele iki kez duyulur.
+    //   Bu yüzden Fatiha'da ayrı besmele adımı ATLANIR (isBesmeleSurah kapsıyor).
     const isBesmeleSurah = sN === 1 || sN === 9; // Fâtiha'nın kendisi besmele, Tevbe'de besmele yok
     const besmeleUrl = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
     if (fromIdx === 0 && !isBesmeleSurah) {
@@ -848,6 +859,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     a.loop = false;
     a.preload = "auto";
     a.load(); // ★ eski buffer temizle
+    a.onended = null; // ★ ESKİ onended TEMİZLE — sure değişince eski handler yeni sureyi ezmesin
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, fromIdx); }).catch(() => {
       setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
     });
@@ -1040,28 +1052,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     <p className="mt-2 text-[8px] italic text-[#655f4c]">"Soldaki veya ortadaki kelimelerden dilediğinize tıklayabilirsiniz; ikisi de eşzamanlı olarak parlayıp çalacaktır!"</p>
                   </div>
 
-                  {/* Kelime Kartı — seçili kelime büyür */}
-                  {activeWord !== null && words[activeWord] ? (
-                    <div className="rounded-2xl border border-[#D7AA41]/50 bg-[#1d1a14] p-4 text-center shadow-[0_0_28px_rgba(215,170,82,.2)] animate-fadeIn">
-                      <p className="font-arabic text-3xl leading-relaxed text-[#f5dda6]">{words[activeWord].ar}</p>
-                      {words[activeWord].translit && <p className="mt-1 text-[11px] italic text-[#7a745f]">{words[activeWord].translit}</p>}
-                      <p className="mt-2 text-[14px] font-black text-white">{words[activeWord].tr}</p>
-                      <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-[#655f4c]">Kelime {activeWord + 1} / {words.length} · {surah.name} {ayahNo}. Ayet</p>
-                      <div className="mt-3 flex items-center justify-center gap-2">
-                        <button onClick={() => playWordAudio(activeWord)} className="flex items-center gap-1.5 rounded-lg bg-[#D7AA41] px-2.5 py-1.5 text-[9px] font-black text-[#151020] shadow-[0_0_10px_rgba(215,170,82,.4)] transition hover:brightness-110 active:scale-95">
-                          <RotateCcw size={11} /> Kelimeyi Tekrar Oku
-                        </button>
-                        {/* ★ AŞAĞI: uzun ayetleri görmek için kelime listesini aşağı kaydırır */}
-                        <button onClick={() => { const el = document.querySelector("[data-ayah-scroll]"); if (el) el.scrollBy({ top: 180, behavior: "smooth" }); }} className="flex items-center gap-1 rounded-md border border-white/10 bg-[#1E293B] px-2 py-1.5 text-[8px] font-black text-[#8f8870] transition hover:text-[#f5dda6]" title="Uzun ayetin devamını görmek için aşağı kaydır">
-                          ↓ Aşağı
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4 text-center">
-                      <p className="text-[10px] text-[#7a745f]">Soldaki veya ortadaki kelimeye tıkla — <b className="text-[#f5dda6]">sarı yansır ve okunur</b>.</p>
-                    </div>
-                  )}
+                  {/* Kelime Kartı — ★ KALDIRILDI: kelime anlamları 3 ayrı yerde gösteriliyordu,
+                      artık SADECE sağdaki "Kelime Kelime Çözüm" listesinde (bire düşürüldü).
+                      Tekrar oku → sağ listedeki 🔊 butonuyla aynı işi görüyor. */}
 
                   {/* Meal */}
                   <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4">
@@ -1073,18 +1066,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   {/* ★ TEFSİR: İbn Kesîr (Türkçe çeviri; yüklenince görünür) */}
                   <TafsirBox surahNo={surahNo} ayahNo={ayahNo} />
 
-                  {/* Sure Ayetleri */}
-                  <div className="rounded-2xl border border-white/10 bg-[#161622] p-2">
-                    <span className="px-2 text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">{surah.name} — Ayetler</span>
-                    <div className="mt-1 max-h-56 overflow-y-auto scrollbar-thin">
-                      {ayahs.map(a2 => (
-                        <button key={a2.n} onClick={() => { setAyahNo(a2.n); setActiveWord(null); }} className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition ${a2.n === ayahNo ? "bg-[#3D342B]" : "hover:bg-white/[.04]"}`}>
-                          <span className={`w-6 shrink-0 text-[9px] font-black ${a2.n === ayahNo ? "text-[#f5dda6]" : "text-[#655f4c]"}`}>{a2.n}</span>
-                          <span className="truncate font-arabic text-sm text-[#cfc6a4]" dir="rtl">{a2.ar}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* ★ SURE AYETLERİ LİSTESİ (soldaki) — ★ KALDIRILDI: ortadaki
+                      "Suredeki Ayetler" listesiyle mükerrerdi. Ortadaki kalsın. */}
                 </div>
 
                 {/* ORTA: prototip düzeni — ayet kartı (içinde kontroller) + kelime analizi */}
@@ -1174,21 +1157,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     </div>
                   </div>
 
-                  {/* ★ KELİME ANALİZ PANELİ — prototipteki "Kelime Meali & Telaffuz Analizi" */}
-                  {activeWord !== null && words[activeWord] ? (
-                    <div className="w-full rounded-2xl border border-[#D7AA41]/30 bg-[#141a2b] p-4 animate-fadeIn">
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-[#e8c87a]">🔊 Kelime Meali & Telaffuz Analizi (Hız: {speed}x )</span>
-                        <button onClick={() => setActiveWord(null)} className="text-[10px] text-[#7a745f] transition hover:text-[#f5dda6]">✕ Kapat</button>
-                      </div>
-                      <p className="mt-2 text-[15px] font-black text-[#f5dda6]">
-                        {words[activeWord].tr}{" "}
-                        <span className="text-[13px] font-normal text-[#8f8870]">( <span className="font-arabic text-lg text-[#cfc6a4]">{words[activeWord].ar}</span> · {words[activeWord].translit || "—"} )</span>
-                      </p>
-                      <p className="mt-1.5 text-[11px] text-[#a8a184]">{surah.name} Suresi · {ayahNo}. Ayet · {activeWord + 1}. kelime</p>
-                      <p className="mt-1 text-[10px] text-[#7a745f]">Ayeti Dinle'den sonra hoca bu kelimeyi okur</p>
-                    </div>
-                  ) : null}
+                  {/* ★ KELİME ANALİZ PANELİ — ★ KALDIRILDI: kelime anlamı artık SADECE
+                      sağdaki "Kelime Kelime Çözüm" listesinde (3 panel → 1 panel) */}
 
                   {/* ★ SURENİN TAMAMI — ~7 ayet görünür, okunan yanar, akışla kayar, tıklayınca o ayet okunur */}
                   <div className="w-full rounded-2xl border border-white/10 bg-[#161622] p-3">
@@ -1211,11 +1181,20 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     {wordLoading ? (
                       <div className="flex items-center justify-center gap-2 p-4 text-[11px] text-[#7a745f]"><Loader2 size={13} className="animate-spin" /> kelimeler…</div>
                     ) : words.map((w, i) => (
-                      <button key={w.i} onClick={() => clickWord(i)} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left transition last:border-0 ${activeWord === i ? "bg-[#3D342B] ring-1 ring-inset ring-[#D7AA41]/60" : "hover:bg-white/[.04]"}`}>
-                        <span className={`w-5 text-[9px] font-black ${activeWord === i ? "text-[#f5dda6]" : "text-[#655f4c]"}`}>{i + 1}</span>
-                        <span className={`flex-1 truncate text-[10px] font-bold ${activeWord === i ? "text-[#f5dda6]" : "text-[#c5bc9a]"}`}>{w.tr}</span>
-                        <span className="font-arabic text-lg text-[#f5dda6]">{w.ar}</span>
-                      </button>
+                      <div key={w.i} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 transition last:border-0 ${activeWord === i ? "bg-[#3D342B] ring-1 ring-inset ring-[#D7AA41]/60" : "hover:bg-white/[.04]"}`}>
+                        <button onClick={() => clickWord(i)} className="flex flex-1 items-center gap-2 text-left min-w-0">
+                          <span className={`w-5 text-[9px] font-black ${activeWord === i ? "text-[#f5dda6]" : "text-[#655f4c]"}`}>{i + 1}</span>
+                          <span className={`flex-1 truncate text-[10px] font-bold ${activeWord === i ? "text-[#f5dda6]" : "text-[#c5bc9a]"}`}>{w.tr}</span>
+                          <span className="font-arabic text-lg text-[#f5dda6]">{w.ar}</span>
+                        </button>
+                        {/* ★ TEKRAR OKU (🔊): kelimeyi TEKRAR TEKRAR okumak için ayrı buton —
+                            tıklayınca sadece o kelime çalar (kelime anlamlarının yanına küçük buton) */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setActiveWord(i); playWordAudio(i); }}
+                          className="shrink-0 rounded-md bg-gold/15 px-1.5 py-1 text-[10px] text-[#f5dda6] transition hover:bg-gold/30 active:scale-90"
+                          title="Bu kelimeyi tekrar oku"
+                        >🔊</button>
+                      </div>
                     ))}
                   </div>
                   {/* Kaynak referansı */}

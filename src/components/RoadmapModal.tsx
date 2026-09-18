@@ -91,8 +91,10 @@ function getDeadline(): string {
 
 export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, adminEmail }) => {
   const isAdmin = adminEmail ? isAdminEmail(adminEmail) : false;
-  const [data, setData] = useState(() => loadFeatures());
+  const [data, setData] = useState<{ v2: Feature[]; v3: Feature[] }>(() => loadFeatures());
   const [localVotes, setLocalVotes] = useState<Record<string, boolean>>(() => getStoredVotes());
+  const [myVote, setMyVote] = useState<string | null>(null);
+  const [dbLoaded, setDbLoaded] = useState(false);
   const [deadline, setDeadline] = useState(() => getDeadline());
   const [adminMode, setAdminMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -105,6 +107,24 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
 
   if (!open) return null;
 
+  // ★ GERÇEK OYLAMA: veritabanından özellikler + gerçek oy toplamları çekilir.
+  //   Eski localStorage sistemi herkesin kendi oylarını kendi gösteriyordu —
+  //   admin gerçek toplamı ASLA göremiyordu. Artık tek gerçek sayaç DB'de.
+  useEffect(() => {
+    if (!open || dbLoaded) return;
+    let live = true;
+    fetch("/api/roadmap")
+      .then((r) => r.json())
+      .then((d: any) => {
+        if (!live || !d?.ok) return;
+        setData({ v2: d.v2 || [], v3: d.v3 || [] });
+        setMyVote(d.myVote || null);
+        setDbLoaded(true);
+      })
+      .catch(() => undefined); // DB yoksa localStorage yedeği ekranda kalır
+    return () => { live = false; };
+  }, [open, dbLoaded]);
+
   const isDeadlinePassed = deadline && new Date(deadline) < new Date();
   const daysLeft = deadline ? Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) : null;
 
@@ -115,27 +135,36 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
 
   const handleVote = (id: string) => {
     if (isDeadlinePassed) return;
-    const prevId = Object.keys(localVotes).find(k => localVotes[k]);
-    // Aynı oya tekrar tıklandıysa — oyu kaldır
-    if (prevId === id) {
-      const newVotes = { ...localVotes };
-      delete newVotes[id];
-      setLocalVotes(newVotes);
-      try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
-      const v2 = data.v2.map(f => f.id === id ? { ...f, votes: Math.max(0, f.votes - 1) } : f);
-      save({ ...data, v2 });
-      return;
-    }
-    // Farklı bir FEATURE'a oy verildi — eskisini sil, yenisini ekle
-    const newVotes: Record<string, boolean> = { [id]: true };
-    setLocalVotes(newVotes);
-    try { localStorage.setItem(VOTE_KEY, JSON.stringify(newVotes)); } catch {}
-    const v2 = data.v2.map(f => {
-      if (f.id === id) return { ...f, votes: f.votes + 1 };
-      if (prevId && f.id === prevId) return { ...f, votes: Math.max(0, f.votes - 1) };
-      return f;
-    });
-    save({ ...data, v2 });
+    // ★ GERÇEK OY: veritabanına yazılır (kullanıcı başına 1 özellik, toggle)
+    const wasVoted = myVote === id;
+    setMyVote(wasVoted ? null : id);
+    setData((prev) => ({
+      v2: prev.v2.map((f) => {
+        if (f.id === id) return { ...f, votes: Math.max(0, f.votes + (wasVoted ? -1 : 1)) };
+        if (myVote === f.id) return { ...f, votes: Math.max(0, f.votes - 1) };
+        return f;
+      }),
+      v3: prev.v3.map((f) => {
+        if (f.id === id) return { ...f, votes: Math.max(0, f.votes + (wasVoted ? -1 : 1)) };
+        if (myVote === f.id) return { ...f, votes: Math.max(0, f.votes - 1) };
+        return f;
+      }),
+    }));
+    fetch("/api/roadmap", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featureId: id }),
+    })
+      .then((r) => r.json())
+      .then((d: any) => {
+        if (!d?.ok) return;
+        // Sunucudan taze gerçek toplamları al (başkasının oyu değişmiş olabilir)
+        return fetch("/api/roadmap").then((r) => r.json()).then((d2: any) => {
+          if (d2?.ok) { setData({ v2: d2.v2 || [], v3: d2.v3 || [] }); setMyVote(d2.myVote || null); }
+        });
+      })
+      .catch(() => undefined);
+    try { localStorage.setItem(VOTE_KEY, JSON.stringify({ [id]: true })); } catch {}
   };
 
   const handleResetVotes = () => {
@@ -181,7 +210,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
     try { localStorage.setItem(DEADLINE_KEY, deadline); } catch {}
   };
 
-  const totalVotes = data.v2.reduce((sum, f) => sum + f.votes, 0);
+  // ★ GERÇEK toplam: V2 + V3 oylarının gerçek DB toplamı (artık sadece kendi oyn değil)
+  const totalVotes = [...data.v2, ...data.v3].reduce((sum, f) => sum + f.votes, 0);
 
   const renderFeature = (f: Feature, version: "V2" | "V3") => {
     const isEditing = editingId === f.id;
@@ -220,11 +250,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               <button
                 onClick={() => handleVote(f.id)}
                 disabled={isDeadlinePassed}
-                className={`p-1.5 rounded-lg transition ${localVotes[f.id] ? (version === "V2" ? "bg-amber-500/20 text-amber-300" : "bg-purple-500/20 text-purple-300") : (version === "V2" ? "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300")}`}
+                className={`p-1.5 rounded-lg transition ${myVote === f.id ? (version === "V2" ? "bg-amber-500/20 text-amber-300" : "bg-purple-500/20 text-purple-300") : (version === "V2" ? "bg-white/5 text-white/30 hover:bg-amber-500/15 hover:text-amber-300" : "bg-white/5 text-white/20 hover:bg-purple-500/15 hover:text-purple-300")}`}
               >
                 <ThumbsUp size={12} />
               </button>
-              <span className={`text-[9px] font-bold ${localVotes[f.id] ? (version === "V2" ? "text-amber-300" : "text-purple-300") : "text-white/25"}`}>
+              <span className={`text-[9px] font-bold ${myVote === f.id ? (version === "V2" ? "text-amber-300" : "text-purple-300") : "text-white/25"}`}>
                 {f.votes.toLocaleString("tr-TR")}
               </span>
             </>
