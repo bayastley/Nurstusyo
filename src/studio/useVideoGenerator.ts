@@ -292,27 +292,35 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
         const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
         const chunks: Blob[] = [];
-        // ★ 90 DK DAYANIKLILIK: Uzun üretimde chunk'lar RAM'de patlamasın.
-        //   90dk x 16Mbps ≈ 11 GB — chunk'ları hemen diske yaz, RAM'de sadece
-        //   küçük bir kuyruk tut. finalBlob onları birleştirir.
-        const LONG_RENDER_MS = 20 * 60 * 1000; // 20 dk üstü üretimde disk-akış modu
+        // ★ HİBRİT DİSK-AKIŞ: 5 dk üstü üretimde chunk'lar diske yazılır (RAM güvende),
+        //   ama bitince dosyadan File-BACKED URL yapılır → site içi oynatıcı + indirme
+        //   birlikte çalışır. URL diski referans gösterir, 11 GB RAM'e yüklenmez.
+        const LONG_RENDER_MS = 5 * 60 * 1000; // 5 dk üstü üretimde disk-akış modu
         const savePicker = (window as unknown as { showSaveFilePicker?: (opts?: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
         const useStreamDump = total * 1000 > LONG_RENDER_MS && typeof savePicker === "function";
         let dumpStream: FileSystemWritableFileStream | null = null;
+        let saveHandle: FileSystemFileHandle | null = null;
         let dumpedBytes = 0;
+        let dumpChain: Promise<void> = Promise.resolve();
         if (useStreamDump) {
           try {
             savePicker?.({ suggestedName: `nurstudyo-${usedItems[0]?.sName || "sure"}-${Math.round(total / 60)}dk.webm`, types: [{ description: "Video", accept: { "video/webm": [".webm"] } }] })
-              .then(async (handle: FileSystemFileHandle) => { dumpStream = await handle.createWritable(); })
+              .then(async (handle: FileSystemFileHandle) => {
+                saveHandle = handle;
+                dumpStream = await handle.createWritable();
+              })
               .catch(() => { /* kullanıcı iptal etti — RAM moduna düş */ });
           } catch { /* desteklenmiyor */ }
         }
         recorder.ondataavailable = (event) => {
           if (!event.data.size) return;
-          // disk-akış modu aktifse chunk'ı hemen diske yaz, RAM kuyruğu kısa tut
+          // disk-akış modu aktifse chunk'ı sıralı olarak diske yaz, RAM kuyruğu kısa tut
           if (dumpStream) {
             const piece = event.data;
-            dumpStream.write(piece).then(() => { dumpedBytes += piece.size; }).catch(() => { chunks.push(piece); });
+            dumpChain = dumpChain
+              .then(() => dumpStream!.write(piece))
+              .then(() => { dumpedBytes += piece.size; })
+              .catch(() => { chunks.push(piece); }); // disk yazımı patlarsa RAM'e düş
           } else {
             chunks.push(event.data);
           }
@@ -367,17 +375,37 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
-        // ★ disk-akış modunda dumpStream'i kapat — dosya kullanılabilir olsun
+        // ★ disk-akış modunda bekleyen yazımlar bitmeden dosya KAPANMAZ
         if (dumpStream) {
+          try { await dumpChain; } catch { /* ignore */ }
           const ds = dumpStream;
           dumpStream = null;
           try { await ds.close(); } catch { /* ignore */ }
         }
         if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · hak düşmedi"); continue; }
 
-        // ★ disk-akış modu: video diske yazıldı — RAM'de blob YOK (11 GB riski yok)
-        if (dumpedBytes > 0 && chunks.length === 0) {
+        // ★ HİBRİT: video diske yazıldı — RAM'de blob YOK ama oynatıcı + indirme
+        //   çalışır: File-URL diskten akıtılır, tarayıcı 11 GB'ı RAM'e YÜKLEMEZ.
+        if (dumpedBytes > 0 && chunks.length === 0 && saveHandle) {
           setProgress(98);
+          try {
+            const savedFile = await saveHandle.getFile();
+            if (savedFile.size > 0) {
+              const output: Output = {
+                id: uid(),
+                url: URL.createObjectURL(savedFile),
+                mime: savedFile.type || (mime || "video/webm").split(";")[0],
+                size: savedFile.size,
+                duration: total,
+                label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`,
+                ext: (savedFile.type || "").includes("mp4") ? "mp4" : "webm",
+              };
+              setOutputs((current) => [output, ...current].slice(0, 8));
+              setActiveOutputId(output.id);
+              notify(`✅ ${Math.round(total / 60)} dk video hazır — oynatıcıdan izle veya indir (${Math.round(savedFile.size / 1e6)} MB)`);
+              continue;
+            }
+          } catch { /* dosya okunamadıysa aşağıdaki bildirim düşer */ }
           notify(`✅ ${Math.round(total / 60)} dakikalık video diske kaydedildi (${Math.round(dumpedBytes / 1e6)} MB)`);
           continue;
         }
