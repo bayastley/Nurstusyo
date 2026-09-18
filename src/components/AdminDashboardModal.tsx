@@ -48,6 +48,30 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number } | null>(null);
   const [errorLoading, setErrorLoading] = useState(false);
+  // ★ HATA ALARMI: son 24 saatte hata sayısı eşik aşarsa panelde uyarı
+  //   eşikler: 10+ → sarı (dikkat), 30+ → kırmızı (acil)
+  const [errorAlarm, setErrorAlarm] = useState<"ok" | "warn" | "alarm">("ok");
+  const refreshErrorAlarm = async () => {
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_errors" }),
+      });
+      const data = await response.json().catch(() => null) as any;
+      if (data?.ok && data.stats) {
+        const total = Number(data.stats.total24h) || 0;
+        setErrorStats(data.stats);
+        setErrorAlarm(total >= 30 ? "alarm" : total >= 10 ? "warn" : "ok");
+      }
+    } catch { /* sessiz — alarm kontrolü siteyi bozmaz */ }
+  };
+  // Panel açıkken 90 saniyede bir hata sayısı kontrolü
+  useEffect(() => {
+    refreshErrorAlarm();
+    const id = setInterval(refreshErrorAlarm, 90_000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // ★ Geri bildirimler — Geri Bildirimler sekmesi için
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<{ turDagilimi: Record<string, number>; puanDagilimi: Record<number, number>; puanOrtalama: number; toplam: number } | null>(null);
@@ -615,6 +639,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           >
             ⚠️
             <span>Hata Logları{errorStats ? ` (${errorStats.total24h})` : ""}</span>
+            {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500 animate-ping" />}
+            {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500" />}
           </button>
           <button
             onClick={() => setActiveTab("feedback")}
@@ -630,6 +656,19 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5 scrollbar-thin">
+          {/* ★ HATA ALARMI — eşik aşımında en üstte görünür */}
+          {errorAlarm !== "ok" && (
+            <div className={`rounded-2xl border px-4 py-3 ${errorAlarm === "alarm" ? "border-red-500/50 bg-red-500/15 animate-pulse" : "border-amber-500/40 bg-amber-500/10"}`}>
+              <p className={`text-xs font-black ${errorAlarm === "alarm" ? "text-red-300" : "text-amber-300"}`}>
+                {errorAlarm === "alarm" ? "🚨 ACİL HATA ALARMI" : "⚠️ HATA UYARISI"}
+                {errorStats ? ` — Son 24 saatte ${errorStats.total24h} hata (${errorStats.unique24h} benzersiz)` : ""}
+              </p>
+              <p className="mt-1 text-[10px] text-white/60">Siteyi kullanıcılar hatalı kullanıyor olabilir. Ayrıntılar için Hata Logları sekmesine bak.</p>
+              <button onClick={() => setActiveTab("errors")} className="mt-2 rounded-lg bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 transition hover:bg-white/20">
+                → Hata Logları'na git
+              </button>
+            </div>
+          )}
           {/* ★ Ödeme RPC uyarısı — sadece sorun varsa görünür */}
           {rpcHealth && !rpcHealth.ok && (
             <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3">
