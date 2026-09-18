@@ -86,6 +86,19 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
   } = props;
   const [lowPower] = useState(lowPowerDevice);
+  // ★ CANLI RAM ÖLÇÜMÜ: Chrome/Edge'in performance.memory API'si (non-standard)
+  //   JS heap kullanımını verir. Üretim sırasında 2 sn'de bir okunur.
+  //   Desteklemeyen tarayıcılarda (Safari/Firefox) gösterge hiç çizilmez — zararsız.
+  const [ramMb, setRamMb] = useState<number | null>(null);
+  useEffect(() => {
+    if (!generating) { setRamMb(null); return; }
+    const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
+    if (!memory) return; // Safari/Firefox: API yok, gösterge çizilmez
+    const read = () => setRamMb(Math.round(memory.usedJSHeapSize / 1048576));
+    read();
+    const timer = window.setInterval(read, 2000);
+    return () => window.clearInterval(timer);
+  }, [generating]);
 
   const aspectCss = useMemo(() => ({ "9:16": "9 / 16", "1:1": "1 / 1", "4:5": "4 / 5", "16:9": "16 / 9" })[aspect], [aspect]);
 
@@ -280,6 +293,18 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
           {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ Üretim hakkı`}
         </button>
+        {/* ★ CANLI RAM GÖSTERGESİ: üretim sırasında tarayıcı belleği MB bazlı izlenir.
+            90 dk hatim gibi uzun üretimlerde bellek şişerse kullanıcı önceden görür. */}
+        {generating && ramMb !== null && (
+          <div className="flex items-center justify-between rounded-xl border px-3 py-1.5 text-[9px] font-bold" style={{
+            borderColor: ramMb > 3000 ? "#ef4444" : ramMb > 1500 ? "#f59e0b" : "rgba(255,255,255,.12)",
+            color: ramMb > 3000 ? "#ef4444" : ramMb > 1500 ? "#fbbf24" : "rgba(255,255,255,.55)",
+            background: ramMb > 3000 ? "rgba(239,68,68,.08)" : "rgba(255,255,255,.03)",
+          }}>
+            <span>💾 Bellek: {ramMb} MB</span>
+            <span className="opacity-70">{ramMb > 3000 ? "⚠️ yüksek — bitince indirin" : ramMb > 1500 ? "orta düzey" : "sağlıklı"}</span>
+          </div>
+        )}
       </div>
     </section>
   );
