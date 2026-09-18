@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════
-// NUR_PUSH_SUBSCRIPTIONS — Öğüt Vakti push abonelikleri
+-- NUR_PUSH_SUBSCRIPTIONS — Öğüt Vakti push abonelikleri
 -- Supabase SQL Editor'de BİR KEZ çalıştır.
 -- Yazma yalnızca backend service role ile yapılır (RLS kapalı).
 -- ════════════════════════════════════════════════════════
