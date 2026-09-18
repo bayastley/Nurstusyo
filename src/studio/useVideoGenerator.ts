@@ -292,7 +292,31 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
         const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
         const chunks: Blob[] = [];
-        recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        // ★ 90 DK DAYANIKLILIK: Uzun üretimde chunk'lar RAM'de patlamasın.
+        //   90dk x 16Mbps ≈ 11 GB — chunk'ları hemen diske yaz, RAM'de sadece
+        //   küçük bir kuyruk tut. finalBlob onları birleştirir.
+        const LONG_RENDER_MS = 20 * 60 * 1000; // 20 dk üstü üretimde disk-akış modu
+        const savePicker = (window as unknown as { showSaveFilePicker?: (opts?: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
+        const useStreamDump = total * 1000 > LONG_RENDER_MS && typeof savePicker === "function";
+        let dumpStream: FileSystemWritableFileStream | null = null;
+        let dumpedBytes = 0;
+        if (useStreamDump) {
+          try {
+            savePicker?.({ suggestedName: `nurstudyo-${usedItems[0]?.sName || "sure"}-${Math.round(total / 60)}dk.webm`, types: [{ description: "Video", accept: { "video/webm": [".webm"] } }] })
+              .then(async (handle: FileSystemFileHandle) => { dumpStream = await handle.createWritable(); })
+              .catch(() => { /* kullanıcı iptal etti — RAM moduna düş */ });
+          } catch { /* desteklenmiyor */ }
+        }
+        recorder.ondataavailable = (event) => {
+          if (!event.data.size) return;
+          // disk-akış modu aktifse chunk'ı hemen diske yaz, RAM kuyruğu kısa tut
+          if (dumpStream) {
+            const piece = event.data;
+            dumpStream.write(piece).then(() => { dumpedBytes += piece.size; }).catch(() => { chunks.push(piece); });
+          } else {
+            chunks.push(event.data);
+          }
+        };
         const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); });
         const startedAt = performance.now();
         let finished = false;
@@ -343,7 +367,20 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
+        // ★ disk-akış modunda dumpStream'i kapat — dosya kullanılabilir olsun
+        if (dumpStream) {
+          const ds = dumpStream;
+          dumpStream = null;
+          try { await ds.close(); } catch { /* ignore */ }
+        }
         if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · hak düşmedi"); continue; }
+
+        // ★ disk-akış modu: video diske yazıldı — RAM'de blob YOK (11 GB riski yok)
+        if (dumpedBytes > 0 && chunks.length === 0) {
+          setProgress(98);
+          notify(`✅ ${Math.round(total / 60)} dakikalık video diske kaydedildi (${Math.round(dumpedBytes / 1e6)} MB)`);
+          continue;
+        }
 
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
         const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
