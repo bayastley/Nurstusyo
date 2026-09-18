@@ -510,6 +510,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const adminAcc = isAdminAtmosphere ? getAdminCatAccess(category.id) : null;
                 const adminHidden = adminAcc === "hidden";
                 if (adminHidden && !isMasterSürüm) return null; // gizli klasör: admin dışına görünmez
+                // ★ BOŞ KATEGORİ KORUMASI: R2'de hiç içeriği olmayan klasör (0 video + 0 şablon)
+                //   adminde bile "0 içerik" ile vitrini kirletmesin — tamamen gizle.
+                //   İçerik R2'ye yüklenip manifeste eklenince otomatik geri gelir.
+                const totalCount = combinedAllClips.filter((clip) => clip.cat === category.id).length;
+                if (isAdminAtmosphere && totalCount === 0) return null;
                 const adminLocked = adminAcc === "v2" || adminAcc === "pro" || adminAcc === "elit";
                 const adminUsable = !isAdminAtmosphere || adminAcc === null ? true : (adminAcc === "v2" ? false : (adminAcc === "pro" ? (accessTier === "pro" || accessTier === "elit") : adminAcc === "elit" ? accessTier === "elit" : true));
                 const lockLevel = adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
