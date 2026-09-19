@@ -464,7 +464,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           {/* ★ R2 KLASÖR ŞABLONLARI: id'si "-tpl-" olan klipler kod listesinden gelir (ADMIN_TEMPLATE_CLIPS)
               ve R2'deki templates/<klasör>/ gerçek dosyalarla birebir eşleşir.
               Eski (id'siz) klipler için ise Pexels video posterleri üzerinden türetilir. */}
-          {clipKind === "vid" && atmosCategory !== "all" ? (
+          {atmosCategory !== "all" ? (
             <div id="atmos-active-banner" data-hero-banner className="mb-3 flex items-center gap-2 animate-fadeIn">
               <button
                 onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
@@ -475,22 +475,35 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               </button>
               <div className="flex min-w-0 flex-1 items-baseline gap-2">
                 <h4 className="truncate text-[12px] font-black tracking-wide text-white">
-                  {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}
+                  {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}{clipKind === "img" ? " · Şablonlar" : ""}
                 </h4>
                 <span className="shrink-0 text-[9px] font-bold text-white/35">
                   {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} içerik
                 </span>
               </div>
+              <button
+                onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
+                className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-[9.5px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
+              >
+                ✕ Seçimi Kaldır
+              </button>
             </div>
           ) : (
             <div className="mb-3 grid grid-cols-3 gap-1.5 sm:grid-cols-5 animate-fadeIn">
               {/* ★ SIRALAMA: önce AÇIK kategoriler, sonra PRO, sonra ELİT, en sonda V2 vitrini
-                  (gizliler yalnızca adminde en sonda görünür) — ömer'in istediği katman sırası */}
+                  (gizliler yalnızca adminde en sonda görünür) — ömer'in istediği katman sırası.
+                  KOD kategorileri de kilid seviyesine göre katmanlanır (CATEGORY_LOCK_LEVEL). */}
               {[...CATEGORIES, ...ADMIN_ATMOSPHERE_CATEGORIES]
                 .filter((category) => isMasterSürüm || !ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id) || getAdminCatAccess(category.id) !== "hidden")
                 .sort((a, b) => {
                   const w = (c: (typeof CATEGORIES)[number]) => {
-                    if (!ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === c.id)) return 0;
+                    if (!ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === c.id)) {
+                      const lvl = CATEGORY_LOCK_LEVEL[c.id];
+                      if (lvl === "V2") return 3;
+                      if (lvl === "Elit") return 2;
+                      if (lvl === "Pro") return 1;
+                      return 0;
+                    }
                     const acc = getAdminCatAccess(c.id);
                     if (acc === "hidden") return 4;
                     if (acc === "v2") return 3;
@@ -502,7 +515,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 })
                 .map((category) => {
                 const CatIcon = CATEGORY_ICONS[category.id] ?? Sparkles;
-                const active = atmosCategory === category.id;
+                const active = (atmosCategory as string) === category.id;
                 const count = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind).length;
                 const isAdminAtmosphere = ADMIN_ATMOSPHERE_CATEGORIES.some((item) => item.id === category.id);
                 // ★ TIER PLANI: admin kategorileri onaylı dağıtıma göre kilidlenir
@@ -551,30 +564,6 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                   </div>
                 );
               })}
-            </div>
-          )}
-
-          {clipKind === "img" && atmosCategory !== "all" && (
-            <div id="atmos-active-banner" className="mb-3 flex items-center justify-between rounded-2xl border border-gold/25 bg-gold/5 px-4 py-2.5 animate-fadeIn">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/10 text-gold">
-                  {React.createElement(CATEGORY_ICONS[atmosCategory as CatId] ?? Sparkles, { size: 16 })}
-                </span>
-                <div>
-                  <h4 className="text-[11px] font-black text-white uppercase tracking-wider">
-                    {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory} · Şablonlar
-                  </h4>
-                  <p className="text-[9px] text-white/40">
-                    {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} şablon listeleniyor · kategori değiştirmek için yukarıdaki klasörlerden seç
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
-                className="flex items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-[9.5px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
-              >
-                ✕ Seçimi Kaldır
-              </button>
             </div>
           )}
 
