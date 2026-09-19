@@ -604,6 +604,27 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return AESTHETIC_POOL[(h >>> 0) % AESTHETIC_POOL.length];
   }, []);
 
+  // ★ Admin kategori ikinci tarama: kod kategorisinde seçili türde klip yoksa
+  //   (örn. bulut kategorisinin şablonu yoksa), ayet kelimelerini admin kategori
+  //   keyword'lerinde tarar. Böylece Şablon V2'de de tematik isabet sağlanır.
+  //   Not: sadece 1. taramanın (detectCategoryFromAyah) admin bölümünden FARKLI
+  //   çalışır — o zaten ADMIN_MOTION_CLIPS varken admin kategorisi döndürüyordu;
+  //   bu fonksiyon her durumda keyword→admin kategori eşleşmesini döndürür.
+  const detectAdminCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId | null => {
+    void ar;
+    const norm = (s: string) => s.toLocaleLowerCase("tr");
+    const words = norm(`${surahName} ${tr}`).split(/[^a-zçğıöşüâîû]+/i).filter(Boolean);
+    const adminMediaCategories = new Set(ADMIN_MOTION_CLIPS.map((clip) => clip.cat));
+    for (const [category, keywords] of Object.entries(ADMIN_AI_KEYWORDS)) {
+      if (!adminMediaCategories.has(category as CatId)) continue;
+      const match = keywords
+        .split(/\s+/)
+        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
+      if (match) return category as CatId;
+    }
+    return null;
+  }, []);
+
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
     const id = `${s}:${a}`;
     if (selectedRef.current.some((item) => item.id === id)) return;
@@ -624,6 +645,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const wantKind = clipKindRef.current;
         const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
         let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
+        // ★ Kategorinin o türde klibi yoksa (örn. kod kategorilerinde şablon yok),
+        //   ayet kelimeleriyle ŞABLONU/HAREKEtlisi olan admin kategorilerine ikinci tarama:
+        //   böylece "Gökten su" ayetine rastgele savaş atları düşmez, bulut/tema kategorisi bulur.
+        if (poolCat.length === 0) {
+          const adminCat = detectAdminCategoryFromAyah(ar, tr, meta.name);
+          if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === wantKind);
+        }
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
         if (poolCat.length) {
@@ -643,7 +671,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       setSelected((current) => current.filter((x) => x.id !== id));
       notify(t("renderAuthError"));
     }
-  }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah]);
+  }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
 
   const toggleAyah = useCallback((s: number, a: number, knownTranslation?: string) => {
     const id = `${s}:${a}`;
