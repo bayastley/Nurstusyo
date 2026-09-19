@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
 import { randomClip, type Clip } from "../clips";
+import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { T } from "../i18n";
 import type { ModalName, Output, SelectedAyah, Tier } from "../types";
 
@@ -198,7 +199,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
       <div className="mx-auto max-w-[228px]">
         <Segmented value={clipKind} onChange={(kind) => { if (kind === "img" && !isMasterSürüm) { return; } setClipKind(kind); setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
-        {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">Şablon görseller V2 güncellemesinde açılacak</p>}
+        {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
       </div>
 
       {/* İNDİRME KLASÖRÜ — üç satır görünür, aşağı kaydırınca diğer çıktılar açılır */}

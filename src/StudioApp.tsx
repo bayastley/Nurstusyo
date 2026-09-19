@@ -768,13 +768,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const applySmartBackgrounds = useCallback(() => {
     if (!selectedRef.current.length) { notify("Önce en az bir ayet seçin"); return; }
+    const wantKind = clipKindRef.current;
     const next: Record<string, Clip> = {};
     const usedIds = new Set<string>();
     selectedRef.current.forEach((item) => {
       const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
-      let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === "vid");
-      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === "vid");
-      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === "vid");
+      let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
+      // ★ Kategoride seçili türden klip yoksa: ayet kelimeleriyle admin kategorisi taraması (Şablon V2 uyumu)
+      if (poolCat.length === 0) {
+        const adminCat = detectAdminCategoryFromAyah(item.ar, item.tr, item.sName);
+        if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === wantKind);
+      }
+      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
+      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
       if (poolCat.length === 0) return;
       const fresh = poolCat.filter((c) => !usedIds.has(c.id));
       const list = fresh.length ? fresh : poolCat;
@@ -785,7 +791,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setAyahBackgrounds(next);
     if (selectedRef.current[0] && next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
     notify("✨ Akıllı AI: Ayet kelimelerine göre sahne atandı!");
-  }, [combinedAllClips, notify, detectCategoryFromAyah]);
+  }, [combinedAllClips, notify, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
 
   const playReciterPreview = useCallback((id: string) => {
     silenceAllAudio();
