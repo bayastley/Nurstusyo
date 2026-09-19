@@ -550,8 +550,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const detectCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId => {
     void ar;
-    const surahKey = surahName.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (SURAH_CATEGORY_HINT[surahKey]) return SURAH_CATEGORY_HINT[surahKey];
+    // ★ SIRA DÜZELTMESİ: ÖNCE ayetin KELİMELERİ, sure ipucu EN SON çare.
+    //   Eski hata: SURAH_CATEGORY_HINT baştan devreye girip "Nahl"→"arı"
+    //   kilitleyordu — "Gökten su indirdi" ayetinde bile meale bakılmıyordu.
     const norm = (s: string) => s.toLocaleLowerCase("tr");
     const words = norm(`${surahName} ${tr}`).split(/[^a-zçğıöşüâîû]+/i).filter(Boolean);
     let matched: CatId | null = null;
@@ -588,6 +589,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     // ★ ÇEŞİTLİLİK MOTORU — eşleşme yoksa artık HER ZAMAN "musaf" (Kur'an) dönmüyor.
     //   Ayet metninden üretilen stabil hash ile estetik kategoriler arasında dağıtılır.
     //   Böylece her ayet farklı bir atmosfer alır, aynı Kur'an görseli tekrar etmez.
+    //   Not: sure ipucu (SURAH_CATEGORY_HINT) kelime eşleşmesi başarısız olursa
+    //   hash havuzundan ÖNCE denenir — artık ayet içeriğini EZMEZ.
+    const surahKey = surahName.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (SURAH_CATEGORY_HINT[surahKey]) return SURAH_CATEGORY_HINT[surahKey];
     const AESTHETIC_POOL: CatId[] = [
       "namaz", "yildizlar", "deniz", "daglar", "gunbatimi",
       "gece", "selale", "orman", "cicekler", "musaf",

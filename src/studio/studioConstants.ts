@@ -55,7 +55,8 @@ export const KEYWORD_CATEGORY_FALLBACK: Record<string, CatId> = {
   cehennem: "cehennem", azap: "cehennem", kaynar: "cehennem", irin: "cehennem", zakkum: "cehennem",
   hurma: "hurma", vaha: "hurma", dal: "hurma", salkım: "hurma",
   arı: "ari", bal: "ari", nahl: "ari", kovan: "ari", petek: "ari",
-  karınca: "karinca", sürü: "karinca",
+  // ★ "sürü" KALDIRILDI — "hayvan sürülerini otlatır" mealinde karıncayı çağırıyordu
+  karınca: "karinca", emek: "karinca",
   kurban: "col", çöl: "col", deve: "col", koyun: "col", duman: "col",
   kevser: "deniz", su: "deniz", nehir: "deniz", deniz: "deniz", pınar: "deniz", havuz: "deniz", ırmak: "deniz", balık: "deniz", gemi: "deniz", dalga: "deniz",
   cennet: "cennet", bahçe: "cennet", meyve: "cennet", şurub: "cennet", zeytin: "cennet", üzüm: "cennet", incir: "cennet", nar: "cennet",
@@ -69,6 +70,9 @@ export const KEYWORD_CATEGORY_FALLBACK: Record<string, CatId> = {
   medeniyet: "sehir", şehir: "sehir", belde: "sehir", kavim: "sehir", ev: "sehir",
   desen: "desen", geometrik: "desen", tasavvuf: "desen",
   bulut: "bulut", gökkubbe: "bulut",
+  // ★ YAĞMUR/SU İNDİRME: "Gökten su indirdi" ayetleri yağmur bulutlarına gitsin
+  //   (eski hata: gök→yıldızlar eziyor, sürü→karınca çıkıyordu)
+  gökten: "bulut", yağmur: "bulut", yağdır: "bulut",
   göl: "gol", durgun: "gol", sakin: "gol", latif: "gol",
 };
 
