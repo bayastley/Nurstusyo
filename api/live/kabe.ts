@@ -10,6 +10,31 @@ const UPSTREAMS: Record<string, string> = {
 };
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
+// ★ DDoS + fatura koruması: canlı yayın proxy'si band genişliği tünelidir.
+//   limitsiz kalırsa 1 IP saniyede binlerce segment isteyip Vercel faturasını patlatabilir.
+const RATE_HITS = new Map<string, number[]>();
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_REQ = 240; // canlı yayın ~2-4 sn'de bir segment çeker; 240/dk 4-5 paralel izleyiciye yeter
+
+function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
+  const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+  const now = Date.now();
+  const hits = (RATE_HITS.get(ip) || []).filter((hit) => hit >= now - RATE_WINDOW_MS);
+  if (hits.length >= RATE_MAX_REQ) {
+    res.setHeader("Retry-After", "30");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(429).json({ ok: false, error: "istek_limiti" });
+    return false;
+  }
+  hits.push(now);
+  RATE_HITS.set(ip, hits);
+  // Map şişmesini önle: 5000 IP'yi geçiyorsa eskileri temizle
+  if (RATE_HITS.size > 5000) {
+    for (const key of RATE_HITS.keys()) { RATE_HITS.delete(key); if (RATE_HITS.size <= 2500) break; }
+  }
+  return true;
+}
+
 export const config = { api: { bodyParser: false } };
 
 function safePath(u: string): string {
@@ -78,6 +103,9 @@ async function pipe(res: VercelResponse, target: string, isPlaylist: boolean): P
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
+  // ★ Rate limit — proxy kötüye kullanımı engellenir (DDoS amplifikasyon koruması)
+  if (!allowRequest(req, res)) return;
+
   const src = String(req.query.src ?? "kabe");
   const type = String(req.query.type ?? "playlist");
   const base = UPSTREAMS[src];

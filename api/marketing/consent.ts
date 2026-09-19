@@ -97,7 +97,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try { refererOrigin = new URL(refererHeader).origin; } catch { /* ignore */ }
   }
   const hasOrigin = Boolean(originHeader || refererOrigin);
-  if (hasOrigin && !ALLOWED_ORIGINS.has(originHeader) && !ALLOWED_ORIGINS.has(refererOrigin)) {
+  // ★ GÜVENLİK: cookie ile POST kabul eden uçta origin ZORUNLU.
+  //   Boş origin = tarayıcı dışı script → rıza DB'sine sahte kayıt enjekte edilebilirdi.
+  if (!hasOrigin || (!ALLOWED_ORIGINS.has(originHeader) && !ALLOWED_ORIGINS.has(refererOrigin))) {
     return res.status(403).json({ ok: false, error: "Origin not allowed" });
   }
 

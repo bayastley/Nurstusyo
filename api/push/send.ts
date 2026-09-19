@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto";
 import webpush from "web-push";
 
 declare const process: { env: Record<string, string | undefined> };
@@ -31,11 +32,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Sadece cron ve GET
   if (req.method !== "GET" && req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
 
-  // CRON_SECRET koruması — Vercel cron otomatik Authorization başlığı ekler
+  // CRON_SECRET koruması — Vercel cron otomatik Authorization başlığı ekler.
+  // ★ GÜVENLİK: secret TANIMLI DEĞİLSE endpoint TAMAMEN KAPANIR (fail-closed).
+  //   Eski davranış (if (secret) ile kontrol) env eksikse herkese açık kılıyordu:
+  //   saldırgan tüm abonelere istediği bildirimi push edebilirdi.
   const secret = process.env.CRON_SECRET || "";
-  if (secret) {
-    const auth = String(req.headers.authorization || "");
-    if (auth !== `Bearer ${secret}`) return res.status(401).json({ ok: false, error: "Yetkisiz" });
+  if (!secret) {
+    console.error("[push/send] CRON_SECRET tanımsız — endpoint kilitli");
+    return res.status(503).json({ ok: false, error: "Gönderim servisi yapılandırılmamış" });
+  }
+  const auth = String(req.headers.authorization || "");
+  const a = Buffer.from(auth);
+  const b = Buffer.from(`Bearer ${secret}`);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ ok: false, error: "Yetkisiz" });
   }
 
   const cfg = supabaseConfig();

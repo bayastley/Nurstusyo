@@ -161,7 +161,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
 
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  // ★ GÜVENLİK: Origin başlığı TÜM tarayıcılardan POST isteklerinde zorunlu gönderilir.
+  //   Boş origin = tarayıcı dışı istemci (curl/script) → cookie çalınsa bile kabul etme.
+  //   Eskiden boş origin sessizce geçiliyordu — oturum çalınmış kullanıcıdan script istekleri kabul edilirdi.
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
     return res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
   }
 

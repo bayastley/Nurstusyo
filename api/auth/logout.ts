@@ -10,7 +10,9 @@ const HITS = new Map<string, number[]>();
 
 function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+  // ★ GÜVENLİK: origin zorunlu — tarayıcı POST'ları her zaman origin gönderir.
+  //   Boş origin = script isteği → CSRF-to-logout (kullanıcıyı oturumdan atma) engellenir.
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
     res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
     return false;
   }
