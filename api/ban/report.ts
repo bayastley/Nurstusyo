@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { rateLimit } from "../_shared/rateLimit";
 
 // ═══════════════════════════════════════════════════════════
 // Self-contained — _shared importları Vercel'de çalışmıyor
@@ -68,6 +69,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
+  // ★ Merkezi rate limit — ban rapor flood'u DB'yi şişirmeden engellenir
+  if (!rateLimit(req, res, "ban:report", 30, 60_000)) return;
 
   // Auto-ban devre dışı — sadece log tutuyoruz
   const autoBanEnabled = process.env.NUR_AUTO_BAN_ENABLED === "true";

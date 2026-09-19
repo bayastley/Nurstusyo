@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { rateLimit } from "../_shared/rateLimit";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -81,6 +82,8 @@ function sanitize(input: unknown, max: number): string {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  // ★ Merkezi rate limit — admin ucu ama Resend kota tüketimini de sınırlar (dakikada 5)
+  if (!rateLimit(req, res, "campaign", 5, 60_000)) return;
 
   const admin = adminFromCookie(req);
   if (!admin || !(await verifyAdminInDb(admin.email))) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });

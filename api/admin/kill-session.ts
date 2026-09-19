@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { rateLimit } from "../_shared/rateLimit";
 
 // ═══════════════════════════════════════════════════════════════
 // ★ /api/admin/kill-session — Banlı Kullanıcı Oturum Öldürme
@@ -240,6 +241,8 @@ export default async function handler(req: any, res: any) {
     res.status(405).json({ error: "Sadece POST" });
     return;
   }
+  // ★ Merkezi rate limit — oturum öldürme ucu taramaya karşı (dakikada 30)
+  if (!rateLimit(req, res, "kill-session", 30, 60_000)) return;
 
   // Admin yetki kontrolü — JWT + env listesi + DB teyidi (üçlü kontrol)
   const adminEmail = getVerifiedAdminEmail(req);

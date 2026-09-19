@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { rateLimit } from "../_shared/rateLimit";
 
 // ════════════════════════════════════════════════════════
 // EMAIL PAZARLAMA RIZASI — KVKK'ya uygun AYRI açık rıza uctu.
@@ -102,6 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!hasOrigin || (!ALLOWED_ORIGINS.has(originHeader) && !ALLOWED_ORIGINS.has(refererOrigin))) {
     return res.status(403).json({ ok: false, error: "Origin not allowed" });
   }
+  // ★ Merkezi rate limit — rıza tablosu flood yazımına karşı (dakikada 30)
+  if (!rateLimit(req, res, "consent", 30, 60_000)) return;
 
   const user = getSessionUser(req);
   if (!user) {

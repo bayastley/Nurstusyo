@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { rateLimit } from "../_shared/rateLimit";
 
 type Kind = "kisa" | "uzun" | "tam";
 
@@ -19,6 +20,8 @@ function userFromSession(req: VercelRequest): { id: string } | null {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  // ★ Merkezi rate limit — hediye claim flood'u Supabase RPC'yi yormasın (dakikada 20)
+  if (!rateLimit(req, res, "rewards:claim", 20, 60_000)) return;
   const user = userFromSession(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
   const body = (req.body || {}) as { eventKey?: string; kind?: Kind };

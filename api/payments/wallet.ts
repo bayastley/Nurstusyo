@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { rateLimit } from '../_shared/rateLimit';
 
 const COOKIE_NAME = 'nur_session';
 
@@ -54,6 +55,8 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'GET only' });
   }
+  // ★ Merkezi rate limit — cüzdan okuma flood'u/DB maliyeti koruması (dakikada 60)
+  if (!rateLimit(req, res, 'wallet', 60, 60_000)) return;
 
   try {
     const user = getUser(req);

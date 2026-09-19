@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import webpush from "web-push";
+import { rateLimitSilent } from "../_shared/rateLimit";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -31,6 +32,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Sadece cron ve GET
   if (req.method !== "GET" && req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+
+  // ★ Brute-force yavaşlatıcı: IP başına dakikada 10 deneme — 9 haneli secret'ı
+  //   bile pratikte kırılamaz yapar (deneme hızı 1000/sn'den 0,17/sn'ye düşer)
+  if (!rateLimitSilent(req, "push:send:auth", 10, 60_000)) {
+    res.setHeader("Retry-After", "60");
+    return res.status(429).json({ ok: false, error: "İstek işlenemedi" });
+  }
 
   // CRON_SECRET koruması — Vercel cron otomatik Authorization başlığı ekler.
   // ★ GÜVENLİK: secret TANIMLI DEĞİLSE endpoint TAMAMEN KAPANIR (fail-closed).

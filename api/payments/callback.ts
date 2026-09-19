@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { rateLimitSilent } from '../_shared/rateLimit';
 
 const URI_PATH = '/payment/iyzipos/checkoutform/auth/ecom/detail';
 
@@ -219,6 +220,12 @@ async function grantProduct(userId: string, productCode: string) {
 // ANA HANDLER
 // ═══════════════════════════════════════════════════════════════
 export default async function handler(req: any, res: any) {
+  // ★ Merkezi rate limit — iyzico callback'i token denemesi yapan saldırganı boğar
+  //   (dakikada 20: gerçek ödeme akışı 1-2 istek atar, tarama/flood 429'a düşer)
+  if (!rateLimitSilent(req, 'payments:callback', 20, 60_000)) {
+    res.status(429).json({ ok: false, error: 'İstek işlenemedi' });
+    return;
+  }
   try {
     let token = '';
 

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { rateLimit } from "./_shared/rateLimit";
 
 function supabaseConfig() {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
@@ -17,6 +18,9 @@ async function query<T>(path: string): Promise<T> {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  // ★ Merkezi rate limit — config okuma ucudur ama tarayıcıda sürekli çağrıldığı için
+  //   tarama/flood koruması şart (dakikada 120 — normal kullanıcıyı asla boğmaz)
+  if (!rateLimit(req, res, "config", 120, 60_000)) return;
   try {
     const now = encodeURIComponent(new Date().toISOString());
     const [announcements, featureLocks, siteSettings] = await Promise.all([
