@@ -323,6 +323,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const lastDescRef = useRef<string>("");
   const selectedRef = useRef(selected), verseIndexRef = useRef(verseIndex), backgroundRef = useRef(background);
   const ayahBackgroundsRef = useRef(ayahBackgrounds), aspectRef = useRef(aspect), themeRef = useRef(THEMES[0]);
+  const clipKindRef = useRef(clipKind); clipKindRef.current = clipKind;
   useEffect(() => { ayahBackgroundsRef.current = ayahBackgrounds; }, [ayahBackgrounds]);
   useEffect(() => { selectedRef.current = selected; }, [selected]);
   useEffect(() => { verseIndexRef.current = verseIndex; }, [verseIndex]);
@@ -619,10 +620,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       setSelected((current) => current.map((x) => x.id === id ? { ...x, ar: ar || x.ar, tr: tr || x.tr } : x));
 
       if (smartAiEnabled) {
+        // ★ Akıllı AI, kullanıcının sekmesini (şablon/hareketli) takip eder
+        const wantKind = clipKindRef.current;
         const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
-        let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === "vid");
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === "vid");
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === "vid");
+        let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
+        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
+        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
         if (poolCat.length) {
           const chosen = poolCat[Math.floor(Math.random() * poolCat.length)];
           setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
@@ -630,7 +633,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }
       }
 
-      const quranClips = MOTION_CLIPS.filter((clip) => clip.cat === "musaf");
+      // ★ AI kapalıyken fallback: seçili sekme türünden mushaf klibi (şablondaysa şablon)
+      const quranClips = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === clipKindRef.current);
       if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
       setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
     } catch (e) {
