@@ -136,10 +136,12 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
     return () => { cancelled = true; };
   }, [notify]);
 
-  // ★ Server-side oturum kontrolü
+  // ★ Server-side oturum kontrolü — HER yüklemede çalışır.
+  // localStorage boş olsa bile /api/auth/me çağrılır: HttpOnly cookie 7 gün
+  // geçerli olduğu için tarayıcı verisi temizlense bile oturum geri yüklenir.
+  // (Eskiden localStorage yoksa istek hiç atılmıyordu → kullanıcı her
+  // yenilemede tekrar giriş yapmak zorunda kalıyordu.)
   useEffect(() => {
-    const stored = secureGet<string | null>("nur_user_v1", null);
-    if (!stored) return;
     let cancelled = false;
     (async () => {
       try {
