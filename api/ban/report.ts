@@ -1,6 +1,40 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
-import { rateLimit } from "../_shared/rateLimit";
+
+// Self-contained rate limit — _shared importları Vercel'de paketlenmediği için gömüldü
+const __buckets = new Map<string, { hits: number[] }>();
+function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): boolean {
+  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const ip = forwarded || req.socket?.remoteAddress || "unknown";
+  const bucketKey = `${key}:${ip}`;
+  const now = Date.now();
+  const bucket = __buckets.get(bucketKey) ?? { hits: [] };
+  const cutoff = now - windowMs;
+  bucket.hits = bucket.hits.filter((hit) => hit >= cutoff);
+  if (bucket.hits.length >= maxRequests) {
+    res.setHeader("Retry-After", "60");
+    res.setHeader("Cache-Control", "no-store");
+    res.status(429).json({ ok: false, error: "İstek işlenemedi" });
+    __buckets.set(bucketKey, bucket);
+    return false;
+  }
+  bucket.hits.push(now);
+  __buckets.set(bucketKey, bucket);
+  return true;
+}
+function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } }, key: string, maxRequests: number, windowMs: number): boolean {
+  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const ip = forwarded || req.socket?.remoteAddress || "unknown";
+  const bucketKey = `${key}:${ip}`;
+  const now = Date.now();
+  const bucket = __buckets.get(bucketKey) ?? { hits: [] };
+  const cutoff = now - windowMs;
+  bucket.hits = bucket.hits.filter((hit) => hit >= cutoff);
+  if (bucket.hits.length >= maxRequests) { __buckets.set(bucketKey, bucket); return false; }
+  bucket.hits.push(now);
+  __buckets.set(bucketKey, bucket);
+  return true;
+}
 
 // ═══════════════════════════════════════════════════════════
 // Self-contained — _shared importları Vercel'de çalışmıyor
