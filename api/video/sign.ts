@@ -2,6 +2,35 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+
+// ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
+async function logServerError(req: { url?: string; headers: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
+  try {
+    const __url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/\/$/, "");
+    const __key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!__url || !__key) return;
+    const __msg = error instanceof Error ? error.message : String(error || "Bilinmeyen sunucu hatası");
+    if (!__msg) return;
+    const __stack = error instanceof Error ? (error.stack || "") : "";
+    const __path = String(req.url || endpoint).slice(0, 200);
+    const __fingerprint = require("crypto").createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
+    await fetch(__url + "/rest/v1/nur_error_logs", {
+      method: "POST",
+      headers: { apikey: __key, Authorization: "Bearer " + __key, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        message: __msg.slice(0, 500),
+        stack: __stack.slice(0, 4000),
+        path: __path,
+        source: ("server:" + endpoint).slice(0, 40),
+        user_agent: String(req.headers["user-agent"] || "server").slice(0, 300),
+        fingerprint: __fingerprint,
+        kind: "genel",
+        user_email: "",
+      }),
+    });
+  } catch { /* log yazımı siteyi ASLA bozmaz */ }
+}
 type Tier = "free" | "pro" | "elit";
 type CatId = typeof CATEGORY_IDS[number];
 const CATEGORY_IDS = [
@@ -216,6 +245,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(503).json({ ok: false, error: "R2 medya servisi yapılandırılmamış" });
   } catch (error) {
+    await logServerError(req, error, "api/video/sign");
     console.error("[R2 Presigned URL Error]", error);
     return res.status(500).json({ ok: false, error: "İmzalı video bağlantısı üretilemedi" });
   }

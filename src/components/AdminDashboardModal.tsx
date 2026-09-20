@@ -961,7 +961,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-black ${turRenkleri[kind] || turRenkleri.genel}`}>{turEtiketleri[kind] || kind}</span>
                         <span className="flex-1 truncate px-1 font-bold text-amber-300" title={log.message}>{okunurMesaj(log.message)}</span>
                         <span className="flex shrink-0 items-center gap-1">
-                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{log.source}</span>
+                          <span className={`rounded px-1.5 py-0.5 text-[8px] font-black ${String(log.source || "").startsWith("server:") ? "bg-red-500/20 text-red-300" : "bg-white/10 text-white/60"}`} title={String(log.source || "").startsWith("server:") ? "Sunucu (Vercel API) hatası" : "Tarayıcı hatası"}>{String(log.source || "").startsWith("server:") ? `🖥️ ${String(log.source).slice(7)}` : log.source}</span>
                           <button onClick={() => deleteErrorLog(log.id)} title="Bu kaydı sil"
                             className="rounded px-1 py-0.5 text-[8px] font-black text-white/30 transition hover:bg-red-500/20 hover:text-red-300">✕</button>
                         </span>
