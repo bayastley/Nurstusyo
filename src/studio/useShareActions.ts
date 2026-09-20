@@ -25,20 +25,47 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     setCopied(true); window.setTimeout(() => setCopied(false), 1600); notify("Paylaşım metni kopyalandı");
   }, [notify, shareDescription, shareTitle]);
 
+  // ★ Videoyu cihaza indirir (paylaşım desteklenmeyen cihazlarda yedek yol)
+  const downloadVideo = useCallback(async (output: Output) => {
+    try {
+      const blob = await (await fetch(output.url)).blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nur-studyo-${Date.now()}.${output.ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    } catch { /* ignore */ }
+  }, []);
+
   const shareOutput = useCallback(async (output: Output) => {
     const promoText = "Bu video nurstudyo.com yapay zeka otomasyonu ile 1 dakikada üretilmiştir. Siz de telifsiz ve sinematik Kur'an videoları üretmek için ziyaret edin!";
+    const shareText = `${promoText}\n\n${shareDescription}`;
     try {
-      await navigator.clipboard.writeText(promoText);
-      notify("📢 Paylaşım metni panoya kopyalandı!");
-    } catch { /* ignore */ }
-    try {
-      const file = new File([await (await fetch(output.url)).blob()], `nur-studyo.${output.ext}`, { type: output.mime });
+      const blob = await (await fetch(output.url)).blob();
+      const file = new File([blob], `nur-studyo-${Date.now()}.${output.ext}`, { type: output.mime || blob.type || "video/mp4" });
+      // ★ 1. YOL: cihazın paylaş menüsü — VIDEO DOSYASIYLA birlikte açılır
+      //    (WhatsApp, Instagram, Telegram… cihazdaki tüm uygulamalar listelenir)
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: shareTitle, text: `${promoText}\n\n${shareDescription}`, files: [file] });
+        await navigator.share({ files: [file], title: shareTitle, text: shareText });
         return;
       }
-    } catch { /* ignore */ }
-  }, [notify, shareTitle, shareDescription]);
+      // ★ 2. YOL: dosya paylaşımı desteklenmiyorsa (eski tarayıcı/masaüstü)
+      //    videoyu cihaza İNDİR + metni panoya kopyala — kullanıcı indirilen
+      //    dosyayı elle paylaşabilir
+      await downloadVideo(output);
+      try { await navigator.clipboard.writeText(`${shareTitle}\n\n${shareText}`); } catch { /* ignore */ }
+      notify(" video cihazına indirildi — indirme klasöründen WhatsApp/Instagram'a atabilirsin (başlık+açıklama panoda)");
+    } catch (e) {
+      // Kullanıcı paylaş menüsünü kapattıysa hata değildir
+      if ((e as { name?: string })?.name === "AbortError") return;
+      // Video paylaşılamadı → en azından indirsin
+      await downloadVideo(output);
+      notify(" video cihazına indirildi — uygulamalarından paylaşabilirsin");
+    }
+  }, [downloadVideo, notify, shareDescription, shareTitle]);
 
   const shareToWhatsApp = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
@@ -72,6 +99,7 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     copied,
     copyShare,
     shareOutput,
+    downloadVideo,
     shareToWhatsApp,
     shareToYouTube,
     shareToTikTok,
