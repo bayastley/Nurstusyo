@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, LockKeyhole, Mail, Save, Send, Trash2 } from "lucide-react";
+import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw } from "lucide-react";
 import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, type MaintenanceConfig } from "../services/adminSyncService";
 import { RECITERS } from "../reciters";
 
@@ -48,6 +48,34 @@ const CATEGORY_OPTIONS = [
 
 const RECITER_OPTIONS = RECITERS.map((reciter) => [reciter.id, reciter.name] as const);
 
+// ★ Kilit işlem geçmişi — geri alma desteğiyle (cihazda saklanır)
+interface LockHistoryEntry {
+  id: string;
+  target: string;       // kilitlenen hedef id
+  targetLabel: string;  // okunur ad
+  from: FeatureLock | "mixed"; // eski değer (geri alma için; toplu işlemde mixed)
+  to: FeatureLock;      // yeni değer
+  at: string;           // ISO zaman
+  reverted?: boolean;   // geri alındı mı?
+}
+const LOCK_HISTORY_KEY = "nur_lock_history_v1";
+function loadLockHistory(): LockHistoryEntry[] {
+  try { return JSON.parse(localStorage.getItem(LOCK_HISTORY_KEY) || "[]"); } catch { return []; }
+}
+function saveLockHistory(list: LockHistoryEntry[]) {
+  try { localStorage.setItem(LOCK_HISTORY_KEY, JSON.stringify(list.slice(0, 30))); } catch { /* ignore */ }
+}
+const LOCK_LABELS: Record<string, string> = { maintenance: "🔧 Bakımda", off: "🚫 Kapalı", free: "✅ Açık", pro: "👑 Pro", elit: "💎 Elit", v2: "🔒 V2 Yakında", v3: "🔒 V3 Yakında" };
+const LOCK_COLORS: Record<string, string> = {
+  maintenance: "bg-yellow-400/15 text-yellow-300 border-yellow-400/30",
+  off: "bg-red-500/15 text-red-300 border-red-500/30",
+  free: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+  pro: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+  elit: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+  v2: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+  v3: "bg-slate-500/15 text-slate-300 border-slate-500/30",
+};
+
 async function adminAction(body: unknown): Promise<boolean> {
   try {
     const res = await fetch("/api/admin/action", {
@@ -79,6 +107,50 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [saving, setSaving] = useState(false);
   const [lockStatus, setLockStatus] = useState("");
   const [maintenance, setMaintenance] = useState<MaintenanceConfig>(() => getSystemConfig().maintenance!);
+  // ★ Aktif kilitler + işlem geçmişi (geri alma destekli)
+  const [lockHistory, setLockHistory] = useState<LockHistoryEntry[]>(() => loadLockHistory());
+  const [activeLocks, setActiveLocks] = useState<Record<string, FeatureLock>>(() => getSystemConfig().featureLocks);
+
+  const refreshLocks = () => {
+    setActiveLocks({ ...getSystemConfig().featureLocks });
+    setLockHistory(loadLockHistory());
+  };
+
+  // ★ Tek kilidi kaldır (free'e döndür)
+  const removeLock = (targetId: string) => {
+    const old = activeLocks[targetId];
+    setFeatureLock(targetId, "free");
+    const history = [{ id: uid(), target: targetId, targetLabel: targetId, from: old, to: "free" as FeatureLock, at: new Date().toISOString(), reverted: false }, ...loadLockHistory()];
+    saveLockHistory(history);
+    refreshLocks();
+    void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: "free" });
+    notify(`✅ "${targetId}" kilidi kaldırıldı — herkese açık`);
+  };
+
+  // ★ Tüm kilitleri kaldır
+  const removeAllLocks = () => {
+    if (!confirm("TÜM özellik kilitleri kaldırılıp her şey herkese açılsın mı?")) return;
+    const cfg = getSystemConfig();
+    const targets = Object.keys(cfg.featureLocks);
+    for (const t of targets) cfg.featureLocks[t] = "free";
+    saveSystemConfig(cfg);
+    for (const t of targets) void adminAction({ action: "set_feature_lock", featureId: t, lockLevel: "free" });
+    const history = [{ id: uid(), target: `(tümü: ${targets.length} kilit)`, targetLabel: "Tümü", from: "mixed" as FeatureLock, to: "free" as FeatureLock, at: new Date().toISOString() }, ...loadLockHistory()];
+    saveLockHistory(history);
+    refreshLocks();
+    notify(`✅ ${targets.length} kilidin tamamı kaldırıldı`);
+  };
+
+  // ★ Bir işlemi geri al — eski değere döndür
+  const revertEntry = (entry: LockHistoryEntry) => {
+    if (entry.from === "mixed") { notify("Bu işlem tek tuşla geri alınamaz — kilitleri tek tek ayarla"); return; }
+    setFeatureLock(entry.target, entry.from);
+    const history = loadLockHistory().map((h) => h.id === entry.id ? { ...h, reverted: true } : h);
+    saveLockHistory(history);
+    void adminAction({ action: "set_feature_lock", featureId: entry.target, lockLevel: entry.from });
+    refreshLocks();
+    notify(`↩️ "${entry.target}" → ${LOCK_LABELS[entry.from] || entry.from} geri alındı`);
+  };
 
   const publish = async () => {
     if (!title.trim() || !message.trim()) { notify("Başlık ve kısa mesaj zorunlu"); return; }
@@ -123,11 +195,19 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     const targetId = lockType === "all" ? featureId : lockType === "category" ? selectedCategory : selectedReciter;
     if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
     // localStorage'a yaz (anında)
+    const oldValue = getSystemConfig().featureLocks[targetId] ?? "free";
     setFeatureLock(targetId, featureLock);
+    // ★ İşlem geçmişine yaz (geri alma desteği)
+    const targetLabel = lockType === "all" ? (FEATURE_OPTIONS.find(([id]) => id === targetId)?.[1] ?? targetId)
+      : lockType === "category" ? (CATEGORY_OPTIONS.find(([id]) => id === targetId)?.[1] ?? targetId)
+      : (RECITER_OPTIONS.find(([id]) => id === targetId)?.[1] ?? targetId);
+    const history: LockHistoryEntry[] = [{ id: uid(), target: targetId, targetLabel, from: oldValue, to: featureLock, at: new Date().toISOString() }, ...loadLockHistory()];
+    saveLockHistory(history);
+    refreshLocks();
     const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
     const label = labelMap[featureLock] ?? featureLock;
-    setLockStatus(`✅ ${targetId} → ${label} uygulandı`);
-    notify(`✅ "${targetId}" → ${label} uygulandı`);
+    setLockStatus(`✅ ${targetLabel} → ${label} uygulandı`);
+    notify(`✅ "${targetLabel}" → ${label} uygulandı`);
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
   };
 
@@ -161,12 +241,21 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       notify("Bakım bitiş saati başlangıçtan sonra olmalı");
       return;
     }
+    // ★ Pencere geçmişteyse uyar — kullanıcı "kaydım çalışmadı" sanmasın
+    if (maintenance.endsAt && new Date(maintenance.endsAt).getTime() <= Date.now()) {
+      notify("⚠️ Bitiş zamanı geçmiş — site bakıma girmez, ileri bir saat seç");
+      return;
+    }
     const next = { ...maintenance, updatedAt: new Date().toISOString() };
     const cfg = getSystemConfig();
     cfg.maintenance = next;
     saveSystemConfig(cfg);
     const ok = await adminAction({ action: "set_maintenance", enabled: next.enabled, startsAt: next.startsAt, endsAt: next.endsAt, message: next.message });
-    notify(ok ? "✅ Bakım planı kaydedildi" : "⚠️ Bakım planı cihazda kaydedildi; sunucuya yazılamadı");
+    // ★ Anında uygula: diğer bileşenler (StudioApp bakım ekranı) reload beklemeden güncellensin
+    window.dispatchEvent(new Event("nur_config_updated"));
+    notify(ok
+      ? (next.enabled ? "✅ Bakım planı kaydedildi — ziyaretçiler 1 dk içinde bakım ekranını görür" : "✅ Bakım planı kaydedildi (bakım KAPALI)")
+      : "⚠️ Bakım planı cihazda kaydedildi; sunucuya yazılamadı");
   };
 
   return (
@@ -268,6 +357,64 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             <Save size={13} /> Kilidi Uygula
           </button>
           {lockStatus && <p className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold text-emerald-300">{lockStatus}</p>}
+
+          {/* ★ AKTİF KİLİTLER — neler kilitli/bakımda/kapalı hepsi burada */}
+          {(() => {
+            const entries = Object.entries(activeLocks).filter(([, v]) => v !== "free");
+            const labelFor = (id: string) =>
+              (FEATURE_OPTIONS.find(([x]) => x === id)?.[1] || CATEGORY_OPTIONS.find(([x]) => x === id)?.[1] || RECITER_OPTIONS.find(([x]) => x === id)?.[1] || id);
+            return (
+              <div className="mt-3 space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><LockKeyhole size={11} /> Aktif Kilitler ({entries.length})</span>
+                  {entries.length > 0 && (
+                    <button onClick={removeAllLocks} className="rounded-lg bg-red-500/15 px-2 py-1 text-[9px] font-bold text-red-300 hover:bg-red-500/25">
+                      <RotateCcw size={9} className="mr-0.5 inline" /> Tümünü Aç
+                    </button>
+                  )}
+                </div>
+                {entries.length === 0 ? (
+                  <p className="py-2 text-center text-[9.5px] text-white/35 italic">Kilitli/bakımda bir şey yok — her şey herkese açık ✅</p>
+                ) : (
+                  <div className="max-h-44 space-y-1.5 overflow-y-auto">
+                    {entries.map(([id, lock]) => (
+                      <div key={id} className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/[.03] px-2 py-1.5">
+                        <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-white/80" title={id}>{labelFor(id)}</span>
+                        <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-black ${LOCK_COLORS[lock] || LOCK_COLORS.free}`}>{LOCK_LABELS[lock] || lock}</span>
+                        <button onClick={() => removeLock(id)} title="Kilidi kaldır — herkese aç"
+                          className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-black text-emerald-300 transition hover:bg-emerald-500/20">
+                          <Unlock size={9} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* ★ KİLİT İŞLEM GEÇMİŞİ — ne yaptıysan burada + geri al */}
+          {lockHistory.length > 0 && (
+            <div className="mt-2 space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
+              <span className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><History size={11} /> Kilit İşlem Geçmisi</span>
+              <div className="max-h-40 space-y-1.5 overflow-y-auto">
+                {lockHistory.slice(0, 15).map((h) => (
+                  <div key={h.id} className={`flex items-center justify-between gap-2 rounded-lg border px-2 py-1.5 ${h.reverted ? "border-white/5 bg-white/[.02] opacity-50" : "border-white/5 bg-white/[.03]"}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[9.5px] font-bold text-white/75">{h.targetLabel} → {LOCK_LABELS[h.to] || h.to}</p>
+                      <p className="text-[8px] text-white/35">{new Date(h.at).toLocaleString("tr-TR")}{h.reverted ? " · geri alındı" : ""}</p>
+                    </div>
+                    {!h.reverted && h.from !== "mixed" && (
+                      <button onClick={() => revertEntry(h)} title="Bu işlemi geri al — eski duruma dönsün"
+                        className="shrink-0 rounded bg-amber-500/15 px-2 py-0.5 text-[9px] font-black text-amber-300 transition hover:bg-amber-500/25">
+                        ↩︎ Geri Al
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>
