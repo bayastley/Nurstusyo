@@ -284,12 +284,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
                     </button>
-                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
-                      <button onClick={() => { openAdminDashboard().then(() => setModal("adminDashboard")); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] font-bold text-amber-300 transition hover:bg-white/5">
-                        <Shield size={14} className="text-amber-400" />
-                        <span>Admin Yönetim Paneli</span>
-                      </button>
-                    )}
                     <div className="mt-1 border-t border-white/5 px-4 py-2.5">
                       <button
                         onClick={() => { openPremium("uyelik"); setMenuOpen(false); }}
@@ -343,7 +337,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <button
                   type="button"
                   onClick={() => openAdminDashboard().then(() => setModal("adminDashboard"))}
-                  className="hidden items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[9.5px] font-black text-amber-300 shadow-lg transition hover:scale-105 active:scale-95 sm:flex"
+                  className="flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[9.5px] font-black text-amber-300 shadow-lg transition hover:scale-105 active:scale-95"
                   title="Admin Yönetim Paneli"
                 >
                   <Shield size={11} className="text-amber-400" /> ADMIN PANEL

@@ -42,8 +42,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [userHistory, setUserHistory] = useState<any>(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyEmail, setHistoryEmail] = useState("");
-  // ★ Ödeme RPC sağlık durumu — panel açılışında kontrol edilir
-  const [rpcHealth, setRpcHealth] = useState<{ ok: boolean; detail: string } | null>(null);
   // ★ Hata logları — Hata Logları sekmesi için
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
   const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number } | null>(null);
@@ -98,21 +96,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     if (activeTab === "feedback" && feedbackList.length === 0 && !feedbackLoading) loadFeedback();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
-
-  // Panel açılırken ödeme RPC'sini kontrol et — hakları yazmayan sistem sessizce para kaybettirir
-  useEffect(() => {
-    let live = true;
-    fetch("/api/admin/action", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "check_rpc_health" }),
-    })
-      .then((r) => r.json())
-      .then((d: any) => { if (live && d?.rpc) setRpcHealth(d.rpc); })
-      .catch(() => undefined);
-    return () => { live = false; };
-  }, []);
 
   const [banLogs, setBanLogs] = useState<BanLog[]>(() => getBanLogs());
 
@@ -667,14 +650,6 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               <button onClick={() => setActiveTab("errors")} className="mt-2 rounded-lg bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 transition hover:bg-white/20">
                 → Hata Logları'na git
               </button>
-            </div>
-          )}
-          {/* ★ Ödeme RPC uyarısı — sadece sorun varsa görünür */}
-          {rpcHealth && !rpcHealth.ok && (
-            <div className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3">
-              <p className="text-xs font-black text-red-300">⚠️ ÖDEME HAK TANIMLAMA SİSTEMİ ÇALIŞMIYOR</p>
-              <p className="mt-1 text-[10px] text-white/60">{rpcHealth.detail}</p>
-              <p className="mt-1 text-[10px] text-white/45">Supabase SQL Editor'de <b>video_rights.sql</b> dosyasını bir kez çalıştır. Bu düzelmeden yapılan ödemelerde kullanıcı hakkını göremez!</p>
             </div>
           )}
           {/* TAB 1: USERS & JETONS */}
