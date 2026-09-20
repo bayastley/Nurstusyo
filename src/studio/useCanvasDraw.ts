@@ -32,6 +32,7 @@ interface CanvasDrawParams {
   arabicFontWeight: number;
   textSizeMul: number;
   mealSizeMul: number; // ★ Meal (çeviri) için BAĞIMSIZ ince ayar çarpanı
+  shimmerIntensity: number; // ★ Işıltı yoğunluğu — parıltı gücü çarpanı (0.5x–2.0x)
   shimmerCfg: { c1: string; c2: string; glow: string; still?: boolean };
   cardBg: "seffaf" | "koyu";
   textOffset: { x: number; y: number };
@@ -237,7 +238,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               let y = centeredTop + oy;
 
               if (p.showArapca && arabicLines.length > 0) {
-                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 10;
+                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = Math.round(10 * p.shimmerIntensity);
                 // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
@@ -271,17 +272,19 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                     wordX -= ww;
                     if (isActive) {
                       // Aktif kelime: HAFİF SARI IŞIK — okunan kelime yumuşak sarı parlar,
-                      // parıltı rengi seçili temanın vurgu rengine göre tonlanır
+                      // parıltı rengi seçili temanın vurgu rengine göre tonlanır,
+                      // GÜCÜ kullanıcıdaki ışıltı yoğunluğu ayarıyla çarpılır (shimmerIntensity)
+                      const gi = p.shimmerIntensity;
                       ctx.save();
                       ctx.shadowColor = currentTheme.acc || "#ffd700";
-                      ctx.shadowBlur = 22;
+                      ctx.shadowBlur = Math.round(22 * gi);
                       ctx.fillStyle = "#fff7c2"; // hafif sarı ton (koyu temalarda bile okunur)
                       ctx.font = `${p.arabicFontWeight} ${Math.round(arabicSize * 1.08)}px ${p.arabicFontCss}`;
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       // ikinci geçiş: sarı sıcaklığı için ince altın katman
                       ctx.shadowColor = "rgba(255, 215, 0, .55)";
-                      ctx.shadowBlur = 12;
-                      ctx.fillStyle = "rgba(255, 240, 170, .35)";
+                      ctx.shadowBlur = Math.round(12 * gi);
+                      ctx.fillStyle = `rgba(255, 240, 170, ${Math.min(0.9, 0.35 * gi).toFixed(2)})`;
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       ctx.restore();
                       // Normal boyuta dön — diğer kelimeler sabit beyaz
@@ -341,5 +344,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
 }

@@ -42,6 +42,9 @@ export interface DesignSettingsPanelProps {
   // ★ Meal için BAĞIMSIZ boyut ince ayarı (0.5x–2.0x)
   mealSizeMul: number;
   setMealSizeMul: (m: number) => void;
+  // ★ Işıltı yoğunluğu — parıltı gücü ince ayarı (0.5x–2.0x)
+  shimmerIntensity: number;
+  setShimmerIntensity: (v: number) => void;
   shimmerStyle: string;
   setShimmerStyle: (s: string) => void;
   SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }>;

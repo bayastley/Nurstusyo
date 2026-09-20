@@ -48,6 +48,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   setTextSizeMul,
   mealSizeMul,
   setMealSizeMul,
+  shimmerIntensity,
+  setShimmerIntensity,
   setTextSize,
   shimmerStyle,
   setShimmerStyle,
@@ -443,6 +445,62 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <select value={shimmerStyle} onChange={(e) => setShimmerStyle(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
                 {SHIMMER_STYLES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
+              {/* ★ IŞILTI YOĞUNLUĞU — parıltı gücünü kullanıcı ayarlar */}
+              <span className="mt-1 flex items-center gap-1" title="Parıltının gücü — okunan kelimenin ışığı ve yazı gölgesi bu kadar güçlü parlar">
+                <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Güç</span>
+                <button
+                  type="button"
+                  onClick={() => setShimmerIntensity(shimmerIntensity - 0.1)}
+                  disabled={shimmerIntensity <= 0.5}
+                  title="Parıltıyı azalt"
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >−</button>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={2}
+                  step={0.1}
+                  value={shimmerIntensity}
+                  onChange={(e) => setShimmerIntensity(parseFloat(e.target.value))}
+                  title="Sürükleyerek parıltı gücünü ayarla (50%–200%)"
+                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
+                  style={{ accentColor: "#fde68a" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShimmerIntensity(shimmerIntensity + 0.1)}
+                  disabled={shimmerIntensity >= 2}
+                  title="Parıltıyı artır"
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >+</button>
+                <span className="min-w-[40px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-amber-200/80">
+                  %{Math.round(shimmerIntensity * 100)}
+                </span>
+                {shimmerIntensity !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setShimmerIntensity(1)}
+                    title="Parıltı gücünü sıfırla"
+                    className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
+                  >sıfırla</button>
+                )}
+              </span>
+              {/* ★ CANLI ÖNİZLEME — slider'ı sürüklerken parıltının gücü anında değişir */}
+              <span
+                className="mt-1 flex h-8 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2"
+                style={{ direction: "rtl" }}
+                title="Parıltının videodaki gerçek gücü — sürükledikçe değişir"
+              >
+                <span
+                  className="whitespace-nowrap leading-none text-amber-100"
+                  style={{
+                    fontSize: "15px",
+                    fontFamily: "'Amiri', serif",
+                    textShadow: `0 0 ${Math.round(8 * shimmerIntensity)}px rgba(255, 215, 0, ${Math.min(0.95, 0.55 * shimmerIntensity).toFixed(2)}), 0 0 ${Math.round(18 * shimmerIntensity)}px rgba(255, 200, 80, ${Math.min(0.8, 0.3 * shimmerIntensity).toFixed(2)})`,
+                    transition: "text-shadow 60ms linear",
+                  }}
+                >نُور</span>
+              </span>
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Kart Arka Planı</span>
