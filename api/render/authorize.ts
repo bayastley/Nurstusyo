@@ -57,7 +57,7 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
 // ─── Inline rate limit ───────────────────────────────────
 const buckets = new Map<string, number[]>();
 function clientIp(req: VercelRequest): string {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
   return forwarded || req.socket.remoteAddress || "unknown";
 }
 function rateLimit(req: VercelRequest, res: VercelResponse, key: string, max: number, windowMs: number): boolean {

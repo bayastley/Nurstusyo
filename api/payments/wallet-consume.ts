@@ -61,7 +61,7 @@ function parseCookies(header: string): Record<string, string> {
   }, {});
 }
 
-function userFromSession(req: { headers: Record<string, string | string[] | undefined> }): { id: string } | null {
+function userFromSession(req: { headers: Record<string, string | string[] | undefined> }): { id: string; isAdmin: boolean } | null {
   try {
     const token = parseCookies(String(req.headers.cookie || ""))[COOKIE_NAME] || "";
     if (!token.includes(".")) return null;
@@ -74,10 +74,10 @@ function userFromSession(req: { headers: Record<string, string | string[] | unde
     const sigBuf = Buffer.from(signature);
     const expectedBuf = Buffer.from(expected);
     if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-    const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SessionUser;
-    if (!user.id || !user.email || user.verified !== true) return null;
-    if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
-    return { id: user.id };
+  const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SessionUser;
+  if (!user.id || !user.email || user.verified !== true) return null;
+  if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
+  return { id: user.id, isAdmin: user.isAdmin === true };
   } catch {
     return null;
   }
@@ -92,6 +92,10 @@ export default async function handler(req: any, res: any) {
 
   const kind = String(req.body?.kind || "");
   if (!["kisa", "uzun", "tam"].includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz video türü" });
+  // ★ ADMIN: tüm üretim hakları sınırsız — kota RPC'sine hiç gitmeden onay
+  if (user.isAdmin) {
+    return res.status(200).json({ ok: true, quota_left: 9999, pack_left: 9999, admin: true });
+  }
 
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";

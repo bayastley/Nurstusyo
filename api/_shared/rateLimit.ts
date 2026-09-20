@@ -14,7 +14,7 @@ interface BucketEntry {
 const buckets = new Map<string, BucketEntry>();
 
 function clientIp(req: VercelRequest): string {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
   return forwarded || req.socket.remoteAddress || "unknown";
 }
 

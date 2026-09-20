@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // Self-contained rate limit — _shared importları Vercel'de paketlenmediği için gömüldü
 const __buckets = new Map<string, { hits: number[] }>();
 function rateLimit(req: VercelRequest, res: VercelResponse, key: string, maxRequests: number, windowMs: number): boolean {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
   const ip = forwarded || req.socket?.remoteAddress || "unknown";
   const bucketKey = `${key}:${ip}`;
   const now = Date.now();

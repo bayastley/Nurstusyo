@@ -3,7 +3,7 @@ import crypto from 'crypto';
 // Self-contained rate limit — _shared importları Vercel'de paketlenmediği için gömüldü
 const __buckets = new Map<string, { hits: number[] }>();
 function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): boolean {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
   const ip = forwarded || req.socket?.remoteAddress || "unknown";
   const bucketKey = `${key}:${ip}`;
   const now = Date.now();
@@ -22,7 +22,7 @@ function rateLimit(req: { headers: Record<string, string | string[] | undefined>
   return true;
 }
 function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string } }, key: string, maxRequests: number, windowMs: number): boolean {
-  const forwarded = String(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim();
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
   const ip = forwarded || req.socket?.remoteAddress || "unknown";
   const bucketKey = `${key}:${ip}`;
   const now = Date.now();
