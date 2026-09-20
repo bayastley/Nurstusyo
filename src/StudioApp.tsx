@@ -228,7 +228,27 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, []);
 
   const ARABIC_FONTS = _ARABIC_FONTS;
-  const [arabicFont, setArabicFont] = useState("amiri");
+  const [arabicFont, setArabicFontState] = useState<string>(() => {
+    try { return localStorage.getItem("nur_arabic_font") || "amiri"; } catch { return "amiri"; }
+  });
+  // ★ TEMBEL FONT YÜKLEME: Google Fonts linki açılışta yalnızca temel fontları
+  //   yükler (Amiri, Inter, Cinzel). Seçilen diğer font, seçildiği anda tek
+  //   istekle yüklenir — açılış hızı korunur. Seçim localStorage'da kalıcı.
+  const yukluFontlar = new Set<string>(["amiri"]);
+  useEffect(() => {
+    const font = ARABIC_FONTS.find((f) => f.id === arabicFont);
+    if (!font || yukluFontlar.has(arabicFont)) return;
+    const aile = font.css.split(",")[0].replace(/'/g, "").trim();
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(aile).replace(/%20/g, "+") + ":wght@400;700&display=swap";
+    document.head.appendChild(link);
+    yukluFontlar.add(arabicFont);
+  }, [arabicFont]);
+  const setArabicFont = (f: string) => {
+    setArabicFontState(f);
+    try { localStorage.setItem("nur_arabic_font", f); } catch { /* ignore */ }
+  };
   const [textSize, setTextSize] = useState<"kucuk" | "normal" | "buyuk">("buyuk");
 
   const SHIMMER_STYLES = _SHIMMER_STYLES;
