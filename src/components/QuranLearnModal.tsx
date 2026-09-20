@@ -18,14 +18,18 @@ interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
 //    (gapless tam sure) çalabilir — [klasör, sunucuNo]. Hepsi tek tek test edildi (200 OK).
 
-// ★ TEFSİR KUTUSU — 4 meşhur tefsir (quran.com v4 API, tek tek test edildi):
-//   169 İbn Kesîr (özet, EN) · 16 Müyeccar (AR) · 15 Taberî (AR) · 90 Kurtubî (AR)
-//   Türkçe tefsir API'de mevcut değil (quranenc + quran.com tarandı) — İbn Kesîr özeti varsayılan.
-const TAFSIRS: Array<{ id: number; name: string }> = [
-  { id: 169, name: "İbn Kesîr (özet)" },
-  { id: 16, name: "Tefsîrü'l-Müyesser" },
-  { id: 15, name: "Taberî" },
-  { id: 90, name: "Kurtubî" },
+// ★ TEFSİR KUTUSU — 5 kaynak:
+//   Türkçe tam tefsir: Elmalılı "Hak Dini Kur'an Dili" (kurancilar/json CDN — jsDelivr)
+//   quran.com v4 API: 169 İbn Kesîr özeti (EN) · 16 Müyeccar (AR) · 15 Taberî (AR) · 90 Kurtubî (AR)
+//   Not: quran.com'da ve quranenc'te Türkçe tefsir YOK — İbn Kesîr Türkçe çevirisi yayımlanmamış,
+//   o yüzden Türkçe isteyenler için varsayılan kaynak Elmalılı (tam tefsir, ayet ayet bölümü).
+import { elmaliliTefsirGetir } from "./elmaliliTefsir";
+const TAFSIRS: Array<{ id: number | "elmalili"; name: string }> = [
+  { id: "elmalili", name: "Elmalılı (Türkçe)" },
+  { id: 169, name: "İbn Kesîr (özet, EN)" },
+  { id: 16, name: "Tefsîrü'l-Müyesser (AR)" },
+  { id: 15, name: "Taberî (AR)" },
+  { id: 90, name: "Kurtubî (AR)" },
 ];
 const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 
@@ -34,7 +38,7 @@ const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").
 const isEnglishMeal = (t: string) => /^[A-Za-z][A-Za-z'’.,;!?()\- ]{2,}$/.test(t.trim());
 const TAFSIR_CACHE = new Map<string, string>();
 const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surahNo, ayahNo }) => {
-  const [tafsirId, setTafsirId] = useState(169);
+  const [tafsirId, setTafsirId] = useState<number | "elmalili">("elmalili");
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -45,6 +49,22 @@ const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surahNo, aya
     if (cached !== undefined) { setText(cached); return; }
     let live = true;
     setLoading(true); setText("");
+    if (tafsirId === "elmalili") {
+      // ★ ELMALILI: surenin TAM tefsiri CDN'den gelir ve AKIŞ olarak gösterilir.
+      //   Kaynak metinde ayet sınırları güvenilir işaretli DEĞİL (dipnot numaraları ve
+      //   "TEFSİR VE TE'VİL" gibi bölüm başlıkları aynı biçimde yazılmış) — otomatik
+      //   bölme yanlış ayete bölüm atıyordu. Kaydırılabilir kutuda surenin tefsiri
+      //   baştan sona sunulur; kullanıcı kendi ayetinin bölümüne kayar.
+      elmaliliTefsirGetir(surahNo)
+        .then(tumMetin => {
+          if (!live) return;
+          TAFSIR_CACHE.set(key, tumMetin);
+          setText(tumMetin);
+        })
+        .catch(() => { if (live) setText(""); })
+        .finally(() => { if (live) setLoading(false); });
+      return () => { live = false; };
+    }
     fetch(`https://api.quran.com/api/v4/tafsirs/${tafsirId}/by_ayah/${surahNo}:${ayahNo}`)
       .then(r => r.json())
       .then(d => { const t = stripHtml(d?.tafsir?.text ?? ""); if (live) { TAFSIR_CACHE.set(key, t); setText(t); } })
@@ -66,7 +86,7 @@ const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surahNo, aya
             ))}
           </div>
           {loading ? <p className="mt-2 text-[10px] text-[#7a745f]">Tefsir yükleniyor…</p>
-          : text ? <p className="mt-2 max-h-64 overflow-y-auto text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
+          : text ? <p className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
           : <p className="mt-2 text-[10px] text-[#7a745f]">Bu ayet için bu tefsirde metin bulunamadı — başka tefsir seç.</p>}
         </>
       )}
@@ -222,6 +242,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
   }, [open]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
+  // ★ KÂBE AÇILINCA ARKADAKİ KURAN SUSSUN: iki ses üst üste binmesin.
+  //   Kapanınca sessize döner (kullanıcı çal düğmesiyle kaldığı yerden sürdürür).
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (kabeLive) { a.muted = true; }
+    else if (!isPlaying) { a.muted = false; }
+    return () => { if (audioRef.current) audioRef.current.muted = false; };
+  }, [kabeLive, isPlaying]);
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
@@ -632,6 +661,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ BESMELE GÖSTERGESİ: besmele mp3'ü çalarken ekranda "Yasin 1. Ayet" değil,
   //   BİSMILLÂH metni + "Besmele" etiketi görünür (ses-ekran uyumsuzluğu bitti)
   const [besmelePlaying, setBesmelePlaying] = useState(false);
+  // ★ BESMELE REFİ: 'ended' olayı İKİ dinleyiciyi birden tetikliyor (a.onended +
+  //   addEventListener). Besmele bitince ikisi AYNI ANDA devreye girip farklı ayetler
+  //   kuruyordu → '1-2 okumuyor', '3. ayetten başladı', 'çifte besmele'. Genel dinleyici
+  //   besmele çalarken KENDİNİ SUSTURUR (ref senkron okunur — state gecikmesi yaşanmaz).
+  const besmeleRef = useRef(false);
+  useEffect(() => { besmeleRef.current = besmelePlaying; }, [besmelePlaying]);
   const BESMELE_AR = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
   const BESMELE_TR = "Rahmân ve Rahîm olan Allah'ın adıyla.";
   const listenAyahDataRef = useRef(listenAyahData);
@@ -871,6 +906,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (mode !== "listen") return;
     const a = audioRef.current; if (!a) return;
     const onEnded = () => {
+      // ★ BESMELE KORUMASI: besmele'nin kendi handler'ı (a.onended) sıradaki ayeti kurar —
+      //   bu genel dinleyici o anda ÇALIŞMAZ. (Çift tetikleme → ayet atlama/çifte besmele bug'ı)
+      if (besmeleRef.current) return;
       if (loopAyahListen) { a.currentTime = 0; a.play().catch(() => undefined); return; }
       const sNow = wholeQuran ? wholeIdx.s : listenSurah;
       const total = SURAHS_DATA.find(s => s.n === sNow)?.ayahs ?? listenSurahInfo.ayahs;
@@ -1402,10 +1440,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 autoPlay
                 muted={kabeMuted}
                 playsInline
-                className="h-full w-full"
+                onClick={() => {
+                  // ★ EKRANA TIKLA = SES AÇ/KAPA: en doğal yol, yayın kesilmez
+                  const nm = !kabeMuted;
+                  setKabeMuted(nm);
+                  const v = kabeVideoRef.current;
+                  if (v) { v.muted = nm; v.volume = nm ? 0 : kabeVolume; }
+                }}
+                className="h-full w-full cursor-pointer"
                 onPlaying={() => setKabeStatus("playing")}
                 onError={() => setKabeStatus("error")}
               />
+              {kabeMuted && kabeStatus === "playing" && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
+                  <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">🔇 Ses için ekrana dokun</span>
+                </div>
+              )}
               {kabeStatus === "loading" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
