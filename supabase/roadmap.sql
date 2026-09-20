@@ -10,7 +10,7 @@ create table if not exists public.nur_roadmap_features (
   id         text primary key,
   version    text not null default 'V2',
   title      text not null,
-  desc       text not null default '',
+  description text not null default '',
   icon       text not null default 'ai_arkaplan',
   active     boolean not null default true,
   created_at timestamptz not null default now()
@@ -31,7 +31,7 @@ revoke all on public.nur_roadmap_features from anon, authenticated;
 revoke all on public.nur_roadmap_votes from anon, authenticated;
 
 -- 2) TAM KATALOG — RoadmapModal.tsx DEFAULT_V2/DEFAULT_V3 ile birebir aynı
-insert into public.nur_roadmap_features (id, version, title, desc, icon)
+insert into public.nur_roadmap_features (id, version, title, description, icon)
 values
   -- ★ V2 öncelikli paket
   ('namaz-bildirim', 'V2', 'Namaz Vakti Hatırlatıcısı', 'Şehrini seç, vakit gelince tarayıcından nazik bir hatırlatma al. Siteye hiç girmeden çalışır.', 'namaz_bildirim'),

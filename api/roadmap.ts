@@ -129,7 +129,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === "GET") {
       // Özellikler + GERÇEK oy toplamları (tek sayaç DB'de)
       const [features, votes] = await Promise.all([
-        db<any[]>("nur_roadmap_features?select=id,version,title,desc,icon,active&order=created_at.asc").catch(() => [] as any[]),
+        db<any[]>("nur_roadmap_features?select=id,version,title,description,icon,active&order=created_at.asc").catch(() => [] as any[]),
         db<any[]>("nur_roadmap_votes?select=feature_id").catch(() => [] as any[]),
       ]);
       const counts: Record<string, number> = {};
@@ -142,8 +142,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       return res.status(200).json({
         ok: true,
-        v2: features.filter((f) => f.version === "V2" && f.active).map((f) => ({ ...f, votes: counts[f.id] || 0 })),
-        v3: features.filter((f) => f.version === "V3" && f.active).map((f) => ({ ...f, votes: counts[f.id] || 0 })),
+        v2: features.filter((f) => f.version === "V2" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
+        v3: features.filter((f) => f.version === "V3" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
         myVote,
         totalVotes: votes.length,
       });
@@ -196,7 +196,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await db("nur_roadmap_features", {
           method: "POST",
           headers: { Prefer: "return=minimal" },
-          body: JSON.stringify({ id, version: body.version === "V3" ? "V3" : "V2", title: sanitize(body.title, 80), desc: sanitize(body.desc, 200), icon: "ai_arkaplan" }),
+          body: JSON.stringify({ id, version: body.version === "V3" ? "V3" : "V2", title: sanitize(body.title, 80), description: sanitize(body.desc, 200), icon: "ai_arkaplan" }),
         });
         return res.status(200).json({ ok: true, id });
       }
