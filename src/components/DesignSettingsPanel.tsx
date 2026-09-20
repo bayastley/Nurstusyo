@@ -73,7 +73,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   useEffect(() => {
     const onUpdate = () => setConfigVersion((v) => v + 1);
     window.addEventListener("nur_config_updated", onUpdate);
-    return () => window.removeEventListener("nur_config_updated", onUpdate);
+    // ★ CROSS-TAB: storage event ile anında güncelle
+    const onStorage = (e: StorageEvent) => { if (e.key && e.key.includes("nur_system_sync_config")) onUpdate(); };
+    window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener("nur_config_updated", onUpdate); window.removeEventListener("storage", onStorage); };
   }, []);
   useEffect(() => {
     let alive = true;

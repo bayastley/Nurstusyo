@@ -453,7 +453,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useEffect(() => {
     const refreshMaintenance = () => setMaintenance(getSystemConfig().maintenance!);
     window.addEventListener("nur_config_updated", refreshMaintenance);
-    return () => window.removeEventListener("nur_config_updated", refreshMaintenance);
+    // ★ CROSS-TAB: admin başka sekmede kilit/bakım değiştirdiğinde secureStore'un
+    //   localStorage'ına yazılır → 'storage' event'i bu sekmede de tetiklenir → anında güncellenir
+    const onStorage = (e: StorageEvent) => { if (e.key && e.key.includes("nur_system_sync_config")) refreshMaintenance(); };
+    window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener("nur_config_updated", refreshMaintenance); window.removeEventListener("storage", onStorage); };
   }, []);
 
   useEffect(() => {

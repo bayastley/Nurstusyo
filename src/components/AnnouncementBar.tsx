@@ -57,8 +57,13 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
       }
     };
     void refresh();
-    const interval = window.setInterval(refresh, 60_000);
-    return () => { alive = false; window.clearInterval(interval); };
+    // ★ KİLİT/BAKIM ANINDA YANSIMA: sekme görünürken 15 sn'de bir poll.
+    //   Gizli sekmede 60 sn (CPU/tasarruf). Ek olarak sekme geri geldiğinde
+    //   anında bir refresh tetiklenir — kullanıcı sekme değiştirince güncel durumu görür.
+    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 15_000);
+    const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
 
   useEffect(() => {
