@@ -901,7 +901,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               ? errorLogs
               : errorFilter === "unique"
                 ? errorLogs.filter((l, i, arr) => arr.findIndex((x) => x.fingerprint === l.fingerprint) === i)
-                : errorLogs.filter((l) => String(l.kind || "genel") === errorFilter);
+                : errorFilter === "server"
+                  ? errorLogs.filter((l) => String(l.source || "").startsWith("server:"))
+                  : errorFilter === "browser"
+                    ? errorLogs.filter((l) => !String(l.source || "").startsWith("server:"))
+                    : errorLogs.filter((l) => String(l.kind || "genel") === errorFilter);
             const gorunen: any[] = errorGrouped && errorFilter !== "unique"
               ? grupla(ham).map((g) => ({ ...g.log, __adet: g.adet }))
               : ham;
@@ -924,6 +928,26 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Benzersiz hata</p>
                 </button>
               </div>
+
+              {/* ★ SUNUCU / TARAYICI ayrım filtresi — 🖥️ server hataları tek tıkla */}
+              {(() => {
+                const serverAdet = errorLogs.filter((l) => String(l.source || "").startsWith("server:")).length;
+                if (serverAdet === 0 && errorFilter !== "server") return null;
+                const butonlar = [
+                  { key: "server", etiket: `🖥️ Sunucu · ${serverAdet}`, stil: "border-red-500/40 bg-red-500/15 text-red-300" },
+                  { key: "browser", etiket: `🌐 Tarayıcı · ${errorLogs.length - serverAdet}`, stil: "border-sky-500/40 bg-sky-500/15 text-sky-300" },
+                ];
+                return (
+                  <div className="flex flex-wrap gap-2">
+                    {butonlar.map((b) => (
+                      <button key={b.key} onClick={() => { setErrorFilter(b.key); setErrorPage(0); }}
+                        className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition ${errorFilter === b.key ? b.stil + " ring-1 ring-white/40" : b.stil + " opacity-60 hover:opacity-100"}`}>
+                        {b.etiket}
+                      </button>
+                    ))}
+                  </div>
+                );
+              })()}
 
               {/* Tür filtresi — varsa tür butonları */}
               {turlar.length > 1 && (
