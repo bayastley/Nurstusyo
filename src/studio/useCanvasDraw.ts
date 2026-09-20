@@ -31,6 +31,7 @@ interface CanvasDrawParams {
   arabicFontCss: string;
   arabicFontWeight: number;
   textSizeMul: number;
+  mealSizeMul: number; // ★ Meal (çeviri) için BAĞIMSIZ ince ayar çarpanı
   shimmerCfg: { c1: string; c2: string; glow: string; still?: boolean };
   cardBg: "seffaf" | "koyu";
   textOffset: { x: number; y: number };
@@ -215,7 +216,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 const shrink = Math.pow(0.96, step);
                 arabicSize = Math.round(Math.min(48, Math.max(13, arBase * shrink)) * p.textSizeMul);
                 const trMaxSize = currentAspect === "16:9" ? 21 : onlyMeal ? 26 : 24;
-                translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.textSizeMul);
+                translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.textSizeMul * p.mealSizeMul);
                 arabicHeight = arabicSize * 1.72;
                 ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
                 arabicLines = p.showArapca ? wrapText(ctx, currentAyah.ar, arMaxW) : [];
@@ -335,5 +336,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
 }

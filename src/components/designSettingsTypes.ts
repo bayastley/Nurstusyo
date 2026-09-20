@@ -39,6 +39,9 @@ export interface DesignSettingsPanelProps {
   // ★ İnce ayar: kullanıcı +/- ile yazıyı büyütüp küçültür (0.5x – 2.0x)
   textSizeMul: number;
   setTextSizeMul: (m: number) => void;
+  // ★ Meal için BAĞIMSIZ boyut ince ayarı (0.5x–2.0x)
+  mealSizeMul: number;
+  setMealSizeMul: (m: number) => void;
   shimmerStyle: string;
   setShimmerStyle: (s: string) => void;
   SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }>;

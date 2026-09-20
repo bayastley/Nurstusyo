@@ -46,6 +46,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   textSize,
   textSizeMul,
   setTextSizeMul,
+  mealSizeMul,
+  setMealSizeMul,
   setTextSize,
   shimmerStyle,
   setShimmerStyle,
@@ -357,6 +359,43 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                     onClick={() => setTextSizeMul(1)}
                     title="Varsayılan boyuta dön"
                     className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
+                  >sıfırla</button>
+                )}
+              </span>
+              {/* ★ MEAL BOYUTU — Arapça'dan BAĞIMSIZ ince ayar */}
+              <span className="mt-1.5 flex items-center gap-1" title="Meal (çeviri) metninin boyutu — Arapça'dan bağımsız">
+                <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Meal</span>
+                <button
+                  type="button"
+                  onClick={() => setMealSizeMul(mealSizeMul - 0.05)}
+                  disabled={mealSizeMul <= 0.5}
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >−</button>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={2}
+                  step={0.05}
+                  value={mealSizeMul}
+                  onChange={(e) => setMealSizeMul(parseFloat(e.target.value))}
+                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
+                  style={{ accentColor: "#38bdf8" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setMealSizeMul(mealSizeMul + 0.05)}
+                  disabled={mealSizeMul >= 2}
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >+</button>
+                <span className="min-w-[40px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-sky-300/80">
+                  %{Math.round(mealSizeMul * 100)}
+                </span>
+                {mealSizeMul !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setMealSizeMul(1)}
+                    title="Meal boyutunu sıfırla"
+                    className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
                   >sıfırla</button>
                 )}
               </span>

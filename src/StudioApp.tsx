@@ -283,6 +283,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setTextSizeFine(clamped);
     try { localStorage.setItem("nur_text_size_fine", String(clamped)); } catch { /* ignore */ }
   };
+  // ★ MEAL İÇİN BAĞIMSIZ ince ayar — Arapça boyutundan ayrı tutulur
+  const [mealSizeFine, setMealSizeFine] = useState<number>(() => {
+    const raw = localStorage.getItem("nur_meal_size_fine");
+    const n = raw ? parseFloat(raw) : NaN;
+    return Number.isFinite(n) ? Math.min(2, Math.max(0.5, n)) : 1;
+  });
+  const setMealSizeMul = (m: number) => {
+    const clamped = Math.round(Math.min(2, Math.max(0.5, m)) * 100) / 100;
+    setMealSizeFine(clamped);
+    try { localStorage.setItem("nur_meal_size_fine", String(clamped)); } catch { /* ignore */ }
+  };
   // ★ FONTA GÖRE OTOMATİK BOYUT: her fontun ideal çarpanı görsel dengeyi
   //   korur (naskh irice, kufi küçüktür). Kullanıcının ince ayarı ekstra çarpılır —
   //   yani elle ayar yaptığı zaman o değer her fontta GEÇERLİ kalır.
@@ -578,7 +589,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useCanvasDraw({
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
-    showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, shimmerCfg, cardBg, textOffset,
+    showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, mealSizeMul: mealSizeFine, shimmerCfg, cardBg, textOffset,
     cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
   });
 
@@ -1511,6 +1522,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setTextSize={setTextSize}
           textSizeMul={textSizeFine}
           setTextSizeMul={setTextSizeMul}
+          mealSizeMul={mealSizeFine}
+          setMealSizeMul={setMealSizeMul}
           shimmerStyle={shimmerStyle}
           setShimmerStyle={setShimmerStyle}
           SHIMMER_STYLES={SHIMMER_STYLES}
