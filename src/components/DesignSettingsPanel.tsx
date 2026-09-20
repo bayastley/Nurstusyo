@@ -303,6 +303,16 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <select value={arabicFont} onChange={(e) => setArabicFont(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
                 {ARABIC_FONTS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
               </select>
+              {/* ★ CANLI ÖNİZLEME — seçili font, kendi yazı tarzıyla örnek ayet gösterir */}
+              <span
+                className="glass-soft mt-1 block truncate rounded-lg px-2 py-1.5 text-center text-lg leading-snug"
+                dir="rtl"
+                lang="ar"
+                style={{ fontFamily: ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif" }}
+                title={`${ARABIC_FONTS.find((f) => f.id === arabicFont)?.label ?? ""} — örnek yazım`}
+              >
+                بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
+              </span>
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Boyutu</span>
