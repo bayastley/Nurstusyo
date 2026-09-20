@@ -242,15 +242,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
   }, [open]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
-  // ★ KÂBE AÇILINCA ARKADAKİ KURAN SUSSUN: iki ses üst üste binmesin.
-  //   Kapanınca sessize döner (kullanıcı çal düğmesiyle kaldığı yerden sürdürür).
-  useEffect(() => {
-    const a = audioRef.current;
-    if (!a) return;
-    if (kabeLive) { a.muted = true; }
-    else if (!isPlaying) { a.muted = false; }
-    return () => { if (audioRef.current) audioRef.current.muted = false; };
-  }, [kabeLive, isPlaying]);
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
@@ -330,6 +321,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ Mobil metin kaydırma alanı — hayalet ok butonları bunu kaydırır (sayfa sabit)
   const listenScrollRef = useRef<HTMLDivElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
+  // ★ KÂBE AÇILINCA ARKADAKİ KURAN SUSSUN: iki ses üst üste binmesin.
+  //   Kapanınca sessize döner (kullanıcı çal düğmesiyle kaldığı yerden sürdürür).
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (kabeLive) { a.muted = true; }
+    else if (!isPlaying) { a.muted = false; }
+    return () => { if (audioRef.current) audioRef.current.muted = false; };
+  }, [kabeLive, isPlaying]);
   const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
   const kabeHlsRef = useRef<Hls | null>(null);
   const kabeWrapRef = useRef<HTMLDivElement | null>(null); // ★ tam ekran kapsayıcısı
