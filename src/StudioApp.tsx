@@ -5,7 +5,7 @@ import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
   MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
-  ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight,
+  ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight, arabicIdealScale,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
 import { useAnalytics } from "./studio/useAnalytics";
@@ -283,7 +283,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setTextSizeFine(clamped);
     try { localStorage.setItem("nur_text_size_fine", String(clamped)); } catch { /* ignore */ }
   };
-  const textSizeMul = (textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1) * textSizeFine;
+  // ★ FONTA GÖRE OTOMATİK BOYUT: her fontun ideal çarpanı görsel dengeyi
+  //   korur (naskh irice, kufi küçüktür). Kullanıcının ince ayarı ekstra çarpılır —
+  //   yani elle ayar yaptığı zaman o değer her fontta GEÇERLİ kalır.
+  const textSizeMul = (textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1) * textSizeFine * arabicIdealScale(arabicFont);
 
   const CINE_FILTERS = _CINE_FILTERS;
   const [cinematic, setCinematic] = useState("orijinal");

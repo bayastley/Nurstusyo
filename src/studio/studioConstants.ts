@@ -121,6 +121,42 @@ export function arabicFontWeight(fontId: string): number {
   return TEK_AGIRLIK_FONTLAR.has(fontId) ? 400 : 700;
 }
 
+// ★ HER FONTUN İDEAL BOYUT ÇARPANI — canvas'ta aynı px değeri fonta göre
+//   farklı görünür: naskh fontlar x-height küçük tutar (irice yazılmalı),
+//   kufi/modern fontlar geniş ve yayvan (küçültülmeli). Değerler font
+//   metriklerine ve görsel denemeye göre kalibre edildi.
+const FONT_IDEAL_CARPAN: Record<string, number> = {
+  // Naskh/Mushaf — ince ve uzun, biraz büyütülmeli
+  amiri: 1.0,             // referans font
+  scheherazade: 1.1,      // x-height çok küçük
+  lateef: 1.15,           // en ince naskh
+  "noto-naskh": 1.05,
+  harmattan: 1.05,
+  mada: 0.95,
+  // Sülüs/Talik — süslü, hafif büyütülmeli
+  arefruqaa: 1.0,
+  "amiri-quran": 1.1,     // ayet işaretleri için nefes payı
+  katibeh: 1.2,           // başlık fontu — küçük görünür
+  mirza: 1.05,
+  vazirmatn: 0.95,
+  // Kufi/Modern — geniş, küçültülmeli
+  reemkufi: 0.9,
+  cairo: 0.92,
+  tajawal: 0.95,
+  elmessiri: 0.95,
+  changa: 0.88,           // çok geniş
+  kufam: 0.88,            // çok geniş
+  // Süsleme — gösterişli, dengeli tutulmalı
+  laref-ruqaa: 0.95,      // Lalezar — kendi içinde zaten kalın/geniş
+  rukola: 0.9,            // Marhey — geniş
+  rummani: 1.0,
+};
+
+/** Fontun ideal boyut çarpanı — kullanıcı ince ayarıyla çarpılır */
+export function arabicIdealScale(fontId: string): number {
+  return FONT_IDEAL_CARPAN[fontId] ?? 1.0;
+}
+
 export const SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }> = [
   { id: "altin", label: "Altın Işıltı", c1: "#f5dda6", c2: "#d7aa52", glow: "rgba(215,170,82,.55)" },
   { id: "gumus", label: "Gümüş Işıltı", c1: "#f1f5f9", c2: "#94a3b8", glow: "rgba(203,213,225,.5)" },
