@@ -157,7 +157,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [lockTip, setLockTip] = useState<string | null>(null);
   const [aspect, setAspect] = useState<Aspect>("9:16");
   const [batchFormats, setBatchFormats] = useState<Aspect[]>(["9:16"]);
-  const [reciterId, setReciterId] = useState("sudais");
+  const [reciterId, setReciterId] = useState("maher"); // ★ Varsayılan: Maher el-Muaiqly (ömer tercihi)
 
   // ★ Hook'lar (state'lerden sonra çağrılır)
   const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard } = useAuth({ isMasterSürüm, isDevMaster, notify });
