@@ -579,12 +579,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               const sameCat = combinedAllClips.filter(c => c.cat === clip.cat && c.kind === clipKind);
               const idx = sameCat.findIndex(c => c.id === clip.id);
               const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
-              const catLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (maintenanceLocked || !tierAtLeast(accessTier, catTier));
+              const vKilitli = dynamicLock === "v2" || dynamicLock === "v3"; // ★ V2/V3 'yakında' kilidi
+              const catLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (maintenanceLocked || vKilitli || !tierAtLeast(accessTier, catTier));
               const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
               const videoLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && !catLocked && idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier);
               // ★ ADMIN: kilitlı GÖRÜR ama kullanabilir — ne yaptığını görsün, kilit onu engellemesin
               const locked = !isMasterSürüm && (catLocked || videoLocked);
-              const lockKind = maintenanceLocked ? "maintenance" : catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
+              const lockKind = maintenanceLocked ? "maintenance" : vKilitli ? (dynamicLock === "v2" ? "v2" : "v3") : catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
               return (
                 <div key={clip.id} className="relative">
                   <AtmosphereCard clip={clip} active={hoveredClip === clip.id} onHover={setHoveredClip} onPick={() => locked ? openPremium("uyelik") : pickClip(clip)} />
