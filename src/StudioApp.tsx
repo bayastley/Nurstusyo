@@ -1168,7 +1168,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [aspect, batchFormats, generating, jetonCount, mode, notify, openPremium, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate]);
 
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
-  const { copied, copyShare, shareOutput, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX } = useShareActions({ shareTitle, shareDescription, notify });
+  const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX } = useShareActions({ shareTitle, shareDescription, notify });
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;
@@ -1477,6 +1477,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setActiveOutputId={setActiveOutputId}
           fmtSize={fmtSize}
           shareOutput={shareOutput}
+          downloadVideo={downloadVideo}
           user={user}
           setLoginTab={setLoginTab}
           notify={notify}

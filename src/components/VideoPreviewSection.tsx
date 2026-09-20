@@ -53,6 +53,7 @@ interface VideoPreviewSectionProps {
   setActiveOutputId: (id: string | null) => void;
   fmtSize: (bytes: number) => string;
   shareOutput: (output: Output) => void;
+  downloadVideo: (output: Output) => Promise<void>;
   user: unknown;
   setLoginTab: (tab: unknown) => void;
   notify: (message: string) => void;
@@ -83,7 +84,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
-    activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, user, setLoginTab, t, handleGenerate,
+    activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, downloadVideo, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
   } = props;
   const [lowPower] = useState(lowPowerDevice);
@@ -266,8 +267,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <p className="truncate text-[9px] text-white/60">{activeOutput.label}</p>
               <p className="mb-3 text-[8px] text-white/40">{fmtDuration(activeOutput.duration)} · {fmtSize(activeOutput.size)}</p>
               <div className="grid grid-cols-2 gap-1.5">
-                <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Download size={12} />{t("download")}</a>
-                <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]"><Share2 size={12} />{t("share")}</button>
+                <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title="Videoyu cihazına kaydet"><Download size={12} />{t("download")}</a>
+                <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title="Cihazındaki uygulamalarla paylaş (WhatsApp, Instagram…)"><Share2 size={12} />{t("share")}</button>
               </div>
             </>
           ) : <p className="py-6 text-center text-[9px] text-white/30">Video çıktınız burada görünür</p>}
