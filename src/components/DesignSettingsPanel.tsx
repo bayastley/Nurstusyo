@@ -318,6 +318,33 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               >
                 بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
               </span>
+              {/* ★ FONT LİSTESİ ÖNİZLEME — açılır liste yerine 4'lü mini galeri:
+                  her font KENDİ yazı tarzıyla örnek gösterir. <option> tarayıcıda
+                  özel fontla çizilemediği için (kısıt) galeri yaklaşımı kullanıldı.
+                  Tembel yüklemeyle uyumlu: fontun CSS'i tıklanınca yüklenir. */}
+              <details className="mt-1">
+                <summary className="cursor-pointer text-[8px] font-bold text-white/40 hover:text-white/70"> görüntülü seç — 20 fontu kendi yazısıyla karşılaştır</summary>
+                <div className="mt-1 grid max-h-52 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-1">
+                  {ARABIC_FONTS.map((f) => {
+                    const secili = f.id === arabicFont;
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setArabicFont(f.id)}
+                        title={f.label}
+                        className={`rounded-md border px-1.5 py-1 text-center transition ${secili ? "border-amber-400/60 bg-amber-500/15" : "border-white/5 bg-white/[.03] hover:bg-white/[.08]"}`}
+                      >
+                        <span className="block truncate text-base leading-snug" dir="rtl" lang="ar" style={{ fontFamily: f.css }}>
+                          بِسْمِ ٱللَّهِ
+                        </span>
+                        <span className={`mt-0.5 block truncate text-[7px] font-bold ${secili ? "text-amber-300" : "text-white/40"}`}>{f.label.split(" (")[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-[7.5px] text-white/30">Not: fontun gerçek yazısı tıkladığın anda yüklenir (tembel yükleme) — liste hızlı açılır.</p>
+              </details>
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Boyutu</span>
