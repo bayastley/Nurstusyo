@@ -111,7 +111,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         const probe = await db<any>("rpc/nur_grant_video_rights", {
           method: "POST",
-          body: JSON.stringify({ p_user_id: "00000000-0000-0000-0000-000000000000", p_rights: {} }),
+          // ★ Gerçek imzayla test: (p_user_id text, p_video_kind text, p_amount integer)
+          //   Eski { p_rights } parametresi fonksiyonda yoktu → PostgREST
+          //   "function not found" dönüyor, panel yanlış alarm veriyordu.
+          body: JSON.stringify({ p_user_id: "00000000-0000-0000-0000-000000000000", p_video_kind: "kisa", p_amount: 0 }),
         });
         rpcOk = true; // 200 döndüyse fonksiyon mevcut (kullanıcı bulunamadı hatası bile olsa RPC çalışıyor demektir)
         rpcDetail = typeof probe === "object" ? JSON.stringify(probe).slice(0, 200) : "ok";
