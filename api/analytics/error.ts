@@ -30,6 +30,9 @@ declare const process: { env: Record<string, string | undefined> };
 // Lansman sonrası "kim nerede patladı" sorusuna cevap verir;
 // Sentry gibi harici servise gerek kalmaz, maliyet sıfır.
 // Tablo: nur_error_logs (message, stack, path, user_agent, created_at)
+// ★ YENİ: hata Türü (video/payment/auth/...) + kullanıcı e-postası
+//   kaydedilir → admin panelde "video üretim hatası — ahmet@gmail.com"
+//   gibi okunur satırlar görünür.
 // ════════════════════════════════════════════════════════
 
 function supabaseConfig() {
@@ -42,6 +45,18 @@ function supabaseConfig() {
 function sanitize(input: unknown, max: number): string {
   if (!input || typeof input !== "string") return "";
   return input.trim().slice(0, max).replace(/[<>"';]/g, "");
+}
+
+// ★ Hata türü: mesaj + stack içeriğinden otomatik tahmin edilir
+function detectKind(message: string, stack: string, path: string): string {
+  const hay = `${message} ${stack} ${path}`.toLowerCase();
+  if (hay.includes("iyzico") || hay.includes("payment") || hay.includes("checkout") || hay.includes("ödeme") || hay.includes("odeme")) return "payment";
+  if (hay.includes("render") || hay.includes("video") || hay.includes("canvas") || hay.includes("mediarecorder") || hay.includes("ffmpeg") || hay.includes("capturestream")) return "video";
+  if (hay.includes("auth") || hay.includes("google") || hay.includes("login") || hay.includes("session") || hay.includes("giris") || hay.includes("giriş")) return "auth";
+  if (hay.includes("r2:") || hay.includes("upload") || hay.includes("s3") || hay.includes("bucket")) return "upload";
+  if (hay.includes("audio") || hay.includes("ses") || hay.includes("tts") || hay.includes("elevenlabs")) return "audio";
+  if (hay.includes("supabase") || hay.includes("fetch") || hay.includes("network") || hay.includes("failed to fetch")) return "network";
+  return "genel";
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -61,6 +76,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const stack = sanitize(body.stack, 4000);
     const path = sanitize(body.path, 200) || "/";
     const source = sanitize(body.source, 40) || "window";
+    const kind = sanitize(body.kind, 20) || detectKind(message, stack, path);
+    // ★ Kullanıcı kimliği: frontend oturumdan e-postayı gönderir (misafirde boş)
+    const userEmail = sanitize(body.userEmail, 120).toLowerCase();
     const userAgent = sanitize(req.headers["user-agent"], 300);
 
     // Aynı hata 5 dakika içinde tekrar geliyorsa yut (retry döngüsü koruması)
@@ -83,7 +101,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         "Content-Type": "application/json",
         "Prefer": "return=minimal",
       },
-      body: JSON.stringify({ message, stack, path, source, user_agent: userAgent, fingerprint }),
+      body: JSON.stringify({ message, stack, path, source, user_agent: userAgent, fingerprint, kind, user_email: userEmail }),
     });
 
     if (!insertRes.ok) {

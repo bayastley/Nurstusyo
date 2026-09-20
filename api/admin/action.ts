@@ -312,15 +312,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ]);
       return res.status(200).json({ ok: true, user: users[0], orders, wallet: wallets[0] || null, subscriptions: subs, auditLogs });
     } else if (action === "list_errors") {
-      // ★ HATA LOGLARI — son 50 frontend hatası + 24 saatlik istatistik
+      // ★ HATA LOGLARI — son 500 hata (sayfalama client'ta) + 24 saatlik istatistik
+      //   kind/user_email kolonları hata türü + kim yaşadı bilgisini taşır
       const [rows, stats] = await Promise.all([
-        db<any[]>("nur_error_logs?select=id,message,stack,path,source,user_agent,fingerprint,created_at&order=created_at.desc&limit=50").catch(() => [] as any[]),
+        db<any[]>("nur_error_logs?select=id,message,stack,path,source,user_agent,fingerprint,kind,user_email,created_at&order=created_at.desc&limit=500").catch(() => [] as any[]),
         db<any[]>("nur_error_logs?select=fingerprint,created_at&created_at=gte." + new Date(Date.now() - 24 * 3600_000).toISOString()).catch(() => [] as any[]),
       ]);
-      // 24 saatlik özet: toplam + benzersiz hata sayısı
+      // 24 saatlik özet: toplam + benzersiz hata sayısı + tür dağılımı
       const toplam24 = stats.length;
       const benzersiz = new Set(stats.map((r) => r.fingerprint)).size;
-      return res.status(200).json({ ok: true, errors: rows, stats: { total24h: toplam24, unique24h: benzersiz } });
+      const turDagilimi: Record<string, number> = {};
+      for (const r of rows) { const k = String(r.kind || "genel"); turDagilimi[k] = (turDagilimi[k] || 0) + 1; }
+      return res.status(200).json({ ok: true, errors: rows, stats: { total24h: toplam24, unique24h: benzersiz, turDagilimi } });
     } else if (action === "list_feedback") {
       // ★ GERİ BİLDİRİMLER — son 50 mesaj + tür/puan dağılımı (sadece admin)
       const [rows, turRows, puanRows] = await Promise.all([

@@ -582,7 +582,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               const catLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (maintenanceLocked || !tierAtLeast(accessTier, catTier));
               const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
               const videoLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && !catLocked && idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier);
-              const locked = catLocked || videoLocked;
+              // ★ ADMIN: kilitlı GÖRÜR ama kullanabilir — ne yaptığını görsün, kilit onu engellemesin
+              const locked = !isMasterSürüm && (catLocked || videoLocked);
               const lockKind = maintenanceLocked ? "maintenance" : catLocked ? (catTier === "pro" ? "pro" : "elit") : (nextTier === "elit" ? "elit" : "pro");
               return (
                 <div key={clip.id} className="relative">

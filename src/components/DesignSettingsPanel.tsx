@@ -178,7 +178,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   const dynamicLock = getFeatureLock(item.id, "free");
                   const requiredTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : reciterRequiredTier(item);
                   const maintenanceLocked = dynamicLock === "maintenance" || dynamicLock === "off";
-                  const reciterLocked = maintenanceLocked || !tierAtLeast(accessTier, requiredTier);
+                  // ★ ADMIN: kilitı GÖRÜR ama kullanabilir (görsel gösterge, engel değil)
+                  const reciterLocked = !isMasterSürüm && (maintenanceLocked || !tierAtLeast(accessTier, requiredTier));
+                  const reciterMaintenance = maintenanceLocked;
                   const riskPercent = item.telifRiski ?? risk.percent;
                   const riskColor = item.risk === "low" ? "#34d399" : item.risk === "mid" ? "#fbbf24" : "#f87171";
                   return (
@@ -204,7 +206,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                           <span className="text-white/35 truncate">• {item.country}</span>
                         </span>
                       </span>
-                      {reciterLocked && <LockBadge kind={maintenanceLocked ? "maintenance" : requiredTier === "pro" ? "pro" : "elit"} onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                      {reciterMaintenance && <LockBadge kind="maintenance" position="top-right" />}
                       <span
                         role="button"
                         title={reciterLocked ? "Üyelik gerekli" : "Ses örneğini çal"}

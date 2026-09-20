@@ -3,9 +3,34 @@
 // Sentry'siz hata izleme: patlayan her hata /api/analytics/error
 // ucuna yazılır, admin panelde görülebilir. Siteyi ASLA bozmaz.
 // Kurulum: initErrorReport() — main.tsx'te bir kez çağrılır.
+// ★ v2: her kayda "kim yaşadı" (e-posta) eklenir → admin panelde
+//   "🎬 Video üretim hatası — ahmet@gmail.com" gibi okunur satırlar.
 // ═══════════════════════════════════════════════════════════
 
+import { secureGet } from "../secureStore";
+
 let gonderildi = new Set<string>(); // aynı hata oturumda 1 kez
+
+// ★ Oturumdaki kullanıcının e-postası — hata anında okunur (giriş yoksa boş)
+function currentUserEmail(): string {
+  try {
+    const user = secureGet<{ email?: string } | null>("nur_user_v1", null);
+    return typeof user?.email === "string" ? user.email.slice(0, 120) : "";
+  } catch { return ""; }
+}
+
+// ★ Hata türü — sunucuyla aynı kurallar (detectKind), mesajdan Türkçe etiket
+export function hataTuruEtiketi(kind: string): string {
+  switch (kind) {
+    case "video": return "🎬 Video üretim hatası";
+    case "payment": return "💳 Ödeme hatası (iyzico)";
+    case "auth": return "🔐 Giriş/oturum hatası";
+    case "upload": return "☁️ Yükleme hatası (R2)";
+    case "audio": return "🎧 Ses hatası";
+    case "network": return "🌐 Bağlantı hatası";
+    default: return "⚠️ Genel hata";
+  }
+}
 
 function raporla(source: string, message: string, stack?: string) {
   try {
@@ -19,6 +44,7 @@ function raporla(source: string, message: string, stack?: string) {
       message: String(message).slice(0, 500),
       stack: String(stack || "").slice(0, 4000),
       path: location.pathname,
+      userEmail: currentUserEmail(),
     });
     if (typeof navigator.sendBeacon === "function") {
       navigator.sendBeacon("/api/analytics/error", new Blob([payload], { type: "application/json" }));

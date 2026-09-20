@@ -44,8 +44,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [historyEmail, setHistoryEmail] = useState("");
   // ★ Hata logları — Hata Logları sekmesi için
   const [errorLogs, setErrorLogs] = useState<any[]>([]);
-  const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number } | null>(null);
+  const [errorStats, setErrorStats] = useState<{ total24h: number; unique24h: number; turDagilimi?: Record<string, number> } | null>(null);
   const [errorLoading, setErrorLoading] = useState(false);
+  // ★ Hata filtresi + sayfalama: her sayfada 10 kayıt, kalabalık olmasın
+  const [errorFilter, setErrorFilter] = useState<"all" | "unique" | string>("all"); // all | unique | video | payment | auth | ...
+  const [errorPage, setErrorPage] = useState(0);
   // ★ HATA ALARMI: son 24 saatte hata sayısı eşik aşarsa panelde uyarı
   //   eşikler: 10+ → sarı (dikkat), 30+ → kırmızı (acil)
   const [errorAlarm, setErrorAlarm] = useState<"ok" | "warn" | "alarm">("ok");
@@ -177,6 +180,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       if (data?.ok) {
         setErrorLogs(data.errors || []);
         setErrorStats(data.stats || null);
+        setErrorPage(0);
       } else notify(data?.error || "Hata logları alınamadı");
     } catch { notify("Sunucuya ulaşılamadı"); }
     finally { setErrorLoading(false); }
@@ -851,19 +855,76 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               </div>
             </div>
           )}
-          {activeTab === "errors" && (
+          {activeTab === "errors" && (() => {
+            // ★ SAYFALAMA + FİLTRE: her sayfada 10 kayıt, sayfa sayfa gezilir
+            const PAGE_SIZE = 10;
+            const turEtiketleri: Record<string, string> = {
+              video: "🎬 Video", payment: "💳 Ödeme", auth: "🔐 Giriş", upload: "☁️ Yükleme", audio: "🎧 Ses", network: "🌐 Bağlantı", genel: "⚠️ Genel",
+            };
+            const turRenkleri: Record<string, string> = {
+              video: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+              payment: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+              auth: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+              upload: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+              audio: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+              network: "bg-orange-500/15 text-orange-300 border-orange-500/30",
+              genel: "bg-white/10 text-white/60 border-white/20",
+            };
+            const okunurMesaj = (msg: string): string => {
+              const m = String(msg || "");
+              if (/failed to fetch|networkerror|network error/i.test(m)) return "İnternet bağlantısı kesildi — istek sunucuya ulaşamadı";
+              if (/401|unauthorized|yetkisiz/i.test(m)) return "Oturum süresi doldu — kullanıcı yeniden giriş yapmalı";
+              if (/403|forbidden/i.test(m)) return "Yetkisiz işlem denemesi";
+              if (/404/i.test(m)) return "Aranan kaynak bulunamadı";
+              if (/429|too many/i.test(m)) return "Çok fazla istek — hız limiti devreye girdi";
+              if (/500|internal server/i.test(m)) return "Sunucu hatası — Vercel fonksiyonu patladı";
+              if (/mediarecorder|canvas|capturestream|render/i.test(m)) return "Video oluşturma (render) sırasında tarayıcı kısıtı";
+              if (/iyzico|payment|checkout/i.test(m)) return "Ödeme akışında sorun";
+              if (/supabase/i.test(m)) return "Veritabanı bağlantı sorunu";
+              if (/storage|quota|bellek|memory/i.test(m)) return "Bellek/disk sınırı aşıldı";
+              return m.length > 90 ? m.slice(0, 90) + "…" : m;
+            };
+            // Benzersiz filtresi: aynı mesajdan yalnızca EN YENİ olanı göster
+            const gorunen = errorFilter === "unique"
+              ? errorLogs.filter((l, i, arr) => arr.findIndex((x) => x.fingerprint === l.fingerprint) === i)
+              : errorFilter === "all"
+                ? errorLogs
+                : errorLogs.filter((l) => String(l.kind || "genel") === errorFilter);
+            const sayfaSayisi = Math.max(1, Math.ceil(gorunen.length / PAGE_SIZE));
+            const guvenliSayfa = Math.min(errorPage, sayfaSayisi - 1);
+            const sayfadaki = gorunen.slice(guvenliSayfa * PAGE_SIZE, guvenliSayfa * PAGE_SIZE + PAGE_SIZE);
+            const turlar = Array.from(new Set(errorLogs.map((l) => String(l.kind || "genel"))));
+            return (
             <div className="space-y-4">
-              {/* İstatistik özeti */}
+              {/* İstatistik özeti — BUTONLAR: tıklayınca filtre uygular */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-center">
+                <button onClick={() => { setErrorFilter("all"); setErrorPage(0); }}
+                  className={`rounded-2xl border p-4 text-center transition ${errorFilter === "all" ? "border-amber-400/60 bg-amber-500/20 ring-1 ring-amber-400/40" : "border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"}`}>
                   <p className="text-2xl font-black text-amber-300">{errorStats?.total24h ?? "—"}</p>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Son 24 saat · toplam</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
+                </button>
+                <button onClick={() => { setErrorFilter("unique"); setErrorPage(0); }}
+                  className={`rounded-2xl border p-4 text-center transition ${errorFilter === "unique" ? "border-white/40 bg-white/15 ring-1 ring-white/30" : "border-white/10 bg-white/5 hover:bg-white/10"}`}>
                   <p className="text-2xl font-black text-white">{errorStats?.unique24h ?? "—"}</p>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Benzersiz hata</p>
-                </div>
+                </button>
               </div>
+
+              {/* Tür filtresi — varsa tür butonları */}
+              {turlar.length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {turlar.map((t) => {
+                    const adet = errorLogs.filter((l) => String(l.kind || "genel") === t).length;
+                    const aktif = errorFilter === t;
+                    return (
+                      <button key={t} onClick={() => { setErrorFilter(t); setErrorPage(0); }}
+                        className={`rounded-lg border px-2.5 py-1 text-[10px] font-bold transition ${aktif ? turRenkleri[t] + " ring-1 ring-white/40" : turRenkleri[t] + " opacity-60 hover:opacity-100"}`}>
+                        {turEtiketleri[t] || t} · {adet}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Yenile / temizle */}
               <div className="flex gap-2">
@@ -889,19 +950,25 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
               {/* Liste */}
               <div className="space-y-2">
-                {errorLogs.length > 0 ? errorLogs.map((log) => {
+                {sayfadaki.length > 0 ? sayfadaki.map((log) => {
                   const cihaz = String(log.user_agent || "");
                   const cihazKisa = cihaz.includes("Mobile") ? "📱 Mobil" : cihaz.includes("Tablet") ? "📟 Tablet" : "💻 Masaüstü";
                   const tarayici = cihaz.includes("Edg/") ? "Edge" : cihaz.includes("Chrome/") ? "Chrome" : cihaz.includes("Firefox/") ? "Firefox" : cihaz.includes("Safari/") ? "Safari" : "Diğer";
+                  const kind = String(log.kind || "genel");
                   return (
                     <div key={log.id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-[10.5px] space-y-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-amber-300 truncate" title={log.message}>{log.message}</span>
+                        <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-black ${turRenkleri[kind] || turRenkleri.genel}`}>{turEtiketleri[kind] || kind}</span>
+                        <span className="flex-1 truncate px-1 font-bold text-amber-300" title={log.message}>{okunurMesaj(log.message)}</span>
                         <span className="flex shrink-0 items-center gap-1">
                           <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{log.source}</span>
                           <button onClick={() => deleteErrorLog(log.id)} title="Bu kaydı sil"
                             className="rounded px-1 py-0.5 text-[8px] font-black text-white/30 transition hover:bg-red-500/20 hover:text-red-300">✕</button>
                         </span>
+                      </div>
+                      {/* ★ KİM YAŞADI — kullanıcı e-postası (misafirde ghost) */}
+                      <div className={`flex items-center gap-1 text-[9.5px] font-bold ${log.user_email ? "text-sky-300" : "text-white/35"}`}>
+                        {log.user_email ? <><UserCheck size={11} /> {log.user_email}</> : "👻 Misafir kullanıcı (giriş yapmamış)"}
                       </div>
                       {log.stack && (
                         <details className="text-white/40">
@@ -917,12 +984,28 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   );
                 }) : (
                   <p className="p-6 text-center text-[10px] text-white/40 italic">
-                    {errorLoading ? "Yükleniyor…" : "Henüz hata kaydı yok — sistem temiz çalışıyor ✨"}
+                    {errorLoading ? "Yükleniyor…" : errorFilter === "all" ? "Henüz hata kaydı yok — sistem temiz çalışıyor ✨" : "Bu filtrede kayıt yok"}
                   </p>
                 )}
               </div>
+
+              {/* Sayfalama: her sayfada 10, aşağıda sayfa butonları */}
+              {sayfaSayisi > 1 && (
+                <div className="flex items-center justify-center gap-1.5 pt-1">
+                  <button onClick={() => setErrorPage(Math.max(0, guvenliSayfa - 1))} disabled={guvenliSayfa === 0}
+                    className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/70 disabled:opacity-30 hover:bg-white/20">‹</button>
+                  {Array.from({ length: sayfaSayisi }, (_, i) => i).slice(Math.max(0, guvenliSayfa - 2), Math.max(0, guvenliSayfa - 2) + 5).map((i) => (
+                    <button key={i} onClick={() => setErrorPage(i)}
+                      className={`h-7 w-7 rounded-lg text-[10px] font-black transition ${i === guvenliSayfa ? "bg-amber-400 text-black" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>{i + 1}</button>
+                  ))}
+                  <button onClick={() => setErrorPage(Math.min(sayfaSayisi - 1, guvenliSayfa + 1))} disabled={guvenliSayfa === sayfaSayisi - 1}
+                    className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/70 disabled:opacity-30 hover:bg-white/20">›</button>
+                  <span className="ml-1 text-[9px] text-white/35">{gorunen.length} kayıt · sayfa {guvenliSayfa + 1}/{sayfaSayisi}</span>
+                </div>
+              )}
             </div>
-          )}
+            );
+          })()}
         </div>
 
         {/* Footer */}
