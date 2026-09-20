@@ -36,6 +36,9 @@ export interface DesignSettingsPanelProps {
   ARABIC_FONTS: Array<{ id: string; label: string; css: string }>;
   textSize: "kucuk" | "normal" | "buyuk";
   setTextSize: (s: "kucuk" | "normal" | "buyuk") => void;
+  // ★ İnce ayar: kullanıcı +/- ile yazıyı büyütüp küçültür (0.5x – 2.0x)
+  textSizeMul: number;
+  setTextSizeMul: (m: number) => void;
   shimmerStyle: string;
   setShimmerStyle: (s: string) => void;
   SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }>;

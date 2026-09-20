@@ -44,6 +44,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   setArabicFont,
   ARABIC_FONTS,
   textSize,
+  textSizeMul,
+  setTextSizeMul,
   setTextSize,
   shimmerStyle,
   setShimmerStyle,
@@ -309,6 +311,34 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <option value="normal">Normal</option>
                 <option value="buyuk">Büyük (Önerilen)</option>
               </select>
+              {/* ★ İNCE AYAR — +/- ile istediğin büyüklüğü kendin belirle */}
+              <span className="mt-1 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setTextSizeMul(textSizeMul - 0.05)}
+                  disabled={textSizeMul <= 0.5}
+                  title="Yazıyı küçült"
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >−</button>
+                <span className="min-w-[46px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-white/70" title="İnce ayar çarpanı">
+                  %{Math.round(textSizeMul * 100)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTextSizeMul(textSizeMul + 0.05)}
+                  disabled={textSizeMul >= 2}
+                  title="Yazıyı büyüt"
+                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
+                >+</button>
+                {textSizeMul !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setTextSizeMul(1)}
+                    title="Varsayılan boyuta dön"
+                    className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
+                  >sıfırla</button>
+                )}
+              </span>
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Işıltısı</span>

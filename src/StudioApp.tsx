@@ -251,7 +251,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [brandPos]);
   const [textOffset, setTextOffset] = useState({ x: 0, y: 0 });
   const arabicFontCss = ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif";
-  const textSizeMul = textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1;
+  // ★ Yazı boyutu: hazır ayar × ince ayar (kullanıcı +/- ile 0.5x–2.0x arası)
+  const [textSizeFine, setTextSizeFine] = useState<number>(() => {
+    const raw = localStorage.getItem("nur_text_size_fine");
+    const n = raw ? parseFloat(raw) : NaN;
+    return Number.isFinite(n) ? Math.min(2, Math.max(0.5, n)) : 1;
+  });
+  const setTextSizeMul = (m: number) => {
+    const clamped = Math.round(Math.min(2, Math.max(0.5, m)) * 100) / 100;
+    setTextSizeFine(clamped);
+    try { localStorage.setItem("nur_text_size_fine", String(clamped)); } catch { /* ignore */ }
+  };
+  const textSizeMul = (textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1) * textSizeFine;
 
   const CINE_FILTERS = _CINE_FILTERS;
   const [cinematic, setCinematic] = useState("orijinal");
@@ -1474,6 +1485,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           ARABIC_FONTS={ARABIC_FONTS}
           textSize={textSize}
           setTextSize={setTextSize}
+          textSizeMul={textSizeFine}
+          setTextSizeMul={setTextSizeMul}
           shimmerStyle={shimmerStyle}
           setShimmerStyle={setShimmerStyle}
           SHIMMER_STYLES={SHIMMER_STYLES}
