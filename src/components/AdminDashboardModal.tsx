@@ -886,16 +886,20 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               if (/storage|quota|bellek|memory/i.test(m)) return "Bellek/disk sınırı aşıldı";
               return m.length > 90 ? m.slice(0, 90) + "…" : m;
             };
-            // ★ GRUPLAMA: aynı fingerprint'ten EN YENİSİ + ×N sayacı
+            // ★ GRUPLAMA: aynı fingerprint'ten EN YENİSİ + ×N sayacı + İLK GÖRÜLME zamanı
             const grupla = (list: any[]) => {
-              const map = new Map<string, { log: any; adet: number }>();
+              const map = new Map<string, { log: any; adet: number; ilkZaman: string }>();
+              // liste created_at.desc sıralı — döngü biterken ilkZaman en eski kayıt olur
+              let sonSonuc: { log: any; adet: number; ilkZaman: string }[] = [];
+              const temp = new Map<string, { log: any; adet: number; ilkZaman: string }>();
               for (const l of list) {
                 const key = String(l.fingerprint || l.id);
-                const cur = map.get(key);
-                if (cur) cur.adet++;
-                else map.set(key, { log: l, adet: 1 });
+                const cur = temp.get(key);
+                if (cur) { cur.adet++; cur.ilkZaman = l.created_at; } // desc sıralı → son gelen en eski
+                else temp.set(key, { log: l, adet: 1, ilkZaman: l.created_at });
               }
-              return [...map.values()];
+              sonSonuc = [...temp.values()];
+              return sonSonuc;
             };
             const ham = errorFilter === "all"
               ? errorLogs
@@ -907,7 +911,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     ? errorLogs.filter((l) => !String(l.source || "").startsWith("server:"))
                     : errorLogs.filter((l) => String(l.kind || "genel") === errorFilter);
             const gorunen: any[] = errorGrouped && errorFilter !== "unique"
-              ? grupla(ham).map((g) => ({ ...g.log, __adet: g.adet }))
+              ? grupla(ham).map((g) => ({ ...g.log, __adet: g.adet, __ilk: g.ilkZaman }))
               : ham;
             const sayfaSayisi = Math.max(1, Math.ceil(gorunen.length / PAGE_SIZE));
             const guvenliSayfa = Math.min(errorPage, sayfaSayisi - 1);
@@ -1028,7 +1032,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       )}
                       <div className="flex items-center justify-between text-[8.5px] text-white/40 pt-1 border-t border-white/5">
                         <span>{cihazKisa} · {tarayici} · {log.path || "/"}</span>
-                        <span>{new Date(log.created_at).toLocaleString("tr-TR")}</span>
+                        <span title={log.__ilk && log.__ilk !== log.created_at ? `İlk görülme: ${new Date(log.__ilk).toLocaleString("tr-TR")}` : undefined}>
+                          {log.__ilk && log.__ilk !== log.created_at ? (
+                            <>ilk: {new Date(log.__ilk).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · son: {new Date(log.created_at).toLocaleString("tr-TR")}</>
+                          ) : (
+                            new Date(log.created_at).toLocaleString("tr-TR")
+                          )}
+                        </span>
                       </div>
                     </div>
                   );
