@@ -182,6 +182,25 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     finally { setErrorLoading(false); }
   };
 
+  // ★ TEK hata kaydını sil (satır bazlı)
+  const deleteErrorLog = async (id: unknown) => {
+    try {
+      await fetch("/api/admin/action", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "delete_error", id: String(id) }) });
+    } catch { /* sessiz */ }
+    setErrorLogs((cur) => cur.filter((l) => String(l.id) !== String(id)));
+  };
+
+  // ★ TÜM hata kayıtlarını sil (admin onaylı)
+  const clearAllErrorLogs = async () => {
+    if (!confirm("TÜM hata kayıtları kalıcı olarak silinsin mi? Bu işlem geri alınamaz!")) return;
+    try {
+      await fetch("/api/admin/action", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clear_all_errors" }) });
+    } catch { /* sessiz */ }
+    setErrorLogs([]);
+    setErrorStats(null);
+    notify("Tüm hata kayıtları silindi");
+  };
+
   // Hata Logları sekmesine ilk geçişte yükle
   useEffect(() => {
     if (activeTab === "errors" && errorLogs.length === 0 && !errorLoading) loadErrorLogs();
@@ -862,6 +881,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-[10px] font-bold text-red-300 transition hover:bg-red-500/20">
                   🗑 Eskileri temizle
                 </button>
+                <button onClick={clearAllErrorLogs}
+                  className="rounded-xl border border-red-500/40 bg-red-500/20 px-3 py-2 text-[10px] font-black text-red-200 transition hover:bg-red-500/30">
+                  🔥 Tümünü temizle
+                </button>
               </div>
 
               {/* Liste */}
@@ -874,7 +897,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                     <div key={log.id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-[10.5px] space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-bold text-amber-300 truncate" title={log.message}>{log.message}</span>
-                        <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{log.source}</span>
+                        <span className="flex shrink-0 items-center gap-1">
+                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{log.source}</span>
+                          <button onClick={() => deleteErrorLog(log.id)} title="Bu kaydı sil"
+                            className="rounded px-1 py-0.5 text-[8px] font-black text-white/30 transition hover:bg-red-500/20 hover:text-red-300">✕</button>
+                        </span>
                       </div>
                       {log.stack && (
                         <details className="text-white/40">

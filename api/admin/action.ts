@@ -346,6 +346,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // ★ HATA LOGLARINI TEMİZLE — 30 günden eski kayıtları sil
       await db(`nur_error_logs?created_at=lt.${new Date(Date.now() - 30 * 24 * 3600_000).toISOString()}`, { method: "DELETE" }).catch(() => null);
       return res.status(200).json({ ok: true });
+    } else if (action === "clear_all_errors") {
+      // ★ TÜM hata kayıtlarını sil (admin onaylı) — PostgREST filtresiz DELETE reddettiği için id=neq.0 hilesi
+      await db("nur_error_logs?id=neq.0", { method: "DELETE" }).catch(() => null);
+      return res.status(200).json({ ok: true });
+    } else if (action === "delete_error") {
+      // ★ TEK hata kaydını sil (satır bazlı çöp kutusu)
+      const logId = String(body.id || "").replace(/[^0-9a-zA-Z_-]/g, "").slice(0, 64);
+      if (!logId) return res.status(400).json({ ok: false, error: "Geçersiz kayıt" });
+      await db(`nur_error_logs?id=eq.${encodeURIComponent(logId)}`, { method: "DELETE" }).catch(() => null);
+      return res.status(200).json({ ok: true });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || ""), metadata: { ip: String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 300) } }) }).catch(() => null);
     return res.status(200).json({ ok: true });
