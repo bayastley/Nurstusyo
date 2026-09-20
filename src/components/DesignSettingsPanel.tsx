@@ -321,7 +321,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <option value="normal">Normal</option>
                 <option value="buyuk">Büyük (Önerilen)</option>
               </select>
-              {/* ★ İNCE AYAR — +/- ile istediğin büyüklüğü kendin belirle */}
+              {/* ★ İNCE AYAR — slider ile sürükle ya da +/- ile adım adım */}
               <span className="mt-1 flex items-center gap-1">
                 <button
                   type="button"
@@ -330,6 +330,17 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   title="Yazıyı küçült"
                   className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
                 >−</button>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={2}
+                  step={0.05}
+                  value={textSizeMul}
+                  onChange={(e) => setTextSizeMul(parseFloat(e.target.value))}
+                  title="Sürükleyerek yazı boyutunu ayarla (50%–200%)"
+                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-amber-400"
+                  style={{ accentColor: "#fbbf24" }}
+                />
                 <span className="min-w-[46px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-white/70" title="İnce ayar çarpanı">
                   %{Math.round(textSizeMul * 100)}
                 </span>
