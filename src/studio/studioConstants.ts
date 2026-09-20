@@ -84,11 +84,30 @@ export const SURAH_CATEGORY_HINT: Record<string, CatId> = {
 };
 
 export const ARABIC_FONTS: Array<{ id: string; label: string; css: string }> = [
+  // ─── Klasik Mushaf / Naskh ailesi ───
   { id: "amiri", label: "Amiri (Klasik Hat)", css: "Amiri, serif" },
   { id: "scheherazade", label: "Scheherazade (Kur'an)", css: "'Scheherazade New', serif" },
   { id: "lateef", label: "Lateef (İnce Zarif)", css: "Lateef, serif" },
-  { id: "reemkufi", label: "Reem Kufi (Modern)", css: "'Reem Kufi', sans-serif" },
+  { id: "noto-naskh", label: "Noto Naskh (Mushaf)", css: "'Noto Naskh Arabic', serif" },
+  { id: "harmattan", label: "Harmattan (Sade Naskh)", css: "Harmattan, sans-serif" },
+  { id: "mada", label: "Mada (Temiz Okunur)", css: "Mada, sans-serif" },
+  // ─── Sülüs / Talik tarzı ───
   { id: "arefruqaa", label: "Aref Ruqaa (Rika Hat)", css: "'Aref Ruqaa', serif" },
+  { id: "amiri-quran", label: "Amiri Kur'an (Ayet İşaretli)", css: "'Amiri Quran', serif" },
+  { id: "katibeh", label: "Katibeh (Başlık Sülüs)", css: "Katibeh, serif" },
+  { id: "mirza", label: "Mirza (Talik Havası)", css: "Mirza, serif" },
+  { id: "vazirmatn", label: "Vazirmatn (Akıcı Modern)", css: "Vazirmatn, sans-serif" },
+  // ─── Kufi / Modern ailesi ───
+  { id: "reemkufi", label: "Reem Kufi (Modern)", css: "'Reem Kufi', sans-serif" },
+  { id: "cairo", label: "Cairo (Modern Kufi)", css: "Cairo, sans-serif" },
+  { id: "tajawal", label: "Tajawal (Yumuşak Modern)", css: "Tajawal, sans-serif" },
+  { id: "elmessiri", label: "El Messiri (Zarif Kufi)", css: "'El Messiri', sans-serif" },
+  { id: "changa", label: "Changa (Kalın Başlık)", css: "Changa, sans-serif" },
+  { id: "kufam", label: "Kufam (Geometrik Kufi)", css: "Kufam, sans-serif" },
+  // ─── Süsleme / Diwani tarzı ───
+  { id: "laref-ruqaa", label: "Lalezar (Kalın Gösteriş)", css: "Lalezar, serif" },
+  { id: "rukola", label: "Marhey (Eğlencelı Geniş)", css: "Marhey, sans-serif" },
+  { id: "rummani", label: "Ruwudu (Nostaljik)", css: "Ruwudu, serif" },
 ];
 
 export const SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }> = [
