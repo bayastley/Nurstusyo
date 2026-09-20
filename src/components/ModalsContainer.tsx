@@ -531,7 +531,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const adminLocked = adminAcc === "v2" || adminAcc === "pro" || adminAcc === "elit";
                 const adminUsable = !isAdminAtmosphere || adminAcc === null ? true : (adminAcc === "v2" ? false : (adminAcc === "pro" ? (accessTier === "pro" || accessTier === "elit") : adminAcc === "elit" ? accessTier === "elit" : true));
                 const lockLevel = adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
-                const hardLocked = !ATMOSPHERE_PREVIEW_UNLOCKED && (adminLocked ? !adminUsable : (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id))));
+                // ★ ADMIN: isMasterSürüm=true → v2/pro/elit dahil TÜM kilitler açık (görsel + tıklama)
+                const hardLocked = !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (adminLocked ? !adminUsable : (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id))));
                 // ★ Arama kutusuna yazınca eşleşen KLASÖR sarı yanar — yerini gösterir
                 const q = atmosQuery.trim().toLocaleLowerCase("tr");
                 const searchHit = q.length >= 2 && !active && category.label.toLocaleLowerCase("tr").includes(q);

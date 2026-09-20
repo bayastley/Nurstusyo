@@ -83,16 +83,18 @@ export function getAdminCatAccess(adminCatId: string): AdminCatAccess {
   return ACCESS_MAP[adminCatId] ?? "hidden";
 }
 
-/** Bu admin kategorisi kullanıcının tier'ına göre görünebilir mi? */
-export function adminCatVisible(adminCatId: string, tier: "free" | "pro" | "elit" | null): boolean {
+/** Bu admin kategorisi kullanıcının tier'ına göre görünebilir mi? master=true (admin) → HER ŞEY açık. */
+export function adminCatVisible(adminCatId: string, tier: "free" | "pro" | "elit" | null, master = false): boolean {
+  if (master) return true; // ★ ADMIN: v2/pro/elit/hidden — hepsi görünür ve açık
   const acc = getAdminCatAccess(adminCatId);
   if (acc === "hidden") return false;
   if (acc === "v2") return true; // V2 vitrinde KİLİTLİ olarak görünür
   return acc === "pro" ? (tier === "pro" || tier === "elit") : tier === "elit";
 }
 
-/** Bu admin kategorisinin İÇERİĞİ kullanılabilir mi? (V2 kilitli = kullanılamaz) */
-export function adminCatUsable(adminCatId: string, tier: "free" | "pro" | "elit" | null): boolean {
+/** Bu admin kategorisinin İÇERİĞİ kullanılabilir mi? master=true (admin) → HER ŞEY kullanılabilir. */
+export function adminCatUsable(adminCatId: string, tier: "free" | "pro" | "elit" | null, master = false): boolean {
+  if (master) return true; // ★ ADMIN: v2 dahil tüm kilitler açık
   const acc = getAdminCatAccess(adminCatId);
   if (acc === "hidden" || acc === "v2") return false;
   return acc === "pro" ? (tier === "pro" || tier === "elit") : tier === "elit";
