@@ -392,6 +392,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   >sıfırla</button>
                 )}
               </span>
+              {/* ★ CANLI ÖNİZLEME — slider'ı sürüklerken besmele anında büyür/küçülür */}
+              <span className="mt-1 flex h-9 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2" style={{ direction: "rtl" }} title="Arapça yazının videodaki gerçek boyutu">
+                <span className="whitespace-nowrap leading-none text-amber-200/90" style={{ fontSize: `${13 * textSizeMul}px`, fontFamily: "'Amiri', serif", transition: "font-size 60ms linear" }}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
+              </span>
               {/* ★ MEAL BOYUTU — Arapça'dan BAĞIMSIZ ince ayar */}
               <span className="mt-1.5 flex items-center gap-1" title="Meal (çeviri) metninin boyutu — Arapça'dan bağımsız">
                 <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Meal</span>
@@ -428,6 +432,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                     className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
                   >sıfırla</button>
                 )}
+              </span>
+              {/* ★ MEAL CANLI ÖNİZLEME — meal slider'ı sürüklerken örnek metin anında değişir */}
+              <span className="mt-1 flex h-8 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2" title="Meal metninin videodaki gerçek boyutu">
+                <span className="whitespace-nowrap leading-none text-sky-200/80" style={{ fontSize: `${9 * mealSizeMul}px`, transition: "font-size 60ms linear" }}>Rahmân ve Rahîm olan Allah'ın adıyla</span>
               </span>
             </label>
             <label className="block">
