@@ -49,6 +49,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // ★ Hata filtresi + sayfalama: her sayfada 10 kayıt, kalabalık olmasın
   const [errorFilter, setErrorFilter] = useState<"all" | "unique" | string>("all"); // all | unique | video | payment | auth | ...
   const [errorPage, setErrorPage] = useState(0);
+  // ★ GRUPLAMA: aynı hata (fingerprint) tek satırda ×N sayacıyla birleştirilir
+  const [errorGrouped, setErrorGrouped] = useState(true);
   // ★ HATA ALARMI: son 24 saatte hata sayısı eşik aşarsa panelde uyarı
   //   eşikler: 10+ → sarı (dikkat), 30+ → kırmızı (acil)
   const [errorAlarm, setErrorAlarm] = useState<"ok" | "warn" | "alarm">("ok");
@@ -884,12 +886,25 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               if (/storage|quota|bellek|memory/i.test(m)) return "Bellek/disk sınırı aşıldı";
               return m.length > 90 ? m.slice(0, 90) + "…" : m;
             };
-            // Benzersiz filtresi: aynı mesajdan yalnızca EN YENİ olanı göster
-            const gorunen = errorFilter === "unique"
-              ? errorLogs.filter((l, i, arr) => arr.findIndex((x) => x.fingerprint === l.fingerprint) === i)
-              : errorFilter === "all"
-                ? errorLogs
+            // ★ GRUPLAMA: aynı fingerprint'ten EN YENİSİ + ×N sayacı
+            const grupla = (list: any[]) => {
+              const map = new Map<string, { log: any; adet: number }>();
+              for (const l of list) {
+                const key = String(l.fingerprint || l.id);
+                const cur = map.get(key);
+                if (cur) cur.adet++;
+                else map.set(key, { log: l, adet: 1 });
+              }
+              return [...map.values()];
+            };
+            const ham = errorFilter === "all"
+              ? errorLogs
+              : errorFilter === "unique"
+                ? errorLogs.filter((l, i, arr) => arr.findIndex((x) => x.fingerprint === l.fingerprint) === i)
                 : errorLogs.filter((l) => String(l.kind || "genel") === errorFilter);
+            const gorunen: any[] = errorGrouped && errorFilter !== "unique"
+              ? grupla(ham).map((g) => ({ ...g.log, __adet: g.adet }))
+              : ham;
             const sayfaSayisi = Math.max(1, Math.ceil(gorunen.length / PAGE_SIZE));
             const guvenliSayfa = Math.min(errorPage, sayfaSayisi - 1);
             const sayfadaki = gorunen.slice(guvenliSayfa * PAGE_SIZE, guvenliSayfa * PAGE_SIZE + PAGE_SIZE);
@@ -932,6 +947,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                   className="flex-1 rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
                   {errorLoading ? "Yükleniyor…" : "↻ Yenile"}
                 </button>
+                <button onClick={() => { setErrorGrouped(!errorGrouped); setErrorPage(0); }}
+                  title={errorGrouped ? "Aynı hatalar tek satırda ×N sayacıyla birleştiriliyor — tıkla, her kaydı tek tek gör" : "Kayıtlar tek tek listeleniyor — tıkla, aynı hatalar tek satırda birleşsin"}
+                  className={`rounded-xl border px-3 py-2 text-[10px] font-bold transition ${errorGrouped ? "border-sky-400/40 bg-sky-500/15 text-sky-300" : "border-white/15 bg-white/5 text-white/50 hover:bg-white/10"}`}>
+                  📚 {errorGrouped ? "Gruplu" : "Tek tek"}
+                </button>
                 <button
                   onClick={async () => {
                     if (!confirm("30 günden eski hata kayıtları silinsin mi?")) return;
@@ -960,6 +980,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       <div className="flex items-center justify-between gap-2">
                         <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-black ${turRenkleri[kind] || turRenkleri.genel}`}>{turEtiketleri[kind] || kind}</span>
                         <span className="flex-1 truncate px-1 font-bold text-amber-300" title={log.message}>{okunurMesaj(log.message)}</span>
+                        {/* ★ GRUP SAYACI — aynı hata N kez tekrarladıysa ×N rozeti */}
+                        {log.__adet > 1 && (
+                          <span className="shrink-0 rounded-full bg-sky-500/20 px-2 py-0.5 text-[8.5px] font-black text-sky-300" title={`Aynı hata son 500 kayıtta ${log.__adet} kez tekrarladı`}>
+                            ×{log.__adet}
+                          </span>
+                        )}
                         <span className="flex shrink-0 items-center gap-1">
                           <span className={`rounded px-1.5 py-0.5 text-[8px] font-black ${String(log.source || "").startsWith("server:") ? "bg-red-500/20 text-red-300" : "bg-white/10 text-white/60"}`} title={String(log.source || "").startsWith("server:") ? "Sunucu (Vercel API) hatası" : "Tarayıcı hatası"}>{String(log.source || "").startsWith("server:") ? `🖥️ ${String(log.source).slice(7)}` : log.source}</span>
                           <button onClick={() => deleteErrorLog(log.id)} title="Bu kaydı sil"
