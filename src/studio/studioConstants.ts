@@ -147,7 +147,7 @@ const FONT_IDEAL_CARPAN: Record<string, number> = {
   changa: 0.88,           // çok geniş
   kufam: 0.88,            // çok geniş
   // Süsleme — gösterişli, dengeli tutulmalı
-  laref-ruqaa: 0.95,      // Lalezar — kendi içinde zaten kalın/geniş
+  "laref-ruqaa": 0.95,      // Lalezar — kendi içinde zaten kalın/geniş
   rukola: 0.9,            // Marhey — geniş
   rummani: 1.0,
 };
