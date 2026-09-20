@@ -45,6 +45,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               updatedAt: serverUpdatedAt || new Date().toISOString(),
             };
             saveSystemConfig(cfg);
+            // ★ Bakım ekranı reload beklemeden güncellensin
+            window.dispatchEvent(new Event("nur_config_updated"));
           }
         }
         if (Array.isArray(data?.featureLocks)) {

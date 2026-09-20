@@ -105,11 +105,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
   const [newVersion, setNewVersion] = useState<"V2" | "V3">("V2");
   const [showAddForm, setShowAddForm] = useState(false);
 
-  if (!open) return null;
-
   // ★ GERÇEK OYLAMA: veritabanından özellikler + gerçek oy toplamları çekilir.
   //   Eski localStorage sistemi herkesin kendi oylarını kendi gösteriyordu —
   //   admin gerçek toplamı ASLA göremiyordu. Artık tek gerçek sayaç DB'de.
+  //   DİKKAT: useEffect, `if (!open) return null`'dan ÖNCE olmalı —
+  //   yoksa hook sayısı render'lar arası değişir ve React çöker.
   useEffect(() => {
     if (!open || dbLoaded) return;
     let live = true;
@@ -117,6 +117,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
       .then((r) => r.json())
       .then((d: any) => {
         if (!live || !d?.ok) return;
+        // DB boşsa (tablo henüz seed edilmediyse) varsayılan planları EZME
+        if ((d.v2?.length || 0) === 0 && (d.v3?.length || 0) === 0) {
+          setMyVote(null);
+          setDbLoaded(true);
+          return;
+        }
         setData({ v2: d.v2 || [], v3: d.v3 || [] });
         setMyVote(d.myVote || null);
         setDbLoaded(true);
@@ -124,6 +130,8 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
       .catch(() => undefined); // DB yoksa localStorage yedeği ekranda kalır
     return () => { live = false; };
   }, [open, dbLoaded]);
+
+  if (!open) return null;
 
   const isDeadlinePassed = deadline && new Date(deadline) < new Date();
   const daysLeft = deadline ? Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) : null;
