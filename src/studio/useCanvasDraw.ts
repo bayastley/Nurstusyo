@@ -211,6 +211,11 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 try { (ctx as CanvasRenderingContext2D & { direction?: string }).direction = "rtl"; } catch { /* ignore */ }
               }
 
+              // ★ FONT BEKLEME: seçili font henüz yüklenmediyse ayet bu karede çizilmez —
+              //   fallback fontla 'yanıp sönme' olmaz. Font gelince nur_font_loaded
+              //   event'i draw'ı tazeler, doğru fontla çizilir.
+              const fontAile = p.arabicFontCss.split(",")[0].replace(/'/g, "").trim();
+              const fontHazir = (document.fonts?.check?.(`${p.arabicFontWeight} 16px "${fontAile}"`)) ?? true;
               let arabicSize = 0, arabicHeight = 0, translationSize = 0, arabicLines: string[] = [], translationLines: string[] = [], sepH = 0, totalH = 0;
               for (let step = 0; step < 22; step += 1) {
                 const shrink = Math.pow(0.96, step);
@@ -219,7 +224,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.textSizeMul * p.mealSizeMul);
                 arabicHeight = arabicSize * 1.72;
                 ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
-                arabicLines = p.showArapca ? wrapText(ctx, currentAyah.ar, arMaxW) : [];
+                arabicLines = (p.showArapca && fontHazir) ? wrapText(ctx, currentAyah.ar, arMaxW) : []; // ★ font yoksa boş bırak — fallback yanıp sönme yok
                 ctx.font = `400 ${translationSize}px Inter,sans-serif`;
                 translationLines = p.showSubMeal ? wrapText(ctx, currentAyah.tr, trMaxW) : [];
                 sepH = (arabicLines.length > 0 && translationLines.length > 0) ? translationSize * 1.35 : 0;

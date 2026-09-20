@@ -244,6 +244,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(aile).replace(/%20/g, "+") + ":wght@400;700&display=swap";
     document.head.appendChild(link);
     yukluFontlar.add(arabicFont);
+    // ★ FOUT ÖNLEME: font gerçekten yüklendiğinde önizlemeyi tazele —
+    //   canvas fallback fontla çizilip öylece kalmaz (yanıp sönme/yanlış font olmaz)
+    Promise.all([
+      document.fonts.load("400 20px " + aile),
+      document.fonts.load("700 20px " + aile),
+    ]).then(() => {
+      window.dispatchEvent(new Event("nur_font_loaded"));
+    }).catch(() => undefined);
   }, [arabicFont]);
   const setArabicFont = (f: string) => {
     setArabicFontState(f);
