@@ -5,7 +5,7 @@ import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
   MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
-  ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS,
+  ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
 import { useAnalytics } from "./studio/useAnalytics";
@@ -271,6 +271,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [brandPos]);
   const [textOffset, setTextOffset] = useState({ x: 0, y: 0 });
   const arabicFontCss = ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif";
+  const arabicFontW = arabicFontWeight(arabicFont);
   // ★ Yazı boyutu: hazır ayar × ince ayar (kullanıcı +/- ile 0.5x–2.0x arası)
   const [textSizeFine, setTextSizeFine] = useState<number>(() => {
     const raw = localStorage.getItem("nur_text_size_fine");
@@ -574,7 +575,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useCanvasDraw({
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
-    showArapca, showSubMeal, accessTier, arabicFontCss, textSizeMul, shimmerCfg, cardBg, textOffset,
+    showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, shimmerCfg, cardBg, textOffset,
     cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
   });
 

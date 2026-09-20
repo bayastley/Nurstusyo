@@ -83,6 +83,11 @@ export const SURAH_CATEGORY_HINT: Record<string, CatId> = {
   "tin": "hurma", "mutaffifin": "cehennem", "meryem": "hurma",
 };
 
+// ★ TEK AĞIRLIKLI FONTLAR: Google Fonts'ta yalnızca 400 ağırlığı var.
+//   Canvas '700' isterse tarayıcı sahte-kalın (TA ikamesi) yapar veya
+//   fallback'e düşer → kayma/kesme. Bu fontlar 400 ile kullanılır.
+const TEK_AGIRLIK_FONTLAR = new Set(["amiri-quran", "katibeh", "lalezar"]);
+
 export const ARABIC_FONTS: Array<{ id: string; label: string; css: string }> = [
   // ─── Klasik Mushaf / Naskh ailesi ───
   { id: "amiri", label: "Amiri (Klasik Hat)", css: "Amiri, serif" },
@@ -109,6 +114,12 @@ export const ARABIC_FONTS: Array<{ id: string; label: string; css: string }> = [
   { id: "rukola", label: "Marhey (Eğlencelı Geniş)", css: "Marhey, sans-serif" },
   { id: "rummani", label: "Ruwudu (Nostaljik)", css: "Ruwudu, serif" },
 ];
+
+// ★ Canvas'a verilecek font ağırlığı — tek ağırlıklı fontlarda 400,
+//   diğerlerinde 700 (koddaki mevcut kalın kullanım korunur)
+export function arabicFontWeight(fontId: string): number {
+  return TEK_AGIRLIK_FONTLAR.has(fontId) ? 400 : 700;
+}
 
 export const SHIMMER_STYLES: Array<{ id: string; label: string; c1: string; c2: string; glow: string; still?: boolean }> = [
   { id: "altin", label: "Altın Işıltı", c1: "#f5dda6", c2: "#d7aa52", glow: "rgba(215,170,82,.55)" },

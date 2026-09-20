@@ -29,6 +29,7 @@ interface CanvasDrawParams {
   showSubMeal: boolean;
   accessTier: Tier;
   arabicFontCss: string;
+  arabicFontWeight: number;
   textSizeMul: number;
   shimmerCfg: { c1: string; c2: string; glow: string; still?: boolean };
   cardBg: "seffaf" | "koyu";
@@ -216,7 +217,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 const trMaxSize = currentAspect === "16:9" ? 21 : onlyMeal ? 26 : 24;
                 translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.textSizeMul);
                 arabicHeight = arabicSize * 1.72;
-                ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`;
+                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
                 arabicLines = p.showArapca ? wrapText(ctx, currentAyah.ar, arMaxW) : [];
                 ctx.font = `400 ${translationSize}px Inter,sans-serif`;
                 translationLines = p.showSubMeal ? wrapText(ctx, currentAyah.tr, trMaxW) : [];
@@ -230,7 +231,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               let y = centeredTop + oy;
 
               if (p.showArapca && arabicLines.length > 0) {
-                ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 10;
+                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = 10;
                 // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
@@ -269,7 +270,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                       ctx.shadowColor = currentTheme.acc || "#ffd700";
                       ctx.shadowBlur = 22;
                       ctx.fillStyle = "#fff7c2"; // hafif sarı ton (koyu temalarda bile okunur)
-                      ctx.font = `700 ${Math.round(arabicSize * 1.08)}px ${p.arabicFontCss}`;
+                      ctx.font = `${p.arabicFontWeight} ${Math.round(arabicSize * 1.08)}px ${p.arabicFontCss}`;
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       // ikinci geçiş: sarı sıcaklığı için ince altın katman
                       ctx.shadowColor = "rgba(255, 215, 0, .55)";
@@ -278,7 +279,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       ctx.restore();
                       // Normal boyuta dön — diğer kelimeler sabit beyaz
-                      ctx.font = `700 ${arabicSize}px ${p.arabicFontCss}`;
+                      ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
                       ctx.fillStyle = "rgba(255,255,255,.92)";
                       ctx.shadowColor = "rgba(0,0,0,.5)";
                       ctx.shadowBlur = 10;
@@ -334,5 +335,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.textSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.shimmerCfg, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
 }
