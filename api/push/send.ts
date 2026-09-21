@@ -90,6 +90,68 @@ async function aboneleriGetir(cfg: { url: string; key: string }, limit: number, 
   return (await res.json()) as Array<{ endpoint: string; p256dh: string; auth: string }>;
 }
 
+// ★ Bakım bildirimi bekleyen aboneler (notify_maintenance=true)
+async function bakimAboneleriGetir(cfg: { url: string; key: string }) {
+  const res = await fetch(`${cfg.url}/rest/v1/nur_push_subscriptions?notify_maintenance=eq.true&select=endpoint,p256dh,auth`, {
+    headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` },
+  });
+  if (!res.ok) return [] as Array<{ endpoint: string; p256dh: string; auth: string }>;
+  return (await res.json()) as Array<{ endpoint: string; p256dh: string; auth: string }>;
+}
+
+// ★ Aktif bakım var mı? (nur_site_settings?key=maintenance)
+async function aktifBakimVar(cfg: { url: string; key: string }): Promise<boolean> {
+  try {
+    const res = await fetch(`${cfg.url}/rest/v1/nur_site_settings?key=eq.maintenance&select=value`, {
+      headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` },
+    });
+    if (!res.ok) return false;
+    const rows = (await res.json()) as Array<{ value?: { enabled?: boolean; endsAt?: string } }>;
+    const m = rows[0]?.value;
+    if (!m?.enabled) return false;
+    // Bakım PENCERESİ içinde mi? (başladı + bitmedi)
+    if (m.endsAt && new Date(m.endsAt).getTime() > Date.now()) return true;
+    if (!m.endsAt) return true; // bitiş yoksa açık olduğu sürece aktif say
+    return false;
+  } catch { return false; }
+}
+
+// ★ Bakım bitti bildirimi gönder + onayları temizle (tek sefer)
+async function bakimBitisBildirimiGonder(req: VercelRequest, cfg: { url: string; key: string }, publicKey: string, privateKey: string) {
+  const bildirim = {
+    title: "🌙 Nûr Stüdyo yeniden açıldı",
+    body: "Bakım tamamlandı — yeni özellikler seni bekliyor. Hoş geldin!",
+    tag: `maintenance-done-${new Date().toISOString().slice(0, 13)}`, // saatlik tekrar koruması
+  };
+  webpush.setVapidDetails("mailto:admin@nurstudyo.com", publicKey, privateKey);
+  const aboneler = await bakimAboneleriGetir(cfg);
+  let gonderildi = 0, silinen = 0;
+  await Promise.allSettled(aboneler.map(async (abone) => {
+    try {
+      await webpush.sendNotification({ endpoint: abone.endpoint, keys: { p256dh: abone.p256dh, auth: abone.auth } }, JSON.stringify(bildirim), { TTL: 3600 });
+      gonderildi++;
+    } catch (e: any) {
+      await logServerError(req, e, "push/send:maintenance");
+      const kod = e?.statusCode;
+      if (kod === 404 || kod === 410) {
+        await fetch(`${cfg.url}/rest/v1/nur_push_subscriptions?endpoint=eq.${encodeURIComponent(abone.endpoint)}`, {
+          method: "DELETE", headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` },
+        }).catch(() => null);
+        silinen++;
+      }
+    }
+  }));
+  // Bildirim gönderilen (ve ölü silinen) abonelerin onayını temizle — bir daha rahatsız edilmesin
+  if (aboneler.length) {
+    await fetch(`${cfg.url}/rest/v1/nur_push_subscriptions?notify_maintenance=eq.true`, {
+      method: "PATCH",
+      headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ notify_maintenance: false }),
+    }).catch(() => null);
+  }
+  return { abone: aboneler.length, gonderildi, silinen };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -125,6 +187,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const publicKey = process.env.VAPID_PUBLIC_KEY || "";
   const privateKey = process.env.VAPID_PRIVATE_KEY || "";
   if (!publicKey || !privateKey) return res.status(503).json({ ok: false, error: "VAPID anahtarları eksik" });
+
+  // ★★★ BAKIM BİTTİ BİLDİRİMİ — cron her 5 dakikada gelir.
+  //   Bakım PENCERESİ kapalı + onay bekleyen abone var = "bakım bitti, haber verilmedi"
+  //   → onaylı abonelere BİR KEZ bildirim, sonra onaylar temizlenir (DB güdümlü —
+  //   serverless cold start'ta bile doğru çalışır).
+  //   Gece susturmadan bağımsız: kullanıcı açıkça "haber ver" dedi.
+  {
+    let aktif = false;
+    try { aktif = await aktifBakimVar(cfg); } catch { aktif = false; }
+    if (!aktif) {
+      const bekleyen = await bakimAboneleriGetir(cfg);
+      if (bekleyen.length > 0) {
+        const sonuc = await bakimBitisBildirimiGonder(req, cfg, publicKey, privateKey).catch(() => ({ abone: 0, gonderildi: 0, silinen: 0 }));
+        if (sonuc.abone > 0) console.log("[push/send] Bakım bitti bildirimi:", sonuc);
+      }
+    }
+  }
 
   // ★ GECE SUSTURMA: Türkiye saatiyle 23:00-05:00 arası asla gönderme
   const trSaat = Number(new Intl.DateTimeFormat("tr-TR", { hour: "numeric", hour12: false, timeZone: "Europe/Istanbul" }).format(new Date()));

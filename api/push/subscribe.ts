@@ -110,6 +110,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!p256dh || !auth) return res.status(400).json({ ok: false, error: "Abonelik anahtarları eksik" });
 
   const saatDilimi = sanitize(body.tz, 40) || "Europe/Istanbul";
+  // ★ Bakım bildirimi onayı: kullanıcı "Bakım bitince haber ver" dediğinde true gelir
+  const notifyMaintenance = body.notify_maintenance === true;
 
   // Upsert: aynı endpoint tekrar gelirse güncelle
   const upsert = await fetch(`${cfg.url}/rest/v1/nur_push_subscriptions?on_conflict=endpoint`, {
@@ -120,7 +122,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       "Content-Type": "application/json",
       Prefer: "resolution=merge-duplicates,return=minimal",
     },
-    body: JSON.stringify({ endpoint, p256dh, auth, tz: saatDilimi, created_at: new Date().toISOString() }),
+    body: JSON.stringify({ endpoint, p256dh, auth, tz: saatDilimi, notify_maintenance: notifyMaintenance, created_at: new Date().toISOString() }),
   }).catch(() => null);
 
   if (!upsert || !upsert.ok) {
