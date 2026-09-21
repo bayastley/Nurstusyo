@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Pause, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
@@ -88,6 +88,42 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
   } = props;
   const [lowPower] = useState(lowPowerDevice);
+  // ★ VİDEO HAZIR KUTLAMASI — yeni çıktı düştüğünde altın konfeti + İndir/Paylaş
+  //   butonlarının olduğu kutu birkaç kez yumuşakça parlar. Saf DOM animasyonu:
+  //   kütüphane yok, React state'i bozmaz, düşük donanımda bile hafif.
+  const [kutlama, setKutlama] = useState(false);
+  const sonCiktiIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const yeni = activeOutput?.id ?? null;
+    if (!yeni || yeni === sonCiktiIdRef.current) { sonCiktiIdRef.current = yeni; return; }
+    sonCiktiIdRef.current = yeni;
+    setKutlama(true);
+    const konfetiDizi = Array.from({ length: 24 }, (_, i) => i);
+    const kutu = document.getElementById("video-hazir-kutusu");
+    konfetiDizi.forEach((i) => {
+      const tane = document.createElement("span");
+      const renkler = ["#d7aa52", "#fbbf24", "#34d399", "#60a5fa", "#f472b6"];
+      tane.style.cssText = `position:fixed;z-index:99990;pointer-events:none;width:${5 + (i % 4) * 2}px;height:${8 + (i % 3) * 3}px;left:${45 + (Math.sin(i * 7.3) * 40)}%;top:-12px;background:${renkler[i % renkler.length]};border-radius:${i % 2 ? "2px" : "50%"};opacity:.95;transition:transform ${1.6 + (i % 5) * 0.3}s cubic-bezier(.25,.46,.45,.94),opacity 2.2s ease-out;`;
+      document.body.appendChild(tane);
+      requestAnimationFrame(() => {
+        tane.style.transform = `translate(${(Math.sin(i * 3.1) * 130)}px, ${window.innerHeight + 60}px) rotate(${180 + i * 24}deg)`;
+        tane.style.opacity = "0";
+      });
+      window.setTimeout(() => tane.remove(), 2400);
+    });
+    if (kutu) {
+      kutu.animate(
+        [
+          { boxShadow: "0 0 0 0 rgba(215,170,82,0)" },
+          { boxShadow: "0 0 34px 5px rgba(215,170,82,.55)" },
+          { boxShadow: "0 0 0 0 rgba(215,170,82,0)" },
+        ],
+        { duration: 1600, iterations: 3 },
+      );
+    }
+    const timer = window.setTimeout(() => setKutlama(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [activeOutput?.id]);
   // ★ CANLI RAM ÖLÇÜMÜ: Chrome/Edge'in performance.memory API'si (non-standard)
   //   JS heap kullanımını verir. Üretim sırasında 2 sn'de bir okunur.
   //   Desteklemeyen tarayıcılarda (Safari/Firefox) gösterge hiç çizilmez — zararsız.
@@ -260,10 +296,13 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       )}
 
       <div className="grid gap-2.5 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
+        <div
+          id="video-hazir-kutusu"
+          className={`rounded-2xl border p-3.5 transition ${kutlama ? "border-amber-300/60" : "border-white/10"} bg-white/[.02]`}
+        >
           {activeOutput ? (
             <>
-              <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Video size={13} />{t("ready")}</p>
+              <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Video size={13} />{t("ready")}{kutlama && <span className="animate-bounce text-[11px]" aria-hidden>🎉</span>}</p>
               <p className="truncate text-[9px] text-white/60">{activeOutput.label}</p>
               <p className="mb-3 text-[8px] text-white/40">{fmtDuration(activeOutput.duration)} · {fmtSize(activeOutput.size)}</p>
               <div className="grid grid-cols-2 gap-1.5">
