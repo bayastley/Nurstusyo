@@ -74,6 +74,17 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   const [backgroundPosterUrl, setBackgroundPosterUrl] = useState<string | undefined>();
   // ★ Font galerisi: panel dışına tıklayınca kapansın
   const galeriRef = useRef<HTMLDetailsElement | null>(null);
+  // ★ MASTER SIFIRLAMA — font + boyutlar + ışıltı + kart + metin konumu tek tıkla varsayılana döner
+  const tumunuSifirla = () => {
+    setArabicFont("amiri");
+    setTextSize("buyuk");
+    setTextSizeMul(1);
+    setMealSizeMul(1);
+    setShimmerStyle("altin");
+    setShimmerIntensity(1);
+    setCardBg("seffaf");
+    setTextOffset({ x: 0, y: 0 });
+  };
   useEffect(() => {
     if (!galeriRef.current) return;
     const onDocClick = (e: MouseEvent) => {
@@ -311,7 +322,17 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               </span>
               <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">Yazı & Tasarım</h2>
             </div>
-            {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>ELİT</span>}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={tumunuSifirla}
+                title="Font, boyut, ışıltı ve konum ayarlarının tümünü varsayılana döndür"
+                className="glass-soft flex items-center gap-1 rounded-lg px-2 py-1 text-[8px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
+              >
+                ⟲ Tümünü Sıfırla
+              </button>
+              {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>ELİT</span>}
+            </div>
           </div>
           {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}
           <div className="relative">
