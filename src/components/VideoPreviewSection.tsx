@@ -47,6 +47,8 @@ interface VideoPreviewSectionProps {
   setAyahBackgrounds: React.Dispatch<React.SetStateAction<Record<string, Clip>>>;
   setPickingFor: (id: string | null) => void;
   setModal: (modal: ModalName) => void;
+  /** ★ Sekme değişince mevcut ayet arka planlarını yeni türe (img/vid) yeniden atar */
+  onClipKindChange?: (kind: "img" | "vid") => void;
   ayahBackgrounds: Record<string, Clip>;
   activeOutput: Output | null;
   outputs: Output[];
@@ -87,6 +89,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, downloadVideo, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
   } = props;
+  const onClipKindChangeRef = useRef(props.onClipKindChange ?? (() => {}));
+  onClipKindChangeRef.current = props.onClipKindChange ?? onClipKindChangeRef.current;
   const [lowPower] = useState(lowPowerDevice);
   // ★ VİDEO HAZIR KUTLAMASI — yeni çıktı düştüğünde altın konfeti + İndir/Paylaş
   //   butonlarının olduğu kutu birkaç kez yumuşakça parlar. Saf DOM animasyonu:
@@ -235,7 +239,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       )}
 
       <div className="mx-auto max-w-[228px]">
-        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); setBackground(randomClip(kind)); onClipKindChangeRef(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {clipKind === "img" && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
       </div>
 

@@ -44,6 +44,8 @@ export interface ModalsContainerProps {
   setAdminGodMode: (v: boolean) => void;
   pickingFor: string | null;
   setPickingFor: (id: string | null) => void;
+  /** ★ Sekme değişince mevcut ayet arka planlarını yeni türe (img/vid) yeniden atar */
+  onClipKindChange?: (kind: "img" | "vid") => void;
   clipKind: "img" | "vid";
   setClipKind: (k: "img" | "vid") => void;
   atmosQuery: string;

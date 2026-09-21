@@ -29,6 +29,7 @@ import {
   FREE_VIDEOS_PER_CATEGORY,
   CATEGORY_PALETTE,
   toHiRes,
+  randomClip,
   type CatId,
   type Clip,
   } from "./clips";
@@ -397,6 +398,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const selectedRef = useRef(selected), verseIndexRef = useRef(verseIndex), backgroundRef = useRef(background);
   const ayahBackgroundsRef = useRef(ayahBackgrounds), aspectRef = useRef(aspect), themeRef = useRef(THEMES[0]);
   const clipKindRef = useRef(clipKind); clipKindRef.current = clipKind;
+  const smartAiEnabledRef = useRef(smartAiEnabled); smartAiEnabledRef.current = smartAiEnabled;
+  const isClipAccessibleRef = useRef<(clip: Clip) => boolean>(() => true);
   useEffect(() => { ayahBackgroundsRef.current = ayahBackgrounds; }, [ayahBackgrounds]);
   useEffect(() => { selectedRef.current = selected; }, [selected]);
   useEffect(() => { verseIndexRef.current = verseIndex; }, [verseIndex]);
@@ -768,6 +771,46 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     catch { notify(t("renderServerError")); }
   }, [surah, lang, notify]);
 
+  // ★ SEKME DEĞİŞİMİ (Şablon V2 ↔ Hareketli) — zaten atanmış ayet arka planlarını
+  //   yeni türe (img/vid) yeniden atar. Eski davranışta sadece ana arka plan
+  //   randomClip ile değişiyordu; ayet kayıtları eski türemiş gibi kalıyor, üretim
+  //   o yüzden Şablon V2 seçiliyken bile HAREKETLİ video basıyordu.
+  const reassignBackgroundsForKind = useCallback((kind: "img" | "vid") => {
+    const items = selectedRef.current;
+    if (!items.length) return;
+    const next: Record<string, Clip> = {};
+    if (smartAiEnabledRef.current) {
+      // Akıllı AI açıksa: her ayete yeni türde tematik sahne
+      const usedIds = new Set<string>();
+      items.forEach((item) => {
+        const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
+        let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === kind);
+        if (poolCat.length === 0) {
+          const adminCat = detectAdminCategoryFromAyah(item.ar, item.tr, item.sName);
+          if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === kind);
+        }
+        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === kind);
+        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === kind);
+        if (!poolCat.length) return;
+        const fresh = poolCat.filter((c) => !usedIds.has(c.id));
+        const list = fresh.length ? fresh : poolCat;
+        const chosen = list[Math.floor(Math.random() * list.length)];
+        usedIds.add(chosen.id);
+        next[item.id] = chosen;
+      });
+    } else {
+      // Akıllı AI kapalıysa: yeni türden mushaf/nötr klip dağıt
+      const pool = combinedAllClips.filter((clip) => clip.kind === kind && isClipAccessibleRef.current(clip));
+      if (!pool.length) return;
+      items.forEach((item) => { next[item.id] = pool[Math.floor(Math.random() * pool.length)]; });
+    }
+    if (Object.keys(next).length) {
+      setAyahBackgrounds(next);
+      const first = next[items[0].id];
+      if (first) setBackground(first);
+    }
+  }, [smartAiEnabledRef, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah, isClipAccessibleRef]);
+
   const useFromLibrary = useCallback((item: LibraryItem) => {
     const s = item.s ?? 0, a = item.a ?? 0;
     const id = item.type === "ayet" && s > 0 ? `${s}:${a}` : `lib-${item.id}`;
@@ -800,6 +843,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier)) return false;
     return true;
   }, [accessTier, clipKind, combinedAllClips, isMasterSürüm]);
+  isClipAccessibleRef.current = isClipAccessible;
 
   const randomizeBackgrounds = useCallback((scopeCat?: CatId) => {
     let pool = combinedAllClips.filter((clip) => clip.kind === clipKind && isClipAccessible(clip));
@@ -1497,6 +1541,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           hasMicroUnlock={hasMicroUnlock}
           tryUnlockElitFeature={tryUnlockElitFeature}
           applySmartBackgrounds={applySmartBackgrounds}
+          onClipKindChange={reassignBackgroundsForKind}
           openPremium={openPremium}
           setSelected={setSelected}
           setAyahBackgrounds={setAyahBackgrounds}
@@ -1845,6 +1890,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <ModalsContainer
         modal={modal}
         setModal={setModal}
+        onClipKindChange={reassignBackgroundsForKind}
         loginTab={loginTab}
         setLoginTab={setLoginTab}
         phone={phone}
