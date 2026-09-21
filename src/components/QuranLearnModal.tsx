@@ -292,6 +292,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     radioRef.current.preload = "none";
   }
   // ★ Radyo çalarken ayet/kelime sesi de durur — iki ses üst üste binmez
+  //   NOT: stopAudio bileşende daha AŞAĞIDA tanımlı; dependency dizisine koyarsak
+  //   TDZ hatası ("Cannot access before initialization") bütün siteyi çökertir.
+  //   Closure lazy yakaladığı için çağrı anında tanımlı olur — deps'e koymuyoruz.
   const toggleRadio = useCallback(() => {
     const r = radioRef.current;
     if (!r) return;
@@ -309,7 +312,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       setRadioOn(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioOn, radioIdx, radioVol, radioMuted, stopAudio]);
+  }, [radioOn, radioIdx, radioVol, radioMuted]);
   // Kanal değişince (radyo açıksa) yeni kanala geç
   useEffect(() => {
     const r = radioRef.current;
