@@ -286,6 +286,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [radioVol, setRadioVol] = useState(0.8);
   const [radioMuted, setRadioMuted] = useState(false);
   const [radioErr, setRadioErr] = useState(false);
+  const [radioNote, setRadioNote] = useState("");
   const radioRef = useRef<HTMLAudioElement | null>(null);
   if (!radioRef.current && typeof Audio !== "undefined") {
     radioRef.current = new Audio();
@@ -295,32 +296,79 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   NOT: stopAudio bileşende daha AŞAĞIDA tanımlı; dependency dizisine koyarsak
   //   TDZ hatası ("Cannot access before initialization") bütün siteyi çökertir.
   //   Closure lazy yakaladığı için çağrı anında tanımlı olur — deps'e koymuyoruz.
+  // ★ Radyo aç/kapa: ayet sesiyle çakışmasın — radyo açılırken ayet/kelime sesi durur
+  //   NOT: stopAudio bileşende daha AŞAĞIDA tanımlı; closure lazy çözümler, çağrı anında tanımlıdır.
   const toggleRadio = useCallback(() => {
     const r = radioRef.current;
     if (!r) return;
     if (radioOn) {
+      radioTimerTemizle();
       r.pause();
       setRadioOn(false);
+      setRadioNote("");
     } else {
       stopAudio();
       setIsPlaying(false);
       setRadioErr(false);
-      if (!r.src) r.src = RADIO_STATIONS[radioIdx].url;
+      setRadioNote("");
+      radioFallbackRef.current = 0;
       r.volume = radioVol;
       r.muted = radioMuted;
-      r.play().catch(() => setRadioErr(true));
+      // kanal değiştirme efekti (radioIdx/radioOn) çalmayı üstlenir
       setRadioOn(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioOn, radioIdx, radioVol, radioMuted]);
-  // Kanal değişince (radyo açıksa) yeni kanala geç
+  }, [radioOn, radioVol, radioMuted]);
+  const radioFallbackRef = useRef(0); // otomatik kanal yedeği sayacı (sonsuz döngü koruması)
+  const radioTimeoutRef = useRef<number | null>(null); // 30 sn yanıt zaman aşımı
+  const radioTimerTemizle = () => {
+    if (radioTimeoutRef.current) { window.clearTimeout(radioTimeoutRef.current); radioTimeoutRef.current = null; }
+  };
+  // ★ OTOMATİK KANAL YEDEĞİ: bağlantı koparsa (play reddi, ağ hatası, 30 sn sessizlik)
+  //   sıradaki kanalı dener — hepsi tükenirse kullanıcıya Tekrar dene butonu düşer.
+  const radioFail = useCallback((neden: string) => {
+    radioTimerTemizle();
+    const r = radioRef.current;
+    if (!r || !radioOn) return;
+    if (radioFallbackRef.current < RADIO_STATIONS.length - 1) {
+      radioFallbackRef.current += 1;
+      const nextIdx = (radioIdx + radioFallbackRef.current) % RADIO_STATIONS.length;
+      setRadioNote(`⚠️ Kanal yanıt vermedi — ${RADIO_STATIONS[nextIdx].ad} kanalına geçildi`);
+      setRadioIdx(nextIdx);
+    } else {
+      // Tüm kanallar denendi — pes et, kullanıcıya bırak
+      radioFallbackRef.current = 0;
+      setRadioErr(true);
+      setRadioNote("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioOn, radioIdx]);
+  // Kanal değişince çal (hem kullanıcı hem otomatik yedek buradan geçer)
   useEffect(() => {
     const r = radioRef.current;
     if (!r || !radioOn) return;
+    radioTimerTemizle();
     r.src = RADIO_STATIONS[radioIdx].url;
-    r.play().catch(() => setRadioErr(true));
+    r.volume = radioVol;
+    r.muted = radioMuted;
+    // ★ 30 SN ZAMAN AŞIMI: sunucu bağlantıyı kabul edip ses basmazsa (zombi akış)
+    //   sessiz kanalda donmak yerine sıradakine geç
+    radioTimeoutRef.current = window.setTimeout(() => {
+      if (r.paused || r.readyState < 2) radioFail("30 sn yanıt yok");
+    }, 30_000);
+    r.play().then(() => { radioFallbackRef.current = 0; setRadioErr(false); }).catch(() => radioFail("play reddi"));
+    return radioTimerTemizle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioIdx]);
+  }, [radioIdx, radioOn]);
+  // Ağ hatası olayı: akış ortasında koparsa otomatik yedeğe devret
+  useEffect(() => {
+    const r = radioRef.current;
+    if (!r) return;
+    const onErr = () => { if (radioOn) radioFail("ağ hatası"); };
+    r.addEventListener("error", onErr);
+    return () => r.removeEventListener("error", onErr);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioOn, radioFail]);
   // Ses seviyesi / sessiz anında uygulanır
   useEffect(() => {
     const r = radioRef.current;
@@ -339,11 +387,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // Modal kapanınca radyo da kapanır (arkada gizli ses kalmasın)
   useEffect(() => {
     if (!open) {
+      radioTimerTemizle();
       radioRef.current?.pause();
       setRadioOn(false);
+      setRadioNote("");
     }
   }, [open]);
-  useEffect(() => () => { radioRef.current?.pause(); }, []);
+  useEffect(() => () => { radioTimerTemizle(); radioRef.current?.pause(); }, []);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -1108,9 +1158,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           >
             {RADIO_STATIONS.map((st, i) => <option key={st.url} value={i}>{st.ad}</option>)}
           </select>
-          <span className="hidden min-w-0 flex-1 truncate text-[10px] font-bold text-sky-200/60 sm:block">CANLI TİLAVET — 7/24 kesintisiz</span>
+          <span className={`hidden min-w-0 flex-1 truncate text-[10px] font-bold sm:block ${radioNote ? "text-amber-300" : "text-sky-200/60"}`} title={radioNote || "CANLI TİLAVET — 7/24 kesintisiz"}>{radioNote || "CANLI TİLAVET — 7/24 kesintisiz"}</span>
           {radioErr ? (
-            <button onClick={() => { setRadioErr(false); const r = radioRef.current; if (r) { r.src = RADIO_STATIONS[radioIdx].url; r.play().catch(() => setRadioErr(true)); } }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Bağlantı koptu — tekrar dene">↻ Tekrar dene</button>
+            <button onClick={() => { setRadioErr(false); setRadioNote(""); const r = radioRef.current; if (r) { setRadioIdx(i => (i + 1) % RADIO_STATIONS.length); } }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Tüm kanallar denendi — baştan dene">↻ Tekrar dene</button>
           ) : (
             <span className="hidden rounded-full bg-sky-500/15 px-2 py-0.5 text-[9px] font-black text-sky-300 sm:inline">● CANLI</span>
           )}
@@ -1118,7 +1168,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             {radioMuted || radioVol === 0 ? "🔇" : radioVol < 0.5 ? "🔉" : "🔊"}
           </button>
           <input type="range" min={0} max={1} step={0.05} value={radioMuted ? 0 : radioVol} onChange={(e) => { const v = Number(e.target.value); setRadioVol(v); setRadioMuted(v === 0); }} className="h-1 w-16 cursor-pointer accent-sky-400" title="Radyo ses seviyesi" />
-          <button onClick={() => { radioRef.current?.pause(); setRadioOn(false); }} className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white" title="Radyoyu kapat">✕</button>
+          <button onClick={() => { radioTimerTemizle(); radioRef.current?.pause(); setRadioOn(false); setRadioNote(""); }} className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white" title="Radyoyu kapat">✕</button>
         </div>
       )}
 
