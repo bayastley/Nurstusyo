@@ -539,9 +539,16 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const panelKilitli = panelLock === "v2" || panelLock === "v3" || panelLock === "pro" || panelLock === "elit";
                 const panelBakimda = panelLock === "maintenance" || panelLock === "off";
                 const adminUsable = !isAdminAtmosphere || adminAcc === null ? true : (adminAcc === "v2" ? false : (adminAcc === "pro" ? (accessTier === "pro" || accessTier === "elit") : adminAcc === "elit" ? accessTier === "elit" : true));
-                const lockLevel = panelKilitli ? (panelLock === "v2" ? "V2" : panelLock === "v3" ? "V3" : panelLock === "pro" ? "PRO" : "ELİT") : adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : (CATEGORY_LOCK_LEVEL[category.id] ?? "V2");
+                // ★ KOD KATEGORİSİ KİLİDİ: statik tier tablosu (selale=pro, cennet=elit, ari=V2…)
+                //   Önceki hata: kod kategorilerinde sadece HARD_LOCKED (V2 listesi) kontrol
+                //   ediliyordu → Cennet/Çöl/Ateş gibi ELİT kategoriler misafire KİLİTSİZ
+                //   görünüp PRO kartların arasında bozuk bir düzende karışıyordu.
+                const kodV2 = HARD_LOCKED_CATEGORIES.includes(category.id);
+                const kodTier = KATEGORI_TIER[category.id as CatId] ?? "free";
+                const kodKilitli = kodV2 || !tierAtLeast(accessTier, kodTier);
+                const lockLevel = panelKilitli ? (panelLock === "v2" ? "V2" : panelLock === "v3" ? "V3" : panelLock === "pro" ? "PRO" : "ELİT") : adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : kodV2 ? "V2" : kodTier === "pro" ? "PRO" : kodTier === "elit" ? "ELİT" : "V2";
                 // ★ ADMIN: isMasterSürüm=true → v2/pro/elit dahil TÜM kilitler açık (görsel + tıklama)
-                const hardLocked = !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (panelBakimda ? true : panelKilitli ? (panelLock === "v2" || panelLock === "v3" ? true : !tierAtLeast(accessTier, panelLock)) : (adminLocked ? !adminUsable : (isAdminAtmosphere || (!isMasterSürüm && HARD_LOCKED_CATEGORIES.includes(category.id)))));
+                const hardLocked = !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (panelBakimda ? true : panelKilitli ? (panelLock === "v2" || panelLock === "v3" ? true : !tierAtLeast(accessTier, panelLock)) : (adminLocked ? !adminUsable : (isAdminAtmosphere || kodKilitli)));
                 // ★ Arama kutusuna yazınca eşleşen KLASÖR sarı yanar — yerini gösterir
                 const q = atmosQuery.trim().toLocaleLowerCase("tr");
                 const searchHit = q.length >= 2 && !active && category.label.toLocaleLowerCase("tr").includes(q);
