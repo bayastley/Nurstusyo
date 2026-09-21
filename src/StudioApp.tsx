@@ -55,6 +55,7 @@ import { VideoPreviewSection } from "./components/VideoPreviewSection";
 import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
 import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
+import { MaintenanceScreen } from "./components/MaintenanceScreen";
 import { AnnouncementBar } from "./components/AnnouncementBar";
 import { CookieConsent } from "./components/CookieConsent";
 import { TelifDisclaimer } from "./components/TelifDisclaimer";
@@ -1418,15 +1419,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   return (
     <div className="relative min-h-screen overflow-x-hidden text-[13px]" style={{ color: "var(--text)" }}>
       {maintenance.enabled && (!maintenance.startsAt || Date.now() >= new Date(maintenance.startsAt).getTime()) && (!maintenance.endsAt || Date.now() < new Date(maintenance.endsAt).getTime()) && !isMasterSürüm && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-6 text-center">
-          <div className="max-w-md rounded-3xl border border-amber-300/30 bg-white/[.05] p-8 shadow-2xl">
-            <div className="mb-4 text-4xl">🔧</div>
-            <h1 className="text-xl font-black text-white">Nûr Stüdyo kısa süreli bakımda</h1>
-            <p className="mt-3 text-sm leading-relaxed text-white/65">{maintenance.message}</p>
-            {maintenance.endsAt && <p className="mt-4 text-xs font-bold text-amber-200">Tahmini bitiş: {new Date(maintenance.endsAt).toLocaleString("tr-TR")}</p>}
-            <p className="mt-5 text-[10px] text-white/35">Güncelleme tamamlandığında site otomatik olarak açılacaktır.</p>
-          </div>
-        </div>
+        <MaintenanceScreen message={maintenance.message} endsAt={maintenance.endsAt ?? null} />
       )}
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%),var(--page)` }} />
 
