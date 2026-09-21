@@ -58,6 +58,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   setCardBg,
   brandSignature,
   setBrandSignature,
+  brandOn,
+  setBrandOn,
   brandPos,
   setBrandPos,
   setTextOffset,
@@ -544,13 +546,25 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[6.5px] font-black text-amber-300">
                   {isMasterSürüm ? "ADMİN" : "ELİT"}
                 </span>
+                {/* ★ WATERMARK AÇ/KAPA — imza metnini silmeden videodan kaldır */}
+                <button
+                  type="button"
+                  onClick={() => setBrandOn(!brandOn)}
+                  role="switch"
+                  aria-checked={brandOn}
+                  title={brandOn ? "İmza videoda görünüyor — kapatmak için tıkla" : "İmza kapalı — açmak için tıkla"}
+                  className={`relative ml-auto inline-flex h-4 w-8 shrink-0 items-center rounded-full transition ${brandOn ? "bg-amber-400" : "bg-white/15"}`}
+                >
+                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition ${brandOn ? "translate-x-4" : "translate-x-0.5"}`} />
+                </button>
               </span>
               <input
                 value={brandSignature}
                 onChange={(e) => setBrandSignature(e.target.value)}
                 maxLength={28}
                 placeholder="@nurstudyo"
-                className="glass-soft w-full rounded-lg px-2 py-1.5 text-[10px] font-bold text-white outline-none focus:border-[color:var(--accent)]"
+                disabled={!brandOn}
+                className="glass-soft w-full rounded-lg px-2 py-1.5 text-[10px] font-bold text-white outline-none focus:border-[color:var(--accent)] disabled:opacity-40"
               />
 
               <span className="block text-[8px] font-bold uppercase tracking-wider text-white/45">

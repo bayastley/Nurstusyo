@@ -277,6 +277,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   useEffect(() => {
     try { localStorage.setItem("nur_brand_pos", brandPos); } catch { /* ignore */ }
   }, [brandPos]);
+  // ★ WATERMARK AÇ/KAPA — imza metninden bağımsız ayrı anahtar; kalıcı.
+  //   Kullanıcı imzayı yazıp istediğinde kapatabilir (kanal logosu yokken vs.)
+  const [brandOn, setBrandOn] = useState<boolean>(() => {
+    try { return localStorage.getItem("nur_brand_on") !== "0"; } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("nur_brand_on", brandOn ? "1" : "0"); } catch { /* ignore */ }
+  }, [brandOn]);
   const [textOffset, setTextOffset] = useState({ x: 0, y: 0 });
   const arabicFontCss = ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif";
   const arabicFontW = arabicFontWeight(arabicFont);
@@ -613,7 +621,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
     showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, mealSizeMul: mealSizeFine, shimmerCfg, shimmerIntensity, cardBg, textOffset,
-    cineFilter, isMasterSürüm, brandSignature, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
+    cineFilter, isMasterSürüm, brandSignature, brandOn, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
   });
 
   // Canvas draw kodu useCanvasDraw hook'una taşındı
@@ -1557,6 +1565,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setCardBg={setCardBg}
           brandSignature={brandSignature}
           setBrandSignature={setBrandSignature}
+          brandOn={brandOn}
+          setBrandOn={setBrandOn}
           brandPos={brandPos}
           setBrandPos={setBrandPos}
           setTextOffset={setTextOffset}

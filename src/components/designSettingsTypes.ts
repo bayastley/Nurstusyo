@@ -52,6 +52,9 @@ export interface DesignSettingsPanelProps {
   setCardBg: (bg: "seffaf" | "koyu") => void;
   brandSignature: string;
   setBrandSignature: (v: string) => void;
+  // ★ WATERMARK AÇ/KAPA — imza metni dolu olsa bile kapatılabilir (ayrı bir anahtar)
+  brandOn: boolean;
+  setBrandOn: (v: boolean) => void;
   brandPos: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt";
   setBrandPos: (v: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt") => void;
   setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;

@@ -39,6 +39,7 @@ interface CanvasDrawParams {
   cineFilter: { css: string; tint?: string; tintAlpha?: number };
   isMasterSürüm: boolean;
   brandSignature: string;
+  brandOn: boolean;
   brandPos: "sol-ust" | "sag-ust" | "sol-alt" | "sag-alt";
   previewFps: number;
   previewTime: number;
@@ -343,7 +344,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
             ctx.save(); ctx.font = `700 ${Math.round(height * 0.018)}px Inter,sans-serif`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
             ctx.shadowColor = "rgba(0, 0, 0, 0.7)"; ctx.shadowBlur = 4; ctx.textAlign = "right"; ctx.fillText("nurstudyo.com", width * 0.95, height * 0.965); ctx.restore();
           }
-          if ((p.isMasterSürüm || p.accessTier === "elit") && p.brandSignature.trim()) {
+          if ((p.isMasterSürüm || p.accessTier === "elit") && p.brandOn && p.brandSignature.trim()) {
             ctx.save(); const sigSize = Math.round(height * 0.019); ctx.font = `800 ${sigSize}px Inter,sans-serif`;
             const isLeft = p.brandPos === "sol-ust" || p.brandPos === "sol-alt", isTop = p.brandPos === "sol-ust" || p.brandPos === "sag-ust";
             const sigX = isLeft ? width * 0.05 : width * 0.95, sigY = isTop ? height * 0.052 : height * 0.965;
@@ -360,5 +361,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandOn, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
 }
