@@ -269,6 +269,78 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     "/api/live/kabe?src=sunnah&type=playlist",
   ];
   const kabeSourcesFor = (tab: string) => (tab === "quran" ? KABE_SOURCES : tab === "mekke" ? SUNNAH_SOURCES : QURAN_HD_SOURCES);
+  // ═══ 📻 KUR'AN RADYOSU — 7/24 kesintisiz tilavet radyoları (mp3quran.net / qurango.net)
+  //   Tümü CORS açık (Access-Control-Allow-Origin: *) ve canlıda test edildi (200 audio/mpeg).
+  //   Ayrı Audio elementi kullanır — ayet sesiyle (audioRef) çakışmaz.
+  const RADIO_STATIONS: Array<{ ad: string; url: string }> = [
+    { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel" },
+    { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly" },
+    { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi" },
+    { ad: "🎙️ Yasser Al-Dosari", url: "https://backup.qurango.net/radio/yasser_aldosari" },
+    { ad: "🎙️ Fares Abbad", url: "https://backup.qurango.net/radio/fares_abbad" },
+    { ad: "🎙️ Abdulrahman As-Sudais", url: "https://backup.qurango.net/radio/abdulrahman_alsudaes" },
+    { ad: "🎙️ Al-Minshawi", url: "https://backup.qurango.net/radio/mohammed_siddiq_alminshawi" },
+  ];
+  const [radioOn, setRadioOn] = useState(false);
+  const [radioIdx, setRadioIdx] = useState(0);
+  const [radioVol, setRadioVol] = useState(0.8);
+  const [radioMuted, setRadioMuted] = useState(false);
+  const [radioErr, setRadioErr] = useState(false);
+  const radioRef = useRef<HTMLAudioElement | null>(null);
+  if (!radioRef.current && typeof Audio !== "undefined") {
+    radioRef.current = new Audio();
+    radioRef.current.preload = "none";
+  }
+  // ★ Radyo çalarken ayet/kelime sesi de durur — iki ses üst üste binmez
+  const toggleRadio = useCallback(() => {
+    const r = radioRef.current;
+    if (!r) return;
+    if (radioOn) {
+      r.pause();
+      setRadioOn(false);
+    } else {
+      stopAudio();
+      setIsPlaying(false);
+      setRadioErr(false);
+      if (!r.src) r.src = RADIO_STATIONS[radioIdx].url;
+      r.volume = radioVol;
+      r.muted = radioMuted;
+      r.play().catch(() => setRadioErr(true));
+      setRadioOn(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioOn, radioIdx, radioVol, radioMuted, stopAudio]);
+  // Kanal değişince (radyo açıksa) yeni kanala geç
+  useEffect(() => {
+    const r = radioRef.current;
+    if (!r || !radioOn) return;
+    r.src = RADIO_STATIONS[radioIdx].url;
+    r.play().catch(() => setRadioErr(true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radioIdx]);
+  // Ses seviyesi / sessiz anında uygulanır
+  useEffect(() => {
+    const r = radioRef.current;
+    if (!r) return;
+    r.volume = radioVol;
+    r.muted = radioMuted;
+  }, [radioVol, radioMuted]);
+  // ★ KÂBE CANLI AÇILINCA RADYO SUSSUN, kapanınca devam etsin
+  useEffect(() => {
+    const r = radioRef.current;
+    if (!r) return;
+    if (kabeLive) r.pause();
+    else if (radioOn) r.play().catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kabeLive]);
+  // Modal kapanınca radyo da kapanır (arkada gizli ses kalmasın)
+  useEffect(() => {
+    if (!open) {
+      radioRef.current?.pause();
+      setRadioOn(false);
+    }
+  }, [open]);
+  useEffect(() => () => { radioRef.current?.pause(); }, []);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -1011,8 +1083,41 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           <button onClick={onClose} className="flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95">
           KAPAT <X size={13} />
         </button>
+          {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
+          <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
+            📻 {radioOn ? "RADYO AÇIK" : "RADYO"}
+          </button>
         </div>
       </div>
+
+      {/* ★ RADYO MİNİ OYNATICI: açılınca üst barın altında ince şerit */}
+      {radioOn && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-sky-400/20 bg-sky-950/30 px-4 py-1.5">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sky-400" />
+          </span>
+          <select
+            value={radioIdx}
+            onChange={(e) => setRadioIdx(Number(e.target.value))}
+            className="max-w-52 shrink-0 rounded-lg border border-white/10 bg-[#0d1a2c] px-2 py-1 text-[11px] font-bold text-sky-100 outline-none"
+            title="Radyo kanalı seç"
+          >
+            {RADIO_STATIONS.map((st, i) => <option key={st.url} value={i}>{st.ad}</option>)}
+          </select>
+          <span className="hidden min-w-0 flex-1 truncate text-[10px] font-bold text-sky-200/60 sm:block">CANLI TİLAVET — 7/24 kesintisiz</span>
+          {radioErr ? (
+            <button onClick={() => { setRadioErr(false); const r = radioRef.current; if (r) { r.src = RADIO_STATIONS[radioIdx].url; r.play().catch(() => setRadioErr(true)); } }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Bağlantı koptu — tekrar dene">↻ Tekrar dene</button>
+          ) : (
+            <span className="hidden rounded-full bg-sky-500/15 px-2 py-0.5 text-[9px] font-black text-sky-300 sm:inline">● CANLI</span>
+          )}
+          <button onClick={() => setRadioMuted(m => !m)} className="text-[13px] leading-none text-sky-100/90 transition hover:text-sky-300" title={radioMuted ? "Sesi aç" : "Sessize al"}>
+            {radioMuted || radioVol === 0 ? "🔇" : radioVol < 0.5 ? "🔉" : "🔊"}
+          </button>
+          <input type="range" min={0} max={1} step={0.05} value={radioMuted ? 0 : radioVol} onChange={(e) => { const v = Number(e.target.value); setRadioVol(v); setRadioMuted(v === 0); }} className="h-1 w-16 cursor-pointer accent-sky-400" title="Radyo ses seviyesi" />
+          <button onClick={() => { radioRef.current?.pause(); setRadioOn(false); }} className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white" title="Radyoyu kapat">✕</button>
+        </div>
+      )}
 
       {/* ══════════ ÖĞREN MODU ══════════ */}
       {mode === "learn" && (
