@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw } from "lucide-react";
+import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw, CheckCircle2 } from "lucide-react";
 import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, type MaintenanceConfig } from "../services/adminSyncService";
 import { RECITERS } from "../reciters";
 
@@ -258,6 +258,21 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       : "⚠️ Bakım planı cihazda kaydedildi; sunucuya yazılamadı");
   };
 
+  // ★ BAKIMI ŞİMDİ BİTİR: planı beklemeden bakımı anında kaldırır.
+  //   enabled=false + boş pencere yazılır → hem cihazda hem sunucuda temizlenir.
+  const endMaintenanceNow = async () => {
+    const next = { enabled: false, startsAt: "", endsAt: "", message: maintenance.message, updatedAt: new Date().toISOString() };
+    const cfg = getSystemConfig();
+    cfg.maintenance = next;
+    saveSystemConfig(cfg);
+    setMaintenance((v) => ({ ...v, enabled: false, startsAt: "", endsAt: "" }));
+    const ok = await adminAction({ action: "set_maintenance", enabled: false, startsAt: "", endsAt: "", message: next.message });
+    window.dispatchEvent(new Event("nur_config_updated"));
+    notify(ok
+      ? "✅ Bakım anında sona erdirildi — site 1 dk içinde herkese açılır"
+      : "⚠️ Bakım cihazda kapatıldı; sunucuya yazılamadı");
+  };
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="rounded-2xl border border-amber-400/25 bg-black/35 p-4">
@@ -304,6 +319,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
         </div>
         <textarea value={maintenance.message} onChange={(e) => setMaintenance((v) => ({ ...v, message: e.target.value }))} rows={2} maxLength={300} placeholder="Bakım mesajı" className="glass-soft mt-2 w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
         <button onClick={saveMaintenance} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-400 py-2.5 text-xs font-black text-black shadow-[0_0_18px_rgba(248,113,113,.45)] transition hover:bg-red-300 hover:shadow-[0_0_26px_rgba(248,113,113,.65)] active:scale-[.98] active:bg-red-200"><Save size={13} /> Bakım Planını Kaydet</button>
+        <button onClick={endMaintenanceNow} disabled={!maintenance.enabled && !maintenance.endsAt} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/15 py-2.5 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/25 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"><CheckCircle2 size={13} /> Bakımı Şimdi Bitir</button>
       </section>
 
       <section className="rounded-2xl border border-sky-400/25 bg-black/35 p-4 lg:col-span-2">
