@@ -239,7 +239,13 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                           <span className="text-white/35 truncate">• {item.country}</span>
                         </span>
                       </span>
-                      {reciterMaintenance && <LockBadge kind="maintenance" position="top-right" />}
+                      {/* ★ V2/V3/PRO/ELİT rozetleri: kâri kilitleri artık klasör kartlarıyla aynı rozet sistemini kullanıyor.
+                          Önceki hata: sadece maintenance rozeti çiziliyordu — v2 kilitli hoca "susturuk kilit" kalıyordu,
+                          kullanıcı neden seçemediğini anlayamıyordu. */}
+                      {reciterMaintenance ? <LockBadge kind="maintenance" position="top-right" /> :
+                        reciterLocked && requiredTier === "pro" ? <LockBadge kind="pro" position="top-right" onUpgrade={() => openPremium("uyelik")} /> :
+                        reciterLocked && requiredTier === "elit" ? <LockBadge kind="elit" position="top-right" onUpgrade={() => openPremium("uyelik")} /> : null}
+                      {reciterLocked && (dynamicLock === "v2" || dynamicLock === "v3") && <LockBadge kind={dynamicLock === "v2" ? "v2" : "v3"} position="top-right" />}
                       <span
                         role="button"
                         title={reciterLocked ? "Üyelik gerekli" : "Ses örneğini çal"}
