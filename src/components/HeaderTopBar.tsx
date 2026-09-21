@@ -133,7 +133,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       {user ? (
                         <>
                           <LogIn size={14} style={{ color: "var(--accent)" }} />
-                          <span className="flex-1 truncate">{user.name}</span>
+                          <span className="flex-1 truncate" title="Hesap değiştir / yeniden giriş yap — giriş ekranını açar">{user.name}</span>
                           <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="text-[9px] text-red-400 hover:text-red-300">Çıkış</button>
                         </>
                       ) : (
@@ -194,16 +194,19 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi</p>
                           </div>
 
-                          {/* ★ YOL HARİTASI BUTONU */}
-                          <button
-                            type="button"
-                            onClick={() => { setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
-                            className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] text-white/85 font-bold hover:bg-white/5 transition"
-                          >
-                            <span className="text-base">🚀</span>
-                            <span className="min-w-0 flex-1 truncate">Güncelleme Yol Haritası</span>
-                            <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-green-500/20 text-green-400">V2 & V3</span>
-                          </button>
+                          {/* ★ YOL HARİTASI BUTONU — V2 kilidi: admin (master sürüm) hariç kimse açamaz */}
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => { if (!isMasterSürüm) return; setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
+                              className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] font-bold transition hover:bg-white/5 ${isMasterSürüm ? "text-white/85" : "text-white/50"}`}
+                            >
+                              <span className="text-base">🚀</span>
+                              <span className="min-w-0 flex-1 truncate">Güncelleme Yol Haritası</span>
+                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-green-500/20 text-green-400">V2 & V3</span>
+                            </button>
+                            {!isMasterSürüm && <LockBadge kind="v2" position="top-right" tooltipText="V2 Güncellemesi Yakında" />}
+                          </div>
 
                           {/* ★ Ayet & Dua Kütüphanesi — V2 kilidiyle Güncellemeler panelinde */}
                           <div className="relative">

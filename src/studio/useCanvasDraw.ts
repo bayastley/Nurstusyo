@@ -216,13 +216,16 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               //   fallback fontla 'yanıp sönme' olmaz. Font gelince nur_font_loaded
               //   event'i draw'ı tazeler, doğru fontla çizilir.
               const fontAile = p.arabicFontCss.split(",")[0].replace(/'/g, "").trim();
-              const fontHazir = (document.fonts?.check?.(`${p.arabicFontWeight} 16px "${fontAile}"`)) ?? true;
+              // ★ FONT HAZIR KONTROLÜ — sadece check() true dönerse çiz; hiçbir koşulda
+              //   false'a takılıp kalma (fallback yanıp sönme yok, boşluk da kalmaz).
+              const fontCheck = document.fonts?.check?.bind(document.fonts);
+              const fontHazir = !fontAile || (typeof fontCheck === "function" ? fontCheck(`${p.arabicFontWeight} 16px "${fontAile}"`) || fontCheck(`400 16px "${fontAile}"`) : true);
               let arabicSize = 0, arabicHeight = 0, translationSize = 0, arabicLines: string[] = [], translationLines: string[] = [], sepH = 0, totalH = 0;
               for (let step = 0; step < 22; step += 1) {
                 const shrink = Math.pow(0.96, step);
                 arabicSize = Math.round(Math.min(48, Math.max(13, arBase * shrink)) * p.textSizeMul);
                 const trMaxSize = currentAspect === "16:9" ? 21 : onlyMeal ? 26 : 24;
-                translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.textSizeMul * p.mealSizeMul);
+                translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.mealSizeMul); // ★ mealSizeMul ARTIK BAĞIMSIZ (textSizeMul ile çarpılmıyordu — biri büyüyünce diğeri de büyüyordu)
                 arabicHeight = arabicSize * 1.72;
                 ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
                 arabicLines = (p.showArapca && fontHazir) ? wrapText(ctx, currentAyah.ar, arMaxW) : []; // ★ font yoksa boş bırak — fallback yanıp sönme yok
@@ -246,11 +249,24 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 const playbackDuration = currentAyah.s === 0 ? 0 : Math.max(0.01, p.previewDuration);
                 const ayahDuration = p.previewIsSurah ? playbackDuration / Math.max(currentItems.length, 1) : playbackDuration;
                 const ayahOffset = p.previewIsSurah ? (currentIndex * ayahDuration) : 0;
-                const localPlaybackTime = Math.max(0, p.previewTime - ayahOffset);
                 const wordDuration = p.previewTime > 0 && totalWords > 0
                   ? Math.max(0.05, (Number.isFinite(ayahDuration) ? ayahDuration : 0) / totalWords)
                   : 0;
-                const activeIdx = totalWords > 0 && wordDuration > 0 && p.previewTime > 0 ? Math.min(totalWords - 1, Math.floor(localPlaybackTime / wordDuration)) : -1;
+                // ★ SES-KELİME SENKRONU: düz zaman bölmesi yerine kelime harf uzunluğuyla
+                //   orantılı dağıtım — uzun kelime uzun okunur, vurgu takılma yapmaz.
+                const cumUzunluk: number[] = [];
+                let toplamUzunluk = 0;
+                if (wordDuration > 0) {
+                  let acc = 0;
+                  for (const w of allArabicWords) { acc += Math.max(1, w.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "").length); cumUzunluk.push(acc); }
+                  toplamUzunluk = acc || 1;
+                }
+                const aktifZaman = wordDuration > 0 ? Math.max(0, p.previewTime - ayahOffset) : 0;
+                const activeIdx = wordDuration > 0 && p.previewTime > 0
+                  ? (aktifZaman >= ayahDuration
+                      ? totalWords - 1
+                      : cumUzunluk.findIndex((c) => aktifZaman < (c / toplamUzunluk) * ayahDuration))
+                  : -1;
                 arabicLines.forEach((line) => {
                   if (activeIdx === -1) {
                     // Sadece tam satırı çiz (Safari ve tüm mobil tarayıcılar için kusursuz birleşik Arapça harfler)

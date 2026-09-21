@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import type { DesignSettingsPanelProps } from "./designSettingsTypes";
 import {
   Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause,
@@ -72,6 +72,17 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   const [configVersion, setConfigVersion] = useState(0);
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState("");
   const [backgroundPosterUrl, setBackgroundPosterUrl] = useState<string | undefined>();
+  // ★ Font galerisi: panel dışına tıklayınca kapansın
+  const galeriRef = useRef<HTMLDetailsElement | null>(null);
+  useEffect(() => {
+    if (!galeriRef.current) return;
+    const onDocClick = (e: MouseEvent) => {
+      const el = galeriRef.current;
+      if (el && el.open && !el.contains(e.target as Node)) el.open = false;
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
   useEffect(() => {
     const onUpdate = () => setConfigVersion((v) => v + 1);
     window.addEventListener("nur_config_updated", onUpdate);
@@ -312,7 +323,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               </select>
               {/* ★ CANLI ÖNİZLEME — seçili font, kendi yazı tarzıyla örnek ayet gösterir */}
               <span
-                className="glass-soft mt-1 block truncate rounded-lg px-2 py-1.5 text-center text-lg leading-snug"
+                className="glass-soft mt-1 block truncate rounded-lg px-2 py-1.5 text-center text-lg leading-snug text-amber-100"
                 dir="rtl"
                 lang="ar"
                 style={{ fontFamily: ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif" }}
@@ -324,7 +335,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   her font KENDİ yazı tarzıyla örnek gösterir. <option> tarayıcıda
                   özel fontla çizilemediği için (kısıt) galeri yaklaşımı kullanıldı.
                   Tembel yüklemeyle uyumlu: fontun CSS'i tıklanınca yüklenir. */}
-              <details className="mt-1">
+              <details ref={galeriRef} className="mt-1">
                 <summary className="cursor-pointer text-[8px] font-bold text-white/40 hover:text-white/70"> görüntülü seç — 20 fontu kendi yazısıyla karşılaştır</summary>
                 <div className="mt-1 grid max-h-52 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-1">
                   {ARABIC_FONTS.map((f) => {
@@ -337,7 +348,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                         title={f.label}
                         className={`rounded-md border px-1.5 py-1 text-center transition ${secili ? "border-amber-400/60 bg-amber-500/15" : "border-white/5 bg-white/[.03] hover:bg-white/[.08]"}`}
                       >
-                        <span className="block truncate text-base leading-snug" dir="rtl" lang="ar" style={{ fontFamily: f.css }}>
+                        {/* ★ Tema uyumlu ALTIN yazı — beyaz değil */}
+                        <span className="block truncate text-base leading-snug text-amber-200/95" dir="rtl" lang="ar" style={{ fontFamily: f.css }}>
                           بِسْمِ ٱللَّهِ
                         </span>
                         <span className={`mt-0.5 block truncate text-[7px] font-bold ${secili ? "text-amber-300" : "text-white/40"}`}>{f.label.split(" (")[0]}</span>
@@ -394,10 +406,6 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   >sıfırla</button>
                 )}
               </span>
-              {/* ★ CANLI ÖNİZLEME — slider'ı sürüklerken besmele anında büyür/küçülür */}
-              <span className="mt-1 flex h-9 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2" style={{ direction: "rtl" }} title="Arapça yazının videodaki gerçek boyutu">
-                <span className="whitespace-nowrap leading-none text-amber-200/90" style={{ fontSize: `${13 * textSizeMul}px`, fontFamily: "'Amiri', serif", transition: "font-size 60ms linear" }}>بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</span>
-              </span>
               {/* ★ MEAL BOYUTU — Arapça'dan BAĞIMSIZ ince ayar */}
               <span className="mt-1.5 flex items-center gap-1" title="Meal (çeviri) metninin boyutu — Arapça'dan bağımsız">
                 <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Meal</span>
@@ -434,10 +442,6 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                     className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
                   >sıfırla</button>
                 )}
-              </span>
-              {/* ★ MEAL CANLI ÖNİZLEME — meal slider'ı sürüklerken örnek metin anında değişir */}
-              <span className="mt-1 flex h-8 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2" title="Meal metninin videodaki gerçek boyutu">
-                <span className="whitespace-nowrap leading-none text-sky-200/80" style={{ fontSize: `${9 * mealSizeMul}px`, transition: "font-size 60ms linear" }}>Rahmân ve Rahîm olan Allah'ın adıyla</span>
               </span>
             </label>
             <label className="block">
