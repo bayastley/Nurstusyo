@@ -982,7 +982,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                           title={`${ep} · ${bilgi.adet} hata · son: ${new Date(bilgi.sonZaman).toLocaleString("tr-TR")}`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="w-20 shrink-0 truncate font-mono text-[9px] font-bold text-white/75 group-hover:text-white">/{ep}</span>
+                            <span className="w-20 shrink-0 truncate font-mono text-[9px] font-bold text-white/75 group-hover:text-white">/{ep}{bilgi.adet === enCok && <span title="En çok hata veren endpoint"> 👑</span>}</span>
                             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/[.06]">
                               <span
                                 className="block h-full rounded-full transition-all"
@@ -998,6 +998,41 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                       ))}
                     </div>
                     <p className="mt-2 text-[8px] text-white/35">Çubuk uzunluğu = hata sayısı oranı · en üstte en çok hata veren endpoint · tıkla → son hata zamanını gör</p>
+                  </div>
+                );
+              })()}
+
+              {/* ★ ALARM BANDI — 24 saatte sunucu hatası 10'u aşarsa kırmızı uyarı + en çok hata veren endpoint */}
+              {(() => {
+                const serverAdet = errorLogs.filter((l) => String(l.source || "").startsWith("server:")).length;
+                if (serverAdet <= 10) return null;
+                const endpointMap = new Map<string, number>();
+                for (const l of errorLogs) {
+                  const src = String(l.source || "");
+                  if (src.startsWith("server:")) endpointMap.set(src.slice(7) || "bilinmeyen", (endpointMap.get(src.slice(7) || "bilinmeyen") || 0) + 1);
+                }
+                const enKotu = [...endpointMap.entries()].sort((a, b) => b[1] - a[1])[0];
+                return (
+                  <div
+                    className="flex items-center gap-2 rounded-xl border border-red-500/50 bg-gradient-to-r from-red-500/20 to-red-500/[.08] px-3 py-2.5"
+                    role="alert"
+                    style={{ boxShadow: "0 0 18px rgba(239,68,68,.25)" }}
+                  >
+                    <span className="animate-pulse text-base" aria-hidden>🚨</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10.5px] font-black text-red-200">
+                        SON 24 SAATTE {serverAdet} SUNUCU HATASI — KRİTİK EŞİK (10) AŞILDI
+                      </p>
+                      <p className="text-[9px] text-red-200/70">
+                        Sorunlu endpoint: <b className="font-mono text-red-100">/{enKotu[0]}</b> ({enKotu[1]} hata) — 🖥️ Sunucu filtresinden kırılımı incele
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => { setErrorFilter("server"); setErrorPage(0); }}
+                      className="shrink-0 rounded-lg bg-red-500/30 px-2.5 py-1.5 text-[9px] font-black text-red-100 transition hover:bg-red-500/50"
+                    >
+                      Kırılımı Gör
+                    </button>
                   </div>
                 );
               })()}
