@@ -953,6 +953,55 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 );
               })()}
 
+              {/* ★ ENDPOINT KIRILIMI — 🖥️ Sunucu filtresi seçiliyken hangi API kaç hata vermiş, çoktan aza sıralı */}
+              {errorFilter === "server" && (() => {
+                const endpointMap = new Map<string, { adet: number; sonZaman: string }>();
+                for (const l of errorLogs) {
+                  const src = String(l.source || "");
+                  if (!src.startsWith("server:")) continue;
+                  const ep = src.slice(7) || "bilinmeyen";
+                  const cur = endpointMap.get(ep);
+                  if (cur) { cur.adet++; if (l.created_at > cur.sonZaman) cur.sonZaman = l.created_at; }
+                  else endpointMap.set(ep, { adet: 1, sonZaman: l.created_at });
+                }
+                const sirali = [...endpointMap.entries()].sort((a, b) => b[1].adet - a[1].adet);
+                if (sirali.length === 0) return null;
+                const enCok = sirali[0][1].adet;
+                return (
+                  <div className="rounded-xl border border-red-500/25 bg-red-500/[.06] p-3">
+                    <p className="mb-2 flex items-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider text-red-300">
+                      <span>🖥️</span> Endpoint Kırılımı — hangi API kaç hata verdi
+                      <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300">{sirali.length} endpoint</span>
+                    </p>
+                    <div className="space-y-1.5">
+                      {sirali.map(([ep, bilgi]) => (
+                        <button
+                          key={ep}
+                          onClick={() => notify(`🔍 ${ep} — son hata: ${new Date(bilgi.sonZaman).toLocaleString("tr-TR")}`)}
+                          className="group block w-full text-left"
+                          title={`${ep} · ${bilgi.adet} hata · son: ${new Date(bilgi.sonZaman).toLocaleString("tr-TR")}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="w-20 shrink-0 truncate font-mono text-[9px] font-bold text-white/75 group-hover:text-white">/{ep}</span>
+                            <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/[.06]">
+                              <span
+                                className="block h-full rounded-full transition-all"
+                                style={{
+                                  width: `${Math.max(6, Math.round((bilgi.adet / enCok) * 100))}%`,
+                                  background: "linear-gradient(90deg,#ef4444,#f87171)",
+                                }}
+                              />
+                            </span>
+                            <span className={`w-8 shrink-0 text-right text-[9.5px] font-black ${bilgi.adet === enCok ? "text-red-300" : "text-white/55"}`}>{bilgi.adet}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-[8px] text-white/35">Çubuk uzunluğu = hata sayısı oranı · en üstte en çok hata veren endpoint · tıkla → son hata zamanını gör</p>
+                  </div>
+                );
+              })()}
+
               {/* Tür filtresi — varsa tür butonları */}
               {turlar.length > 1 && (
                 <div className="flex flex-wrap gap-2">
