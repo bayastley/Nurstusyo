@@ -237,6 +237,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   yükler (Amiri, Inter, Cinzel). Seçilen diğer font, seçildiği anda tek
   //   istekle yüklenir — açılış hızı korunur. Seçim localStorage'da kalıcı.
   const yukluFontlar = new Set<string>(["amiri"]);
+  // ★ Font yükleme hatası takibi: internet yoksa / Google Fonts erişilemezse
+  //   kullanıcıyı bilgilendir — sessizce fallback fontta kalmaz.
+  const fontHataBildirildi = useRef(new Set<string>());
   useEffect(() => {
     const font = ARABIC_FONTS.find((f) => f.id === arabicFont);
     if (!font || yukluFontlar.has(arabicFont)) return;
@@ -244,6 +247,25 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(aile).replace(/%20/g, "+") + ":wght@400;700&display=swap";
+    let yuklendi = false;
+    // ★ ÇEVRİMDIŞI KONTROL: navigator.onLine=false ise istek hiç atılmaz —
+    //   hemen bilgilendir, gereksiz ağ beklemesi olmasın
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      if (!fontHataBildirildi.current.has(arabicFont)) {
+        fontHataBildirildi.current.add(arabicFont);
+        notify(`📶 İnternet bağlantısı yok — "${font.label}" fontu yüklenemedi, Amiri kullanılacak`);
+      }
+      return;
+    }
+    // ★ ZAMAN AŞIMLI YÜKLEME: 8 saniyede font gelmezse (ofline proxy, DNS hatası,
+    //   Google engeli) kullanıcıyı bilgilendir — Amiri zaten fallback CSS'te var
+    const zamanAsimi = window.setTimeout(() => {
+      if (yuklendi) return;
+      if (!fontHataBildirildi.current.has(arabicFont)) {
+        fontHataBildirildi.current.add(arabicFont);
+        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak (internet bağlantını kontrol et)`);
+      }
+    }, 8000);
     document.head.appendChild(link);
     yukluFontlar.add(arabicFont);
     // ★ FOUT ÖNLEME: font gerçekten yüklendiğinde önizlemeyi tazele —
@@ -252,9 +274,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       document.fonts.load("400 20px " + aile),
       document.fonts.load("700 20px " + aile),
     ]).then(() => {
+      yuklendi = true;
+      window.clearTimeout(zamanAsimi);
       window.dispatchEvent(new Event("nur_font_loaded"));
-    }).catch(() => undefined);
-  }, [arabicFont]);
+    }).catch(() => {
+      yuklendi = true; // catch'te de zaman aşımını durdur — çift bildirim olmasın
+      window.clearTimeout(zamanAsimi);
+      if (!fontHataBildirildi.current.has(arabicFont)) {
+        fontHataBildirildi.current.add(arabicFont);
+        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak`);
+      }
+    });
+    return () => window.clearTimeout(zamanAsimi);
+  }, [arabicFont, notify]);
   const setArabicFont = (f: string) => {
     setArabicFontState(f);
     try { localStorage.setItem("nur_arabic_font", f); } catch { /* ignore */ }
