@@ -76,19 +76,24 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     const text = `${shareTitle}\n\n${shareDescription}`;
     navigator.clipboard.writeText(text).catch(() => undefined);
     window.open("https://studio.youtube.com/channel/upload", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
+    // ★ PLATFORM ÖNERİSİ: YouTube başlığı otomatik kopyalar — kullanıcıya haber ver
+    notify("📋 Başlık + açıklama kopyalandı — YouTube yüklerken başlık kutusuna yapıştır");
+  }, [notify, shareTitle, shareDescription]);
 
   const shareToTikTok = useCallback(() => {
     const text = `${shareTitle}\n\n${shareDescription}`;
     navigator.clipboard.writeText(text).catch(() => undefined);
     window.open("https://www.tiktok.com/creator-center/upload", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
+    notify("📋 Başlık + açıklama kopyalandı — TikTok açıklamasına yapıştır");
+  }, [notify, shareTitle, shareDescription]);
 
   const shareToInstagram = useCallback(() => {
-    const text = `${shareTitle}\n\n${shareDescription}`;
-    navigator.clipboard.writeText(text).catch(() => undefined);
+    // ★ REELS HATIRLATMASI: Instagram dosya paylaşımını kabul etmez — video önce
+    //   cihaza inmeli; Reels sadece 9:16 dikey formatı tam ekran kabul eder.
+    navigator.clipboard.writeText(`${shareTitle}\n\n${shareDescription}`).catch(() => undefined);
     window.open("https://www.instagram.com/reels/", "_blank", "noopener,noreferrer");
-  }, [shareTitle, shareDescription]);
+    notify("📱 Videoyu cihazından Reels'e yükle · Reels 9:16 dikey format ister — videon hazır (metin panoda)");
+  }, [notify, shareTitle, shareDescription]);
 
   const shareToX = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
