@@ -19,6 +19,8 @@ export interface ModalsContainerProps {
   handleForgotPassword: () => void;
   handleVerifyCode: () => void;
   handleGuestContinue: () => void;
+  /** Misafirin kalan deneme video hakkı (0-2). Verilmezse 2 varsayılır. */
+  guestTrialLeft?: number;
   fullUnlockConfirmOpen: boolean;
   setFullUnlockConfirmOpen: (v: boolean) => void;
   jetonCount: number;

@@ -986,8 +986,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const handleGenerate = useCallback(async () => {
     if (generating) { stopGenerationRef.current(); return; }
-    if (!user && !isMasterSürüm) {
-      notify("🎁 Video üretmek için lütfen Google ile 3 saniyede ücretsiz üye olun, +20 ücretsiz jeton kazanın");
+    // ★ MİSAFİR DENEME: üye olmayan da kalan hakkı varsa 1-2 deneme videosu üretebilir
+    //   (indirme/paylaşım yine üyelik ister — VideoPreviewSection'da kilitli). Hakkı biten
+    //   misafir kayıt modalına yönlendirilir.
+    const misafirKalan = user || isMasterSürüm ? 0 : Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed());
+    if (!user && !isMasterSürüm && misafirKalan <= 0) {
+      notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +20 jeton kazan");
       setLoginTab("register");
       setModal("login");
       return;
@@ -1431,6 +1435,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setModal(null);
     notify(`👋 Misafir modundasın · ${left} deneme videosu hakkın var · indirmek için üyelik gerekir`);
   }, [notify]);
+
+  // ★ Misafirin "Video Üret" akışı: hakkı bitince kayıt modalı (yukarıda misafirKalan kontrolü)
 
   const handleForgotPassword = () => { const code = String(Math.floor(100000 + Math.random() * 900000)); setSentCode(code); setLoginTab("verify"); notify(`Doğrulama kodu: ${code}`); };
   const handleVerifyCode = () => { if (verifyCode === sentCode) { notify("Kod doğrulandı! Şifrenizi sıfırlayabilirsiniz."); setLoginTab("forgot"); } else { notify("Kod hatalı!"); } };
@@ -1928,6 +1934,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         handleForgotPassword={handleForgotPassword}
         handleVerifyCode={handleVerifyCode}
         handleGuestContinue={handleGuestContinue}
+        guestTrialLeft={Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed())}
         fullUnlockConfirmOpen={fullUnlockConfirmOpen}
         setFullUnlockConfirmOpen={setFullUnlockConfirmOpen}
         jetonCount={jetonCount}

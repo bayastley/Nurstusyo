@@ -52,6 +52,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   handleForgotPassword,
   handleVerifyCode,
   handleGuestContinue,
+  guestTrialLeft,
   fullUnlockConfirmOpen,
   setFullUnlockConfirmOpen,
   jetonCount,
@@ -269,7 +270,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               onClick={handleGuestContinue}
               className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
             >
-              👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">(2 deneme videosu)</span>
+              👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">({Math.max(0, (guestTrialLeft ?? 2))} deneme videosu kaldı)</span>
             </button>
           </div>
           {loginTab === "verify" && (
