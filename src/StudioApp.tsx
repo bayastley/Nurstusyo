@@ -9,6 +9,7 @@ import {
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
+import { checkGuestGate, bumpGuestUsed } from "./studio/useGuestTrial";
 import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
@@ -1016,15 +1017,28 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const handleGenerate = useCallback(async () => {
     if (generating) { stopGenerationRef.current(); return; }
-    // ★ MİSAFİR DENEME: üye olmayan da kalan hakkı varsa 1-2 deneme videosu üretebilir
-    //   (indirme/paylaşım yine üyelik ister — VideoPreviewSection'da kilitli). Hakkı biten
-    //   misafir kayıt modalına yönlendirilir.
-    const misafirKalan = user || isMasterSürüm ? 0 : Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed());
-    if (!user && !isMasterSürüm && misafirKalan <= 0) {
-      notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +20 jeton kazan");
-      setLoginTab("register");
-      setModal("login");
-      return;
+    // ★ MİSAFİR DENEME + KÖTÜYE KULLANIM FRENİ: üye olmayan da kalan hakkı varsa
+    //   deneme videosu üretebilir ama: (1) toplam 2 hak, (2) günde en fazla 4 üretim
+    //   (sayaç silse bile), (3) iki üretim arası 2 dk cooldown — F5 spam ile seri
+    //   üretim imkansız. Hakkı/günü biten misafir kayıt modalına yönlendirilir.
+    const misafirGate = user || isMasterSürüm ? { allowed: true, remaining: 0 } : checkGuestGate();
+    if (!user && !isMasterSürüm) {
+      if (misafirGate.reason === "bekle") {
+        notify(`⏳ Deneme videoları arasında kısa bir mola var · ${misafirGate.retryAfterSec} sn sonra tekrar dene`);
+        return;
+      }
+      if (misafirGate.reason === "günlük-sınır") {
+        notify("🌙 Bugünkü deneme hakkın doldu · yarın tekrar gelirsin ya da hemen ücretsiz üye olabilirsin");
+        setLoginTab("register");
+        setModal("login");
+        return;
+      }
+      if (!misafirGate.allowed) {
+        notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +20 jeton kazan");
+        setLoginTab("register");
+        setModal("login");
+        return;
+      }
     }
     const rl = checkRateLimit("video");
     if (!rl.allowed) {
@@ -1451,12 +1465,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   };
 
   // ★ MİSAFİR MODU — üye olmadan deneme hakkı
+  //   Sayaç + gün çıpası + zaman damgası videoStore'daki bumpGuestUsed ile yönetilir:
+  //   günde en fazla GUEST_DAILY_CAP üretim, aralarında GUEST_COOLDOWN_SEC fren (F5 spam engeli).
   const GUEST_FREE_VIDEOS = 2;
   const getGuestUsed = () => {
     try { return Number(localStorage.getItem("nur_guest_videos") || 0); } catch { return 0; }
-  };
-  const bumpGuestUsed = () => {
-    try { localStorage.setItem("nur_guest_videos", String(getGuestUsed() + 1)); } catch { /* ignore */ }
   };
   const handleGuestContinue = useCallback(() => {
     const used = getGuestUsed();
@@ -1469,7 +1482,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify(`👋 Misafir modundasın · ${left} deneme videosu hakkın var · indirmek için üyelik gerekir`);
   }, [notify]);
 
-  // ★ Misafirin "Video Üret" akışı: hakkı bitince kayıt modalı (yukarıda misafirKalan kontrolü)
+  // ★ Misafirin "Video Üret" akışı: hakkı/günü bitince kayıt modalı (yukarıda checkGuestGate kontrolü)
 
   const handleForgotPassword = () => { const code = String(Math.floor(100000 + Math.random() * 900000)); setSentCode(code); setLoginTab("verify"); notify(`Doğrulama kodu: ${code}`); };
   const handleVerifyCode = () => { if (verifyCode === sentCode) { notify("Kod doğrulandı! Şifrenizi sıfırlayabilirsiniz."); setLoginTab("forgot"); } else { notify("Kod hatalı!"); } };
