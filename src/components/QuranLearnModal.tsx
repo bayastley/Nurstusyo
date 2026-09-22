@@ -379,7 +379,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     radioTimeoutRef.current = window.setTimeout(() => {
       if (r.paused || r.readyState < 2) radioFail("30 sn yanıt yok");
     }, 30_000);
-    r.play().then(() => { radioFallbackRef.current = 0; setRadioErr(false); }).catch(() => radioFail("play reddi"));
+    r.play().then(() => { radioFallbackRef.current = 0; setRadioErr(false); setRadioNote(""); }).catch(() => radioFail("play reddi"));
     return radioTimerTemizle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radioIdx, radioOn]);
@@ -1176,7 +1176,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           </span>
           <select
             value={radioIdx}
-            onChange={(e) => setRadioIdx(Number(e.target.value))}
+            onChange={(e) => { setRadioIdx(Number(e.target.value)); setRadioNote(""); setRadioErr(false); }} // manuel seçimde eski yedek uyarısını temizle
             className="max-w-52 shrink-0 rounded-lg border border-white/10 bg-[#0d1a2c] px-2 py-1 text-[11px] font-bold text-sky-100 outline-none"
             title="Radyo kanalı seç"
           >
