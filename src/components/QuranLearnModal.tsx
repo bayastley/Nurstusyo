@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS } from "../data/liveStreams";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
@@ -246,41 +247,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
   const [kabeTab, setKabeTab] = useState<"quran" | "live" | "mekke">("quran"); // ★ 1) Suudi Quran TV 2) Katar Quran TV HD 3) Mescid-i Nebi (Medine)
-  // ★ KÂBE CANLI — iki kanal:
-  //   "quran" → Suudi resmî Quran TV (sürekli Kur'an tilaveti, arada Mekke görüntüsü)
-  //   "live"  → AlQuran4K Mekke HD kamera (Kâbe yakın plan, 7/24 canlı)
-  // ★ YouTube TAMAMEN atlandı — hata 153 bir daha asla çıkmaz. İki kanal da kendi proxy'mizden:
-  //   "quran" → Suudi Quran TV (Mekke, kesintisiz tilavet)
-  //   "live"  → Katar Quran TV (HD 576p, kesintisiz tilavet — YouTube'sız Akamai CDN)
-  // ★ DOĞRUDAN KAYNAK: üç kanalın da CORS'u açık (Access-Control-Allow-Origin: *) —
-  //   tarayıcı doğrudan bağlanır, Vercel proxy'si devre dışı → 502 tarih oldu.
-  //   Proxy yalnızca yedek: doğrudan kaynak patlarsa otomatik geçilir.
-  const KABE_SOURCES = [
-    "https://cdn-globecast.akamaized.net/live/eds/saudi_quran/hls_roku/index.m3u8", // ★ Suudi resmî Quran TV (Kur'an tilaveti + Mekke/Medine ibadet görüntüleri) — https, CORS açık
-    "https://media2.streambrothers.com:1936/8122/8122/playlist.m3u8", // yedek: Makkah TV
-    "/api/live/kabe?src=kabe&type=playlist",
-  ];
-  const QURAN_HD_SOURCES = [
-    "https://qatartv.akamaized.net/hls/live/20000612/qtvquran/master.m3u8",
-    "/api/live/kabe?src=quran&type=playlist",
-  ];
-  const SUNNAH_SOURCES = [
-    "https://cdn-globecast.akamaized.net/live/eds/saudi_sunnah/hls_roku/index.m3u8",
-    "/api/live/kabe?src=sunnah&type=playlist",
-  ];
-  const kabeSourcesFor = (tab: string) => (tab === "quran" ? KABE_SOURCES : tab === "mekke" ? SUNNAH_SOURCES : QURAN_HD_SOURCES);
-  // ═══ 📻 KUR'AN RADYOSU — 7/24 kesintisiz tilavet radyoları (mp3quran.net / qurango.net)
-  //   Tümü CORS açık (Access-Control-Allow-Origin: *) ve canlıda test edildi (200 audio/mpeg).
-  //   Ayrı Audio elementi kullanır — ayet sesiyle (audioRef) çakışmaz.
-  const RADIO_STATIONS: Array<{ ad: string; url: string }> = [
-    { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel" },
-    { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly" },
-    { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi" },
-    { ad: "🎙️ Yasser Al-Dosari", url: "https://backup.qurango.net/radio/yasser_aldosari" },
-    { ad: "🎙️ Fares Abbad", url: "https://backup.qurango.net/radio/fares_abbad" },
-    { ad: "🎙️ Abdulrahman As-Sudais", url: "https://backup.qurango.net/radio/abdulrahman_alsudaes" },
-    { ad: "🎙️ Al-Minshawi", url: "https://backup.qurango.net/radio/mohammed_siddiq_alminshawi" },
-  ];
+  // ★ KÂBE CANLI kaynakları ve 📻 RADYO kanalları → src/data/liveStreams.ts'e taşındı (saf veri)
   const [radioOn, setRadioOn] = useState(false);
   const [radioIdx, setRadioIdx] = useState(0);
   const [radioVol, setRadioVol] = useState(0.8);
