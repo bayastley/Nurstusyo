@@ -282,7 +282,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
       const reason = sanitize(body.reason, 500) || "Admin kararı";
-      await db("nur_ban_logs", { method: "POST", body: JSON.stringify({ user_email: email, reason, banned_by: admin.email }) });
+      // ★ user_id de yaz — video/sign ban kontrolünü user_id ile yapar; sadece
+      //   user_email yazılırsa imzalı videolar banlının elinde kalır (kök hata).
+      const banUsers = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`).catch(() => [] as any[]);
+      const banUid = banUsers[0]?.id ?? null;
+      await db("nur_ban_logs", { method: "POST", body: JSON.stringify({ user_id: banUid, user_email: email, reason, banned_by: admin.email }) });
     } else if (action === "unban_user") {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
@@ -320,9 +324,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
       if (users[0]?.id) {
         const uid = users[0].id;
-        // 3) Cüzdanı tamamen sıfırla
+        // 3) Eski cüzdan tablosunu da temizle (geriye uyumluluk)
         await db(`nur_wallets?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0, sub_jeton: 0, purchased_jeton: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
-        // 4) Aktif aboneliği iptal et
+        // 4) ★ ASIL PAKET HAKLARI: nur_video_rights remaining=0 — wallet API hakları
+        //    BU tablodan okur (bkz. api/payments/wallet.ts); nur_wallets sıfırlamak
+        //    paket haklarını SIFIRLAMAZ, iki tablo da temizlenmeli.
+        await db(`nur_video_rights?user_id=eq.${encodeURIComponent(uid)}`, { method: "PATCH", body: JSON.stringify({ remaining: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
+        // 5) Günlük üyelik kullanım kaydını da temizle
+        await db(`nur_daily_usage?user_id=eq.${encodeURIComponent(uid)}`, { method: "DELETE" }).catch(() => null);
+        // 6) Aktif aboneliği iptal et
         await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }).catch(() => null);
       }
     } else if (action === "user_history") {

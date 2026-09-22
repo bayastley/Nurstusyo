@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS } from "../data/liveStreams";
+import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
@@ -1457,12 +1458,21 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 <div className="h-44 overflow-y-auto rounded-xl border border-white/10 bg-[#1E293B] scrollbar-thin">
                   {filteredReciters.length === 0 ? (
                     <p className="p-3 text-center text-[10px] text-[#6e6853]">Bu isimle kari bulunamadı.</p>
-                  ) : filteredReciters.map(r => (
-                    <button key={r.id} onClick={() => { setListenReciter(r.id); stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${listenReciter === r.id ? "bg-gold/15 text-gold" : "text-[#b8b093] hover:bg-white/[.05]"}`}>
-                      <span className="truncate font-semibold">{r.name}</span>
-                      {listenReciter === r.id && <span className="text-[9px] font-black">✓ SEÇİLİ</span>}
+                  ) : filteredReciters.map(r => {
+                    // ★ KİLİT: admin panelinden konan hoca kilidi (maher→maintenance gibi).
+                    //   Panel kısa id (maher) kullanır; buradaki kari id'si uzun
+                    //   (MaherAlMuaiqly128kbps) — full[0] alanı kısa id'yi taşır.
+                    const kisaId = r.full?.[0] ?? r.id;
+                    const lock = getFeatureLock(kisaId, "free") || getFeatureLock(r.id, "free");
+                    const locked = lock === "maintenance" || lock === "off" || lock === "v2" || lock === "v3";
+                    const lockLabel = lock === "maintenance" || lock === "off" ? "🔧 BAKIMDA" : locked ? "🔒 GÜNCELLEME" : "";
+                    return (
+                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; setListenReciter(r.id); stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : listenReciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? "Bu kâri şu anda bakımda / güncellemede — kısa süre içinde dönecek" : undefined}>
+                      <span className="truncate font-semibold">{r.name}{locked && <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/70">{lockLabel}</span>}</span>
+                      {listenReciter === r.id && !locked && <span className="text-[9px] font-black">✓ SEÇİLİ</span>}
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </label>
             </div>
