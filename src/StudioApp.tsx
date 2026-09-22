@@ -145,7 +145,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [results, setResults] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
   // ★ Açılışta hiçbir sure/ayet seçili olmasın — kullanıcı kendisi seçsin
-  const [surah, setSurah] = useState("");
+  // ★ Sure seçici "1" (Fâtiha) ile başlar — dropdown'da Fatiha görünüyorsa state de gerçekten Fatiha olsun.
+  //   Eskiden "" ile başlıyordu: tarayıcı ilk seçeneği (Fatiha) GÖSTERİR ama state boş kalır,
+  //   "Tüm Sure" basınca "Önce bir sure seç" uyarısı çıkıyordu (görünüş ↔ gerçek çelişkisi).
+  const [surah, setSurah] = useState("1");
   const [ayah, setAyah] = useState("");
   const [selected, setSelected] = useState<SelectedAyah[]>([]);
   const [verseIndex, setVerseIndex] = useState(0);
