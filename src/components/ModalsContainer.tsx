@@ -482,7 +482,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                   {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}{clipKind === "img" ? " · Şablonlar" : ""}
                 </h4>
                 <span className="shrink-0 text-[9px] font-bold text-white/35">
-                  {combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} içerik
+                  {/* ★ İçerik sayısı yalnızca admin'de */}
+                  {isMasterSürüm ? `${combinedAllClips.filter((clip) => clip.cat === atmosCategory && clip.kind === clipKind).length} içerik` : ""}
                 </span>
               </div>
               <button
@@ -571,7 +572,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                       {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
                       {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : searchHit ? "#151020" : "var(--accent)" }} /> : null}
                       <span className="px-1 text-center text-[8px] font-bold leading-tight">{category.label}</span>
-                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : searchHit ? "text-[#151020]/70" : "text-white/25"}`}>{count} içerik</span>
+                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : searchHit ? "text-[#151020]/70" : "text-white/25"}`}>{isMasterSürüm ? `${count} içerik` : ""}</span>
                     </button>
                     {hardLocked && lockTip === `cat-${category.id}` && (
                       <span className="pointer-events-none absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-black text-black shadow-lg" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>

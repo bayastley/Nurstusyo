@@ -159,7 +159,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           </button>
           <div className="grid flex-1 gap-1.5">
             <button onClick={() => setModal("atmos")} className="glass-soft rounded-lg px-3 py-2 text-[10px] font-semibold text-white/70">
-              {t("atmoLibrary")} ({combinedAllClipsLength})
+              {/* ★ İçerik sayacı yalnızca admin'de — kullanıcıya rakam gösterilmez */}
+              {t("atmoLibrary")}{isMasterSürüm ? ` (${combinedAllClipsLength})` : ""}
             </button>
             <div className="grid grid-cols-2 gap-1.5">
               <button
