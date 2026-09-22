@@ -314,6 +314,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
         body: JSON.stringify({ key: "maintenance", value: { enabled: body.enabled, startsAt, endsAt, message }, updated_by: admin.email, updated_at: new Date().toISOString() }),
       });
+    } else if (action === "reset_single_right") {
+      // ★ TEK HAK SIFIRLA — suçun boyutuna göre kısmi ceza (tümü değil).
+      //   kind: kisa | uzun | tam → nur_video_rights'ta o türün kalanını 0'lar.
+      //   Ayrıca iptal_reason=true ise aktif aboneliği de iptal eder.
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const kind = String(body.kind || "");
+      if (!("kisa uzun tam".split(" ")).includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz hak türü" });
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+      if (!users[0]?.id) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı" });
+      const uid = users[0].id;
+      // nur_video_rights satırı yoksa oluştur (remaining=0) — upsert
+      await db("nur_video_rights?on_conflict=user_id,video_kind", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: uid, video_kind: kind, remaining: 0, updated_at: new Date().toISOString() }) }).catch(() => null);
+      let subIptal = false;
+      if (body.cancelSubscription === true) {
+        await db(`nur_subscriptions?user_id=eq.${encodeURIComponent(uid)}&status=eq.active`, { method: "PATCH", body: JSON.stringify({ status: "cancelled" }) }).catch(() => null);
+        subIptal = true;
+      }
+      return res.status(200).json({ ok: true, kind, subscriptionCancelled: subIptal });
     } else if (action === "reset_rights") {
       // ★ TÜM HAKLARI SIFIRLA — tier, cüzdan, abonelik hepsini temizle
       const email = validateEmail(body.target);

@@ -339,6 +339,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
+  // ★ TEK HAK SIFIRLA — kısa/uzun/tam ayrı ayrı; suçun boyutuna göre kısmi ceza
+  const handleResetSingleRight = async (email: string, kind: "kisa" | "uzun" | "tam", cancelSubscription: boolean) => {
+    const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm";
+    const state = await serverManage("reset_single_right", { email, kind, cancelSubscription });
+    if (state === "error") return;
+    notify(cancelSubscription
+      ? `🗑️ ${email} — ${ad} hakları sıfırlandı + üyelik iptal edildi`
+      : `🗑️ ${email} — ${ad} paket hakları sıfırlandı (üyelik korundu)`);
+  };
+
   // ★ KULLANICI GEÇMİŞİ — Email ile son 10 siparişi göster
   const handleUserHistory = async (email: string) => {
     const q = sanitizeText(email).trim().toLowerCase().slice(0, 254);
@@ -697,6 +707,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               handleUnban={handleUnban}
               handleTierChange={handleTierChange}
               handleResetRights={handleResetRights}
+              handleResetSingleRight={handleResetSingleRight}
               jetonDelta={jetonDelta}
               setJetonDelta={setJetonDelta}
               handleDirectJetonSet={handleDirectJetonSet}

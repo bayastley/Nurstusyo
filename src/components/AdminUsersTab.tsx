@@ -22,6 +22,7 @@ interface AdminUsersTabProps {
   handleUnban: (email: string) => void;
   handleTierChange: (email: string, tier: Tier) => void;
   handleResetRights: (email: string) => void;
+  handleResetSingleRight: (email: string, kind: "kisa" | "uzun" | "tam", cancelSubscription: boolean) => void;
   jetonDelta: number;
   setJetonDelta: (v: number) => void;
   handleDirectJetonSet: (email: string, amount: number) => void;
@@ -42,7 +43,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   handleEmailSearch, handleSetTierViaEmail,
   giftAmount, setGiftAmount, giftTier, setGiftTier, handleGiftRights,
   selectedUser, banReasonInput, setBanReasonInput,
-  handleBan, handleUnban, handleTierChange, handleResetRights,
+  handleBan, handleUnban, handleTierChange, handleResetRights, handleResetSingleRight,
   jetonDelta, setJetonDelta, handleDirectJetonSet,
   selectedEmail, setSelectedEmail, filteredUsers, currentUserEmail,
   handleUserHistory, userHistory, loadingHistory, historyEmail, setHistoryEmail, setUserHistory,
@@ -361,6 +362,32 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               >
                 🗑️ TÜM HAKLARI SIFIRLA (Free Yap + Paketleri Sil)
               </button>
+
+              {/* ★ TEK HAK SIFIRLAMA — suçun boyutuna göre kısmi ceza; tümü nükleer, bu cerrahi */}
+              <details className="mt-2 rounded-xl border border-white/10 bg-black/30 p-2">
+                <summary className="cursor-pointer text-[10px] font-bold text-white/55 hover:text-white/80">⚖️ Tek Hak Sıfırla (kısmi ceza — üyeliği korur)</summary>
+                <div className="mt-2 space-y-1.5">
+                  {(["kisa", "uzun", "tam"] as const).map((kind) => (
+                    <div key={kind} className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => { const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm"; if (window.confirm(`${selectedUser.email} kullanıcısının ${ad} paket hakları 0'a çekilecek.\n\nÜyelik etkilenmez.\n\nEmin misiniz?`)) handleResetSingleRight(selectedUser.email, kind, false); }}
+                        className="flex-1 rounded-lg bg-amber-500/10 border border-amber-500/25 px-2 py-1.5 text-[9px] font-bold text-amber-300 hover:bg-amber-500/20 transition"
+                      >
+                        {kind === "kisa" ? "🎬 Kısa" : kind === "uzun" ? "🎞️ Uzun" : "📽️ Tam Sürüm"} haklarını sıfırla
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm"; if (window.confirm(`${selectedUser.email} kullanıcısının ${ad} hakları sıfırlanacak VE aktif üyeliği iptal edilecek.\n\nEmin misiniz?`)) handleResetSingleRight(selectedUser.email, kind, true); }}
+                        className="rounded-lg bg-red-500/10 border border-red-500/25 px-2 py-1.5 text-[9px] font-bold text-red-300 hover:bg-red-500/20 transition"
+                        title="Aynı hak + üyelik iptali"
+                      >
+                        + üyelik iptal
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </details>
             </div>
 
             {/* Üretim hakkı bakiyesi yönetimi */}
