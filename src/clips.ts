@@ -10,6 +10,7 @@ import {
   KAR_DATA, SEHIR_DATA, CAMI_DATA, DESEN_DATA, GOL_DATA, BULUT_DATA,
   CENNET_DATA, DAGLAR_DATA,
 } from "./clips-data";
+import { FIL_LINKS } from "./filVideos";
 import { ADMIN_MOTION_CLIPS, ADMIN_TEMPLATE_CLIPS } from "./adminMediaManifest";
 
 export type CatId =
@@ -18,7 +19,8 @@ export type CatId =
   | "gunbatimi"  | "gece"   | "selale"   | "orman"
   | "col"        | "kar"    | "sehir"    | "cami"
   | "desen"      | "gol"    | "bulut"
-  | "ates"       | "cehennem" | "hurma"  | "ari" | "karinca";
+  | "ates"       | "cehennem" | "hurma"  | "ari" | "karinca"
+  | "fil";
 
 export interface Clip {
   id: string;
@@ -61,6 +63,8 @@ export const CATEGORIES: Array<{ id: CatId; label: string }> = [
   { id: "cennet",      label: "🌿 Cennet Bahçeleri" },
   { id: "col",         label: "🏜️ Çöl & Kum" },
   { id: "ates",        label: "🔥 Ateş & Alev" },
+  // FİL (2026-09 lansman — Pexels kaynaklı)
+  { id: "fil",         label: "🐘 Filller & Vahşi Doğa" },
   // HARD LOCKED
   { id: "cehennem",    label: "⚡ Cehennem & Karanlık" },
   { id: "hurma",       label: "🌴 Hurma & Vaha" },
@@ -74,6 +78,7 @@ export const ACTIVE_CATEGORIES: CatId[] = [
   "selale", "daglar", "kar", "sehir",
   "cennet", "col", "ates",
   "cami", "gol", "bulut", "desen",
+  "fil",
 ];
 
 export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
@@ -82,6 +87,7 @@ export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
   cami: "free", gol: "free", bulut: "free", desen: "free",
   selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
   cennet: "elit", col: "elit", ates: "elit",
+  fil: "elit", // ★ FİL — lansman sonrası ELİT (29 Eylül)
   yuklenenler: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
 };
 
@@ -113,6 +119,7 @@ export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: strin
   bulut:     { primary: "#93c5fd", secondary: "#dbeafe", glow: "#bfdbfe", bg: "#0a1018", bg2: "#1a2438" },
   yuklenenler:{ primary: "#d7aa52", secondary: "#f5dda6", glow: "#ffcf6b", bg: "#141414", bg2: "#2a2a2a" },
   ates:      { primary: "#f97316", secondary: "#fed7aa", glow: "#fb923c", bg: "#1c0a02", bg2: "#3d1604" },
+  fil:       { primary: "#a8a29e", secondary: "#e7e5e4", glow: "#d6d3d1", bg: "#16130f", bg2: "#2c2620" }, // 🐘 fildişi/gri
   cehennem:  { primary: "#dc2626", secondary: "#7c2d12", glow: "#ef4444", bg: "#120202", bg2: "#2a0808" },
   hurma:     { primary: "#84cc16", secondary: "#d9f99d", glow: "#a3e635", bg: "#0c1404", bg2: "#1e2e08" },
   ari:       { primary: "#eab308", secondary: "#fef08a", glow: "#facc15", bg: "#161002", bg2: "#302404" },
@@ -125,6 +132,7 @@ export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
   cami:"Ücretsiz", gol:"Ücretsiz", bulut:"Ücretsiz", desen:"Ücretsiz",
   selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
   cennet:"Elit", col:"Elit", ates:"Elit",
+  fil:"Elit",
   yuklenenler:"V2", ari:"V2", cehennem:"V2", hurma:"V2", karinca:"V2",
 };
 
@@ -175,6 +183,18 @@ export const MOTION_CLIPS: Clip[] = [
   ...cat("bulut",    BULUT_DATA),
   ...cat("cennet",   CENNET_DATA),
   ...cat("daglar",   DAGLAR_DATA),
+  // 🐘 FİL: Pexels API'den çekilen GERÇEK linklerle (kalıp URL değil — 403 sorununu önler)
+  ...FIL_LINKS.map((v, i): Clip => ({
+    id: `fil-${i + 1}`,
+    label: `Fil ${i + 1}`,
+    cat: "fil",
+    kind: "vid" as const,
+    src: v.url,
+    poster: thumb(v.id),
+    pexelsId: v.id,
+    r2: `${R2_BASE}/videos/fil/${v.id}.mp4`,
+    r2Poster: `${R2_BASE}/posters/fil/${v.id}.jpg`,
+  })),
 ];
 
 // ─── ŞABLON (HAREKETSİZ) GERÇEK FOTOĞRAFLAR ─────────────

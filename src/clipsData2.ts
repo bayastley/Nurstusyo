@@ -254,3 +254,4 @@ export const DAGLAR_DATA: Row[] = [
   [34505196,30,true,"Karlı III"],[34532365,30,true,"Drone III"],
   [34798290,24,true,"Zirve IV"],[35514793,24,true,"Buz III"],
 ];
+

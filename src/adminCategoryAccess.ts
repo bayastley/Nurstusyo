@@ -52,6 +52,7 @@ export const ADMIN_ELIT: string[] = [
   "admin_underwater_currents_dark", // Akıntı 47
   "admin_darkness_to_light",       // Nur 46
   "admin_hellfire_volcano_lava",   // Lav 46
+  "admin_fil_elephants",           // 🐘 Fil (2026-09 lansman — Pexels kaynaklı)
 ];
 
 // V2 KİLİTLİ (10): vitrinde "🔒 V2 Güncellemesi Yakında" rozetiyle görünür.

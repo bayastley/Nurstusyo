@@ -55,6 +55,7 @@ export const KEYWORD_CATEGORY_FALLBACK: Record<string, CatId> = {
   cehennem: "cehennem", azap: "cehennem", kaynar: "cehennem", irin: "cehennem", zakkum: "cehennem",
   hurma: "hurma", vaha: "hurma", dal: "hurma", salkım: "hurma",
   arı: "ari", bal: "ari", nahl: "ari", kovan: "ari", petek: "ari",
+  fil: "fil", filler: "fil", fîl: "fil", // 🐘 Fil suresi + fil kategorisi (2026-09)
   // ★ "sürü" KALDIRILDI — "hayvan sürülerini otlatır" mealinde karıncayı çağırıyordu
   karınca: "karinca", emek: "karinca",
   kurban: "col", çöl: "col", deve: "col", koyun: "col", duman: "col",
@@ -78,7 +79,7 @@ export const KEYWORD_CATEGORY_FALLBACK: Record<string, CatId> = {
 
 export const SURAH_CATEGORY_HINT: Record<string, CatId> = {
   "nahl": "ari", "yasin": "yildizlar", "rahman": "cennet", "mulk": "yildizlar",
-  "maun": "namaz", "tevbe": "cehennem", "bakara": "musaf", "fil": "sehir",
+  "maun": "namaz", "tevbe": "cehennem", "bakara": "musaf", "fil": "fil",
   "kevser": "deniz", "nur": "musaf", "duha": "gunbatimi", "asr": "gunbatimi",
   "tin": "hurma", "mutaffifin": "cehennem", "meryem": "hurma",
 };

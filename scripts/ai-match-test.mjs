@@ -126,7 +126,7 @@ const KORPUS = [
   ["Vâkıa", 5, "Dağlar yerinden oynatılıp savrulduğunda.", ["daglar", "admin_mountains_wool_dust"], "KRİTİK", "dağ"],
   ["Tîn", 1, "İncire, zeytine, Sina Dağı'na ve bu güvenli şehre yemin olsun.", ["hurma", "daglar", "cicekler", "cennet", "admin_olive_grove_trees"], "SOFT", "zeytin/dağ"],
   ["Nûr", 35, "Allah göklerin ve yerin nurudur. Nur misali, içinde lamba bulunan bir niş gibidir.", ["musaf", "bulut", "gece", "admin_darkness_to_light"], "SOFT", "nur"],
-  ["FIL/Fil", 1, "Rabbinin fil sahiplerine ne yaptığını görmedin mi?", ["col", "sehir", "admin_grazing_cattle_sheep"], "SOFT", "fil — fil kategorisi yok"],
+  ["FIL/Fil", 1, "Rabbinin fil sahiplerine ne yaptığını görmedin mi?", ["fil"], "KRİTİK", "fil — 🐘 fil kategorisi eklendi (2026-09 lansman)"],
 ];
 
 // ── 4) Çalıştır + rapor ──
