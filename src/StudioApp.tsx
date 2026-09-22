@@ -8,6 +8,7 @@ import {
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight, arabicIdealScale,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
+import { storeVideo, loadStoredVideos } from "./studio/videoStore";
 import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
@@ -481,6 +482,32 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       } catch {}
     }
   }, [outputs]);
+
+  // ★ AÇILIŞTA GERİ YÜKLEME: IndexedDB'deki videoları outputs'a koyar.
+  //   Senaryo: misafir video üretti → indirmek için üye oldu → Google girişi sayfayı
+  //   yeniledi → eski davranışta video buharlaşıyordu; artık buradan geri gelir ve
+  //   üye olarak indirebilir. (localStorage'daki metadata-only geçmişin yerine bu gerçek veri.)
+  useEffect(() => {
+    let cancelled = false;
+    void loadStoredVideos().then((stored) => {
+      if (cancelled || !stored.length) return;
+      const restored: Output[] = stored.map((item) => ({
+        id: item.id,
+        url: URL.createObjectURL(item.blob),
+        mime: item.mime,
+        size: item.size,
+        duration: item.duration,
+        label: item.label,
+        ext: item.ext,
+      }));
+      setOutputs((current) => {
+        const have = new Set(current.map((item) => item.id));
+        const fresh = restored.filter((item) => !have.has(item.id));
+        return fresh.length ? [...current, ...fresh].slice(0, 5) : current;
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const activeOutput = outputs.find((output) => output.id === activeOutputId) ?? outputs[0] ?? null;
   const t = (key: keyof (typeof T)["tr"]) => T[lang][key] ?? T.tr[key];
@@ -1261,6 +1288,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }
         const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
         setOutputs((current) => [output, ...current].slice(0, 5)); setActiveOutputId(output.id);
+        // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
+        //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).
+        void storeVideo({ id: output.id, label: output.label, mime: output.mime, ext: output.ext, size: output.size, duration: output.duration, blob });
       }
       if (!isMasterSürüm && !userStopped && !jetonCharged) {
         setProgress(98);
