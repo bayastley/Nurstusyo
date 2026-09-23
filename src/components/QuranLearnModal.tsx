@@ -258,6 +258,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ DURDUR/BAŞLAT: radyo kanalı seçili kalır, sadece ses askıya alınır
   const [radioPaused, setRadioPaused] = useState(false);
   const radioRef = useRef<HTMLAudioElement | null>(null);
+  const radioHlsRef = useRef<Hls | null>(null); // ★ HLS kanallar (Diyanet m3u8) için hls.js örneği
   if (!radioRef.current && typeof Audio !== "undefined") {
     radioRef.current = new Audio();
     radioRef.current.preload = "none";
@@ -273,6 +274,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!r) return;
     if (radioOn) {
       radioTimerTemizle();
+      radioHlsTemizle();
       r.pause();
       setRadioOn(false);
       setRadioNote("");
@@ -291,14 +293,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radioOn, radioVol, radioMuted]);
   // ★ DURDUR: akışı askıya al — kanal seçimi ve "RADYO AÇIK" durumu korunur
+  //   HLS kanallarında (Diyanet) pause yeterli değil: hls.js segment indirmeye devam
+  //   edebilir, bu yüzden akışı askıya almak için detach etmiyoruz — sadece pause.
   const pauseRadio = useCallback(() => {
     const r = radioRef.current;
     if (!r || !radioOn) return;
     radioTimerTemizle(); // 30 sn zaman aşımı dururken yanlışlıkla kanal değiştirmesin
-    r.pause();
+    r.pause(); // HLS askıda kalabilir — hls.js durdurulmaz, resume devam eder
     setRadioPaused(true);
   }, [radioOn]);
   // ★ BAŞLAT: askıdaki kanal kaldığı yerden/kaynaktan devam eder
+  //   HLS kanalı yeniden bağlanır (aynı kanal, aynı idx — hls.loadSource idempotent)
   const resumeRadio = useCallback(() => {
     const r = radioRef.current;
     if (!r || !radioOn) return;
@@ -306,9 +311,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     radioTimeoutRef.current = window.setTimeout(() => {
       if (r.paused || r.readyState < 2) radioFail("30 sn yanıt yok");
     }, 30_000);
+    // HLS kanalında askı sonrası akış kopmuş olabilir — kanal useEffect'i yeniden tetikle
+    const st = RADIO_STATIONS[radioIdx];
+    if (st?.hls && Hls.isSupported() && radioHlsRef.current) {
+      radioHlsRef.current.startLoad(); // hls.js: durdurulan akışı yeniden başlat
+    }
     r.play().then(() => { radioFallbackRef.current = 0; }).catch(() => radioFail("play reddi"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioOn]);
+  }, [radioOn, radioIdx]);
   const radioFallbackRef = useRef(0); // otomatik kanal yedeği sayacı (sonsuz döngü koruması)
   const radioTimeoutRef = useRef<number | null>(null); // 30 sn yanıt zaman aşımı
   const radioTimerTemizle = () => {
@@ -333,13 +343,28 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [radioOn, radioIdx]);
+  // ★ RADYO KAPANINCA HLS örneğini de temizle (arkada segment indirmesin)
+  const radioHlsTemizle = () => {
+    if (radioHlsRef.current) { radioHlsRef.current.destroy(); radioHlsRef.current = null; }
+  };
   // Kanal değişince çal (hem kullanıcı hem otomatik yedek buradan geçer)
   useEffect(() => {
     const r = radioRef.current;
     if (!r || !radioOn) return;
     radioTimerTemizle();
     setRadioPaused(false); // kanal değişince askı iptal — yeni kanal direkt çalar
-    r.src = RADIO_STATIONS[radioIdx].url;
+    // ★ HLS KANAL DESTEĞİ (Diyanet m3u8): hls.js varsa onunla bağla, yoksa Safari'ye bırak
+    const st = RADIO_STATIONS[radioIdx];
+    if (st.hls && Hls.isSupported()) {
+      if (radioHlsRef.current) { radioHlsRef.current.destroy(); radioHlsRef.current = null; }
+      const hls = new Hls({ lowLatencyMode: false, backBufferLength: 10 });
+      radioHlsRef.current = hls;
+      hls.attachMedia(r);
+      hls.loadSource(st.url);
+    } else {
+      if (radioHlsRef.current) { radioHlsRef.current.destroy(); radioHlsRef.current = null; }
+      r.src = st.url;
+    }
     r.volume = radioVol;
     r.muted = radioMuted;
     // ★ 30 SN ZAMAN AŞIMI: sunucu bağlantıyı kabul edip ses basmazsa (zombi akış)
@@ -379,13 +404,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     if (!open) {
       radioTimerTemizle();
+      radioHlsTemizle();
       radioRef.current?.pause();
       setRadioOn(false);
       setRadioNote("");
       setRadioPaused(false);
     }
   }, [open]);
-  useEffect(() => () => { radioTimerTemizle(); radioRef.current?.pause(); }, []);
+  useEffect(() => () => { radioTimerTemizle(); radioHlsTemizle(); radioRef.current?.pause(); }, []);
   const [speed, setSpeed] = useState(1);
   const [reciter, setReciter] = useState("Alafasy_128kbps");
   const [wordLoading, setWordLoading] = useState(false);
@@ -1162,7 +1188,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             {radioMuted || radioVol === 0 ? "🔇" : radioVol < 0.5 ? "🔉" : "🔊"}
           </button>
           <input type="range" min={0} max={1} step={0.05} value={radioMuted ? 0 : radioVol} onChange={(e) => { const v = Number(e.target.value); setRadioVol(v); setRadioMuted(v === 0); }} className="h-1 w-16 cursor-pointer accent-sky-400" title="Radyo ses seviyesi" />
-          <button onClick={() => { radioTimerTemizle(); radioRef.current?.pause(); setRadioOn(false); setRadioNote(""); }} className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white" title="Radyoyu kapat">✕</button>
+          <button onClick={() => { radioTimerTemizle(); radioHlsTemizle(); radioRef.current?.pause(); setRadioOn(false); setRadioNote(""); }} className="rounded-lg bg-white/5 px-2 py-1 text-[10px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white" title="Radyoyu kapat">✕</button>
         </div>
       )}
 

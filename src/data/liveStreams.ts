@@ -30,7 +30,10 @@ export const kabeSourcesFor = (tab: string) =>
 
 // ═══ 📻 KUR'AN RADYOSU — 7/24 kesintisiz tilavet radyoları (mp3quran.net / qurango.net)
 //   Tümü CORS açık (Access-Control-Allow-Origin: *) ve canlıda test edildi (200 audio/mpeg).
-export const RADIO_STATIONS: Array<{ ad: string; url: string }> = [
+export const RADIO_STATIONS: Array<{ ad: string; url: string; hls?: boolean }> = [
+  { ad: "🕌 Diyanet Kur'an Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1171d7d2a.smil/playlist.m3u8", hls: true },
+  { ad: "🕌 Diyanet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1520b2626.smil/playlist.m3u8", hls: true },
+  { ad: "🕌 Diyanet Risalet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c14192aa92.smil/playlist.m3u8", hls: true },
   { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel" },
   { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly" },
   { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi" },
