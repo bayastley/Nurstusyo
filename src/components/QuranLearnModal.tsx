@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS } from "../data/liveStreams";
+import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS, ulkeToBolge, type RadioBolge } from "../data/liveStreams";
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
@@ -255,6 +255,40 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [radioMuted, setRadioMuted] = useState(false);
   const [radioErr, setRadioErr] = useState(false);
   const [radioNote, setRadioNote] = useState("");
+  // ★ AKILLI RADYO: konuma göre bölge önerisi ("genel" | "tr" | "ar") + kullanıcı tercihi.
+  //   "null" = henüz bilinmiyor; tespit edilince localStorage'a yazılır (bir daha sormaz).
+  //   Kullanıcı "Tüm Kanallar"ı seçerse akıllı filtre devre dışı kalır (manuelle öncelik).
+  const [akilliBolge, setAkilliBolge] = useState<RadioBolge | null>(null);
+  const [akilliAcik, setAkilliAcik] = useState(true); // kullanıcı "Tüm Kanallar" derse false
+  useEffect(() => {
+    try {
+      const kayit = localStorage.getItem("nur_akilli_radyo_bolge");
+      if (kayit === "tr" || kayit === "ar" || kayit === "genel") setAkilliBolge(kayit);
+      else if (kayit === "kapat") setAkilliAcik(false);
+    } catch { /* localStorage kapalıysa sessizce atla */ }
+    // Konum tespiti: Cloudflare trace (izinli) → ipapi.co yedek. Her ikisi de fail olursa "genel".
+    if (!localStorage.getItem("nur_akilli_radyo_bolge")) {
+      fetch("https://cloudflare.com/cdn-cgi/trace")
+        .then(r => r.text())
+        .then(t => {
+          const m = t.match(/^loc=(\w{2})$/m);
+          if (m) { const b = ulkeToBolge(m[1]); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
+        })
+        .catch(() => {
+          fetch("https://ipapi.co/json/")
+            .then(r => r.json())
+            .then(d => { if (d?.country_code) { const b = ulkeToBolge(d.country_code); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } } })
+            .catch(() => { setAkilliBolge("genel"); try { localStorage.setItem("nur_akilli_radyo_bolge", "genel"); } catch { /* yut */ } });
+        });
+    }
+  }, []);
+  // ★ Akıllı mod açıksa: bölge kanalları öne, sonra diğerleri. Kapalıysa orijinal sıra.
+  const siraliKanallar = useMemo(() => {
+    if (!akilliAcik || !akilliBolge) return RADIO_STATIONS.map((_, i) => i);
+    const oneri = RADIO_STATIONS.map((st, i) => (st.bolge === akilliBolge ? i : -1)).filter(i => i >= 0);
+    const digerleri = RADIO_STATIONS.map((_, i) => i).filter(i => !oneri.includes(i));
+    return [...oneri, ...digerleri];
+  }, [akilliAcik, akilliBolge]);
   // ★ DURDUR/BAŞLAT: radyo kanalı seçili kalır, sadece ses askıya alınır
   const [radioPaused, setRadioPaused] = useState(false);
   const radioRef = useRef<HTMLAudioElement | null>(null);
@@ -1180,13 +1214,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sky-400" />
           </span>
+          {/* ★ AKILLI RADYO düğmesi: bölge önerisini aç/kapa (isteğe bağlı — kullanıcı serbest) */}
+          <button onClick={() => { const yeni = !akilliAcik; setAkilliAcik(yeni); try { localStorage.setItem("nur_akilli_radyo_bolge", yeni ? (akilliBolge || "genel") : "kapat"); } catch { /* yut */ } if (yeni) setRadioNote(`🌍 Akıllı Radyo açık — ${akilliBolge === "tr" ? "Türkiye" : akilliBolge === "ar" ? "Arap bölgesi" : "evrensel"} kanalları öne alındı`); }} className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition active:scale-95 ${akilliAcik ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "bg-white/5 text-white/50 hover:bg-white/10"}`} title={akilliAcik ? "Akıllı Radyo açık — bölgenize göre kanallar öne alınıyor. Kapatırsanız tüm kanallar eşit sıralanır." : "Akıllı Radyo kapalı — tüm kanallar eşit. Açarsanız bölgenize göre önerilir."}>
+            🌍 {akilliAcik ? "AKILLI" : "TÜMÜ"}
+          </button>
           <select
             value={radioIdx}
             onChange={(e) => { setRadioIdx(Number(e.target.value)); setRadioNote(""); setRadioErr(false); }} // manuel seçimde eski yedek uyarısını temizle
             className="max-w-52 shrink-0 rounded-lg border border-white/10 bg-[#0d1a2c] px-2 py-1 text-[11px] font-bold text-sky-100 outline-none"
             title="Radyo kanalı seç"
           >
-            {RADIO_STATIONS.map((st, i) => <option key={st.url} value={i}>{st.ad}</option>)}
+            {siraliKanallar.map(i => <option key={RADIO_STATIONS[i].url} value={i}>{RADIO_STATIONS[i].ad}{akilliAcik && akilliBolge && RADIO_STATIONS[i].bolge === akilliBolge ? " ★" : ""}</option>)}
           </select>
           <span className={`hidden min-w-0 flex-1 truncate text-[10px] font-bold sm:block ${radioNote ? "text-amber-300" : radioPaused ? "text-white/50" : "text-sky-200/60"}`} title={radioNote || (radioPaused ? "DURDURULDU — başlatmak için ▶" : "CANLI TİLAVET — 7/24 kesintisiz")}>{radioNote || (radioPaused ? "⏸ DURDURULDU" : "CANLI TİLAVET — 7/24 kesintisiz")}</span>
           {radioErr ? (

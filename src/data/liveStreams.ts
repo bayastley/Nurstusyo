@@ -30,15 +30,30 @@ export const kabeSourcesFor = (tab: string) =>
 
 // ═══ 📻 KUR'AN RADYOSU — 7/24 kesintisiz tilavet radyoları (mp3quran.net / qurango.net)
 //   Tümü CORS açık (Access-Control-Allow-Origin: *) ve canlıda test edildi (200 audio/mpeg).
-export const RADIO_STATIONS: Array<{ ad: string; url: string; hls?: boolean }> = [
-  { ad: "🕌 Diyanet Kur'an Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1171d7d2a.smil/playlist.m3u8", hls: true },
-  { ad: "🕌 Diyanet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1520b2626.smil/playlist.m3u8", hls: true },
-  { ad: "🕌 Diyanet Risalet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c14192aa92.smil/playlist.m3u8", hls: true },
-  { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel" },
-  { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly" },
-  { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi" },
-  { ad: "🎙️ Yasser Al-Dosari", url: "https://backup.qurango.net/radio/yasser_aldosari" },
-  { ad: "🎙️ Fares Abbad", url: "https://backup.qurango.net/radio/fares_abbad" },
-  { ad: "🎙️ Abdulrahman As-Sudais", url: "https://backup.qurango.net/radio/abdulrahman_alsudaes" },
-  { ad: "🎙️ Al-Minshawi", url: "https://backup.qurango.net/radio/mohammed_siddiq_alminshawi" },
+//   ★ bolge: "tr" = Türkçe/sohbet ağırlıklı, "ar" = Arapça tilavet, "genel" = evrensel.
+//     Akıllı Radyo, kullanıcının ülkesine göre bu etiketlerle öneri sıralar.
+export type RadioBolge = "tr" | "ar" | "genel";
+export const RADIO_STATIONS: Array<{ ad: string; url: string; hls?: boolean; bolge: RadioBolge }> = [
+  { ad: "🕌 Diyanet Kur'an Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1171d7d2a.smil/playlist.m3u8", hls: true, bolge: "tr" },
+  { ad: "🕌 Diyanet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1520b2626.smil/playlist.m3u8", hls: true, bolge: "tr" },
+  { ad: "🕌 Diyanet Risalet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c14192aa92.smil/playlist.m3u8", hls: true, bolge: "tr" },
+  { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel", bolge: "genel" },
+  { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly", bolge: "ar" },
+  { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi", bolge: "ar" },
+  { ad: "🎙️ Yasser Al-Dosari", url: "https://backup.qurango.net/radio/yasser_aldosari", bolge: "ar" },
+  { ad: "🎙️ Fares Abbad", url: "https://backup.qurango.net/radio/fares_abbad", bolge: "ar" },
+  { ad: "🎙️ Abdulrahman As-Sudais", url: "https://backup.qurango.net/radio/abdulrahman_alsudaes", bolge: "ar" },
+  { ad: "🎙️ Al-Minshawi", url: "https://backup.qurango.net/radio/mohammed_siddiq_alminshawi", bolge: "ar" },
 ];
+
+// ★ ÜLKE → BÖLGE eşlemesi (Cloudflare geo / ipapi.co ülke kodu):
+//   TR + Azerbaycan → "tr" (Türkçe sohbet/tilavet), Arap ülkeleri → "ar",
+//   geri kalan herkes → "genel" (evrensel kâriler).
+const TR_ULKEKAARI = new Set(["TR", "AZ"]);
+const ARAP_ULKEKAARI = new Set(["SA", "AE", "QA", "KW", "BH", "OM", "JO", "LB", "SY", "IQ", "YE", "PS", "EG", "LY", "TN", "DZ", "MA", "MR", "SD", "SO", "DJ", "KM"]);
+export const ulkeToBolge = (ulke: string | null | undefined): RadioBolge => {
+  const u = (ulke || "").toUpperCase();
+  if (TR_ULKEKAARI.has(u)) return "tr";
+  if (ARAP_ULKEKAARI.has(u)) return "ar";
+  return "genel";
+};
