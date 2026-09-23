@@ -40,6 +40,7 @@ values
   ('uyku-tilaveti',  'V2', 'Uyku Tilaveti (Zamanlayıcılı Dinleme)', 'Yatarken sure seç, zamanlayıcıyı kur, sessizce dinle. Uyku öncesi huzurlu bir refakatçi.', 'uyku_tilaveti'),
   ('seri-uretim',    'V2', 'Seri Üretim (Çoklu Ayet Videosu)', 'Onlarca ayet seç, hepsine tek tasarımı uygula, videolar sırayla kendiliğinden hazır olsun.', 'seri_uretim'),
   ('kandil-sayfasi', 'V2', 'Kandil ve Özel Geceler Sayfası', 'Kandil gecelerinde site otomatik süslenir: o geceye özel sure, dua ve ibadet önerisi hazır gelir.', 'kandil'),
+  ('akilli-radyo',   'V2', '🌍 Bölgeye Akıllı Radyo', 'Radyo seni tanısın: bulunduğun bölgeye göre tilavet, sohbet ve hadis kanalları öne gelir; dilediğin kanalı elle de seçersin.', 'akilli_radyo'),
   -- V2 mevcut liste
   ('ai-meal',         'V2', 'AI Meal Seslendirme', 'Ayetlerin anlamını doğal bir sesle dinle. Bir sure seç, kendi meal videonu dakikalar içinde hazırla.', 'ai_meal'),
   ('kendi-ses',       'V2', 'Kendi Sesinle Seslendirme', 'Kendi anlatım tarzını videolarına taşı. Sesini seçtiğin ayetlerle buluştur.', 'kendi_ses'),

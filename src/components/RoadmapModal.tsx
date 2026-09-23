@@ -9,6 +9,7 @@ const ICON_EMOJI: Record<string, string> = {
   e_fatura: "💳", meal_dinle: "🎧", mobil: "📱", koleksiyon: "🔖",
   notlar: "📝", seriler: "🎬", reklam: "🛡️", coklu_kullanici: "👥", api: "⚡", kurumsal: "👑",
   namaz_bildirim: "🕌", zikirmatik: "📿", hatim: "📖", seri_uretim: "⚡", uyku_tilaveti: "🌙", kandil: "🌟",
+  akilli_radyo: "📻",
 };
 function getIcon(id: string): string {
   return ICON_EMOJI[id] || "✨";
@@ -38,6 +39,7 @@ const DEFAULT_V2: Omit<Feature, "votes">[] = [
   { id: "uyku-tilaveti", iconId: "uyku_tilaveti", title: "Uyku Tilaveti (Zamanlayıcılı Dinleme)", desc: "Yatarken sure seç, zamanlayıcıyı kur, sessizce dinle. Uyku öncesi huzurlu bir refakatçi.", tag: "V2", active: true },
   { id: "seri-uretim", iconId: "seri_uretim", title: "Seri Üretim (Çoklu Ayet Videosu)", desc: "Onlarca ayet seç, hepsine tek tasarımı uygula, videolar sırayla kendiliğinden hazır olsun.", tag: "V2", active: true },
   { id: "kandil-sayfasi", iconId: "kandil", title: "Kandil ve Özel Geceler Sayfası", desc: "Kandil gecelerinde site otomatik süslenir: o geceye özel sure, dua ve ibadet önerisi hazır gelir.", tag: "V2", active: true },
+  { id: "akilli-radyo", iconId: "akilli_radyo", title: "🌍 Bölgeye Akıllı Radyo", desc: "Radyo seni tanısın: bulunduğun bölgeye göre tilavet, sohbet ve hadis kanalları öne gelir; dilediğin kanalı elle de seçersin.", tag: "V2", active: true },
   // ─── Mevcut V2 listesi ───
   { id: "ai-meal", iconId: "ai_meal", title: "AI Meal Seslendirme", desc: "Ayetlerin anlamını doğal bir sesle dinle. Bir sure seç, kendi meal videonu dakikalar içinde hazırla.", tag: "V2", active: true },
   { id: "kendi-ses", iconId: "kendi_ses", title: "Kendi Sesinle Seslendirme", desc: "Kendi anlatım tarzını videolarına taşı. Sesini seçtiğin ayetlerle buluştur.", tag: "V2", active: true },
