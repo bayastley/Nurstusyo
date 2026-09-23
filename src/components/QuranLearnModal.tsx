@@ -321,6 +321,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [radioOn, radioIdx]);
   const radioFallbackRef = useRef(0); // otomatik kanal yedeği sayacı (sonsuz döngü koruması)
   const radioTimeoutRef = useRef<number | null>(null); // 30 sn yanıt zaman aşımı
+  // ★ BAŞTAN DENEME sayacı: "↻ Tekrar dene" bunu artırır — kanal efekti yeniden koşar.
+  //   radioIdx aynı kalsa bile (0. kanalda hata vb.) bağlantıyı sıfırdan kurmayı sağlar.
+  const [radioRetryCount, setRadioRetryCount] = useState(0);
   const radioTimerTemizle = () => {
     if (radioTimeoutRef.current) { window.clearTimeout(radioTimeoutRef.current); radioTimeoutRef.current = null; }
   };
@@ -375,7 +378,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     r.play().then(() => { radioFallbackRef.current = 0; setRadioErr(false); setRadioNote(""); }).catch(() => radioFail("play reddi"));
     return radioTimerTemizle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [radioIdx, radioOn]);
+  }, [radioIdx, radioOn, radioRetryCount]);
   // Ağ hatası olayı: akış ortasında koparsa otomatik yedeğe devret
   useEffect(() => {
     const r = radioRef.current;
@@ -1187,7 +1190,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           </select>
           <span className={`hidden min-w-0 flex-1 truncate text-[10px] font-bold sm:block ${radioNote ? "text-amber-300" : radioPaused ? "text-white/50" : "text-sky-200/60"}`} title={radioNote || (radioPaused ? "DURDURULDU — başlatmak için ▶" : "CANLI TİLAVET — 7/24 kesintisiz")}>{radioNote || (radioPaused ? "⏸ DURDURULDU" : "CANLI TİLAVET — 7/24 kesintisiz")}</span>
           {radioErr ? (
-            <button onClick={() => { setRadioErr(false); setRadioNote(""); const r = radioRef.current; if (r) { setRadioIdx(i => (i + 1) % RADIO_STATIONS.length); } }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Tüm kanallar denendi — baştan dene">↻ Tekrar dene</button>
+            <button onClick={() => { // ★ BAŞTAN BAŞLAT: liste 1. kanaldan itibaren yeniden denenir
+              radioFallbackRef.current = 0;
+              setRadioErr(false);
+              setRadioNote("🔄 Kanal listesi baştan deneniyor…");
+              setRadioIdx(0);
+              setRadioRetryCount(c => c + 1); // aynı kanalsa da efekti zorla tetikle
+            }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Tüm kanallar denendi — 1. kanaldan baştan dene">↻ Tekrar dene</button>
           ) : (
             <button onClick={() => (radioPaused ? resumeRadio() : pauseRadio())} className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${radioPaused ? "bg-emerald-500/25 text-emerald-200 hover:bg-emerald-500/40" : "bg-amber-500/20 text-amber-200 hover:bg-amber-500/35"}`} title={radioPaused ? "Radyoyu başlat" : "Radyoyu durdur (kanal seçili kalır)"}>
               {radioPaused ? "▶ BAŞLAT" : "⏸ DURDUR"}
