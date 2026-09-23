@@ -393,11 +393,19 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     r.muted = radioMuted;
   }, [radioVol, radioMuted]);
   // ★ KÂBE CANLI AÇILINCA RADYO SUSSUN, kapanınca devam etsin
+  //   HLS kanallarında (Diyanet) resume hls.startLoad() ister — resumeRadio ile aynı mantık.
   useEffect(() => {
     const r = radioRef.current;
     if (!r) return;
-    if (kabeLive) r.pause();
-    else if (radioOn && !radioPaused) r.play().catch(() => undefined);
+    if (kabeLive) {
+      r.pause();
+    } else if (radioOn && !radioPaused) {
+      const st = RADIO_STATIONS[radioIdx];
+      if (st?.hls && Hls.isSupported() && radioHlsRef.current) {
+        radioHlsRef.current.startLoad(); // durdurulan HLS akışını yeniden bağla
+      }
+      r.play().catch(() => undefined);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [kabeLive]);
   // Modal kapanınca radyo da kapanır (arkada gizli ses kalmasın)
