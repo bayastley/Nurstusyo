@@ -37,7 +37,7 @@ export const RADIO_STATIONS: Array<{ ad: string; url: string; hls?: boolean; bol
   { ad: "🕌 Diyanet Kur'an Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1171d7d2a.smil/playlist.m3u8", hls: true, bolge: "tr" },
   { ad: "🕌 Diyanet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c1520b2626.smil/playlist.m3u8", hls: true, bolge: "tr" },
   { ad: "🕌 Diyanet Risalet Radyo (TR)", url: "https://eustr76.mediatriple.net/videoonlylive/mtikoimxnztxlive/broadcast_5e3c14192aa92.smil/playlist.m3u8", hls: true, bolge: "tr" },
-  { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel", bolge: "genel" },
+  { ad: "🌿 Trawîh & Tilavet Karışık", url: "https://qurango.net/radio/tarateel", bolge: "ar" },
   { ad: "🎙️ Maher Al-Muaiqly", url: "https://backup.qurango.net/radio/maher_almuaiqly", bolge: "ar" },
   { ad: "🎙️ Mishary Alafasy", url: "https://backup.qurango.net/radio/mishary_alafasi", bolge: "ar" },
   { ad: "🎙️ Yasser Al-Dosari", url: "https://backup.qurango.net/radio/yasser_aldosari", bolge: "ar" },
