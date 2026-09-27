@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto"; // ★ 27.09 FIX: require("crypto") ESM'de patlıyordu (type:module) — oturum okunamıyordu
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
 async function logServerError(req: { url?: string; headers?: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
@@ -121,7 +122,6 @@ function getSession(req: VercelRequest): SessionInfo | null {
   if (secret.length < 20) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
-  const crypto = require("crypto") as typeof import("crypto");
   const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   const sigBuf = Buffer.from(sig);
   const expectedBuf = Buffer.from(expected);

@@ -1,3 +1,4 @@
+import crypto from "crypto"; // ★ 27.09 FIX: require() ESM'de patlıyor — statik import
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 

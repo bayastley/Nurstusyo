@@ -1,3 +1,4 @@
+import crypto from "crypto"; // ★ 27.09 FIX: require() ESM'de patlıyor — statik import
 // ★ CANLI YAYIN PROXY — tarayıcı dış siteye bağlanmaz, akış same-origin gelir.
 // ?src=kabe  → Suudi Quran TV (Mekke)  | ?src=quran → Katar Quran TV (HD, sürekli tilavet)
 // ?type=playlist → ana liste | ?type=chunk&u=... → alt liste | ?type=seg&u=... → ts parçası
