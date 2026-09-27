@@ -237,7 +237,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!session) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
       // ★ FAIL-CLOSED (27.09 güvenlik taraması): adminEmails BOŞSA herkes admin
       //   olabiliyordu! Artık env tanımsızsa işlem MUTLAKA reddedilir.
-      const adminEmails = (process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
+      // ★ 28.09 FIX (canlıda kanıtlandı): env'de yalnız NUR_ADMIN_EMAILS varken
+      //   burada ADMIN_EMAILS okunduğu için gerçek admin bile 403 alıyordu —
+      //   roadmap Ekle/Sil/Düzenle/Sıfırla canlıda hiç çalışmıyordu.
+      //   auth/google.ts + kill-session.ts ile aynı anahtar okunur.
+      const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
       if (!adminEmails.length || !adminEmails.includes(session.email.toLowerCase())) {
         return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
       }
