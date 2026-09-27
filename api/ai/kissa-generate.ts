@@ -158,9 +158,10 @@ async function isRateLimited(ip: string): Promise<boolean> {
 }
 
 function addRateLimit(ip: string): void {
-  const timestamps = rateLimitMap.get(ip) || [];
+  // ★ 27.09 FIX: eski rateLimitMap ismi artık yok — __RL_MAP (aynı Map, doğru isim)
+  const timestamps = __RL_MAP.get(ip) || [];
   timestamps.push(Date.now());
-  rateLimitMap.set(ip, timestamps);
+  __RL_MAP.set(ip, timestamps);
 }
 
 // ─── OPENAI KISSA ÜRETİMİ ──────────────────────────────────

@@ -147,16 +147,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userAgent = sanitize(req.headers["user-agent"], 300);
 
     // Aynı hata 5 dakika içinde tekrar geliyorsa yut (retry döngüsü koruması)
+    // ★ 27.09 FIX: eski __buckets ismi artık yok — __RL_MAP (aynı Map, doğru isim)
     const fingerprint = crypto.createHash("sha256").update(`${message}|${path}`).digest("hex").slice(0, 16);
-    const fpBucket = __buckets.get(`errfp:${fingerprint}`) ?? { hits: [] };
-    const cutoff = Date.now() - 5 * 60_000;
-    fpBucket.hits = fpBucket.hits.filter((h) => h >= cutoff);
-    if (fpBucket.hits.length >= 5) {
-      __buckets.set(`errfp:${fingerprint}`, fpBucket);
+    const fpKey = `errfp:${fingerprint}`;
+    const nowMs = Date.now();
+    const fpHits = (__RL_MAP.get(fpKey) || []).filter((h) => h >= nowMs - 5 * 60_000);
+    if (fpHits.length >= 5) {
+      __RL_MAP.set(fpKey, fpHits);
       return res.status(200).json({ ok: true, deduped: true });
     }
-    fpBucket.hits.push(Date.now());
-    __buckets.set(`errfp:${fingerprint}`, fpBucket);
+    fpHits.push(nowMs);
+    __RL_MAP.set(fpKey, fpHits);
 
     const insertRes = await fetch(`${cfg.url}/rest/v1/nur_error_logs`, {
       method: "POST",

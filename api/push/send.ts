@@ -1,6 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import webpush from "web-push";
+// ★ 27.09 FIX: dinamik import("./hadisler") Vercel serverless paketleyicisine
+//   dahil edilmiyordu (ERR_MODULE_NOT_FOUND) → statik import. hadisler.ts
+//   saf veri modülüdür, yan etki yoktur.
+import { gununHadisi, saateGoreHadis } from "./hadisler";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -235,7 +239,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Günün saate uygun hadisi (sunucu TR saatine göre tema seçer)
-  const { gununHadisi, saateGoreHadis } = await import("./hadisler");
   const hadis = trSaat >= 5 && trSaat < 23 ? saateGoreHadis(trSaat) : gununHadisi();
   const bildirim = {
     title: `🌙 Öğüt Vakti · ${hadis.kaynak.split(",")[0]}`,
