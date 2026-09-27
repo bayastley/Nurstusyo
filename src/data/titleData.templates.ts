@@ -214,7 +214,7 @@ export const EMOTIONAL_TITLE_TEMPLATES: Record<string, string[]> = {
     "Bu ayetle namazın tadı başka olur... 🕌",
     "Allah'ın sana söylemek istedikleri bu ayetin içinde... 📖",
     "Bu sabah bu ayetle başla, günün bereketli geçecek... 🌅",
-    "Hz. Aişe (r.a.) bu ayetleri thường dinlerdi... 🌹",
+    "Hz. Aişe (r.a.) bu ayetleri sık sık dinlerdi... 🌹",
     "Bu tilaveti paylaşırsan sevap kazanırsın... 📲",
     "Kendini çaresiz hissedenler için: Allah yeter... 💪",
     "Bu ayeti bilen cehennemden kurtulur... 🔥",

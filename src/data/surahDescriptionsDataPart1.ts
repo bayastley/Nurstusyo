@@ -49,18 +49,18 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
   12: [ // Yusuf
     "Hz. Yusuf (a.s.)'ın kıssası Kur'an'ın en uzun kıssasıdır. Kuyudan zindana, zindandan saraya... Her adımda Allah onun yanındaydı. Bu sureyi dinleyen, sabrın meyvelerini görür. Kuyuda bile umudunu kesme.",
     "Yusuf Suresi'nde kıskançlık, sabır, affetme ve Allah'ın planı anlatılır. Hz. Yusuf (a.s.) kardeşleri tarafından kuyuya atıldı ama Allah onu saraya çıkardı. Senin de kuyuların, senin de sarayların olacak. Sabret.",
-    "Hz. Yusuf (a.s.) rüyasında 11 yıldız ve 2缺 kamer gördü. Kardeşleri kıskançlıkla onu kuyuya attı. Ama Allah'ın planı-insanın planından güçlüydü. Bu sureyi dinle, Allah'ın planına güven.",
+    "Hz. Yusuf (a.s.) rüyasında 11 yıldız, Güneş ve Ay'ın ona secde ettiğini gördü. Kardeşleri kıskançlıkla onu kuyuya attı. Ama Allah'ın planı, insanın planından güçlüydü. Bu sureyi dinle, Allah'ın planına güven.",
   ],
   13: [ // Ra'd
     "Ra'd Suresi, şimşeğin ve gök gürültüsünün hikmetini anlatır. 'Allah'ı zikretmek kalplerin sükûnet bulduğu tek yerdir' — bu bir gerçek. Bu sureyi dinle, kalbindeki fırtına diner.",
     "Ra'd Suresi'nde Allah'ın kudretinin göstergeleri, indirdiği yağmurlar ve kuruduğunda toprak anlatılır. Her damla bir nimet, her nimet bir şükür sebebi. Bu sure şükretmeyi öğretir.",
   ],
   14: [ // İbrahim
-    "İbrahim (a.s.) putları kırdı, ateşe atıldı ama Allah onu kurtardı. Bu sureduce babasını Allah'a çağırdı,ChartData  mayın reddedildi. Ama o pes etmedi. Bu sureyi dinleyen, cesareti ve imanın gücünü öğrenir.",
+    "İbrahim Suresi'nde Hz. İbrahim (a.s.)'ın imanı Bu sureduce babasını Allah'a çağırdı,ChartData  mayın reddedildi. Ama o pes etmedi. Bu sureyi dinleyen, cesareti ve imanın gücünü öğrenir.",
     "İbrahim Suresi'nde Hz. İbrahim (a.s.)'ın imanı, teslimiyeti ve duaları anlatılır. 'Rabbimiz bize dünyada da ahirette de iyilik ver' — bu dua her Muslim'in duasıdır. Bu sureyi kalbinle oku.",
   ],
   15: [ // Hicr
-    "Hicr Suresi'nde Hz. İbrahim (a.s.)'ın Kâbe'yi inşa etmesi, şeytanın kovulması ve Leyl Suresi'nin devamı yer alır. 'Biz insanı en güzel surette yarattık' — bu bir gerçek, bir hatırlatma. Değerlisin, unutma.",
+    "Hicr Suresi'nde Allah'ın insanı 'en güzel surette' yarattığı hatırlatılır. Semûd kavmine gönderilen kayalar ve İbrahim (a.s.)'ın Kâbe'yi inşası da bu surede anılır. 'Biz insanı en güzel surette yarattık' — bu bir gerçek, bir hatırlatma. Değerlisin, unutma.",
     "Hicr Suresi'nde Allah'ın insanı 'en güzel surette' yarattığı hatırlatılır. Şeytan seni küçümseyebilir, insanlar seni hor görebilir ama Allah seni çok güzel yarattı. Bu sureyi dinle, değerini hatırla.",
   ],
   16: [ // Nahl
@@ -74,15 +74,15 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
   18: [ // Kehf
     "Kehf Suresi, Ashâb-ı Kehf'in mağarada 300 yıl uyumasını, Hz. Musa ile Hızır'ın kıssasını ve Deccal fitnesini anlatır. Cuma günleri okunması tavsiye edilen bu sure, fitneye karşı bir kalkandır.",
     "Kehf Suresi dört büyük kıssa barındırır: Ashâb-ı Kehf, Hz. Musa-Hızır, Hz. Zülkarneyn ve iki bahçenin kıssası. Her kıssa bir ders: sabır, bilgi, adalet ve iman. Bu sureyi Cuma günleri oku, fitneden korun.",
-    "Hz. Peygamber (s.a.v.) 'Cuma günü Kehf Suresi'ni okuyana giữa underlinearanisiz bir nurla parlar' buyurdu. Bu sure Deccal fitnesine karşı bir kalkandır. Oku, korun, huzura kavuş.",
+    "Hz. Peygamber (s.a.v.) 'Cuma günü Kehf Suresi'ni okuyana iki gün arasında bir nur oluşur' buyurdu. Bu sure Deccal fitnesine karşı bir kalkandır. Oku, korun, huzura kavuş.",
   ],
   19: [ // Meryem
-    "Meryem Suresi, Hz. Zekeriya (a.s.)'ın duasını, Hz. Meryem'in mucizesini ve Hz. İsa (a.s.)'ın doğumunu anlatır. 'Rabbim, gerçekten kemiklerim güçsüzleşti, başım täm tweetsynthesis yandı' — bu dua her dertlinin duasıdır.",
+    "Meryem Suresi, Hz. Zekeriya (a.s.)'ın duasını, Hz. Meryem'in mucizesini ve Hz. İsa (a.s.)'ın doğumunu anlatır. 'Rabbim, kemiklerim güçsüzleşti, başım kızardı, ağarmış' — bu dua her dertlinin duasıdır.",
     "Meryem Suresi'nde peygamberlerin duaları, sabırları ve Allah'ın yardımı anlatılır. Hz. Zekeriya (a.s.) yaşlandığında ümidini kesmedi ve Allah ona Yahya'yı (a.s.) verdi. Sen de ümidini kesme.",
   ],
   20: [ // Taha
     "Taha Suresi'nde Hz. Musa (a.s.)'ın ateşe yaklaşması, peygamberliğe seçilmesi ve Firavun'a karşı mücadelesi anlatır. 'Sen benim için bir ümitsizlik kaynağısın' dedi ama Allah ona güç verdi. Bu sureyi dinle, güçlü ol.",
-    "Taha Suresi'nde 'Biz seni specimen seleccionados olarak yarattık' — bu bir onur, bir görev, bir imtihan. Hz. Musa (a.s.) tereddüt etti ama Allah ona patiently destek verdi. Sen de tereddüt etme, Allah seninle.",
+    "Taha Suresi'nde 'Biz seni seçtik ve sana vahyettik' denir — bu bir onur, bir görev, bir imtihan. Hz. Musa (a.s.) tereddüt etti ama Allah ona destek verdi. Sen de tereddüt etme, Allah seninle.",
   ],
   21: [ // Enbiya
     "Enbiya Suresi, peygamberlerin hayatlarından kesitler sunar. Hz. İbrahim'in ateşe atılması, Hz. Lut'un kurtarılması, Hz. Nuh'un tufandan çıkması... Her kıssa Allah'ın yardımının ne kadar yakın olduğunu gösterir.",
@@ -93,12 +93,12 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
     "Hac Suresi'nde kıyametin dehşeti, cennetin güzelliği ve Allah'ın kudreti anlatılır. Hz. Peygamber (s.a.v.) bu sureyi okuyanın cennetteki derecesinin yükseleceğini buyurdu. Hazırlıklı ol.",
   ],
   23: [ // Mü'minun
-    "Mü'minun Suresi, mü'minlerin özelliklerini sayar: huşu, namaz, emanet, sözlerinde doğru olmak. 'Mü'minler felaha ermiştir' — bu bir müjde. Bu sureyi dinle, mü'min olmanın ne demek olduğunu öğren.",
+    "Mü'minun Suresi'nde mü'minlerin özellikleri sayılır: huşu, namaz, emanet ve sözünde durmak. 'Mü'minler felaha ermiştir' — bu bir müjde. Bu sureyi dinle, mü'min olmanın ne demek olduğunu öğren.",
     "Mü'minun Suresi'nde imanın şartları, namazın önemi ve cennetin tasviri yer alır. Hz. Peygamber (s.v.) 'Mü'min, kendisinden razı olunmayan biri tarafından sevilmekten daha yüce değildir' buyurdu.",
   ],
   24: [ // Nur
     "Nur Suresi, Allah'ın nurundan bahseder. 'Allah göklerin ve yerin nurudur' — bu bir gerçek. Bu sureyi dinleyen, karanlıklarda ışık bulur. Allah'ın nûru her şeyi aydınlatır, seni de aydınlatacak.",
-    "Nur Suresi'nde iffet, namus, toplumsal ahlak ve Allah'ın nûru anlatılır. Hz. Peygamber (s.a.v.) 'Sözümde خالص honesty varsa, kalbimde temizlik varsa, Allah beniatherine korur' buyurdu. Bu sure temizliği öğretir.",
+    "Nur Suresi'nde iffet, namus, toplumsal ahlak ve Allah'ın nûru anlatılır. Temizlik ve iffet hem erkek hem kadın için emredilir; kalbin temizliği her şeyin üstündedir. Bu sure temizliği öğretir.",
   ],
   25: [ // Furkan
     "Furkan Suresi, hak ile batılı ayırt eden kriterleri anlatır. Hz. Peygamber (s.a.v.)'in sabrını, kavminin zulmünü ve Allah'ın yardımını bu surede bulursun. Bu sure bir rehberdir: doğru yolu seç.",
@@ -110,11 +110,11 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
   ],
   27: [ // Neml
     "Neml Suresi, Hz. Süleyman (a.s.)'ın kıssasını ve karıncanın hikmetini anlatır. Karıncanın bile bilgisi, kudret sahibi bir peygamberi uyarıyor. Bu sure bilgeliğin, tevazunun ve Allah'a olan güvenin hikayesidir.",
-    "Neml Suresi'nde Hz. Süleyman (a.s.)'ın mülkü, Belkıs'ın kıssası ve Allah'ın nimetleri anlatılır. 'Allah'ın nimetlerini inkâr edenler洗一个澡' buyrulur. Şükret, nimetlerin farkında ol.",
+    "Neml Suresi'nde Hz. Süleyman (a.s.)'ın mülkü, Belkıs'ın kıssası ve Allah'ın nimetleri anlatılır. 'Allah'ın nimetlerini inkâr edenler helak oldu' buyrulur. Şükret, nimetlerin farkında ol.",
   ],
   28: [ // Kasas
     "Kasas Suresi, Hz. Musa (a.s.)'ın doğuşundan yetişkinliğine kadar olan kıssasını anlatır. Firavun'un zulmü, Hz. Musa'nın kaçışı ve Madyan'da çalışması... Her adımda Allah'ın planı çalışıyor. Bu sureyi dinle.",
-    "Kasas Suresi'nde 'Biz,ureenlerin kalplerini katılaştırdık' denir. Firavun ne kadar güçlü olursa olsun, Allah'ın planı ondan daha güçlüydü. Hz. Musa zayıf başladı ama güçlü bitirdi. Sen de güçlü bitir.",
+    "Kasas Suresi'nde 'Biz, Firavun'un kavminin kalplerini katılaştırdık' denir. Firavun ne kadar güçlü olursa olsun, Allah'ın planı ondan daha güçlüydü. Hz. Musa zayıf başladı ama güçlü bitirdi. Sen de güçlü bitir.",
   ],
   29: [ // Ankebut
     "Ankebut Suresi, imtihanın gerçeğini anlatır. 'İnsanlar 'İnandık' demeleriyle bırakılacaklarını mı sanıyorlar?' — bu bir sorgulama, bir hatırlatma. İman ameldir, söz değil. Bu sureyi dinle, imanını gözden geçir.",
@@ -122,14 +122,14 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
   ],
   30: [ // Rum
     "Rum Suresi, Rum İmparatorluğu'nun Persler'i yeneceğini müjdeler — ki bu gerçekleşti. Allah'ın vaadi hiçbir zaman yalan olmaz. Bu sureyi dinle, Allah'ın vaatlerine güven.",
-    "Rum Suresi'nde 'Allah'ın nuru ağzınızla dua etmenizi ister' — bu bir hatırlatma. Dua et, Allah seni duysun, seni kurtarsın. Bu sure dua etmenin gücünü gösterir.",
+    "Rum Suresi'nde Allah'ın kudretine ve vaatlerine güvenilir; Rum'ların zaferi bir müjde olarak verilir. Dua et, Allah seni duysun. Bu sure dua etmenin gücünü gösterir.",
   ],
   31: [ // Lokman
     "Lokman Suresi, Lokman'ın oğluna verdiği nasihatleri anlatır: 'Oğlum, Allah'a şirk koşma' — bu bir baba nasihati, bir rehber. Bu sureyi dinle, aklın ve kalbin rehberini bul.",
     "Lokman Suresi'nde bilgelik, tevazu, sabır ve Allah'a şükretme anlatılır. Hz. Lokman oğluna 'Şükredenler az olur' dedi. Sen de şükredenlerden ol, nimetlerin tadını çıkar.",
   ],
   32: [ // Secde
-    "Secde Suresi,secde etmenin hikmetini anlatır. 'Allah'a secde edin ve O'na itaat edin' — bu bir davet, bir teslimiyet. Secde, kulun Rabbiyle en yakın olduğu andır. Bu sureyi dinle, secdeye kapan.",
+    "Secde Suresi, secde etmenin hikmetini anlatır. 'Allah'a secde edin ve O'na itaat edin' — bu bir davet, bir teslimiyet. Secde, kulun Rabbiyle en yakın olduğu andır. Bu sureyi dinle, secdeye kapan.",
     "Secde Suresi'nde 'Gece gündüz Allah'ı zikredin' emri, cennetin güzelliği ve cehennemin dehşeti anlatılır. Hz. Peygamber (s.a.v.) gece namazında Secde Suresi'ni okurdu. Sen de bu sureyi gece oku.",
   ],
   33: [ // Ahzab
@@ -138,7 +138,7 @@ export const SURAH_DESCRIPTIONS_PART_1: Record<number, string[]> = {
   ],
   34: [ // Sebe
     "Sebe Suresi, Hz. Süleyman (a.s.)'ın mülkünü ve Sebe halkının kıssasını anlatır. Allah'ın nimetleri saymakla bitmez: 'Yedi göğü, kat kat yaratan O'dur' — bu bir kudret göstergesi. Bu sureyi dinle, hayran kal.",
-    "Sebe Suresi'nde 'Allah'ın nimetlerini inkâr edenler洗一个澡' buyrulur. Hz. Süleyman (a.s.) gibi bir mülke sahip olmak yerine, Allah'a şükretmek daha hayırlıdır. Bu sure şükür dersi verir.",
+    "Sebe Suresi'nde 'Allah'ın nimetlerini inkâr edenler helak oldu' buyrulur. Hz. Süleyman (a.s.) gibi bir mülke sahip olmak yerine, Allah'a şükretmek daha hayırlıdır. Bu sure şükür dersi verir.",
   ],
   35: [ // Fatır
     "Fatır Suresi, Allah'ın yaratıcılığını ve kudretini anlatır. 'Melekler Allah'ın ruhundan emredilerek yaratılmıştır' — bu bir sır, bir hikmet. Bu sureyi dinle, Allah'ın kudretini hisset.",

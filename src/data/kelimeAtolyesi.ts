@@ -225,7 +225,7 @@ export const KELIME_RECETELERI: KelimeRecete[] = [
     satir: "Sadaka malı eksiltmez; bereketle büyütür.",
     aciklama: "Zekât ve infak temalı ayetler + açan çiçek atmosferi." },
   { id: "dua", emoji: "🙌", etiket: "Dua",
-    anahtarlar: ["dua", "dilek", "ricа", "rica", "bagir", "bağır", "yakarma", "dualar"],
+    anahtarlar: ["dua", "dilek", "rica", "bagir", "bağır", "yakarma", "dualar"],
     moods: ["tevekkul", "rahmet"], cats: ["gece", "cami", "gol"],
     satir: "Dua, kapıyı çalan el değil; kapının ardını bilen kalptir.",
     aciklama: "Dua ve icabet temalı ayetler + gece atmosferi." },

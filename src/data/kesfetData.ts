@@ -152,7 +152,7 @@ export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string;
 export interface KissaKaydi { ad: string; sure: string; ozet: string; ders: string; dua: string }
 export const KISSA_LISTESI: KissaKaydi[] = [
   { ad: "Hz. Yûsuf'un Sabrı", sure: "Yûsuf Suresi", ozet: "Kardeşlerinin kıskançlığıyla kuyuya atıldı, köle satıldı, haksız yere hapse girdi — ama her aşamada Allah'a sığındı. Sonunda Mısır hazinesinin başına geçti ve ailesiyle kavuştu.", ders: "Sabır ve ismet, kötülüğü iyiliğe çevirir. 'Belki sevmediğiniz bir şey sizin için hayırlıdır.'", dua: "﴿رَبِّ قَدْ آتَيْتَنِي مِنَ الْمُلْكِ وَعَلَّمْتَنِي مِن تَأْوِيلِ الْأَحَادِيثِ﴾ — 'Rabbim! Bana hükümranlık verdin, olayların yorumunu öğrettin' (Yûsuf 12:101). Ey kıskançlıkla sınananların yardımcısı, bizi de sabrumuzun sonunda kavuşla müjdele!" },
-  { ad: "Hz. Eyyûb'un Tecessüdü", sure: "Enbiyâ Suresi", ozet: "Hastalık ve mal kaybıyla yıllarca sınandı; ama hiçbir an şikâyet etmedi: 'Rabbi erhamü'r-râhimîn.' Sonunda Allah ona şifa ve eski nimetleri iki kat verdi.", ders: "Gerçek sabır, şikâyetsiz connected'tir. Allah sabredenle beraberdir.", dua: "﴿أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ﴾ — 'Başıma zarar geldi; sen merhametlilerin en merhametlisin' (Enbiyâ 21:83). Ey şifânın kaynağı, hasta olanlara, borç içindeboğulanlara, yalnız düşenlere Eyyûb sabrıyla cevap ver!" },
+  { ad: "Hz. Eyyûb'un Tecessüdü", sure: "Enbiyâ Suresi", ozet: "Hastalık ve mal kaybıyla yıllarca sınandı; ama hiçbir an şikâyet etmedi: 'Rabbi erhamü'r-râhimîn.' Sonunda Allah ona şifa ve eski nimetleri iki kat verdi.", ders: "Gerçek sabır, şikâyetsiz taşınandır. Allah sabredenle beraberdir.", dua: "﴿أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ﴾ — 'Başıma zarar geldi; sen merhametlilerin en merhametlisin' (Enbiyâ 21:83). Ey şifânın kaynağı, hasta olanlara, borç içindeboğulanlara, yalnız düşenlere Eyyûb sabrıyla cevap ver!" },
   { ad: "Ashâb-ı Kehf", sure: "Kehf Suresi", ozet: "Baskıcı bir devirde imanlarını korumak için mağaraya sığındı; Allah onları 309 yıl uyuttu, sonra diriltti — halk iman edenlerin sayısını gördü.", ders: "İman uğruna 'bir mağara' bulmak da ibadettir; Allah yolunu açar.", dua: "﴿رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا﴾ — 'Rabbimiz! Katından bir rahmet ver, işimizi düzgün bir yol eyle' (Kehf 18:10). Baskı ve fitne devirlerinde imanını koruyan kullarından eyle, mağaramıza rahmetinle nur gönder!" },
   { ad: "Hz. Mûsâ ve Hızır", sure: "Kehf Suresi", ozet: "Mûsâ (a.s.) ilim öğrenmek için Hızır'a (a.s.) takıldı; üç olayda sabrı zorlandı ama sonunda her olayın gizli hikmetini öğrendi.", ders: "İlim sabır ister; görünüşte kötü olan içinde hayır taşıyabilir.", dua: "﴿رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي﴾ ruhuyla: 'Rabbim! Sinemi aç, işimi kolaylaştır' (Tâhâ 20:25-26). Ey hikmetini ardıl bilginlere öğreten, bize de olayların arkasındaki hayrı görecek bir kalp ve sabır ver!" },
   { ad: "Fil Sahibi ve Kâbe", sure: "Fil Suresi", ozet: "Ebrehe filleriyle Kâbe'yi yıkmaya geldi; Allah kuşlarla taş yağdırdı — 'onları yenilmiş saman çöpü gibi yaptı.'", ders: "Kâbe'nin koruyucusu Allah'tır; zulüm ağır gelir, intikamı O alır.", dua: "﴿رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي﴾ ruhuyla Kâbe'ye yönelerek: 'Rabbim! Beni namazı kılanlardan eyle, soyumdan da' (İbrâhîm 14:40). Ey Kâbe'yi fillerdenden koruyan, bizi de her kötülükten koru, hacımızı ve dualarımızı kabul eyle!" },
@@ -162,7 +162,6 @@ export const KISSA_LISTESI: KissaKaydi[] = [
 // ── 20: SORU-CEVAP ARŞİVİ (Diyanet yönlendirmeli) ──────────
 export interface SoruCevap { soru: string; cevap: string; kaynak: string }
 export const SORU_CEVAP_ARŞIVI: SoruCevap[] = [
-  { soru: "Abdestin farzları nelerdir?", cevap: "Dört farz vardır: 1) Yüzü yıkamak, 2) Kolları dirsekleriyle beraber yıkamak, 3) Başın dörtte birini mesh etmek, 4) Ayakları topuklarla beraber yıkamak.", kaynak: "Diyanet İlmihal — dinislerleri.diyanet.gov.tr" },
   { soru: "Oruç kimlere farzdır?", cevap: "Akıl sağlığı yerinde, buluğ çağına ermiş ve mukim (yolcu olmayan) her Müslümana Ramazan orucu farzdır. Hasta ve yolcuya izin vardır; iyileşince kaza eder.", kaynak: "Diyanet İlmihal — Oruç bölümü" },
   { soru: "Zekât kimlere verilmez?", cevap: "Ana, baba, dede, nine, oğul, oğlun çocuğu, kız, kızın çocuğu, eşe zekât verilmez. Zenginlere de verilmez. Kardeş, amca, dayı gibi akrabaya verilebilir.", kaynak: "Diyanet İlmihal — Zekât bölümü" },
   { soru: "Kurbanın ortaklık şartları var mı?", cevap: "Küçükbaş hayvan (koyun-keçi) tek kişiye, büyükbaş (sığır, deve) yedi kişiye kadar ortak olabilir; her hisse 1/7'den az olmamalı ve hisse sahibi kurban niyetiyle almalıdır.", kaynak: "Diyanet İlmihal — Kurban bölümü" },
@@ -172,49 +171,227 @@ export const SORU_CEVAP_ARŞIVI: SoruCevap[] = [
   { soru: "Sırertaşı vermek caiz midir?", cevap: "Mü'min kardeşinin ayıbını arkasından söylemek gıybet ve haramdır. Ama zulme uğrayanın hakkını aramak, dinî hüküm verme (fetva) talebi gibi durumlarda caizdir.", kaynak: "Diyanet Fetva Kurulu — gıybet ilgili fetvalar" },
 ];
 
+// ── 20b: İSLAM'IN 5 ŞARTI — MEZHEPLERE GÖRE FIKHİ SORU-CEVAP (28.09, kullanıcı kararı)
+// "5 şart ile ilgili fıkhi sorular cevaplar kaynaklarıyla birlikte mezheplere göre ayrılsın
+//  herşey dahil" — Hanefî/Şâfiî/Mâlikî/Hanbelî karşılaştırmalı, kaynak gösterimli.
+export type MezhepAd = "Hanefî" | "Şâfiî" | "Mâlikî" | "Hanbelî";
+export interface BesSartSoru {
+  sart: "Şehadet" | "Namaz" | "Zekât" | "Oruç" | "Hac";
+  soru: string;
+  cevaplar: Array<{ mezhep: MezhepAd; metin: string }>;
+  kaynak: string;
+}
+export const BES_SART_SORULARI: BesSartSoru[] = [
+  {
+    sart: "Şehadet",
+    soru: "İslam'ın 5 şartı nedir ve hangi kaynaklara dayanır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "1) Kelime-i şehadet etmek, 2) Beş vakit namaz kılmak, 3) Zekât vermek, 4) Ramazan orucu tutmak, 5) Gücü yetenler için Kâbe'yi haccetmek. Bu bölüm Hadis-i Cibrîl'e dayanır." },
+      { mezhep: "Şâfiî", metin: "Aynı beş şart — Hadis-i Cibrîl'in zahiridir; ibadetler dinin direkleri olarak dört mezhepte de ortaktır." },
+      { mezhep: "Mâlikî", metin: "Aynı beş şart; Muvatta'da benzer rivayetler vardır. Hadiste 'İslam'ın binası beş şey üzerine kurulmuştur' denir." },
+      { mezhep: "Hanbelî", metin: "Aynı beş şart — aynı Hadis-i Cibrîl kaynaklı; İbn Teymiye el-Îmân kitabında bunları detaylandırır." },
+    ],
+    kaynak: "Buhârî, Îmân, 37 · Müslim, Îmân, 8 (Hadis-i Cibrîl) · Diyanet İlmihal",
+  },
+  {
+    sart: "Şehadet",
+    soru: "Şehadet getirmenin şartları nelerdir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Yedi şart: ilim (anlamını bilmek), yakîn (kalpten tasdik), ikrar (dille söylemek), sıdk (doğruluk), ihlâs, inâbet (samimi yöneliş) ve kabul. Sadece dille söylemek yetmez." },
+      { mezhep: "Şâfiî", metin: "Sekiz şart sayılır: ilim, yakîn, ihlâs, sıdk, kabul, inâbet, muhabbet (sevgi) ve dil ile ikrar." },
+      { mezhep: "Mâlikî", metin: "Yedi şart; ayrıca açık ikrar gereklidir. Kalpten tasdik etmeden yalnız dille söyleyen dünyada Müslüman muamelesi görür, içini Allah bilir." },
+      { mezhep: "Hanbelî", metin: "Dokuz şart: ilim, yakîn, kabul, inkıyâd (itaat), sıdk, ihlâs, muhabbet, inâbet ve ikrar — en geniş liste Hanbelî'de." },
+    ],
+    kaynak: "Diyanet İlmihal — İman bölümü · İbn Kudâme, el-Muğnî · Nevevî, Kitâbü'l-Ezkâr",
+  },
+  {
+    sart: "Namaz",
+    soru: "Namazın farzları (rüknleri) mezheplere göre kaçtır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Namazın 12 şartı ve 12 farzı sayılır; asıl rüknler: tekbir-i tehrime, kıyam, kıraat, rükû, iki secde ve kade-i ahire. Hanefî'de Fâtiha farz-ı ayndır (cemaatte imam okur)." },
+      { mezhep: "Şâfiî", metin: "17 rükn sayılır: niyet, tekbir, kıyam, Fâtiha (her rekatte farz), rükû, sücûd, istirahat, oturuş, tehiyyât, selam, sıra, kasd... Fâtiha terk edilirse namaz geçersizdir." },
+      { mezhep: "Mâlikî", metin: "14 rükn sayılır; Fâtiha farz DEĞİL sünnet-i müekked kabul edilir — her rekatte başka bir sure okunabilir." },
+      { mezhep: "Hanbelî", metin: "16 rükn sayılır; Fâtiha farzdır (Şâfiî gibi). Niyet, tekbir, kıyam, rükû, secde, oturuşlar ve selam asıl rüknlerdir." },
+    ],
+    kaynak: "Diyanet İlmihal — Namaz · İbn Âbidîn, Reddü'l-Muhtâr (Hanefî) · Nevevî, el-Mecmû' (Şâfiî) · İbn Kudâme, el-Muğnî (Hanbelî)",
+  },
+  {
+    sart: "Namaz",
+    soru: "Fâtiha okunmadan namaz geçerli olur mu?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Fâtiha farz-ı ayndır; terkinde namaz mekruh-ı tahrimen olur ve yeniden kılınması gerekir. Ancak cemaatle imam sesli kıraat ederken arkadakiler için dinlemek yeterli kabul edilir." },
+      { mezhep: "Şâfiî", metin: "Fâtiha rükndür — terk edilirse namaz geçerli OLMAZ." },
+      { mezhep: "Mâlikî", metin: "Fâtiha farz değildir; bir sure okumak yeterlidir — Fâtiha sünnet-i müekkededir." },
+      { mezhep: "Hanbelî", metin: "Fâtiha farzdır (her rekatte) — terk edilirse namaz geçersiz." },
+    ],
+    kaynak: "Diyanet İlmihal · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî · İbn Âbidîn, Reddü'l-Muhtâr",
+  },
+  {
+    sart: "Namaz",
+    soru: "'Âmîn' sesli mi sessiz mi denir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Sessizce (içinden) denir; imam'ın Fâtiha'sı bitince cemaat içinden 'âmin' der." },
+      { mezhep: "Şâfiî", metin: "Sesli (cehrî) denir — Fâtiha bitince imam ve cemaat yüksek sesle 'âmin' der." },
+      { mezhep: "Mâlikî", metin: "Sessizce denir; sabah namazında sesli rivayetler de nakledilmiştir." },
+      { mezhep: "Hanbelî", metin: "Sesli denir — özellikle cehrî kıraatlerde; Şâfiî'ye benzer." },
+    ],
+    kaynak: "Buhârî, Edeb; Müslim, Salât — 'âmîn' bahsi · Diyanet İlmihal",
+  },
+  {
+    sart: "Namaz",
+    soru: "Yolcu namazı kısaltır mı, birleştirir mi?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Yalnız KASR (kısaltma) vardır: öğle-ikindi 4→2, yatsı 4→2. Cem' (öğle+ikindi, akşam+yatsı birleştirme) YOK; yalnız Arefe ve Müzdelife'de hac esnasında geçerlidir." },
+      { mezhep: "Şâfiî", metin: "Hem kasr hem cem' mümkündür: yolcu dilerse kısaltır, dilerse iki namazı bir vakte birleştirir." },
+      { mezhep: "Mâlikî", metin: "Kasr + cem' ikisi de mümkün; cem', yağmur/hastalık/hac kalabalığı gibi özürlerde mukimler için de geçerli sayılır." },
+      { mezhep: "Hanbelî", metin: "Kasr + cem' ikisi de mümkündür; Hanbelî'de cem' için özür şartı aranmaz." },
+    ],
+    kaynak: "Diyanet İlmihal — Yolcu namazı · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Namaz",
+    soru: "Abdestin farzları mezheplere göre nasıl sayılır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "4 farz: yüzü yıkamak, kolları dirseklerle yıkamak, başın dörtte birini mesh, ayakları topuklarıyla yıkamak. Diğerleri sünnettir." },
+      { mezhep: "Şâfiî", metin: "6 farz: niyet, yüz, kollar, baş, ayaklar ve sıra (tertib). Niyet ve sıra Şâfiî'de farzdır." },
+      { mezhep: "Mâlikî", metin: "7 farz: niyet, yüz, kollar, baş, ayaklar, sıra ve muvâlât (araları uzatmadan yıkama)." },
+      { mezhep: "Hanbelî", metin: "7 farz: niyet, yüz, kollar, başın TAMAMI (mesh), ayaklar, sıra, muvâlât." },
+    ],
+    kaynak: "Diyanet İlmihal — Tâhâret · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, Minhâcü't-Tâlibîn · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Zekât",
+    soru: "Zekâtın vacip olma şartları ve nisab miktarı nedir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Nisab: 96 gr altın veya 609 gr gümüş veya değeri kadar mal. Bir yıl (havlan-ı hâvâl) elinde kalanın 1/40'ı (2,5%) verilir. Akıl ve buluğ şartı — çocuğun malına zekât vacip DEĞİL." },
+      { mezhep: "Şâfiî", metin: "Nisab aynı; ancak çocuk ve akıl hastasının malına da zekât vacip kabul edilir (velisi verir)." },
+      { mezhep: "Mâlikî", metin: "Nisab aynı; bir yıl geçmesi şarttır. Tarım ürünlerinde farklı nisab ve oran (1/10 veya 1/20) uygulanır — bu 'uşur'dur." },
+      { mezhep: "Hanbelî", metin: "Nisab aynı; havlan-ı hâvâl şarttır. Çocuk malında vacip kabulü (Şâfiî gibi) mekruh görülür; en sahih rivayet vacip olduğudur." },
+    ],
+    kaynak: "Diyanet İlmihal — Zekât · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, Ravzatu't-Tâlibîn · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Zekât",
+    soru: "Zekât kime verilmez?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Ana-baba, dede-nine, oğul ve onun çocukları, kız ve onun çocukları ve eşe verilmez. Kardeş, amca, dayı, enişte, gelin gibi akrabaya verilebilir." },
+      { mezhep: "Şâfiî", metin: "Hanefî ile aynı: usul (üst soylar), fürû' (alt soylar) ve eşe verilmez; diğer akrabaya vermek mümkündür." },
+      { mezhep: "Mâlikî", metin: "Benzer; bakımını üstlendiği yakınlarına verilmez, diğer akrabaya verilebilir — yakınlara önceliklidir." },
+      { mezhep: "Hanbelî", metin: "Benzer kural; zenginlere verilmez, zekât yalnız sekiz sınıfa (Tevbe 60) verilir." },
+    ],
+    kaynak: "Diyanet İlmihal — Zekât verilecek yerler · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, Minhâcü't-Tâlibîn",
+  },
+  {
+    sart: "Zekât",
+    soru: "Fitre (sadaka-i fıtriyye) ne zaman verilir, kimlere verilmez?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Ramazan bayramının sabahı, bayram namazından önce verilirse 'sadaka-i fıtriyye'; sonraysa sadaka olur. Ana-baba, çocuk ve eşe verilmez; akrabaya verilebilir." },
+      { mezhep: "Şâfiî", metin: "Benzer; bayram namazından önce verilmesi müstehab, sonrasında da geçerlidir." },
+      { mezhep: "Mâlikî", metin: "Bayram sabahından önce verilir; sonraya bırakmak mekruh sayılır." },
+      { mezhep: "Hanbelî", metin: "Bayram namazından önce verilmesi vacip; sonrasında kaza edilir." },
+    ],
+    kaynak: "Diyanet İlmihal — Fitre · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû'",
+  },
+  {
+    sart: "Oruç",
+    soru: "Oruç kimlere farzdır; hasta ve yolcu ne yapar?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Akıl sağlığı yerinde, buluğ çağına ermiş ve mukim her Müslümana farzdır. Hasta ve yolcu tutmayabilir, sonra kaza eder. İyileşmesi umulmayan hasta ve yaşlılar fidye verir." },
+      { mezhep: "Şâfiî", metin: "Benzer; yolcuya tutmayıp kaza etmek tavsiye edilir. Fidye yalnızca yaşlılık ve iyileşmesi umulmayan hastalıkta geçerlidir." },
+      { mezhep: "Mâlikî", metin: "Benzer; hamile ve süt annesi için fidye + kaza şekli vardır (kaza şart, fidye de tavsiye edilir)." },
+      { mezhep: "Hanbelî", metin: "Benzer; fidye yalnız yaşlılık ve iyileşmesi umulmayan hastalığa geçerlidir; sağlıklı gençlere geçmez." },
+    ],
+    kaynak: "Diyanet İlmihal — Oruç · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Oruç",
+    soru: "İmsak ve iftar vakitleri nasıl belirlenir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "İmsak: fecr-i sâdık (yeni şafak). İftar: güneş tamamen batınca. Türkiye'de Diyanet imsakiyesi ihtiyat süresiyle birlikte hesaplar." },
+      { mezhep: "Şâfiî", metin: "Benzer: fecr-i sâdık ile imsak, güneş batımı ile iftar. Ufuk derecesi hesabında (18° vs 15°) mezhepler arasında uygulama farkı olabilir; yerel müftülük takvimi esas alınır." },
+      { mezhep: "Mâlikî", metin: "Benzer; iftar güneş batımıyla, imsak fecr-i sâdıkla. Batı ufukta beyazlık kaybolduğunda iftar rivayeti de nakledilmiştir." },
+      { mezhep: "Hanbelî", metin: "Benzer; imsak 18° fecr-i sâdık, iftar güneş batımı. Vakit tartışmalarında müftüye sorulması tavsiye edilir." },
+    ],
+    kaynak: "Diyanet İşleri Takvimi (imsakiye) · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû'",
+  },
+  {
+    sart: "Hac",
+    soru: "Hac kimlere farzdır, ömürde kaç kez?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Akıl sağlığı yerinde, buluğ çağına ermiş, hür ve istitâat (yol + masraf gücü) sahibi her Müslümana ömürde BİR KEZ farzdır; fazlası nafile." },
+      { mezhep: "Şâfiî", metin: "Benzer; istitâat şartı aynı. Kadın için güvenli yol (mahrem veya güvenli grup) şarttır." },
+      { mezhep: "Mâlikî", metin: "Benzer; kadın için mahrem şartı daha vurgulu kabul edilir." },
+      { mezhep: "Hanbelî", metin: "Benzer; istitâat beden, mal ve güvenlik üçlüsü olarak tanımlanır." },
+    ],
+    kaynak: "Diyanet İlmihal — Hac · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Hac",
+    soru: "İhram yasakları nelerdir, ihlâlinde ceza nasıl olur?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Yasaklar: parfüm/koku, saç-tırnak kesme, avlanma, bitki koparma, nikâh, cinsel temas ve tartışma. İhlâlde ceza (cim') — kurban veya sadaka gerekir." },
+      { mezhep: "Şâfiî", metin: "Benzer yasaklar; ceza türü 'dem' (kurban) öncelikli — Hanefî'de sadaka daha sık." },
+      { mezhep: "Mâlikî", metin: "Benzer yasaklar; ihlâl şekline göre ceza değişir (kurban, sadaka, oruç)." },
+      { mezhep: "Hanbelî", metin: "Benzer yasaklar; ihlâle göre dem, sadaka veya oruç cezası gerekir." },
+    ],
+    kaynak: "Diyanet İlmihal — İhram yasakları · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Hac",
+    soru: "Kurban kesmek hangi mezhepte vacip, hangisinde sünnet?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Vacip: nisab sahibi zengin Müslümana bayram sabahı kurban kesmek vaciptir. Zilhicce 10-12. günlerinde kesilir." },
+      { mezhep: "Şâfiî", metin: "Sünnet-i müekkede — vacip değil; kesilmesi güçlü şekilde tavsiye edilir." },
+      { mezhep: "Mâlikî", metin: "Sünnet-i müekkede; kesim 10-12. günler." },
+      { mezhep: "Hanbelî", metin: "Vacip kabul edilir (Hanefî gibi); kesim 10-12. günler." },
+    ],
+    kaynak: "Diyanet İlmihal — Kurban · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+];
+
 // ── 21: KELİME KARTLARI ("Kur'an'da 80 sık kelime" — ilk 40) ──
-export interface KelimeKart { ar: string; tr: string; ornek: string }
+export interface KelimeKart { ar: string; tr: string; okunus: string; ornek: string }
 export const KELIME_KARTLARI: KelimeKart[] = [
-  { ar: "اللَّه", tr: "Allah", ornek: "Bismillâh…" },
-  { ar: "رَبّ", tr: "Rab (sahip, terbiye eden)", ornek: "Rabbü'l-âlemîn" },
-  { ar: "رَحْمَة", tr: "Rahmet, merhamet", ornek: "er-Rahmân" },
-  { ar: "يَوْم", tr: "Gün", ornek: "Yevmi'd-dîn" },
-  { ar: "دِين", tr: "Din, hesap", ornek: "Yevmi'd-dîn" },
-  { ar: "نَاس", tr: "İnsanlar", ornek: "Yâ eyyühe'n-nâs" },
-  { ar: "قَلْب", tr: "Kalp", ornek: "أَفَلَا تَعْقِلُونَ (kalp ile akıl)" },
-  { ar: "عِلْم", tr: "İlim, bilgi", ornek: "بِعِلْمٍ" },
-  { ar: "كِتَاب", tr: "Kitap", ornek: "el-Kitâb" },
-  { ar: "حَقّ", tr: "Hak, gerçek", ornek: "el-Hakk" },
-  { ar: "صَبْر", tr: "Sabır", ornek: "يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ" },
-  { ar: "صَلَاة", tr: "Namaz, dua", ornek: "أَقِمِ الصَّلَاةَ" },
-  { ar: "زَكَاة", tr: "Zekât", ornek: "وَآتُوا الزَّكَاةَ" },
-  { ar: "صَوْم", tr: "Oruç", ornek: "كُتِبَ عَلَيْكُمُ الصِّيَامُ" },
-  { ar: "حَجّ", tr: "Hac", ornek: "وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ" },
-  { ar: "جَنَّة", tr: "Cennet", ornek: "جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ" },
-  { ar: "نَار", tr: "Ateş (cehennem)", ornek: "نَارٌ" },
-  { ar: "نُور", tr: "Nur, ışık", ornek: "اللَّهُ نُورُ السَّمَاوَاتِ" },
-  { ar: "ظُلْم", tr: "Zulüm", ornek: "إِنَّ اللَّهَ لَا يَظْلِمُ" },
-  { ar: "عَدْل", tr: "Adalet", ornek: "يَأْمُرُ بِالْعَدْلِ" },
-  { ar: "إِحْسَان", tr: "İhsan, iyilik", ornek: "وَالْإِحْسَانِ" },
-  { ar: "تَقْوَى", tr: "Takva, sakınma", ornek: "وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ" },
-  { ar: "إِيمَان", tr: "İman", ornek: "آمَنُوا" },
-  { ar: "كُفْر", tr: "Küfür, inkâr", ornek: "الَّذِينَ كَفَرُوا" },
-  { ar: "نِفَاق", tr: "Nifak, iki yüzlülük", ornek: "الْمُنَافِقُونَ" },
-  { ar: "تَوْبَة", tr: "Tövbe", ornek: "تَوْبَةً نَّصُوحًا" },
-  { ar: "عِبَادَة", tr: "İbadet", ornek: "لِيَعْبُدُونِ" },
-  { ar: "دُعَاء", tr: "Dua", ornek: "ادْعُونِي أَسْتَجِبْ لَكُمْ" },
-  { ar: "ذِكْر", tr: "Zikir, anma", ornek: "بِذِكْرِ اللَّهِ" },
-  { ar: "شُكْر", tr: "Şükür", ornek: "لَئِن شَكَرْتُمْ" },
-  { ar: "صِدْق", tr: "Doğruluk", ornek: "قَوْلًا سَدِيدًا" },
-  { ar: "كَذِب", tr: "Yalan", ornek: "كَذِبٍ" },
-  { ar: "أَمَانَة", tr: "Emanet", ornek: "أَدَّى الْأَمَانَةَ" },
-  { ar: "خِيَانَة", tr: "Hıyanet", ornek: "يَخُونُونَ" },
-  { ar: "رِزْق", tr: "Rızık", ornek: "وَمِنْهُم مَّن يَرْزُقُ" },
-  { ar: "مَوْت", tr: "Ölüm", ornek: "كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ" },
-  { ar: "حَيَاة", tr: "Hayat", ornek: "الْحَيَاةُ الدُّنْيَا" },
-  { ar: "آخِرَة", tr: "Ahiret", ornek: "وَالْآخِرَةُ خَيْرٌ" },
-  { ar: "دُنْيَا", tr: "Dünya", ornek: "مَتَاعَ الْحَيَاةِ الدُّنْيَا" },
-  { ar: "قِيَامَة", tr: "Kıyamet", ornek: "يَوْمَ الْقِيَامَةِ" },
+  { ar: "اللَّه", tr: "Allah", okunus: "Allâh", ornek: "Bismillâh…" },
+  { ar: "رَبّ", tr: "Rab (sahip, terbiye eden)", okunus: "Rabb", ornek: "Rabbü'l-âlemîn" },
+  { ar: "رَحْمَة", tr: "Rahmet, merhamet", okunus: "rahmet", ornek: "er-Rahmân" },
+  { ar: "يَوْم", tr: "Gün", okunus: "yevm", ornek: "Yevmi'd-dîn" },
+  { ar: "دِين", tr: "Din, hesap", okunus: "dîn", ornek: "Yevmi'd-dîn" },
+  { ar: "نَاس", tr: "İnsanlar", okunus: "nâs", ornek: "Yâ eyyühe'n-nâs" },
+  { ar: "قَلْب", tr: "Kalp", okunus: "kalb", ornek: "أَفَلَا تَعْقِلُونَ (kalp ile akıl)" },
+  { ar: "عِلْم", tr: "İlim, bilgi", okunus: "ilm", ornek: "بِعِلْمٍ" },
+  { ar: "كِتَاب", tr: "Kitap", okunus: "kitâb", ornek: "el-Kitâb" },
+  { ar: "حَقّ", tr: "Hak, gerçek", okunus: "hakk", ornek: "el-Hakk" },
+  { ar: "صَبْر", tr: "Sabır", okunus: "sabr", ornek: "يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ" },
+  { ar: "صَلَاة", tr: "Namaz, dua", okunus: "salât", ornek: "أَقِمِ الصَّلَاةَ" },
+  { ar: "زَكَاة", tr: "Zekât", okunus: "zekât", ornek: "وَآتُوا الزَّكَاةَ" },
+  { ar: "صَوْم", tr: "Oruç", okunus: "savm", ornek: "كُتِبَ عَلَيْكُمُ الصِّيَامُ" },
+  { ar: "حَجّ", tr: "Hac", okunus: "hacc", ornek: "وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ" },
+  { ar: "جَنَّة", tr: "Cennet", okunus: "cennet", ornek: "جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ" },
+  { ar: "نَار", tr: "Ateş (cehennem)", okunus: "nâr", ornek: "نَارٌ" },
+  { ar: "نُور", tr: "Nur, ışık", okunus: "nûr", ornek: "اللَّهُ نُورُ السَّمَاوَاتِ" },
+  { ar: "ظُلْم", tr: "Zulüm", okunus: "zulm", ornek: "إِنَّ اللَّهَ لَا يَظْلِمُ" },
+  { ar: "عَدْل", tr: "Adalet", okunus: "adl", ornek: "يَأْمُرُ بِالْعَدْلِ" },
+  { ar: "إِحْسَان", tr: "İhsan, iyilik", okunus: "ihsân", ornek: "وَالْإِحْسَانِ" },
+  { ar: "تَقْوَى", tr: "Takva, sakınma", okunus: "takvâ", ornek: "وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ" },
+  { ar: "إِيمَان", tr: "İman", okunus: "îmân", ornek: "آمَنُوا" },
+  { ar: "كُفْر", tr: "Küfür, inkâr", okunus: "küfr", ornek: "الَّذِينَ كَفَرُوا" },
+  { ar: "نِفَاق", tr: "Nifak, iki yüzlülük", okunus: "nifâk", ornek: "الْمُنَافِقُونَ" },
+  { ar: "تَوْبَة", tr: "Tövbe", okunus: "tevbe", ornek: "تَوْبَةً نَّصُوحًا" },
+  { ar: "عِبَادَة", tr: "İbadet", okunus: "ibâdet", ornek: "لِيَعْبُدُونِ" },
+  { ar: "دُعَاء", tr: "Dua", okunus: "duâ", ornek: "ادْعُونِي أَسْتَجِبْ لَكُمْ" },
+  { ar: "ذِكْر", tr: "Zikir, anma", okunus: "zikr", ornek: "بِذِكْرِ اللَّهِ" },
+  { ar: "شُكْر", tr: "Şükür", okunus: "şükr", ornek: "لَئِن شَكَرْتُمْ" },
+  { ar: "صِدْق", tr: "Doğruluk", okunus: "sıdk", ornek: "قَوْلًا سَدِيدًا" },
+  { ar: "كَذِب", tr: "Yalan", okunus: "kizb", ornek: "كَذِبٍ" },
+  { ar: "أَمَانَة", tr: "Emanet", okunus: "emânet", ornek: "أَدَّى الْأَمَانَةَ" },
+  { ar: "خِيَانَة", tr: "Hıyanet", okunus: "hıyânet", ornek: "يَخُونُونَ" },
+  { ar: "رِزْق", tr: "Rızık", okunus: "rızık", ornek: "وَمِنْهُم مَّن يَرْزُقُ" },
+  { ar: "مَوْت", tr: "Ölüm", okunus: "mevt", ornek: "كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ" },
+  { ar: "حَيَاة", tr: "Hayat", okunus: "hayât", ornek: "الْحَيَاةُ الدُّنْيَا" },
+  { ar: "آخِرَة", tr: "Ahiret", okunus: "âhiret", ornek: "وَالْآخِرَةُ خَيْرٌ" },
+  { ar: "دُنْيَا", tr: "Dünya", okunus: "dünyâ", ornek: "مَتَاعَ الْحَيَاةِ الدُّنْيَا" },
+  { ar: "قِيَامَة", tr: "Kıyamet", okunus: "kıyâmet", ornek: "يَوْمَ الْقِيَامَةِ" },
 ];
 
 // ── 22: SURE BİLGİLERİ (seçme) ─────────────────────────────
@@ -326,8 +503,8 @@ export const KANAL_REHBERI: KanalIpucu[] = [
 // ── 48: TECVİD REHBERİ (madde 48) — temel kurallar, örneklerle ──
 export interface TecvidKurali { baslik: string; tanim: string; ornek: string; seviye: "temel" | "orta" | "ileri" }
 export const TECVID_KURALLARI: TecvidKurali[] = [
-  { baslik: "Nûn-u Sâkin ve Tenvîn: İzhar", tanim: "Nûn sâkin veya tenvînden sonra harf-i hal (ا هـ ع ح غ خ) gelirse nûn, ġunnasız ve açık okunur.", ornek: "مِنْ آمَنَ (min â-mene) · أَنْتُمْ henüz izharsız okunmaz — أَنْعَمْتَ (en'amte)", seviye: "temel" },
-  { baslik: "Nûn-u Sâkin ve Tenvîn: İdgam", tanim: "ي ر م ل و ن harflerinden biri gelirse nûn, sonraki harfe karışır (bʻaziyle ġunna: ي ن م و; ġunnasız: ر ل).", ornek: "مَنْ يَعْمَلْ (men ya'mel — ġunnalı) · مِنْ رَبِّهِمْ (mir-rabbihim — ġunnasız)", seviye: "temel" },
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İzhar", tanim: "Nûn sâkin veya tenvînden sonra harf-i hal (ا هـ ع ح غ خ) gelirse nûn, ġunnasız ve açık okunur.", ornek: "مِنْ آمَنَ (min â-mene) · أَنْتُمْ (entüm) · أَنْعَمْتَ (en'amte)", seviye: "temel" },
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İdgam", tanim: "ي ر م ل و ن harflerinden biri gelirse nûn, sonraki harfe karışır (bazılarıyla ġunna: ي ن م و; ġunnasız: ر ل).", ornek: "مَنْ يَعْمَلْ (men ya'mel — ġunnalı) · مِنْ رَبِّهِمْ (mir-rabbihim — ġunnasız)", seviye: "temel" },
   { baslik: "Nûn-u Sâkin ve Tenvîn: İklab", tanim: "ب (bâ) gelirse nûn, gizlice mîm'e çevrilir ve ġunnayla okunur — hatta üzerinde م yazılır.", ornek: "مِنْ بَعْدِ (mim-be'di) · سَمِيعٌ بَصِيرٌ (semî'um-basîrun)", seviye: "temel" },
   { baslik: "Nûn-u Sâkin ve Tenvîn: İhfa", tanim: "Kalan 15 harf gelirse nûn, ġunnayla gizlenir — dil harfe dokunmaz, burundan 2-3 vakt ġunna.", ornek: "مِنْ قَبْلِ (mink-kabli) · أَنْتَ (ante) · انْتُمْ (intum)", seviye: "temel" },
   { baslik: "Mîm-i Sâkin: İzhar-ı Şefevî", tanim: "Mîm sâkinden sonra harf-i şefevî (ف ب م و) gelirse mîm açık okunur — dudaklar hafif ayrılır.", ornek: "الْحَمْدُ لِلَّهِ (el-hamdu lillâh) · تَمْ كُنتُم (tum-kuntum)", seviye: "temel" },

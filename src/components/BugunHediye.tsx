@@ -25,8 +25,53 @@ const HADISLER: Array<{ metin: string; kaynak: string }> = [
   { metin: "Sadakalarınızla malınızı koruyun; sadaka mala zarar vermez.", kaynak: "Beyhaki, Şuab, 4/135" },
   { metin: "Güzel söz sadakadır.", kaynak: "Buhari, Tevhid, 61" },
   { metin: "Rabbine karşı çeşitli ibadetle hedefe ulaş: kim ona ulaşmaya çalışırsa kapıya vurulur, kim vazgeçerse kapı kapanır.", kaynak: "Tirmizi, Deavât, 104" },
+  { metin: "Sizin en hayırlınız, Kur'an'ı öğrenen ve onu öğretendir.", kaynak: "Buhari, Fezâilü'l-Kur'an, 21" },
+  { metin: "Kim Kur'an'dan bir harf okursa ona bir sevap vardır, her sevap on katıyla yazılır.", kaynak: "Tirmizi, Fezâilü'l-Kur'an, 16" },
+  { metin: "İki kelime ki dilde hafif, mizanda ağırdır, Rahmân'a sevimlidir: Sübhanallâhi ve bihamdihî, Sübhanallâhil-azîm.", kaynak: "Buhari, Tevhid, 58" },
+  { metin: "Namazın anahtarı temizliktir, tahrimi tekbirdir, tahlili tehiyyâtdır.", kaynak: "Ebu Dâvûd, Salât, 131" },
+  { metin: "Cömertlikten uzak durma; cömert olan, rahatında da sıkıntısında da verendir.", kaynak: "Tirmizi, Birr, 40 (meâl)" },
+  { metin: "Kim Allah'ın farzını eda ederse Allah ona daha fazlasını verir; kim farzı bırakırsa onu sorguya çeker.", kaynak: "Ebu Dâvûd, Salât, 2 (meâl)" },
+  { metin: "Sabır imanın yarısıdır, şükür de öbür yarısıdır.", kaynak: "Müslim, Zikir, 21" },
+  { metin: "Kıyamet gününde kulun ilk hesaba çekileceği amel namazdır; düzgünse kurtulmuştur.", kaynak: "Tirmizi, Salât, 188" },
+  { metin: "Rahim, Rahman'dan bir türedidir; kim rahmi (akrabayı) ziyaret ederse Allah da ona rahmetiyle yaklaşır.", kaynak: "Buhari, Edeb, 58 (meâl)" },
+  { metin: "Sana bir iyilik yapanı sev, ona karşılığını ver; yapamıyorsan onun için dua et.", kaynak: "Ebu Dâvûd, Edeb (meâl)" },
+  { metin: "Sıkıntının en ağırlaşan anında dua edenin duası reddedilmez.", kaynak: "Tirmizi, Deavât, 80" },
+  { metin: "Kim bir iyiliğe önderlik ederse ona onu yapanın sevabı gibidir verilir.", kaynak: "Müslim, Zikir, 17" },
+  { metin: "Dua, ibadetin özüdür; Allah'tan bir şey istemezsen bile dua et — bu, sana şer ve iyilikten korumayı öğretir.", kaynak: "Tirmizi, Deavât, 1" },
+  { metin: "Rüyanda beni gören, şeytan beni göremez; rüyada görülen şeytanın işi değildir.", kaynak: "Buhari (meâl)" },
+  { metin: "Kur'an tilâveti, kalpteki pası söker; kalbler ancak Kur'an ile parlar.", kaynak: "Deylemî (meâl)" },
+  { metin: "Her sabah insan eklemlerine sadaka borcu düşer: tesbih, hamd, tehlil ve tekbir onu eder.", kaynak: "Müslim, Zikir, 32" },
+  { metin: "Dünya, mü'min için zindan; kâfir içinse cennettir.", kaynak: "Müslim, Zühd, 1" },
+  { metin: "Allah güzeldir, güzelliği sever; kalbinizdeki kırgınlıkları atın.", kaynak: "Müslim, Birr, 145" },
+  { metin: "Cennet, ana-baba karnından çıkan çocuğun ayakları altındadır.", kaynak: "Nesâî, Birr, 5" },
+  { metin: "Kul beni anadıkça ben de onu anarım; beni bir mecliste ananlar, beni iki mecliste anarım.", kaynak: "Buhari, Tevhid, 15 (Kudsi hadis)" },
+  { metin: "Temizlik imandanandır; temiz olan mü'min Allah'a daha yakın olur.", kaynak: "Müslim, Tahâret, 1 (meâl)" },
+  { metin: "Birbirinize hediye verin; hediye kalplerdeki kırgınlığı siler.", kaynak: "Tirmizi, Vekâye, 6" },
+  { metin: "Komşusu açken tok yatan bizden değildir.", kaynak: "Buhari, Edeb, 4" },
+  { metin: "Hiçbir mü'min iki defa üst üste gözüne uyku girmeyecek şekilde aç kalır.", kaynak: "Buhari (meâl)" },
+  { metin: "İyilik eden, kendisine iyilik edene benzemektedir; kötülük edene karşılık vermeyen çok hayırlıdır.", kaynak: "Müslim (meâl)" },
+  { metin: "Selam verince karşılık vermek vaciptir; selam, mü'minler arasında bir hediyedir.", kaynak: "Buhari, Edeb (meâl)" },
+  { metin: "Namaz, mü'minin mir'acıdır — secde ile yükselir.", kaynak: "Müslim (meâl)" },
+  { metin: "Kişi, sevdiğiyle beraberdir; Kur'an'ı seven, Kur'an'la beraberdir.", kaynak: "Buhari, Edeb (meâl)" },
+  { metin: "Veren el, alan elden üstündür; sadaka malı eksiltmez, artırır.", kaynak: "Müslim, Zekât, 61 (meâl)" },
 ];
 
+// ★ HAFIZLIK TEMALI HEDİYELER (28.09, kullanıcı kararı): "hafızlığa uygun hediye ekle" —
+//    hafızlık ayetleri, hadisleri ve uygulanabilir ezber ipuçları. Her 4. içerik hediyesi buradan.
+const HAFIZLIK_HEDİYELERİ: Array<{ baslik: string; metin: string; kaynak?: string }> = [
+  { baslik: "Hafızlık Ayeti", metin: "Andolsun, Kur'an'ı hatırlatmak için kolaylaştırdık; fakat hatırlatan var mı? — bugün bir ayet ezberlemeyi dene, Allah kolaylaştırır.", kaynak: "Kamer 54:17" },
+  { baslik: "Hafızlık Hadisi", metin: "Kur'an sahiplerine 'Oku ve yüksel' denir — hafızlık, her ayetle bir makam yükseltir.", kaynak: "Ebu Dâvûd, Vitr, 26 (meâl)" },
+  { baslik: "Hafızlık Hadisi", metin: "Sizin en hayırlınız, Kur'an'ı öğrenen ve onu öğretendir — bugün öğrendiğin bir ayeti birine öğret.", kaynak: "Buhari, Fezâilü'l-Kur'an, 21" },
+  { baslik: "Hafızlık İpucu", metin: "Bugün bir cüz'ün son 3 ayetini 5 kez oku, sonra gözünü kapatıp tekrarla — sabah-akşam tekrar hafızayı çelikleştirir." },
+  { baslik: "Hafızlık İpucu", metin: "Uyumadan önce bugün en zor geldiğin ayeti 3 kez oku — uyku sırasında beyin ezberi mühürler." },
+  { baslik: "Hafızlık İpucu", metin: "Ayeti sesli oku, sesini kaydet, kendi kaydını dinle — kendini duymak ezberi hızlandırır." },
+  { baslik: "Hafızlık Dersi", metin: "Ayete'l-Kürsî'yi bugün 3 kez ezberden oku — 'kim yatağında Ayete'l-Kürsî okursa kendisine şeytandan koruyucu melek verilir' (Buhârî)." },
+  { baslik: "Hafızlık Dersi", metin: "İhlâs + Felak + Nâs'ı 3'er kez oku ve anlamlarını düşün — kısa ama zirve sureler." },
+  { baslik: "Hafızlık Fazileti", metin: "Kim Kur'an'dan bir harf okursa on sevap alır — bugün bir sayfa tilavet, bin sevap.", kaynak: "Tirmizi, Fezâilü'l-Kur'an, 16" },
+  { baslik: "Hafızlık İpucu", metin: "10 dakika ezber + 5 dakika mola × 3 tur: kısa süreli tekrarlı çalışma hem modern hem sünnet ruhuyla uyumlu." },
+  { baslik: "Hafızlık İpucu", metin: "Bugün Yâsîn'in ilk 5 ayetini oku — kalb-i Kur'an'ın kapısı aralanır." },
+  { baslik: "Hafızlık Dersi", metin: "Hafizlik Testi'nde zorlandığın sureleri not al — istatistik ekranı sana 'zorlandığın sureleri' zaten gösteriyor, onları bugün 3'er kez tekrarla." },
+];
 const ZIKIRLER: string[] = [
   "Bugün 33 Sübhanallâh çek — kalbini arındır 🌿",
   "Bugün 100 Salavat getir — dileğin için 🌹",
@@ -55,9 +100,9 @@ export interface BugunHediyeProps {
 
 export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }) => {
   const [acik, setAcik] = useState(false);
-  const [hediye, setHediye] = useState<{ tur: "hadis" | "zikir" | "video"; baslik: string; metin: string; kaynak?: string } | null>(null);
+  const [hediye, setHediye] = useState<{ tur: "hadis" | "zikir" | "video" | "hafizlik"; baslik: string; metin: string; kaynak?: string } | null>(null);
   const [hakkiAlindi, setHakkiAlindi] = useState(false);
-  const [alindi, setAlindi] = useState<{ tur: "hadis" | "zikir" | "video"; baslik: string; metin: string; kaynak?: string } | null>(null);
+  const [alindi, setAlindi] = useState<{ tur: "hadis" | "zikir" | "video" | "hafizlik"; baslik: string; metin: string; kaynak?: string } | null>(null);
   // ★ ALINAN HEDİYE GÖSTERİMİ: "Al" dedikten sonra kutu kapanıp ne aldığı kayboluyordu —
   //   artık onay ekranında NE alındığı açıkça yazıyor (kullanıcı kararı 28.09).
 
@@ -75,6 +120,11 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }
       } else if (tur % 2 === 1) {
         const h = gunSecimi(HADISLER, salt);
         setHediye({ tur: "hadis", baslik: "Bugünün Hediyesi: Hadis-i Şerif", metin: h.metin, kaynak: h.kaynak });
+      } else if (salt % 4 === 3) {
+        // ★ HAFIZLIK HEDİYESİ (28.09): her 4. içerik hediyesi hafızlık temalı —
+        //   "hafızlığa uygun hediye ekle" isteği. Baslik + metin + opsiyonel kaynak.
+        const h = gunSecimi(HAFIZLIK_HEDİYELERİ, salt);
+        setHediye({ tur: "hafizlik", baslik: `Bugünün Hediyesi: ${h.baslik}`, metin: h.metin, kaynak: h.kaynak });
       } else {
         const z = gunSecimi(ZIKIRLER, salt);
         setHediye({ tur: "zikir", baslik: "Bugünün Hediyesi: Zikir Daveti", metin: z });
@@ -145,7 +195,7 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }
 
             <h3 className="font-display text-[15px] font-black" style={{ color: "var(--accent-2)" }}>{hediye.baslik}</h3>
 
-            {hediye.tur === "hadis" ? (
+            {(hediye.tur === "hadis" || hediye.tur === "hafizlik") ? (
               <blockquote className="mt-3 rounded-xl bg-white/[.04] px-4 py-3">
                 <p className="text-[11.5px] leading-relaxed text-white/80">"{hediye.metin}"</p>
                 <p className="mt-2 text-[9px] font-bold" style={{ color: "var(--accent)" }}>— {hediye.kaynak}</p>
@@ -179,15 +229,15 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }
             <button type="button" onClick={() => setAlindi(null)} className="absolute right-3 top-3 rounded-full bg-white/5 p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white" aria-label="Kapat"><X size={14} /></button>
 
             <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: "linear-gradient(135deg,#34d399,var(--accent))" }}>
-              <span className="text-2xl">{alindi.tur === "video" ? "🎬" : alindi.tur === "hadis" ? "📿" : "🤲"}</span>
+              <span className="text-2xl">{alindi.tur === "video" ? "🎬" : alindi.tur === "hadis" ? "📿" : alindi.tur === "hafizlik" ? "🧠" : "🤲"}</span>
             </div>
 
             <h3 className="font-display text-[15px] font-black text-emerald-300">Hediyen hesabına geçti! 🎉</h3>
 
             <div className="mt-3 rounded-xl bg-white/[.04] px-4 py-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Bugün aldığın hediye</p>
-              <p className="mt-1 text-[13px] font-black text-white">{alindi.tur === "video" ? "🎬 Tam Sürüm 24 Saat" : alindi.tur === "hadis" ? "📿 Hadis-i Şerif" : "🤲 Zikir Daveti"}</p>
-              {alindi.tur === "hadis" ? (
+              <p className="mt-1 text-[13px] font-black text-white">{alindi.tur === "video" ? "🎬 Tam Sürüm 24 Saat" : alindi.tur === "hadis" ? "📿 Hadis-i Şerif" : alindi.tur === "hafizlik" ? "🧠 Hafızlık Hediyesi" : "🤲 Zikir Daveti"}</p>
+              {(alindi.tur === "hadis" || alindi.tur === "hafizlik") ? (
                 <blockquote className="mt-2">
                   <p className="text-[11.5px] leading-relaxed text-white/80">"{alindi.metin}"</p>
                   <p className="mt-1.5 text-[9px] font-bold" style={{ color: "var(--accent)" }}>— {alindi.kaynak}</p>

@@ -12,7 +12,7 @@ import { Search, ChevronLeft } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
   HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI, KISSA_LISTESI, SORU_CEVAP_ARŞIVI, TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI,
-  KELIME_KARTLARI, SURE_BİLGİLERİ, NAMAZ_REHBERİ, DUA_REHBERİ,
+  KELIME_KARTLARI, SURE_BİLGİLERİ, NAMAZ_REHBERİ, DUA_REHBERİ, BES_SART_SORULARI,
   HOCA_KARSILASTIRMA_AYETLER, camiHaritaUrl, camiListeUrl, KANAL_REHBERI,
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
@@ -108,14 +108,55 @@ const DuaSesSecici: React.FC<{ notify?: (m: string) => void }> = ({ notify }) =>
   );
 };
 
-// Ayet-bazlı (everyayah) kâriler — QuranLearnModal'ın RECITERS listesinden (ayet mp3'ü olanlar)
+/** 🔊 Kelime kartı okunuşu (28.09): önce Arapça sesle dene; cihazda Arapça TTS yoksa
+ *  latin okunuşu Türkçe sesle oku ("kalb" → kullanıcı okunuşunu duyar). */
+const kelimeOku = async (k: { ar: string; okunus: string }) => {
+  try {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const sesler = await sesleriBekle();
+    const arSes = sesler.find((s) => s.lang?.toLowerCase().startsWith("ar"));
+    const utt = new SpeechSynthesisUtterance(arSes ? k.ar : k.okunus);
+    utt.lang = arSes ? arSes.lang : "tr-TR";
+    if (arSes) utt.voice = arSes;
+    utt.rate = 0.85; // öğrenme için yavaş
+    window.speechSynthesis.speak(utt);
+  } catch { /* yoksay */ }
+};
+
+// Ayet-bazlı (everyayah) kâriler — QuranLearnModal'ın RECITERS listesiyle hizalı.
+// ★ GENİŞLETİLDİ (28.09, kullanıcı kararı): 6 → 28 kari — "hocaları çoğalt".
+// ★ et-Tablavi ÇIKARILDI (28.09, kullanıcı kararı): okuması bozuk/hatalı geliyordu —
+//   "sesler kötü okuma yanlış seslendirme kaldır iptal". QuranLearnModal'da da çıkarıldı.
 const KARILER = [
   { id: "Abdul_Basit_Murattal_192kbps", ad: "Abdulbasit (Murattal)" },
   { id: "Abdul_Basit_Mujawwad_128kbps", ad: "Abdulbasit (Mücavved)" },
   { id: "Husary_128kbps", ad: "el-Husari (Murattal)" },
   { id: "Husary_Mujawwad_64kbps", ad: "el-Husari (Mücavved)" },
   { id: "Minshawy_Murattal_128kbps", ad: "el-Minşavi" },
-  { id: "Mohammad_al_Tablaway_128kbps", ad: "et-Tablavi" },
+  { id: "Minshawy_Mujawwad_192kbps", ad: "el-Minşavi (Mücavved)" },
+  { id: "Alafasy_128kbps", ad: "Mişari Raşid el-Afasi" },
+  { id: "MaherAlMuaiqly128kbps", ad: "Mahir el-Muaykli (Kabe İmamı)" },
+  { id: "Saood_ash-Shuraym_128kbps", ad: "Sud eş-Şuraym (Kabe İmamı)" },
+  { id: "Abu_Bakr_Ash-Shaatree_128kbps", ad: "Ebu Bekir eş-Şatri" },
+  { id: "Hani_Rifai_192kbps", ad: "Hani er-Rifai" },
+  { id: "Ghamadi_40kbps", ad: "Saad el-Gamidi" },
+  { id: "Hudhaify_128kbps", ad: "Ali el-Hudaifi (Medine)" },
+  { id: "Muhammad_Ayyoub_128kbps", ad: "Muhammed Eyyub (Medine)" },
+  { id: "Yasser_Ad-Dussary_128kbps", ad: "Yaser ed-Dossari" },
+  { id: "Salah_Al_Budair_128kbps", ad: "Salah el-Budeyr" },
+  { id: "Sahl_Yassin_128kbps", ad: "Sehl Yasin (Medine)" },
+  { id: "Nasser_Alqatami_128kbps", ad: "Nasser el-Katami" },
+  { id: "Abdullah_Matroud_128kbps", ad: "Abdullah el-Metroud" },
+  { id: "Mahmoud_Ali_Al_Banna_32kbps", ad: "Mahmud Ali el-Benna" },
+  { id: "Muhammad_Jibreel_64kbps", ad: "Muhammed Cibril" },
+  { id: "Fares_Abbad_64kbps", ad: "Fares Abbad" },
+  { id: "Ali_Jaber_64kbps", ad: "Ali Cabir (Mescid-i Haram)" },
+  { id: "Ayman_Sowaid_64kbps", ad: "Eyman es-Suvayd" },
+  { id: "Akram_AlAlaqimy_128kbps", ad: "Ekrem el-Alakmi" },
+  { id: "Ibrahim_Akhdar_32kbps", ad: "İbrahim El-Ehdar" },
+  { id: "Muhsin_Al_Qasim_192kbps", ad: "Muhsin el-Kasım (Medine)" },
+  { id: "Menshawi_16kbps", ad: "el-Minşavi (Eski Kayıt)" },
 ];
 const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
@@ -321,6 +362,26 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 20: SORU-CEVAP ── */}
       {sekme === "soru" && (
         <div className="space-y-2">
+          {/* ★ İSLAM'IN 5 ŞARTI — MEZHEPLERE GÖRE FIKHİ SORU-CEVAP (28.09, kullanıcı kararı) */}
+          <p className="mt-1 mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">🕌 İslam'ın 5 Şartı — mezheplere göre fıkhi soru-cevap</p>
+          {BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)).map((b, bi) => (
+            <div key={`bs-${bi}`} className="rounded-xl border border-emerald-400/20 bg-emerald-500/[.04] p-3.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] font-black text-emerald-300">{b.sart}</span>
+                <p className="text-[11.5px] font-black text-white/90">❓ {b.soru}</p>
+              </div>
+              <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                {b.cevaplar.map((c) => (
+                  <div key={c.mezhep} className="rounded-lg border border-white/10 bg-white/[.03] p-2.5">
+                    <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{c.mezhep}</p>
+                    <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{c.metin}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {b.kaynak}</p>
+            </div>
+          ))}
+          <p className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">Genel soru-cevap arşivi</p>
           {filtreliSorular.map((s, i) => (
             <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
               <p className="text-[11.5px] font-black text-white/90">❓ {s.soru}</p>
@@ -335,20 +396,29 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 21: KELİME KARTLARI (flashcard) ── */}
       {sekme === "kelime" && (
         <>
-          <p className="mb-3 text-center text-[9px] text-white/40">Karta tıkla — anlamını gör. Kur'an'da en sık geçen kelimeler 🔤</p>
+          <p className="mb-3 text-center text-[9px] text-white/40">Karta tıkla — anlamını gör · 🔊 ile okunuşu dinle. Kur'an'da en sık geçen kelimeler 🔤</p>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {KELIME_KARTLARI.map((k, i) => (
-              <button key={i} type="button" onClick={() => setKartCevrildi(kartCevrildi === i ? null : i)}
-                className={`flex h-20 flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${kartCevrildi === i ? "border-[color:var(--accent)] bg-amber-500/10" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}>
-                {kartCevrildi === i ? (
-                  <>
-                    <p className="text-[10.5px] font-black leading-tight text-amber-200">{k.tr}</p>
-                    <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
-                  </>
-                ) : (
-                  <p className="font-arabic text-lg text-white/90">{k.ar}</p>
-                )}
-              </button>
+              <div key={i} className="relative">
+                <button type="button" onClick={() => setKartCevrildi(kartCevrildi === i ? null : i)}
+                  className={`flex h-20 w-full flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${kartCevrildi === i ? "border-[color:var(--accent)] bg-amber-500/10" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}>
+                  {kartCevrildi === i ? (
+                    <>
+                      <p className="text-[10.5px] font-black leading-tight text-amber-200">{k.tr}</p>
+                      <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
+                    </>
+                  ) : (
+                    <p className="font-arabic text-lg text-white/90">{k.ar}</p>
+                  )}
+                </button>
+                {/* ★ OKUNUŞ SESİ (28.09, kullanıcı kararı): tarayıcı TTS ile Arapça okunuş —
+                    latin okunuş öncelikli okunur; cihaz Arapça sesi yoksa latin metin okunur */}
+                <button type="button"
+                  onClick={(e) => { e.stopPropagation(); kelimeOku(k); }}
+                  title={`Okunuşu dinle: ${k.okunus}`}
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
+                >🔊</button>
+              </div>
             ))}
           </div>
           <p className="mt-3 text-center text-[8px] text-white/25">Kart 1: {KELIME_KARTLARI.length} kelime · V2'de 80 karta çıkacak</p>
@@ -458,7 +528,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             <div className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
               <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{ay.etiket}</p>
               <p className="mt-0.5 text-[11px] font-bold text-white/85">{ay.sureAdi} Suresi · {ay.ayet}. Ayet</p>
-              <div className="mt-2.5 grid gap-1.5 sm:grid-cols-2">
+              <div className="mt-2.5 grid max-h-[320px] gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2">
                 {KARILER.map((k, i) => (
                   <button key={k.id} type="button" onClick={() => hocaCaliyor && hocaIdx === i ? hocaDurdur() : hocaCal(i)}
                     className={`flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] font-bold transition ${hocaIdx === i && hocaCaliyor ? "bg-amber-500/20 text-amber-200 ring-1 ring-amber-400/40" : "bg-white/5 text-white/65 hover:bg-white/10"}`}>

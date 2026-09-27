@@ -391,6 +391,11 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   }, [notify]);
 
   // ── Arka plan görselini yükle (CORS-ok, canvas'ta kullanılabilir) ──
+  // ★ BUG DÜZELTMESİ (28.09, kullanıcı kararı): "galeriden resim seçtim ama üstüne ayet
+  //   yazılmadı" — ensureImage'in deps'i boş [] idi → kendiFoto state'ini MOUNT anındaki
+  //   null değeriyle donduruyordu (stale closure). Foto yüklense bile kendi-foto hep
+  //   null dönüyor, kart fotoğrafsız gradyanla çiziliyordu. Artık kendiFoto değişince
+  //   fonksiyon tazelenir → fotoğraf canvas'a girer, ayet altın hat üstüne yazılır.
   const ensureImage = useCallback(async (item: BgItem | null): Promise<HTMLImageElement | null> => {
     if (!item) return null;
     // 📸 Kendi fotoğrafı: önceden yüklenen Image döner (ağ isteği YOK)
@@ -408,7 +413,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       img.onerror = () => resolve(null); // görsel gelmezse gradyan palet çizilir
       img.src = item.src;
     });
-  }, []);
+  }, [kendiFoto]);
 
   // ── ÖNİZLEME ÇİZİMİ — indirme ile aynı drawCard ─────────
   useEffect(() => {
@@ -449,6 +454,11 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   // ── İNDİR — PNG olarak fotoğraf kaydeder ────────────────
   const download = useCallback(async (kind: "45" | "11" | "916") => {
     if (!ayet) return;
+    // ★ EMNİYET (28.09): kendi-foto seçili ama fotoğraf yüklenmemişse kullanıcıya net söyle
+    if (bgId === "kendi-foto" && !kendiFoto) {
+      notify?.("📸 Önce fotoğrafını yükle — sağ üstteki 'Fotoğraf Yükle' kutusundan seç");
+      return;
+    }
     setDownloading(true);
     try {
       const w = 1080;
@@ -476,7 +486,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     } finally {
       setDownloading(false);
     }
-  }, [ayet, bg, ayar, ensureImage, notify]);
+  }, [ayet, bg, bgId, kendiFoto, ayar, ensureImage, notify]);
 
   const shuffleBg = useCallback(() => {
     if (!filteredBgs.length) return;

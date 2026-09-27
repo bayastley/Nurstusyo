@@ -45,7 +45,7 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
     "Hucurat Suresi'nde 'Mü'minler ancak kardeştirler' denir. Kardeşlik, sevgi, saygı... Bu sure toplumsal barışın rehberidir. Dinle, uygula.",
   ],
   50: [ // Kaf
-    "Kaf Suresi, kıyamet gününü ve Allah'ın kudretini anlatır. 'Yere显示屏 baktığında ne görüyoruz? Yeryüzünü ne kadar genişlettik' — bu bir kudret, bir hikmet. Bu sureyi dinle, hayran kal.",
+    "Kaf Suresi, kıyamet gününü ve Allah'ın kudretini anlatır. 'Yere baktığında ne görüyoruz? Yeryüzünü ne kadar genişlettik' — bu bir kudret, bir hikmet. Bu sureyi dinle, hayran kal.",
     "Kaf Suresi'nde 'Allah'ın şanı yücedir' denir. Her şey O'nun kontrolünde, her şey O'nun yaratmasında. Bu sure teslimiyeti öğretir.",
   ],
   51: [ // Zariyat
@@ -70,7 +70,7 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
     "Rahmân Suresi, 'Rahmân'ın Teaching'i' olarak bilinir. 78 ayette Allah'ın nimetleri anlatılır ve her ayet 'O halde nimetlerin hangisini yalanlarsınız?' diye sorulur. Bu sure şükür dersidir.",
   ],
   56: [ // Vakia
-    "Vâkia Suresi, kıyamet gününü, cennet ve cehennemi detaylı anlatır. 'İnsanlar grup grup cennete ve cehenneme girecekler' — bu bir gerçek, bir uyarı. Bu sureyi dinle, prepare ol.",
+    "Vâkia Suresi, kıyamet gününü, cennet ve cehennemi detaylı anlatır. 'İnsanlar grup grup cennete ve cehenneme girecekler' — bu bir gerçek, bir uyarı. Bu sureyi dinle, hazırlıklı ol.",
     "Vâkia Suresi'nde 'Onlar ne yediklerini, ne içtiklerini sorarlar' denir. Cennette her nimet var: meyve, şarap, temiz sular... Bu sure cennetin güzelliğini hissettirir.",
   ],
   57: [ // Hadid
@@ -99,7 +99,7 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
   ],
   63: [ // Munafikun
     "Münafıkun Suresi, münafıklığın zararını ve samimiyetin önemini anlatır. 'Münafıklar cehennemin en alt tabakasındadırlar' — bu bir uyarı. Samimi ol, münafık olma.",
-    "Münafıkun Suresi'nde 'Münafıklar словно köpük gibidirler' denir. Dışarıdan güzel görünürler ama içeride boşluk vardır. Samimi ol, içten inan. Bu sure samimiyeti öğretir.",
+    "Münafıkun Suresi'nde 'Münafıklar köpük gibidirler' denir. Dışarıdan güzel görünürler ama içeride boşluk vardır. Samimi ol, içten inan. Bu sure samimiyeti öğretir.",
   ],
   64: [ // Tegabün
     "Teğabün Suresi, ahiretin Preparedness'ini ve Allah'ın kudretini anlatır. 'Allah'tan gelmiş olan bir gerçekle imtihan ediliyor musunuz?' denir. Hazırlıklı ol, bu sureyi dinle.",
@@ -115,7 +115,7 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
   ],
   67: [ // Mülk
     "Mülk Suresi, yaratılışın mucizesini ve ahiretin ciddiyetini anlatır. 'Mülk sahibi Allah puffsndır, O'ndan başka ilah yoktur' — bu bir teslimiyet. Gece uyumadan önce okunması tavsiye edilir.",
-    "Mülk Suresi'nde 'Yedi göğü倒装 yarattık' denir. Allah'ın kudretinin sınırı yok. Hz. Peygamber (s.a.v.) bu sureyi her gece okurdu. Sen de bu sureyi gece oku, melekler seni korur.",
+    "Mülk Suresi'nde 'Yedi göğü kat kat yarattık' denir. Allah'ın kudretinin sınırı yok. Hz. Peygamber (s.a.v.) bu sureyi her gece okurdu. Sen de bu sureyi gece oku, melekler seni korur.",
     "Hz. Peygamber (s.a.v.) buyurdu ki: 'Mülk Suresi'nde bin ayetin bereketi vardır.' Bu sureyi gece okuyan kişi cehennemden korunur. Bu sure bir kalkandır, bir şifadır.",
   ],
   68: [ // Kalem
@@ -135,8 +135,8 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
     "Nuh Suresi'nde Hz. Nuh (a.s.)'ın kavmine olan sevgisi ve onları kurtarma çabası anlatılır. 'Rabbim,help refused' dedi ama Allah onu yalnız bırakmadı. Sen de yalnız hissetme.",
   ],
   72: [ // Cin
-    "Cin Suresi, cinlerin imanını ve Hz. Peygamber (s.a.v.)'in east'ını anlatır. 'Biz thấy bir grup insan...' — bu bir gerçek, bir delil. Bu sureyi dinle, görünmeyen dünyanın gücünü hisset.",
-    "Cin Suresi'nde 'Biz Muslim'lerin bir gruptur, kendilerine-document' denir. Cinler de Allah'a inanır. Bu sure gam世界的 otherworldly'ı gösterir.",
+    "Cin Suresi, cinlerin imanını ve Hz. Peygamber (s.a.v.)'in görevini anlatır. 'Biz iman eden bir grup insan...' — bu bir gerçek, bir delil. Bu sureyi dinle, görünmeyen dünyanın gücünü hisset.",
+    "Cin Suresi'nde 'Şüphe yok ki cinler arasından okumakta olan bir grup vardır' denir. Cinler de Allah'a inanır. Bu sure, görünmeyen âlemin imanını gösterir.",
   ],
   73: [ // Müzzemmil
     "Müzzemmil Suresi, gece namazının ve sabah namazının önemini anlatır. 'Ey örtüsüne bürünen, gece namazını kıl' — bu bir emir, bir davet. Bu sure gece namazının faziletini hatırlatır.",

@@ -98,7 +98,7 @@ export const AYET_KARTILARI_MEGA2: AyetKarti[] = [
     tr: "Her canlı ölümü tadacaktır." },
   { id: "m2-3-193", mood: "af", title: "Rabbimize İman Edin", source: "Âl-i İmrân Suresi • 193. Ayet",
     ar: "رَبَّنَا فَاغْفِرْ لَنَا ذُنُوبَنَا وَكَفِّرْ عَنَّا سَيِّئَاتِنَا",
-    tr: "Rabbimiz, günahlarımızı bağışla, kötülüklerimizi örte检查; katında ölümü bize iyi kıl." },
+    tr: "Rabbimiz, günahlarımızı bağışla, kötülüklerimizi örte; katında ölümü bize iyi kıl." },
 
   // ══ EN'ÂM — devam ═════════════════════════════════════
   { id: "m2-6-12", mood: "rahmet", title: "Kendi Üzerine Yazdı", source: "En'âm Suresi • 12. Ayet",

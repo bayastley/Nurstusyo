@@ -98,13 +98,21 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
       const hedef = hedefler.get(h.ay * 40 + h.gun);
       if (hedef && !bulunan.has(hedef.ad)) bulunan.set(hedef.ad, { gun: hedef, tarih: d });
     }
+    // ★ TARİH GÖSTERİMİ (28.09, kullanıcı kararı): "süreleri bide tarihleri yazsın
+    //   örneğin 1 nisan" — her sıradaki gün artık GREGORYEN tarihini de taşıyor
+    //   (örn. "1 Nisan 2027, Çarşamba"). Cuma için tarih bugünden hesaplanır.
+    const tarihStr = (d: Date) =>
+      d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", weekday: "long" });
     const liste = [...bulunan.values()].map(({ gun, tarih }) => ({
       ...gun,
       gunFark: Math.round((tarih.getTime() - new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate()).getTime()) / 86_400_000),
+      gTarih: tarihStr(tarih),
     }));
     // Cuma: bugün Cuma ise 0, değilse gelecek Cumaya kalan gün
     const cumaFark = (5 - bugun.getDay() + 7) % 7;
-    liste.push({ ...MUHIM_GUNLER[0], gunFark: cumaFark });
+    const cumaTarihi = new Date(bugun);
+    cumaTarihi.setDate(cumaTarihi.getDate() + cumaFark);
+    liste.push({ ...MUHIM_GUNLER[0], gunFark: cumaFark, gTarih: tarihStr(cumaTarihi) });
     return liste.sort((a, b) => a.gunFark - b.gunFark).slice(0, 5);
   }, [hicri, bugun]);
 
@@ -165,12 +173,13 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
         )}
       </div>
 
-      {/* ── SIRADAKİ GÜNLER ───────────────────────────── */}
+      {/* ── SIRADAKİ GÜNLER — kalıcı tarihler gösterilir (örn. "1 Nisan 2027, Çarşamba") ── */}
       <div className="mb-3 space-y-1.5">
         {siradaki.map((g) => (
-          <div key={g.ad} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.02] px-3 py-2">
+          <div key={g.ad} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[.02] px-3 py-2">
             <div className="min-w-0">
               <p className="text-[10.5px] font-bold text-white/85">{g.emoji} {g.ad}</p>
+              {g.gTarih && <p className="text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>📅 {g.gTarih}</p>}
               <p className="truncate text-[9px] text-white/45">{g.tema}</p>
             </div>
             <span className="ml-2 shrink-0 rounded-lg px-2 py-1 text-[9.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>

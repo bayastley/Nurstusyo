@@ -136,7 +136,8 @@ const RECITERS: Reciter[] = [
   { id: "Hudhaify_128kbps", name: "Ali el-Hudaifi (Medine)" },
   { id: "Ibrahim_Akhdar_32kbps", name: "İbrahim El-Ehdar" },
   { id: "Mahmoud_Ali_Al_Banna_32kbps", name: "Mahmud Ali el-Benna" },
-  { id: "Mohammad_al_Tablaway_128kbps", name: "Muhammed et-Tablavi" },
+  // ★ et-Tablavi ÇIKARILDI (28.09, kullanıcı kararı): okuması hatalı geliyordu —
+  //   "sesler kötü okuma yanlış seslendirme kaldır iptal". KesfetModal KARİLER'den de çıkarıldı.
   { id: "Muhammad_Ayyoub_128kbps", name: "Muhammed Eyyub (Medine)", full: ["ayyub", 8] },
   { id: "Muhammad_Jibreel_64kbps", name: "Muhammed Cibril", full: ["jbrl", 8] },
   { id: "Muhsin_Al_Qasim_192kbps", name: "Muhsin el-Kasım (Medine)" },
@@ -286,10 +287,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         .then(t => {
           const m = t.match(/^loc=(\w{2})$/m);
           if (m) { const b = ulkeToBolge(m[1]); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
+          return t;
         })
-        .then(r => r.json())
-        .then(d => { if (d?.country_code) { const b = ulkeToBolge(d.country_code); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
-                    else { const b = dilToBolge(navigator.language); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } } })
+        .then(txt => {
+          // ipapi.co text/json karışık dönebilir — JSON parse edilebiliyorsa ülke kodunu oku
+          try {
+            const d = JSON.parse(txt);
+            if (d?.country_code) { const b = ulkeToBolge(d.country_code); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
+          } catch { /* text yanıtı — dil fallback'i alttaki catch'te */ }
+        })
         .catch(() => { const b = dilToBolge(navigator.language); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } });
     }
   }, []);
@@ -304,6 +310,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [radioPaused, setRadioPaused] = useState(false);
   const radioRef = useRef<HTMLAudioElement | null>(null);
   const radioHlsRef = useRef<Hls | null>(null); // ★ HLS kanallar (Diyanet m3u8) için hls.js örneği
+  // ★ KARŞILIKLI DURDURMA KÖPRÜSÜ (28.09): stopAudio (bileşende daha aşağıda tanımlı)
+  //   radyoyu da durduracak — ama radioTimerTemizle/radioHlsTemizle fonksiyonları o
+  //   noktada henüz tanımsız (TDZ). Çözüm: temizlik fonksiyonlarını ref üzerinden
+  //   kaydet; stopAudio çağrı anında ref'ten erişir (TDZ hatasız, taze closure).
+  const radioTimerTemizleRef = useRef<(() => void) | null>(null);
+  const radioHlsTemizleRef = useRef<(() => void) | null>(null);
   if (!radioRef.current && typeof Audio !== "undefined") {
     radioRef.current = new Audio();
     radioRef.current.preload = "none";
@@ -395,6 +407,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const radioHlsTemizle = () => {
     if (radioHlsRef.current) { radioHlsRef.current.destroy(); radioHlsRef.current = null; }
   };
+  // ★ KÖPRÜ KAYDI: stopAudio (yukarıda) bu temizlikleri ref üzerinden çağırır —
+  //   her render'da taze fonksiyonlar ref'e yazılır (stale closure yok).
+  radioTimerTemizleRef.current = radioTimerTemizle;
+  radioHlsTemizleRef.current = radioHlsTemizle;
   // Kanal değişince çal (hem kullanıcı hem otomatik yedek buradan geçer)
   useEffect(() => {
     const r = radioRef.current;
@@ -750,6 +766,16 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const stopAudio = useCallback(() => {
     const a = audioRef.current; if (!a) return;
     a.pause(); a.onended = null; a.ontimeupdate = null;
+    // ★ KARŞILIKLI DURDURMA (28.09, kullanıcı kararı): "radyo ile kuran dinliyorum aynı anda
+    //   çalışıyor, biri çalışınca diğeri dursun" — ayet/kelime sesi dururken radyo da dursun.
+    //   (Ters yol zaten vardı: toggleRadio açılırken stopAudio çağırıyordu.)
+    //   NOT: radioTimerTemizle/radioHlsTemizle bu noktada TANIMLI DEĞİL (daha aşağıda) —
+    //   TDZ hatası olmasın diye doğrudan ref/state üzerinden temizlik yapıyoruz.
+    const r = radioRef.current;
+    if (r) { r.pause(); }
+    radioTimerTemizleRef.current?.();
+    radioHlsTemizleRef.current?.();
+    setRadioOn(false); setRadioNote(""); setRadioPaused(false);
   }, []);
 
   // ★ GÜNCEL AYET REFİ: ses her zaman EKRANDAKİ ayeti okur (eski closure taşımaz)

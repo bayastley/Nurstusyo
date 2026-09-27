@@ -62,6 +62,13 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   }, [metin, open, accessTier, isMasterSurum]);
 
   // ── Uygula: mevcut stüdyo akışlarıyla sahne kur ───────────
+  // ★ ÇEŞİTLİLİK DÜZELTMESİ (28.09, kullanıcı kararı): "hep aynı şeyler çıkmasın" —
+  //   eskiden tek/cift/yolculuk FARKI YOKTU: hepsi cats[0]'ı atıyordu. Artık:
+  //   • Tek Sahne → ana kategori (cats[0])
+  //   • İkili Kurgu → ana kategori atanır; sonra 600 ms sonra destek kategorisi (cats[1])
+  //     atanarak ayetler iki atmosfer arasında dönüşümlü dağıtılır
+  //   • Yolculuk → açılış (cats[0]) + 600ms sonra orta (cats[1]) + 1200ms sonra final
+  //     (cats[2]) — hikâye yayı gerçekten 3 farklı kategoride kurulur
   const uygula = useCallback(async () => {
     if (!aktifMood || uygulaniyor) return;
     if (cats.length === 0) {
@@ -74,20 +81,24 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
         randomizeBackgrounds(cat);
         if (aktifMood.filtre) setCinematic(aktifMood.filtre);
       };
+      const bekle = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
 
       if (senaryo === "tek") {
         // Tek Sahne: ana kategori
         yolu(cats[0]);
       } else if (senaryo === "cift") {
-        // İkili Kurgu: ana kategori şimdi; destek kategorisi yol haritası notuyla
+        // İkili Kurgu: ana şimdi, destek 600 ms sonra — iki kategori dönüşümlü dağıtılır
         yolu(cats[0]);
-        // 2. kategori bilgisini plan metnine işledik; kullanıcı "Rastgele Ata" ile
-        // destek kategorisine tek tıkla geçebilir (aynı akış, sahte kasa yok).
+        if (cats[1] && cats[1] !== cats[0]) { await bekle(600); yolu(cats[1]); }
       } else {
-        // Yolculuk: ana kategoriden başlar; öneriler metinde
+        // Yolculuk: açılış → orta → final — 3 farklı kategori, hikâye yayı
         yolu(cats[0]);
+        if (cats[1] && cats[1] !== cats[0]) { await bekle(600); yolu(cats[1]); }
+        const final = cats[2] ?? cats[1];
+        if (final && final !== cats[0] && final !== cats[1]) { await bekle(600); yolu(final); }
       }
-      notify?.(`✨ "${aktifMood.ad}" sahnesi stüdyoya uygulandı — ${aktifMood.filtre !== "orijinal" ? "sinematik filtre + " : ""}atmosfer hazır!`);
+      const kategoriSayisi = senaryo === "tek" ? 1 : senaryo === "cift" ? Math.min(2, cats.length) : Math.min(3, cats.length);
+      notify?.(`✨ "${aktifMood.ad}" sahnesi stüdyoya uygulandı — ${kategoriSayisi} kategori ${aktifMood.filtre !== "orijinal" ? "+ sinematik filtre " : ""}kullanıldı!`);
       onClose();
     } catch {
       notify?.("Uygulama sırasında bir sorun oldu — tekrar dene");
@@ -103,11 +114,11 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
     if (senaryo === "tek") return `Tüm sahne "${catLabel(cats[0])}" kategorisinden kurulacak.`;
     if (senaryo === "cift") {
       const destek = cats[1] ?? cats[0];
-      return `Ana sahne "${catLabel(cats[0])}", destek sahne "${catLabel(destek)}" — şimdi ana kategori atanır; destek kategorisine stüdyoda tek tıkla geçebilirsin.`;
+      return `Ana sahne "${catLabel(cats[0])}" + destek sahne "${catLabel(destek)}" — Uygula'ya basınca İKİ kategori birden atanır, ayetler iki atmosfer arasında dönüşümlü dağıtılır.`;
     }
     const orta = cats[1] ?? cats[0];
     const final = cats[2] ?? orta;
-    return `Yolculuk planı: açılış "${catLabel(cats[0])}" → orta "${catLabel(orta)}" → final "${catLabel(final)}". Şimdi açılış atanır; stüdyoda diğer kategorilere "Rastgele Ata" ile geçebilirsin.`;
+    return `Yolculuk planı: açılış "${catLabel(cats[0])}" → orta "${catLabel(orta)}" → final "${catLabel(final)}" — Uygula'ya basınca ÜÇ kategori sırayla atanır, hikâye yayı otomatik kurulur.`;
   }, [aktifMood, cats, senaryo]);
 
   if (!open) return null;

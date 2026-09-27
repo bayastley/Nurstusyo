@@ -72,6 +72,13 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const [yukleniyor, setYukleniyor] = useState(false);
   const [secim, setSecim] = useState<number | null>(null); // seçilen index
   const [puan, setPuan] = useState({ dogru: 0, toplam: 0 });
+  // ★ YANLIŞ SAYACI + SORU GEÇMİŞİ (28.09, kullanıcı kararı): "doğru var ama yanlış kaç
+  //   tane yok" + özette her soruya "neden yanlış" açıklaması istendi. Geçmişte her soru
+  //   için sure/ayet + doğru devam metni tutulur; özet ekranda listelenir.
+  const [yanlis, setYanlis] = useState(0);
+  const [gecmis, setGecmis] = useState<Array<{ sn: string; a: number; dogru: boolean; devam: string }>>([]);
+  // ★ TUR ÖZETİ (28.09): "Turu Bitir → Özet" — İyi/Orta/Zayıf tabiri + neden/açıklama listesi
+  const [ozetAcik, setOzetAcik] = useState(false);
   // ★ Zorluk seviyesi + tur takibi (5 soruluk turlar)
   const [seviye, setSeviye] = useState<SeviyeId>("kolay");
   const [seviyeSecili, setSeviyeSecili] = useState(false);
@@ -82,18 +89,28 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const [ist, setIst] = useState<HafizlikIstatistik>(() => hafizlikIstOku());
   // ★ Kaldığın yerden devam (madde 38)
   const [devam, setDevam] = useState(() => hafizlikDevamOku());
+  // ★ Sınırsız mod otomatik-tekrar referansları (28.09): modal kapanınca zamanlayıcı durur
+  const yenidenDeneRef = React.useRef(0);
+  const openRef = React.useRef(open);
+  const seviyeSeciliRef = React.useRef(seviyeSecili);
+  React.useEffect(() => { openRef.current = open; }, [open]);
+  React.useEffect(() => { seviyeSeciliRef.current = seviyeSecili; }, [seviyeSecili]);
 
-  const soruHazirla = useCallback(async () => {
+  // ★ SORU ÜRETİMİ (28.09): sınırsız modda "1 sorudan başka yok" sorunu — soruHazirla
+  //   başarısız olunca (API yavaş/hata) kullanıcı boş ekranda kalıyordu. Artık: havuz
+  //   TAZELENİR (splice havuzu tüketmişti) + 12 sure denenir + hata olursa 2 sn sonra
+  //   OTOMATİK yeniden dener (maks. 5 kez). "1000 yap" isteği böylece karşılanır —
+  //   sorular API'den gelmeye devam eder, kullanıcı durmak istediğinde X ile çıkar.
+  const soruHazirla = useCallback(async (sessiz = false) => {
     setYukleniyor(true);
-    setSecim(null);
-    setSoru(null);
+    if (!sessiz) { setSecim(null); setSoru(null); }
     try {
-      // Seçili zorluk seviyesinin havuzundan rastgele sure çek
-      // ★ Retry: kısa surelerde uzun ayet bulunamayabilir → 8 farklı sure dene (havuz genişledi)
       const havuz = [...(SEVIYELER.find(s => s.id === seviye)?.sureler ?? TEST_SURELERI)];
       let soruPaket: { sn: number; d: any } | null = null;
-      for (let deneme = 0; deneme < 8 && !soruPaket; deneme++) {
-        const sn = havuz.splice(Math.floor(Math.random() * havuz.length), 1)[0] ?? TEST_SURELERI[0];
+      for (let deneme = 0; deneme < 12 && !soruPaket; deneme++) {
+        // Havuz boşaldıysa tazele — uzun turlarda aynı sureler tekrar gelebilir (istenen davranış)
+        if (havuz.length === 0) havuz.push(...(SEVIYELER.find(s => s.id === seviye)?.sureler ?? TEST_SURELERI));
+        const sn = havuz.splice(Math.floor(Math.random() * havuz.length), 1)[0];
         const r = await fetch(`https://api.alquran.cloud/v1/surah/${sn}/editions/quran-uthmani,tr.diyanet`);
         const d = await r.json();
         if (d.code !== 200) continue;
@@ -131,7 +148,14 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
       setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler });
     } catch {
-      notify?.("⚠️ Soru hazırlanamadı — tekrar dener misin?");
+      notify?.("⚠️ Soru hazırlanamadı — birkaç saniye içinde otomatik tekrar denecek…");
+      // ★ OTOMATİK TEKRAR: sınırsız modda takılma olmasın — 2 sn sonra sessizce yeniden dener
+      if (yenidenDeneRef.current < 5) {
+        yenidenDeneRef.current += 1;
+        window.setTimeout(() => { if (openRef.current && seviyeSeciliRef.current) soruHazirla(true); }, 2000);
+      } else {
+        notify?.("❌ Soru üretilemedi — internet bağlantını kontrol et, seviye ekranına dönmek için üstteki ← tuşunu kullan");
+      }
     } finally {
       setYukleniyor(false);
     }
@@ -141,6 +165,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     if (open && seviyeSecili && !soru && !yukleniyor) soruHazirla();
     if (!open) {
       setSoru(null); setPuan({ dogru: 0, toplam: 0 }); setSeviyeSecili(false);
+      setYanlis(0); setGecmis([]); setOzetAcik(false); yenidenDeneRef.current = 0;
       // ★ Açılışta taze oku — kapanınca sıfırla ki sonraki açılışta devam/istatistik güncel olsun (madde 38 & 52)
       setDevam(hafizlikDevamOku()); setIst(hafizlikIstOku());
     }
@@ -154,11 +179,38 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     setSecim(i);
     const dogruMu = soru.secenekler[i] === soru.devam;
     setPuan((p) => ({ dogru: p.dogru + (dogruMu ? 1 : 0), toplam: p.toplam + 1 }));
+    if (!dogruMu) setYanlis((v) => v + 1);
+    // ★ Geçmişe kaydet — özette "neden yanlış" listesi bununla kurulur
+    setGecmis((g) => [...g, { sn: soru.sn, a: soru.a, dogru: dogruMu, devam: soru.devam }]);
     // ★ İstatistik + rozet kaydı (madde 52 & 16) — yalnız cihazda
     hafizlikIstKaydet(soru.s, dogruMu);
     setIst(hafizlikIstOku());
     rozetleriTazele();
   };
+
+  // ★ GERİ TUŞU (28.09, kullanıcı kararı): "hafızlık zorluk derecesi kısmı seçildikten
+  //   sonra geri tuşu ekle" — soru ekranından seviye ekranına döner; tur istatistiği
+  //   istatistiğe işlenmiş olarak kalır (hak edilmemiş puan silinmez).
+  const seviyeEkraninaDon = () => {
+    hocaAudioPauseGuvenli();
+    setSeviyeSecili(false);
+    setSoru(null);
+    setSecim(null);
+  };
+  // Turu istediği an bitirmek için: "Turu Bitir" de özete götürür
+  const turOzetiGoster = () => {
+    if (soru && secim !== null) hafizlikDevamKaydet(seviye, puan.dogru, puan.toplam);
+    setOzetAcik(true);
+  };
+  // Yeni tur: sayaçlar sıfır, özet kapanır, ilk soru gelir
+  const yeniTurBaslat = () => {
+    setOzetAcik(false); setSoru(null); setSecim(null);
+    setPuan({ dogru: 0, toplam: 0 }); setYanlis(0); setGecmis([]);
+    yenidenDeneRef.current = 0;
+    hafizlikDevamKaydet(seviye, 0, 0);
+  };
+  // Ses ref'i yok — güvenlik için boş; geri tuşu sadece state temizler.
+  const hocaAudioPauseGuvenli = () => { /* future-proof: ses durdurma gerekirse */ };
 
   return (
     <Modal title="Hafızlık Testi" sub="Devamını getir — ayeti tamamla, hafızanı test et 🧠" onClose={onClose}>
@@ -168,7 +220,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
           {/* ★ KALDIĞIN YERDEN DEVAM (madde 38) */}
           {devam && !istGoster && (
             <button type="button"
-              onClick={() => { setSeviye((devam.seviye as SeviyeId) ?? "kolay"); setSeviyeSecili(true); setPuan({ dogru: 0, toplam: 0 }); }}
+              onClick={() => { setSeviye((devam.seviye as SeviyeId) ?? "kolay"); setSeviyeSecili(true); setPuan({ dogru: 0, toplam: 0 }); setYanlis(0); setGecmis([]); setOzetAcik(false); yenidenDeneRef.current = 0; }}
               className="flex w-full items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-500/[.08] p-3 text-left transition hover:border-amber-400/50">
               <span className="text-xl">⚡</span>
               <div className="min-w-0 flex-1">
@@ -237,7 +289,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
           <p className="mb-2 text-center text-[10px] text-white/50">Zorluk seviyesi seç:</p>
           {SEVIYELER.map((s) => (
             <button key={s.id} type="button"
-              onClick={() => { setSeviye(s.id); setSeviyeSecili(true); setPuan({ dogru: 0, toplam: 0 }); hafizlikDevamKaydet(s.id, 0, 0); }}
+              onClick={() => { setSeviye(s.id); setSeviyeSecili(true); setPuan({ dogru: 0, toplam: 0 }); setYanlis(0); setGecmis([]); setOzetAcik(false); yenidenDeneRef.current = 0; hafizlikDevamKaydet(s.id, 0, 0); }}
               className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.03] p-3.5 text-left transition hover:border-white/25 hover:bg-white/[.05]">
               <span className="text-2xl">{s.emoji}</span>
               <div className="min-w-0 flex-1">
@@ -261,19 +313,73 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
                 </button>
               ))}
             </div>
-            {turBoyu === 0 && <p className="mt-1.5 text-center text-[8.5px] text-white/35">♾️ Sınırsız modda sorular bitmez — durmak istediğinde X ile çık, istatistiğin kayıtlı kalır</p>}
+            {turBoyu === 0 && <p className="mt-1.5 text-center text-[8.5px] text-white/35">♾️ Sınırsız modda sorular bitmez — durmak istediğinde üstteki "Turu Bitir" ile özet gör, X ile çıkarsan istatistiğin kayıtlı kalır</p>}
           </div>
         </div>
+      ) : ozetAcik ? (
+        <>
+        {/* ★ TUR ÖZETİ (28.09): İyi/Orta/Zayıf tabiri + yanlışların neden/açıklaması */}
+        {(() => {
+          const toplam = puan.toplam || 1;
+          const yuzde = Math.round((puan.dogru / toplam) * 100);
+          const tabir = yuzde >= 80 ? { ad: "İYİ", emoji: "🌟", renk: "text-emerald-300", bg: "bg-emerald-500/10 border-emerald-400/30", mesaj: "Maşâallah! Hafızanın sağlam — bu tempoyla devam!" }
+            : yuzde >= 60 ? { ad: "ORTA", emoji: "🌿", renk: "text-amber-300", bg: "bg-amber-500/10 border-amber-400/30", mesaj: "Fena değil — zorlandığın yerleri tekrar edince İyi olacak." }
+            : { ad: "ZAYIF", emoji: "🌱", renk: "text-red-300", bg: "bg-red-500/10 border-red-400/30", mesaj: "Endişelenme — tekrar, hafızlığın anası. Aynı sureleri bir daha oku." };
+          const yanlislar = gecmis.filter((g) => !g.dogru);
+          return (
+            <>
+              <div className={`mb-3 rounded-xl border p-4 text-center ${tabir.bg}`}>
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/45">Tur özeti</p>
+                <p className={`mt-1 font-display text-[22px] font-black ${tabir.renk}`}>{tabir.emoji} {tabir.ad}</p>
+                <p className="mt-0.5 text-[13px] font-black text-white">✓ {puan.dogru} doğru · ✗ {yanlis} yanlış · {puan.dogru}/{puan.toplam} (%{yuzde})</p>
+                <p className="mt-1.5 text-[10px] leading-relaxed text-white/70">{tabir.mesaj}</p>
+                {yuzde >= 80 && <p className="mt-1 text-[9px] font-bold text-emerald-300/80">🎁 İpucu: Bugünün Hediyesi'nde sana hafızlığa uygun hediyeler var — ana ekrandaki 🎁 butonuna bak!</p>}
+                {yanlislar.length > 0 && <p className="mt-1 text-[9px] text-amber-200/70">📖 Hafızlığa uygun: aşağıdaki ayetleri bugün 3 kez oku, yarın aynı testte zorlanmazsın.</p>}
+              </div>
+
+              {yanlislar.length > 0 && (
+                <div className="mb-3 space-y-1.5">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/45">Neden yanlış? — doğrusuyla birlikte</p>
+                  {yanlislar.map((y, i) => (
+                    <div key={i} className="rounded-xl border border-red-400/20 bg-red-500/[.06] p-2.5">
+                      <p className="text-[9.5px] font-black text-red-200">✗ {y.sn} · {y.a}. Ayet — devamını bilemedin</p>
+                      <p className="mt-1 text-right font-arabic text-[12px] leading-relaxed text-emerald-200/90" dir="rtl">{y.devam}</p>
+                      <p className="mt-1 text-[8.5px] text-white/45">↑ Doğrusu bu — bugün 3 kez okuman yeterli</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {yanlislar.length === 0 && puan.toplam > 0 && (
+                <p className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-center text-[10px] font-bold text-emerald-200">🏆 Tek yanlışın yok — kurban ol, sen gerçek hafızsın!</p>
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <button type="button" onClick={yeniTurBaslat}
+                  className="rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
+                  style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                  Yeni Tur Başlat →
+                </button>
+                <button type="button" onClick={() => { setOzetAcik(false); seviyeEkraninaDon(); }}
+                  className="rounded-xl border border-white/15 py-3 text-[11px] font-bold text-white/70 transition hover:bg-white/5 hover:text-white">
+                  ← Seviye Değiştir
+                </button>
+              </div>
+            </>
+          );
+        })()}
+        </>
       ) : (
       <>
-      {/* Seviye göstergesi + puan bandı */}
-      <div className="mb-3 flex items-center justify-center gap-3 rounded-xl bg-white/[.04] py-2 text-[10px] font-bold text-white/60">
-        <Brain size={13} style={{ color: "var(--accent)" }} />
-        <span>{SEVIYELER.find(s => s.id === seviye)?.emoji} {SEVIYELER.find(s => s.id === seviye)?.ad}</span>
-        <span>·</span>
-        <span>Doğru: <b className="text-emerald-300">{puan.dogru}</b></span>
-        <span>·</span>
-        <span>Tur: <b className="text-white/80">{turBoyu === 0 ? `${puan.toplam + (soru ? 1 : 0)}` : `${Math.min(puan.toplam + (soru ? 1 : 0), turBoyu)}/${turBoyu}`}</b></span>
+      {/* ★ GERİ TUŞU + Seviye göstergesi + puan bandı (28.09) */}
+      <div className="mb-3 flex items-center gap-2 rounded-xl bg-white/[.04] px-2.5 py-2 text-[10px] font-bold text-white/60">
+        <button type="button" onClick={seviyeEkraninaDon} title="Seviye ekranına dön"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/70 transition hover:bg-white/15 hover:text-white">←</button>
+        <Brain size={13} className="shrink-0" style={{ color: "var(--accent)" }} />
+        <span className="shrink-0">{SEVIYELER.find(s => s.id === seviye)?.emoji} {SEVIYELER.find(s => s.id === seviye)?.ad}</span>
+        <span className="shrink-0">·</span>
+        <span className="shrink-0">✓ <b className="text-emerald-300">{puan.dogru}</b> · ✗ <b className="text-red-300">{yanlis}</b></span>
+        <span className="ml-auto shrink-0">Tur: <b className="text-white/80">{turBoyu === 0 ? `${puan.toplam}` : `${Math.min(puan.toplam + (soru ? 1 : 0), turBoyu)}/${turBoyu}`}</b></span>
       </div>
 
       {yukleniyor && (
@@ -313,30 +419,27 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
             })}
           </div>
 
+          {/* ★ TURU BİTİR — sınırlı turda tur boyutu dolduğunda, sınırsızda her zaman görünür (28.09) */}
+          {(turBoyu === 0 || puan.toplam + 1 < turBoyu) && puan.toplam > 0 && (
+            <button type="button" onClick={turOzetiGoster}
+              className="mt-2 w-full rounded-xl border border-white/15 py-2 text-[10px] font-bold text-white/60 transition hover:bg-white/5 hover:text-white">
+              Turu Bitir → Özet
+            </button>
+          )}
           <button
             type="button"
             onClick={() => {
+              const sonCevapDogru = secim !== null && soru.secenekler[secim] === soru.devam;
               soruHazirla();
-              // ★ Tur bitince devam et — sınırsız modda tur özeti gösterilmez
-              if (turBoyu > 0 && puan.toplam + 1 >= turBoyu) hafizlikDevamKaydet(seviye, puan.dogru + (secim !== null && soru.secenekler[secim] === soru.devam ? 1 : 0), puan.toplam + 1);
+              // ★ Tur bitince devam kaydı — "Kaldığın yerden devam" bundan okur
+              if (turBoyu > 0 && puan.toplam + 1 >= turBoyu) hafizlikDevamKaydet(seviye, puan.dogru + (sonCevapDogru ? 1 : 0), puan.toplam + 1);
+              else hafizlikDevamKaydet(seviye, puan.dogru, puan.toplam);
             }}
             className="mt-4 w-full rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >
             {turBoyu > 0 && puan.toplam + 1 >= turBoyu ? "Turu Bitir → Özet" : "Sıradaki Soru →"}
           </button>
-          {/* Tur özeti — seçilen boyut dolunca (sınırsızda çıkmaz) */}
-          {turBoyu > 0 && puan.toplam >= turBoyu && (
-            <div className="mt-3 rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-3 text-center">
-              <p className="text-[12px] font-black text-emerald-200">
-                {puan.dogru === turBoyu ? `🏆 Mükemmel! ${puan.dogru}/${turBoyu} — sen gerçek bir hafızsın!` : puan.dogru >= turBoyu * 0.6 ? `🎉 Güzel! ${puan.dogru}/${turBoyu} — devam et!` : `📖 ${puan.dogru}/${turBoyu} — tekrar denemek güçlendirir`}
-              </p>
-              <button type="button" onClick={() => { setSeviyeSecili(false); setSoru(null); setPuan({ dogru: 0, toplam: 0 }); }}
-                className="mt-2 rounded-lg glass-soft px-3 py-1.5 text-[9.5px] font-bold text-white/70 transition hover:text-white">
-                ← Seviye değiştir / yeni tur
-              </button>
-            </div>
-          )}
         </>
         )}
       </>

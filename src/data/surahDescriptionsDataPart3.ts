@@ -6,30 +6,30 @@ export const SURAH_DESCRIPTIONS_PART_3: Record<number, string[]> = {
   ],
   78: [ // Nebe
     "Nebe Suresi, kıyametin tasvirini ve cennetin güzelliğini anlatır. 'Büyük haber nedir?' denir. Bu büyük haber kıyamet, hesap, cennet ve cehennemdir. Bu sureyi dinle, prepared ol.",
-    "Nebe Suresi'nde 'Biz gözleri konserve' denir. Cennette gözler外面 đẹp olacak, yorgunluk olmayacak. Bu sure cennetin güzelliğini hissettirir.",
+    "Nebe Suresi'nde 'Biz gözleri doyurucu kıldık' denir. Cennette gözler dış güzelliğe doyar, yorgunluk olmayacak. Bu sure cennetin güzelliğini hissettirir.",
   ],
   79: [ // Naziat
     "Nâzi'ât Suresi, kıyametin dehşetini ve Allah'ın kudretini anlatır. 'Nefesleri stripexhausted çekenler' — bu bir güç, bir gerçek. Bu sureyi dinle, kudretin karşısında hayran kal.",
     "Nâzi'ât Suresi'nde 'Hz. Musa'yı hatırlıyor musunuz?' denir. Firavun bile Allah'ın gücü karşısında çöktü. Bu sure Allah'ın kudretini hatırlatır.",
   ],
   80: [ // Abese
-    "Abese Suresi, kör adamın geldiğini ve Hz. Peygamber (s.a.v.)'in onu observing'ini anlatır. Allah görme engelli bir kulunu bile önemser. Bu sure herkesin价值'ını hatırlatır.",
+    "Abese Suresi, kör adamın geldiğini ve Hz. Peygamber (s.a.v.)'in onu önemsemesini anlatır. Allah görme engelli bir kulunu bile önemser. Bu sure herkesin değerini hatırlatır.",
     "Abese Suresi'nde 'Yüzünü çevirip gitti' denir. Hz. Peygamber (s.a.v.) hatalı davrandı ve Allah onu uyardı. Bu sure humble'lığı, tevazuyu öğretir.",
   ],
   81: [ // Tekvir
-    "Tekvîr Suresi, kıyametin dehşetini anlatır. 'Güneş dürülüp yıldızlar döküldüğünde' — bu bir felaket, bir gerçek. Bu sureyi dinle, prepare ol.",
+    "Tekvîr Suresi, kıyametin dehşetini anlatır. 'Güneş dürülüp yıldızlar döküldüğünde' — bu bir felaket, bir gerçek. Bu sureyi dinle, hazırlıklı ol.",
     "Tekvîr Suresi'nde 'Kur'an okunduğunda sustular' denir. Kur'an okunurken dinle. Bu sure huzurun kapısını açar.",
   ],
   82: [ // Infitar
-    "İnfitâr Suresi, kıyamet gününü ve hesap gününü anlatır. 'Gök yarılıp парк durulduğunda' — bu bir dehşet, bir gerçek. Hazırlıklı ol, bu sureyi dinle.",
+    "İnfitâr Suresi, kıyamet gününü ve hesap gününü anlatır. 'Gök yarılıp yarılıp durulduğunda' — bu bir dehşet, bir gerçek. Hazırlıklı ol, bu sureyi dinle.",
     "İnfitâr Suresi'nde 'İnsan kendi ameline bakar' denir. Amelini hazırla, ahirete hazırlan. Bu sure bir hatırlatma, bir uyarı.",
   ],
   83: [ // Mutaffifin
     "Mutaffifîn Suresi, ölçü ve tartıda hile yapanları anlatır. 'Vay olsun ölçüde hile yapanlara' — bu bir uyarı, bir tehdit. Adaletli ol, hile yapma.",
-    "Mutaffifîn Suresi'nde 'Mü'minlerin头上 bir册子 vardır' denir. Amelleriniz yazılıyor, her şey kaydediliyor. Hesap günü gelecek. Bu sure adalete davet eder.",
+    "Mutaffifîn Suresi'nde 'Mü'minlerin yanında bir kitap (ameller defteri) vardır' denir. Amelleriniz yazılıyor, her şey kaydediliyor. Hesap günü gelecek. Bu sure adalete davet eder.",
   ],
   84: [ // İnşikak
-    "İnşikâk Suresi, kıyamet gününü ve insanların durumunu anlatır. 'Gök yarılıp парк durulduğunda' — bu bir felaket, bir gerçek. Hazırlıklı ol, bu sureyi dinle.",
+    "İnşikâk Suresi, kıyamet gününü ve insanların durumunu anlatır. 'Gök yarılıp açıldığında' — bu bir felaket, bir gerçek. Hazırlıklı ol, bu sureyi dinle.",
     "İnşikâk Suresi'nde 'İnsan kendi ameline bakar' denir. Amelini hazırla. Bu sure bir hatırlatma, bir uyarı.",
   ],
   85: [ // Buruj
@@ -108,11 +108,11 @@ export const SURAH_DESCRIPTIONS_PART_3: Record<number, string[]> = {
   ],
   103: [ // Asr
     "Asr Suresi, zamanın değerini ve kaybını anlatır. 'Yemin olsun, zamana' — bu bir gerçek, bir hatırlatma. Zaman geçiyor,Prepare ol. İman, salih amel, birbirine tavsiye... Bu sure üç temel prensibi öğretir.",
-    "Asr Suresi'nde 'Ancak iman edenler, salih amel işleyenler, birbirine真理 ve sabrı tavsiye edenler kurtulur' denir. Bu üç şey kurtuluşun sırrıdır. Bu sure kısa ama derindir.",
+    "Asr Suresi'nde 'Ancak iman edenler, salih amel işleyenler, birbirine hakkı ve sabrı tavsiye edenler kurtulur' denir. Bu üç şey kurtuluşun sırrıdır. Bu sure kısa ama derindir.",
   ],
   104: [ // Humes
-    "Hümeze Suresi, iftira atanların ve alaycıların durumunu anlatır. 'Vay olsun iftira edip THROWING children' denir. İftira büyük bir günahtır. Bu sure adaleti ve_temizliği hatırlatır.",
-    "Hümeze Suresi'nde 'Onlar cehennem ateşinde yanacaklar' denir. İftira edenler, alaycılar,鐙 asleep prepare edilmemişler... Bu sure bir uyarı, bir ders.",
+    "Hümeze Suresi, iftira atanların ve alaycıların durumunu anlatır. 'Vay olsun her iftira edip durana' denir. İftira büyük bir günahtır. Bu sure adaleti ve temizliği hatırlatır.",
+    "Hümeze Suresi'nde 'Onlar cehennem ateşinde yanacaklar' denir. İftira edenler, alaycılar, hiçbir hazırlığı olmayanlar... Bu sure bir uyarı, bir ders.",
   ],
   105: [ // Kureyş
     "Kureyş Suresi, Kureyş kabilesinin güvenliğini ve Allah'ın korumasını anlatır. 'Kureyş'in kış ve yaz yolculuklarını kolaylaştırdık' — bu bir nimet. Allah seni de korur.",
@@ -145,7 +145,7 @@ export const SURAH_DESCRIPTIONS_PART_3: Record<number, string[]> = {
   112: [ // İhlas
     "İhlâs Suresi, Allah'ın birliğinin özeti ve en temiz imanıdır. 'De ki: O Allah bir'tir' — bu bir gerçek, bir teslimiyet. Kur'an'ın dörtte birinin sevabını verir. Bu sureyi oku, imanını güçlendir.",
     "İhlâs Suresi'nde 'O doğurmamış, doğmamış, hiçbir şey O'na denk değildir' denir. Bu dört ayet tüm tevhidi anlatır. Hz. Peygamber (s.a.v.) bu sureyi severdi.",
-    "Hz. Peygamber (s.a.v.) bir adamın 'Ben Kur'an'ın dörtte birünü okudum' dediğini duydu ve 'O说的话的话的话...' dedi. İhlâs Suresi, Kur'an'ın dörtte birinin sevabını verir.",
+    "Hz. Peygamber (s.a.v.) bir adamın 'Ben Kur'an'ın dörtte birini okudum' dediğini duydu ve 'O, İhlâs Suresi'ne benzer...' dedi. İhlâs Suresi, Kur'an'ın dörtte birinin sevabını verir.",
   ],
   113: [ // Felak
     "Felâk Suresi, kötülüklerden Allah'a sığınmanın önemini anlatır. 'Sabahın Rabbine sığınırım' — bu bir koruma, bir kalkan. Her sabah oku, korun. Bu sure şeytanın tuzaklarından korur.",
