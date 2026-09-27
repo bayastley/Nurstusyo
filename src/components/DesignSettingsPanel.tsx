@@ -432,7 +432,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-amber-400"
                   style={{ accentColor: "#fbbf24" }}
                 />
-                <span className="min-w-[46px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-white/70" title="İnce ayar çarpanı">
+                {/* ★ KAYMA DÜZELTMESİ (28.09): min-w yerine sabit w — dar panelde %170 yazısı
+                    slider üstüne biniyordu; shrink-0 + sabit genişlik hizayı korur */}
+                <span className="w-[46px] shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums text-white/70" title="İnce ayar çarpanı">
                   %{Math.round(textSizeMul * 100)}
                 </span>
                 <button
@@ -476,7 +478,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   disabled={mealSizeMul >= 2}
                   className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
                 >+</button>
-                <span className="min-w-[40px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-sky-300/80">
+                <span className="w-[46px] shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums text-sky-300/80">
                   %{Math.round(mealSizeMul * 100)}
                 </span>
                 {mealSizeMul !== 1 && (

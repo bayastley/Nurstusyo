@@ -517,7 +517,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               <input value={atmosQuery} onChange={(event) => setAtmosQuery(event.target.value)} placeholder="Atmosfer ara..." className="glass-soft h-full w-full rounded-xl pl-8 pr-3 text-[11px] outline-none placeholder:text-white/25" />
             </div>
             {isMasterSürüm ? (
-              <button type="button" onClick={() => setModal("zip")} className="glass-soft flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold text-white/70"><FolderUp size={12} /> ZIP / Image</button>
+              <button type="button" onClick={() => setModal("zip")} className="glass-soft flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold text-white/70"><FolderUp size={12} /> Video / Resim / Ses</button>
             ) : (
               <span className="relative flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold glass-soft text-white/30 cursor-not-allowed"><FolderUp size={12} /> ZIP / Image<LockBadge kind="v3" position="top-right" tooltipText="V3 Güncellemesi Yakında" /></span>
             )}
@@ -814,9 +814,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* ZIP EXPLORER MODAL */}
+      {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red */}
       {modal === "zip" && isMasterSürüm && (
-        <Modal title="ZIP Dosya Gezgini" sub="Admin · V3 geliştirme aracı aktif" onClose={() => setModal(null)} wide>
+        <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — diğerleri otomatik reddedilir" onClose={() => setModal(null)} wide>
           <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} /></div>
         </Modal>
       )}

@@ -2,7 +2,11 @@
 // ADMIN TAB'LARI — AdminDashboardModal'dan ayrıldı (dosya küçültme, 27.09)
 //   • AdminHaftaVideoTab  → Haftanın Videosu onay kuyruğu (madde 17)
 //   • AdminHaftalikRaporTab → haftalık rapor + hız testi (madde 25 & 26)
+// ★ PANEL CRASH DÜZELTMESİ (28.09): bu dosyada React importu YOKTU —
+//   useState/React.useCallback runtime'da "React is not defined" patlatıyordu;
+//   Haftanın Videosu + Haftalık Rapor sekmeleri BÜTÜN admin panelini düşürüyordu.
 // ════════════════════════════════════════════════════════
+import React, { useState } from "react";
 
 // ════════════════════════════════════════════════════════
 // ★ HAFTANIN VİDEOSU — admin onay/ret/sil tab'ı (madde 17)
@@ -138,8 +142,10 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
         if (!kaynaklar[tur] || kaynaklar[tur] < sure) kaynaklar[tur] = sure;
       }
       let onBellekKb = 0;
-      if (performance.storage?.estimate) {
-        performance.storage.estimate().then((e) => setPerf({ acilisMs, girisimler: kaynaklar, onBellekKb: Math.round((e.usage ?? 0) / 1024) })).catch(() => setPerf({ acilisMs, girisimler: kaynaklar, onBellekKb: 0 }));
+      // performance.storage bazı tarayıcı tiplerinde tanımlı değil — güvenli erişim
+      const perfStorage = (performance as unknown as { storage?: { estimate?: () => Promise<{ usage?: number }> } }).storage;
+      if (perfStorage?.estimate) {
+        perfStorage.estimate().then((e) => setPerf({ acilisMs, girisimler: kaynaklar, onBellekKb: Math.round((e.usage ?? 0) / 1024) })).catch(() => setPerf({ acilisMs, girisimler: kaynaklar, onBellekKb: 0 }));
       } else setPerf({ acilisMs, girisimler: kaynaklar, onBellekKb: 0 });
     } catch { setPerf(null); }
   }, []);

@@ -3,7 +3,7 @@ import { Plus, FolderPlus, CloudUpload, RefreshCw } from "lucide-react";
 import type { DynamicModule, SystemConfig } from "../services/adminSyncService";
 
 interface AdminModulesSyncTabProps {
-  activeTab: "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync";
+  activeTab: "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor";
   sysConfig: SystemConfig;
   newModTitle: string;
   setNewModTitle: (v: string) => void;

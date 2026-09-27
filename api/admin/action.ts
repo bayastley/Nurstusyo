@@ -12,7 +12,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
     if (!__msg) return;
     const __stack = error instanceof Error ? (error.stack || "") : "";
     const __path = String(req.url || endpoint).slice(0, 200);
-    const __fingerprint = require("crypto").createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
+    const __fingerprint = crypto.createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
     await fetch(__url + "/rest/v1/nur_error_logs", {
       method: "POST",
       headers: { apikey: __key, Authorization: "Bearer " + __key, "Content-Type": "application/json", Prefer: "return=minimal" },
@@ -482,7 +482,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         db<any[]>(`nur_page_views?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
         db<any[]>(`nur_error_logs?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
         db<any[]>(`nur_feedback?select=id,tur,puan&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
-        db<any[]>(`nur_roadmap_votes?select=feature_id&select=feature_id`).catch(() => [] as any[]),
+        db<any[]>("nur_roadmap_votes?select=feature_id").catch(() => [] as any[]),
         db<any[]>(`nur_referans_kullanim?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
         db<any[]>("nur_zikir_topluluk?select=toplam").catch(() => [] as any[]),
         db<any[]>(`nur_haftanin_videolari?select=id,durum&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),

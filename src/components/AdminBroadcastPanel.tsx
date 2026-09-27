@@ -116,6 +116,29 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     setLockHistory(loadLockHistory());
   };
 
+  // ★ DB SENKRONU (28.09, kullanıcı kararı): "maher kilitlenmiyor" — kilidin DB'ye
+  //   yazıldığı (set_feature_lock → nur_feature_locks) ama panelin SADECE kendi
+  //   localStorage'ına baktığı için Aktif Kilitler hep 0 gösteriyordu. Panel açılırken
+  //   /api/config'ten gerçek kilitler çekilir — DB'de kilitliyse panelde de görünür.
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/config", { cache: "no-store" });
+        const d = await r.json().catch(() => null) as { featureLocks?: Array<{ feature_id: string; lock_level: string }> } | null;
+        if (!alive || !Array.isArray(d?.featureLocks)) return;
+        const cfg = getSystemConfig();
+        for (const l of d.featureLocks) {
+          if (l.feature_id && l.lock_level) cfg.featureLocks[l.feature_id] = l.lock_level as FeatureLock;
+        }
+        saveSystemConfig(cfg);
+        refreshLocks();
+      } catch { /* sunucu erişilemezse local kalır */ }
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ★ Tek kilidi kaldır (free'e döndür)
   const removeLock = (targetId: string) => {
     const old = activeLocks[targetId];

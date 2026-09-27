@@ -12,7 +12,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
     if (!__msg) return;
     const __stack = error instanceof Error ? (error.stack || "") : "";
     const __path = String(req.url || endpoint).slice(0, 200);
-    const __fingerprint = require("crypto").createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
+    const __fingerprint = crypto.createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
     await fetch(__url + "/rest/v1/nur_error_logs", {
       method: "POST",
       headers: { apikey: __key, Authorization: "Bearer " + __key, "Content-Type": "application/json", Prefer: "return=minimal" },
@@ -125,7 +125,6 @@ function getSession(req: VercelRequest): SessionInfo | null {
   if (secret.length < 20) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
-  const crypto = require("crypto") as typeof import("crypto");
   const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   const sigBuf = Buffer.from(sig);
   const expectedBuf = Buffer.from(expected);
