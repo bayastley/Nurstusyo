@@ -57,10 +57,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
       }
     };
     void refresh();
-    // ★ KİLİT/BAKIM ANINDA YANSIMA: sekme görünürken 15 sn'de bir poll.
-    //   Gizli sekmede 60 sn (CPU/tasarruf). Ek olarak sekme geri geldiğinde
-    //   anında bir refresh tetiklenir — kullanıcı sekme değiştirince güncel durumu görür.
-    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 15_000);
+    // ★ KİLİT/BAKIM ANINDA YANSIMA + SCALE KORUMASI (tam tarama 28.09):
+    //   Eski plan 15 sn'de bir poll idi — 100k kullanıcıda dakikada ~400k istek yaratırdı
+    //   (rate limit 120/dk'ya dayar, hiçbir değişiklik olmasa bile).
+    //   YENİ: 60 sn poll + sunucudan gelen updated_at'a göre değişiklik YOKSA cache;
+    //   ayrıca sekme gizliyken poll tamamen durur, döndüğünde hemen bir kez çeker.
+    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 60_000);
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };

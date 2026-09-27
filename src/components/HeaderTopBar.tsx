@@ -3,6 +3,7 @@ import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette, Headphones,
   LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
+  Image as ImageIcon, Info, Package, CalendarDays, Compass, Brain, NotebookPen, Type, Wand2, Gift, Film,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
@@ -143,9 +144,21 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </>
                       )}
                     </button>
-                    {[
+                    {                    [
+                      { icon: ImageIcon, label: "Ayet Kütüphanesi", target: "ayetKartlari" as ModalName },
+                      { icon: Compass, label: "Keşfet · Hadis & Kıssa & Rehber", target: "kesfet" as ModalName },
+                      { icon: Brain, label: "Hafızlık Testi", target: "hafizlikTesti" as ModalName },
+                      { icon: NotebookPen, label: "Ayet Notlarım", target: "ayetNotlari" as ModalName },
+                      { icon: Type, label: "Kelime Atölyesi · ✍️", target: "kelimeAtolyesi" as ModalName },
+                      { icon: Wand2, label: "Arka Plan Üretici · ✨", target: "arkaPlanUretici" as ModalName },
+                      { icon: Gift, label: "Arkadaşını Davet Et · 🎁", target: "davet" as ModalName },
+                      { icon: Film, label: "Haftanın Videosu · 🎬", target: "haftaninVideosu" as ModalName },
+                      { icon: Package, label: "Hazır Ayet Paketleri", target: "ayetPaketleri" as ModalName },
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                      { icon: BookOpen, label: "Kur'an Öğreniyorum", target: "quranLearn" as ModalName },
+                      { icon: BookOpen, label: "Kur'an", target: "quranLearn" as ModalName },
+                      { icon: Info, label: "Bu Sitede Ne Var?", target: "siteHakkinda" as ModalName },
+                      { icon: Moon, label: "🌙 Ramazan & Kandil", target: "ramazan" as ModalName },
+                      { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName },
                     ].map((item) => (
                       <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
@@ -168,7 +181,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         <span className="flex-1">Güncellemeler</span>
                         <span className="flex items-center gap-1">
                           <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[7.5px] font-black text-amber-300">
-                            {dynamicModules.filter((m) => m.active && m.lock !== "free").length + 1}
+                            {dynamicModules.filter((m) => m.active && m.lock !== "free").length + 1 + 6}
                           </span>
                           <ChevronDown size={11} className="-rotate-90 opacity-60" />
                         </span>
@@ -187,92 +200,32 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             boxShadow: "0 24px 60px rgba(0,0,0,.8)",
                           }}
                         >
+                          {/* ★ SADELEŞTİRME — rozet sayacı artık sadece Yol Haritası'na işaret eder */}
                           <div className="border-b border-white/5 px-3 pb-2 pt-1">
                             <p className="text-[9.5px] font-black uppercase tracking-widest" style={{ color: "var(--accent-2)" }}>
                               Yakında Gelecek Modüller
                             </p>
-                            <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi</p>
+                            <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi — oylama yol haritasında</p>
                           </div>
 
-                          {/* ★ YOL HARİTASI BUTONU — V2 kilidi: admin (master sürüm) hariç kimse açamaz */}
+                          {/* ★ YOL HARİTASI — V2 kilidi KALDIRILDI (topluluk oylaması):
+                              herkes açıp yenilikleri görebilir ve oy verebilir.
+                              Oy vermek için giriş gerekir (API tarafında zorunlu). */}
                           <div className="relative">
                             <button
                               type="button"
-                              onClick={() => { if (!isMasterSürüm) return; setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
-                              className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] font-bold transition hover:bg-white/5 ${isMasterSürüm ? "text-white/85" : "text-white/50"}`}
+                              onClick={() => { setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
+                              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] font-bold text-white/85 transition hover:bg-white/5"
                             >
                               <span className="text-base">🚀</span>
                               <span className="min-w-0 flex-1 truncate">Güncelleme Yol Haritası</span>
-                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-green-500/20 text-green-400">V2 & V3</span>
+                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">🗳️ OYLA</span>
                             </button>
-                            {!isMasterSürüm && <LockBadge kind="v2" position="top-right" tooltipText="V2 Güncellemesi Yakında" />}
                           </div>
 
-                          {/* ★ Ayet & Dua Kütüphanesi — V2 kilidiyle Güncellemeler panelinde */}
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isMasterSürüm) return;
-                                setModal("library");
-                                setUpdatesOpen(false);
-                                setMenuOpen(false);
-                              }}
-                              className={`relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] transition hover:bg-white/5 ${
-                                isMasterSürüm ? "text-white/85 font-medium" : "text-white/50"
-                              }`}
-                            >
-                              <BookOpen size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                              <span className="min-w-0 flex-1 truncate">Ayet & Dua Kütüphanesi</span>
-                            </button>
-                            {!isMasterSürüm && (
-                              <LockBadge kind="v2" position="top-right" tooltipText="V2 Güncellemesi Yakında" />
-                            )}
-                          </div>
-
-                          {dynamicModules.filter((m) => m.active).map((item) => {
-                            const IconComponent = item.iconName === "Sparkles" ? Sparkles : item.iconName === "LibraryBig" ? LibraryBig : item.iconName === "Heart" ? Heart : BookOpen;
-                            const isUnlocked = item.lock === "free" || isMasterSürüm;
-                            return (
-                              <div key={item.id} className="relative">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!isUnlocked) return;
-                                    if (item.category === "hadis") { setLibType("hadis"); setModal("library"); }
-                                    else if (item.category === "dua") { setLibType("dua"); setModal("library"); }
-                                    else setModal("stories");
-                                    setUpdatesOpen(false);
-                                    setMenuOpen(false);
-                                  }}
-                                  className={`relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] transition hover:bg-white/5 ${
-                                    isUnlocked ? "text-white/85 font-medium" : "text-white/50"
-                                  }`}
-                                >
-                                  <IconComponent size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                                  <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                                </button>
-                                {!isUnlocked && (
-                                  <LockBadge
-                                    kind={item.lock === "v2" || item.lock === "v3" ? item.lock : item.lock === "pro" ? "pro" : "elit"}
-                                    position="top-right"
-                                    tooltipText={`${item.lock.toUpperCase()} Güncellemesi Yakında`}
-                                  />
-                                )}
-                              </div>
-                            );
-                          })}
-
-                          <div className="relative border-t border-white/5">
-                            <button
-                              type="button"
-                              className="relative flex w-full items-center gap-2.5 px-3 py-2.5 pr-12 text-left text-[10.5px] text-white/40 cursor-not-allowed"
-                            >
-                              <Shield size={13} style={{ color: "var(--accent)" }} className="shrink-0" />
-                              <span className="min-w-0 flex-1 truncate">Kurumsal Üyelik & Ajans</span>
-                            </button>
-                            <LockBadge kind="v3" position="top-right" tooltipText="V3 · Kurumsal Paketler Yakında" />
-                          </div>
+                          {/* ★ SADELEŞTİRME: V2/V3 rozetli maddeler (Ayet & Dua Kütüphanesi, Kur'an Hikayeleri,
+                              Kıssalar, Hadisler, Dualar & Zikirler, Kurumsal) menüden kaldırıldı —
+                              hepsi Yol Haritası'nda oylamada. Menüde tek giriş: 🚀 Güncelleme Yol Haritası. */}
                         </div>
                       )}
                     </div>
@@ -416,13 +369,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
               <span>🎁</span>Hediye Kodu
             </span>
-            {/* ★ KUR'AN ÖĞRENIYORUM */}
-            <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
-              <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an Öğreniyorum
+            {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartı fotoğraf olarak indir */}
+            <button onClick={() => setModal("ayetKartlari")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
+              <ImageIcon size={11} style={{ color: "var(--accent)" }} />Ayet Kütüphanesi
             </button>
-            {/* ★ KUR'AN DINLIYORUM */}
-            <button onClick={() => setModal("quranListen")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70 transition hover:scale-105 md:flex">
-              <Headphones size={11} style={{ color: "var(--accent)" }} />Kur'an Dinliyorum
+            {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
+            <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
+              <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an
             </button>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">

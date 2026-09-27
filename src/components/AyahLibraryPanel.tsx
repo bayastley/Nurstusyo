@@ -177,7 +177,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-1.5">
           <button
-            onClick={() => toggleAyah(Number(surah), Number(ayah))}
+            onClick={() => { if (!surah || !ayah) return; toggleAyah(Number(surah), Number(ayah)); }}
             className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold text-black"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >

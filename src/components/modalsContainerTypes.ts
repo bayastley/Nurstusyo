@@ -53,7 +53,17 @@ export interface ModalsContainerProps {
   atmosQuery: string;
   setAtmosQuery: (q: string) => void;
   isMasterSürüm: boolean;
+  /** ★ V2 kilidi yönlendirmesi — kilitli modal tıklanınca yol haritasına götürür */
+  setRoadmapOpen?: (v: boolean) => void;
   randomizeBackgrounds: (cat?: any) => void;
+  /** ★ İş 4: Arka Plan Üretici — sinematik filtre state'ini değiştirir */
+  setCinematic: (id: string) => void;
+  /** ★ İş 4: Seçili ayet sayısı (Arka Plan Üretici uyarısı için) */
+  seciliAyetSayisi?: number;
+  /** ★ İş 5: Linkten gelen davet kodu (?davet=KOD) — kayıt sonrası otomatik kullanılır */
+  bekleyenDavetKodu?: string | null;
+  /** ★ İş 5: Davet ödülü alınınca cüzdanı tazele */
+  syncWallet?: () => Promise<void> | void;
   atmosCategory: CatId | "all";
   setAtmosCategory: (c: CatId | "all") => void;
   combinedAllClips: Clip[];

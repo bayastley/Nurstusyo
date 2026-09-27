@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS, ulkeToBolge, type RadioBolge } from "../data/liveStreams";
+import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS, ulkeToBolge, dilToBolge, type RadioBolge } from "../data/liveStreams";
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
@@ -157,6 +157,13 @@ const MEALS = [
   { id: "tr.yildirim", name: "Suat Yıldırım" },
   { id: "tr.bulac", name: "Ali Bulaç" },
   { id: "tr.ates", name: "Süleyman Ateş" },
+  // ★ ÇOK DİLLİ MEAL (madde 49) — EN/DE/FR öncelikli uluslararası açılım
+  { id: "en.sahih", name: "English — Sahih International" },
+  { id: "en.pickthall", name: "English — Pickthall" },
+  { id: "de.aburida", name: "Deutsch — Abu Rida" },
+  { id: "de.bubenheim", name: "Deutsch — Bubenheim & Elyas" },
+  { id: "fr.hamidullah", name: "Français — Hamidullah" },
+  { id: "es.cortes", name: "Español — Julio Cortés" },
 ] as const;
 
 // ★ KELİME ANLAMLARI: tam Kur'an sözlüğü (15.321 kök, TÜM 77.429 kelime %100 kapsama)
@@ -259,6 +266,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   "null" = henüz bilinmiyor; tespit edilince localStorage'a yazılır (bir daha sormaz).
   //   Kullanıcı "Tüm Kanallar"ı seçerse akıllı filtre devre dışı kalır (manuelle öncelik).
   const [akilliBolge, setAkilliBolge] = useState<RadioBolge | null>(null);
+  // ★ MUSHAF GÖRÜNÜMÜ (madde 29) — ayetler tek blok halinde mushaf sayfası gibi
+  const [mushafModu, setMushafModu] = useState(false);
   const [akilliAcik, setAkilliAcik] = useState(true); // kullanıcı "Tüm Kanallar" derse false
   useEffect(() => {
     try {
@@ -266,20 +275,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       if (kayit === "tr" || kayit === "ar" || kayit === "genel") setAkilliBolge(kayit);
       else if (kayit === "kapat") setAkilliAcik(false);
     } catch { /* localStorage kapalıysa sessizce atla */ }
-    // Konum tespiti: Cloudflare trace (izinli) → ipapi.co yedek. Her ikisi de fail olursa "genel".
+    // Konum tespiti: ipapi.co → tarayıcı dili fallback. Her ikisi de fail olursa
+    //   tarayıcı diliyle "yabanci" (Batı kitlesi) / "genel" bölgesi seçilir. Yol haritası madde 1.
+    // ★ CORS DÜZELTMESİ (tam tarama 28.09): cloudflare.com/cdn-cgi/trace CORS header
+    //   döndürmüyor — her sayfada "blocked by CORS" hatası basıyordu. ipapi.co
+    //   CORS'lu ve tek başına yeterli → zincirin başı artık doğrudan ipapi.co.
     if (!localStorage.getItem("nur_akilli_radyo_bolge")) {
-      fetch("https://cloudflare.com/cdn-cgi/trace")
+      fetch("https://ipapi.co/json/")
         .then(r => r.text())
         .then(t => {
           const m = t.match(/^loc=(\w{2})$/m);
           if (m) { const b = ulkeToBolge(m[1]); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
         })
-        .catch(() => {
-          fetch("https://ipapi.co/json/")
-            .then(r => r.json())
-            .then(d => { if (d?.country_code) { const b = ulkeToBolge(d.country_code); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } } })
-            .catch(() => { setAkilliBolge("genel"); try { localStorage.setItem("nur_akilli_radyo_bolge", "genel"); } catch { /* yut */ } });
-        });
+        .then(r => r.json())
+        .then(d => { if (d?.country_code) { const b = ulkeToBolge(d.country_code); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } }
+                    else { const b = dilToBolge(navigator.language); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } } })
+        .catch(() => { const b = dilToBolge(navigator.language); setAkilliBolge(b); try { localStorage.setItem("nur_akilli_radyo_bolge", b); } catch { /* yut */ } });
     }
   }, []);
   // ★ Akıllı mod açıksa: bölge kanalları öne, sonra diğerleri. Kapalıysa orijinal sıra.
@@ -466,7 +477,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [searching, setSearching] = useState(false);
   useEffect(() => {
     const q = query.trim();
-    if (!open || mode !== "learn" || q.length < 2) { setAyahResults([]); setSearching(false); return; }
+    // ★ AYET ARAMA HER İKİ MODDA DA (madde 33): learn + listen — "ortak süper güç"
+    if (!open || !mode || q.length < 2) { setAyahResults([]); setSearching(false); return; }
     let live = true;
     setSearching(true);
     const t = setTimeout(() => {
@@ -498,6 +510,16 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
   const [nextSurahAuto, setNextSurahAuto] = useState(true);
   const [wholeQuran, setWholeQuran] = useState(false);
+  // ★ ÇOKLU HOCA KARIŞIK DİNLEME (madde 65): komple Kur'an modunda sure başına
+  //    farklı hoca seçeneği — "hatim karışık hocalarla". Kapalıysa tek hoca (normal akış).
+  const [karisikHoca, setKarisikHoca] = useState(false);
+  // Ayet-bazlı (everyayah) kâri havuzu — karışık modda her sure bunlardan birine atanır
+  const KARISIK_HOCA_POOL = ["Alafasy_128kbps", "MaherAlMuaiqly128kbps", "Abdul_Basit_Murattal_192kbps", "Husary_128kbps", "Minshawy_Murattal_128kbps", "Yasser_Ad-Dussary_128kbps"];
+  // Deterministik atama: sure no → havuzdaki kâri (her dinlemede aynı hocalar aynı sureyi okur)
+  const karisikReciterFor = useCallback((sN: number) => {
+    if (!karisikHoca) return listenReciter;
+    return KARISIK_HOCA_POOL[(sN * 7) % KARISIK_HOCA_POOL.length];
+  }, [karisikHoca, listenReciter]);
   // ★ TAM SURE MODU: seçilen kârinin mp3quran.net'teki TEK DOSYALIK gapless tam sure kaydı
   //    (ayet ayet indirmeden sureyi baştan sona kesintisiz dinleme — mp3quran.net telifsiz paylaşım)
   const [fullSurahMode, setFullSurahMode] = useState(false);
@@ -509,6 +531,39 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ★ Mobil metin kaydırma alanı — hayalet ok butonları bunu kaydırır (sayfa sabit)
   const listenScrollRef = useRef<HTMLDivElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
+  // ★ Uyku modu ZATEN VARDI (uykuTimer/kurUykuZamanlayici, satır ~211) — yeni ekleme YAPMADIK.
+  // ★ KALDIĞIN YERDEN DEVAM (madde 38) — dinlemede sure/ayet değişince otomatik kaydet
+  useEffect(() => {
+    if (mode !== "listen" || !listenSurah) return;
+    try { localStorage.setItem("nur_son_konum", JSON.stringify({ s: listenSurah, a: listenAyahIdx + 1 })); } catch {}
+  }, [mode, listenSurah, listenAyahIdx]);
+  // ★ EKRANSIZ MEAL DİNLEME (yol haritası V2) — ekran karartılır, sadece ses + kilit ekranı
+  //   kontrolleri çalışır (MediaSession API: telefon kilit ekranında oynat/duraklat düğmeleri).
+  //   Not: normal tarayıcı sekmesinde ekran kapanınca tarayıcı sesi durdurabilir; PWA olarak
+  //   kurulmuşsa (ana ekrana ekle) arka planda çalma çok daha sağlamdır.
+  const [ekransizMod, setEkransizMod] = useState(false);
+  useEffect(() => {
+    if (!open) setEkransizMod(false);
+  }, [open]);
+  // MediaSession — kilit ekranı kontrolleri + meta bilgisi
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    const ms = (navigator as any).mediaSession;
+    if (!ekransizMod || mode !== "listen") { try { ms.metadata = null; } catch {} return; }
+    try {
+      ms.metadata = new (window as any).MediaMetadata({
+        title: `${listenSurah}. Sure — Nûr Stüdyo`,
+        artist: "Kur'an Tilaveti",
+        album: "Nûr Stüdyo · Ekransız Dinleme",
+        artwork: [{ src: "/logo.png", sizes: "512x512", type: "image/png" }],
+      });
+      ms.setActionHandler("play", () => resumeAyah());
+      ms.setActionHandler("pause", () => pauseAyah());
+      try { ms.setActionHandler("nexttrack", () => setListenAyahIdx((i: number) => Math.min(i + 1, 285))); } catch {}
+      try { ms.setActionHandler("previoustrack", () => setListenAyahIdx((i: number) => Math.max(0, i - 1))); } catch {}
+    } catch {}
+    return () => { try { ms.setActionHandler("play", null); ms.setActionHandler("pause", null); } catch {} };
+  }, [ekransizMod, mode, listenSurah]);
   // ★ KÂBE AÇILINCA ARKADAKİ KURAN SUSSUN: iki ses üst üste binmesin.
   //   Kapanınca sessize döner (kullanıcı çal düğmesiyle kaldığı yerden sürdürür).
   useEffect(() => {
@@ -573,7 +628,40 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const surah = SURAHS_DATA.find(s => s.n === surahNo) ?? SURAHS_DATA[0];
   const ayah = ayahs.find(a => a.n === ayahNo);
 
+  // ★ KARŞILAŞTIRMALI OKUMA (madde 55): ikinci meal yan yana
+  const [karsilastirmaAcik, setKarsilastirmaAcik] = useState(false);
+  const [karsiMealId, setKarsiMealId] = useState<string>("tr.yazir");
+  const [karsiMetin, setKarsiMetin] = useState("");
+  useEffect(() => {
+    if (!open || mode !== "learn" || !karsilastirmaAcik || !surahNo || !ayahNo) return;
+    let live = true;
+    setKarsiMetin("");
+    fetch(`https://api.alquran.cloud/v1/ayah/${surahNo}:${ayahNo}/${karsiMealId}`)
+      .then(r => r.json())
+      .then((d: any) => { if (live && d.code === 200) setKarsiMetin(String(d.data?.text ?? "")); })
+      .catch(() => undefined);
+    return () => { live = false; };
+  }, [open, mode, karsilastirmaAcik, karsiMealId, surahNo, ayahNo]);
+
   // Ayetleri çek
+  // ★ LATİN OKUNUŞ (madde 43): en.transliteration edition'ı ayrıca çekilir;
+  //   kullanıcı "Aa Latin" düğmesiyle ayet altında latin okunuşu görebilir.
+  const [translit, setTranslit] = useState<Record<number, string>>({});
+  const [latinAcik, setLatinAcik] = useState(false);
+  useEffect(() => {
+    if (!open || mode !== "learn") return;
+    let live = true;
+    fetch(`https://api.alquran.cloud/v1/surah/${surahNo}/en.transliteration`)
+      .then(r => r.json())
+      .then((d: any) => {
+        if (!live || d.code !== 200) return;
+        const map: Record<number, string> = {};
+        for (const a of d.data?.ayahs ?? []) map[a.numberInSurah] = String(a.text || "");
+        setTranslit(map);
+      })
+      .catch(() => undefined); // latin okunuş opsiyoneldir — hata sessizce yutulur
+    return () => { live = false; };
+  }, [open, mode, surahNo]);
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
@@ -911,8 +999,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     return [...liste].sort((a, b) => (a.id === listenReciter ? -1 : b.id === listenReciter ? 1 : 0));
   }, [reciterSearch, listenReciter]);
   // ★ Ayet mp3 yolu — everyayah (30 kari, hepsi ayet bazlı, tek tek test edildi)
+  //   ★ Karışık hoca modunda sure numarasına göre atanmış kâri kullanılır (madde 65)
   const ayahUrl = useCallback((sN: number, aN: number) =>
-    `https://everyayah.com/data/${listenReciter}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [listenReciter]);
+    `https://everyayah.com/data/${karisikReciterFor(sN)}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [karisikReciterFor]);
   // ★ TAM SURE dosya yolu — kâri destekliyorsa mp3quran.net'ten tek dosya (gapless)
   const fullSurahUrl = useCallback((sN: number) => {
     const rc = RECITERS.find(r => r.id === listenReciter);
@@ -1102,26 +1191,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       const total = SURAHS_DATA.find(s => s.n === sNow)?.ayahs ?? listenSurahInfo.ayahs;
       if (listenAyahIdx + 1 < total) { playAt(sNow, listenAyahIdx + 1); return; }
       // Sure bitti → KOMPLE KUR'AN ya da SIRADAKİ SURE açıksa bir sonraki sureye geç
-      // ★ YENİ SURE BESMELEYLE BAŞLAR (Fâtiha/Tevbe hariç) — besmele bitince 1. ayet
+      // ★ ÇİFTE BESMELE DÜZELTİLDİ (28.09): eskiden burada besmele ELLE çalınıp onended'de
+      //   playAt(next.n, 0) çağrılıyordu — playAt da fromIdx===0'da besmele çaldığı için
+      //   sure geçişinde besmele İKİ KEZ duyuluyordu. Artık doğrudan playAt çağrılır;
+      //   besmele (Fâtiha/Tevbe hariç) playAt'ın içinde BİR KEZ çalar, ekran da besmele gösterir.
       const next = SURAHS_DATA.find(s => s.n === sNow + 1);
       if ((wholeQuran || nextSurahAuto) && next) {
         if (wholeQuran) setWholeIdx({ s: next.n, a: 1 });
         setListenSurah(next.n);
-        if (next.n !== 1 && next.n !== 9) {
-          // besmele çal, bitince 1. ayet — EKRANDA DA BESMELE gösterilir
-          setListenAyahData({ ar: BESMELE_AR, tr: BESMELE_TR, n: 0 });
-          setListenWordProgress(-1);
-          setBesmelePlaying(true);
-          a.onended = () => {
-            a.onended = null;
-            setBesmelePlaying(false);
-            playAt(next.n, 0);
-          };
-          a.src = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
-          a.load();
-          a.play().catch(() => playAt(next.n, 0));
-          return;
-        }
         playAt(next.n, 0);
         return;
       }
@@ -1178,6 +1255,24 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
   return (
     <div className="fixed inset-0 z-[80] flex flex-col animate-fadeIn bg-[#161622]">
+      {/* ★ EKRANSIZ MEAL DİNLEME — tam ekran karartma; ses aynen sürer, gözler dinlenir */}
+      {ekransizMod && mode === "listen" && (
+        <div className="fixed inset-0 z-[250] bg-black" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 select-none">
+            <span className="animate-pulse text-4xl">🌙</span>
+            <p className="text-[13px] font-bold text-white/60">Ekransız Dinleme — {listenSurah}. Sure</p>
+            <p className="text-[10px] text-white/30">Gözlerini dinlendir… ses sürüyor · kilit ekranından kontrol edebilirsin</p>
+          </div>
+          <div className="absolute bottom-5 right-5 flex items-center gap-2">
+            <button onClick={() => (paused ? resumeAyah() : pauseAyah())} className="rounded-full bg-white/10 px-4 py-2 text-[11px] font-black text-white/70 backdrop-blur transition hover:bg-white/20">
+              {paused ? "▶ Devam" : "⏸ Duraklat"}
+            </button>
+            <button onClick={() => setEkransizMod(false)} className="rounded-full bg-amber-500/20 px-4 py-2 text-[11px] font-black text-amber-200 backdrop-blur transition hover:bg-amber-500/30">
+              ✕ Ekrana Dön
+            </button>
+          </div>
+        </div>
+      )}
       {/* ÜST BAR */}        <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#D7AA41]/20 bg-[#0d1a2c] px-4">
         <div className="flex items-center gap-2">
           <div className="flex overflow-hidden rounded-xl border border-white/10">
@@ -1215,7 +1310,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-sky-400" />
           </span>
           {/* ★ AKILLI RADYO düğmesi: bölge önerisini aç/kapa (isteğe bağlı — kullanıcı serbest) */}
-          <button onClick={() => { const yeni = !akilliAcik; setAkilliAcik(yeni); try { localStorage.setItem("nur_akilli_radyo_bolge", yeni ? (akilliBolge || "genel") : "kapat"); } catch { /* yut */ } if (yeni) setRadioNote(`🌍 Akıllı Radyo açık — ${akilliBolge === "tr" ? "Türkiye" : akilliBolge === "ar" ? "Arap bölgesi" : "evrensel"} kanalları öne alındı`); }} className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition active:scale-95 ${akilliAcik ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "bg-white/5 text-white/50 hover:bg-white/10"}`} title={akilliAcik ? "Akıllı Radyo açık — bölgenize göre kanallar öne alınıyor. Kapatırsanız tüm kanallar eşit sıralanır." : "Akıllı Radyo kapalı — tüm kanallar eşit. Açarsanız bölgenize göre önerilir."}>
+          <button onClick={() => { const yeni = !akilliAcik; setAkilliAcik(yeni); try { localStorage.setItem("nur_akilli_radyo_bolge", yeni ? (akilliBolge || "genel") : "kapat"); } catch { /* yut */ } if (yeni) setRadioNote(`🌍 Akıllı Radyo açık — ${akilliBolge === "tr" ? "Türkiye" : akilliBolge === "ar" ? "Arap bölgesi" : akilliBolge === "yabanci" ? "uluslararası" : "evrensel"} kanalları öne alındı`); }} className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition active:scale-95 ${akilliAcik ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "bg-white/5 text-white/50 hover:bg-white/10"}`} title={akilliAcik ? "Akıllı Radyo açık — bölgenize göre kanallar öne alınıyor. Kapatırsanız tüm kanallar eşit sıralanır." : "Akıllı Radyo kapalı — tüm kanallar eşit. Açarsanız bölgenize göre önerilir."}>
             🌍 {akilliAcik ? "AKILLI" : "TÜMÜ"}
           </button>
           <select
@@ -1328,10 +1423,30 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       artık SADECE sağdaki "Kelime Kelime Çözüm" listesinde (bire düşürüldü).
                       Tekrar oku → sağ listedeki 🔊 butonuyla aynı işi görüyor. */}
 
-                  {/* Meal */}
+                  {/* Meal — ★ Karşılaştırmalı okuma (madde 55): iki meal yan yana */}
                   <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4">
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">Ayet Meali</span>
-                    <p className="mt-2 text-[12px] leading-relaxed text-[#c5bc9a]">{ayah?.tr}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">Ayet Meali</span>
+                      <button onClick={() => setKarsilastirmaAcik(!karsilastirmaAcik)} className={`rounded-lg px-2 py-1 text-[8.5px] font-black transition ${karsilastirmaAcik ? "bg-[#D7AA41] text-[#151020]" : "bg-white/5 text-[#8f8870] hover:text-[#f5dda6]"}`} title="İki meali yan yana karşılaştır (Diyanet + Elmalılı)">
+                        ⇔ Karşılaştır
+                      </button>
+                    </div>
+                    {karsilastirmaAcik ? (
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <div className="rounded-xl bg-white/[.04] p-2.5">
+                          <p className="mb-1 text-[8px] font-black uppercase tracking-wider text-gold/70">{MEALS.find(m => m.id === mealId)?.name}</p>
+                          <p className="text-[11px] leading-relaxed text-[#c5bc9a]">{ayah?.tr}</p>
+                        </div>
+                        <div className="rounded-xl bg-white/[.04] p-2.5">
+                          <select value={karsiMealId} onChange={(e) => setKarsiMealId(e.target.value)} className="mb-1 w-full rounded-lg bg-[#0d1626] px-1.5 py-1 text-[8.5px] font-bold text-[#d8cfae] outline-none">
+                            {MEALS.filter(m => m.id !== mealId).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                          </select>
+                          <p className="text-[11px] leading-relaxed text-[#c5bc9a]" dir={karsiMealId.startsWith("tr") ? "ltr" : "auto"}>{karsiMetin || "…"}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-[12px] leading-relaxed text-[#c5bc9a]">{ayah?.tr}</p>
+                    )}
                     <span className="mt-2 block text-right text-[8px] font-bold text-[#5a5443]">Kaynak: {MEALS.find(m => m.id === mealId)?.name}</span>
                   </div>
 
@@ -1420,6 +1535,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                           <button key={v} onClick={() => setSpeed(v)} className={`rounded px-2 py-0.5 transition ${speed === v ? "bg-[#D7AA41] text-[#151020]" : "text-[#8f8870] hover:text-[#f5dda6]"}`}>{v}x</button>
                         ))}
                       </div>
+                      {/* ★ LATİN OKUNUŞ düğmesi (madde 43) — Arapça bilmeyenler için */}
+                      <button onClick={() => setLatinAcik(!latinAcik)} className={`ml-1 rounded-lg px-2 py-1.5 text-[9px] font-black transition ${latinAcik ? "bg-[#D7AA41] text-[#151020]" : "bg-[#1E293B] text-[#cfc6a4] ring-1 ring-white/10 hover:bg-[#243449]"}`} title="Ayet altında latin okunuşunu göster/gizle (Bismillahirrahmanirrahim şeklinde)">
+                        Aa Latin
+                      </button>
+                      {/* ★ MUSHAF GÖRÜNÜMÜ (madde 29) — satırlı liste ↔ gerçek mushaf sayfası akışı */}
+                      <button onClick={() => setMushafModu(!mushafModu)} className={`ml-1 rounded-lg px-2 py-1.5 text-[9px] font-black transition ${mushafModu ? "bg-[#D7AA41] text-[#151020]" : "bg-[#1E293B] text-[#cfc6a4] ring-1 ring-white/10 hover:bg-[#243449]"}`} title="Mushaf görünümü: ayetler gerçek mushaf sayfası gibi tek blok, ayet numaraları altın daire içinde">
+                        📖 Mushaf
+                      </button>
                     </div>
                     {/* Hoca seçici — kontrollerin altında, prototipteki gibi */}
                     <div className="mt-3 flex w-full justify-center">
@@ -1433,16 +1556,49 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                       sağdaki "Kelime Kelime Çözüm" listesinde (3 panel → 1 panel) */}
 
                   {/* ★ SURENİN TAMAMI — ~7 ayet görünür, okunan yanar, akışla kayar, tıklayınca o ayet okunur */}
-                  <div className="w-full rounded-2xl border border-white/10 bg-[#161622] p-3">
-                    <p className="mb-2 text-center text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">Suredeki Ayetler — okunan yanar, birine tıklarsan o okunur</p>
-                    <div ref={centerListRef} className="flex max-h-[300px] flex-col gap-1.5 overflow-y-auto scrollbar-thin">
-                      {ayahs.map(a => (
-                        <button key={a.n} data-current={a.n === ayahNo || undefined} onClick={() => { setFlowPlaying(false); setAyahNo(a.n); setActiveWord(null); setTimeout(() => playAyahRef.current(), 350); }} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-right transition ${a.n === ayahNo ? "bg-[#3D342B] ring-1 ring-[#D7AA41]/60 shadow-[0_0_14px_rgba(215,170,82,.25)]" : "hover:bg-white/[.04]"}`}>
-                          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${a.n === ayahNo ? "bg-[#D7AA41] text-[#151020]" : "bg-white/10 text-[#8f8870]"}`} dir="ltr">{a.n}</span>
-                          <span className={`flex-1 truncate font-arabic text-sm leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-[#b8b093]"}`} dir="rtl">{a.ar}</span>
-                        </button>
-                      ))}
-                    </div>
+                  <div className={`w-full rounded-2xl border border-white/10 p-3 ${mushafModu ? "bg-[#F5EDD8]" : "bg-[#161622]"}`}>
+                    <p className={`mb-2 text-center text-[9px] font-bold uppercase tracking-widest ${mushafModu ? "text-[#8a7440]" : "text-[#6e6853]"}`}>
+                      {mushafModu ? "📖 Mushaf Görünümü — gerçek sayfa düzeni, ayet numarası altın dairede" : "Suredeki Ayetler — okunan yanar, birine tıklarsan o okunur"}
+                    </p>
+                    {mushafModu ? (
+                      /* ★ MUSHAF SAYFASI — ayetler tek blok, sonraki ayete doğal akış; tıklanan ayet yanar */
+                      <div ref={centerListRef} className="max-h-[340px] overflow-y-auto rounded-xl bg-[#F5EDD8] px-4 py-3 scrollbar-thin shadow-inner" style={{ backgroundImage: "linear-gradient(rgba(138,116,64,.06) 1px, transparent 1px)", backgroundSize: "100% 2.4rem" }}>
+                        <p className="mb-2 text-center font-arabic text-base font-bold text-[#8a7440]" dir="rtl">﴿﷽﴾</p>
+                        <p className="text-right font-arabic text-[17px] leading-[2.4] text-[#2c2416]" dir="rtl">
+                          {ayahs.map(a => (
+                            <span
+                              key={a.n}
+                              data-current={a.n === ayahNo || undefined}
+                              onClick={() => { setFlowPlaying(false); setAyahNo(a.n); setActiveWord(null); setTimeout(() => playAyahRef.current(), 350); }}
+                              className={`cursor-pointer transition ${a.n === ayahNo ? "rounded bg-[#D7AA41]/25 text-[#8a5a10] shadow-[0_0_10px_rgba(215,170,65,.4)]" : "hover:bg-[#D7AA41]/10"}`}
+                            >
+                              {a.ar}
+                              <span className="mx-1.5 inline-flex h-5 w-5 translate-y-0.5 items-center justify-center rounded-full border border-[#b08d3e] align-middle text-[9px] font-black text-[#8a5a10]" dir="ltr">{a.n}</span>
+                              {" "}
+                            </span>
+                          ))}
+                        </p>
+                        {latinAcik && (
+                          <p className="mt-2 border-t border-[#d8c69a] pt-2 text-center text-[9px] italic text-[#8a7440]" dir="ltr">
+                            Latin okunuşu mushaf görünümünde gizlidir — satır görünümüne geç
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div ref={centerListRef} className="flex max-h-[300px] flex-col gap-1.5 overflow-y-auto scrollbar-thin">
+                        {ayahs.map(a => (
+                          <React.Fragment key={a.n}>
+                          <button data-current={a.n === ayahNo || undefined} onClick={() => { setFlowPlaying(false); setAyahNo(a.n); setActiveWord(null); setTimeout(() => playAyahRef.current(), 350); }} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-right transition ${a.n === ayahNo ? "bg-[#3D342B] ring-1 ring-[#D7AA41]/60 shadow-[0_0_14px_rgba(215,170,82,.25)]" : "hover:bg-white/[.04]"}`}>
+                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-black ${a.n === ayahNo ? "bg-[#D7AA41] text-[#151020]" : "bg-white/10 text-[#8f8870]"}`} dir="ltr">{a.n}</span>
+                            <span className={`flex-1 truncate font-arabic text-sm leading-relaxed ${a.n === ayahNo ? "text-[#f5dda6]" : "text-[#b8b093]"}`} dir="rtl">{a.ar}</span>
+                          </button>
+                          {latinAcik && translit[a.n] && (
+                            <p className="-mt-1 px-3 pb-1.5 pl-12 text-left text-[9px] italic leading-relaxed text-[#9a927a]" dir="ltr">{translit[a.n]}</p>
+                          )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1504,10 +1660,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <button onClick={() => { setWholeQuran(false); setNextSurahAuto(false); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && !nextSurahAuto ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`}>Tek Sure</button>
               <button onClick={() => { setWholeQuran(false); setNextSurahAuto(true); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${!wholeQuran && nextSurahAuto ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Seçtiğin sure bitince sıradaki sureye otomatik geçer">Sıradaki Sureye Geç</button>
               <button onClick={() => { setWholeQuran(true); stopListening(); setFullSurahMode(false); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${wholeQuran ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Seçtiğin sureden Nâs'a, sureler arası kesintisiz">📖 KOMPLE KUR'AN</button>
+              {/* ★ ÇOKLU HOCA KARIŞIK (madde 65) — komple Kur'an modunda her sure farklı hoca */}
+              <button onClick={() => { setKarisikHoca(v => !v); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${karisikHoca ? "border-sky-500/40 bg-sky-950/40 text-sky-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Hatim karışık hocalarla: komple Kur'an modunda her sureyi farklı bir hoca okur">🎤 KARIŞIK HOCA</button>
               {/* ★ TAM SURE: tek dosya gapless sure kaydı (mp3quran.net) — kesintisiz sure dinleme */}
               <button onClick={() => { setFullSurahMode(v => !v); setWholeQuran(false); stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${fullSurahMode ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Sureyi tek dosyadan kesintisiz (gapless) dinle — ayet aralarında bekleme yok">🎵 TAM SURE (kesintisiz)</button>
               {/* ★ KÂBE CANLI: Mescid-i Haram 7/24 canlı yayın (YouTube embed) */}
               <button onClick={() => setKabeLive(true)} className="rounded-xl border border-emerald-900/30 bg-emerald-950/40 px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:brightness-125" title="Mescid-i Haram'dan 7/24 canlı yayın">🕋 KÂBE CANLI</button>
+              {/* ★ EKRANSIZ MEAL DİNLEME: ekran kararır, sadece ses; kilit ekranı kontrolleri aktif */}
+              <button onClick={() => { setEkransizMod(v => !v); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${ekransizMod ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Gözlerini kapat, sadece dinle — ekran kararır, kilit ekranından kontrol edersin">🎧 EKRANSIZ DİNLEME</button>
               {/* ★ UYKU TİLAVETİ: seçilen süre sonunda ses kendiliğinden durur */}
               <button onClick={() => setUykuMenu(v => !v)} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${uykuTimer ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title="Yatarken dinle: süre dolunca ses kendiliğinden durur">🌙 UYKU TİLAVETİ{uykuKalan !== null ? ` · ${Math.floor(uykuKalan / 60)}:${String(uykuKalan % 60).padStart(2, "0")}` : ""}</button>
               {uykuMenu && (
@@ -1623,6 +1783,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                   <button key={v} onClick={() => { setSpeed(v); if (audioRef.current) audioRef.current.playbackRate = v; }} className={`rounded px-2 py-0.5 transition ${speed === v ? "bg-gold text-slate-950" : "text-[#8f8870] hover:text-[#f5dda6]"}`}>{v}x</button>
                 ))}
               </div>
+              {/* Uyku modu mevcut kurUykuZamanlayici ile çalışıyor (UI zaten var) */}
               <div className="flex items-center gap-3">
                 <button onClick={() => startListening(Math.max(0, listenAyahIdx - 1))} className="rounded-full bg-white/[.06] p-2.5 text-[#b8b093] transition hover:bg-white/10 active:scale-95" title="Önceki ayet">⏮</button>
                 {isPlaying ? (

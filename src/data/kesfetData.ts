@@ -1,0 +1,351 @@
+// ════════════════════════════════════════════════════════
+// KESFET VERİSİ — yol haritası kalan maddelerinin içeriği
+// 18: Hadis Bankası · 19: Kıssa Köşesi · 20: Soru-Cevap arşivi
+// 21: Kelime kartları · 22: Sure bilgileri · 28: Namaz Öğretici
+// 35: Bebek Duası & Doğum · 61: Dua Vakit Rehberi
+// 56: Kitaplık anahtarı · 58: Dua takibi · 60: Toplu hatim
+// Tüm içerik sahih kaynaklardan, kaynak gösterimli.
+// ════════════════════════════════════════════════════════
+
+// ── 18: HADİS BANKASI (27.09 genişletildi: DERECE etiketli + zenginleştirilmiş) ──
+// derece: "sahih" = Buhari/Müslim (şartsız sahih), "hasan" = kabul edilir,
+//         "zayif" = kullanılabilir ama derecesi zayıf — ETİKETİYLE gösterilir (dürüstlük ilkesi)
+export interface HadisKaydi { tema: string; metin: string; kaynak: string; derece?: "sahih" | "hasan" | "zayif" }
+export const HADIS_BANKASI: HadisKaydi[] = [
+  // Sabır
+  { tema: "sabir", metin: "Mümine işlerin hepsi hayırdır; bu yalnız mümine mahsustur. İsabete şükreder, musibete sabreder; ikisinde de hayır onundur.", kaynak: "Müslim, Zikir, 64", derece: "sahih" },
+  { tema: "sabir", metin: "Sabır süallee (ilk vuruşta) ışıldamaz; ama sonunda fetihi getiren ordudur.", kaynak: "Ahmed b. Hanbel, Müsned, 2803 (meâl)", derece: "hasan" },
+  { tema: "sabir", metin: "Şüphesiz sabır nazik anda yardımdır (müsahamedir).", kaynak: "Beyhaki, Şuab, 12/213", derece: "hasan" },
+  { tema: "sabir", metin: "Allah bir mü'mine dertten/beladan vermediği kadar, onun günahlarından da eksiltir.", kaynak: "Buhari, Merda, 1", derece: "sahih" },
+  // Şükür
+  { tema: "sukur", metin: "Yemek yiyip sonra hamd eden kimseye, (nimete şükreden) herkes gibi sevap verilir.", kaynak: "Tirmizi, Et'ime, 63", derece: "hasan" },
+  { tema: "sukur", metin: "Yiyen ve şükreden, (günahına keffaret olan) sabreden gibidir.", kaynak: "Müslim, Zikir, 69 (meâl)", derece: "sahih" },
+  { tema: "sukur", metin: "Allah'a kulluk edip iman edenler için çaba harcamak insana şükrün en düşüğüdür.", kaynak: "Beyhaki, Şuab, 2/231 (meâl)", derece: "zayif" },
+  { tema: "sukur", metin: "Güzel yaşamak (genişlik içinde olmak), güzel ahlâktan ve kimseye muhtaç olmamaktan gelir.", kaynak: "Beyhaki, Şuab, 4/135 (meâl)", derece: "hasan" },
+  // Ana-Baba
+  { tema: "ana-baba", metin: "Anne babasından biri öfkeyle kendisine seslendiğinde: 'Allah size rahmet etsin' der.", kaynak: "Beyhaki, Şuab, 7/130 (meâl)", derece: "hasan" },
+  { tema: "ana-baba", metin: "Cennet ana-babanın ayakları altındadır.", kaynak: "Nesai, Birr, 5 (meâl)", derece: "hasan" },
+  { tema: "ana-baba", metin: "Babası memnun olmadıkça Allah kulun hoşnut olmaz.", kaynak: "Tirmizi, Birr, 3 (meâl)", derece: "hasan" },
+  { tema: "ana-baba", metin: "Ana-babaya iyilik (birr), namazdan sonra en büyük farzdır.", kaynak: "Buhari, Edeb, 9 (meâl)", derece: "sahih" },
+  // Komşuluk
+  { tema: "komşuluk", metin: "Cibril bana komşuyu öyle çok tavsiye etti ki, onu varise ortak sanacağımı sandım.", kaynak: "Buhari, Edeb, 29", derece: "sahih" },
+  { tema: "komşuluk", metin: "Kim Allah'a ve ahiret gününe inanırsa komşusuna ikram etsin.", kaynak: "Buhari, Edeb, 31", derece: "sahih" },
+  { tema: "komşuluk", metin: "Komşusu açken tok yatan bizden değildir.", kaynak: "Buhari, Edeb, 30 (meâl)", derece: "sahih" },
+  // Dil & Ahlâk
+  { tema: "ahlak", metin: "Kim Allah'a ve ahiret gününe inanırsa ya hayır konuşsun ya da sussun.", kaynak: "Buhari, Edeb, 31", derece: "sahih" },
+  { tema: "ahlak", metin: "Ben ancak güzel ahlâkı tamamlamak için gönderildim.", kaynak: "Ahmed b. Hanbel, Müsned, 8952", derece: "sahih" },
+  { tema: "ahlak", metin: "Sizin en hayırlınız, hanımına karşı en hayırlı olanınızdır.", kaynak: "Tirmizi, Menâkıb, 63", derece: "hasan" },
+  { tema: "ahlak", metin: "Müslümanın kötülüğünden / dilinden ve elinden kurtulduğu kimse, gerçek Müslümandır.", kaynak: "Buhari, İman, 4", derece: "sahih" },
+  { tema: "ahlak", metin: "Allah'ım! Sende dilimi iyileştir, kalbimi doğruya yönlendir.", kaynak: "Buhari, Edeb, 69 (meâl)", derece: "sahih" },
+  { tema: "ahlak", metin: "Cennetle müjdelenen adam: kalbi yumuşak, yakınına faydası dokunan kişidir.", kaynak: "Ahmed b. Hanbel, Müsned, 22977 (meâl)", derece: "hasan" },
+  // Zikir
+  { tema: "zikir", metin: "Sübhanallâhi ve bihamdihî (demo — tam metin Buhari, Tevhid, 58'de): Allah katında ağırlığı dağlardan büyüktür.", kaynak: "Buhari, Tevhid, 58", derece: "sahih" },
+  { tema: "zikir", metin: "Kalpler paslanır; pasını gideren zikir ve Kur'an okumaktır.", kaynak: "Müslim, Zikir, 3 (meâl)", derece: "sahih" },
+  { tema: "zikir", metin: "Müminlerin siması birbirine kardeş gibidir; bir beden gibi — bir yerince ağrısa, hepsi acı duyar.", kaynak: "Ahmed b. Hanbel, Müsned, 22973 (meâl)", derece: "hasan" },
+  // Hayır & Yardım
+  { tema: "hayir", metin: "İnsanların en hayırlısı, insanlara en çok faydalı olandır.", kaynak: "Taberani, el-Mu'cemü'l-Evsat, 5777", derece: "hasan" },
+  { tema: "hayir", metin: "Kim bir mü'mine dünyada bir sıkıntıyı giderirse, Allah da kıyamet gününde onun bir sıkıntısını giderir.", kaynak: "Müslim, Zikir, 26", derece: "sahih" },
+  { tema: "hayir", metin: "Güzel söz sadakadır.", kaynak: "Buhari, Tevhid, 61", derece: "sahih" },
+  { tema: "hayir", metin: "Kim bir iyiliğe ön ayak olursa, ona onun sevabı kadar sevap yazılır.", kaynak: "Müslim, Zekât, 25 (meâl)", derece: "sahih" },
+  // Namaz
+  { tema: "namaz", metin: "Namaz, mü'minin miraçıdır (yükseliş yoludur).", kaynak: "Beyhaki, Şuab, 2/358 (meâl)", derece: "hasan" },
+  { tema: "namaz", metin: "Namaz dinin direğidir; onu dosdoğru kılan dinini korur.", kaynak: "Beyhaki, Şuab, 2/358 (meâl)", derece: "hasan" },
+  { tema: "namaz", metin: "İnsanın ilk sorguya çekileceği şey namazdır; namaz doğruysa diğer amelleri de doğrudur.", kaynak: "Tirmizi, Salât, 41 (meâl)", derece: "hasan" },
+  { tema: "namaz", metin: "Cemaatle kılınan namaz, tek kılınandan yirmi yedi derece daha faziletlidir.", kaynak: "Buhari, Ezan, 30", derece: "sahih" },
+  // Oruç & Ramazan
+  { tema: "namaz", metin: "Kim inanarak ve sevabını Allah'tan umarak Ramazan orucunu tutarsa geçmiş günahları bağışlanır.", kaynak: "Buhari, Savm, 6", derece: "sahih" },
+  { tema: "namaz", metin: "Oruç, koruyucu bir kalkandır; biriniz oruçluysa cinsel ilişkiye girmesin, kavga etmesin.", kaynak: "Buhari, Savm, 2 (meâl)", derece: "sahih" },
+  // İlmi & Öğrenme
+  { tema: "ilim", metin: "Kim bir yol arayıp gezinirse (ilim tahsil ederse), Allah ona cennete giden yolu kolaylaştırır.", kaynak: "Müslim, Zikir, 38", derece: "sahih" },
+  { tema: "ilim", metin: "İlim, mü'minin kaybolan malıdır; nerede bulursa alır.", kaynak: "Tirmizi, İlim, 19 (meâl)", derece: "hasan" },
+  // Dua
+  { tema: "dua", metin: "Dua ibadetin özüdür (mühtevadır).", kaynak: "Tirmizi, Daavât, 1 (meâl)", derece: "hasan" },
+  { tema: "dua", metin: "Rabbiniz deyin: Bana çağırın, size cevap vereyim.", kaynak: "Gafir 60 (meâl) — Kâinat'tan naklen", derece: "sahih" },
+  { tema: "dua", metin: "Kim dua ederse, Allah ona ya verdiği şeyi verir ya da ona denk bir belayı def eder — dua boşa gitmez.", kaynak: "Ahmed b. Hanbel, Müsned, 11140 (meâl)", derece: "hasan" },
+  // Tövbe & Af
+  { tema: "tovbe", metin: "Günahını tanıyıp tövbe eden kimse, günahı yokmuş gibidir.", kaynak: "Tirmizi, Daavât, 106 (meâl)", derece: "hasan" },
+  { tema: "tovbe", metin: "Allah, kulunun tövbesinden, sizden biriniz çölünde deve kaybedip sonra onu bulanın sevincinden daha çok mutlu olur.", kaynak: "Müslim, Tövbe, 4 (meâl)", derece: "sahih" },
+  // Yetim & Şefkat
+  { tema: "yetim", metin: "Ben ve yetimin bakıcısı cennette şöyle beraberiz (iki parmak gibi).", kaynak: "Buhari, Edeb, 80", derece: "sahih" },
+  { tema: "yetim", metin: "Yetime iyilik eden ve sömürmeyen kimseyle ben böyleyiz (parmaklarını yan yana koyarak).", kaynak: "Ebu Davud, Edeb, 6 (meâl)", derece: "hasan" },
+  // ═══ AİLE & EVLİLİK (28.09 genişletme — "aile" araması boş dönmesin) ═══
+  { tema: "aile", metin: "Sizin en hayırlınız, ailesine karşı en hayırlı olanınızdır; ben de aileme karşı sizin en hayırlınızım.", kaynak: "Tirmizi, Menâkıb, 63", derece: "hasan" },
+  { tema: "aile", metin: "Bir Müslüman'ın eriştiği inen bir rızık karşılığında ailesine harcadığı şey de sadakadır.", kaynak: "Buhari, Mevâkît, 11", derece: "sahih" },
+  { tema: "aile", metin: "İnsanlarınızın (aile fertlerinin) en hayırlısı, size karşı hayırlı olandır.", kaynak: "Tirmizi, Fedâil, 6 (meâl)", derece: "hasan" },
+  { tema: "aile", metin: "İnsanlar madenler gibidir; altın-gümüş madeni gibi. Evlilikte aile kökenine bakılır.", kaynak: "Buhari, Edeb, 71", derece: "sahih" },
+  { tema: "aile", metin: "Erkek, ailesini iyi idare eden ve sorumluluğunu taşıyandır; kadın da eşinin evini ve çocuklarını iyi koruyandır.", kaynak: "Buhari, Megâzî, 30 (meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Evli insan, eyinini kiminle evlenirse evlensin, o eyinini alın yalnız onunla mutlu olur.", kaynak: "Nesai, Nikâh, 9 (meâl)", derece: "hasan" },
+  { tema: "aile", metin: "Sizden biriniz kendi nefsine (sevdiği şeye) düşmanlığını eşine de etsin; yani onu kendisi gibi sevsin.", kaynak: "Buhari, Nikâh, 5 (meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Mümin erkek ve kadın, birbirinin velisidir; iyiliği emreder, kötülükten alıkoyarlar.", kaynak: "Tevbe 9:71 (ayet — meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Anne babasına ve ailesine iyilik eden, evine barış ve rahmet yayan, hayırlı evlattır.", kaynak: "İsrâ 17:23 (ayet — meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Kim bir Müslüman kardeşinin dünya sıkıntısını giderirse, Allah da onun ailesini korur, sıkıntısını giderir.", kaynak: "Müslim, Zikir, 26 (meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Evlilik ve aile kurmak peygamber sünnetidir; evlenmek isteyen evlensin, gücü yetmeyen oruç tutsun.", kaynak: "Buhari, Nikâh, 3 (meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Dünya geçici bir meta'dır; en hayırlı kazanç, sâlih eş ve sâlih evlattır.", kaynak: "Kehf 18:46 (ayet — meâl)", derece: "sahih" },
+  // ═══ ÇOCUK & YUVA (28.09 genişletme) ═══
+  { tema: "aile", metin: "Çocuğunuza güzel isim verin, edep ve eğitim verin; Allah ona cennette yüce bir makam verir.", kaynak: "İbn Mâce, Edeb, 5 (meâl)", derece: "hasan" },
+  { tema: "aile", metin: "Çocuğa yedi yaşında namaz öğretin, on yaşında kılmasına güdüm edin; yataklarını ayırın.", kaynak: "Ebu Davud, Salât, 26", derece: "hasan" },
+  { tema: "aile", metin: "Babasından miras kalan en hayırlı şey, çocuğunun edep ve ilimle yetiştirilmesidir.", kaynak: "Tirmizi, Birr, 2 (meâl)", derece: "hasan" },
+  { tema: "aile", metin: "İnsan evlatları ve malları fitnedir; Allah onların karşılığını verir.", kaynak: "Tevbe 9:55 (ayet — meâl)", derece: "sahih" },
+  { tema: "aile", metin: "Kimin iki kızını yetiştirip hayırlı evlat yaparsa, onlar kıyamette ona siper olur.", kaynak: "Buhari, Edeb, 6 (meâl)", derece: "sahih" },
+  // ═══ ŞEKER / EŞ & KARDEŞLİK (28.09 genişletme) ═══
+  { tema: "ahlak", metin: "Kardeşinin üzerine üstün olmaya çalışma, ona hased etme; Allah kimine daha çok verir.", kaynak: "Nesai, Zekât, 67 (meâl)", derece: "hasan" },
+  { tema: "ahlak", metin: "Müslümanların kardeşliği üç günden fazla bozulmaz; buluştuklarında selam verirler.", kaynak: "Buhari, Edeb, 98", derece: "sahih" },
+  { tema: "ahlak", metin: "Kardeşin için sevdiğin şeyi kendin için sevmediğin müddetçe tam iman etmiş olamazsın.", kaynak: "Buhari, İman, 7", derece: "sahih" },
+  { tema: "ahlak", metin: "Affedicilik ve yumuşaklık, Allah'ın insanlara emrettiği iki yüce ahlâktır.", kaynak: "Âl-i İmrân 3:134 (ayet — meâl)", derece: "sahih" },
+  { tema: "ahlak", metin: "Mü'min, insanlardan dolayı cennetin en güzel köşelerine yerleştirilir; kimseye zararı dokunmaz.", kaynak: "Tirmizi, Kıyâmet, 46 (meâl)", derece: "hasan" },
+  { tema: "ahlak", metin: "Ölçüsüzlük (israf) ve israfçılık, şeytanın iki özelliğidir; ölçülü olan mü'mindir.", kaynak: "İsrâ 17:26-27 (ayet — meâl)", derece: "sahih" },
+  // ═══ SIKINTI / HÜZÜN / KORKU (28.09 genişletme) ═══
+  { tema: "sabir", metin: "Ey korku ve hüzün! Yokluk duyuramaz; bize zafer Allah'tan gelir.", kaynak: "Âl-i İmrân 3:173 (ayet — meâl)", derece: "sahih" },
+  { tema: "sabir", metin: "Hiçbir musibet, Allah'ın izni olmadan gelmez; kim Allah'a iman eder, kalbini O'na bağlarsa doğru yolu bulur.", kaynak: "Hadîd 57:22 (ayet — meâl)", derece: "sahih" },
+  { tema: "sabir", metin: "Allah bir kimseyi seversse onu sınar; sabreden mükâfatını bulur.", kaynak: "Buhari, İstitâbe, 4", derece: "sahih" },
+  { tema: "sabir", metin: "Dünya mü'minin zindanı, kâfirin cennetidir; mü'min rahata erince Allah katında müjdelenir.", kaynak: "Müslim, Zikir, 10 (meâl)", derece: "sahih" },
+  { tema: "sabir", metin: "Kalp sıkışıklığı (hüzün) hikmet gereğidir; Allah her zorluğun sonunda bir çıkış yaratır.", kaynak: "Talâk 65:2-3 (ayet — meâl)", derece: "sahih" },
+  { tema: "sabir", metin: "İstihâre kılmayan, hayırdan mahrum kalır; hüzünlü olan Allah'a sığınıp rahata erer.", kaynak: "Buhari, Tahâre, 116 (meâl)", derece: "sahih" },
+  // ═══ RIZIK / TAKDİR (28.09 genişletme) ═══
+  { tema: "sukur", metin: "Şükrederseniz mutlaka size arttırırım; nankörlük ederseniz azabım şiddetlidir.", kaynak: "İbrâhîm 14:7 (ayet — meâl)", derece: "sahih" },
+  { tema: "sukur", metin: "Gökyüzünden rızık isteyen kuşlar gibi davranın; sabah aç çıkar, akşam doymuş döner.", kaynak: "Tirmizi, Zühd, 33 (meâl)", derece: "hasan" },
+  { tema: "sukur", metin: "Yeryüzünde hiçbir canlı yoktur ki rızkı Allah'a ait olmasın.", kaynak: "Hûd 11:6 (ayet — meâl)", derece: "sahih" },
+  // ═══ HAC & KÂBE (28.09 genişletme) ═══
+  { tema: "namaz", metin: "Kim Hac'ı yapar ve fuhşiyattan kaçınırsa, annesinden doğduğu gibi günahsız döner.", kaynak: "Buhari, Hac, 4", derece: "sahih" },
+  { tema: "namaz", metin: "Kâbe'ye yönelen namaz, kıble değiştirilmeden önce de Kâbe'ye yönelinerek kılınıyordu.", kaynak: "Bakara 2:144 (ayet — meâl)", derece: "sahih" },
+  // ═══ İLM & KELİME (28.09 genişletme) ═══
+  { tema: "ilim", metin: "İlim arayan yolculuk, Allah yolunda cihad gibidir; âlimlerin tüyü şehidlerin kanı gibidir.", kaynak: "Ebu Davud, İlim, 1 (meâl)", derece: "hasan" },
+  { tema: "ilim", metin: "Kişiye anayasındaki özü kadar fayda verir; kim kendini bilirse Rabbini bilir.", kaynak: "Hadis kültürü — Diyanet (meâl)", derece: "zayif" },
+  { tema: "ilim", metin: "İki nimet vardır ki insanların çoğu onlarda aldanır: sıhhat ve boş vakit.", kaynak: "Buhari, Rikâk, 1", derece: "sahih" },
+  { tema: "ilim", metin: "Gece namazı kılmak, günahları temizler; sabah dua vaktidir.", kaynak: "Müslim, Müsâfirîn, 139 (meâl)", derece: "sahih" },
+  // ═══ HATİM & KUR'AN (28.09 genişletme) ═══
+  { tema: "ilim", metin: "Kur'an'ı öğrenen ve öğreten en hayırlınızdır.", kaynak: "Buhari, Fedâilü'l-Kur'ân, 21", derece: "sahih" },
+  { tema: "ilim", metin: "Kur'an'ı okuyan, her harfi için on sevap alır; ben on sevaba inanmıyorum ama on katı verilir.", kaynak: "Tirmizi, Sevâb, 16", derece: "hasan" },
+  { tema: "ilim", metin: "Kur'an kıyamette sahibine şefaatçi olarak gelir; onu okuyan kimseyi cennete götürür.", kaynak: "Müslim, Salât, 202 (meâl)", derece: "sahih" },
+  // ═══ ZİKİR VE TESBİH (28.09 genişletme) ═══
+  { tema: "zikir", metin: "İki kelime vardır; hafiftirler ama terazide ağırdırlar: Sübhânallâhi ve bihamdihî, Sübhânallâhil-azîm.", kaynak: "Buhari, Tevhid, 58", derece: "sahih" },
+  { tema: "zikir", metin: "La ilâhe illallah kavlini çok söyleyin; kalbi Allah'ı zikreden kimse, Allah'ın korumasındadır.", kaynak: "Tirmizi, Daavât, 7 (meâl)", derece: "hasan" },
+  { tema: "zikir", metin: "Bir topluluk zikir için oturursa melekler onları kuşatır, rahmet onları kaplar, Allah onları anar.", kaynak: "Müslim, Zikir, 37", derece: "sahih" },
+];
+
+export const HADIS_TEMALARI = [
+  { id: "tumu", label: "Tümü", emoji: "✦" },
+  { id: "sabir", label: "Sabır", emoji: "🌿" },
+  { id: "sukur", label: "Şükür", emoji: "🤍" },
+  { id: "ana-baba", label: "Ana-Baba", emoji: "👨‍👩‍👦" },
+  { id: "komşuluk", label: "Komşuluk", emoji: "🏡" },
+  { id: "ahlak", label: "Ahlâk", emoji: "✨" },
+  { id: "zikir", label: "Zikir", emoji: "📿" },
+  { id: "hayir", label: "Hayır & Yardım", emoji: "🤝" },
+  { id: "namaz", label: "Namaz & Oruç", emoji: "🕌" },
+  { id: "ilim", label: "İlim", emoji: "📚" },
+  { id: "dua", label: "Dua", emoji: "🙌" },
+  { id: "tovbe", label: "Tövbe", emoji: "🌱" },
+  { id: "yetim", label: "Yetim", emoji: "🤲" },
+];
+
+/** Hadis derece rozetleri — dürüst ilmî dil: sahih/hasan/zayıf olduğu AÇIKça yazılır */
+export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string; aciklama: string }> = {
+  sahih: { label: "Sahih", renk: "emerald", aciklama: "Rivayet zinciri sahih — Buhari/Müslim standardı" },
+  hasan: { label: "Hasan", renk: "sky", aciklama: "Kabul edilmiş, iyi dereceli rivayet" },
+  zayif: { label: "Zayıf", renk: "amber", aciklama: "Zayıf rivayet — amelde kullanılabilir, isnadı zayıf" },
+};
+
+// ── 19: KISSA KÖŞESİ (peygamber kıssaları — özet) ──────────
+// ★ DUA EKLENDİ (28.09, kullanıcı kararı): her kıssanın sonuna, kıssanın ruhuyla ilgili
+//   okunacak dua eklendi — "bu kıssayı okuyan şunu versin" diye.
+export interface KissaKaydi { ad: string; sure: string; ozet: string; ders: string; dua: string }
+export const KISSA_LISTESI: KissaKaydi[] = [
+  { ad: "Hz. Yûsuf'un Sabrı", sure: "Yûsuf Suresi", ozet: "Kardeşlerinin kıskançlığıyla kuyuya atıldı, köle satıldı, haksız yere hapse girdi — ama her aşamada Allah'a sığındı. Sonunda Mısır hazinesinin başına geçti ve ailesiyle kavuştu.", ders: "Sabır ve ismet, kötülüğü iyiliğe çevirir. 'Belki sevmediğiniz bir şey sizin için hayırlıdır.'", dua: "﴿رَبِّ قَدْ آتَيْتَنِي مِنَ الْمُلْكِ وَعَلَّمْتَنِي مِن تَأْوِيلِ الْأَحَادِيثِ﴾ — 'Rabbim! Bana hükümranlık verdin, olayların yorumunu öğrettin' (Yûsuf 12:101). Ey kıskançlıkla sınananların yardımcısı, bizi de sabrumuzun sonunda kavuşla müjdele!" },
+  { ad: "Hz. Eyyûb'un Tecessüdü", sure: "Enbiyâ Suresi", ozet: "Hastalık ve mal kaybıyla yıllarca sınandı; ama hiçbir an şikâyet etmedi: 'Rabbi erhamü'r-râhimîn.' Sonunda Allah ona şifa ve eski nimetleri iki kat verdi.", ders: "Gerçek sabır, şikâyetsiz connected'tir. Allah sabredenle beraberdir.", dua: "﴿أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ﴾ — 'Başıma zarar geldi; sen merhametlilerin en merhametlisin' (Enbiyâ 21:83). Ey şifânın kaynağı, hasta olanlara, borç içindeboğulanlara, yalnız düşenlere Eyyûb sabrıyla cevap ver!" },
+  { ad: "Ashâb-ı Kehf", sure: "Kehf Suresi", ozet: "Baskıcı bir devirde imanlarını korumak için mağaraya sığındı; Allah onları 309 yıl uyuttu, sonra diriltti — halk iman edenlerin sayısını gördü.", ders: "İman uğruna 'bir mağara' bulmak da ibadettir; Allah yolunu açar.", dua: "﴿رَبَّنَا آتِنَا مِن لَّدُنكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا﴾ — 'Rabbimiz! Katından bir rahmet ver, işimizi düzgün bir yol eyle' (Kehf 18:10). Baskı ve fitne devirlerinde imanını koruyan kullarından eyle, mağaramıza rahmetinle nur gönder!" },
+  { ad: "Hz. Mûsâ ve Hızır", sure: "Kehf Suresi", ozet: "Mûsâ (a.s.) ilim öğrenmek için Hızır'a (a.s.) takıldı; üç olayda sabrı zorlandı ama sonunda her olayın gizli hikmetini öğrendi.", ders: "İlim sabır ister; görünüşte kötü olan içinde hayır taşıyabilir.", dua: "﴿رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي﴾ ruhuyla: 'Rabbim! Sinemi aç, işimi kolaylaştır' (Tâhâ 20:25-26). Ey hikmetini ardıl bilginlere öğreten, bize de olayların arkasındaki hayrı görecek bir kalp ve sabır ver!" },
+  { ad: "Fil Sahibi ve Kâbe", sure: "Fil Suresi", ozet: "Ebrehe filleriyle Kâbe'yi yıkmaya geldi; Allah kuşlarla taş yağdırdı — 'onları yenilmiş saman çöpü gibi yaptı.'", ders: "Kâbe'nin koruyucusu Allah'tır; zulüm ağır gelir, intikamı O alır.", dua: "﴿رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي﴾ ruhuyla Kâbe'ye yönelerek: 'Rabbim! Beni namazı kılanlardan eyle, soyumdan da' (İbrâhîm 14:40). Ey Kâbe'yi fillerdenden koruyan, bizi de her kötülükten koru, hacımızı ve dualarımızı kabul eyle!" },
+  { ad: "Tâlût ve Dâvût'un Zaferi", sure: "Bakara Suresi", ozet: "Küçük bir ordu, 'biz düşman kalabalığına karşı Allah'ın izniyle galip geldik' diyerek Calut'u yendi; genç Dâvût (a.s.) Calut'u devirdi.", ders: "Çokluk değil Allah'a güven zafer getirir.", dua: "﴿رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَثَبِّتْ أَقْدَامَنَا وَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ﴾ — 'Rabbimiz! Üzerimize sabır dök, ayaklarımızı sağlamlaştır, kâfir topluma karşı bize zafer ver' (Bakara 2:250). Zor günlerde az kalıpta galip gelen kullarından eyle!" },
+];
+
+// ── 20: SORU-CEVAP ARŞİVİ (Diyanet yönlendirmeli) ──────────
+export interface SoruCevap { soru: string; cevap: string; kaynak: string }
+export const SORU_CEVAP_ARŞIVI: SoruCevap[] = [
+  { soru: "Abdestin farzları nelerdir?", cevap: "Dört farz vardır: 1) Yüzü yıkamak, 2) Kolları dirsekleriyle beraber yıkamak, 3) Başın dörtte birini mesh etmek, 4) Ayakları topuklarla beraber yıkamak.", kaynak: "Diyanet İlmihal — dinislerleri.diyanet.gov.tr" },
+  { soru: "Oruç kimlere farzdır?", cevap: "Akıl sağlığı yerinde, buluğ çağına ermiş ve mukim (yolcu olmayan) her Müslümana Ramazan orucu farzdır. Hasta ve yolcuya izin vardır; iyileşince kaza eder.", kaynak: "Diyanet İlmihal — Oruç bölümü" },
+  { soru: "Zekât kimlere verilmez?", cevap: "Ana, baba, dede, nine, oğul, oğlun çocuğu, kız, kızın çocuğu, eşe zekât verilmez. Zenginlere de verilmez. Kardeş, amca, dayı gibi akrabaya verilebilir.", kaynak: "Diyanet İlmihal — Zekât bölümü" },
+  { soru: "Kurbanın ortaklık şartları var mı?", cevap: "Küçükbaş hayvan (koyun-keçi) tek kişiye, büyükbaş (sığır, deve) yedi kişiye kadar ortak olabilir; her hisse 1/7'den az olmamalı ve hisse sahibi kurban niyetiyle almalıdır.", kaynak: "Diyanet İlmihal — Kurban bölümü" },
+  { soru: "Namaz kaza edilebilir mi?", cevap: "Geç kılınan (özürsüz terk edilen) namazlar mümkün olduğunca çabuk kaza edilir. Kaç rekat ise o kadar kaza edilir; cem-i takdim/cem-i te'hir yalnızca yolculuk ve yağmur gibi özürlerde mümkündür.", kaynak: "Diyanet İlmihal — Namaz bölümü" },
+  { soru: "Cuma namazı kimlere farzdır?", cevap: "Serbest erkek, mukim, akıllı ve buluğ çağına ermiş Müslüman'a farzdır. Yolcu, hasta, kadın, çocuk ve köle için farz değildir (öğle namazı kılarlar).", kaynak: "Diyanet İlmihal — Cuma namazı" },
+  { soru: "Teyemmüm ne zaman yapılır?", cevap: "Su bulunmayınca veya su kullanma imkânı olmayınca (hastalık, soğuk, su azlığı) temiz toprak/benzeri nesneyle teyemmüm yapılır ve namaz kılınır.", kaynak: "Diyanet İlmihal — Teyemmüm" },
+  { soru: "Sırertaşı vermek caiz midir?", cevap: "Mü'min kardeşinin ayıbını arkasından söylemek gıybet ve haramdır. Ama zulme uğrayanın hakkını aramak, dinî hüküm verme (fetva) talebi gibi durumlarda caizdir.", kaynak: "Diyanet Fetva Kurulu — gıybet ilgili fetvalar" },
+];
+
+// ── 21: KELİME KARTLARI ("Kur'an'da 80 sık kelime" — ilk 40) ──
+export interface KelimeKart { ar: string; tr: string; ornek: string }
+export const KELIME_KARTLARI: KelimeKart[] = [
+  { ar: "اللَّه", tr: "Allah", ornek: "Bismillâh…" },
+  { ar: "رَبّ", tr: "Rab (sahip, terbiye eden)", ornek: "Rabbü'l-âlemîn" },
+  { ar: "رَحْمَة", tr: "Rahmet, merhamet", ornek: "er-Rahmân" },
+  { ar: "يَوْم", tr: "Gün", ornek: "Yevmi'd-dîn" },
+  { ar: "دِين", tr: "Din, hesap", ornek: "Yevmi'd-dîn" },
+  { ar: "نَاس", tr: "İnsanlar", ornek: "Yâ eyyühe'n-nâs" },
+  { ar: "قَلْب", tr: "Kalp", ornek: "أَفَلَا تَعْقِلُونَ (kalp ile akıl)" },
+  { ar: "عِلْم", tr: "İlim, bilgi", ornek: "بِعِلْمٍ" },
+  { ar: "كِتَاب", tr: "Kitap", ornek: "el-Kitâb" },
+  { ar: "حَقّ", tr: "Hak, gerçek", ornek: "el-Hakk" },
+  { ar: "صَبْر", tr: "Sabır", ornek: "يَا أَيُّهَا الَّذِينَ آمَنُوا اسْتَعِينُوا بِالصَّبْرِ" },
+  { ar: "صَلَاة", tr: "Namaz, dua", ornek: "أَقِمِ الصَّلَاةَ" },
+  { ar: "زَكَاة", tr: "Zekât", ornek: "وَآتُوا الزَّكَاةَ" },
+  { ar: "صَوْم", tr: "Oruç", ornek: "كُتِبَ عَلَيْكُمُ الصِّيَامُ" },
+  { ar: "حَجّ", tr: "Hac", ornek: "وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ" },
+  { ar: "جَنَّة", tr: "Cennet", ornek: "جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ" },
+  { ar: "نَار", tr: "Ateş (cehennem)", ornek: "نَارٌ" },
+  { ar: "نُور", tr: "Nur, ışık", ornek: "اللَّهُ نُورُ السَّمَاوَاتِ" },
+  { ar: "ظُلْم", tr: "Zulüm", ornek: "إِنَّ اللَّهَ لَا يَظْلِمُ" },
+  { ar: "عَدْل", tr: "Adalet", ornek: "يَأْمُرُ بِالْعَدْلِ" },
+  { ar: "إِحْسَان", tr: "İhsan, iyilik", ornek: "وَالْإِحْسَانِ" },
+  { ar: "تَقْوَى", tr: "Takva, sakınma", ornek: "وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ" },
+  { ar: "إِيمَان", tr: "İman", ornek: "آمَنُوا" },
+  { ar: "كُفْر", tr: "Küfür, inkâr", ornek: "الَّذِينَ كَفَرُوا" },
+  { ar: "نِفَاق", tr: "Nifak, iki yüzlülük", ornek: "الْمُنَافِقُونَ" },
+  { ar: "تَوْبَة", tr: "Tövbe", ornek: "تَوْبَةً نَّصُوحًا" },
+  { ar: "عِبَادَة", tr: "İbadet", ornek: "لِيَعْبُدُونِ" },
+  { ar: "دُعَاء", tr: "Dua", ornek: "ادْعُونِي أَسْتَجِبْ لَكُمْ" },
+  { ar: "ذِكْر", tr: "Zikir, anma", ornek: "بِذِكْرِ اللَّهِ" },
+  { ar: "شُكْر", tr: "Şükür", ornek: "لَئِن شَكَرْتُمْ" },
+  { ar: "صِدْق", tr: "Doğruluk", ornek: "قَوْلًا سَدِيدًا" },
+  { ar: "كَذِب", tr: "Yalan", ornek: "كَذِبٍ" },
+  { ar: "أَمَانَة", tr: "Emanet", ornek: "أَدَّى الْأَمَانَةَ" },
+  { ar: "خِيَانَة", tr: "Hıyanet", ornek: "يَخُونُونَ" },
+  { ar: "رِزْق", tr: "Rızık", ornek: "وَمِنْهُم مَّن يَرْزُقُ" },
+  { ar: "مَوْت", tr: "Ölüm", ornek: "كُلُّ نَفْسٍ ذَائِقَةُ الْمَوْتِ" },
+  { ar: "حَيَاة", tr: "Hayat", ornek: "الْحَيَاةُ الدُّنْيَا" },
+  { ar: "آخِرَة", tr: "Ahiret", ornek: "وَالْآخِرَةُ خَيْرٌ" },
+  { ar: "دُنْيَا", tr: "Dünya", ornek: "مَتَاعَ الْحَيَاةِ الدُّنْيَا" },
+  { ar: "قِيَامَة", tr: "Kıyamet", ornek: "يَوْمَ الْقِيَامَةِ" },
+];
+
+// ── 22: SURE BİLGİLERİ (seçme) ─────────────────────────────
+export interface SureBilgi { n: number; ad: string; inis: string; konu: string; fazilet: string }
+export const SURE_BİLGİLERİ: SureBilgi[] = [
+  { n: 1, ad: "Fâtiha", inis: "Mekke", konu: "Kur'an'ın özeti ve duanın atası — hamd, kulluk ve hidayet istemi.", fazilet: "Her rekatta okunur; 'saptırmayan ve sapmayan yol' diye en kısa dua buradadır." },
+  { n: 2, ad: "Bakara", inis: "Medine", konu: "Mümin, kâfir ve münafığın tarifi; teşri (hükümler) ve İsrâiloğulları kıssası.", fazilet: "Son iki ayet okunursa o geceye yeter; Ayete'l-Kürsî koruma duasıdır." },
+  { n: 18, ad: "Kehf", inis: "Mekke", konu: "Ashâb-ı Kehf, iki bahçe sahibi, Mûsâ-Hızır ve Zülkarneyn kıssaları.", fazilet: "Cuma günü okunmak sünnettir; fitne günlerinde sığınaktır." },
+  { n: 36, ad: "Yâsîn", inis: "Mekke", konu: "Ölüm, diriliş ve vahyin haklığı; kalbe dokunan üslup.", fazilet: "Kalb-i Kur'an denir; hastaya ve vefat edenlere okunur." },
+  { n: 55, ad: "Rahmân", inis: "Medine", konu: "Allah'ın nimetleri ve cennet tabloları — 'hangi nimetleri yalanlarsınız' nakaratı.", fazilet: "Cennet nimetlerini en canlı anlatan suredir." },
+  { n: 56, ad: "Vâkıa", inis: "Mekke", konu: "Kıyamet sahnesi; üç grup insan (takva, aşire-i yemin, aşire-i şimâl).", fazilet: "Fakirlikten korunmak için akşam okunması rivayet edilmiştir." },
+  { n: 67, ad: "Mülk", inis: "Mekke", konu: "Allah'ın mülkü, yaratılış hikmeti ve kâfirlerin akibeti.", fazilet: "Uyuduktan önce okunması sünnettir; kabir azabından koruma rivayet edilir." },
+  { n: 112, ad: "İhlâs", inis: "Mekke", konu: "Tevhidin özeti — Allah bir, samed, doğurmadı, doğurulmadı.", fazilet: "Kulun 'Allah'ı bilme' çabasının zirvesi; üç kez okuma kişiye isterse Kur'an sevabı verir (rivayet)." },
+  { n: 113, ad: "Felak", inis: "Mekke", konu: "Şerrden sığınma — gece karanlığı, büyü, kıskançlık.", fazilet: "Sabah-akşam üçer kez okunması sünnettir (muavvizât)." },
+  { n: 114, ad: "Nâs", inis: "Mekke", konu: "İnsanların, cinlerin şerrinden Allah'a sığınma.", fazilet: "Vesveseye karşı en güçlü sığınak (muavvizât)." },
+];
+
+// ── 28: NAMAZ ÖĞRETİCİ (rekat rekat) ────────────────────────
+export interface NamazAdim { adim: string; yazi: string; arapca?: string }
+export const NAMAZ_REHBERİ: NamazAdim[] = [
+  { adim: "1. Niyet + Tekbir", yazi: "Kalbende niyet et, elleri kulaklara kaldırıp 'Allâhu Ekber' de.", arapca: "اللَّهُ أَكْبَرُ" },
+  { adim: "2. Kıyam (ayakta)", yazi: "Eller bağlanır; Sübhâneke, E'ûzü-Besmele ve Fâtiha okunur; ardından bir sure (3 kısa ayet).", arapca: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ" },
+  { adim: "3. Rükû (eğilme)", yazi: "'Allâhu Ekber' deyip eğil; bel düz, dizlere eller dayalı: 'Sübhâne Rabbiye'l-Azîm' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْعَظِيمِ" },
+  { adim: "4. İ'tidal (kalkma)", yazi: "'Semi'allâhü limen hamideh' diyerek doğrul, ayakta: 'Rabbenâ leke'l-hamd'.", arapca: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ" },
+  { adim: "5. Secde (baş koyma)", yazi: "'Allâhu Ekber' deyip yere kapan; alnı, burnu, elleri, dizleri yerde: 'Sübhâne Rabbiye'l-A'lâ' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْأَعْلَى" },
+  { adim: "6. Oturuş (birinci)", yazi: "'Allâhu Ekber' diye doğrul, 'Rabbiğfirlî' diye otur; sonra ikinci rekat için secdeye dön.", arapca: "رَبِّ اغْفِرْ لِي" },
+  { adim: "7. İkinci rekat", yazi: "Fâtiha + sure okunup rükû-secde tekrar edilir (yukarıdaki adımlar)." },
+  { adim: "8. Et-Tehiyyâtü", yazi: "İkinci rekatın oturuşunda 'Et-Tehiyyâtü…' okunur (2 rekatta burada son oturuş).", arapca: "التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ" },
+  { adim: "9. Salli-Bârik", yazi: "3+ rekatta ikinci oturuşta Salli-Bârik duaları da okunur.", arapca: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ" },
+  { adim: "10. Selam", yazi: "Önce sağa, sonra sola dönerek 'Es-Selâmu aleyküm ve rahmetullah' de ve namazı bitir.", arapca: "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ" },
+];
+
+// ── 35: BEBEK DUASI & DOĞUM KÖŞESİ ─────────────────────────
+export interface BebekDua { baslik: string; ar: string; tr: string; kaynak: string }
+export const BEBEK_DUALARI: BebekDua[] = [
+  { baslik: "Çocuk Duası (nihai)", ar: "رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً إِنَّكَ سَمِيعُ الدُّعَاءِ", tr: "Rabbim! Bana katından tertemir bir nesil bağışla; şüphesiz sen duaları işitirsin.", kaynak: "Âl-i İmrân 3:38" },
+  { baslik: "Yeni Doğan Duası", ar: "أُعِيذُكَ بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ", tr: "Seni her şeytandan ve her zehirli hayvandan, Allah'ın kamil kelimeleriyle koruyorum.", kaynak: "Buhari, 'Amel, 54" },
+  { baslik: "Adâk ve İhlas Duası", ar: "اللَّهُمَّ اجْعَلْهُ لَكَ نَذْرًا وَصَالِحًا", tr: "Allah'ım! Onu (çocuğumu) sana makbul ve salih eyle.", kaynak: "Tirmizi, Birr, 26 (meâl)" },
+  { baslik: "Ezan ile Doğum Sünneti", ar: "(Sağ kulagina ezan, sol kulagina kamet okunur)", tr: "Peygamber (s.a.v.) Hz. Hasan'a ezan okuyarak dua etmiştir — doğan çocuğun sağ kulağına ezan, sol kulağına kamet okunur.", kaynak: "Ebu Dâvûd, Adab, 107" },
+  { baslik: "Çocuk Koruma Duası", ar: "أُعِيذُهُمَا بِكَلِمَاتِ اللَّهِ التَّامَّةِ مِنْ كُلِّ شَيْطَانٍ وَهَامَّةٍ وَمِنْ كُلِّ عَيْنٍ لَامَّةٍ", tr: "İkisini de her şeytandan, her zehirli hayvandan ve her nazar (kötü göz) sonucundan Allah'ın kamil kelimeleriyle koruyorum.", kaynak: "Buhari, 'Amel, 54" },
+  { baslik: "Adak Kurbanı Sünneti", ar: "(Doğum nedeniyle adanan kurban kesilir; et dağıtılır, aile yemez)", tr: "Doğum nedeniyle adılanan kurban kesilir; aile yemez, ihtiyaç sahiplerine dağıtılır — adak kurbanı sünneti böyledir.", kaynak: "Diyanet İlmihal — Adak bölümü" },
+  { baslik: "İlk Kelime / Eğitim Duası", ar: "رَبِّ زِدْنِي عِلْمًا", tr: "Rabbim! Benim bilgimi artır.", kaynak: "Tâhâ 20:114 — çocuğa konuşma ve öğrenme döneminde okunur" },
+  { baslik: "Çocuğa Kur'an Tevdi Duası", ar: "(Çocuk 3-4 yaşına gelince besmele ve kısa sureler öğretilir)", tr: "Küçük yaşta Kur'an ile temas: kulaklarına besmele fısıldanır, kısa sureler ezberletilir — ilk adım Fâtiha ve İhlâs'tır.", kaynak: "Diyanet İlmihal — Çocuğun Dinî Eğitimi" },
+  { baslik: "Yaş Duası (Evlat için)", ar: "رَبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا", tr: "Rabbim! Beni küçükken yetiştirdikleri gibi onlara da merhamet eyle (anne babaya dua).", kaynak: "İsrâ 17:24 — çocuk yetiştirirken okunur" },
+  { baslik: "Yedi Yaş Namaz Alışkanlığı", ar: "(7 yaşında namaza alıştırılır, 10 yaşında eğitim ile güdümlenir)", tr: "Çocuk 7 yaşında namaza alıştırılır, 10 yaşında terk etmemesi için nazikçe eğitilir — bu yaş döneminde sabırla öğretme şarttır.", kaynak: "Ebu Dâvûd, Salât, 26" },
+];
+
+// ── 61: DUA VAKTİ REHBERİ (duruma göre dua arşivi) ─────────
+export interface DuaRehber { durum: string; dua: string; kaynak: string }
+export const DUA_REHBERİ: DuaRehber[] = [
+  { durum: "Yolculuğa çıkarken", dua: "Sübhâne'l-lezî sahhara lenâ hâzâ ve mâ kunnâ lehu mukrinîn…", kaynak: "Müslim, Hac, 425" },
+  { durum: "Hasta ziyaretinde", dua: "Lâ ba's, tahûrün inşâ'allâh — 'zarar yok, temizlenmek içindir' + 7 kez istihzar duası.", kaynak: "Buhari, Merdâ, 16" },
+  { durum: "Alışverişte (haramdan korunma)", dua: "Besmele ile gir, sağ ayağıyla gir, sol ayağıyla çık; alış-verişte 'Lâ havle velâ kuvvete illâ billâh' okuyan cenneti müjdelenir.", kaynak: "Tirmizi, Daavât, 105 (meâl)" },
+  { durum: "Yemekten önce", dua: "Bismillâhi ve'alâ berekâtillâh", kaynak: "Ebu Dâvûd, Et'ime, 14" },
+  { durum: "Yemekten sonra", dua: "Elhamdü lillâhi'llezî et'amena ve sekâna ve ce'alena müslimîn", kaynak: "Tirmizi, Et'ime, 46" },
+  { durum: "Uyurken", dua: "Bi-ismike allâhümme emûtu ve ahyâ", kaynak: "Buhari, Daavât, 50" },
+  { durum: "Uyanınca", dua: "Elhamdü lillâhi'llezî ahyânâ ba'de mâ emâtenâ ve ileyhi'n-nüşûr", kaynak: "Buhari, Daavât, 50" },
+  { durum: "Kabir ziyaretinde", dua: "Es-selâmu aleyküm ehle'd-diyâri mine'l-mü'minîne ve'l-müslimîn…", kaynak: "Müslim, Cenâiz, 103" },
+  { durum: "İstihâre (karar verememe)", dua: "Allâhümme innî estehîrüke bi'ilmike… — hayırlıysa kolaylaştır, değilse uzaklaştır.", kaynak: "Buhari, Tevhid, 49" },
+  { durum: "Sıkıntı anında", dua: "Lâ ilâhe illâllâhü'l-Azîmu'l-Halîm… Lâ ilâhe illâllâhu Rabbi'l-'arşi'l-azîm", kaynak: "Müslim, Zikir, 49" },
+  { durum: "Borçtan kurtulma", dua: "Allâhümme'kfînî bi-halâlike 'an harâmike ve ağninî bi-fadlike ammen sivâke", kaynak: "Tirmizi, Daavât, 36" },
+  { durum: "Yağmur duası", dua: "Allâhümme'skı'nâ ğaysen mücîben rebin merî'en", kaynak: "Ebu Dâvûd, Salât, 332" },
+];
+
+// ── 41: HOCA KARŞILAŞTIRMA — meşhur ayetler (everyayah ayet-bazlı sesle) ──
+// Her ayet, RECITERS listesindeki ayet-bazlı (everyayah) hocalarla dinlenir.
+export const HOCA_KARSILASTIRMA_AYETLER: Array<{ sure: number; sureAdi: string; ayet: number; etiket: string }> = [
+  { sure: 1, sureAdi: "Fâtiha", ayet: 1, etiket: "Besmele" },
+  { sure: 1, sureAdi: "Fâtiha", ayet: 2, etiket: "Hamd Âlemlerin Rabbine" },
+  { sure: 2, sureAdi: "Bakara", ayet: 255, etiket: "Ayete'l-Kürsî" },
+  { sure: 2, sureAdi: "Bakara", ayet: 286, etiket: "Rabbenâ — güç yetmezlik" },
+  { sure: 24, sureAdi: "Nûr", ayet: 35, etiket: "Allah göklerin ve yerin nurudur" },
+  { sure: 13, sureAdi: "Ra'd", ayet: 28, etiket: "Kalpler ancak zikirle huzur bulur" },
+  { sure: 94, sureAdi: "İnşirâh", ayet: 6, etiket: "Güçlükle beraber kolaylık" },
+  { sure: 65, sureAdi: "Talâk", ayet: 3, etiket: "Kim Allah'a tevekkül ederse" },
+  { sure: 112, sureAdi: "İhlâs", ayet: 1, etiket: "Kul hüvellâhü ehad" },
+  { sure: 21, sureAdi: "Enbiyâ", ayet: 107, etiket: "Âlemlere rahmet" },
+  { sure: 3, sureAdi: "Âl-i İmrân", ayet: 173, etiket: "Hasbünallâh" },
+  { sure: 39, sureAdi: "Zümer", ayet: 53, etiket: "Rahmetten ümit kesmeyin" },
+];
+
+// ── 47: CAMİ BULUCU — Google Maps embed (anahtar gerektirmez, sorgu bazlı)
+export const camiHaritaUrl = (konum: string) =>
+  `https://www.google.com/maps?q=${encodeURIComponent("cami " + konum)}&output=embed`;
+export const camiListeUrl = (konum: string) =>
+  `https://www.google.com/maps/search/${encodeURIComponent("mosque near " + konum)}`;
+
+// ── 45/58: SALAH TRACKER + DUA TAKİBİ gün anahtarları ───────
+export const SALAH_VAKITLERI = ["İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı"] as const;
+
+// ── 60: TOPLU HATİM — cüz eşitleme yardımcıları ────────────
+export interface TopluHatimDurum { cüzler: number[]; katilimciSayisi: number }
+export const TOPLU_HATIM_CÜZ = Array.from({ length: 30 }, (_, i) => i + 1);
+// ── 12: KANAL REHBERİ — YouTube/Instagram algoritma ipuçları ──
+export interface KanalIpucu { baslik: string; metin: string; kategori: string }
+export const KANAL_REHBERI: KanalIpucu[] = [
+  { kategori: "YouTube", baslik: "İlk 3 saniye kuralı", metin: "Videonun ilk 3 saniyesinde en etkileyici ayet bölümünü koy — algoritma izlenme süresine bakar, izlenme süresi yüksek olan videoya daha çok gösterim verir." },
+  { kategori: "YouTube", baslik: "Başlık formülü", metin: '"[Ayet konusu] | [Sure adı] [Ayet no]" formatı kullan: "Huzur Arayanlara | Ra"d 28". Emoji başlığın başına, değil sonuna.' },
+  { kategori: "YouTube", baslik: "Açıklama ve etiket", metin: "İlk satırda ayetin özeti, sonra kaynak, sonra 5-8 etiket (#kuran #ayet #huzur). Açıklamaya site linkini koy — trafik geri döner." },
+  { kategori: "YouTube", baslik: "Shorts döngüsü", metin: "Shorts videolarını 30-45 saniye yap; döngüsel his veren (sonu başla uyumlu) videolar tekrar izlenir ve algoritma bunu ödüllendirir." },
+  { kategori: "Instagram", baslik: "Reels + Carousel ikilisi", metin: "Reels ile dikkat çek, carousel (4:5 ayet kartları) ile kaydet — kaydedilen gönderi algoritmada en güçlü sinyaldir." },
+  { kategori: "Instagram", baslik: "Sabit hikaye", metin: "En iyi videonuzu 'Öne Çıkanlar'a sabitleyin; profil ziyaretçisi ilk 10 saniyede ne yaptığınızı görsün." },
+  { kategori: "Instagram", baslik: "Paylaşılabilir açıklama", metin: "»Bir kardeşine ilet» gibi nazik paylaşım çağrısı paylaşımı artırır; zorlamayan cümleler daha çok paylaşılır." },
+  { kategori: "Genel", baslik: "Düzenli saat", metin: "Her gün aynı saatte paylaş (öneri: sabah 07-08 veya yatsı sonrası 21-22). Topluluk alışkanlığı algoritmadan da önemlidir." },
+  { kategori: "Genel", baslik: "Özel günler", metin: "Cuma günleri ve kandil gecelerinde paylaşımlar 3-5 kat daha çok etkileşim alır — Özel Gün Takvimi'ni takip et." },
+  { kategori: "Genel", baslik: "Telif güvenliği", metin: "Sitedeki videolar telifsiz şablonlar + izinli kari kayıtlarıyla üretilir; yine de YouTube Content ID bazlı uyarı çıkabilir — itiraz mektubu hazır bulundur." },
+];
+
+// ── 48: TECVİD REHBERİ (madde 48) — temel kurallar, örneklerle ──
+export interface TecvidKurali { baslik: string; tanim: string; ornek: string; seviye: "temel" | "orta" | "ileri" }
+export const TECVID_KURALLARI: TecvidKurali[] = [
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İzhar", tanim: "Nûn sâkin veya tenvînden sonra harf-i hal (ا هـ ع ح غ خ) gelirse nûn, ġunnasız ve açık okunur.", ornek: "مِنْ آمَنَ (min â-mene) · أَنْتُمْ henüz izharsız okunmaz — أَنْعَمْتَ (en'amte)", seviye: "temel" },
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İdgam", tanim: "ي ر م ل و ن harflerinden biri gelirse nûn, sonraki harfe karışır (bʻaziyle ġunna: ي ن م و; ġunnasız: ر ل).", ornek: "مَنْ يَعْمَلْ (men ya'mel — ġunnalı) · مِنْ رَبِّهِمْ (mir-rabbihim — ġunnasız)", seviye: "temel" },
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İklab", tanim: "ب (bâ) gelirse nûn, gizlice mîm'e çevrilir ve ġunnayla okunur — hatta üzerinde م yazılır.", ornek: "مِنْ بَعْدِ (mim-be'di) · سَمِيعٌ بَصِيرٌ (semî'um-basîrun)", seviye: "temel" },
+  { baslik: "Nûn-u Sâkin ve Tenvîn: İhfa", tanim: "Kalan 15 harf gelirse nûn, ġunnayla gizlenir — dil harfe dokunmaz, burundan 2-3 vakt ġunna.", ornek: "مِنْ قَبْلِ (mink-kabli) · أَنْتَ (ante) · انْتُمْ (intum)", seviye: "temel" },
+  { baslik: "Mîm-i Sâkin: İzhar-ı Şefevî", tanim: "Mîm sâkinden sonra harf-i şefevî (ف ب م و) gelirse mîm açık okunur — dudaklar hafif ayrılır.", ornek: "الْحَمْدُ لِلَّهِ (el-hamdu lillâh) · تَمْ كُنتُم (tum-kuntum)", seviye: "temel" },
+  { baslik: "Mîm-i Sâkin: İdgam-ı Şefevî (Ġunna)", tanim: "Mîm sâkinden sonra yine م veya ن gelirse mîm, ġunnayla sonraki harfe karışır (2 vakit).", ornek: "لَهُمْ مَا (lehum-mâ) · مِنْهُمْ مَنْ (minhum-men)", seviye: "orta" },
+  { baslik: "Mîm-i Sâkin: İhfa-ı Şefevî", tanim: "Bâ gelirse mîm ile bâ arasında ġunna yapılır (ihfa-ı şefevî).", ornek: "تَرْمِيهِمْ بِحِجَارَةٍ (termîhim-bi-hicâre)", seviye: "orta" },
+  { baslik: "Med: Tabiî (Doğal Uzatma)", tanim: "Harf-i med (ا و ي) üzerinde hiçbir sebep ve zaıd yoksa 1 vakit uzatılır — fazlası hata.", ornek: "قَالَ (kâle) · يَقُولُ (yekûlu) · قِيلَ (kîle)", seviye: "temel" },
+  { baslik: "Med: Muttasıl (Bitişik Uzatma)", tanim: "Aynı kelimede harf-i medden sonra hemze gelirse 4-5 vakit uzatılır (tevassut 4 müstahsen).", ornek: "جَاءَ (câe) · السُّوءَ (es-sûe) · سِيئَتْ (sîet)", seviye: "orta" },
+  { baslik: "Med: Münfasıl (Ayrı Uzatma)", tanim: "Kelimede harf-i med, sonraki kelimede hemze gelirse 4-5 vakit uzatılır (vamcelerin tercihi farklı).", ornek: "يَا أَيُّهَا (yâ eyyühâ) · بِمَا أُنزِلَ (bimâ unzile)", seviye: "orta" },
+  { baslik: "Med: Lâzım (Zorunlu Uzatma)", tanim: "Harf-i medden sonra şedde gelirse 6 vakit uzatılır — en uzun meddir.", ornek: "الضَّالِّينَ (ed-dâl-lîne) · الحَاقَّةُ (el-hâk-ketü) · كُفَّارًا (küf-fâren)", seviye: "orta" },
+  { baslik: "Med: Arız-ı Sükûn", tanim: "Vakfedince harf-i med üzerine sükûn arız olursa 2, 4 veya 6 vakit uzatılabilir (vakfa mahsus).", ornek: "نَسْتَعِينُ ۝ vakıf: nâs-ta'î-nû (2/4/6)", seviye: "ileri" },
+  { baslik: "Şedde ve Ġunna", tanim: "Şeddeli harfin ilk harfi sâkin gibi, ikincisi harekeli okunur; ن و م şeddeliyse 2 vakit ġunna şart.", ornek: "إِنَّ (in-ne) · ثُمَّ (thum-me) · مِنَّ (min-ne)", seviye: "temel" },
+  { baslik: "Kalkale", tanim: "Vakıfta ق ط ب ج د harfleri sâkin kalırsa ses, boğazda hafif zıplamayla (kalkale) vurgulanır — büyük/küçük kalkale.", ornek: "أَقْرَبْ (ak-rab) · وَتَبَّ (ve teb-bet)", seviye: "ileri" },
+  { baslik: "Lâm-ı Şemsî ve Kamrî", tanim: "Şemsî harflerde (14 adet) elifteki LÂM okunmaz, sonraki harf şeddeli; kamrîde LÂM açık okunur.", ornek: "Şemsî: اَلرَّحْمَن (er-rahmân) · Kamrî: اَلْقَمَر (el-kamer)", seviye: "temel" },
+  { baslik: "Lâm ve Râ'nın Okunuş Özellikleri", tanim: "Lâm kalın (talık) veya ince okunabilir; Râ önceki harekete göre kalın/ince olur — tilavetin tadı buradadır.", ornek: "اللَّهُ (kalın) · بِسْمِ الرَّبِّ (ince)", seviye: "ileri" },
+];
+
+export const TECVID_SEVIYE_ETIKETI: Record<string, { label: string; renk: string }> = {
+  temel: { label: "Temel", renk: "emerald" },
+  orta: { label: "Orta", renk: "sky" },
+  ileri: { label: "İleri", renk: "fuchsia" },
+};

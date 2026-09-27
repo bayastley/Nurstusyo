@@ -58,18 +58,64 @@ function validateId(id: unknown): string | null {
   return id;
 }
 
-// In-memory rate limit (per admin session)
-const rateLimitMap = new Map<string, { hits: number[] }>();
-
-function adminRateLimit(adminId: string, max = 100, windowMs = 60000): boolean {
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
   const now = Date.now();
-  const key = `admin:${adminId}`;
-  const entry = rateLimitMap.get(key) ?? { hits: [] };
-  entry.hits = entry.hits.filter((h) => h >= now - windowMs);
-  if (entry.hits.length >= max) return false;
-  entry.hits.push(now);
-  rateLimitMap.set(key, entry);
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
   return true;
+}
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) {
+    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
+    return true;
+  }
+  const ok = __rlMem(bucketKey, maxRequests, windowMs);
+  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
+  return ok;
+}
+async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+
+async function adminRateLimit(adminId: string, max = 100, windowMs = 60000): Promise<boolean> {
+  return rateLimitBucket(`admin:action:${adminId}`, max, windowMs);
 }
 
 interface AdminSession { id: string; email: string; verified: boolean; isAdmin: boolean; exp: number }
@@ -125,7 +171,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
   
   // ★ Admin rate limit (dakikada 100 işlem)
-  if (!adminRateLimit(admin.id, 100, 60000)) {
+  if (!(await adminRateLimit(admin.id, 100, 60000))) {
     return res.status(429).json({ ok: false, error: "Çok fazla istek, lütfen bekleyin" });
   }
 
@@ -403,6 +449,73 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         puanDagilimi,
         puanOrtalama: Math.round(ortalama * 10) / 10,
         toplam: turRows.length,
+      });
+    } else if (action === "hafta_video_list") {
+      // ★ HAFTANIN VİDEOSU — admin vitrin yönetimi: beklemede + onaylı + ret (son 100)
+      const rows = await db<any[]>("nur_haftanin_videolari?select=id,user_ad,baslik,aciklama,video_link,sure_bilgi,durum,onay_yok_sebep,hafta,begeni,created_at&order=created_at.desc&limit=100").catch(() => [] as any[]);
+      return res.status(200).json({ ok: true, videolar: rows });
+    } else if (action === "hafta_video_onay") {
+      // Onayla veya reddet (sebep ile)
+      const id = validateId(body.id);
+      if (!id) return res.status(400).json({ ok: false, error: "Geçersiz video" });
+      const durum = body.durum === "onayli" || body.durum === "reddedildi" ? String(body.durum) : "";
+      if (!durum) return res.status(400).json({ ok: false, error: "Geçersiz durum" });
+      const sebep = sanitize(body.sebep, 200);
+      await db(`nur_haftanin_videolari?id=eq.${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({
+        durum, onay_yok_sebep: durum === "reddedildi" ? sebep || "Admin kararı" : "", onaylayan: admin.email, onay_at: new Date().toISOString(),
+      }) });
+      await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action: `hafta_video_${durum}`, target: id, created_at: new Date().toISOString() }) }).catch(() => null);
+      return res.status(200).json({ ok: true });
+    } else if (action === "hafta_video_sil") {
+      const id = validateId(body.id);
+      if (!id) return res.status(400).json({ ok: false, error: "Geçersiz video" });
+      await db(`nur_haftanin_videolari?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+      return res.status(200).json({ ok: true });
+    } else if (action === "haftalik_rapor") {
+      // ★ İŞ 25 — HAFTALIK RAPOR: 7 günlük özet (kullanıcı, ödeme, içerik, hata)
+      const haftaOnce = new Date(Date.now() - 7 * 86_400_000).toISOString();
+      const [yeniKullanicilar, aktifKullanicilar, odemeler, cuzdanlar, pageViews, hatalar, feedbackler, oylar, davetler, zikirler, haftaVideolari] = await Promise.all([
+        db<any[]>(`nur_users?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>(`nur_users?select=id,updated_at&updated_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>(`nur_orders?select=id,amount_minor,currency,status&paid_at=gte.${haftaOnce}&status=eq.paid`).catch(() => [] as any[]),
+        db<any[]>("nur_wallets?select=user_id,sub_jeton,purchased_jeton").catch(() => [] as any[]),
+        db<any[]>(`nur_page_views?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>(`nur_error_logs?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>(`nur_feedback?select=id,tur,puan&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>(`nur_roadmap_votes?select=feature_id&select=feature_id`).catch(() => [] as any[]),
+        db<any[]>(`nur_referans_kullanim?select=id&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+        db<any[]>("nur_zikir_topluluk?select=toplam").catch(() => [] as any[]),
+        db<any[]>(`nur_haftanin_videolari?select=id,durum&created_at=gte.${haftaOnce}`).catch(() => [] as any[]),
+      ]);
+      const ciroMinor = odemeler.reduce((s, o) => s + Number(o.amount_minor || 0), 0);
+      const ciroPara = odemeler[0]?.currency || "TRY";
+      const oylarDagilim: Record<string, number> = {};
+      for (const v of oylar) oylarDagilim[v.feature_id] = (oylarDagilim[v.feature_id] || 0) + 1;
+      const liderOylar = Object.entries(oylarDagilim).sort((a, b) => b[1] - a[1]).slice(0, 5)
+        .map(([fid, adet]) => ({ ozellik: fid, adet }));
+      const toplamZikir = zikirler.reduce((s, z) => s + Number(z.toplam || 0), 0);
+      const puanOrt = feedbackler.filter((f) => f.puan).length
+        ? Math.round((feedbackler.filter((f) => f.puan).reduce((s, f) => s + Number(f.puan), 0) / feedbackler.filter((f) => f.puan).length) * 10) / 10 : 0;
+      return res.status(200).json({
+        ok: true,
+        rapor: {
+          tarihAraligi: { baslangic: haftaOnce, bitis: new Date().toISOString() },
+          kullanicilar: {
+            yeniKayit: yeniKullanicilar.length,
+            aktif7gun: aktifKullanicilar.length,
+            toplamCuzdan: cuzdanlar.length,
+            toplamJeton: cuzdanlar.reduce((s, c) => s + Number(c.sub_jeton || 0) + Number(c.purchased_jeton || 0), 0),
+          },
+          gelir: { odemeAdedi: odemeler.length, ciroMinor, paraBirimi: ciroPara, ciroOkunur: (ciroMinor / 100).toFixed(2) + " " + ciroPara },
+          trafik: { sayfaGoruntuleme: pageViews.length, hataSayisi: hatalar.length },
+          topluluk: {
+            feedbackAdet: feedbackler.length, feedbackPuanOrtalama: puanOrt,
+            oyToplam: oylar.length, oyLiderler: liderOylar,
+            davetSayisi: davetler.length, toplamZikir,
+            haftaVideoOneri: haftaVideolari.length,
+            haftaVideoOnayli: haftaVideolari.filter((v) => v.durum === "onayli").length,
+          },
+        },
       });
     } else if (action === "clear_errors") {
       // ★ HATA LOGLARINI TEMİZLE — 30 günden eski kayıtları sil

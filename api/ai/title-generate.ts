@@ -54,6 +54,41 @@ function requireAuth(req: VercelRequest, res: VercelResponse): { id: string; ema
 // ★ /api/ai/title-generate — AI Tabanlı Sahih Ayet Başlığı Üretimi
 // ═══════════════════════════════════════════════════════════════
 
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
+  return true;
+}
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
   const requestOrigin = String(req.headers.origin || "").replace(/\/$/, "");
@@ -82,18 +117,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = requireAuth(req, res);
   if (!user) return;
 
-  // ★ Basit rate limit — dakikada 10 istek (OpenAI maliyet koruması)
-  const rlBuckets = (globalThis as unknown as { __titleRl?: Map<string, number[]> }).__titleRl ?? new Map<string, number[]>();
-  (globalThis as unknown as { __titleRl?: Map<string, number[]> }).__titleRl = rlBuckets;
-  const rlKey = user.id;
-  const now = Date.now();
-  const recent = (rlBuckets.get(rlKey) ?? []).filter((t: number) => t >= now - 60_000);
-  if (recent.length >= 10) {
+  // ★ Paylaşımlı rate limit — dakikada 10 istek (OpenAI maliyet koruması)
+  if (!(await rateLimitBucket(`ai:title:${user.id}`, 10, 60_000))) {
     res.status(429).json({ error: "Çok fazla istek. Lütfen biraz bekleyin." });
     return;
   }
-  recent.push(now);
-  rlBuckets.set(rlKey, recent);
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

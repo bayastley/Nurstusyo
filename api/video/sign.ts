@@ -47,7 +47,6 @@ const CATEGORY_TIER: Record<CatId, Tier> = {
   cehennem: "elit", hurma: "elit", ari: "elit", karinca: "elit",
 };
 const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
-const HITS = new Map<string, number[]>();
 
 interface SessionUser {
   id: string;
@@ -121,27 +120,65 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
   }
 }
 
-const USER_HITS = new Map<string, number[]>();
-
-function checkRateLimits(ip: string, userId: string): boolean {
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
   const now = Date.now();
-  
-  // 1. IP Limit (dakikada en fazla 60 imzalama isteği — tam sure seçilince 52 ayetin
-  //    klibi + posterleri tek seferde imzalanıyor; 40 limiti meşru kullanıcıyı 429'a
-  //    boğup önizlemeyi donduruyordu. Oturum + origin doğrulaması zaten var.)
-  const ipHits = (HITS.get(ip) || []).filter((hit) => now - hit < 60000);
-  if (ipHits.length >= 60) return false;
-  ipHits.push(now);
-  HITS.set(ip, ipHits);
-  
-  // 2. Kullanıcı ID Limit (dakikada en fazla 45 imzalama isteği)
-  if (userId) {
-    const userHits = (USER_HITS.get(userId) || []).filter((hit) => now - hit < 60000);
-    if (userHits.length >= 45) return false;
-    userHits.push(now);
-    USER_HITS.set(userId, userHits);
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
+  return true;
+}
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) {
+    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
+    return true;
   }
-  
+  const ok = __rlMem(bucketKey, maxRequests, windowMs);
+  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
+  return ok;
+}
+async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+
+async function checkRateLimits(req: VercelRequest, ip: string, userId: string): Promise<boolean> {
+  if (!(await rateLimitBucket(`video:sign:ip:${ip}`, 60, 60_000))) return false;
+  if (userId && !(await rateLimitBucket(`video:sign:user:${userId}`, 45, 60_000))) return false;
   return true;
 }
 
@@ -202,7 +239,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Çok sıkı IP/Kullanıcı Rate Limit (Scraping Engelleme)
   const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
-  if (!checkRateLimits(ip, sessionUser.id)) {
+  if (!(await checkRateLimits(req, ip, sessionUser.id))) {
     res.setHeader("Retry-After", "60");
     return res.status(429).json({ ok: false, error: "İstek limitini aştınız. Lütfen bir dakika bekleyin." });
   }

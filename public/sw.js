@@ -7,13 +7,20 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v2";
+const CACHE = "nurstudyo-v3";
+const AUDIO_CACHE = "nurstudyo-audio-v3"; // ★ İş 24+59: dinlenen ayet sesleri çevrimdışı çalışsın
 const SHELL = ["/logo.png", "/manifest.json"];
+const AUDIO_LIMIT = 120; // en fazla 120 ayet sesi (~45MB) saklanır — en eskiler silinir
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting())
   );
+});
+
+// ★ Yeni sürüm beklemedeyken sayfadan gelen SKIP_WAITING mesajı → anında devreye gir
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -27,10 +34,48 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Sadece GET önbelleklenir; API/çapraz kaynak istekleri geçer
+  // Sadece GET önbelleklenir; çapraz kaynak istekleri aşağıda ses özel işlenir
   if (event.request.method !== "GET") return;
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) {
+    // ★ KUR'AN SESİ CACHE-FIRST (İş 24+59 — ÇEVRİMDIŞI TİLAVET):
+    //   everyayah/mp3quran mp3'leri dinlendikçe cache'e yazılır; bir daha
+    //   dinlenen ayet İNTERNETSİZ de çalar. Sadece audio uzantıları yakalanır.
+    if (/\.(mp3|ogg|wav)(\?|$)/.test(url.pathname) || url.hostname.includes("everyayah") || url.hostname.includes("mp3quran")) {
+      event.respondWith(
+        caches.open(AUDIO_CACHE).then(async (cache) => {
+          const hit = await cache.match(event.request);
+          if (hit) return hit;
+          try {
+            const res = await fetch(event.request);
+            if (res.ok && (res.status === 200)) {
+              // Range istekleri cache'lenemez — yalnız tam cevap saklanır
+              if (!event.request.headers.has("range")) {
+                await cache.put(event.request, res.clone());
+                await audioKirp(cache);
+              }
+            }
+            return res;
+          } catch {
+            // Çevrimdışı + cache'te yok → net hata (UI zaten "indirilemedi" gösterir)
+            throw new Error("Çevrimdışı — bu ayet daha önce dinlenmemiş");
+          }
+        })
+      );
+    }
+    return; // diğer çapraz kaynaklar geçer
+  }
   if (url.pathname.startsWith("/api/")) return;
+
+  /** En eskilerini sil — depo şişmesin */
+  async function audioKirp(cache) {
+    try {
+      const keys = await cache.keys();
+      if (keys.length <= AUDIO_LIMIT) return;
+      // Cache API sıra garantisi vermez; basit yaklaşım: fazlalığı sil
+      const fazla = keys.length - AUDIO_LIMIT;
+      for (let i = 0; i < fazla; i++) await cache.delete(keys[i]);
+    } catch { /* yoksay */ }
+  }
 
   // ★ Ana sayfa: NETWORK-FIRST — yeni deploy anında kullanıcıya ulaşsın.
   //   (Eskiden cache-first idi; güncellemeler önbellekte takılı kalıyordu.)

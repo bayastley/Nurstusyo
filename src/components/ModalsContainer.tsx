@@ -11,6 +11,18 @@ import { ZipExplorer } from "./ZipExplorer";
 import { AtmosphereCard } from "./AtmosphereCard";
 import { AdminDashboardModal } from "./AdminDashboardModal";
 import QuranLearnModal from "./QuranLearnModal";
+import { AyetKartlariModal } from "./AyetKartlariModal";
+import { SiteHakkindaModal } from "./SiteHakkindaModal";
+import { RamazanModal } from "./RamazanModal";
+import { AyetPaketleriModal } from "./AyetPaketleriModal";
+import { OzelGunTakvimiModal } from "./OzelGunTakvimiModal";
+import { KesfetModal } from "./KesfetModal";
+import { HafizlikTestiModal } from "./HafizlikTestiModal";
+import { AyetNotlariModal } from "./AyetNotlariModal";
+import { KelimeAtolyesiModal } from "./KelimeAtolyesiModal";
+import { ArkaPlanUreticiModal } from "./ArkaPlanUreticiModal";
+import { DavetModal } from "./DavetModal";
+import { HaftaninVideosuModal } from "./HaftaninVideosuModal";
 import { ATMOSPHERE_PREVIEW_UNLOCKED, CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
@@ -85,6 +97,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setAtmosQuery,
   isMasterSürüm,
   randomizeBackgrounds,
+  setCinematic,
+  seciliAyetSayisi = 0,
+  bekleyenDavetKodu,
+  syncWallet,
+  setRoadmapOpen,
   atmosCategory,
   setAtmosCategory,
   combinedAllClips,
@@ -184,6 +201,49 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   void tosAccepted;
   void adminEmailInput; void setAdminEmailInput; void adminCodeInput; void setAdminCodeInput;
   void setAdminError; void setAdminGodMode;
+
+  // ★ TOPLULUK OYU KİLİDİ (V2) — lansman planı: yenilikler kodda kurulu ama admin
+  //   onayına dek KİLİTLİ. Admin panelindeki Kilit Yönetimi'nden ('free' yapınca)
+  //   o modal HERKESE açılır. Kilitliyken modal açılmaz; yol haritasına yönlendirilir →
+  //   kullanıcı oylar, en çok oyu alanı admin kendisi açar. Admin her zaman açar.
+  //
+  // ★★ İNCELEME MODU (26 Eylül — SAHİBİN EMRİ): VITE_INCELEME_MODU=1 iken
+  //   kilitler HERKESE AÇIK (girişsiz dahil) — sahibin yerel incelemesi için.
+  //   LANSmanda bu .env değişkeni KALDIRILACAK → kilitler otomatik geri gelir.
+  //   Yayın build'inde env yoksa kural eskisi gibi çalışır; canlıyı etkilemez.
+  const INCELEME_MODU = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_INCELEME_MODU === "1";
+  type V2ModalId = "ayetKartlari" | "kesfet" | "hafizlikTesti" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi";
+  const V2_KILITLI: Record<V2ModalId, string> = {
+    ayetKartlari: "Ayet & Dua Kütüphanesi",
+    kesfet: "Keşfet Merkezi",
+    hafizlikTesti: "Hafızlık Testi",
+    ayetNotlari: "Ayet Notlarım",
+    ayetPaketleri: "Hazır Ayet Paketleri",
+    ozelGunTakvimi: "Özel Gün Takvimi",
+  };
+  const v2Kapali = (m: V2ModalId): boolean =>
+    !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
+  const v2Gate = (m: V2ModalId): boolean => {
+    if (!v2Kapali(m)) return true;
+    setModal(null);
+    notify(`🔒 ${V2_KILITLI[m]} oylamada — Yol Haritası'ndan oy ver, en çok oyu alan açılır!`);
+    setRoadmapOpen?.(true);
+    return false;
+  };
+  // Kilitli modallar hiç mount edilmez (içerik sızmasın)
+  const v2Acik = (m: V2ModalId) => (v2Kapali(m) ? false : modal === m);
+  // ★ MERKEZİ GEÇİT — menüden/yol haritasından/kitaplıktan nereden çağrılırsa çağrılsın,
+  //   kilitli modal bir an bile ekrana gelmez: kapanır + uyarı + yol haritası açılır.
+  React.useEffect(() => {
+    if (!modal) return;
+    for (const m of Object.keys(V2_KILITLI) as V2ModalId[]) {
+      if (modal === m && v2Kapali(m)) {
+        v2Gate(m);
+        return;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modal]);
 
   // ★ GOOGLE İLE GİRİŞ/KAYIT — Gmail hesabına bağlanarak kayıt olur.
   //   Google Cloud Console'dan alınan Client ID .env'e eklenir:
@@ -650,9 +710,67 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* QURAN LEARN / LISTEN MODAL */}
-      <QuranLearnModal open={modal === "quranLearn"} onClose={() => setModal(null)} initialMode="learn" />
-      <QuranLearnModal open={modal === "quranListen"} onClose={() => setModal(null)} initialMode="listen" />
+      {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride */}
+      <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} />
+      {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
+      <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ BU SİTEDE NE VAR — kaynaklar, telif bildirimi, iletişim (yol haritası madde 4) */}
+      <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} />
+
+      {/* ★ RAMAZAN & KANDİL MERKEZİ — hicri takvimle otomatik Ramazan modu (madde 6) */}
+      <RamazanModal open={modal === "ramazan"} onClose={() => setModal(null)} prayerTimings={prayerTimings} notify={notify} />
+
+      {/* ★ HAZIR AYET PAKETLERİ — tek tuşla stüdyoya paket ekle (madde 8) */}
+      <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} />
+
+      {/* ★ ÖZEL GÜN TAKVİMİ — Cuma/kandiller + tema önerisi + hatırlatıcı (madde 10) */}
+      <OzelGunTakvimiModal open={v2Acik("ozelGunTakvimi")} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ HAFTANIN VİDEOSU — admin onaylı topluluk vitrini (madde 17) */}
+      <HaftaninVideosuModal open={modal === "haftaninVideosu"} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ KEŞFET — hadis bankası, kıssa, soru-cevap, kelime kartları, sure bilgileri, namaz rehberi, bebek duası, dua rehberi (maddeler 18-22-28-35-61) */}
+      <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ HAFIZLIK TESTİ — devamını getir, 4 seçenekli ayet tamamlama (madde 44) */}
+      <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ AYET NOTLARI — şifreli kişisel notlar, sunucuya gitmez (madde 57) */}
+      <AyetNotlariModal open={v2Acik("ayetNotlari")} onClose={() => setModal(null)} notify={notify} />
+
+      {/* ★ KELİME ATÖLYESİ — kelime yaz → ayet + atmosfer önerisi → tek tık stüdyoya (İş 3) */}
+      <KelimeAtolyesiModal
+        open={modal === "kelimeAtolyesi"}
+        onClose={() => setModal(null)}
+        notify={notify}
+        addAyah={addAyah}
+        randomizeBackgrounds={randomizeBackgrounds}
+        accessTier={accessTier}
+        isMasterSurum={isMasterSürüm}
+      />
+
+      {/* ★ ARKA PLAN ÜRETİCİ LİTE — mood yaz → sahne planı + sinematik filtre (İş 4) */}
+      <ArkaPlanUreticiModal
+        open={modal === "arkaPlanUretici"}
+        onClose={() => setModal(null)}
+        notify={notify}
+        randomizeBackgrounds={randomizeBackgrounds}
+        setCinematic={setCinematic}
+        seciliAyetSayisi={seciliAyetSayisi}
+        accessTier={accessTier}
+        isMasterSurum={isMasterSürüm}
+      />
+
+      {/* ★ DAVET / REFERANS — kod + link + karşılıklı +3 kısa video (İş 5) */}
+      <DavetModal
+        open={modal === "davet"}
+        onClose={() => setModal(null)}
+        notify={notify}
+        user={user}
+        bekleyenDavetKodu={bekleyenDavetKodu}
+        onOdulAlindi={syncWallet}
+      />
 
       {/* LIBRARY MODAL */}
       {modal === "library" && (

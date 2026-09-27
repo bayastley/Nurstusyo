@@ -12,7 +12,9 @@ export const HASHTAG_CATEGORIES: Record<string, string[]> = {
   marka:     ["#nurstudyo", "#nurstüdyo"],
 };
 
-export const HASHTAG_POOL: string[] = Object.values(HASHTAG_CATEGORIES).flat();
+// ★ TEKILLEŞTİRME: aynı etiket iki kategoride geçebilir (ör. #huzur) —
+//   havuzda tek örneğe düşer, yoksa React "duplicate key" hatası verir.
+export const HASHTAG_POOL: string[] = [...new Set(Object.values(HASHTAG_CATEGORIES).flat())];
 
 /** Rastgele hashtag kombinasyonu üretir — her kategoriden farklı sayıda çekerek çeşitlilik sağlar */
 export function randomHashtagCombo(count = 7): string[] {

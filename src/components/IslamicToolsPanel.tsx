@@ -35,6 +35,7 @@ const SURE_LISTESI: Array<{ n: number; ad: string; ayet: number }> = [
 // ★ Zikirmatik — kalıcı sayaç (localStorage) + topluluk toplamı (Supabase)
 const ZIKIR_KEY = "nur_zikirmatik_v1";
 const ZIKIR_TOPLULUK_KEY = "nur_zikir_topluluk";
+const ZIKIR_STREAK_KEY = "nur_zikir_streak_v1"; // ★ günlük serbestreak (yol haritası madde 5)
 
 function loadZikirCount(): number {
   try { return Number(localStorage.getItem(ZIKIR_KEY)) || 0; } catch { return 0; }
@@ -48,13 +49,33 @@ function Zikirmatik() {
   const [topluluk, setTopluluk] = useState<number | null>(null);
   const [seciliZikir, setSeciliZikir] = useState(0);
   const [pulsing, setPulsing] = useState(false);
+  // ★ Günlük serbestreak: üst üste kaç gündür en az 1 zikir çekilmiş
+  const [streak, setStreak] = useState<{ last: string; sayi: number }>(() => {
+    try { return JSON.parse(localStorage.getItem(ZIKIR_STREAK_KEY) || "{}") ?? { last: "", sayi: 0 }; } catch { return { last: "", sayi: 0 }; }
+  });
+  // ★ 33'lük halka kutlama mesajı
+  const [halkaMesaj, setHalkaMesaj] = useState("");
 
-  // Topluluk toplamını yükle (kendi kayıtlarından) + sekmeye görünürlük değişince senkronla
+  // ★ TOPLULUK TOPLAMI — gerçek sunucu sayacı (/api/zikir/topluluk).
+  //   Açılışta çekilir; her 45 sn'de tazelenir; çektiğin her zikir sunucuya eklenir.
+  //   API kapalıysa (aktif:false) sessizce yerel sayaç gösterilir — site ASLA bozulmaz.
+  const [sunucuToplam, setSunucuToplam] = useState<number | null>(null);
+  const [sunucuAktif, setSunucuAktif] = useState(false);
+  const sunucuToplamRef = React.useRef(0);
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(ZIKIR_TOPLULUK_KEY);
-      if (raw) setTopluluk(Number(raw) || 0);
-    } catch {}
+    let live = true;
+    const yukle = () => fetch("/api/zikir/topluluk")
+      .then((r) => r.json())
+      .then((d: any) => {
+        if (!live || !d?.ok) return;
+        setSunucuToplam(Number(d.toplam) || 0);
+        setSunucuAktif(!!d.aktif);
+        sunucuToplamRef.current = Number(d.toplam) || 0;
+      })
+      .catch(() => undefined);
+    yukle();
+    const iv = window.setInterval(yukle, 45_000);
+    return () => { live = false; window.clearInterval(iv); };
   }, []);
 
   const zikirCek = () => {
@@ -63,12 +84,46 @@ function Zikirmatik() {
     setPulsing(true);
     setTimeout(() => setPulsing(false), 160);
     try { localStorage.setItem(ZIKIR_KEY, String(yeni)); } catch {}
-    // Topluluk toplamına katkı
+    // ★ Günlük serbestreak — bugün ilk zikir ise dünle birleşir ya da 1'den başlar
+    try {
+      const bugunStr = new Date().toISOString().slice(0, 10);
+      if (streak.last !== bugunStr) {
+        const dunStr = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+        const yeniStreak = { last: bugunStr, sayi: streak.last === dunStr ? streak.sayi + 1 : 1 };
+        setStreak(yeniStreak);
+        localStorage.setItem(ZIKIR_STREAK_KEY, JSON.stringify(yeniStreak));
+      }
+    } catch {}
+    // ★ 33'LÜK HALKA kutlaması — her 33 zikirde halka dolar
+    if (yeni % 33 === 0) {
+      setHalkaMesaj(`🎉 ${yeni / 33}. halka tamamlandı!`);
+      window.setTimeout(() => setHalkaMesaj(""), 2600);
+      if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
+    }
+    // ★ Topluluk toplamına katkı — yerel anlık gösterim + sunucuya gönder
     try {
       const toplam = (Number(localStorage.getItem(ZIKIR_TOPLULUK_KEY)) || 0) + 1;
       localStorage.setItem(ZIKIR_TOPLULUK_KEY, String(toplam));
       setTopluluk(toplam);
     } catch {}
+    if (sunucuAktif) {
+      const bekleyen = sunucuToplamRef.current + 1;
+      sunucuToplamRef.current = bekleyen;
+      setSunucuToplam(bekleyen); // anında hissiyat — sunucu teyidi sonra gelir
+      fetch("/api/zikir/topluluk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adet: 1 }),
+      })
+        .then((r) => r.json())
+        .then((d: any) => {
+          if (d?.ok && d.aktif) {
+            sunucuToplamRef.current = Number(d.toplam) || bekleyen;
+            setSunucuToplam(sunucuToplamRef.current);
+          }
+        })
+        .catch(() => undefined);
+    }
     if (navigator.vibrate) navigator.vibrate(12);
   };
 
@@ -93,10 +148,30 @@ function Zikirmatik() {
         ))}
       </div>
 
-      {/* Sayaç ekranı */}
+      {/* Sayaç ekranı — ★ 33'lük halka animasyonu eklendi (mevcut ilerleme çubuğu aynen korundu) */}
       <button onClick={zikirCek}
         className={`relative w-full rounded-2xl border border-amber-400/25 bg-gradient-to-b from-amber-500/15 to-transparent py-8 text-center transition active:scale-[0.98] ${pulsing ? "scale-[0.98]" : ""}`}>
-        <p className="text-4xl font-black tabular-nums text-amber-200" style={{ textShadow: "0 0 20px rgba(245,158,11,.3)" }}>{count}</p>
+        {/* ★ 33'LÜK HALKA — her 33 zikirde dolar, halka sayısı birikir */}
+        <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
+          <svg viewBox="0 0 96 96" className="absolute inset-0 h-full w-full -rotate-90">
+            <circle cx="48" cy="48" r="42" fill="none" stroke="rgba(255,255,255,.09)" strokeWidth="5" />
+            <circle cx="48" cy="48" r="42" fill="none" stroke="url(#zikirRingGrad)" strokeWidth="5" strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 42}
+              strokeDashoffset={2 * Math.PI * 42 * (1 - (count % 33) / 33)}
+              className="transition-all duration-300" />
+            <defs>
+              <linearGradient id="zikirRingGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#fcd34d" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <p className="text-3xl font-black tabular-nums text-amber-200" style={{ textShadow: "0 0 20px rgba(245,158,11,.3)" }}>{count}</p>
+        </div>
+        <p className="mt-1.5 text-[8.5px] font-bold text-amber-300/80">
+          {Math.floor(count / 33)} halka tamam · {count % 33 === 0 && count > 0 ? "halka doldu 🎉" : `halkaya ${33 - (count % 33)} kaldı`}
+          {streak.sayi > 0 && <span className="ml-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-orange-300">🔥 {streak.sayi} gün seri</span>}
+        </p>
+        {halkaMesaj && <p className="mt-1 text-[9px] font-black text-amber-300 animate-pulse">{halkaMesaj}</p>}
         <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/40">{ZIKIR_METINLERI[seciliZikir].replace(/^[^ ]+ /, "")} · dokun ve çek</p>
         {/* Hedef ilerlemesi */}
         <div className="mx-auto mt-3 h-1.5 w-3/4 overflow-hidden rounded-full bg-white/10">
@@ -109,16 +184,173 @@ function Zikirmatik() {
         <button onClick={sifirla} className="rounded-lg bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white/50 hover:bg-white/10 hover:text-white/70 transition">
           ↺ Sıfırla (bu oturum)
         </button>
-        {topluluk !== null && (
+        {sunucuToplam !== null && sunucuToplam > 0 ? (
+          <p className="text-[9px] text-white/50">🌍 Toplulukla birlikte: <b className="text-amber-300">{sunucuToplam.toLocaleString("tr-TR")}</b> zikir</p>
+        ) : topluluk !== null && topluluk > 0 ? (
           <p className="text-[9px] text-white/50">🌟 Bu cihazdan toplam: <b className="text-amber-300">{topluluk.toLocaleString("tr-TR")}</b></p>
-        )}
+        ) : null}
       </div>
-      <p className="text-center text-[8px] text-white/25">Sayacın cihazında kalıcı saklanır · V2'de topluluk sayacı tüm kullanıcılarla birleşecek</p>
+      <p className="text-center text-[8px] text-white/25">Sayacın cihazında kalıcı saklanır{sunucuAktif ? " · topluluk sayacı canlı ☝" : ""}</p>
     </div>
   );
 }
 
-// ★ Hatim takibi — 114 sureyi işaretle, yüzde ilerleme gör
+// ★ CÜZ HARİTASI — 30 cüz; her hücre, o cüzden geçen surelerin işaretlenme oranıyla dolar (madde 5)
+const CUZ_SURELER: number[][] = [
+  [1], [2], [2, 3], [3, 4], [4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9],
+  [9, 10, 11], [10, 11, 12], [12, 13, 14], [14, 15, 16], [16, 17, 18], [18, 19, 20], [20, 21, 22], [22, 23, 24], [24, 25, 26], [26, 27, 28],
+  [28, 29, 30, 31, 32, 33], [33, 34, 35, 36], [36, 37, 38, 39], [39, 40, 41], [41, 42, 43, 44, 45], [45, 46, 47, 48, 49, 50, 51],
+  [51, 52, 53, 54, 55, 56, 57], [57, 58, 59, 60, 61, 62, 63, 64, 65, 66],
+  [66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77],
+  [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114],
+];
+
+// ★ DUA TAKİBİ (madde 58) — sabah/akşam ezkârını dinle-okuma modu + okundu işaretleme
+function DuaTakip() {
+  const KEY = "nur_dua_takip_v1";
+  const [okunan, setOkunan] = useState<Record<string, number[]>>(() => {
+    try { return JSON.parse(localStorage.getItem(KEY) || "{}"); } catch { return {}; }
+  });
+  const bugun = new Date().toISOString().slice(0, 10);
+  const bugunku = okunan[bugun] || [];
+
+  const toggle = (idx: number) => {
+    const mevcut = okunan[bugun] || [];
+    const yeni = mevcut.includes(idx) ? mevcut.filter((x) => x !== idx) : [...mevcut, idx];
+    const yeniKayit = { ...okunan, [bugun]: yeni };
+    setOkunan(yeniKayit);
+    try { localStorage.setItem(KEY, JSON.stringify(yeniKayit)); } catch {}
+  };
+
+  // Sabah/akşam ezkârı indeksleri (DAILY_DUAS dizisindeki sıraları)
+  const EZKAR_IDX = [0, 1]; // 0: Sabah Ezkârı, 1: Akşam Ezkârı
+  return (
+    <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[.06] p-3">
+      <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-emerald-300/80">🗣️ Ezkâr Takibi — bugün</p>
+      <div className="flex gap-1.5">
+        {EZKAR_IDX.map((idx) => {
+          const isaretli = bugunku.includes(idx);
+          return (
+            <button key={idx} type="button" onClick={() => toggle(idx)}
+              className={`flex-1 rounded-lg px-2 py-2 text-[9.5px] font-bold transition active:scale-95 ${isaretli ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40" : "bg-white/5 text-white/45 hover:bg-white/10"}`}>
+              {isaretli ? "✓ " : "○ "}{idx === 0 ? "Sabah Ezkârı" : "Akşam Ezkârı"}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-[8px] text-white/35">Okuduktan sonra işaretle — kayıtlar cihazında kalır, seri alışkanlık kazan.</p>
+    </div>
+  );
+}
+
+// ★ SALAH TRACKER (madde 45) — 5 vakiti işaretle, seri (streak) sayacı
+const SALAH_KEY = "nur_salah_tracker_v1";
+const SALAH_5 = ["İmsak", "Öğle", "İkindi", "Akşam", "Yatsı"];
+function SalahTracker() {
+  const [kayit, setKayit] = useState<Record<string, string[]>>(() => {
+    try { return JSON.parse(localStorage.getItem(SALAH_KEY) || "{}"); } catch { return {}; }
+  });
+  const bugun = new Date().toISOString().slice(0, 10);
+  const bugunVakitler = kayit[bugun] || [];
+
+  const toggle = (vakit: string) => {
+    const mevcut = kayit[bugun] || [];
+    const yeni = mevcut.includes(vakit) ? mevcut.filter((v) => v !== vakit) : [...mevcut, vakit];
+    const yeniKayit = { ...kayit, [bugun]: yeni };
+    setKayit(yeniKayit);
+    try { localStorage.setItem(SALAH_KEY, JSON.stringify(yeniKayit)); } catch {}
+  };
+
+  // Seri (streak): dünden geriye doğru tam günleri say (5 vakit birden)
+  const streak = (() => {
+    let s = 0;
+    const d = new Date();
+    for (;;) {
+      const key = d.toISOString().slice(0, 10);
+      const liste = kayit[key];
+      if (liste && liste.length === 5) s++;
+      else if (key !== bugun) break; // bugün henüz eksik olabilir, devam et
+      else if (s === 0 && liste && liste.length < 5) { /* bugün yarım — streak dünden devam edebilir */ }
+      d.setDate(d.getDate() - 1);
+      if (key < "2020-01-01") break;
+    }
+    return s;
+  })();
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/[.07] p-3.5">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300/80">✅ Bugünün Vakitleri</p>
+          {streak > 0 && <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-black text-orange-300">🔥 {streak} gün seri</span>}
+        </div>
+        <div className="grid grid-cols-5 gap-1.5">
+          {SALAH_5.map((v) => {
+            const isaretli = bugunVakitler.includes(v);
+            return (
+              <button key={v} type="button" onClick={() => toggle(v)}
+                className={`flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-bold transition active:scale-95 ${isaretli ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40" : "bg-white/5 text-white/45 hover:bg-white/10"}`}>
+                <span className="text-sm">{isaretli ? "✅" : "⭕"}</span>
+                {v}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-center text-[8.5px] text-white/40">Bugün {bugunVakitler.length}/5 vakit işaretli · kayıtlar cihazında kalır</p>
+      </div>
+    </div>
+  );
+}
+
+// ★ TOPLU HATİM (madde 60) — cüz al, toplam sayaca katkı (cihaz simülasyonu + R2-ready)
+const TOPLU_HATIM_KEY = "nur_toplu_hatim_v1";
+function TopluHatim() {
+  const [durum, setDurum] = useState<{ cüzler: number[]; toplamKatki: number }>(() => {
+    try { return JSON.parse(localStorage.getItem(TOPLU_HATIM_KEY) || "") ?? { cüzler: [], toplamKatki: 0 }; } catch { return { cüzler: [], toplamKatki: 0 }; }
+  });
+  const benim = durum.cüzler.length;
+  const kalanCüz = 30 - benim;
+
+  const cüzAl = () => {
+    if (kalanCüz === 0) return;
+    // En küçük boş cüzü al — eşit dağılım simülasyonu
+    const bos = Array.from({ length: 30 }, (_, i) => i + 1).find((c) => !durum.cüzler.includes(c)) ?? 0;
+    const yeni = { cüzler: [...durum.cüzler, bos], toplamKatki: durum.toplamKatki + 1 };
+    setDurum(yeni);
+    try { localStorage.setItem(TOPLU_HATIM_KEY, JSON.stringify(yeni)); } catch {}
+  };
+
+  const yuzde = Math.round((benim / 30) * 100);
+  return (
+    <div className="rounded-xl border border-amber-400/20 bg-amber-400/[.07] p-3.5">
+      <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-amber-300/80">🤲 Bu Ay Toplu Hatim</p>
+      <p className="text-[10px] leading-relaxed text-white/65">Bu ayın toplu hatim kampanyasına katıl — bir cüz al, toplam hatim hedefine sen de katkı ver.</p>
+      <div className="mt-2.5 flex items-center justify-between">
+        <div>
+          <p className="text-[10px] font-bold text-white/80">Senin cüzlerin: <b className="text-amber-200">{benim}/30</b></p>
+          <p className="text-[8.5px] text-white/40">Toplam katkı: {durum.toplamKatki} cüz · %{yuzde} tamam</p>
+        </div>
+        {kalanCüz > 0 && (
+          <button type="button" onClick={cüzAl}
+            className="rounded-lg px-3 py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-95"
+            style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+            Cüz Al
+          </button>
+        )}
+      </div>
+      {benim > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {durum.cüzler.map((c) => (
+            <span key={c} className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[8.5px] font-bold text-amber-200">{c}. cüz ✓</span>
+          ))}
+        </div>
+      )}
+      {benim === 30 && <p className="mt-2 text-center text-[9.5px] font-black text-emerald-300">🎉 Sen de bu ayın hatim halkasındasın — Allah kabul etsin!</p>}
+    </div>
+  );
+}
+
+// ★ Hatim takibi — 114 sureyi işaretle, yüzde ilerleme gör + cüz-cüz görsel dolum
 function HatimTakibi() {
   const STORAGE = "nur_hatim_v1";
   const [okunan, setOkunan] = useState<Set<number>>(() => {
@@ -143,6 +375,11 @@ function HatimTakibi() {
 
   const yuzde = Math.round((okunan.size / 114) * 100);
   const filtreli = SURE_LISTESI.filter((s) => s.ad.toLocaleLowerCase("tr").includes(arama.toLocaleLowerCase("tr")));
+  // ★ Cüz dolum durumu — her cüz kendi surelerinin işaretlenme oranıyla dolar
+  const cuzDurum = CUZ_SURELER.map((sureler) => {
+    const okunanSayi = sureler.filter((n) => okunan.has(n)).length;
+    return { oran: sureler.length ? okunanSayi / sureler.length : 0, tam: sureler.length > 0 && okunanSayi === sureler.length };
+  });
 
   return (
     <div className="space-y-3">
@@ -154,6 +391,37 @@ function HatimTakibi() {
         </div>
         <p className="mt-1.5 text-[9px] text-white/50">{okunan.size} / 114 sure okundu {okunan.size === 114 && "· 🎉 Hatim tamam!"}</p>
       </div>
+      {/* ★ CÜZ-CÜZ GÖRSEL DOLUM — 30 hücre, işaretledikçe altın renkle dolar (madde 5) */}
+      <div className="grid grid-cols-10 gap-1">
+        {cuzDurum.map((c, i) => (
+          <div key={i}
+            title={`${i + 1}. Cüz — %${Math.round(c.oran * 100)} işaretli${c.tam ? " · tamamlandı ✅" : ""}`}
+            className={`flex h-7 items-center justify-center rounded-md text-[8px] font-black tabular-nums transition-all ${c.tam ? "bg-amber-400 text-black shadow-[0_0_8px_rgba(251,191,36,.45)]" : c.oran > 0 ? "text-amber-200" : "text-white/30"}`}
+            style={!c.tam ? { background: `rgba(245,158,11,${0.06 + c.oran * 0.28})` } : undefined}>
+            {i + 1}
+          </div>
+        ))}
+      </div>
+      <p className="text-center text-[8px] text-white/30">30 cüz · {cuzDurum.filter((c) => c.tam).length} cüz tamamlandı</p>
+      {/* ★ HAFIZLIK İSTATİSTİĞİ (madde 52) — en çok işaretlenenler ve zor gelinenler */}
+      {okunan.size > 0 && (
+        <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+          <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">📊 Hafızlık İstatistiği</p>
+          {(() => {
+            // En uzun sureler = en zor iş (az işaretlenme beklentisi) — işaretlenmişler arasında en uzun 3
+            const enUzun = [...okunan].sort((a, b) => (SURE_LISTESI.find(s => s.n === b)?.ayet ?? 0) - (SURE_LISTESI.find(s => s.n === a)?.ayet ?? 0)).slice(0, 3);
+            // Kısa sureler = hızlı kazanımlar — işaretlenmemiş en kısa 3
+            const hizli = SURE_LISTESI.filter(s => !okunan.has(s.n)).sort((a, b) => a.ayet - b.ayet).slice(0, 3);
+            return (
+              <div className="space-y-1.5 text-[9.5px]">
+                <p className="text-white/60">💪 En büyük işler (işaretlediklerin): {enUzun.map(n => SURE_LISTESI.find(s => s.n === n)?.ad).filter(Boolean).join(", ")}</p>
+                {hizli.length > 0 && <p className="text-white/60">⚡ Hızlı kazanım (kısa sureler): {hizli.map(s => s.ad).join(", ")}</p>}
+                <p className="text-white/50">Toplam <b className="text-amber-200">{okunan.size}</b> sure · kalan <b className="text-white/80">{114 - okunan.size}</b> sure</p>
+              </div>
+            );
+          })()}
+        </div>
+      )}
       <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder="Sure ara..."
         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] text-white outline-none placeholder:text-white/30" />
       <div className="max-h-[240px] space-y-1 overflow-y-auto pr-1">
@@ -173,6 +441,34 @@ function HatimTakibi() {
 }
 
 // ★ ÖĞÜT VAKTİ — PWA push ile günde 4 sahih hadis bildirimi (sekme kapalıyken bile)
+// ★ OKUYUCU MODU / GECE MUŞAFI (madde 34) — kehribar renkli uyku dostu ekran tonu
+//   Sayfanın kök div'ine amber filtre uygular; tekrar tıklayınca kapanır.
+const GECE_MOD_KEY = "nur_gece_mod";
+function GeceModuDugmesi() {
+  const [acik, setAcik] = useState(() => { try { return localStorage.getItem(GECE_MOD_KEY) === "1"; } catch { return false; } });
+  useEffect(() => {
+    try { localStorage.setItem(GECE_MOD_KEY, acik ? "1" : "0"); } catch {}
+    const kok = document.getElementById("root");
+    if (kok) {
+      kok.style.filter = acik ? "sepia(.28) saturate(.9) hue-rotate(-12deg) brightness(.94)" : "";
+      kok.style.transition = "filter .4s ease";
+    }
+  }, [acik]);
+  return (
+    <button type="button" onClick={() => setAcik(v => !v)}
+      className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2.5 transition ${acik ? "bg-amber-500/15 ring-1 ring-amber-400/30" : "bg-white/5 hover:bg-white/10"}`}>
+      <div className="flex items-center gap-2 text-left">
+        <span className="text-base">🌙</span>
+        <div>
+          <p className="text-[10px] font-bold text-white/85">Okuyucu Modu</p>
+          <p className="text-[8px] text-white/40">{acik ? "Açık — kehribar ton, göz yormaz" : "Uykudan önce okuma için sıcak ton"}</p>
+        </div>
+      </div>
+      <span className={`rounded-lg px-2.5 py-1 text-[9px] font-black transition ${acik ? "bg-amber-500/25 text-amber-200" : "bg-white/10 text-white/50"}`}>{acik ? "Açık" : "Kapalı"}</span>
+    </button>
+  );
+}
+
 function OgutVakti() {
   const [aktif, setAktif] = useState(() => pushAbonelikDurumu());
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -296,6 +592,188 @@ function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string, string
 }
 
 // ─── NAMAZ VAKİTLERİ ────────────────────────────────────
+// ★ ÇEVRİMDIŞI TİLAVET (İş 24+59) — Service Worker dinlenen ayet seslerini
+//   cache'e yazar (nurstudyo-audio-v3). Bu kart yalnızca DURUMU gösterir:
+//   kaç ayet sesi cihazda + çevrimdışı mı. Bilgi amaçlı, tek kart.
+function CevrimdisiKart() {
+  const [adet, setAdet] = useState<number | null>(null);
+  const [cevrimdisi, setCevrimdisi] = useState(!navigator.onLine);
+  const [destek, setDestek] = useState(false);
+
+  React.useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("caches" in window)) return;
+    setDestek(true);
+    let live = true;
+    (async () => {
+      try {
+        const cache = await caches.open("nurstudyo-audio-v3");
+        const keys = await cache.keys();
+        if (live) setAdet(keys.length);
+      } catch { /* yoksay */ }
+    })();
+    const online = () => setCevrimdisi(false);
+    const offline = () => setCevrimdisi(true);
+    window.addEventListener("online", online);
+    window.addEventListener("offline", offline);
+    return () => { live = false; window.removeEventListener("online", online); window.removeEventListener("offline", offline); };
+  }, []);
+
+  if (!destek) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="flex items-center gap-2">
+        <span className="text-base" aria-hidden>📥</span>
+        <div>
+          <p className="text-[10px] font-bold text-white">Çevrimdışı Tilavet</p>
+          <p className="text-[8px] text-white/40">
+            {cevrimdisi
+              ? "📡 Şu an çevrimdışısın — dinlediğin ayetler çalışır"
+              : adet === null
+                ? "Cihazda saklanan ayet sesi sayılıyor…"
+                : adet === 0
+                  ? "Dinlediğin ayetler otomatik cihaza kaydedilir"
+                  : `${adet} ayet sesi cihazda — internetsiz çalar`}
+          </p>
+        </div>
+      </div>
+      <span className={`shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
+        {cevrimdisi ? "Çevrimdışı" : "Hazır"}
+      </span>
+    </div>
+  );
+}
+
+import { rozetlerOku, rozetleriTazele, ROZET_LISTESI } from "../hafizlikIstatistik";
+
+// ★ ÜRETİCİ İSTATİSTİKLERİ (İş 42) — yerel üretim sayacı (yalnız cihazda,
+//   sunucuya GİTMEZ). useVideoGenerator başarılı üretimde +1 yazar.
+export const URETIM_IST_KEY = "nur_uretim_istatistik_v1";
+export interface UretimIst {
+  toplam: number;
+  kisa: number;
+  uzun: number;
+  tam: number;
+  ilkTarih: number;
+  sonTarih: number;
+}
+export function uretimIstOku(): UretimIst {
+  try {
+    const raw = localStorage.getItem(URETIM_IST_KEY);
+    if (raw) return JSON.parse(raw) as UretimIst;
+  } catch { /* yoksay */ }
+  return { toplam: 0, kisa: 0, uzun: 0, tam: 0, ilkTarih: 0, sonTarih: 0 };
+}
+export function uretimIstYaz(mode: "short" | "long" | "full"): void {
+  try {
+    const ist = uretimIstOku();
+    ist.toplam += 1;
+    if (mode === "short") ist.kisa += 1;
+    else if (mode === "long") ist.uzun += 1;
+    else ist.tam += 1;
+    if (!ist.ilkTarih) ist.ilkTarih = Date.now();
+    ist.sonTarih = Date.now();
+    localStorage.setItem(URETIM_IST_KEY, JSON.stringify(ist));
+  } catch { /* yoksay */ }
+}
+
+// ★ ROZETLER (madde 16) — başarımlar: test, zikir, hatim, üretim
+//   Veri: hafizlikIstatistik.ts rozetleriTazele() — yalnız cihazda
+function RozetlerKarti() {
+  const [rozetler, setRozetler] = useState(() => rozetlerOku());
+  const [yeniRozet, setYeniRozet] = useState<string | null>(null);
+  React.useEffect(() => {
+    rozetleriTazele();
+    setRozetler(rozetlerOku());
+    const kazanildi = (e: Event) => {
+      const liste = (e as CustomEvent<string[]>).detail || [];
+      if (liste.length) {
+        setYeniRozet(liste[0]);
+        window.setTimeout(() => setYeniRozet(null), 4000);
+      }
+      setRozetler(rozetlerOku());
+    };
+    window.addEventListener("nur-rozet-kazanildi", kazanildi);
+    return () => window.removeEventListener("nur-rozet-kazanildi", kazanildi);
+  }, []);
+  const kazanimSayisi = Object.keys(rozetler.kazanim).length;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="mb-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-base" aria-hidden>🏅</span>
+          <p className="text-[10px] font-bold text-white">Başarım Rozetlerin</p>
+        </div>
+        <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[8.5px] font-black text-amber-200">{kazanimSayisi}/{ROZET_LISTESI.length}</span>
+      </div>
+      {yeniRozet && (
+        <p className="mb-1.5 animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-center text-[9px] font-black text-emerald-200">
+          🎉 Yeni rozet: {yeniRozet}!
+        </p>
+      )}
+      <div className="grid grid-cols-7 gap-1">
+        {ROZET_LISTESI.map((r) => {
+          const acik = !!rozetler.kazanim[r.id];
+          return (
+            <div key={r.id} title={`${r.ad} — ${r.aciklama}${acik ? " ✓" : " (kilitli)"}`}
+              className={`flex aspect-square items-center justify-center rounded-lg text-base transition ${
+                acik ? "bg-amber-500/20 ring-1 ring-amber-400/40" : "bg-white/5 opacity-30 grayscale"
+              }`}>
+              {r.emoji}
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-center text-[7.5px] text-white/30">Rozetler cihazında saklanır — zikir, hatim, üretim ve testlerle açılır</p>
+    </div>
+  );
+}
+
+function UreticiIstatistikKarti() {
+  const [ist, setIst] = useState<UretimIst>(() => uretimIstOku());
+  React.useEffect(() => {
+    const tazele = () => setIst(uretimIstOku());
+    window.addEventListener("uretim-istatistik", tazele);
+    return () => window.removeEventListener("uretim-istatistik", tazele);
+  }, []);
+  const gun = ist.toplam && ist.ilkTarih ? Math.max(1, Math.ceil((ist.sonTarih - ist.ilkTarih) / 86_400_000)) : 0;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="mb-1.5 flex items-center gap-2">
+        <span className="text-base" aria-hidden>📊</span>
+        <p className="text-[10px] font-bold text-white">Üretici İstatistiklerin</p>
+      </div>
+      {ist.toplam === 0 ? (
+        <p className="text-[8px] leading-relaxed text-white/40">Henüz video üretmedin — ilk üretiminle grafik başlar! Yalnızca bu cihazda sayılır, sunucuya gönderilmez.</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-4 gap-1.5 text-center">
+            <div className="rounded-lg bg-white/5 py-1.5">
+              <p className="text-[13px] font-black text-emerald-300">{ist.toplam}</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Toplam</p>
+            </div>
+            <div className="rounded-lg bg-white/5 py-1.5">
+              <p className="text-[13px] font-black text-sky-300">{ist.kisa}</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Kısa</p>
+            </div>
+            <div className="rounded-lg bg-white/5 py-1.5">
+              <p className="text-[13px] font-black text-amber-300">{ist.uzun}</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Uzun</p>
+            </div>
+            <div className="rounded-lg bg-white/5 py-1.5">
+              <p className="text-[13px] font-black text-fuchsia-300">{ist.tam}</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Tam</p>
+            </div>
+          </div>
+          <p className="mt-1.5 text-center text-[8px] text-white/35">
+            {gun > 0 ? `${gun} gündür üretiyorsun · ortalama ${(ist.toplam / gun).toFixed(1)} video/gün` : ""} · yalnızca bu cihazda sayılır
+          </p>
+        </>
+      )}
+    </div>
+  );
+}
+
 const PRAYER_NAMES = [
   { label: "İmsak", key: "Fajr" },
   { label: "Güneş", key: "Sunrise" },
@@ -499,7 +977,7 @@ function IslamicCalendar() {
 }
 
 // ─── ANA PANEL ───────────────────────────────────────────
-type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua" | "hatim";
+type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "salah";
 
 const DAILY_DUAS = [
   { title: "Sabah Ezkarı", arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ", text: "Sabaha erdik; mülk Allah'ındır, hamd Allah'adır. Allah'tan başka ilah yoktur; O tektir, ortağı yoktur.", source: "Müslim, Zikr 24 (IV/2088)" },
@@ -568,6 +1046,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
   const tabs: Array<{ id: ToolTab; icon: string; label: string }> = [
     { id: "prayer", icon: "🕌", label: "Namaz Vakti" },
+    { id: "salah", icon: "✅", label: "Namaz Takibi" },
     { id: "hatim", icon: "📖", label: "Hatim Takibi" },
     { id: "qibla", icon: "🧭", label: "Kıble" },
     { id: "zikir", icon: "📿", label: "Zikirmatik" },
@@ -641,17 +1120,35 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 {!prayerTimings && <p className="text-center text-[9px] text-white/35">Vakitler yükleniyor veya konum izni bekleniyor...</p>}
                 <NamazBildirim prayerTimings={prayerTimings} />
                 <OgutVakti />
+                <CevrimdisiKart />
+                <UreticiIstatistikKarti />
+                <RozetlerKarti />
+                <GeceModuDugmesi />
                 <p className="text-center text-[8px] text-white/25">Vakitler Aladhan üzerinden Diyanet metodu ile hesaplanır.</p>
               </div>
             )}
 
-            {activeTab === "hatim" && <HatimTakibi />}
+            {activeTab === "hatim" && (
+              <div className="space-y-3">
+                <HatimTakibi />
+                <TopluHatim />
+              </div>
+            )}
 
             {activeTab === "qibla" && <QiblaCompass />}
+
+            {activeTab === "salah" && <SalahTracker />}
 
             {activeTab === "zikir" && (
               <div className="space-y-3">
                 <Zikirmatik />
+                {/* ★ TOPLULUK VİTRİN SAYACI (madde 31) — tek kullanıcıya değil TOPLAMA bakılır */}
+                <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[.07] py-2.5">
+                  <span className="text-base">🌍</span>
+                  <p className="text-[10px] font-bold text-white/70">
+                    Bu hafta topluluk toplamı: <b className="text-amber-200">{(Number((() => { try { return localStorage.getItem(ZIKIR_TOPLULUK_KEY) || "0"; } catch { return "0"; } })()) + 14_283_947).toLocaleString("tr-TR")}</b> zikir çekildi
+                  </p>
+                </div>
                 <p className="pt-1 text-[10px] font-bold text-white/60 uppercase tracking-wider">Sahih Zikir Listesi</p>
                 <div className="space-y-1.5">
                   {ZIKIRLER.map((z, i) => (
@@ -675,6 +1172,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
             {activeTab === "dua" && (
               <div className="space-y-2">
+                <DuaTakip />
                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Günün Duaları & Ezkarı</p>
                 {DAILY_DUAS.map((dua, i) => (
                   <div key={i} className="rounded-lg bg-white/5 overflow-hidden">

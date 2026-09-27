@@ -42,27 +42,66 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
 
 // ★ DDoS + fatura koruması: canlı yayın proxy'si band genişliği tünelidir.
 //   limitsiz kalırsa 1 IP saniyede binlerce segment isteyip Vercel faturasını patlatabilir.
-const RATE_HITS = new Map<string, number[]>();
-const RATE_WINDOW_MS = 60_000;
-const RATE_MAX_REQ = 240; // canlı yayın ~2-4 sn'de bir segment çeker; 240/dk 4-5 paralel izleyiciye yeter
 
-function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
-  const ip = String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
+
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
   const now = Date.now();
-  const hits = (RATE_HITS.get(ip) || []).filter((hit) => hit >= now - RATE_WINDOW_MS);
-  if (hits.length >= RATE_MAX_REQ) {
-    res.setHeader("Retry-After", "30");
-    res.setHeader("Cache-Control", "no-store");
-    res.status(429).json({ ok: false, error: "istek_limiti" });
-    return false;
-  }
-  hits.push(now);
-  RATE_HITS.set(ip, hits);
-  // Map şişmesini önle: 5000 IP'yi geçiyorsa eskileri temizle
-  if (RATE_HITS.size > 5000) {
-    for (const key of RATE_HITS.keys()) { RATE_HITS.delete(key); if (RATE_HITS.size <= 2500) break; }
-  }
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
   return true;
+}
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) {
+    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
+    return true;
+  }
+  const ok = __rlMem(bucketKey, maxRequests, windowMs);
+  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
+  return ok;
+}
+async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+
+async function allowRequest(req: VercelRequest, res: VercelResponse): Promise<boolean> {
+  return rateLimit(req, res, "live:kabe", 240, 60_000);
 }
 
 export const config = { api: { bodyParser: false } };
@@ -134,7 +173,7 @@ async function pipe(res: VercelResponse, target: string, isPlaylist: boolean): P
 
 export default async function handler(req: VercelRequest, res: VercelResponse): Promise<void> {
   // ★ Rate limit — proxy kötüye kullanımı engellenir (DDoS amplifikasyon koruması)
-  if (!allowRequest(req, res)) return;
+  if (!(await allowRequest(req, res))) return;
 
   const src = String(req.query.src ?? "kabe");
   const type = String(req.query.type ?? "playlist");

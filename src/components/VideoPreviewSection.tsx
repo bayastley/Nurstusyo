@@ -319,17 +319,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
-          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />Akıllı AI</p>
-          <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? "Ayetlere göre sahne eşleştirme aktif." : "Kapalı - atmosferleri kendin seçersin."}</p>
-          {!isMasterSürüm && !tierAtLeast(tier, "elit") && !hasMicroUnlock("ai_search") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik")} />}
+          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />Akıllı AI <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>ÜCRETSİZ</span></p>
+          <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? "Ayetlere göre sahne eşleştirme aktif — yeni eklenen her ayete uygun atmosfer kendiliğinden atanır." : "Kapalı — aç, ayetinin atmosferini AI kendisi seçsin."}</p>
           <button
             onMouseEnter={() => setAiTooltipHover(true)}
             onMouseLeave={() => setAiTooltipHover(false)}
-            onClick={() => { if (!tryUnlockElitFeature("ai_search", "Akıllı AI")) return; setSmartAiEnabled(!smartAiEnabled); if (!smartAiEnabled) window.setTimeout(applySmartBackgrounds, lowPower ? 700 : 300); }}
+            onClick={() => { setSmartAiEnabled(!smartAiEnabled); if (!smartAiEnabled) window.setTimeout(applySmartBackgrounds, lowPower ? 700 : 300); }}
             className="relative w-full rounded-xl py-2 text-[10px] font-black text-black"
             style={{ background: smartAiEnabled ? "#34d399" : "#ef4444" }}
           >
-            {aiTooltipHover ? (smartAiEnabled ? "Kapat" : "Aç") : smartAiEnabled ? <><Sparkles size={10} className="mr-1 inline" />AÇIK</> : <><X size={10} className="mr-1 inline" />KAPALI</>}
+            {aiTooltipHover ? (smartAiEnabled ? "Kapat" : "Aç + Uygula") : smartAiEnabled ? <><Sparkles size={10} className="mr-1 inline" />AÇIK</> : <><X size={10} className="mr-1 inline" />KAPALI</>}
           </button>
         </div>
       </div>

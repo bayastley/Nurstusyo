@@ -16,6 +16,7 @@ import { sanitizeText, isValidEmail, clampNumber } from "../security/sanitize";
 import { syncUserInDb } from "./adminHelpers";
 import { AdminUsersTab } from "./AdminUsersTab";
 import { AdminModulesSyncTab } from "./AdminModulesSyncTab";
+import { AdminHaftaVideoTab, AdminHaftalikRaporTab } from "./adminDashboardTabs";
 
 interface AdminDashboardModalProps {
   onClose: () => void;
@@ -30,7 +31,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor">("users");
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -661,6 +662,26 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500" />}
           </button>
           <button
+            onClick={() => setActiveTab("haftaVideo")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "haftaVideo" ? "text-black font-black" : "text-fuchsia-300 hover:text-white"
+            }`}
+            style={activeTab === "haftaVideo" ? { background: "linear-gradient(135deg,#e879f9,#c026d3)" } : { background: "rgba(232,121,249,0.12)", border: "1px solid rgba(232,121,249,0.3)" }}
+          >
+            🎬
+            <span>Haftanın Videosu</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("rapor")}
+            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "rapor" ? "text-black font-black" : "text-teal-300 hover:text-white"
+            }`}
+            style={activeTab === "rapor" ? { background: "linear-gradient(135deg,#2dd4bf,#0d9488)" } : { background: "rgba(45,212,191,0.12)", border: "1px solid rgba(45,212,191,0.3)" }}
+          >
+            📊
+            <span>Haftalık Rapor</span>
+          </button>
+          <button
             onClick={() => setActiveTab("feedback")}
             className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap relative ${
               activeTab === "feedback" ? "text-black font-black" : "text-emerald-300 hover:text-white"
@@ -793,6 +814,16 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </div>
               </div>
             </div>
+          )}
+
+          {/* TAB: HAFTANIN VİDEOSU — admin onay kuyruğu */}
+          {activeTab === "haftaVideo" && (
+            <AdminHaftaVideoTab notify={notify} />
+          )}
+
+          {/* TAB: HAFTALIK RAPOR — 7 günlük özet */}
+          {activeTab === "rapor" && (
+            <AdminHaftalikRaporTab notify={notify} />
           )}
 
           {/* TAB 5: HATA LOGLARI */}

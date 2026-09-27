@@ -1,206 +1,319 @@
+// ════════════════════════════════════════════════════════════════
+// ÇEREZ ONAY BANNER'I — 6698 sayılı KVKK m.10 + KVKK Kurulu Çerez
+// Rehberi (08.03.2025 gün ve 11896 sayılı) uyumlu.
+//
+// UYUM NOTLARI (araştırma bulguları, 27 Eylül 2026):
+//  • Rıza OPT-IN'dir: varsayılan KAPALI, önceden işaretli kutu yoktur.
+//  • "Hepsini Kabul Et" / "Hepsini Reddet" / "Tercihleri Yönet" butonları
+//    EŞİT BELİRGİNLİKTE yan yana durur; reddetmenin kabul kadar kolay
+//    olması gerekir (rıza reddi de mümkün olmalı — m.5/1).
+//  • ZORUNLU çerezler (iletişimin teknik olarak sağlanması) için rıza
+//    GEREKMEZ; ancak aydınlatma (envanter) yükümlülüğü devam eder.
+//  • Bu sitede 3. taraf analitik/reklam çerezi KULLANILMAZ (GA/GTM/Meta
+//    yoktur); envanterde yalnızca 1. taraf zorunlu ve işlevsel anahtarlar
+//    listelenir. Tedarikçi çerezleri ileride eklenecek olursa rıza
+//    alınmadan devreye ALINMAZ — bu banner onları kapsayacak şekilde
+//    hazırdır (analitik/pazarlama anahtarları varsayılan kapalıdır).
+//  • Geri alma kolay olmalı: sayfa altındaki 🍪 düğmesi her an banner'ı
+//    yeniden açar; tercihler anında uygulanır ve saklanır.
+//  • Aydınlatma yükümlülüğü banner'dan AYRI olarak Yasal modal →
+//    "KVKK Aydınlatma" sekmesinde yerine getirilir (openLegalTab).
+// ════════════════════════════════════════════════════════════════
+
 import { useState, useEffect } from "react";
+import { openLegalTab } from "../legalTabs";
 
 const COOKIE_KEY = "nur_cookie_consent";
+// ★ SÜRÜM NOTU: kullanıcı tercihi — onay BİR KEZ verilirse, çerezler cihazdan silinmedikçe
+//   banner bir daha AÇILMAZ. Metin küçük değişse de onay geçerli kalır; kullanıcı zaten 🍪
+//   düğmesinden her an tercihlerini görüp değiştirebilir (geri alma hakkı korunur).
+//   Kaydedilen v alanı yalnızca denetim (audit) amaçlı saklanır.
+const CONSENT_VERSION = "2026-09-27";
 
-interface CookieSettings {
-  necessary: boolean; // Zorunlu — kapatılamaz
-  analytics: boolean; // Google Analytics
-  marketing: boolean; // Reklam / yeniden hedefleme
+export interface CookieSettings {
+  /** Zorunlu — rıza gerektirmez, her zaman açık */
+  necessary: true;
+  /** Analitik / performans — sitede 3. taraf analitik kullanılmaz; ileride eklenirse bu anahtar açık rıza ile devreye alınır */
+  analytics: boolean;
+  /** Pazarlama / tedarikçi çerezleri — kullanılmıyor; rıza opt-in kalır */
+  marketing: boolean;
 }
 
-const DEFAULTS: CookieSettings = {
-  necessary: true,
-  analytics: false,
-  marketing: false,
-};
+const DEFAULTS: CookieSettings = { necessary: true, analytics: false, marketing: false };
 
+/** Kayıt varsa her zaman döner — sürüm farkı onayı geçersizleştirmez (kullanıcı kararı: banner bir daha çıkmasın). */
 export function getCookieConsent(): CookieSettings | null {
   try {
     const raw = localStorage.getItem(COOKIE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as CookieSettings;
+    const parsed = JSON.parse(raw) as CookieSettings & { v?: string };
+    // Eski sürüm kaydında gerekli alanlar yoksa güvenli varsayılara düş (rıza opt-in kalır)
+    if (typeof parsed.analytics !== "boolean" || typeof parsed.marketing !== "boolean") {
+      return { necessary: true, analytics: false, marketing: false };
+    }
+    return { necessary: true, analytics: parsed.analytics, marketing: parsed.marketing };
   } catch {
     return null;
   }
 }
 
+/** Analitik/ölçüm anahtarını consent'li şekilde çalıştırmak için: getCookieConsent()?.analytics */
+export function analyticsIzinli(): boolean {
+  return getCookieConsent()?.analytics === true;
+}
+
+interface EnvanterSatiri {
+  ad: string;
+  taraf: "1. Taraf" | "3. Taraf";
+  amaç: string;
+  süre: string;
+  kategori: "necessary" | "analytics" | "marketing";
+}
+
+// ★ ÇEREZ ENVANTERİ — Çerez Rehberi şartı: her çerez için ad, amaç, taraf, saklama süresi.
+//   LocalStorage/oturum anahtarları da Rehber'de "çerez" başlığında bilgilendirme kapsamındadır.
+const ENVANTER: EnvanterSatiri[] = [
+  { ad: "nur_session", taraf: "1. Taraf", amaç: "Oturum güvenliği — girişli kullanıcıların kimlik doğrulaması", süre: "Oturum / 30 gün" },
+  { ad: "nur_theme, nur_lang", taraf: "1. Taraf", amaç: "Tema ve dil tercihinin hatırlanması (işlevsel)", süre: "365 gün" },
+  { ad: "nur_cookie_consent", taraf: "1. Taraf", amaç: "Çerez tercihlerinin saklanması (bu banner)", süre: "365 gün" },
+  { ad: "nur_wallet, üretim hakkı sayacı", taraf: "1. Taraf", amaç: "Satın aldığın üretim haklarının cihazda şifreli tutulması", süre: "365 gün" },
+  { ad: "nur_push_token", taraf: "1. Taraf", amaç: "Bildirim gönderimi (yalnızca bildirim izni verdiysen)", süre: "İzin süresince" },
+];
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [settings, setSettings] = useState<CookieSettings>(DEFAULTS);
+  const [showEnvanter, setShowEnvanter] = useState(false);
+  const [analytics, setAnalytics] = useState(false);
+  const [marketing, setMarketing] = useState(false);
 
   useEffect(() => {
     const existing = getCookieConsent();
     if (!existing) {
-      // Kısa gecikme — sayfa yüklensin
+      // Kısa gecikme — sayfa yüklensin, kanka banner patlamasın
       const t = setTimeout(() => setVisible(true), 1500);
       return () => clearTimeout(t);
     }
+    setAnalytics(existing.analytics);
+    setMarketing(existing.marketing);
   }, []);
 
-  function save(prefs: CookieSettings) {
-    localStorage.setItem(COOKIE_KEY, JSON.stringify(prefs));
+  // 🍪 ayar düğmesi "Detaylı Ayarlar" dediğinde banner yeniden açılır (geri alma hakkı)
+  useEffect(() => {
+    const tekrar = () => { setVisible(true); setShowDetails(true); };
+    window.addEventListener("cookie-consent-tekrar", tekrar);
+    return () => window.removeEventListener("cookie-consent-tekrar", tekrar);
+  }, []);
+
+  function save(prefs: { analytics: boolean; marketing: boolean }) {
+    const payload = { necessary: true as const, analytics: prefs.analytics, marketing: prefs.marketing, v: CONSENT_VERSION };
+    try {
+      localStorage.setItem(COOKIE_KEY, JSON.stringify(payload));
+    } catch { /* depolama kapalıysa da site çalışır */ }
     setVisible(false);
-    // Tracking'leri aç/kapat
-    if (prefs.analytics) {
-      // Google Analytics consent granted
-      window.dispatchEvent(new CustomEvent("cookie-consent", { detail: prefs }));
-    }
-    if (prefs.marketing) {
-      window.dispatchEvent(new CustomEvent("cookie-consent", { detail: prefs }));
-    }
+    window.dispatchEvent(new CustomEvent("cookie-consent", { detail: payload }));
   }
 
   function handleAcceptAll() {
-    save({ necessary: true, analytics: true, marketing: true });
+    setAnalytics(true);
+    setMarketing(true);
+    save({ analytics: true, marketing: true });
   }
 
   function handleRejectAll() {
-    save({ necessary: true, analytics: false, marketing: false });
+    setAnalytics(false);
+    setMarketing(false);
+    save({ analytics: false, marketing: false });
   }
 
   function handleSaveSettings() {
-    save({ necessary: true, ...settings });
+    save({ analytics, marketing });
   }
+
+  const btnEsit =
+    "flex-1 rounded-xl px-3 py-2.5 text-[12px] font-bold transition border";
 
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end justify-center p-4 sm:items-center">
-      {/* Arka plan overlay */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={handleRejectAll} />
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true" aria-label="Çerez Tercihleri">
+      {/* Arka plan — tıklamak red sayılmaz (dark pattern yok); bilinçli buton gerekli */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
-      {/* Banner */}
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0d1117] p-5 shadow-2xl sm:p-6">
-        {/* Başlık */}
         <div className="mb-3 flex items-center gap-2">
           <span className="text-2xl">🍪</span>
           <h3 className="text-lg font-bold text-white">Çerez Tercihleri</h3>
         </div>
 
-        {/* Açıklama */}
-        <p className="mb-4 text-sm leading-relaxed text-white/70">
-          Bu web sitesi, deneyiminizi geliştirmek ve hizmetlerimizi sunmak için çerezler kullanır.
-          <strong className="text-white/90"> 6698 sayılı KVKK</strong> ve
-          <strong className="text-white/90"> GDPR</strong> kapsamında çerez tercihlerinizi
-          yönetebilirsiniz.
+        <p className="mb-3 text-sm leading-relaxed text-white/70">
+          Nûr Stüdyo'yu kullanabilmen için gerekli <strong className="text-white/90">zorunlu çerezleri</strong> kullanıyoruz.
+          Analitik ve pazarlama çerezleri <strong className="text-white/90">yalnızca onayınla</strong> devreye girer.
+          Tercihini dilediğin an sayfa altındaki 🍪 düğmesinden değiştirebilirsin.
         </p>
 
-        {/* Detaylı ayarlar */}
+        {/* DETAYLI AYARLAR */}
         {showDetails && (
           <div className="mb-4 space-y-3 rounded-xl border border-white/5 bg-white/5 p-4">
-            {/* Zorunlu Çerezler */}
-            <label className="flex items-center justify-between">
+            {/* Zorunlu — her zaman açık, kapatılamaz */}
+            <div className="flex items-center justify-between">
               <div>
                 <span className="text-sm font-semibold text-white">Zorunlu Çerezler</span>
-                <p className="text-xs text-white/50">Site çalışması için gerekli</p>
+                <p className="text-xs text-white/50">Site çalışması için gerekli — rıza gerektirmez</p>
               </div>
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked
-                  disabled
-                  className="peer sr-only"
-                />
-                <div className="h-6 w-11 rounded-full bg-emerald-500 opacity-60" />
-                <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition" />
+              <div className="h-6 w-11 rounded-full bg-emerald-500 opacity-60 relative">
+                <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow" />
               </div>
-            </label>
+            </div>
 
-            {/* Analitik Çerezler */}
-            <label className="flex items-center justify-between cursor-pointer">
+            {/* Analitik — opt-in */}
+            <label className="flex cursor-pointer items-center justify-between">
               <div>
                 <span className="text-sm font-semibold text-white">Analitik Çerezler</span>
-                <p className="text-xs text-white/50">Google Analytics — site kullanımı</p>
+                <p className="text-xs text-white/50">Anonim kullanım ölçümü — varsayılan kapalı</p>
               </div>
               <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={settings.analytics}
-                  onChange={(e) => setSettings({ ...settings, analytics: e.target.checked })}
-                  className="peer sr-only"
-                />
-                <div className={`h-6 w-11 rounded-full transition-colors ${settings.analytics ? "bg-emerald-500" : "bg-white/20"}`} />
-                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${settings.analytics ? "right-0.5" : "right-5.5"}`} />
+                <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="peer sr-only" />
+                <div className={`h-6 w-11 rounded-full transition-colors ${analytics ? "bg-emerald-500" : "bg-white/20"}`} />
+                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${analytics ? "right-0.5" : "right-5.5"}`} />
               </div>
             </label>
 
-            {/* Pazarlama Çerezleri */}
-            <label className="flex items-center justify-between cursor-pointer">
+            {/* Pazarlama — opt-in */}
+            <label className="flex cursor-pointer items-center justify-between">
               <div>
                 <span className="text-sm font-semibold text-white">Pazarlama Çerezleri</span>
-                <p className="text-xs text-white/50">Kişiselleştirilmiş reklamlar</p>
+                <p className="text-xs text-white/50">Kişiselleştirilmiş reklam — şu an kullanılmıyor</p>
               </div>
               <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={settings.marketing}
-                  onChange={(e) => setSettings({ ...settings, marketing: e.target.checked })}
-                  className="peer sr-only"
-                />
-                <div className={`h-6 w-11 rounded-full transition-colors ${settings.marketing ? "bg-emerald-500" : "bg-white/20"}`} />
-                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${settings.marketing ? "right-0.5" : "right-5.5"}`} />
+                <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="peer sr-only" />
+                <div className={`h-6 w-11 rounded-full transition-colors ${marketing ? "bg-emerald-500" : "bg-white/20"}`} />
+                <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${marketing ? "right-0.5" : "right-5.5"}`} />
               </div>
             </label>
 
-            <p className="text-xs text-white/40 pt-2 border-t border-white/5">
-              Tercihleriniz 365 gün boyunca saklanır. Dilediğiniz zaman{" "}
-              <button onClick={() => { localStorage.removeItem(COOKIE_KEY); setVisible(true); }} className="underline text-[var(--accent)] hover:text-white">
-                tekrar düzenleyebilirsiniz
+            {/* ENVANTER — Rehber şartı: ad + amaç + taraf + süre */}
+            <div className="border-t border-white/5 pt-2">
+              <button type="button" onClick={() => setShowEnvanter((v) => !v)} className="text-[11px] font-bold text-[var(--accent)] hover:text-white">
+                {showEnvanter ? "▾ Çerez Envanterini Gizle" : "▸ Çerez Envanterini Göster (ad · amaç · taraf · süre)"}
+              </button>
+              {showEnvanter && (
+                <div className="mt-2 space-y-1.5">
+                  {ENVANTER.map((s) => (
+                    <div key={s.ad} className="rounded-lg bg-black/30 px-3 py-2 text-[10.5px] leading-snug text-white/70">
+                      <span className="font-mono font-bold text-white/90">{s.ad}</span>
+                      <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] text-white/60">{s.taraf}</span>
+                      <p className="mt-0.5">Amaç: {s.amaç}</p>
+                      <p>Süre: {s.süre}</p>
+                    </div>
+                  ))}
+                  <p className="text-[9.5px] text-white/40">
+                    3. taraf analitik/reklam çerezi kullanılmamaktadır. İleride tedarikçi çerezi eklenecek olursa bu banner üzerinden onayın alınır.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-white/40">
+              Tercihler 365 gün boyunca saklanır. Dilediğin zaman bu ekranda değiştirebilir veya tüm onayı{" "}
+              <button type="button" onClick={() => { try { localStorage.removeItem(COOKIE_KEY); } catch { /* yoksay */ } setVisible(true); setShowDetails(true); }} className="underline text-[var(--accent)] hover:text-white">
+                sıfırlayabilirsin
               </button>.
             </p>
           </div>
         )}
 
-        {/* Butonlar */}
+        {/* BUTONLAR — EŞİT BELİRGİNLİK: Kabul / Reddet / Tercihler aynı görsel ağırlıkta */}
         <div className="flex flex-wrap gap-2">
           {!showDetails ? (
             <>
-              <button
-                onClick={handleAcceptAll}
-                className="flex-1 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
-              >
-                Tümünü Kabul Et
+              <button type="button" onClick={handleAcceptAll} className={btnEsit + " bg-[var(--accent)] text-white hover:opacity-90"} style={{ borderColor: "var(--accent)" }}>
+                Hepsini Kabul Et
               </button>
-              <button
-                onClick={handleRejectAll}
-                className="flex-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/5 transition"
-              >
-                Reddet
+              <button type="button" onClick={handleRejectAll} className={btnEsit + " bg-white/5 text-white hover:bg-white/15"} style={{ borderColor: "rgba(255,255,255,.25)" }}>
+                Hepsini Reddet
               </button>
-              <button
-                onClick={() => setShowDetails(true)}
-                className="w-full rounded-xl border border-white/10 px-4 py-2 text-xs text-white/50 hover:text-white/70 hover:bg-white/5 transition"
-              >
-                ⚙️ Detaylı Ayarlar
+              <button type="button" onClick={() => setShowDetails(true)} className={btnEsit + " bg-transparent text-white/80 hover:bg-white/10"} style={{ borderColor: "rgba(255,255,255,.25)" }}>
+                Tercihleri Yönet
               </button>
             </>
           ) : (
             <>
-              <button
-                onClick={handleSaveSettings}
-                className="flex-1 rounded-xl bg-[var(--accent)] px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 transition"
-              >
-                Tercihleri Kaydet
+              <button type="button" onClick={handleSaveSettings} className={btnEsit + " bg-[var(--accent)] text-white hover:opacity-90"} style={{ borderColor: "var(--accent)" }}>
+                Seçtiklerimi Kaydet
               </button>
-              <button
-                onClick={handleAcceptAll}
-                className="flex-1 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/5 transition"
-              >
-                Tümünü Kabul Et
+              <button type="button" onClick={handleRejectAll} className={btnEsit + " bg-white/5 text-white hover:bg-white/15"} style={{ borderColor: "rgba(255,255,255,.25)" }}>
+                Hepsini Reddet
+              </button>
+              <button type="button" onClick={handleAcceptAll} className={btnEsit + " bg-transparent text-white/80 hover:bg-white/10"} style={{ borderColor: "rgba(255,255,255,.25)" }}>
+                Hepsini Kabul Et
               </button>
             </>
           )}
         </div>
 
-        {/* Yasal bilgi */}
+        {/* YASAL BAĞLANTILAR — yerel yasal modalı açar (404 sayfası YOK) */}
         <p className="mt-3 text-center text-[10px] text-white/30">
-          detaylı bilgi için{" "}
-          <a href="/kvkk" className="underline hover:text-white/50">KVKK Aydınlatma Metni</a>
-          {" "}ve{" "}
-          <a href="/gizlilik" className="underline hover:text-white/50">Gizlilik Politikası</a>
+          Detaylı bilgi:{" "}
+          <button type="button" onClick={() => { setVisible(false); openLegalTab("kvkk"); }} className="underline hover:text-white/60">KVKK Aydınlatma Metni</button>
+          {" · "}
+          <button type="button" onClick={() => { setVisible(false); openLegalTab("gizlilik"); }} className="underline hover:text-white/60">Gizlilik & Çerez Politikası</button>
         </p>
       </div>
     </div>
   );
 }
+
+/** Sayfa köşesindeki 🍪 düğmesi — geri alma hakkının "her sayfadan erişimi" (Rehber şartı) */
+export function CookieAyarDugmesi() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const ac = (e: Event) => { setOpen(false); void (e as CustomEvent).detail; };
+    window.addEventListener("cookie-consent", ac);
+    return () => window.removeEventListener("cookie-consent", ac);
+  }, []);
+
+  function banneriAc() {
+    // Tercihi sil → CookieConsent useEffect'i yeniden göstermez (mount aşaması geçti);
+    // bu yüzden düğme ayrı bir küçük panel açar: onay sıfırla + yeniden seçtir.
+    try { localStorage.removeItem(COOKIE_KEY); } catch { /* yoksay */ }
+    setOpen(true);
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={banneriAc}
+        title="Çerez Tercihleri"
+        aria-label="Çerez Tercihleri"
+        className="glass-soft fixed bottom-3 left-3 z-[60] rounded-full p-2 text-white/40 transition hover:text-white"
+      >
+        🍪
+      </button>
+
+      {open && (
+        <div className="fixed bottom-14 left-3 z-[9999] w-[calc(100vw-24px)] max-w-sm rounded-2xl border border-white/10 bg-[#0d1117] p-4 shadow-2xl">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-bold text-white">🍪 Çerez Tercihleri</span>
+            <button type="button" onClick={() => setOpen(false)} className="text-white/40 hover:text-white" aria-label="Kapat">✕</button>
+          </div>
+          <p className="mb-3 text-[11px] leading-relaxed text-white/60">
+            Çerez onayın sıfırlandı. Tercihini yeniden seç:
+          </p>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => { setOpen(false); window.dispatchEvent(new CustomEvent("cookie-consent-tekrar", { detail: true })); }} className="flex-1 rounded-xl bg-[var(--accent)] px-3 py-2 text-[11px] font-bold text-white hover:opacity-90">
+              Detaylı Ayarlar
+            </button>
+            <button type="button" onClick={() => { try { localStorage.setItem(COOKIE_KEY, JSON.stringify({ necessary: true as const, analytics: false, marketing: false, v: CONSENT_VERSION })); } catch { /* yoksay */ } setOpen(false); }} className="flex-1 rounded-xl border border-white/25 bg-white/5 px-3 py-2 text-[11px] font-semibold text-white hover:bg-white/15">
+              Sadece Zorunlu
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+

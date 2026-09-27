@@ -37,7 +37,6 @@ const ALLOWED_REDIRECT_URIS = new Set([
   "https://www.nurstudyo.com/",
 ]);
 const ALLOWED_ORIGINS = new Set([...ALLOWED_REDIRECT_URIS].map((uri) => new URL(uri).origin));
-const AUTH_HITS = new Map<string, number[]>();
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
 const REGISTER_BONUS = 5;
 
@@ -49,6 +48,12 @@ function base64Url(value: Buffer | string): string {
 function createSessionToken(user: Record<string, unknown>): string {
   const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
   if (secret.length < 20) throw new Error("NUR_SESSION_SECRET veya GOOGLE_CLIENT_SECRET tanımlı değil");
+  // ★ Açık 10 notu: GOOGLE_CLIENT_SECRET fallback'i geçici uyumluluktur.
+  //   Vercel'de NUR_SESSION_SECRET tanımlanınca bu uyarı kaybolur; o zaman
+  //   fallback zinciri tüm dosyalardan kaldırılabilir (tek adımda, planlı).
+  if (!process.env.NUR_SESSION_SECRET) {
+    console.warn("[guvenlik] NUR_SESSION_SECRET tanımlı değil — oturum imzası GOOGLE_CLIENT_SECRET fallback'iyle yapılıyor. Vercel env'ine NUR_SESSION_SECRET ekle.");
+  }
   const now = Math.floor(Date.now() / 1000);
   const payload = base64Url(JSON.stringify({ ...user, iat: now, exp: now + SESSION_MAX_AGE }));
   const signature = base64Url(crypto.createHmac("sha256", secret).update(payload).digest());
@@ -61,24 +66,59 @@ function setSessionCookie(req: VercelRequest, res: VercelResponse, token: string
   res.setHeader("Set-Cookie", `nur_session=${encodeURIComponent(token)}; Path=/; HttpOnly; ${secure ? "Secure; " : ""}SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`);
 }
 
-function allowRequest(req: VercelRequest, res: VercelResponse): boolean {
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
+  return true;
+}
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) {
+    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
+    return true;
+  }
+  const ok = __rlMem(bucketKey, maxRequests, windowMs);
+  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
+  return ok;
+}
+
+async function allowRequest(req: VercelRequest, res: VercelResponse): Promise<boolean> {
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
     res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
     return false;
   }
 
-  const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown").split(",")[0].trim();
-  const now = Date.now();
-  const hits = (AUTH_HITS.get(ip) || []).filter((hit) => hit >= now - 60_000);
-  if (hits.length >= 10) {
-    res.setHeader("Retry-After", "60");
-    res.status(429).json({ ok: false, error: "İstek işlenemedi" });
-    return false;
-  }
-  hits.push(now);
-  AUTH_HITS.set(ip, hits);
-  return true;
+  return rateLimit(req, res, "auth:google", 10, 60_000);
 }
 
 interface GoogleTokenInfo {
@@ -174,7 +214,7 @@ async function verifyIdToken(idToken: string, clientId: string): Promise<{ ok: t
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!allowRequest(req, res)) return;
+  if (!(await allowRequest(req, res))) return;
 
   try {
     const clientId = process.env.VITE_GOOGLE_CLIENT_ID || "";

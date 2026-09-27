@@ -1,26 +1,34 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { telifUyarisiGerekli, telifUyarisiKabulEt } from "../telifUyari";
 
 interface TelifDisclaimerProps {
+  /** StudioApp üretim akışı "uyarı göster" işareti koyduğunda açılır (Video Üret anı) */
+  tetik: number;
   onAccept?: () => void;
 }
 
 /**
  * ★ Telif Uyarısı — Kullanıcıya telif riskini açıkça gösterir
- * Kâri seçildiğinde veya video oluşturulurken gösterilir.
- * KVKK/AB uyumlu: Kullanıcı bilgilendirilmeden video oluşturulamaz.
+ * SADECE İLK "Video Üret" basışında BİR KERE gösterilir (kalıcı kayıt);
+ * site girişinde / sayfa açılışında ASLA çıkmaz. KVKK/AB uyumlu:
+ * kullanıcı bilgilendirilmeden video oluşturulamaz.
  */
-export function TelifDisclaimer({ onAccept }: TelifDisclaimerProps) {
+export function TelifDisclaimer({ tetik, onAccept }: TelifDisclaimerProps) {
   const [visible, setVisible] = useState(false);
 
+  // Üretim akışından gelen tetik: uyarı daha önce kabul edilmemişse göster
   useEffect(() => {
-    // Her oturumda bir kez göster
-    const shown = sessionStorage.getItem("telif_disclaimer_shown");
-    if (!shown) {
+    if (tetik > 0 && telifUyarisiGerekli()) {
       setVisible(true);
-      sessionStorage.setItem("telif_disclaimer_shown", "1");
     }
-  }, []);
+  }, [tetik]);
+
+  const kapat = () => {
+    telifUyarisiKabulEt();
+    setVisible(false);
+    onAccept?.();
+  };
 
   if (!visible) return null;
 
@@ -28,7 +36,7 @@ export function TelifDisclaimer({ onAccept }: TelifDisclaimerProps) {
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative max-w-md w-full rounded-2xl border border-amber-500/30 bg-gradient-to-b from-gray-900 to-gray-950 p-6 shadow-2xl">
         <button
-          onClick={() => { setVisible(false); onAccept?.(); }}
+          onClick={kapat}
           className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition"
         >
           <X size={16} className="text-white/50" />
@@ -60,7 +68,7 @@ export function TelifDisclaimer({ onAccept }: TelifDisclaimerProps) {
         </div>
 
         <button
-          onClick={() => { setVisible(false); onAccept?.(); }}
+          onClick={kapat}
           className="mt-5 w-full py-2.5 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 font-bold text-sm hover:bg-amber-500/30 transition"
         >
           Anladım, Devam Et

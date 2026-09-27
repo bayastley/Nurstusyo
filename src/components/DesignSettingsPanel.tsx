@@ -288,6 +288,21 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             lockLabel={() => "Pro Üyelik Gerekir"}
             items={ASPECTS}
           />
+          {/* ★ SHORTS TEK TUŞ (madde 9): 9:16 + Kısa modu — Reels/Shorts/TikTok için ideal preset */}
+          {aspect === "9:16" && mode === "short" ? (
+            <div className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500/10 py-1.5 text-[9px] font-black text-emerald-300 ring-1 ring-emerald-400/30">
+              📱 Shorts Modu aktif · "Instagram Reels / YouTube Shorts için ideal" rozeti açık
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setAspect("9:16"); setMode("short"); setBatchFormats(["9:16"]); }}
+              className="mt-2 w-full rounded-lg py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-[.98]"
+              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+            >
+              📱 Shorts Modu — 9:16 + Kısa (Reels için ideal)
+            </button>
+          )}
           <div className="mt-2 flex gap-1">
             {(["9:16", "1:1", "16:9", "4:5"] as Aspect[]).map((item) => {
               const active = batchFormats.includes(item);

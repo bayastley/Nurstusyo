@@ -30,26 +30,62 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
 }
 
 // Self-contained rate limit — _shared importları Vercel'de paketlenmediği için gömüldü
-const __buckets = new Map<string, { hits: number[] }>();
-function rateLimit(req: VercelRequest, res: VercelResponse, key: string, maxRequests: number, windowMs: number): boolean {
+// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
+//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
   const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
-  const ip = forwarded || req.socket?.remoteAddress || "unknown";
-  const bucketKey = `${key}:${ip}`;
+  return forwarded || req.socket?.remoteAddress || "unknown";
+}
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
   const now = Date.now();
-  const bucket = __buckets.get(bucketKey) ?? { hits: [] };
-  const cutoff = now - windowMs;
-  bucket.hits = bucket.hits.filter((hit) => hit >= cutoff);
-  if (bucket.hits.length >= maxRequests) {
-    res.setHeader("Retry-After", "300");
-    res.setHeader("Cache-Control", "no-store");
-    res.status(429).json({ ok: false, error: "Çok fazla istek gönderildi, birazdan tekrar dene" });
-    __buckets.set(bucketKey, bucket);
-    return false;
-  }
-  bucket.hits.push(now);
-  __buckets.set(bucketKey, bucket);
+  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now);
+  __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
   return true;
 }
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result: unknown }>;
+    return Number(json[0]?.result ?? 1);
+  } catch { return null; }
+}
+async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) {
+    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
+    return true;
+  }
+  const ok = __rlMem(bucketKey, maxRequests, windowMs);
+  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
+  return ok;
+}
+async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const bucketKey = `${key}:${__rlIp(req)}`;
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
+  const hits = await __rlShared(bucketKey, windowMs);
+  if (hits !== null) return hits <= maxRequests;
+  return __rlMem(bucketKey, maxRequests, windowMs);
+}
+
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -117,7 +153,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   // Saatte 5 mesaj / IP — kutu spam'ine karşı
-  if (!rateLimit(req, res, "feedback", 5, 60 * 60_000)) return;
+  if (!(await rateLimit(req, res, "feedback", 5, 60 * 60_000))) return;
 
   try {
     const cfg = supabaseConfig();

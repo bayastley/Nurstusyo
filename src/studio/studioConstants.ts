@@ -22,7 +22,7 @@ export const CATEGORY_ICONS: Record<CatId, LucideIcon> = {
   selale: Droplets, orman: Trees, col: Sun, kar: Snowflake,
   sehir: Building2, cami: Landmark, desen: Shapes, gol: Sailboat,
   bulut: Cloud, ates: Flame, cehennem: CloudLightning,
-  hurma: TreePalm, ari: Bug, karinca: Footprints,
+  hurma: TreePalm, ari: Bug, fil: Bug, karinca: Footprints,
 };
 
 export const DEFAULT_MASTER_SURUM = false;

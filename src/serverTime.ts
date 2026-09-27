@@ -82,9 +82,14 @@ async function fetchFromTimeAPI(): Promise<number | null> {
 // ─── Kaynak 3: Cloudflare Date header (HEAD request) ─────────
 async function fetchFromCloudflare(): Promise<number | null> {
   try {
+    // ★ CORS DÜZELTMESİ (tam tarama 28.09): cloudflare.com/cdn-cgi/trace
+    //   Access-Control-Allow-Origin döndürmüyor → tarayıcıda her seferinde
+    //   "blocked by CORS policy" konsol hatası basiyordu. worldtimeapi +
+    //   timeapi.io ana kaynaklar; Cloudflare kaynağı yalnız production'da
+    //   (nurstudyo.com) anlamlı — localda atlanır, hata kirliliği biter.
+    if (location.hostname === "localhost" || location.hostname === "127.0.0.1") return null;
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 3000);
-    // cloudflare.com/cdn-cgi/trace her zaman Date header döner
     const res = await fetch("https://cloudflare.com/cdn-cgi/trace", { method: "HEAD", signal: controller.signal });
     window.clearTimeout(timeout);
     const dateHeader = res.headers.get("date");

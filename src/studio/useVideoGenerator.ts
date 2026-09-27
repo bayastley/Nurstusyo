@@ -472,7 +472,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       notify(t("successVideoReady"));
     } catch (error) {
       reportRenderError(error);
-      if (!userStopped) notify("Video üretimi sırasında teknik bir takılma oluştu");
+      // ★ TAM TARAMA (29.09): "Ses dosyaları alınamadı" artık anlaşılır Türkçe mesaj veriyor
+      if (!userStopped) notify(error instanceof Error && error.message.includes("Ses dosyaları alınamadı")
+        ? "⚠️ Hoca sesleri indirilemedi — internet bağlantını kontrol edip tekrar dene"
+        : "Video üretimi sırasında teknik bir takılma oluştu");
     } finally {
       aspectRef.current = aspect;
       setGenerating(false);

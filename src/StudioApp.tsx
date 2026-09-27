@@ -59,8 +59,13 @@ import { SocialSharePanel } from "./components/SocialSharePanel";
 import { ModalsContainer } from "./components/ModalsContainer";
 import { MaintenanceScreen } from "./components/MaintenanceScreen";
 import { AnnouncementBar } from "./components/AnnouncementBar";
-import { CookieConsent } from "./components/CookieConsent";
+import { CookieConsent, CookieAyarDugmesi } from "./components/CookieConsent";
+import { setLegalTabAçıcı, type LegalTab } from "./legalTabs";
 import { TelifDisclaimer } from "./components/TelifDisclaimer";
+import { telifUyarisiGerekli } from "./telifUyari";
+import { uretimIstYaz } from "./components/IslamicToolsPanel";
+import { BugunHediye } from "./components/BugunHediye";
+import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { RoadmapModal } from "./components/RoadmapModal";
 import { useShareActions } from "./studio/useShareActions";
 import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
@@ -116,6 +121,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const notify = useCallback((message: string) => setToast(message), []);
 
   // ★ Cookie Consent — yeni KVKK component'i tarafından yönetiliyor
+
+  // ★ Telif uyarısı tetiği — handleGenerate ilk üretimde bir kez artırır;
+  //   tetik 2'ye ulaştığında (uyarı kabul edildi → otomatik devam) üretim yeniden çağrılır
+  const [telifTetik, setTelifTetik] = useState(0);
+  const telifDevamRef = useRef(false);
+  const telifIlkTetikRef = useRef(true);
+  React.useEffect(() => {
+    if (telifTetik === 0) return;
+    if (telifIlkTetikRef.current) { telifIlkTetikRef.current = false; return; } // ilk artış = uyarıyı göster, üretimi başlatma
+    handleGenerate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [telifTetik]);
 
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
   const [genConfirmOpen, setGenConfirmOpen] = useState(false);
@@ -403,12 +420,29 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [modal, setModal] = useState<ModalName>(null);
+  // ★ İş 5: Linkten gelen davet kodu (?davet=KOD) — giriş yapınca DavetModal otomatik kullanır
+  const [bekleyenDavetKodu, setBekleyenDavetKodu] = useState<string | null>(() => {
+    try {
+      const m = new URLSearchParams(window.location.search).get("davet");
+      if (m && /^[A-Z0-9]{4,12}$/i.test(m)) return m.toUpperCase();
+    } catch { /* SSR/güvenli mod */ }
+    return null;
+  });
+  useEffect(() => {
+    if (!bekleyenDavetKodu) return;
+    try { window.history.replaceState({}, "", window.location.pathname); } catch { /* ignore */ }
+  }, [bekleyenDavetKodu]);
   const [tosOpen, setTosOpen] = useState(false);
   // localBanned, localBanReason → useBan hook'unda
 
   // Ban cleanup → useBan hook'unda
 
-  const [legalTab, setLegalTab] = useState<"tos" | "kvkk" | "gizlilik" | "iade">("tos");
+  const [legalTab, setLegalTab] = useState<LegalTab>("tos");
+  // ★ YASAL SEKME KÖPRÜSÜ — çerez banner'ı ve diğer bağımsız bileşenler
+  //   LegalModal'ı buradan açar (KVKK m.10: aydınlatmaya kolay erişim şartı)
+  useEffect(() => {
+    setLegalTabAçıcı((tab) => { setLegalTab(tab); setTosOpen(true); });
+  }, []);
   const [debugGuideModal, setDebugGuideModal] = useState<DebugGuideMessage | null>(null);
   const [tosAccepted, setTosAccepted] = useState(false);
   const [contactType, setContactType] = useState<"oneri" | "sikayet">("oneri");
@@ -770,6 +804,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, []);
 
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
+    // ★ TAM TARAMA (29.09): a=0 guard — "Ayet Ekle" butonu ayet seçilmeden basılınca
+    // Number("")=0 geliyordu → "Fâtiha 1:0" placeholder → 001000.mp3 404 → render crash.
+    if (!Number.isInteger(s) || s < 1 || !Number.isInteger(a) || a < 1) { notify("⚠️ Önce sure ve ayet seç"); return; }
     const id = `${s}:${a}`;
     if (selectedRef.current.some((item) => item.id === id)) return;
     const meta = SURAHS[s - 1];
@@ -1047,6 +1084,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     }
     if (!selected.length) { notify("Önce en az bir ayet seçin"); return; }
     if (!window.MediaRecorder) { notify("Tarayıcınız video üretimini desteklemiyor"); return; }
+    // ★ TELİF UYARISI — SADECE İLK üretim basışında BİR KERE:
+    //   uyarı kabul edilmemişse bayrak konur, uyarı açılır; "Anladım" deyince
+    //   üretim otomatik kaldığı yerden DEVAM eder (ikinci tıklama gerekmez).
+    //   Girişte/refresh'te ASLA çıkmaz — sadece üretim akışı tetikler.
+    if (telifUyarisiGerekli()) {
+      telifDevamRef.current = true;
+      setTelifTetik((v) => v + 1);
+      return;
+    }
     // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
     const canvasEl = canvasRef.current;
     if (!canvasEl || typeof canvasEl.captureStream !== "function") {
@@ -1305,6 +1351,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
         //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).
         void storeVideo({ id: output.id, label: output.label, mime: output.mime, ext: output.ext, size: output.size, duration: output.duration, blob });
+        // ★ ÜRETİCİ İSTATİSTİĞİ (İş 42) — başarılı üretimde yerel sayaç +1 (cihazda kalır)
+        try { uretimIstYaz(mode); window.dispatchEvent(new Event("uretim-istatistik")); } catch { /* yoksay */ }
       }
       if (!isMasterSürüm && !userStopped && !jetonCharged) {
         setProgress(98);
@@ -1321,7 +1369,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     } catch (error) {
       console.error(error);
       reportRenderError(error);
-      if (!userStopped) notify("Video üretimi sırasında teknik bir takılma oluştu");
+      // ★ TAM TARAMA (29.09): "Ses dosyaları alınamadı" artık anlaşılır Türkçe mesaj veriyor
+      if (!userStopped) notify(error instanceof Error && error.message.includes("Ses dosyaları alınamadı")
+        ? "⚠️ Hoca sesleri indirilemedi — internet bağlantını kontrol edip tekrar dene"
+        : "Video üretimi sırasında teknik bir takılma oluştu");
     }
     finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
   }, [aspect, batchFormats, generating, jetonCount, mode, notify, openPremium, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate]);
@@ -1967,6 +2018,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <ModalsContainer
         modal={modal}
         setModal={setModal}
+        setRoadmapOpen={setRoadmapOpen}
         onClipKindChange={reassignBackgroundsForKind}
         loginTab={loginTab}
         setLoginTab={setLoginTab}
@@ -2012,6 +2064,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         setAtmosQuery={setAtmosQuery}
         isMasterSürüm={isMasterSürüm}
         randomizeBackgrounds={randomizeBackgrounds}
+        setCinematic={setCinematic}
+        seciliAyetSayisi={selected.length}
+        bekleyenDavetKodu={bekleyenDavetKodu}
+        syncWallet={syncWallet}
         atmosCategory={atmosCategory}
         setAtmosCategory={setAtmosCategory}
         combinedAllClips={combinedAllClips}
@@ -2064,11 +2120,28 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         user={user}
       />
 
-      {/* COOKIE CONSENT — KVKK/AB Uyumu */}
+      {/* COOKIE CONSENT — KVKK m.10 + Çerez Rehberi uyumlu (opt-in, eşit butonlar, envanter) */}
       <CookieConsent />
+      {/* 🍪 Çerez ayarları — geri alma hakkı her sayfadan erişilebilir */}
+      <CookieAyarDugmesi />
 
-      {/* TELİF UYARISI — Kullanıcıları bilgilendir */}
-      <TelifDisclaimer />
+      {/* TELİF UYARISI — SADECE ilk Video Üret basışında bir kere (girişte çıkmaz) */}
+      <TelifDisclaimer
+        tetik={telifTetik}
+        onAccept={() => {
+          // Uyarı kabul edildi → uyarıdan ÖNCE basılan üretim otomatik devam etsin
+          if (telifDevamRef.current) {
+            telifDevamRef.current = false;
+            setTelifTetik((v) => v + 1); // 2. tetik → useEffect handleGenerate'i çağırır
+          }
+        }}
+      />
+
+      {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) */}
+      <BugunHediye notify={notify} onHakDegisti={syncWallet} />
+
+      {/* ★ PWA KURULUM SİHİRBAZI — Ana Ekrana Ekle öğreticisi (madde 23) */}
+      <PwaKurulumBanneri />
 
       {/* V2-V3 YOL HARİTASI */}
       <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} adminEmail={user?.email} />

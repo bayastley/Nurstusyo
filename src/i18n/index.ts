@@ -65,21 +65,38 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "İşbu koşullar Türk Hukuku'na tabidir. Uyuşmazlıklarda Türkiye Cumhuriyeti mahkemeleri yetkilidir.\n\n" +
           "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
         kvkk:
-          "VERİ SORUMLUSU\n\n" +
-          "Veri sorumlusu nurstudyo.com üzerinden hizmet veren şahıs firmasıdır.\nİletişim: destek@nurstudyo.com\n\n" +
-          "İŞLENEN KİŞİSEL VERİLER\n\n" +
-          "Google OAuth ile alınan ad-soyad, e-posta ve profil fotoğrafı. Tercihler cihazdaki şifreli LocalStorage'da tutulur.\n\n" +
-          "HAKLARINIZ (KVKK m.11)\n\n" +
-          "Erişim, düzeltme, silme ve itiraz haklarınız için destek@nurstudyo.com\n\n" +
-          "Son güncelleme: Ağustos 2026",
+          "6698 SAYILI KVKK AYDINLATMA METNİ (m.10)\n\n" +
+          "VERİ SORUMLUSU\n" +
+          "nurstudyo.com hizmetini sunan şahıs firması (Nûr Stüdyo).\nİletişim: destek@nurstudyo.com\n\n" +
+          "İŞLENEN VERİLER VE AMACI\n" +
+          "Google ile giriş (OAuth) ile alınan ad-soyad, e-posta ve profil fotoğrafı; üyelik ve üretim hakkı durumu; dil ve tema tercihleriniz. Bu veriler yalnızca kimlik doğrulama, hizmetin sunulması (video üretimi, üretim hakları), destek taleplerine yanıt verilmesi ve yasal yükümlülüklerin yerine getirilmesi amacıyla işlenir.\n\n" +
+          "HUKUKİ SEBEPLER (KVKK m.5)\n" +
+          "Sözleşmenin kurulması/ifası (m.5/2-c), hukuki yükümlülük (m.5/2-ç), meşru menfaat (m.5/2-f) ve hakkınızı korumak (m.5/2-e). Özel nitelikli (hassas) veri işlenmez.\n\n" +
+          "AKTARIM\n" +
+          "Verileriniz; altyapı ve ödeme hizmeti aldığımız Google (OAuth oturumu), Supabase (veritabanı) ve iyzico (ödeme) ile yalnızca hizmet için gerekli ölçüde paylaşılır. Yurt dışına aktarım yalnızca bu sağlayıcıların sunucularına yapılır.\n\n" +
+          "TOPLAMA YÖNTEMİ\n" +
+          "Tamamen elektronik ortamda; site kullanımınız ve kayıt akışı aracılığıyla.\n\n" +
+          "SAKLAMA SÜRESİ\n" +
+          "Üyelik süresince; üyelik sonunda yasal saklama süreleri dolunca silinir.\n\n" +
+          "HAKLARINIZ (KVKK m.11)\n" +
+          "Verilerinizin işlenip işlenmediğini öğrenme, bilgi isteme, düzeltme, silme/yok etme, aktarıldığı 3. kişileri bilme, otomatik analiz sonucu aleyhinize çıkan sonuçlara itiraz ve zarara uğramanız halinde tazminat isteme haklarınız vardır. Taleplerinizi destek@nurstudyo.com'a iletin; en geç 30 gün içinde yanıtlanır. KVKK Kurulu'na kvkk.gov.tr üzerinden şikâyet hakkınız da saklıdır.\n\n" +
+          "ÇEREZLER\n" +
+          "Zorunlu çerezler dışındaki çerezler yalnızca onayınızla çalışır; onayınızı sayfa altındaki 🍪 düğmesinden her an geri alabilirsiniz.\n\n" +
+          "VERBİS NOTU\n" +
+          "Şahıs firması olarak 50'den az çalışan ve 100 milyon TL altı bilanço eşiği nedeniyle VERBİS kaydından istisnayız (Kurul kararı 2025/1572); bu durum aydınlatma ve rıza yükümlülüklerini ortadan kaldırmaz.\n\n" +
+          "Son güncelleme: Eylül 2026",
         privacy:
-          "TOPLANAN VERİLER\n\n" +
-          "Oturum ve tercihler yalnızca cihazdaki şifreli LocalStorage'da saklanır. Sunucu taraflı davranış kaydı yoktur.\n\n" +
-          "• Google hesap bilgileri — oturum doğrulama\n" +
-          "• Tema, dil tercihleri\n" +
-          "• Üyelik durumu ve günlük hizmet kullanım sayısı\n\n" +
-          "ÇEREZ: Yalnızca zorunlu teknik çerezler. Reklam çerezi yok.\n\n" +
-          "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
+          "GİZLİLİK & ÇEREZ POLİTİKASI\n\n" +
+          "TOPLANAN VERİLER\n" +
+          "• Google hesap bilgileri (ad, e-posta, profil fotoğrafı) — yalnızca oturum doğrulama\n" +
+          "• Tema ve dil tercihleri\n" +
+          "• Üyelik durumu ve üretim hakları (cihazda şifreli LocalStorage)\n" +
+          "• Davet ve oylama hareketleri — topluluk özellikleri için\n\n" +
+          "ÇEREZ POLİTİKASI\n" +
+          "Zorunlu çerezler (oturum, güvenlik, tercihler) rıza gerektirmeksizin kullanılır. Analitik ve pazarlama çerezleri YALNIZCA onayınızla devreye girer; şu anda sitede 3. taraf analitik/reklam çerezi kullanılmamaktadır. Onayınızı sayfa altındaki 🍪 düğmesinden her an değiştirebilirsiniz.\n\n" +
+          "3. TARAFLAR\n" +
+          "Google (oturum), Supabase (veri depolama), iyzico (ödeme — kart bilgisi bize ulaşmaz, PCI DSS uyumlu). Sunucu taraflı reklam/izleme çerezi yoktur.\n\n" +
+          "Son güncelleme: Eylül 2026 · destek@nurstudyo.com",
         refund:
           "DİJİTAL HİZMET KAPSAMI\n\n" +
           "Satın alınan aylık üyelikler ve tek seferlik video üretim paketleri anında ifa edilen dijital hizmetlerdir. Ödenen tutar doğrudan hizmet bedelidir. Platformda bakiye yükleme, cüzdan veya para benzeri bir sistem bulunmaz.\n\n" +
@@ -117,19 +134,34 @@ export const getPaymentCopy = (lang?: Lang | string | null): LegalBundle => {
           "Laws of the Republic of Turkey. Turkish courts have jurisdiction.\n\n" +
           "Last updated: August 2026 · support@nurstudyo.com",
         kvkk:
-          "DATA CONTROLLER\n\n" +
-          "Contact: support@nurstudyo.com\n\n" +
-          "PERSONAL DATA: Name, email, profile photo via Google OAuth. Processed for account verification and service delivery (service fee / payment). Preferences stored encrypted on device only.\n\n" +
-          "YOUR RIGHTS: Access, correction, deletion — support@nurstudyo.com within 30 days.\n\n" +
-          "Last updated: August 2026",
+          "KVKK (TURKISH DATA PROTECTION LAW) NOTICE\n\n" +
+          "DATA CONTROLLER\n" +
+          "Nûr Studio, sole proprietorship operating nurstudyo.com.\nContact: support@nurstudyo.com\n\n" +
+          "PERSONAL DATA & PURPOSE\n" +
+          "Name, email and profile photo via Google OAuth (account verification); membership and production-credit status; language and theme preferences. Processed solely to authenticate you, deliver the service (video production, credits), respond to support requests and fulfil legal obligations.\n\n" +
+          "LEGAL GROUNDS (Art. 5)\n" +
+          "Contract performance (2-c), legal obligation (2-ç), legitimate interest (2-f) and protection of rights (2-e). No sensitive data is processed.\n\n" +
+          "TRANSFERS\n" +
+          "Shared only with service providers to the extent necessary: Google (OAuth session), Supabase (database) and iyzico (payments). Transfers abroad occur only through these providers' servers.\n\n" +
+          "COLLECTION METHOD: fully electronic, through your use of the site and the registration flow.\n\n" +
+          "RETENTION: during membership; deleted once statutory retention periods expire.\n\n" +
+          "YOUR RIGHTS (Art. 11)\n" +
+          "To learn whether your data is processed, request information, request correction and deletion, learn third-party recipients, object to automated analysis, and claim compensation for damage. Email support@nurstudyo.com — answered within 30 days. You may also complain to the Data Protection Board via kvkk.gov.tr.\n\n" +
+          "COOKIES: beyond strictly necessary cookies, analytics/marketing cookies run only with your consent; change it anytime via the 🍪 button at the bottom-left.\n\n" +
+          "VERBIS NOTE: as a small-scale sole proprietorship (under 50 employees and balance sheet below TRY 100M), the registry exemption applies (Board decision 2025/1572); notification and consent duties remain in force.\n\n" +
+          "Last updated: September 2026",
         privacy:
-          "DATA COLLECTED\n\n" +
-          "Session and preferences in encrypted LocalStorage only. No server-side tracking.\n\n" +
-          "• Google account info — auth only\n" +
-          "• Theme/language preferences\n" +
-          "• Membership status and daily service usage count\n\n" +
-          "COOKIES: Essential technical cookies only.\n\n" +
-          "Last updated: August 2026 · support@nurstudyo.com",
+          "PRIVACY & COOKIE POLICY\n\n" +
+          "DATA COLLECTED\n" +
+          "• Google account info (name, email, photo) — session verification only\n" +
+          "• Theme and language preferences\n" +
+          "• Membership status and production credits (encrypted LocalStorage on your device)\n" +
+          "• Invite and voting activity — for community features\n\n" +
+          "COOKIE POLICY\n" +
+          "Strictly necessary cookies (session, security, preferences) run without consent. Analytics and marketing cookies run ONLY with your consent; no third-party analytics/ad cookies are currently used. Change your choice anytime via the 🍪 button at the bottom-left.\n\n" +
+          "THIRD PARTIES\n" +
+          "Google (auth), Supabase (data storage), iyzico (payments — card data never reaches us, PCI DSS compliant). No server-side advertising or tracking cookies.\n\n" +
+          "Last updated: September 2026 · support@nurstudyo.com",
         refund:
           "DIGITAL SERVICE SCOPE\n\n" +
           "Purchased memberships and one-time video production packages are instantly delivered digital services. The amount paid is a service fee. There is no wallet, balance top-up or money-like unit on the platform.\n\n" +
