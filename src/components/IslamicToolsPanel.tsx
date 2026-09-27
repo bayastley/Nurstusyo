@@ -43,6 +43,38 @@ function loadZikirCount(): number {
 
 const ZIKIR_METINLERI = ["🔴 Estagfirullah", "🌿 Sübhanallah", "❤️ Elhamdülillah", "🌟 Allahuekber", "🌹 Salavat (Sallallâhu Aleyhi ve Sellem)"];
 
+/** ★ TOPLULUK VİTRİN SAYACI — YALNIZCA GERÇEK SAYI (28.09 dürüstlük düzeltmesi).
+ *  /api/zikir/topluluk'tan canlı toplam çekip gösterir; 45 sn'de tazelenir.
+ *  Toplam 0 ise uydurma sayı yerine davet metni gösterilir. Sahte taban YASAK. */
+function ToplulukVitrinSayaci() {
+  const [toplam, setToplam] = useState<number | null>(null);
+  const [aktif, setAktif] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const yukle = () => fetch("/api/zikir/topluluk")
+      .then((r) => r.json())
+      .then((d: any) => {
+        if (!live || !d?.ok) return;
+        setToplam(Number(d.toplam) || 0);
+        setAktif(!!d.aktif);
+      })
+      .catch(() => undefined);
+    yukle();
+    const iv = window.setInterval(yukle, 45_000);
+    return () => { live = false; window.clearInterval(iv); };
+  }, []);
+  return (
+    <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[.07] py-2.5">
+      <span className="text-base">🌍</span>
+      <p className="text-[10px] font-bold text-white/70">
+        {aktif && toplam !== null && toplam > 0
+          ? <>Topluluk toplamı: <b className="text-amber-200">{toplam.toLocaleString("tr-TR")}</b> zikir çekildi</>
+          : <>Topluluk sayacı canlı — <b className="text-amber-200">ilk zikiri sen çek</b> 📿</>}
+      </p>
+    </div>
+  );
+}
+
 function Zikirmatik() {
   const [count, setCount] = useState(() => loadZikirCount());
   const [zikir, setZikir] = useState(0);
@@ -1176,13 +1208,13 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
             {activeTab === "zikir" && (
               <div className="space-y-3">
                 <Zikirmatik />
-                {/* ★ TOPLULUK VİTRİN SAYACI (madde 31) — tek kullanıcıya değil TOPLAMA bakılır */}
-                <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[.07] py-2.5">
-                  <span className="text-base">🌍</span>
-                  <p className="text-[10px] font-bold text-white/70">
-                    Bu hafta topluluk toplamı: <b className="text-amber-200">{(Number((() => { try { return localStorage.getItem(ZIKIR_TOPLULUK_KEY) || "0"; } catch { return "0"; } })()) + 14_283_947).toLocaleString("tr-TR")}</b> zikir çekildi
-                  </p>
-                </div>
+                {/* ★ TOPLULUK VİTRİN SAYACI (madde 31) — tek kullanıcıya değil TOPLAMA bakılır.
+                    ★ DÜRÜSTLÜK DÜZELTMESİ (28.09): burada sabit +14.283.947 "sahte taban"
+                    toplanıyordu — DB'de gerçek toplam 1 iken ekranda 14 milyonun üstünde
+                    yalan sayı görünüyordu. Artık SAYI YOK: sunucudan (nur_zikir_topluluk)
+                    gelen gerçek toplam yazılır; henüz kimse çekmediyse "İlk zikiri sen çek"
+                    daveti gösterilir. Sitede asla uydurma sayı görünmez. */}
+                <ToplulukVitrinSayaci />
                 <p className="pt-1 text-[10px] font-bold text-white/60 uppercase tracking-wider">Sahih Zikir Listesi</p>
                 <div className="space-y-1.5">
                   {ZIKIRLER.map((z, i) => (
