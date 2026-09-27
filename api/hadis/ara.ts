@@ -13,8 +13,68 @@
 // limit; girdi temizlenir; dış adresler sabit (SSRF yok). Cache'li.
 // ════════════════════════════════════════════════════════════════
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireAllowedOrigin } from "../_shared/security";
-import { rateLimit } from "../_shared/rateLimit";
+
+// ─── GÖMÜLÜ GÜVENLİK/RATE LIMIT — _shared importları Vercel'de
+//     paketlenmediği için (FUNCTION_INVOCATION_FAILED) buraya gömüldü.
+//     Diğer API dosyalarıyla aynı desen (feedback.ts, referans.ts). ───
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  const envOrigins = (process.env.NUR_ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", ...envOrigins]);
+  if (!origin && !referer) return true;
+  if (origin && allowed.has(origin)) return true;
+  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* bozuk referer */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
+const __RL_MAP = new Map<string, number[]>();
+const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
+const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
+const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
+
+function __rlIp(req: VercelRequest): string {
+  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
+  return forwarded || (req as unknown as { socket?: { remoteAddress?: string | null } }).socket?.remoteAddress || "unknown";
+}
+
+function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const active = (__RL_MAP.get(bucketKey) || []).filter((t) => t >= now - windowMs);
+  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
+  active.push(now); __RL_MAP.set(bucketKey, active);
+  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
+  return true;
+}
+
+async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
+  if (!__RL_SHARED) return null;
+  try {
+    const res = await fetch(`${__RL_URL}/pipeline`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as Array<{ result?: number }>;
+    return typeof json?.[0]?.result === "number" ? json[0].result : null;
+  } catch { return null; }
+}
+
+async function rateLimit(req: VercelRequest, res: VercelResponse, bucket: string, max: number, windowMs: number): Promise<boolean> {
+  const shared = await __rlShared(`${bucket}:${__rlIp(req)}`, windowMs);
+  if (shared !== null) {
+    if (shared > max) { res.status(429).json({ ok: false, error: "Çok hızlı — biraz bekle" }); return false; }
+    return true;
+  }
+  if (!__rlMem(`${bucket}:${__rlIp(req)}`, max, windowMs)) {
+    res.status(429).json({ ok: false, error: "Çok hızlı — biraz bekle" });
+    return false;
+  }
+  return true;
+}
 
 // ─── Girdi temizleme — kontrolsüz karakterleri at, 120 karakter yeter ───
 function temizle(raw: string): string {
