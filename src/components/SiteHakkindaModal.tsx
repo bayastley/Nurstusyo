@@ -5,8 +5,12 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useState } from "react";
-import { BookOpen, Radio, ShieldCheck, Mail, ExternalLink, HeartHandshake, Video, Sparkles } from "lucide-react";
+import { BookOpen, Radio, ShieldCheck, Mail, ExternalLink, HeartHandshake, Video, Sparkles, Clapperboard, PlayCircle } from "lucide-react";
 import { Modal } from "./UIElements";
+
+// ★ TANITIM VİDEOSU — "Bu Sitede Ne Var?" modalında oynatılır.
+//   Boş string = bölüm hiç görünmez. Link geldiğinde buraya yapıştır (27.09).
+const TANITIM_VIDEO_YOUTUBE = "";
 
 interface SiteHakkindaModalProps {
   open: boolean;
@@ -33,10 +37,48 @@ const OZELLIKLER: Array<{ ikon: React.ElementType; baslik: string; metin: string
 export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onClose, onIletisim }) => {
   const [mesajGoster, setMesajGoster] = useState(false);
 
+  // YouTube linkini embed'e çevir (watch?v=, youtu.be, shorts — hepsi)
+  const videoEmbed = (() => {
+    const l = TANITIM_VIDEO_YOUTUBE.trim();
+    if (!l) return "";
+    const m = l.match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([A-Za-z0-9_-]{11})/);
+    return m ? `https://www.youtube-nocookie.com/embed/${m[1]}?rel=0` : "";
+  })();
+
   if (!open) return null;
 
   return (
     <Modal title="Bu Sitede Ne Var?" sub="Nûr Stüdyo — içerik kaynakları, telif bildirimi ve iletişim" onClose={onClose} wide>
+      {/* ── TANITIM VİDEOSU ────────────────────────────── */}
+      {videoEmbed && (
+        <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              src={videoEmbed}
+              title="Nûr Stüdyo Tanıtım Videosu"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              loading="lazy"
+              className="absolute inset-0 h-full w-full"
+              style={{ border: 0 }}
+            />
+          </div>
+          <div className="flex items-center justify-between gap-2 px-3 py-2">
+            <p className="flex items-center gap-1.5 text-[9.5px] font-bold text-white/60">
+              <Clapperboard size={12} className="text-red-400" /> Siteyi 2 dakikada tanı — video rehber
+            </p>
+            <a
+              href={TANITIM_VIDEO_YOUTUBE.trim()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex shrink-0 items-center gap-1 rounded-lg glass-soft px-2 py-1 text-[8.5px] font-bold text-white/60 transition hover:text-white"
+            >
+              <PlayCircle size={9} /> YouTube'da izle
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* ── ÖZELLİKLER ─────────────────────────────────── */}
       <div className="mb-4 grid gap-2 sm:grid-cols-2">
         {OZELLIKLER.map(({ ikon: Icon, baslik, metin }) => (

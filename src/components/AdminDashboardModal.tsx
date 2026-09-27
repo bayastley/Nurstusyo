@@ -606,7 +606,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 </span>
               </div>
               <p className="text-[10px] text-white/50 mt-0.5">
-                Oturum: <b style={{ color: "var(--accent-2)" }}>{currentUserEmail || "Admin"}</b>
+                {/* ★ 27.09: e-posta yerine "Admin" — tanıtım videosunda gizlilik */}
+                Oturum: <b style={{ color: "var(--accent-2)" }}>Admin ✔</b>
               </p>
             </div>
           </div>

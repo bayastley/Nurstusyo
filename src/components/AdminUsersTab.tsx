@@ -302,7 +302,8 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 }
               >
                 {isKurucu ? <Crown size={11} className={isSelected ? "text-black" : "text-amber-400"} /> : <UserCheck size={11} />}
-                <span>{u.email}</span>
+                {/* ★ 27.09: kurucu e-postası videoda görünmesin — "Admin (Kurucu)" */}
+                <span>{isKurucu ? "Admin (Kurucu)" : u.email}</span>
                 <span className={`text-[8.5px] px-1.5 py-0.2 rounded-full font-black ${
                   isSelected ? "bg-black/20 text-black" : "bg-white/10 text-white/60"
                 }`}>
