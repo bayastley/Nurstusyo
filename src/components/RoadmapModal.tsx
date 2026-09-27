@@ -168,10 +168,21 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
         }
         // ★ MERGE: DB'de olmayan YENİ default maddeler de görünsün —
         //   SQL seed güncellenmemişken bile liste eksik kalmaz (27.09 fix)
+        // ★ 28.09: DB satırları icon alanını `icon` olarak gönderiyor →
+        //   norm without iconId tüm emojiler ✨ fallback'e düşüyordu.
+        const norm0 = (f: any): Feature => ({
+          id: String(f.id),
+          iconId: String(f.iconId || f.icon || "ai_arkaplan"),
+          title: String(f.title || ""),
+          desc: String(f.desc || f.description || ""),
+          tag: f.tag === "V3" ? "V3" : f.tag === "V2" ? "V2" : f.version === "V3" ? "V3" : "V2",
+          votes: Number(f.votes) || 0,
+          active: f.active !== false,
+        });
         const dbIds = new Set([...(d.v2 || []), ...(d.v3 || [])].map((f: any) => String(f.id)));
         const eksikV2 = DEFAULT_V2.filter((f) => !dbIds.has(f.id)).map((f) => ({ ...f, votes: 0 }));
         const eksikV3 = DEFAULT_V3.filter((f) => !dbIds.has(f.id)).map((f) => ({ ...f, votes: 0 }));
-        setData({ v2: [...(d.v2 || []), ...eksikV2], v3: [...(d.v3 || []), ...eksikV3] });
+        setData({ v2: [...(d.v2 || []).map(norm0), ...eksikV2], v3: [...(d.v3 || []).map(norm0), ...eksikV3] });
         setMyVote(d.myVote || null);
         setDbLoaded(true);
       })
@@ -192,6 +203,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
   const handleVote = (id: string) => {
     if (isDeadlinePassed) return;
     // ★ GERÇEK OY: veritabanına yazılır (kullanıcı başına 1 özellik, toggle)
+    const oncekiDurum = { myVote, v2: data.v2, v3: data.v3 };
     const wasVoted = myVote === id;
     setMyVote(wasVoted ? null : id);
     setData((prev) => ({
@@ -206,31 +218,61 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
         return f;
       }),
     }));
-    fetch("/api/roadmap", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ featureId: id }),
-    })
-      .then((r) => r.json())
-      .then((d: any) => {
-        if (!d?.ok) {
-          // ★ Misafir oyu: API 401 döner — nazikçe girişe yönlendir
-          if (typeof d?.error === "string" && d.error.includes("giriş")) {
-            setVoteMsg("🔐 Oy vermek için giriş yapman gerekiyor — sol üst menüden Kayıt Ol / Giriş Yap.");
-          } else {
-            // ★ DB seed edilmemiş / API hatası: kullanıcı hiçbir oyu sessizce kaybetmesin
-            setVoteMsg("⚠️ Oyun şu an alınamadı — birazdan tekrar dener misin?");
-          }
-          return;
-        }
-        setVoteMsg("");
-        // Sunucudan taze gerçek toplamları al (başkasının oyu değişmiş olabilir)
-        return fetch("/api/roadmap").then((r) => r.json()).then((d2: any) => {
-          if (d2?.ok) { setData({ v2: d2.v2 || [], v3: d2.v3 || [] }); setMyVote(d2.myVote || null); }
-        });
-      })
-      .catch(() => undefined);
     try { localStorage.setItem(VOTE_KEY, JSON.stringify({ [id]: true })); } catch {}
+    setVoteMsg("");
+    const gonder = (deneme: number): void => {
+      fetch("/api/roadmap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ featureId: id }),
+      })
+        .then((r) => r.json().catch(() => null).then((d: any) => ({ http: r.status, d })))
+        .then(({ http, d }) => {
+          if (d?.ok) {
+            setVoteMsg("");
+            // Sunucudan taze gerçek toplamları al (başkasının oyu değişmiş olabilir)
+            fetch("/api/roadmap")
+              .then((r2) => r2.json())
+              .then((d2: any) => {
+                if (!d2?.ok || (d2.v2?.length || 0) === 0) return;
+                const norm2 = (f: any): Feature => ({
+                  id: String(f.id),
+                  iconId: String(f.iconId || f.icon || "ai_arkaplan"),
+                  title: String(f.title || ""),
+                  desc: String(f.desc || f.description || ""),
+                  tag: f.tag === "V3" ? "V3" : f.tag === "V2" ? "V2" : f.version === "V3" ? "V3" : "V2",
+                  votes: Number(f.votes) || 0,
+                  active: f.active !== false,
+                });
+                setData({ v2: (d2.v2 || []).map(norm2), v3: (d2.v3 || []).map(norm2) });
+                setMyVote(d2.myVote || null);
+              })
+              .catch(() => undefined);
+            return;
+          }
+          // ★ Misafir oyu: API 401 döner — nazikçe girişe yönlendir
+          if (http === 401 || (typeof d?.error === "string" && d.error.includes("giriş"))) {
+            setMyVote(oncekiDurum.myVote);
+            setData({ v2: oncekiDurum.v2, v3: oncekiDurum.v3 });
+            setVoteMsg("🔐 Oy vermek için giriş yapman gerekiyor — sol üst menüden Kayıt Ol / Giriş Yap.");
+            return;
+          }
+          // ★ 28.09: otomatik 1 retry (Vercel fonksiyonunun Supabase'e ara sıra
+          //   ulaşamaması — kablolu olarak doğrulandı). Başarısızsa optimistic
+          //   değişiklik GERİ alınıyor; eskiden ekranda "Oyun Verildi ✓" kalıyordu!
+          if (deneme < 1) { window.setTimeout(() => gonder(deneme + 1), 1200); return; }
+          setMyVote(oncekiDurum.myVote);
+          setData({ v2: oncekiDurum.v2, v3: oncekiDurum.v3 });
+          setVoteMsg("⚠️ Oyun şu an alınamadı — birazdan tekrar dener misin?");
+        })
+        .catch(() => {
+          if (deneme < 1) { window.setTimeout(() => gonder(deneme + 1), 1200); return; }
+          setMyVote(oncekiDurum.myVote);
+          setData({ v2: oncekiDurum.v2, v3: oncekiDurum.v3 });
+          setVoteMsg("⚠️ Oyun şu an alınamadı — birazdan tekrar dener misin?");
+        });
+    };
+    gonder(0);
   };
 
   // ★ ADMIN İŞLEMLERİ ARTIK DB'YE YAZILIR — adminin eklediği/sildiği/düzenlediği
@@ -239,13 +281,29 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
   //   DİKKAT: burada useCallback/useMemo KULLANILMAZ — `if (!open) return null`
   //   sonrasında hook tanımlanamaz, hook sayısı değişir ve React çöker.
   //   Sıradan fonksiyon oldukları için hook kuralına takılmazlar.
+  // ★ 28.09: "Oyun şu an alınamadı" uyarısının kök nedeni — optimistic güncelleme
+  //   POST başarısız olunca geri alınıyordu... AMA hiç geri alınmıyordu! Ekran
+  //   "Oyun Verildi ✓" gösteriyor, uyarı çıkıyor, DB'de oy yok. Ayrıca GET'ten
+  //   dönen DB satırları icon alanını `icon` olarak taşıdığından DB listesi
+  //   uygulanmışsa tüm emojiler fallback'e düşüyordu. İkisi de giderildi:
+  //   • POST başarısız → optimistic değişiklik GERİ alınıyor + otomatik 1 retry
+  //   • DB satırı { icon } → { iconId } normalizasyonu (emoji kaybı yok)
   const reloadFromDb = () => {
     fetch("/api/roadmap")
       .then((r) => r.json())
       .then((d: any) => {
         if (!d?.ok) return;
         if ((d.v2?.length || 0) === 0 && (d.v3?.length || 0) === 0) return;
-        setData({ v2: d.v2 || [], v3: d.v3 || [] });
+        const norm = (f: any): Feature => ({
+          id: String(f.id),
+          iconId: String(f.iconId || f.icon || "ai_arkaplan"),
+          title: String(f.title || ""),
+          desc: String(f.desc || f.description || ""),
+          tag: f.tag === "V3" ? "V3" : f.tag === "V2" ? "V2" : f.version === "V3" ? "V3" : "V2",
+          votes: Number(f.votes) || 0,
+          active: f.active !== false,
+        });
+        setData({ v2: (d.v2 || []).map(norm), v3: (d.v3 || []).map(norm) });
         setMyVote(d.myVote || null);
       })
       .catch(() => undefined);

@@ -164,9 +164,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === "GET") {
       // Özellikler + GERÇEK oy toplamları (tek sayaç DB'de)
+      // ★ 28.09 FIX: buradaki .catch(() => []) maskesi GET'i bozuyordu — DB'ye
+      //   ara sıra ulaşılamayınca ok:true + BOŞ liste dönüyor, frontend default
+      //   planda kalıyor ("34 özellik" + DB id drifti) ve POST 400'e çakılıyordu.
+      //   Artık DB hatası dış try/catch'e düşer → 500 + nur_error_logs kaydı.
       const [features, votes] = await Promise.all([
-        db<any[]>("nur_roadmap_features?select=id,version,title,description,icon,active&order=created_at.asc").catch(() => [] as any[]),
-        db<any[]>("nur_roadmap_votes?select=feature_id").catch(() => [] as any[]),
+        db<any[]>("nur_roadmap_features?select=id,version,title,description,icon,active&order=created_at.asc"),
+        db<any[]>("nur_roadmap_votes?select=feature_id"),
       ]);
       const counts: Record<string, number> = {};
       for (const v of votes) counts[v.feature_id] = (counts[v.feature_id] || 0) + 1;
@@ -194,8 +198,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!featureId) return res.status(400).json({ ok: false, error: "Geçersiz özellik" });
 
       // Özellik var mı (aktif mi)?
-      const feat = await db<any[]>(`nur_roadmap_features?id=eq.${encodeURIComponent(featureId)}&select=id,active`).catch(() => [] as any[]);
-      if (!feat[0]?.active) return res.status(400).json({ ok: false, error: "Bu özellik oylamaya kapalı" });
+      // ★ 28.09 FIX: bu sorgudaki .catch(() => []) EN TEHLİKELİ maskaydı —
+      //   DB'ye geçici ulaşılamazsa feat=[] → "Bu özellik oylamaya kapalı" 400
+      //   dönüyordu; frontend mesajda "giriş" aradığından genel "Oyun şu an
+      //   alınamadı" uyarısı düşüyordu. Artık: DB hatası → 503 (log'lu),
+      //   kayıt gerçekten yoksa → 400 + log (id drifti görünür olsun).
+      let feat: any[] = [];
+      try {
+        feat = await db<any[]>(`nur_roadmap_features?id=eq.${encodeURIComponent(featureId)}&select=id,active`);
+      } catch (dbErr) {
+        await logServerError(req, dbErr, "api/roadmap:feature-lookup");
+        return res.status(503).json({ ok: false, error: "Oy kaydedilemedi — birkaç saniye sonra tekrar dener misin?" });
+      }
+      if (feat.length === 0) {
+        await logServerError(req, new Error(`Roadmap özelliği DB'de yok: ${featureId} (frontend/DB id drifti?)`), "api/roadmap:feature-missing");
+        return res.status(400).json({ ok: false, error: "Oy listesi güncelleniyor — sayfayı yenileyip tekrar dener misin?" });
+      }
+      if (!feat[0].active) return res.status(400).json({ ok: false, error: "Bu özellik oylamaya kapalı" });
 
       // Aynı özelliğe tekrar tıklandı → oyu kaldır (toggle)
       const mine = await db<any[]>(`nur_roadmap_votes?user_id=eq.${encodeURIComponent(session.id)}&select=feature_id`).catch(() => [] as any[]);
