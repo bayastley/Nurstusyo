@@ -37,21 +37,37 @@ const DUA_SES_KEY = "nur_dua_ses_tercihi"; // "kadin" | "erkek"
 function duaSesTercihiOku(): "kadin" | "erkek" {
   try { return localStorage.getItem(DUA_SES_KEY) === "erkek" ? "erkek" : "kadin"; } catch { return "kadin"; }
 }
+// ★ 27.09 SESİYİLEŞTİRME: getVoices() ilk çağrıda boş döner (Chrome/Edge async yükler)
+//   → voicesChanged gelene kadar bekleyen yardımcı. Yoksa 1sn'de pes et.
+function sesleriBekle(ms = 1200): Promise<SpeechSynthesisVoice[]> {
+  return new Promise((resolve) => {
+    try {
+      const syn = window.speechSynthesis;
+      if (!syn) return resolve([]);
+      const ilk = syn.getVoices?.() ?? [];
+      if (ilk.length) return resolve(ilk);
+      let bitti = false;
+      const tamamla = () => { if (!bitti) { bitti = true; resolve(syn.getVoices?.() ?? []); } };
+      syn.addEventListener("voiceschanged", tamamla, { once: true });
+      window.setTimeout(tamamla, ms);
+    } catch { resolve([]); }
+  });
+}
 /** Cihazdaki Türkçe sesler arasından tercihe göre en kalitelisini bulur (nöral > premium > normal). */
-function enIyiTurkceSes(tercih: "kadin" | "erkek"): SpeechSynthesisVoice | null {
+async function enIyiTurkceSes(tercih: "kadin" | "erkek"): Promise<SpeechSynthesisVoice | null> {
   try {
-    const sesler = window.speechSynthesis?.getVoices?.() ?? [];
+    const sesler = await sesleriBekle();
     const tr = sesler.filter((s) => s.lang?.toLowerCase().startsWith("tr"));
     if (!tr.length) return null;
     const kadinIpucu = /emel|filiz|yelda|seda|zeynep|woman|female|kadın/i;
-    const erkekIpucu = /tolga|ahmet|man|male|erkek/i;
+    const erkekIpucu = /ahmet|tolga|man|male|erkek/i; // Ahmet (nöral) Tolga'dan önce gelsin
     const sinif: SpeechSynthesisVoice[] = [];
     const diger: SpeechSynthesisVoice[] = [];
     for (const s of tr) (tercih === "kadin" ? kadinIpucu : erkekIpucu).test(s.name) ? sinif.push(s) : diger.push(s);
     const havuz = sinif.length ? sinif : diger;
-    // Nöral/premium sesler en doğal — adında geçenlere öncelik
+    // Nöral/premium sesler en doğal — adında geçenlere öncelik (Emel Online Natural > Tolga SAPI)
     havuz.sort((a, b) => {
-      const puan = (s: SpeechSynthesisVoice) => (/natural|neural|premium|enhanced|online/i.test(s.name) ? 2 : /google|microsoft/i.test(s.name) ? 1 : 0);
+      const puan = (s: SpeechSynthesisVoice) => (/natural|neural|premium|enhanced/i.test(s.name) ? 3 : /online/i.test(s.name) ? 2 : /google|microsoft/i.test(s.name) ? 1 : 0);
       return puan(b) - puan(a);
     });
     return havuz[0] ?? null;
@@ -60,16 +76,21 @@ function enIyiTurkceSes(tercih: "kadin" | "erkek"): SpeechSynthesisVoice | null 
 /** 🔊/🔇 ses tercihi seçici — Dua Rehberi başlığının altında durur. */
 const DuaSesSecici: React.FC<{ notify?: (m: string) => void }> = ({ notify }) => {
   const [tercih, setTercih] = useState<"kadin" | "erkek">(() => duaSesTercihiOku());
-  const degistir = (yeni: "kadin" | "erkek") => {
+  const degistir = async (yeni: "kadin" | "erkek") => {
     setTercih(yeni);
     try { localStorage.setItem(DUA_SES_KEY, yeni); } catch {}
-    // sesleri yükle (ilk çağrıda boş gelebilir) + kısa örnek oku
+    // sesleri bekle-yükle (async) + kısa örnek oku — nöral ses varsa onu seçer
     try {
       window.speechSynthesis?.cancel();
-      const utt = new SpeechSynthesisUtterance(yeni === "kadin" ? "Dualar kabul olsun" : "Dualar kabul olsun");
-      utt.lang = "tr-TR"; utt.rate = 0.95;
-      const ses = enIyiTurkceSes(yeni); if (ses) utt.voice = ses;
+      const utt = new SpeechSynthesisUtterance("Dualar kabul olsun");
+      utt.lang = "tr-TR"; utt.rate = 0.92; utt.pitch = 1.0;
+      const ses = await enIyiTurkceSes(yeni); if (ses) utt.voice = ses;
       window.speechSynthesis?.speak(utt);
+      // Cihazda sadece eski SAPI sesi varsa kullanıcıya doğal ses yolunu göster
+      if (ses && !/natural|neural|online/i.test(ses.name) && notify) {
+        notify("🔊 Ses seçildi · Daha doğal ses için Microsoft Edge kullan (Emel/Ahmet sesleri)");
+        return;
+      }
     } catch { /* yoksay */ }
     notify?.(yeni === "kadin" ? "🔊 Kadın sesi seçildi" : "🔊 Erkek sesi seçildi");
   };
@@ -381,15 +402,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           {filtreliDuaRehber.map((d, i) => {
             const anahtar = `nur_dua_okundu_${i}`;
             const okundu = (() => { try { return localStorage.getItem(anahtar) === "1"; } catch { return false; } })();
-            const dinle = () => {
+            const dinle = async () => {
               try {
                 if (!("speechSynthesis" in window)) { notify?.("Tarayıcın sesli okumayı desteklemiyor"); return; }
                 window.speechSynthesis.cancel();
                 const utt = new SpeechSynthesisUtterance(d.dua);
-                utt.lang = "tr-TR"; utt.rate = 0.95;
-                // ★ KALİTELİ SES SEÇİMİ — kullanıcının kadın/erkek tercihi + en iyi Türkçe ses
+                utt.lang = "tr-TR"; utt.rate = 0.92; utt.pitch = 1.0;
+                // ★ KALİTELİ SES SEÇİMİ — async ses listesi bekle + kadın/erkek tercihi
                 const tercih = duaSesTercihiOku();
-                const ses = enIyiTurkceSes(tercih);
+                const ses = await enIyiTurkceSes(tercih);
                 if (ses) utt.voice = ses;
                 window.speechSynthesis.speak(utt);
               } catch { notify?.("Sesli okuma başlatılamadı"); }
