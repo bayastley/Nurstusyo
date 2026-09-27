@@ -969,6 +969,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   besmele çalarken KENDİNİ SUSTURUR (ref senkron okunur — state gecikmesi yaşanmaz).
   const besmeleRef = useRef(false);
   useEffect(() => { besmeleRef.current = besmelePlaying; }, [besmelePlaying]);
+  // ★ TEK BESMELE KURALI (28.09, kullanıcı raporu): "besmele → 1. ayet → TEKRAR besmele
+  //   → sure tekrar başlıyor" (her surede). Sebep: Pause düğmesi stopListening atıyor,
+  //   Play'e tekrar basınca startListening(0) besmele adımını YENIDEN oynatıyordu;
+  //   aynı şekilde 1. ayette ⏮ de besmeleyi tekrar çalıyordu. Artık besmele bir sure
+  //   için dinleme oturumunda EN FAZLA BİR KEZ çalar; sure/hoca değişince sıfırlanır
+  //   (yeni surede bir kez okunur — doğru adab), modal kapanınca da temizlenir.
+  const besmeleCalindiRef = useRef(0);
   const BESMELE_AR = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
   const BESMELE_TR = "Rahmân ve Rahîm olan Allah'ın adıyla.";
   const listenAyahDataRef = useRef(listenAyahData);
@@ -1170,7 +1177,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     //   Bu yüzden Fatiha'da ayrı besmele adımı ATLANIR (isBesmeleSurah kapsıyor).
     const isBesmeleSurah = sN === 1 || sN === 9; // Fâtiha'nın kendisi besmele, Tevbe'de besmele yok
     const besmeleUrl = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
-    if (fromIdx === 0 && !isBesmeleSurah) {
+    // ★ TEK BESMELE: bu sure için besmele çalındıysa bir daha ASLA (pause→play, ⏮
+    //   veya tekrar çal düğmeleri besmelenin tekrarını tetikleyemez)
+    if (fromIdx === 0 && !isBesmeleSurah && besmeleCalindiRef.current !== sN) {
+      besmeleCalindiRef.current = sN;
       // Önce besmele, bittikten sonra 1. ayet — EKRANDA DA BESMELE gösterilir
       setListenAyahData({ ar: BESMELE_AR, tr: BESMELE_TR, n: 0 });
       setListenWordProgress(-1);
@@ -1265,7 +1275,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // (kelime takibi artık playAyahAudio içinde doğrudan ses'e bağlı — state beklemez,
   //   akış modunda bile kopmaz)
 
-  useEffect(() => { if (!open) { stopAudio(); setIsPlaying(false); } }, [open, stopAudio]);
+  useEffect(() => { if (!open) { stopAudio(); setIsPlaying(false); besmeleCalindiRef.current = 0; } }, [open, stopAudio]);
 
   const filteredSurahs = useMemo(() => {
     const q = query.trim().toLocaleLowerCase("tr");
@@ -1711,7 +1721,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="flex flex-col gap-1.5">
                 <span className="text-[9px] font-bold uppercase text-[#7a745f]">Sure</span>
-                <select value={listenSurah} onChange={(e) => { setListenSurah(Number(e.target.value)); stopListening(); }} className="rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
+                {/* ★ Sure değişimi: ayet konumu ve besmele hakkı SIFIRLANIR — eskiden
+                    listenAyahIdx eski sureden kalıyordu, play'e basınca besmelesiz
+                    2-3. ayetten başlıyordu (canlı testte kanıtlandı) */}
+                <select value={listenSurah} onChange={(e) => { setListenSurah(Number(e.target.value)); setListenAyahIdx(0); besmeleCalindiRef.current = 0; stopListening(); }} className="rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
                   {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} ayet)</option>)}
                 </select>
               </label>
@@ -1735,7 +1748,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     const locked = lock === "maintenance" || lock === "off" || lock === "v2" || lock === "v3";
                     const lockLabel = lock === "maintenance" || lock === "off" ? "🔧 BAKIMDA" : locked ? "🔒 GÜNCELLEME" : "";
                     return (
-                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; setListenReciter(r.id); stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : listenReciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? "Bu kâri şu anda bakımda / güncellemede — kısa süre içinde dönecek" : undefined}>
+                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; setListenReciter(r.id); besmeleCalindiRef.current = 0; stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : listenReciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? "Bu kâri şu anda bakımda / güncellemede — kısa süre içinde dönecek" : undefined}>
                       <span className="truncate font-semibold">{r.name}{locked && <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/70">{lockLabel}</span>}</span>
                       {listenReciter === r.id && !locked && <span className="text-[9px] font-black">✓ SEÇİLİ</span>}
                     </button>
