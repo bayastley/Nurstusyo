@@ -4,7 +4,10 @@ import webpush from "web-push";
 // ★ 27.09 FIX: dinamik import("./hadisler") Vercel serverless paketleyicisine
 //   dahil edilmiyordu (ERR_MODULE_NOT_FOUND) → statik import. hadisler.ts
 //   saf veri modülüdür, yan etki yoktur.
-import { gununHadisi, saateGoreHadis } from "./hadisler";
+// ★★ 27.09 FIX-2: package.json "type":"module" olduğundan Vercel ESM derliyor;
+//   ESM'de uzantısız göreceli import çözülmüyor (probe ile canlıda teyit) →
+//   import'a .js uzantısı eklendi (TS ESM standardı, .ts dosyasına çözülür).
+import { gununHadisi, saateGoreHadis } from "./hadisler.js";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───

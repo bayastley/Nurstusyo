@@ -6,7 +6,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     adimlar.push("1:basla");
     const wp = await import("web-push");
     adimlar.push("2:web-push-ok:" + typeof (wp.default?.setVapidDetails ?? (wp as any).setVapidDetails));
-    const h = await import("./push/hadisler");
+    const h = await import("./push/hadisler.js");
     adimlar.push("3:hadisler-ok:" + (h as any).HADIS_HAVUZU?.length);
     adimlar.push("4:vapid:" + (process.env.VAPID_PUBLIC_KEY ? "var" : "yok"));
     return res.status(200).json({ ok: true, adimlar });
