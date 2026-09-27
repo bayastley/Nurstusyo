@@ -144,29 +144,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </>
                       )}
                     </button>
-                    {                    [
-                      { icon: ImageIcon, label: "Ayet Kütüphanesi", target: "ayetKartlari" as ModalName },
-                      { icon: Compass, label: "Keşfet · Hadis & Kıssa & Rehber", target: "kesfet" as ModalName },
-                      { icon: Brain, label: "Hafızlık Testi", target: "hafizlikTesti" as ModalName },
-                      { icon: NotebookPen, label: "Ayet Notlarım", target: "ayetNotlari" as ModalName },
-                      { icon: Type, label: "Kelime Atölyesi · ✍️", target: "kelimeAtolyesi" as ModalName },
-                      { icon: Wand2, label: "Arka Plan Üretici · ✨", target: "arkaPlanUretici" as ModalName },
-                      { icon: Gift, label: "Arkadaşını Davet Et · 🎁", target: "davet" as ModalName },
-                      { icon: Film, label: "Haftanın Videosu · 🎬", target: "haftaninVideosu" as ModalName },
-                      { icon: Package, label: "Hazır Ayet Paketleri", target: "ayetPaketleri" as ModalName },
-                      { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                      { icon: BookOpen, label: "Kur'an", target: "quranLearn" as ModalName },
-                      { icon: Info, label: "Bu Sitede Ne Var?", target: "siteHakkinda" as ModalName },
-                      { icon: Moon, label: "🌙 Ramazan & Kandil", target: "ramazan" as ModalName },
-                      { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName },
-                    ].map((item) => (
-                      <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                        <item.icon size={14} style={{ color: "var(--accent)" }} />
-                        {item.label}
-                      </button>
-                    ))}
-
-                    {/* ★ GÜNCELLEMELER — Giriş yapmadan da yol haritası görülebilir */}
+                    {/* ★ GÜNCELLEMELER EN ÜSTTE (kullanıcı kararı 27.09) — yenilikler ilk bakışta görünsün */}
                     <div
                       className="relative"
                       onMouseEnter={openUpdates}
@@ -230,12 +208,37 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       )}
                     </div>
 
-                    {/* ★ ARAÇLAR — İslami yardımcı araçlar */}
+                    {/* ★ ARAÇLAR — İslami yardımcı araçlar (Güncellemeler'in altında, en üst bölgede) */}
                     <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <span className="text-base">🤲</span>
                       <span>Araçlar</span>
                       <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-bold text-emerald-300">YENİ</span>
                     </button>
+
+                    {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09) */}
+                    <div className="my-1 border-t border-white/5" />
+                    {[
+                      { icon: ImageIcon, label: "Ayet Kütüphanesi", target: "ayetKartlari" as ModalName },
+                      { icon: Compass, label: "Keşfet · Hadis & Kıssa & Rehber", target: "kesfet" as ModalName },
+                      { icon: Brain, label: "Hafızlık Testi", target: "hafizlikTesti" as ModalName },
+                      { icon: NotebookPen, label: "Ayet Notlarım", target: "ayetNotlari" as ModalName },
+                      { icon: Type, label: "Kelime Atölyesi · ✍️", target: "kelimeAtolyesi" as ModalName },
+                      { icon: Wand2, label: "Arka Plan Üretici · ✨", target: "arkaPlanUretici" as ModalName },
+                      { icon: Gift, label: "Arkadaşını Davet Et · 🎁", target: "davet" as ModalName },
+                      { icon: Film, label: "Haftanın Videosu · 🎬", target: "haftaninVideosu" as ModalName },
+                      { icon: Package, label: "Hazır Ayet Paketleri", target: "ayetPaketleri" as ModalName },
+                      { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
+                      { icon: BookOpen, label: "Kur'an", target: "quranLearn" as ModalName },
+                      { icon: Info, label: "Bu Sitede Ne Var?", target: "siteHakkinda" as ModalName },
+                      { icon: Moon, label: "🌙 Ramazan & Kandil", target: "ramazan" as ModalName },
+                      { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName },
+                    ].map((item) => (
+                      <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                        <item.icon size={14} style={{ color: "var(--accent)" }} />
+                        {item.label}
+                      </button>
+                    ))}
+
                     <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
