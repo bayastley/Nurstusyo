@@ -644,7 +644,7 @@ function CevrimdisiKart() {
   );
 }
 
-import { rozetlerOku, rozetleriTazele, ROZET_LISTESI } from "../hafizlikIstatistik";
+import { rozetlerOku, rozetleriTazele, ROZET_LISTESI, rozetOzelOku, rozetGuncelEsik, rozetEsikCarpani, rozetOduluHesapla } from "../hafizlikIstatistik";
 
 // ★ ÜRETİCİ İSTATİSTİKLERİ (İş 42) — yerel üretim sayacı (yalnız cihazda,
 //   sunucuya GİTMEZ). useVideoGenerator başarılı üretimde +1 yazar.
@@ -682,21 +682,28 @@ export function uretimIstYaz(mode: "short" | "long" | "full"): void {
 function RozetlerKarti() {
   const [rozetler, setRozetler] = useState(() => rozetlerOku());
   const [yeniRozet, setYeniRozet] = useState<string | null>(null);
+  // ★ ÖDÜL DÖNGÜSÜ (28.09): tur sayısı + rozet başına kazanım (kırmızı yıldız) + ödül bildirimi
+  const [ozel, setOzel] = useState(() => rozetOzelOku());
+  const [odulMsg, setOdulMsg] = useState<string | null>(null);
   React.useEffect(() => {
     rozetleriTazele();
     setRozetler(rozetlerOku());
+    setOzel(rozetOzelOku());
     const kazanildi = (e: Event) => {
       const liste = (e as CustomEvent<string[]>).detail || [];
       if (liste.length) {
         setYeniRozet(liste[0]);
         window.setTimeout(() => setYeniRozet(null), 4000);
+        if (String(liste[0]).includes("🎁")) setOdulMsg(String(liste[0]));
       }
       setRozetler(rozetlerOku());
+      setOzel(rozetOzelOku());
     };
     window.addEventListener("nur-rozet-kazanildi", kazanildi);
     return () => window.removeEventListener("nur-rozet-kazanildi", kazanildi);
   }, []);
   const kazanimSayisi = Object.keys(rozetler.kazanim).length;
+  const odulHak = rozetOduluHesapla(ozel.turNo);
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <div className="mb-1.5 flex items-center justify-between">
@@ -704,8 +711,18 @@ function RozetlerKarti() {
           <span className="text-base" aria-hidden>🏅</span>
           <p className="text-[10px] font-bold text-white">Başarım Rozetlerin</p>
         </div>
-        <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[8.5px] font-black text-amber-200">{kazanimSayisi}/{ROZET_LISTESI.length}</span>
+        <div className="flex items-center gap-1">
+          {ozel.turNo > 1 && (
+            <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300" title={`Rozet serisi ${ozel.turNo - 1} kez tamamlandı — her turda hediyeler büyüdü, eşikler zorlaştı`}>★ {ozel.turNo - 1}</span>
+          )}
+          <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[8.5px] font-black text-amber-200">{kazanimSayisi}/{ROZET_LISTESI.length}</span>
+        </div>
       </div>
+      {odulMsg && (
+        <p className="mb-1.5 animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-center text-[9px] font-black text-emerald-200">
+          {odulMsg}
+        </p>
+      )}
       {yeniRozet && (
         <p className="mb-1.5 animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-center text-[9px] font-black text-emerald-200">
           🎉 Yeni rozet: {yeniRozet}!
@@ -714,17 +731,34 @@ function RozetlerKarti() {
       <div className="grid grid-cols-7 gap-1">
         {ROZET_LISTESI.map((r) => {
           const acik = !!rozetler.kazanim[r.id];
+          // ★ KIRMIZI KÜÇÜK YILDIZ: rozet kaç turda kazanıldıysa sol üstünde o sayı yazar
+          const tur = ozel.kazanimSayisi[r.id] || 0;
+          const esik = rozetGuncelEsik(r.id, ozel.turNo);
+          const esikMetni = esik !== null ? ` · bu turda: ${esik}` : "";
           return (
-            <div key={r.id} title={`${r.ad} — ${r.aciklama}${acik ? " ✓" : " (kilitli)"}`}
-              className={`flex aspect-square items-center justify-center rounded-lg text-base transition ${
+            <div key={r.id} className="relative" title={`${r.ad} — ${r.aciklama}${esikMetni}${tur > 0 ? ` · ${tur}× kazanıldı` : ""}`}>
+              <div className={`flex aspect-square items-center justify-center rounded-lg text-base transition ${
                 acik ? "bg-amber-500/20 ring-1 ring-amber-400/40" : "bg-white/5 opacity-30 grayscale"
               }`}>
-              {r.emoji}
+                {r.emoji}
+              </div>
+              {tur > 0 && (
+                <span className="absolute -left-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[6.5px] font-black text-white shadow" title={`${r.ad}: ${tur} kez kazanıldı`}>★{tur > 1 ? tur : ""}</span>
+              )}
             </div>
           );
         })}
       </div>
-      <p className="mt-1.5 text-center text-[7.5px] text-white/30">Rozetler cihazında saklanır — zikir, hatim, üretim ve testlerle açılır</p>
+      {/* ★ DÖNGÜ BİLGİSİ: sıradaki ödül + zorluk çarpanı */}
+      <p className="mt-1.5 text-center text-[7.5px] text-white/35">
+        {ozel.turNo > 1
+          ? <>🔄 {ozel.turNo}. tur — eşikler <b className="text-red-300">{rozetEsikCarpani(ozel.turNo)}×</b> zor · hepsi bitince <b className="text-amber-300">+{odulHak} hak</b></>
+          : <>Hepsini kazan → <b className="text-amber-300">+{odulHak} üretim hakkı</b> kazan, sonra eşikler zorlaşır, ödül büyür</>}
+      </p>
+      {ozel.sonOdul > 0 && (
+        <p className="mt-0.5 text-center text-[7px] text-white/25">Son ödül: +{ozel.sonOdul} hak ({new Date(ozel.sonOdulTarih).toLocaleDateString("tr-TR")}) · rozet altındaki ★ = kaç kez kazanıldı</p>
+      )}
+      <p className="mt-1 text-center text-[7.5px] text-white/30">Rozetler cihazında saklanır — zikir, hatim, üretim ve testlerle açılır</p>
     </div>
   );
 }

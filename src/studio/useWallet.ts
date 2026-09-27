@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   getCurrentTier, getJeton, setJeton as persistJetonSecure,
   addPurchasedJeton, addDailySubJeton,
@@ -53,6 +53,19 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
           uzun: data.wallet.uzun || 0,
           tam: data.wallet.tam || 0,
         };
+        // ★ ABONE İŞLEMLERİ KORUMASI (28.09): rozet ödülü / yerel hediyeler grantPack ile
+        //   LOCAL paket hakkına eklenir; sunucu cüzdanı bunu BİLMEZ. Eski kod doğrudan
+        //   EZİYORDU → kullanıcı ödülünü 30 sn'de kaybediyordu. Artık tür başına
+        //   MAKSİMUM alınır: local > sunucu ise (yerel kazanım) fark korunur; sunucu
+        //   büyükse (gerçek satın alma) sunucu kazanır.
+        try {
+          const local = secureGet<PackRights | null>("nur_pack_rights_v1", null);
+          if (local) {
+            rights.kisa = Math.max(rights.kisa, local.kisa || 0);
+            rights.uzun = Math.max(rights.uzun, local.uzun || 0);
+            rights.tam = Math.max(rights.tam, local.tam || 0);
+          }
+        } catch { /* local yoksa doğrudan sunucu değeri yazılır */ }
         // ★ Abonelik bitiş tarihini kaydet
         if (data.subscriptionEndsAt) setSubscriptionEndsAt(data.subscriptionEndsAt);
         // ★ React state'e yaz — secureStore fingerprint sorunu yüzünden buradan okunur
@@ -78,6 +91,19 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
     const iv = setInterval(() => { if (user?.id) syncWallet(); }, 30000);
     return () => clearInterval(iv);
   }, [syncWallet, user?.id]);
+
+  // ★ JETON/PAKET DEĞİŞİMİ BİLDİRİMİ (28.09): rozet ödülü grantPack yazdığında
+  //   üst bar (HeaderTopBar) anında güncellensin — 30 sn sync beklemeden.
+  React.useEffect(() => {
+    const t = window.setInterval(() => {
+      try {
+        const r = secureGet<PackRights | null>("nur_pack_rights_v1", null);
+        const total = r ? (r.kisa || 0) + (r.uzun || 0) + (r.tam || 0) : 0;
+        setJetonCount((prev) => (prev !== total ? total : prev));
+      } catch { /* yoksay */ }
+    }, 2000);
+    return () => clearInterval(t);
+  }, []);
 
   // ★ Günlük bonus + Cuma bonusları
   useEffect(() => {
