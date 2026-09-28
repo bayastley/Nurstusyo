@@ -538,6 +538,11 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
           <button
             type="button"
             onClick={() => {
+              // ★ FIX (29.09, canlı testte yakalandı): tur dolunca (toplam >= turBoyu) altın buton
+              //   "Turu Bitir → Özet" yazıyordu ama onClick soruHazirla() çağırıyordu — özet ASLA
+              //   açılmıyor, soru soru sonsuz turaya giriliyordu. Artık tur dolduysa özet açılır;
+              //   tur dolmadıysa sıradaki soru gelir (eski davranış, devam kaydı aynı).
+              if (turBoyu > 0 && puan.toplam >= turBoyu) { turOzetiGoster(); return; }
               const sonCevapDogru = secim !== null && soru.secenekler[secim] === soru.devam;
               soruHazirla();
               // ★ Tur bitince devam kaydı — "Kaldığın yerden devam" bundan okur
@@ -547,7 +552,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
             className="mt-4 w-full rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >
-            {turBoyu > 0 && puan.toplam + 1 >= turBoyu ? "Turu Bitir → Özet" : "Sıradaki Soru →"}
+            {turBoyu > 0 && puan.toplam >= turBoyu ? "Turu Bitir → Özet" : "Sıradaki Soru →"}
           </button>
         </>
         )}
