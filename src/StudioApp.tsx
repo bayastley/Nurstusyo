@@ -82,6 +82,8 @@ import { usePrayerTime } from "./studio/usePrayerTime";
 import { useDailyAyah } from "./studio/useDailyAyah";
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
+import { getStoredMedia } from "./studio/medyaStore";
+import { medyaClipYukle } from "./components/medyaKutuphaneHelpers";
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { syncUserInDb } from "./components/adminHelpers";
 import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
@@ -173,6 +175,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [verseIndex, setVerseIndex] = useState(0);
   const [background, setBackground] = useState<Clip>(MOTION_CLIPS[0]);
   const [ayahBackgrounds, setAyahBackgrounds] = useState<Record<string, Clip>>({});
+  // ★ KULLANICI MEDYASI (28.09): medya yükleyiciden eklenen video/resim/ses dosyaları
+  //   IndexedDB'de KALICI saklanır; açılışta buraya Clip olarak yüklenir → atmosfer
+  //   galerisinde "📁 Yüklediklerim" kategorisinde arka plan olarak seçilebilir.
+  const [medyaClips, setMedyaClips] = useState<Clip[]>([]);
   const [clipKind, setClipKind] = useState<"img" | "vid">("vid");
   const [atmosCategory, setAtmosCategory] = useState<CatId | "all">("all");
   const [atmosQuery, setAtmosQuery] = useState("");
@@ -481,8 +487,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const videoWatchdog = useRef(new Map<HTMLVideoElement, { t: number; at: number }>());
 
   const combinedAllClips = useMemo(
-    () => [...ALL_CLIPS, ...QURAN_CLIPS],
-    []
+    () => [...medyaClips, ...ALL_CLIPS, ...QURAN_CLIPS],
+    [medyaClips]
   );
 
   const ALL_THEMES = useMemo(() => [...THEMES, ...EXTRA_THEMES], []);
@@ -1425,6 +1431,33 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);
 
+  // ★ MEDYA → ARKA PLAN (28.09): Medya Yükleme'deki "Stüdyoya Arka Plan Yap" buraya gelir.
+  //   IndexedDB'den blob okunur → taze blob URL'i → Clip → setBackground (+ pickingFor ise ayete atanır).
+  const medyaArkaPlanYap = useCallback(async (medyaId: string) => {
+    const row = await getStoredMedia(medyaId);
+    if (!row) { notify("⚠️ Dosya kalıcı depoda bulunamadı — yeniden yüklemeyi dene"); return; }
+    if (row.tur === "ses") { notify("🎵 Ses dosyası arka plan olamaz — arka plan için video/resim seç"); return; }
+    try {
+      const url = URL.createObjectURL(row.blob);
+      const clip: Clip = { id: `medya-${row.id}`, label: row.name, cat: "yuklenenler", kind: row.tur === "resim" ? "img" : "vid", src: url };
+      setMedyaClips((cur) => (cur.some((c) => c.id === clip.id) ? cur : [clip, ...cur]));
+      if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip);
+      notify(`💾 "${row.name}" arka plan olarak seçildi — kalıcı depodan`);
+    } catch {
+      notify("⚠️ Dosya açılamadı — depolama erişimi engellenmiş olabilir");
+    }
+  }, [pickingFor, notify]);
+
+  // ★ AÇILIŞTA GERİ YÜKLEME: IndexedDB'deki kalıcı medya → galeride "Yüklediklerim"
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const clips = await medyaClipYukle();
+      if (alive && clips.length) setMedyaClips(clips);
+    })();
+    return () => { alive = false; };
+  }, []);
+
   const pickClip = (clip: Clip) => {
     // ★ TIKLAMA ANINDA ÖN İMZA: useEffect render'ı bekler, biz beklemeden imzayı
     //   kuyruğun en önüne şimdi atıyoruz — seçim ile imza isteği aynı milisaniyede başlar.
@@ -2019,6 +2052,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         modal={modal}
         setModal={setModal}
         setRoadmapOpen={setRoadmapOpen}
+        onMedyaArkaPlan={medyaArkaPlanYap}
         onClipKindChange={reassignBackgroundsForKind}
         loginTab={loginTab}
         setLoginTab={setLoginTab}

@@ -610,8 +610,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 //   Önceki hata: kod kategorilerinde sadece HARD_LOCKED (V2 listesi) kontrol
                 //   ediliyordu → Cennet/Çöl/Ateş gibi ELİT kategoriler misafire KİLİTSİZ
                 //   görünüp PRO kartların arasında bozuk bir düzende karışıyordu.
-                const kodV2 = HARD_LOCKED_CATEGORIES.includes(category.id);
-                const kodTier = KATEGORI_TIER[category.id as CatId] ?? "free";
+                // ★ KULLANICI MEDYASI (28.09): "📁 Yüklediklerim" kategorisinde kendi dosyası olan
+  //   kullanıcı için kilit açılır (kendi cihazındaki dosya — sunucu maliyeti sıfır).
+  const kullaniciYuklemisi = category.id === "yuklenenler" && combinedAllClips.some((clip) => clip.cat === "yuklenenler");
+  const kodV2 = HARD_LOCKED_CATEGORIES.includes(category.id) && !kullaniciYuklemisi;
+                const kodTier = kullaniciYuklemisi ? "free" : (KATEGORI_TIER[category.id as CatId] ?? "free");
                 const kodKilitli = kodV2 || !tierAtLeast(accessTier, kodTier);
                 const lockLevel = panelKilitli ? (panelLock === "v2" ? "V2" : panelLock === "v3" ? "V3" : panelLock === "pro" ? "PRO" : "ELİT") : adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : kodV2 ? "V2" : kodTier === "pro" ? "PRO" : kodTier === "elit" ? "ELİT" : "V2";
                 // ★ ADMIN: isMasterSürüm=true → v2/pro/elit dahil TÜM kilitler açık (görsel + tıklama)
@@ -819,10 +822,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red */}
+      {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red.
+          ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır */}
       {modal === "zip" && isMasterSürüm && (
-        <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — diğerleri otomatik reddedilir" onClose={() => setModal(null)} wide>
-          <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} /></div>
+        <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
+          <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} /></div>
         </Modal>
       )}
 
