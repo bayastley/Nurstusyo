@@ -521,7 +521,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   }, [query, mealId, mode, open]);
 
   // ── Dinle state ──
-  const [listenSurah, setListenSurah] = useState(36);
+  // ★ FIX (29.09, kullanıcı kararı): başlangıç sureği Yâsîn (36) değil FÂTİHA (1) —
+  //   "Kur'an fatihadan başlar, ne alaka" — dinleme akışı Kur'an sırasına uyar.
+  //   Kullanıcının kaldığı yer nur_son_konum'a zaten kaydediliyor; ilk kez açan
+  //   Fâtiha'dan başlar, devam eden kaldığından devam eder.
+  const [listenSurah, setListenSurah] = useState(1);
   const [listenReciter, setListenReciter] = useState("Alafasy_128kbps");
   const [isPlaying, setIsPlaying] = useState(false);
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
