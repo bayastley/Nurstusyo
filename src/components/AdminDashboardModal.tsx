@@ -80,6 +80,10 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
   const [feedbackStats, setFeedbackStats] = useState<{ turDagilimi: Record<string, number>; puanDagilimi: Record<number, number>; puanOrtalama: number; toplam: number } | null>(null);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
+  // ★ GERİ BİLDİRİM YANITI (28.09): mesaj başına yanıt kutusu + e-posta gönderimi
+  const [feedbackYanitAcik, setFeedbackYanitAcik] = useState<number | null>(null);
+  const [feedbackYanitMetni, setFeedbackYanitMetni] = useState("");
+  const [feedbackYanitYukleniyor, setFeedbackYanitYukleniyor] = useState<number | null>(null);
 
   const loadFeedback = async () => {
     setFeedbackLoading(true);
@@ -95,6 +99,26 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       } else notify(data?.error || "Geri bildirimler alınamadı");
     } catch { notify("Sunucuya ulaşılamadı"); }
     finally { setFeedbackLoading(false); }
+  };
+
+  // ★ YANIT GÖNDER (28.09): admin cevabını kaydeder + kullanıcıya e-posta atar
+  const feedbackYanitGonder = async (fbId: number) => {
+    if (!feedbackYanitMetni.trim()) return;
+    setFeedbackYanitYukleniyor(fbId);
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "feedback_reply", id: fbId, yanit: feedbackYanitMetni.trim() }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; mailGitti?: boolean; mailHata?: string; error?: string } | null;
+      if (data?.ok) {
+        notify(data.mailGitti ? "📧 Yanıt kaydedildi + e-posta gönderildi" : `⚠️ Yanıt kaydedildi ama e-posta gitmedi: ${data.mailHata || "bilinmeyen"}`);
+        setFeedbackYanitAcik(null);
+        setFeedbackYanitMetni("");
+        await loadFeedback();
+      } else notify(data?.error || "Yanıt gönderilemedi");
+    } catch { notify("Sunucuya ulaşılamadı"); }
+    finally { setFeedbackYanitYukleniyor(null); }
   };
 
   // Geri Bildirimler sekmesine ilk geçişte yükle
@@ -875,11 +899,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                 {feedbackLoading ? "Yükleniyor…" : "↻ Yenile"}
               </button>
 
-              {/* Mesaj listesi */}
+              {/* Mesaj listesi — mesaj başına admin yanıtı + e-posta gönderimi */}
               <div className="space-y-2">
                 {feedbackList.length > 0 ? feedbackList.map((fb) => {
                   const turRenk = fb.tur === "sikayet" ? "text-red-300" : fb.tur === "ozellik" ? "text-sky-300" : fb.tur === "oneri" ? "text-amber-300" : "text-white/60";
                   const turEtiket = fb.tur === "sikayet" ? "😔 Şikayet" : fb.tur === "ozellik" ? "✨ Özellik" : fb.tur === "oneri" ? "💡 Öneri" : "✉️ Diğer";
+                  const yanitAcik = feedbackYanitAcik === fb.id;
+                  const buYanitYukleniyor = feedbackYanitYukleniyor === fb.id;
                   return (
                     <div key={fb.id} className="rounded-xl border border-white/10 bg-black/40 p-3 text-[10.5px] space-y-1">
                       <div className="flex items-center justify-between gap-2">
@@ -887,9 +913,57 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
                         <span className="shrink-0 text-[8.5px] text-white/40">{new Date(fb.created_at).toLocaleString("tr-TR")}</span>
                       </div>
                       <p className="whitespace-pre-wrap text-white/80">{fb.mesaj}</p>
-                      <div className="border-t border-white/5 pt-1 text-[8.5px] text-white/40">
-                        {fb.user_name || fb.user_email ? `${fb.user_name ? fb.user_name + " · " : ""}${fb.user_email || ""}` : "👻 Misafir kullanıcı"}
+                      <div className="flex items-center justify-between gap-2 border-t border-white/5 pt-1 text-[8.5px] text-white/40">
+                        <span>{fb.user_name || fb.user_email ? `${fb.user_name ? fb.user_name + " · " : ""}${fb.user_email || ""}` : "👻 Misafir kullanıcı (e-posta yok — yanıt yalnız kaydedilir)"}</span>
+                        <button
+                          onClick={() => { setFeedbackYanitAcik(yanitAcik ? null : fb.id); setFeedbackYanitMetni(fb.admin_yanit || ""); }}
+                          className="shrink-0 rounded-md bg-amber-500/15 px-2 py-0.5 font-black text-amber-300 transition hover:bg-amber-500/25"
+                        >
+                          {fb.admin_yanit ? "✏️ Yanıtı düzenle" : "↩️ Yanıtla"}
+                        </button>
                       </div>
+                      {/* ★ MEVCUT YANIT GÖRÜNÜMÜ */}
+                      {fb.admin_yanit && !yanitAcik && (
+                        <div className="rounded-lg border border-amber-400/25 bg-amber-500/[.06] p-2">
+                          <p className="flex items-center justify-between gap-2 text-[8.5px] font-black uppercase tracking-wider text-amber-300">
+                            <span>↩️ Verilen yanıt</span>
+                            <span className="flex items-center gap-1 font-bold normal-case tracking-normal">
+                              {fb.mail_gonderildi
+                                ? <span className="rounded bg-emerald-500/20 px-1.5 py-px text-emerald-300">📧 e-posta gönderildi</span>
+                                : <span className="rounded bg-red-500/15 px-1.5 py-px text-red-300" title={fb.mail_hata || ""}>📧 gönderilemedi{fb.mail_hata ? `: ${fb.mail_hata}` : ""}</span>}
+                            </span>
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-white/75">{fb.admin_yanit}</p>
+                          <p className="mt-1 text-right text-[7.5px] text-white/30">{fb.yanit_admin ? `${fb.yanit_admin} · ` : ""}{fb.yanit_at ? new Date(fb.yanit_at).toLocaleString("tr-TR") : ""}</p>
+                        </div>
+                      )}
+                      {/* ★ YANIT YAZMA KUTUSU */}
+                      {yanitAcik && (
+                        <div className="rounded-lg border border-amber-400/30 bg-amber-500/[.05] p-2 space-y-1.5">
+                          <textarea
+                            value={feedbackYanitMetni}
+                            onChange={(e) => setFeedbackYanitMetni(e.target.value)}
+                            maxLength={2000}
+                            rows={4}
+                            placeholder="Kullanıcıya yanıtını yaz — gönderince e-posta olarak gider…"
+                            className="w-full resize-none rounded-lg border border-white/10 bg-black/40 p-2 text-[10.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-amber-400/50"
+                          />
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[8px] text-white/30">{feedbackYanitMetni.length}/2000 · {fb.user_email ? `📧 ${fb.user_email}` : "⚠️ misafir — e-posta gönderilemez"}</span>
+                            <div className="flex gap-1.5">
+                              <button onClick={() => { setFeedbackYanitAcik(null); setFeedbackYanitMetni(""); }}
+                                className="rounded-md bg-white/10 px-2.5 py-1 font-bold text-white/60 transition hover:bg-white/20">İptal</button>
+                              <button
+                                disabled={buYanitYukleniyor || !feedbackYanitMetni.trim()}
+                                onClick={() => void feedbackYanitGonder(fb.id)}
+                                className="rounded-md bg-amber-500 px-3 py-1 font-black text-black transition hover:brightness-110 disabled:opacity-40"
+                              >
+                                {buYanitYukleniyor ? "Gönderiliyor…" : "Yanıtla & E-posta Gönder 📧"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 }) : (

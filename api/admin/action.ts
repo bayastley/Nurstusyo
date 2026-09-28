@@ -432,7 +432,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else if (action === "list_feedback") {
       // ★ GERİ BİLDİRİMLER — son 50 mesaj + tür/puan dağılımı (sadece admin)
       const [rows, turRows, puanRows] = await Promise.all([
-        db<any[]>("nur_feedback?select=id,user_name,user_email,tur,puan,mesaj,created_at&order=created_at.desc&limit=50").catch(() => [] as any[]),
+        db<any[]>("nur_feedback?select=id,user_name,user_email,tur,puan,mesaj,created_at,admin_yanit,yanit_at,yanit_admin,mail_gonderildi,mail_hata&order=created_at.desc&limit=50").catch(() => [] as any[]),
         db<any[]>("nur_feedback?select=tur").catch(() => [] as any[]),
         db<any[]>("nur_feedback?select=puan&puan=not.is.null").catch(() => [] as any[]),
       ]);
@@ -531,6 +531,58 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!logId) return res.status(400).json({ ok: false, error: "Geçersiz kayıt" });
       await db(`nur_error_logs?id=eq.${encodeURIComponent(logId)}`, { method: "DELETE" }).catch(() => null);
       return res.status(200).json({ ok: true });
+    } else if (action === "feedback_reply") {
+      // ★ GERİ BİLDİRİM YANITI (28.09): admin panelden cevap yaz → DB'ye kaydet →
+      //   kullanıcıya Resend ile e-posta gönder. Misafir mesajlarında e-posta
+      //   yoksa yanıt kaydedilir ama mail gönderilemez (dürüst yanıt).
+      const fbId = String(body.id || "").replace(/[^0-9]/g, "").slice(0, 20);
+      const yanit = sanitize(body.yanit, 2000);
+      if (!fbId || !yanit) return res.status(400).json({ ok: false, error: "Mesaj kimliği ve yanıt metni gerekli" });
+      const rows = await db<any[]>(`nur_feedback?id=eq.${fbId}&select=id,user_email,user_name,mesaj,tur`).catch(() => [] as any[]);
+      const fb = rows[0];
+      if (!fb) return res.status(404).json({ ok: false, error: "Geri bildirim bulunamadı" });
+      // 1) Yanıtı kaydet (mail başarısız olsa da kayıt kalır — durum dürüst tutulur)
+      await db(`nur_feedback?id=eq.${fbId}`, { method: "PATCH", body: JSON.stringify({ admin_yanit: yanit, yanit_at: new Date().toISOString(), yanit_admin: admin.email, mail_gonderildi: false }) });
+      let mailGitti = false;
+      let mailHata = "";
+      const resendKey = process.env.RESEND_API_KEY || "";
+      const alıcıEmail = String(fb.user_email || "").toLowerCase().trim();
+      if (!alıcıEmail || !alıcıEmail.includes("@")) {
+        mailHata = "kullanıcı e-postasız (misafir)";
+      } else if (!resendKey) {
+        mailHata = "RESEND_API_KEY tanımlı değil";
+      } else {
+        try {
+          const isim = String(fb.user_name || "").slice(0, 60) || "Değerli kullanıcı";
+          const turEtiket = fb.tur === "sikayet" ? "Şikayetiniz" : fb.tur === "ozellik" ? "Özellik öneriniz" : fb.tur === "oneri" ? "Öneriniz" : "Mesajınız";
+          const yanitHtml =
+            `<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;background:#0d0f16;color:#e8e6f0;border-radius:16px;overflow:hidden;border:1px solid #2a2d3a">` +
+            `<div style="background:linear-gradient(135deg,#d7aa52,#f5dda6);padding:18px 24px"><h2 style="margin:0;font-size:17px;color:#141414">Nûr Stüdyo — Yanıtınız 🌙</h2></div>` +
+            `<div style="padding:22px 24px">` +
+            `<p style="margin:0 0 12px;font-size:13px;color:#c9c6d4">Merhaba <b style="color:#f5dda6">${isim}</b>,</p>` +
+            `<p style="margin:0 0 14px;font-size:13px;line-height:1.6;color:#c9c6d4">Nûr Stüdyo'ya ilettiğiniz <b>${turEtiket}</b> için teşekkür ederiz. Ekibimiz mesajınızı inceledi:</p>` +
+            `<blockquote style="margin:0 0 16px;padding:10px 14px;border-left:3px solid #d7aa52;background:#161925;font-size:12px;color:#a8a4b8;font-style:italic">${String(fb.mesaj || "").slice(0, 400).replace(/[<>]/g, "")}</blockquote>` +
+            `<div style="padding:14px 16px;border-radius:12px;background:#1b1f2e;border:1px solid #d7aa52aa;font-size:13px;line-height:1.7;color:#f0eee8">${yanit.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c] || c)).replace(/\n/g, "<br>")}</div>` +
+            `<p style="margin:18px 0 0;font-size:12px;color:#8f8ca0">İyi çalışmalar dileriz,<br><b style="color:#d7aa52">Nûr Stüdyo Ekibi</b></p>` +
+            `</div>` +
+            `<div style="padding:12px 24px;background:#0a0c12;font-size:10px;color:#5f5c70;text-align:center">Bu e-posta, nurstudyo.com'daki geri bildiriminize yanıt olarak gönderilmiştir.</div></div>`;
+          const r = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: process.env.MARKETING_FROM_EMAIL || "Nûr Stüdyo <bildirim@nurstudyo.com>",
+              to: [alıcıEmail],
+              subject: `Nûr Stüdyo — geri bildiriminiz yanıtlandı 🌙`,
+              html: yanitHtml,
+            }),
+          });
+          if (r.ok) mailGitti = true; else mailHata = `resend ${r.status}`;
+        } catch (e) {
+          mailHata = String((e as Error).message || e).slice(0, 120);
+        }
+      }
+      await db(`nur_feedback?id=eq.${fbId}`, { method: "PATCH", body: JSON.stringify({ mail_gonderildi: mailGitti, mail_hata: mailHata }) });
+      return res.status(200).json({ ok: true, mailGitti, mailHata });
     } else return res.status(400).json({ ok: false, error: "Geçersiz admin işlemi" });
     await db("nur_admin_audit_logs", { method: "POST", body: JSON.stringify({ admin_id: admin.id, admin_email: admin.email, action, target: String(body.target || body.featureId || ""), metadata: { ip: String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 300) } }) }).catch(() => null);
     return res.status(200).json({ ok: true });
