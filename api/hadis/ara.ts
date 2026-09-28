@@ -117,6 +117,9 @@ function dorarKitap(bilgi: string): string {
 //   (kanıt: tarayıcı UA ve uygulama UA = 200, node UA = 403). Uygulama
 //   kimlikli UA gönderince sunucu fetch'leri de kabul ediliyor.
 const DIS_UA = "Nurstudyo/1.0 (+https://nurstudyo.com)";
+// ★ 2. deneme kimliği: bazı engelleme kuralları IP+UA kombinasyonuna bakar —
+//   verimerkezden gelen isteğe tarayıcı kimliği de denenir (dürüst raporlanır).
+const BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS — yalnız sitemiz
@@ -174,11 +177,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (sonuclar.length < 5) {
     try {
       const url = `https://dorar.net/dorar_api.json?skey=${encodeURIComponent(q)}`;
-      const r = await fetch(url, {
+      // ★ İki kimlikli deneme: uygulama UA → reddedilirse tarayıcı UA
+      let r = await fetch(url, {
         headers: { "User-Agent": DIS_UA, Accept: "application/json" },
         signal: AbortSignal.timeout(8000),
       });
+      if (!r.ok) {
+        kaynaklar.dorar = `ua-reddet-${r.status}`;
+        r = await fetch(url, {
+          headers: { "User-Agent": BROWSER_UA, Accept: "application/json" },
+          signal: AbortSignal.timeout(8000),
+        });
+      }
       if (r.ok) {
+        kaynaklar.dorar = "ok";
         const data = (await r.json()) as { ahadith?: { result?: { html?: string } } };
         const html = data?.ahadith?.result?.html ?? "";
         // HTML kalıpları: metin <div class="hadith">, künye <div class="hadith-info">
@@ -197,6 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: "ar",
           });
         }
+        kaynaklar.dorar = `kapali-${r.status}`;
       }
     } catch { kaynaklar.dorar = "hata"; /* dorar kapalıysa sunnah sonuçları kalır */ }
   }
