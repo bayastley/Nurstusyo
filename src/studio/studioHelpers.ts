@@ -127,6 +127,37 @@ function throttle(): Promise<void> {
   return wait > 0 ? new Promise((r) => setTimeout(r, wait)) : Promise.resolve();
 }
 
+// ════════════════════════════════════════════════════════
+// ★ TÜRKÇE MEAL FALLBACK (28.09) — tr.diyanet kayması koruması
+//   Kanıt (28.09 canlı tarama): tek-ayet + sure-array endpoint'leri hizalı;
+//   ama API bir edition'da kayma/eksik dönerse (geçmişte yaşandı) kullanıcı
+//   YANLIŞ ayet çevirisi görebilir. Kural: birincil edition şüpheliyse
+//   sırayla tr.yazir → tr.vakfi denenir; şüpheli yanıt KABUL EDİLMEZ.
+// ════════════════════════════════════════════════════════
+
+const TURKCE_MEAL_YEDEKLERI: Record<string, string[]> = {
+  "tr.diyanet": ["tr.yazir", "tr.vakfi"],
+  "tr.yazir": ["tr.vakfi", "tr.diyanet"],
+  "tr.vakfi": ["tr.yazir", "tr.diyanet"],
+};
+
+/** Birincil meal başarısız/şüpheli ise denenecek yedek edition'lar (Türkçe değilse boş) */
+export function turkceMealYedekleri(edition: string): string[] {
+  return edition.startsWith("tr.") ? (TURKCE_MEAL_YEDEKLERI[edition] ?? ["tr.yazir", "tr.vakfi"]) : [];
+}
+
+/**
+ * Meal metni sağlıklı mı? (kayma/eksiklik belirtileri)
+ *  - boş ya da 10 karakterden kısa çeviri → şüpheli
+ *  - diyanet çevirisi ":" ile biterse cümle kesik demektir → şüpheli
+ */
+export function mealSaglikliMi(text: string, edition: string): boolean {
+  const t = (text ?? "").trim();
+  if (!t || t.length < 10) return false;
+  if (edition === "tr.diyanet" && t.endsWith(":")) return false;
+  return true;
+}
+
 export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir"): Promise<{ ar: string; tr: string }> {
   const key = `${surah}:${ayah}:${edition}`;
   const cached = ayahCache.get(key);
@@ -139,58 +170,106 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
   await throttle();
   pendingFetches++;
 
+  // ★ FALLBACK ZİNCİRİ: birincil edition şüpheli/başarısızsa yedekler sırayla denenir
+  const denenecekler = [edition, ...turkceMealYedekleri(edition)];
   try {
-    const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ text: string }> };
-    const ar = (json.data?.[0]?.text ?? "") as string;
-    const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, edition);
-    console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
-    if (ar || tr) {
-      const result = { ar, tr };
+    let sonAr = "";
+    let sonTr = "";
+    for (const ed of denenecekler) {
+      try {
+        await throttle();
+        const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`) as { data?: Array<{ text: string }> };
+        const ar = (json.data?.[0]?.text ?? "") as string;
+        const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, ed);
+        if (ar) sonAr = ar;
+        if (tr) sonTr = tr;
+        // ★ Kabul koşulu: Arapça VAR ve çeviri SAĞLIKLI (kayma şüphesi yok)
+        if (ar && mealSaglikliMi(tr, ed)) {
+          const result = { ar, tr };
+          ayahCache.set(key, result);
+          if (ed !== edition) console.warn(`[fetchAyah] FALLBACK: ${key} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
+          console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
+          return result;
+        }
+        console.warn(`[fetchAyah] Meal şüpheli/eksik (${ed}) — yedek edition denenir:`, key, tr ? tr.slice(0, 60) : "(çeviri boş)");
+      } catch (e) {
+        console.warn(`[fetchAyah] Edition başarısız (${ed}):`, key, (e as Error).message);
+      }
+    }
+    // Tüm editionlar denendi: Arapça geldiyse onunla dön (eskiden de ar||tr kabul ediliyordu)
+    if (sonAr) {
+      const result = { ar: sonAr, tr: sonTr };
       ayahCache.set(key, result);
-      pendingFetches--;
       return result;
     }
-  } catch (e) { console.warn("[fetchAyah] Birincil istek başarısız, yedek denenir:", `${surah}:${ayah}`, (e as Error).message); }
-
-  // ★ Yedek: tek tek çek (ama throttlı)
-  await throttle();
-  try {
-    const [arabic, translated] = await Promise.all([
-      fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`),
-      fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${edition}`),
-    ]) as [{ data?: { text: string } }, { data?: { text: string } }];
-    const result = { ar: (arabic.data?.text ?? "") as string, tr: normalizeTurkishMeal((translated.data?.text ?? "") as string, edition) };
-    console.log("[fetchAyah] Yedek başarılı:", key, "ar:", result.ar.length, "tr:", result.tr.length);
-    ayahCache.set(key, result);
-    pendingFetches--;
-    return result;
-  } catch (e2) {
-    console.error("[fetchAyah] Yedek de başarısız:", key, (e2 as Error).message);
-    pendingFetches--;
+    console.error("[fetchAyah] Tüm editionlar başarısız:", key);
     return { ar: "", tr: "" };
+  } finally {
+    pendingFetches--;
   }
 }
 
-export async function fetchSurah(surah: number, edition: string): Promise<Array<{ ar: string; tr: string }>> {
-  let arabic: Array<{ text: string }> = [];
-  let translated: Array<{ text: string }> = [];
+/** Tek edition için sure verisi — editions endpoint + tek-tek yedek endpoint */
+async function surahHamCek(surah: number, edition: string): Promise<{ name: string; arabic: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }>; translated: Array<{ text: string }> } | null> {
   try {
-    const json = await fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ ayahs?: Array<{ text: string }> }> };
-    arabic = json.data?.[0]?.ayahs ?? [];
-    translated = json.data?.[1]?.ayahs ?? [];
+    const json = await fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
+    const arabic = json.data?.[0]?.ayahs ?? [];
+    const translated = json.data?.[1]?.ayahs ?? [];
+    if (arabic.length && translated.length) return { name: String(json.data?.[0]?.name ?? ""), arabic, translated };
   } catch { /* yedek endpoint denenir */ }
-  if (!arabic.length || !translated.length) {
+  try {
     const [arabicJson, translatedJson] = await Promise.all([
       fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`),
       fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/${edition}`),
-    ]) as [{ data?: { ayahs?: Array<{ text: string }> } }, { data?: { ayahs?: Array<{ text: string }> } }];
-    arabic = arabicJson.data?.ayahs ?? [];
-    translated = translatedJson.data?.ayahs ?? [];
+    ]) as [{ data?: { name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> } }, { data?: { ayahs?: Array<{ text: string }> } }];
+    const arabic = arabicJson.data?.ayahs ?? [];
+    const translated = translatedJson.data?.ayahs ?? [];
+    if (arabic.length && translated.length) return { name: String(arabicJson.data?.name ?? ""), arabic, translated };
+  } catch { /* sıradaki edition */ }
+  return null;
+}
+
+export interface SureEditionData {
+  name: string;
+  arabic: Array<{ n: number; text: string; juz: number; page: number }>;
+  tr: string[]; // arabic ile birebir aynı uzunlukta (hizalama doğrulanır)
+  edition: string; // fiilen kullanılan edition (fallback sonrası farklı olabilir)
+  fallbackUsed: boolean;
+}
+
+/**
+ * Sure + meal verisi — KAYMA KORUMALI.
+ * Birincil edition'da (1) ayet sayısı uyuşmazsa veya (2) Türkçe çevirilerin
+ * >%20'si boşsa yedek edition (tr.yazir → tr.vakfi) denenir; uyan ilk edition dönülür.
+ */
+export async function fetchSurahEditions(surah: number, edition: string): Promise<SureEditionData> {
+  const denenecekler = [edition, ...turkceMealYedekleri(edition)];
+  for (const ed of denenecekler) {
+    const ham = await surahHamCek(surah, ed);
+    if (!ham) continue;
+    if (ham.arabic.length !== ham.translated.length) {
+      console.warn(`[fetchSurahEditions] Ayet sayısı uyuşmuyor (${ed}): ar=${ham.arabic.length} tr=${ham.translated.length} — yedek edition denenir`);
+      continue;
+    }
+    // Boş çeviri oranı — tüm editionlarda kayma işareti
+    const bosSayi = ham.translated.filter((t) => !(t.text ?? "").trim()).length;
+    if (ham.translated.length && bosSayi / ham.translated.length > 0.2) {
+      console.warn(`[fetchSurahEditions] Çevirilerin ${Math.round((bosSayi / ham.translated.length) * 100)}%'i boş (${ed}) — yedek edition denenir`);
+      continue;
+    }
+    if (ed !== edition) console.warn(`[fetchSurahEditions] FALLBACK: sure ${surah} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
+    return {
+      name: ham.name,
+      arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: String(a.text ?? ""), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
+      tr: ham.translated.map((t) => normalizeTurkishMeal(String(t.text ?? ""), ed)),
+      edition: ed,
+      fallbackUsed: ed !== edition,
+    };
   }
-  const rows = arabic.map((item, index) => ({
-    ar: item.text,
-    tr: normalizeTurkishMeal((translated[index]?.text ?? "") as string, edition),
-  }));
-  if (!rows.length) throw new Error("SURAH_EMPTY");
-  return rows;
+  throw new Error("SURAH_EMPTY");
+}
+
+export async function fetchSurah(surah: number, edition: string): Promise<Array<{ ar: string; tr: string }>> {
+  const d = await fetchSurahEditions(surah, edition);
+  return d.arabic.map((a, i) => ({ ar: a.text, tr: d.tr[i] ?? "" }));
 }

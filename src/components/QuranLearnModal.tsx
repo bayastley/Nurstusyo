@@ -4,6 +4,7 @@ import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
+import { fetchSurahEditions } from "../studio/studioHelpers"; // ★ kayma korumalı sure+meal çekimi (28.09)
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
 // ══════════════════════════════════════════════════════════════
@@ -682,16 +683,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!open || mode !== "learn") return;
     let live = true;
     setLoading(true); setError(null); setAyahs([]); setWords([]); setActiveWord(null);
-    fetch(`https://api.alquran.cloud/v1/surah/${surahNo}/editions/quran-uthmani,${mealId}`)
-      .then(r => r.json())
-      .then((d: any) => {
+    // ★ KAYMA KORUMASI (28.09): merkezî fetchSurahEditions — tr.diyanet şüpheliyse
+    //   tr.yazir → tr.vakfi fallback'i çeker, ayet sayısı/çeviri sağlığı doğrulanır.
+    fetchSurahEditions(surahNo, mealId)
+      .then((d) => {
         if (!live) return;
-        if (d.code !== 200) throw new Error("fail");
-        const ar = d.data[0], tr = d.data[1];
-        setAyahs(ar.ayahs.map((a: any, i: number) => ({
-          n: a.numberInSurah,
-          ar: (a.text || "").trim(),
-          tr: tr.ayahs[i]?.text ?? "",
+        setAyahs(d.arabic.map((a, i) => ({
+          n: a.n,
+          ar: a.text.trim(),
+          tr: d.tr[i] ?? "",
           juz: a.juz,
           page: a.page,
         })));
@@ -1005,12 +1005,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       return;
     }
     let live = true;
-    fetch(`https://api.alquran.cloud/v1/surah/${sNow}/editions/quran-uthmani,tr.diyanet`)
-      .then(r => r.json())
-      .then((d: any) => {
-        if (!live || d.code !== 200 || !Array.isArray(d.data?.[0]?.ayahs)) return;
-        const ars: string[] = d.data[0].ayahs.map((x: any) => x.text ?? "");
-        const trs: string[] = d.data[1].ayahs.map((x: any) => x.text ?? "");
+    // ★ KAYMA KORUMASI (28.09): tr.diyanet şüpheliyse tr.yazir → tr.vakfi fallback
+    fetchSurahEditions(sNow, "tr.diyanet")
+      .then((d) => {
+        if (!live) return;
+        const ars: string[] = d.arabic.map((x) => x.text);
+        const trs: string[] = d.tr;
         listenSurahCacheRef.current = { s: sNow, ar: ars, tr: trs };
         // Yanıt gecikirse ayet değişmiş olabilir → ref'ten GÜNCEL konumu yaz
         const pos = listenPosRef.current;

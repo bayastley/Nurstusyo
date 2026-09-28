@@ -9,6 +9,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Brain, Check, X, BarChart3 } from "lucide-react";
 import { Modal } from "./UIElements";
+import { fetchSurahEditions } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09)
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
@@ -153,15 +154,15 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     if (!sessiz) { setSecim(null); setSoru(null); }
     try {
       const havuz = [...(SEVIYELER.find(s => s.id === seviye)?.sureler ?? TEST_SURELERI)];
-      let soruPaket: { sn: number; d: any } | null = null;
+      let soruPaket: { sn: number; d: Awaited<ReturnType<typeof fetchSurahEditions>> } | null = null;
       for (let deneme = 0; deneme < 12 && !soruPaket; deneme++) {
         // Havuz boşaldıysa tazele — uzun turlarda aynı sureler tekrar gelebilir (istenen davranış)
         if (havuz.length === 0) havuz.push(...(SEVIYELER.find(s => s.id === seviye)?.sureler ?? TEST_SURELERI));
         const sn = havuz.splice(Math.floor(Math.random() * havuz.length), 1)[0];
-        const r = await fetch(`https://api.alquran.cloud/v1/surah/${sn}/editions/quran-uthmani,tr.diyanet`);
-        const d = await r.json();
-        if (d.code !== 200) continue;
-        const ayahsTmp: Array<{ text: string }> = d.data[0].ayahs;
+        // ★ KAYMA KORUMASI (28.09): merkezî çekim — tr.diyanet şüpheliyse tr.yazir → tr.vakfi fallback
+        let d: Awaited<ReturnType<typeof fetchSurahEditions>>;
+        try { d = await fetchSurahEditions(sn, "tr.diyanet"); } catch { continue; }
+        const ayahsTmp = d.arabic;
         const enUzun = Math.max(...ayahsTmp.map(a => a.text.length));
         if (enUzun < 55) continue; // bu sure çok kısa → başka sure dene
         soruPaket = { sn, d };
@@ -169,9 +170,9 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       if (!soruPaket) throw new Error("havuz-bos");
       const sn = soruPaket.sn;
       const d = soruPaket.d;
-      const ayahs: Array<{ text: string }> = d.data[0].ayahs;
-      const meal: Array<{ text: string }> = d.data[1].ayahs;
-      const snAdi: string = d.data[0].name;
+      const ayahs: Array<{ text: string }> = d.arabic;
+      void d.tr; // meal bu teste girmiyor (Arapça-devam bazlı) ama sağlıklı edition'la çekilir
+      const snAdi: string = d.name;
       // Ayet sayısı 4'ten azsa kısa sure — uygun ayet bul (devam kısmı olsun diye uzun olanı seç)
       const uzunlukSirası = ayahs.map((a, i) => ({ i, len: a.text.length })).sort((x, y) => y.len - x.len);
       const hedef = uzunlukSirası[uzunlukSirası.length > 1 ? Math.floor(Math.random() * Math.min(3, uzunlukSirası.length)) : 0];
