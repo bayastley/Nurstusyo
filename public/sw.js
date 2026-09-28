@@ -19,14 +19,32 @@ self.addEventListener("install", (event) => {
 });
 
 // ★ Yeni sürüm beklemedeyken sayfadan gelen SKIP_WAITING mesajı → anında devreye gir
+// ★ SÜRÜM RAPORLAMA (29.09 — "güncelleme bandı sürekli geliyor" fix):
+//   Sayfa GET_VERSION sorar; SW kendi sürümünü döner:
+//   - BEKLEYEN_SURUM: bu worker henüz kontrolü almamışsa (gerçek beklemedeki sürüm)
+//   - AKTIF_SURUM: bu worker kontrol ediyorsa (sayfanın üzerindeki sürüm)
+//   Bant artık "installing→installed geçici anında" değil, yalnız GERÇEK bekleyen
+//   sürüm varsa basılır; kapatılan sürüm localStorage'a yazılıp bir daha nag etmez.
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
+  const tip = event.data && event.data.type;
+  if (tip === "SKIP_WAITING") { self.skipWaiting(); return; }
+  if (tip !== "GET_VERSION") return;
+  // Bu worker pencere kontrol EDİYORSA aktiftir; etmiyorsa beklemededir.
+  self.clients.matchAll({ type: "window", includeUncontrolled: false })
+    .then((musteriler) => {
+      const bekliyorMu = musteriler.length === 0;
+      const cevap = (type) => event.source && event.source.postMessage({ type, v: CACHE });
+      if (bekliyorMu) cevap("BEKLEYEN_SURUM"); else cevap("AKTIF_SURUM");
+    })
+    .catch(() => { if (event.source) event.source.postMessage({ type: "AKTIF_SURUM", v: CACHE }); });
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      // ★ FIX (29.09): AUDIO_CACHE korunur — eskiden her aktivasyonda siliniyordu,
+      //   çevrimdışı tilavet cache'i (indirilen ayet sesleri) deploy başına çöpe gidiyordu.
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== AUDIO_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

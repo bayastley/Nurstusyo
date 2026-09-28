@@ -3,13 +3,30 @@
 // "Ana Ekrana Ekle" öğretici banner'ı. Chrome'da beforeinstallprompt
 // ile tek tık kurulum; iOS'ta adım adım talimat. Kurulunca veya
 // kapatılırsa 30 gün boyunca bir daha çıkmaz.
+//
+// ★ GÜNCELLEME BİLDİRİMİ — YENİDEN YAZILDI (29.09, kullanıcı kararı:
+//   "bu neden sürekli geliyor — güncelleme yapıldıktan sonra gelsin,
+//   gerçekten de sürekli gelmesin")
+//   ESKİ HATA: her installing worker "installed" durumuna geçtiği AN bandı
+//   basıyordu — oysa sw.js install'da skipWaiting() çağırdığı için yeni SW
+//   zaten kendiliğinden aktive oluyordu; "installed" anı geçici bir köprüydü
+//   ve deploy başına gereksiz yere bant basılıyordu (sürekli gelme şikâyeti).
+//   YENİ MANTIK (iki katman, ikisi de sürüm-farkındalıklı):
+//   1) GERÇEKTEN bekleyen (waiting) worker varsa → "Yeni sürüm hazır" bandı.
+//      X ile kapatılırsa O SÜRÜM için bir daha ASLA çıkmaz (localStorage'a
+//      sürüm yazılır); yeni/different sürüm geldiğinde yalnız 1 kez gelir.
+//   2) Yeni sürüm aktive olduktan SONRA (bir sonraki açılışta fark edilir)
+//      → 6 saniyede kendiliğinden kaybolan nazik "✓ Güncellendi" biliği,
+//      sürüm başına yalnız 1 kez. İlk ziyarette hiç gösterilmez.
 // ════════════════════════════════════════════════════════
 
 import React, { useEffect, useRef, useState } from "react";
 import { Smartphone, X, Download, Share } from "lucide-react";
 
-const KAPAT_KEY = "nur_pwa_banner_kapat"; // kapatınca 30 gün
-const KURULUM_KEY = "nur_pwa_kuruldu";    // kurduysa bir daha yok
+const KAPAT_KEY = "nur_pwa_banner_kapat";       // kurulum bannerı: kapatınca 30 gün
+const KURULUM_KEY = "nur_pwa_kuruldu";          // kurduysa bir daha yok
+const BILDIRIM_KEY = "nur_sw_bildirim_kapatilan"; // kapatılan beklemedeki SW sürümü — o sürüm bir daha nag etmez
+const GORULEN_KEY = "nur_sw_son_surum";         // bildirilmiş aktif sürüm — değişirse 1 kez "✓ Güncellendi"
 
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
@@ -21,36 +38,80 @@ export const PwaKurulumBanneri: React.FC = () => {
   const [bipEvent, setBipEvent] = useState<BIPEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [manuelTalimat, setManuelTalimat] = useState(false);
-  // ★ İş 23 güçlendirme: yeni SW (yani yeni sürüm) algılanınca nazik "Yenile" bandı
+  // Katman 1: gerçekten bekleyen (waiting) SW varsa "Yenile" bandı
   const [guncellemeVar, setGuncellemeVar] = useState(false);
+  // Katman 2: yeni sürüm aktive olduktan sonra 1 kez gösterilen bilgi (6 sn'de kaybolur)
+  const [guncellendi, setGuncellendi] = useState(false);
   const bekleyenSwRef = useRef<ServiceWorkerRegistration | null>(null);
+  const bekleyenSurumRef = useRef<string>("");
 
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     let live = true;
+
+    // Sürüm bildirimini işle: beklemedeki worker'ın sürümü kapatılmışsa sessiz geç
+    const bekleyenSurumuIste = (reg: ServiceWorkerRegistration) => {
+      if (!reg.waiting || !navigator.serviceWorker.controller) return;
+      bekleyenSwRef.current = reg;
+      try { reg.waiting.postMessage({ type: "GET_VERSION" }); } catch { /* yoksay */ }
+    };
+
+    const swMesaj = (e: MessageEvent) => {
+      const data = e.data as { type?: string; v?: string } | null;
+      if (!data || typeof data.v !== "string") return;
+      const surum = data.v;
+      if (data.type === "BEKLEYEN_SURUM") {
+        // Katman 1: gerçek beklemedeki sürüm — kapatılmışsa bir daha gösterme
+        try { if (localStorage.getItem(BILDIRIM_KEY) === surum) return; } catch { /* yut */ }
+        bekleyenSurumRef.current = surum;
+        if (live) setGuncellemeVar(true);
+      } else if (data.type === "AKTIF_SURUM") {
+        // Katman 2: aktif sürüm son görülenden farklıysa 1 kez "✓ Güncellendi" (6 sn)
+        let onceki: string | null = null;
+        try { onceki = localStorage.getItem(GORULEN_KEY); } catch { /* yut */ }
+        try { localStorage.setItem(GORULEN_KEY, surum); } catch { /* yut */ }
+        if (!onceki || onceki === surum) return; // ilk ziyaret ya da aynı sürüm → sessiz
+        if (live) {
+          setGuncellendi(true);
+          window.setTimeout(() => { if (live) setGuncellendi(false); }, 6000);
+        }
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", swMesaj);
+
     (async () => {
       try {
         const reg = await navigator.serviceWorker.getRegistration();
-        if (!reg) return;
+        if (!reg || !live) return;
+        bekleyenSurumuIste(reg); // açılışta bekleyen var mı
+        if (navigator.serviceWorker.controller) {
+          try { navigator.serviceWorker.controller.postMessage({ type: "GET_VERSION" }); } catch { /* yoksay */ }
+        }
         reg.addEventListener("updatefound", () => {
           const yeni = reg.installing;
           if (!yeni) return;
           yeni.addEventListener("statechange", () => {
-            if (yeni.state === "installed" && navigator.serviceWorker.controller && live) {
-              setGuncellemeVar(true);
-              bekleyenSwRef.current = reg;
-            }
+            // ★ ESKİ HATALI KOŞUL KALDIRILDI: "installed && controller" geçici an
+            //   bandı basıyordu. Artık yalnız GERÇEK waiting varsa sorulur.
+            if (yeni.state === "installed" && live) bekleyenSurumuIste(reg);
           });
         });
       } catch { /* yoksay */ }
     })();
-    return () => { live = false; };
+    return () => { live = false; navigator.serviceWorker.removeEventListener("message", swMesaj); };
   }, []);
 
   const guncelle = () => {
+    try { if (bekleyenSurumRef.current) localStorage.setItem(BILDIRIM_KEY, bekleyenSurumRef.current); } catch { /* yut */ }
     bekleyenSwRef.current?.waiting?.postMessage({ type: "SKIP_WAITING" });
     setGuncellemeVar(false);
     window.setTimeout(() => window.location.reload(), 400);
+  };
+
+  // ★ X ile kapatma (29.09): bu sürüm için bildirim kalıcı susturulur
+  const guncellemeBildiriminiKapat = () => {
+    try { if (bekleyenSurumRef.current) localStorage.setItem(BILDIRIM_KEY, bekleyenSurumRef.current); } catch { /* yut */ }
+    setGuncellemeVar(false);
   };
 
   useEffect(() => {
@@ -96,11 +157,21 @@ export const PwaKurulumBanneri: React.FC = () => {
     setManuelTalimat(true);
   };
 
-  if (!gorunur && !guncellemeVar) return null;
+  if (!gorunur && !guncellemeVar && !guncellendi) return null;
 
   return (
     <div className="fixed bottom-4 right-4 z-[88] mx-2 max-w-[300px]">
-      {/* ★ YENİ SÜRÜM bandı — SW güncellemesi beklemedeyken */}
+      {/* ★ GÜNCELLENDİ biliği — yeni sürüm aktive olduktan sonra 1 kez, 6 sn'de kaybolur */}
+      {guncellendi && (
+        <div className="glass modal-in mb-2 flex items-center gap-2.5 rounded-2xl p-3 shadow-2xl" style={{ border: "1px solid rgba(52,211,153,.4)" }}>
+          <span className="text-base" aria-hidden>✅</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10.5px] font-black text-white">Güncellendi</p>
+            <p className="text-[8.5px] text-white/50">Site artık en yeni sürümde — keyifli kullanımlar</p>
+          </div>
+        </div>
+      )}
+      {/* Katman 1: gerçekten bekleyen SW varsa (nadir) — Yenile + kalıcı kapatma */}
       {guncellemeVar && (
         <div className="glass modal-in mb-2 flex items-center gap-2.5 rounded-2xl p-3 shadow-2xl" style={{ border: "1px solid rgba(52,211,153,.4)" }}>
           <span className="text-base" aria-hidden>🆕</span>
@@ -108,6 +179,7 @@ export const PwaKurulumBanneri: React.FC = () => {
             <p className="text-[10.5px] font-black text-white">Yeni sürüm hazır</p>
             <p className="text-[8.5px] text-white/50">Tek tıkla güncelle — yenileme saniyeler sürer</p>
           </div>
+          <button type="button" onClick={guncellemeBildiriminiKapat} className="shrink-0 rounded-full p-1 text-white/35 transition hover:text-white" aria-label="Bu bildirimi kalıcı kapat"><X size={11} /></button>
           <button type="button" onClick={guncelle} className="shrink-0 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110">
             Yenile
           </button>
