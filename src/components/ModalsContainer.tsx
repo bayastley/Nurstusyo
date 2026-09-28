@@ -106,6 +106,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   atmosCategory,
   setAtmosCategory,
   combinedAllClips,
+  onMedyaArkaPlan,
   CATEGORY_ICONS,
   lockTip,
   setLockTip,
