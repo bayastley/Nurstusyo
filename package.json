@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "node scripts/ai-match-test.mjs",
     "test:esm": "node scripts/esm-tarama.mjs",
-    "test:ses": "node scripts/kesfet-hoca-ses-testi.mjs"
+    "test:ses": "node scripts/kesfet-hoca-ses-testi.mjs",
+    "test:roadmap": "node scripts/roadmap-saglik-testi.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1097.0",
