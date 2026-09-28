@@ -1729,9 +1729,23 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                 {/* ★ Sure değişimi: ayet konumu ve besmele hakkı SIFIRLANIR — eskiden
                     listenAyahIdx eski sureden kalıyordu, play'e basınca besmelesiz
                     2-3. ayetten başlıyordu (canlı testte kanıtlandı) */}
-                <select value={listenSurah} onChange={(e) => { setListenSurah(Number(e.target.value)); setListenAyahIdx(0); besmeleCalindiRef.current = 0; stopListening(); }} className="rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
-                  {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} ayet)</option>)}
-                </select>
+                <span className="flex gap-1.5">
+                  <select value={listenSurah} onChange={(e) => { setListenSurah(Number(e.target.value)); setListenAyahIdx(0); besmeleCalindiRef.current = 0; stopListening(); }} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
+                    {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} ayet)</option>)}
+                  </select>
+                  {/* ★ BAŞINDAN BAŞLA (29.09, kullanıcı isteği): besmele hakkını sıfırla →
+                      kullanıcı isterse TEKRAR besmeleyle başlasın. Tek besmele kuralı
+                      (pause→play'de besmele tekrarı) bozulmaz — bu düğme bilinçli
+                      sıfırlama olduğundan ertesi çalmada besmele HAKKINI yeniden verir. */}
+                  <button
+                    type="button"
+                    onClick={() => { setListenAyahIdx(0); besmeleCalindiRef.current = 0; stopListening(); }}
+                    className="shrink-0 rounded-xl border border-gold/40 bg-gold/10 px-2.5 py-2.5 text-[10px] font-black text-gold transition hover:bg-gold/20 active:scale-95"
+                    title={`${SURAHS_DATA.find(s => s.n === listenSurah)?.name ?? "Sure"} başından, besmeleyle başla`}
+                  >
+                    ⟲ Başından
+                  </button>
+                </span>
               </label>
               <label className="flex flex-col gap-1.5">
                 <span className="text-[9px] font-bold uppercase text-[#7a745f]">Okuyan Hoca (Kari) — {reciterSearch.trim() ? `${filteredReciters.length} bulundu` : `${RECITERS.length} kari`}</span>
