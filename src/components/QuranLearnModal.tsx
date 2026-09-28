@@ -4,7 +4,7 @@ import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
-import { fetchSurahEditions } from "../studio/studioHelpers"; // ★ kayma korumalı sure+meal çekimi (28.09)
+import { fetchSurahEditions, fetchAyah } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
 // ══════════════════════════════════════════════════════════════
@@ -653,9 +653,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!open || mode !== "learn" || !karsilastirmaAcik || !surahNo || !ayahNo) return;
     let live = true;
     setKarsiMetin("");
-    fetch(`https://api.alquran.cloud/v1/ayah/${surahNo}:${ayahNo}/${karsiMealId}`)
-      .then(r => r.json())
-      .then((d: any) => { if (live && d.code === 200) setKarsiMetin(String(d.data?.text ?? "")); })
+    // ★ FALLBACK ZİNCİRİ (29.09): ham fetch yerine merkezî fetchAyah — karşılaştırma
+    //   mealinde de kayma koruması (diyanet şüpheliyse yazir → vakfi). Arapça + meal tek istekte.
+    fetchAyah(surahNo, ayahNo, karsiMealId)
+      .then(d => { if (live && d.tr) setKarsiMetin(d.tr); })
       .catch(() => undefined);
     return () => { live = false; };
   }, [open, mode, karsilastirmaAcik, karsiMealId, surahNo, ayahNo]);
