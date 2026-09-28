@@ -28,7 +28,10 @@ export function usePrayerTimes(prayerCity: string, prayerSearch: string) {
         .catch(() => { if (live) setPrayerTimings(null); });
     };
 
-    if (navigator.geolocation) {
+    // ★ KULLANICI EMRİ (28.09): açılışta konum izni ASLA sorulmaz — tarayıcı
+    //   onayı çıkmasın. Koordinat yalnız izin DAHA ÖNCE verilmişse sessizce kullanılır.
+    const izinDahaOnceVerilmis = localStorage.getItem("nur_konum_izin") === "1";
+    if (izinDahaOnceVerilmis && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
         () => fetchByCity(),

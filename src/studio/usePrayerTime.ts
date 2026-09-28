@@ -27,7 +27,11 @@ export function usePrayerTime(): UsePrayerTimeReturn {
         if (live) setPrayerTimings(json?.data?.timings ?? null);
       }).catch(() => { if (live) setPrayerTimings(null); });
     };
-    if (navigator.geolocation) {
+    // ★ KULLANICI EMRİ (28.09): açılışta konum izni ASLA sorulmaz — tarayıcı onayı
+    //   çıkmasın. Şehir bazlı vakitler (varsayılan İstanbul) yeterli. Koordinat
+    //   yalnız izin DAHA ÖNCE verilmişse (localStorage işareti) sessizce kullanılır.
+    const izinDahaOnceVerilmis = localStorage.getItem("nur_konum_izin") === "1";
+    if (izinDahaOnceVerilmis && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
         () => fetchByCity(),

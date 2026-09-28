@@ -562,7 +562,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   // Konum izni varsa koordinat bazlı ara, yoksa şehir iste
                   if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
-                      (pos) => setCamiAranan(`${pos.coords.latitude},${pos.coords.longitude}`),
+                      (pos) => { try { localStorage.setItem("nur_konum_izin", "1"); } catch { /* yoksay */ } setCamiAranan(`${pos.coords.latitude},${pos.coords.longitude}`); },
                       () => notify?.("⚠️ Konum izni verilmedi — şehir adı yazarak arayabilirsin"),
                       { timeout: 8000 },
                     );
