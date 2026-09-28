@@ -25,7 +25,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   useEffect(() => {
     let alive = true;
     const refresh = async () => {
-      const response = await fetch("/api/config", { cache: "no-store" }).catch(() => null);
+      // ★ Lansman hazırlığı: config 45sn TTL CDN cache'te — poll DB'yi vurmaz (28.09)
+      const response = await fetch("/api/config", { cache: "default" }).catch(() => null);
       const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }>; maintenance?: { enabled?: boolean; startsAt?: string; endsAt?: string; message?: string; updated_at?: string } | null } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());
@@ -62,7 +63,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     //   (rate limit 120/dk'ya dayar, hiçbir değişiklik olmasa bile).
     //   YENİ: 60 sn poll + sunucudan gelen updated_at'a göre değişiklik YOKSA cache;
     //   ayrıca sekme gizliyken poll tamamen durur, döndüğünde hemen bir kez çeker.
-    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 60_000);
+    const interval = window.setInterval(() => { if (document.visibilityState === "visible") void refresh(); }, 90_000);
     const onVisible = () => { if (document.visibilityState === "visible") void refresh(); };
     document.addEventListener("visibilitychange", onVisible);
     return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };

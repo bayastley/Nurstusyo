@@ -102,11 +102,28 @@ async function query<T>(path: string): Promise<T> {
   return await response.json() as T;
 }
 
+// ═════════════════════════════════════════════════════════
+// ★ LANSMAN HAZIRLIĞI (28.09) — config = en sıcak endpoint.
+//   Her açık sekme 60-90sn'de bir poll ediyor; lansmanda binlerce
+//   sekme × 3 sorgu = DB kilitlenme riski. İki katman:
+//   1) IN-MEMORY snapshot (45sn): aynı instance'a gelen tekrarlar
+//      Supabase'e HİÇ gitmez; DB erişilemezse son sağlıklı snapshot
+//      döner (site ayakta kalır — panel çökme sigortası felsefesi).
+//   2) CDN s-maxage=45 + stale-while-revalidate=300: Vercel edge,
+//      farklı instance'ları bile tek talebe indirger.
+// ═════════════════════════════════════════════════════════
+const CONFIG_TTL_MS = 45_000;
+let cfgSnapshot: { at: number; body: unknown } | null = null;
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader("Cache-Control", "no-store");
-  if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  // ★ Merkezi rate limit — config okuma ucudur ama tarayıcıda sürekli çağrıldığı için
-  //   tarama/flood koruması şart (dakikada 120 — normal kullanıcıyı asla boğmaz)
+  // ★ Snapshot taze ise DB'siz dön — lansman yükünde DB nefes alır
+  if (req.method === "GET" && cfgSnapshot && Date.now() - cfgSnapshot.at < CONFIG_TTL_MS) {
+    res.setHeader("Cache-Control", "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
+    return res.status(200).json(cfgSnapshot.body as Record<string, unknown>);
+  }
+  if (req.method !== "GET") { res.setHeader("Cache-Control", "no-store"); return res.status(405).json({ ok: false, error: "Method Not Allowed" }); }
+  // ★ Merkezi rate limit — snapshot'a isabet eden istekler DB'ye değmediği
+  //   için limit yalnız DB'ye gidecek talepleri yavaşlatır (dakikada 120)
   if (!(await rateLimit(req, res, "config", 120, 60_000))) return;
   try {
     const now = encodeURIComponent(new Date().toISOString());
@@ -117,15 +134,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ]);
     const maintenanceRow = Array.isArray(siteSettings) ? siteSettings[0] : null;
     const maintenanceValue = maintenanceRow?.value && typeof maintenanceRow.value === "object" ? { ...maintenanceRow.value, updated_at: maintenanceRow.updated_at } : null;
-    return res.status(200).json({
+    const body = {
       ok: true,
       announcement: announcements[0] ?? null,
       featureLocks,
       maintenance: maintenanceValue,
-    });
+    };
+    cfgSnapshot = { at: Date.now(), body };
+    res.setHeader("Cache-Control", "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
+    return res.status(200).json(body);
   } catch (error) {
     await logServerError(req, error, "api/config");
     console.error("[Public Config Error]", error);
+    // ★ DB erişilemezse son sağlıklı snapshot ile cevapla — lansmanda config
+    //   kaynağından dolayı TÜM SİTE kapanmasın (panel sigortası felsefesi).
+    if (cfgSnapshot) {
+      res.setHeader("Cache-Control", "public, max-age=10, s-maxage=30");
+      return res.status(200).json(cfgSnapshot.body as Record<string, unknown>);
+    }
+    res.setHeader("Cache-Control", "no-store");
     return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null });
   }
 }

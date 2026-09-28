@@ -23,7 +23,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, onRewa
   useEffect(() => {
     let alive = true;
     const refresh = async () => {
-      const response = await fetch("/api/config", { cache: "no-store" }).catch(() => null);
+      // ★ Lansman hazırlığı: config 45sn TTL CDN cache'te — poll DB'yi vurmaz (28.09)
+      const response = await fetch("/api/config", { cache: "default" }).catch(() => null);
       const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }> } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());

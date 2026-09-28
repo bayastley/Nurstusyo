@@ -124,7 +124,8 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     let alive = true;
     (async () => {
       try {
-        const r = await fetch("/api/config", { cache: "no-store" });
+        // ★ Lansman hazırlığı: default cache — panelde 45sn gecikme zararsız, DB rahatlar (28.09)
+        const r = await fetch("/api/config", { cache: "default" });
         const d = await r.json().catch(() => null) as { featureLocks?: Array<{ feature_id: string; lock_level: string }> } | null;
         if (!alive || !Array.isArray(d?.featureLocks)) return;
         const cfg = getSystemConfig();

@@ -156,6 +156,16 @@ async function db<T>(path: string, init?: RequestInit): Promise<T> {
 
 const sanitize = (s: unknown, max: number) => (typeof s === "string" ? s.trim().slice(0, max).replace(/[<>"';]/g, "") : "");
 
+// ═════════════════════════════════════════════════════════
+// ★ LANSMAN HAZIRLIĞI (28.09) — GET'te her istek tüm oylar tablosunu
+//   çekiyordu; kullanıcı arttıkça satır da artıyor (lansmanda en ağır
+//   okuma). Aggregate 20sn in-memory cache'te; oy verme/dağıtma anında
+//   bust edilir (kimse bayat sayaç görmez). myVote kullanıcıya özel
+//   olduğu için CDN cache KULLANILMAZ — yalnız instance-içi cache.
+// ═════════════════════════════════════════════════════════
+const RM_TTL_MS = 20_000;
+let rmCache: { at: number; features: any[]; counts: Record<string, number>; totalVotes: number } | null = null;
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   const cfg = supabaseConfig();
@@ -168,12 +178,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       //   ara sıra ulaşılamayınca ok:true + BOŞ liste dönüyor, frontend default
       //   planda kalıyor ("34 özellik" + DB id drifti) ve POST 400'e çakılıyordu.
       //   Artık DB hatası dış try/catch'e düşer → 500 + nur_error_logs kaydı.
-      const [features, votes] = await Promise.all([
-        db<any[]>("nur_roadmap_features?select=id,version,title,description,icon,active&order=created_at.asc"),
-        db<any[]>("nur_roadmap_votes?select=feature_id"),
-      ]);
-      const counts: Record<string, number> = {};
-      for (const v of votes) counts[v.feature_id] = (counts[v.feature_id] || 0) + 1;
+      let features: any[];
+      let counts: Record<string, number>;
+      let totalVotes: number;
+      if (rmCache && Date.now() - rmCache.at < RM_TTL_MS) {
+        ({ features, counts, totalVotes } = rmCache);
+      } else {
+        const [f, votes] = await Promise.all([
+          db<any[]>("nur_roadmap_features?select=id,version,title,description,icon,active&order=created_at.asc"),
+          db<any[]>("nur_roadmap_votes?select=feature_id"),
+        ]);
+        features = f;
+        counts = {};
+        for (const v of votes) counts[v.feature_id] = (counts[v.feature_id] || 0) + 1;
+        totalVotes = votes.length;
+        rmCache = { at: Date.now(), features, counts, totalVotes };
+      }
       const session = getSession(req);
       let myVote: string | null = null;
       if (session) {
@@ -185,7 +205,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         v2: features.filter((f) => f.version === "V2" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
         v3: features.filter((f) => f.version === "V3" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
         myVote,
-        totalVotes: votes.length,
+        totalVotes,
       });
     }
 
@@ -220,6 +240,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const mine = await db<any[]>(`nur_roadmap_votes?user_id=eq.${encodeURIComponent(session.id)}&select=feature_id`).catch(() => [] as any[]);
       if (mine[0]?.feature_id === featureId) {
         await db(`nur_roadmap_votes?user_id=eq.${encodeURIComponent(session.id)}`, { method: "DELETE" });
+        rmCache = null; // ★ sayaç anında tazelensin
         return res.status(200).json({ ok: true, removed: true });
       }
       // Kullanıcı başına tek oy: mevcut kaydı GÜNCELLE (upsert)
@@ -228,6 +249,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: { Prefer: "resolution=merge-duplicates" },
         body: JSON.stringify({ user_id: session.id, feature_id: featureId }),
       });
+      rmCache = null; // ★ sayaç anında tazelensin
       return res.status(200).json({ ok: true });
     }
 
@@ -250,6 +272,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (action === "delete") {
         const id = sanitize(body.id, 60);
         await db(`nur_roadmap_features?id=eq.${encodeURIComponent(id)}`, { method: "DELETE" });
+        rmCache = null;
         return res.status(200).json({ ok: true });
       }
       if (action === "add") {
@@ -259,6 +282,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           headers: { Prefer: "return=minimal" },
           body: JSON.stringify({ id, version: body.version === "V3" ? "V3" : "V2", title: sanitize(body.title, 80), description: sanitize(body.desc, 200), icon: "ai_arkaplan" }),
         });
+        rmCache = null;
         return res.status(200).json({ ok: true, id });
       }
       if (action === "edit") {
@@ -275,6 +299,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (action === "resetVotes") {
         // ★ Yeni oylama turu: tüm oylar silinir (özellikler kalır)
         await db("nur_roadmap_votes", { method: "DELETE" });
+        rmCache = null;
         return res.status(200).json({ ok: true });
       }
       return res.status(400).json({ ok: false, error: "Geçersiz işlem" });
