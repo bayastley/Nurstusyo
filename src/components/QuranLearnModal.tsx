@@ -201,6 +201,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // Header'dan hangi sekmeyle açıldıysa o modda başla
   useEffect(() => { if (open && initialMode) setMode(initialMode); }, [open, initialMode]);
 
+  // ★ KALDIĞIN YERDEN DEVAM — AYET SEVİYESİ: effect gövdesi besmeleCalindiRef
+  //   tanımından SONRAYA taşındı (TDZ: eski konumda ref'ten önceydi, build patlardı).
+  //   Bakınca: "besmeleCalindiRefUygula" etkisi satır ~1015 civarında.
+
   // ── Öğren state ──
   const [surahNo, setSurahNo] = useState(1);
   const [ayahNo, setAyahNo] = useState(1);
@@ -523,9 +527,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   // ── Dinle state ──
   // ★ FIX (29.09, kullanıcı kararı): başlangıç sureği Yâsîn (36) değil FÂTİHA (1) —
   //   "Kur'an fatihadan başlar, ne alaka" — dinleme akışı Kur'an sırasına uyar.
-  //   Kullanıcının kaldığı yer nur_son_konum'a zaten kaydediliyor; ilk kez açan
-  //   Fâtiha'dan başlar, devam eden kaldığından devam eder.
-  const [listenSurah, setListenSurah] = useState(1);
+  //   ★ KALDIĞIN YERDEN DEVAM (29.09): kayıtlı konum varsa onunla başlar (aşağıdaki
+  //   effect modal açılınca uygular); kayıt yoksa Kur'an'ın başı Fâtiha'dan.
+  const [listenSurah, setListenSurah] = useState(() => {
+    try {
+      const k = JSON.parse(localStorage.getItem("nur_son_konum") || "") as { s?: number };
+      const s = Number(k?.s);
+      return s >= 1 && s <= 114 ? s : 1;
+    } catch { return 1; }
+  });
   const [listenReciter, setListenReciter] = useState("Alafasy_128kbps");
   const [isPlaying, setIsPlaying] = useState(false);
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
@@ -981,6 +991,29 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   //   için dinleme oturumunda EN FAZLA BİR KEZ çalar; sure/hoca değişince sıfırlanır
   //   (yeni surede bir kez okunur — doğru adab), modal kapanınca da temizlenir.
   const besmeleCalindiRef = useRef(0);
+  // ★ KALDIĞIN YERDEN DEVAM — AYET SEVİYESİ (29.09, kullanıcı isteği):
+  //   sure konumu zaten listenSurah başlangıcında okunuyor; AYET konumu ise modal
+  //   dinleme modunda AÇILDIĞI İLK ANDA nur_son_konum'dan uygulanır. besmeleCalindiRef
+  //   o sure için İŞARETLİ kurulur → kullanıcı Play'e basınca kaldığı ayetten
+  //   BESMELESİZ devam eder (besmele yalnız sure başında olur — adabın gereği).
+  //   "⟲ Başından" düğmesi bu hakkı bilinçli sıfırlar, besmeleyle başlar.
+  const sonKonumUygulandiRef = useRef(false);
+  useEffect(() => {
+    if (!open || mode !== "listen" || sonKonumUygulandiRef.current) return;
+    sonKonumUygulandiRef.current = true;
+    try {
+      const k = JSON.parse(localStorage.getItem("nur_son_konum") || "") as { s?: number; a?: number };
+      const s = Number(k?.s), a = Number(k?.a);
+      if (s >= 1 && s <= 114 && a >= 2) {
+        setListenSurah(s);
+        const toplam = SURAHS_DATA.find(x => x.n === s)?.ayahs ?? 7;
+        setListenAyahIdx(Math.min(a - 1, toplam - 1));
+        if (s !== 1 && s !== 9) besmeleCalindiRef.current = s; // kaldığı ayetten besmelesiz devam
+      }
+    } catch { /* kayıt yok/bozuk — Fâtiha 1:1 varsayılan */ }
+  }, [open, mode]);
+  // Modal kapanınca bir sonraki açılış için sıfırla (konum zaten canlı yazılıyor)
+  useEffect(() => { if (!open) sonKonumUygulandiRef.current = false; }, [open]);
   const BESMELE_AR = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
   const BESMELE_TR = "Rahmân ve Rahîm olan Allah'ın adıyla.";
   const listenAyahDataRef = useRef(listenAyahData);
