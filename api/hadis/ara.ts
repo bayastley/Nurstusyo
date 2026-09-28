@@ -112,6 +112,12 @@ function dorarKitap(bilgi: string): string {
   return "Diğer";
 }
 
+// ─── Dış fetch'ler için uygulama kimliği ───
+// ★ 28.09: dorar.net, Node/curl gibi genel araç UA'larını 403 ile engelliyor
+//   (kanıt: tarayıcı UA ve uygulama UA = 200, node UA = 403). Uygulama
+//   kimlikli UA gönderince sunucu fetch'leri de kabul ediliyor.
+const DIS_UA = "Nurstudyo/1.0 (+https://nurstudyo.com)";
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS — yalnız sitemiz
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
@@ -131,6 +137,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (q.length < 2) return res.status(400).json({ ok: false, error: "Arama en az 2 karakter olmalı" });
 
   const sonuclar: HadisSonuc[] = [];
+  // ★ Dürüst kaynak raporu: hangi sağlayıcı ne durumda, yanıtla birlikte döner
+  const kaynaklar: { dorar: string; sunnah: string } = { dorar: "kapali", sunnah: "anahtar-yok" };
 
   // ─── 1) sunnah.com (API anahtarı varsa) — Buhârî + Müslim, İngilizce metin ───
   const apiKey = process.env.HADITH_API_KEY;
@@ -139,10 +147,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const kitaplar = ["bukhari", "muslim"] as const;
       await Promise.all(kitaplar.map(async (kitap) => {
         const r = await fetch(`https://api.sunnah.com/v1/${kitap}/search/${encodeURIComponent(q)}?limit=5`, {
-          headers: { "X-API-KEY": apiKey },
+          headers: { "X-API-KEY": apiKey, "User-Agent": DIS_UA, Accept: "application/json" },
           signal: AbortSignal.timeout(8000),
         });
-        if (!r.ok) return;
+        if (!r.ok) { kaynaklar.sunnah = `hata-${r.status}`; return; }
         const data = (await r.json()) as {
           data?: Array<{ hadithEnglish?: string; hadithArabic?: string; chapter?: { chapterName?: string }; hadithNumber?: number }>;
         };
@@ -157,15 +165,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: h.hadithEnglish ? "en" : "ar",
           });
         }
+        kaynaklar.sunnah = "ok";
       }));
-    } catch { /* sunnah.com kapalıysa dorar devam eder */ }
+    } catch { kaynaklar.sunnah = "hata"; /* sunnah.com kapalıysa dorar devam eder */ }
   }
 
   // ─── 2) dorar.net — anahtarsız külliyat arama (Arapça) ───
   if (sonuclar.length < 5) {
     try {
       const url = `https://dorar.net/dorar_api.json?skey=${encodeURIComponent(q)}`;
-      const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const r = await fetch(url, {
+        headers: { "User-Agent": DIS_UA, Accept: "application/json" },
+        signal: AbortSignal.timeout(8000),
+      });
       if (r.ok) {
         const data = (await r.json()) as { ahadith?: { result?: { html?: string } } };
         const html = data?.ahadith?.result?.html ?? "";
@@ -186,8 +198,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         }
       }
-    } catch { /* dorar kapalıysa sunnah sonuçları kalır */ }
+    } catch { kaynaklar.dorar = "hata"; /* dorar kapalıysa sunnah sonuçları kalır */ }
   }
 
-  return res.status(200).json({ ok: true, q, sayi: sonuclar.length, sonuclar: sonuclar.slice(0, 12) });
+  return res.status(200).json({ ok: true, q, sayi: sonuclar.length, kaynaklar, sonuclar: sonuclar.slice(0, 12) });
 }
