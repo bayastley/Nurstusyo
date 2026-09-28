@@ -168,7 +168,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: h.hadithEnglish ? "en" : "ar",
           });
         }
-        kaynaklar.sunnah = "ok";
+        kaynaklar.sunnah = `ok-${sonuclar.length}`;
       }));
     } catch { kaynaklar.sunnah = "hata"; /* sunnah.com kapalıysa dorar devam eder */ }
   }
@@ -209,6 +209,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: "ar",
           });
         }
+        kaynaklar.dorar = `ok-${sonuclar.length}`;
+      } else {
         kaynaklar.dorar = `kapali-${r.status}`;
       }
     } catch { kaynaklar.dorar = "hata"; /* dorar kapalıysa sunnah sonuçları kalır */ }
