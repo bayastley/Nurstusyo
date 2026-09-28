@@ -102,6 +102,15 @@ export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
 
 // ★ AYET CACHE — aynı ayeti tekrar çekmeyi engeller, rate-limit sorunu çözer
 const ayahCache = new Map<string, { ar: string; tr: string }>();
+// ★ BELLEK SINIRI (tam tarama 29.09): 1500 ayet ≈ birkaç MB — geçince en eskiler atılır
+const AYAH_CACHE_SINIR = 1500;
+function ayahCacheKoy(key: string, deger: { ar: string; tr: string }) {
+  ayahCache.set(key, deger);
+  if (ayahCache.size > AYAH_CACHE_SINIR) {
+    const silinecek = [...ayahCache.keys()].slice(0, ayahCache.size - AYAH_CACHE_SINIR);
+    for (const k of silinecek) ayahCache.delete(k);
+  }
+}
 let pendingFetches = 0;
 let frameCount = 0;
 const MAX_PARALLEL = 4; // en fazla 4 paralel istek (daha hızlı yükleme)
@@ -186,7 +195,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
         // ★ Kabul koşulu: Arapça VAR ve çeviri SAĞLIKLI (kayma şüphesi yok)
         if (ar && mealSaglikliMi(tr, ed)) {
           const result = { ar, tr };
-          ayahCache.set(key, result);
+          ayahCacheKoy(key, result);
           if (ed !== edition) console.warn(`[fetchAyah] FALLBACK: ${key} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
           console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
           return result;
@@ -199,7 +208,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
     // Tüm editionlar denendi: Arapça geldiyse onunla dön (eskiden de ar||tr kabul ediliyordu)
     if (sonAr) {
       const result = { ar: sonAr, tr: sonTr };
-      ayahCache.set(key, result);
+      ayahCacheKoy(key, result);
       return result;
     }
     console.error("[fetchAyah] Tüm editionlar başarısız:", key);
@@ -253,6 +262,10 @@ export interface SureEditionData {
 // ★ SURE CACHE (28.09): aynı sure tekrar istenirse API'ye gitmeden dön — 429 fırtınasını
 // keser (hafızlık testi + Kur'an öğren/dinle ortak kullanır). İçerik değişmez veri.
 const sureCache = new Map<string, SureEditionData>();
+// ★ BELLEK SINIRI (tam tarama 29.09): sınırsız Map uzun oturumda şişer (114 sure ×
+//   4 meal × Bakara 286 ayet ≈ yüzlerce KB). FIFO: 320 kaydı geçince en eskiler atılır —
+//   içerik değişmez veri olduğu için bayatlık riski yok, yalnız bellek korunur.
+const SURE_CACHE_SINIR = 320;
 
 export async function fetchSurahEditions(surah: number, edition: string): Promise<SureEditionData> {
   const cacheKey = `${surah}:${edition}`;
@@ -287,6 +300,10 @@ export async function fetchSurahEditions(surah: number, edition: string): Promis
       fallbackUsed: ed !== edition,
     };
     sureCache.set(cacheKey, sonuc);
+    if (sureCache.size > SURE_CACHE_SINIR) {
+      const silinecek = [...sureCache.keys()].slice(0, sureCache.size - SURE_CACHE_SINIR);
+      for (const k of silinecek) sureCache.delete(k);
+    }
     return sonuc;
   }
   throw new Error("SURAH_EMPTY");
