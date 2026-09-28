@@ -118,3 +118,32 @@ Vercel'in çok instance'a ölçeklendiği lansman günü gerçek koruma için ş
 | Free plan pause/limit | ⚠️ Panel bekliyor | B1: Pro'ya geçiş |
 | Gelecek pg bağlantısı | ⚠️ Env bekliyor | B2: pooler 6543 env'e tanımlansın |
 | DB çöküp tüm siteyi götürmesi | ✅ Kodla çözüldü | config fail-open snapshot + zikir/roadmap try-catch |
+
+---
+
+## C) KALICI EMİR — ADMINE HER KİLİT AÇIK (28.09, kullanıcıdan — ASLA UNUTMA)
+
+> **Emir:** "Admine her kilit açık olsun — bu emiri asla unutma."
+
+Bu sitede admin (bayastley@gmail.com + /api/auth/me isAdmin=true) her zaman:
+
+- TÜM tier kilitleri (pro/elit) → `accessTier = "elit"` (useTier.ts)
+- TÜM V2/V3 feature-lock modalları → `v2Kapali()` `isMasterSürüm`'e bakar
+- TÜM atmosfer/kategori kilitleri → `hardLocked` `isMasterSürüm`'e bakar
+- Üretim hakları: jeton ∞, maliyet 0 (StudioApp/useVideoGenerator)
+- Kelime atölyesi, hafızlık testi, ayet kütüphanesi vb. → kilit yok
+
+**Mekanizma zinciri:** /api/auth/me isAdmin → adminGodMode → isMasterSürüm → tüm kilit geçitleri.
+
+### Yeni geliştirici için KURAL
+Projeye YENİ bir kilit eklerken (tier/oylama/admin-kategori ne olursa olsun)
+kod şunu içermek ZORUNDADIR: kilit kontrolü `isMasterSürüm` (veya adminGodMode)
+yanından geçmelidir. Örnek:
+```ts
+const kilitli = !isMasterSürüm && <kilit koşulu>;
+```
+Bu kuralı bozan commit deploy EDİLMEZ.
+
+### Arayüz emri (aynı konuşma): 
+ADMIN PANEL / ADMIN·ÇIKIŞ üst barda DURMAZ — sol menü altındaki
+ADMIN bölümündedir. Üst bar tertemiz kalır; yalnız admin bu bölümü görür.

@@ -243,6 +243,38 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
                     </button>
+                    {/* ★ ADMIN BÖLÜMÜ (kullanıcı emri 28.09): üst bar temizlendi,
+                        admin kontrolleri buraya taşındı — yalnız admin görünür.
+                        ★ KALICI EMİR: ADMINE HER KİLİT AÇIK — isMasterSürüm tüm
+                        tier/v2/pro/elit/atmosfer kilitlerini geçer. BU DAVRANIŞ
+                        ASLA DEĞİŞTİRİLMEZ; yeni kilit eklenirken isMasterSürüm
+                        (adminGodMode) kontrolünden geçirilmek ZORUNDADIR. */}
+                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
+                      <div className="mt-1 border-t border-amber-400/20 px-2 py-1.5">
+                        <button
+                          onClick={() => { openAdminDashboard().then(() => setModal("adminDashboard")); setMenuOpen(false); }}
+                          className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[11px] font-black text-amber-300 transition hover:bg-amber-500/10"
+                        >
+                          <Shield size={14} className="text-amber-400" />
+                          <span className="flex-1">ADMIN PANEL</span>
+                          {banCount > 0 && (
+                            <span className="flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-red-500/20 border border-red-500/40 px-1 text-[8.5px] font-black text-red-300">
+                              <Lightbulb size={9} className="animate-pulse text-amber-300" fill="currentColor" />
+                              {banCount}
+                            </span>
+                          )}
+                        </button>
+                        {isMasterSürüm && (
+                          <button
+                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); setMenuOpen(false); }}
+                            className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
+                          >
+                            <Shield size={14} className="text-emerald-400" />
+                            ADMIN · ÇIKIŞ
+                          </button>
+                        )}
+                      </div>
+                    )}
                     <div className="mt-1 border-t border-white/5 px-4 py-2.5">
                       <button
                         onClick={() => { openPremium("uyelik"); setMenuOpen(false); }}
@@ -290,42 +322,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
           )}
 
+          {/* ★ LANSMAN TEMİZLİĞİ (kullanıcı emri 28.09): ADMIN PANEL / ADMIN·ÇIKIŞ
+              pill'leri ÜST BAR'DAN KALDIRILDI — yer kaplamasın, arayüz tertemiz.
+              Admin kontrolleri artık sol menünün altındaki ADMIN bölümünde (aşağıda). */}
           <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-            {user && (isAdminEmail(user.email) || isMasterSürüm) && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => openAdminDashboard().then(() => setModal("adminDashboard"))}
-                  className="flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/15 px-3 py-1.5 text-[9.5px] font-black text-amber-300 shadow-lg transition hover:scale-105 active:scale-95"
-                  title="Admin Yönetim Paneli"
-                >
-                  <Shield size={11} className="text-amber-400" /> ADMIN PANEL
-                </button>
-                {banCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => openAdminDashboard().then(() => setModal("adminDashboard"))}
-                    className="relative flex h-7 w-7 items-center justify-center rounded-full bg-red-500/20 border border-red-500/40 text-red-300 shadow-lg transition hover:scale-110 active:scale-95"
-                    title={`${banCount} Siber Denetim / Ban Kaydı — Tıkla, incele ve gerekirse banı kaldır`}
-                  >
-                    <Lightbulb size={13} className="animate-pulse text-amber-300" fill="currentColor" />
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-600 text-[7.5px] font-black text-white ring-1 ring-black">
-                      {banCount}
-                    </span>
-                  </button>
-                )}
-              </>
-            )}
-            {user && isMasterSürüm && (
-              <button
-                type="button"
-                onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); }}
-                className="hidden items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300 transition hover:bg-emerald-500/20 sm:flex"
-                title="Admin modunu kapat"
-              >
-                <Shield size={10} /> ADMIN · ÇIKIŞ
-              </button>
-            )}
             {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) — SADECE GİRİŞ YAPMIŞ */}
             {user && (() => {
               const vault = getJetonVault();
