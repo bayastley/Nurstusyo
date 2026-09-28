@@ -1122,8 +1122,16 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
   ];
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="relative max-w-lg w-full max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl mx-2 sm:mx-auto" onClick={(e) => e.stopPropagation()}>
+    // ★ 28.09 FIX: "modal en aşağıda açılıyor" — kutu max-h ve overflow'suz büyüyordu:
+    //   uzun içerikte items-center kutuyu ekran ALTINA itiyor, kullanıcı en üste
+    //   dönmek için ucuza kaydırıyordu. Doğru desen (paylaşılan Modal ile aynı):
+    //   max-h + flex flex-col KÖK KUTUDA, overflow-y-auto YALNIZ içerikte.
+    //   Kutu asla viewport'u aşmaz; üst boşlukta merkezde kalır.
+    <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onMouseDown={onClose}>
+      <div
+        className="relative flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black shadow-2xl mx-2 sm:mx-auto"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gray-950/90 backdrop-blur px-6 py-4">
           <div>
@@ -1137,7 +1145,8 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        {/* ★ İÇERİK: yalnız burası kayar — kutu max-h'yi asla aşmaz (28.09 fix) */}
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin p-4 space-y-4">
           {/* Tab Bar */}
           <div className="flex flex-wrap gap-1.5 pb-1">
             {tabs.map((tab) => (

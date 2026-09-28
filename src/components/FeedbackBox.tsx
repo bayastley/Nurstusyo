@@ -63,7 +63,7 @@ export const FeedbackBox: React.FC = () => {
       {open && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 p-4" onClick={() => !gonderiyor && setOpen(false)}>
           <div
-            className="w-full max-w-md rounded-2xl border border-white/10 bg-[#141414] p-5 shadow-2xl"
+            className="w-full max-w-md max-h-[88vh] overflow-y-auto scrollbar-thin rounded-2xl border border-white/10 bg-[#141414] p-5 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-3 flex items-center justify-between">
