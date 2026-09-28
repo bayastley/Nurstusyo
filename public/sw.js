@@ -7,8 +7,8 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v3";
-const AUDIO_CACHE = "nurstudyo-audio-v3"; // ★ İş 24+59: dinlenen ayet sesleri çevrimdışı çalışsın
+const CACHE = "nurstudyo-v4";
+const AUDIO_CACHE = "nurstudyo-audio-v4"; // ★ İş 24+59: dinlenen ayet sesleri çevrimdışı çalışsın
 const SHELL = ["/logo.png", "/manifest.json"];
 const AUDIO_LIMIT = 120; // en fazla 120 ayet sesi (~45MB) saklanır — en eskiler silinir
 
@@ -40,7 +40,9 @@ self.addEventListener("fetch", (event) => {
     // ★ KUR'AN SESİ CACHE-FIRST (İş 24+59 — ÇEVRİMDIŞI TİLAVET):
     //   everyayah/mp3quran mp3'leri dinlendikçe cache'e yazılır; bir daha
     //   dinlenen ayet İNTERNETSİZ de çalar. Sadece audio uzantıları yakalanır.
-    if (/\.(mp3|ogg|wav)(\?|$)/.test(url.pathname) || url.hostname.includes("everyayah") || url.hostname.includes("mp3quran")) {
+    //   ★ v4: audio.qurancdn.com (kelime-kartı sesleri) yakalanmaz — eski
+    //     SW bu isteklerde hata yuttu; tarayıcı kendi çalar, cache'e gerek yok.
+    if (!url.hostname.includes("qurancdn") && (/\.(mp3|ogg|wav)(\?|$)/.test(url.pathname) || url.hostname.includes("everyayah") || url.hostname.includes("mp3quran"))) {
       event.respondWith(
         caches.open(AUDIO_CACHE).then(async (cache) => {
           const hit = await cache.match(event.request);
