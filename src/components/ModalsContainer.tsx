@@ -10,6 +10,7 @@ import { PremiumModal } from "./PremiumModal";
 import { ZipExplorer } from "./ZipExplorer";
 import { AtmosphereCard } from "./AtmosphereCard";
 import { AdminDashboardModal } from "./AdminDashboardModal";
+import ErrorBoundary from "./ErrorBoundary";
 import QuranLearnModal from "./QuranLearnModal";
 import { AyetKartlariModal } from "./AyetKartlariModal";
 import { SiteHakkindaModal } from "./SiteHakkindaModal";
@@ -454,22 +455,26 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         />
       )}
 
-      {/* ADMIN DASHBOARD MODAL */}
+      {/* ADMIN DASHBOARD MODAL
+          ★ 28.09 PANEL İZOLASYONU: panel içi bir hata artık TÜM siteyi düşüremez —
+          kök ErrorBoundary (App.tsx) yerine bu sınır patlar, yalnız panel kapanır. */}
       {modal === "adminDashboard" && serverAdminVerified && (
-        <AdminDashboardModal
-          onClose={() => setModal(null)}
-          currentUserEmail={phone.includes("@") ? phone : ""}
-          onUpdateUser={(email, newTier, newJeton) => {
-            // Eğer güncellenen hesap şu anki oturum sahibi ise, canlı state'leri güncelle
-            if (phone.toLowerCase() === email.toLowerCase()) {
-              setTier(newTier);
-              setCurrentTier(newTier);
-              setJetonCount(newJeton);
-              secureSet("nur_jeton", newJeton);
-            }
-          }}
-          notify={notify}
-        />
+        <ErrorBoundary label="Admin Paneli">
+          <AdminDashboardModal
+            onClose={() => setModal(null)}
+            currentUserEmail={phone.includes("@") ? phone : ""}
+            onUpdateUser={(email, newTier, newJeton) => {
+              // Eğer güncellenen hesap şu anki oturum sahibi ise, canlı state'leri güncelle
+              if (phone.toLowerCase() === email.toLowerCase()) {
+                setTier(newTier);
+                setCurrentTier(newTier);
+                setJetonCount(newJeton);
+                secureSet("nur_jeton", newJeton);
+              }
+            }}
+            notify={notify}
+          />
+        </ErrorBoundary>
       )}
 
       {/* ADMIN AUTH MODAL */}

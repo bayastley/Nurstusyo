@@ -77,7 +77,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               {emailSearchResult.email}
             </div>
             <div className="mb-2 text-white/70">
-              Tier: {emailSearchResult.tier.toUpperCase()} · Hak: {emailSearchResult.jeton} ⚡
+              Tier: {(emailSearchResult.tier || "free").toUpperCase()} · Hak: {emailSearchResult.jeton ?? 0} ⚡
               {emailSearchResult.isBanned ? " · BANLI" : ""}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -307,7 +307,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 <span className={`text-[8.5px] px-1.5 py-0.2 rounded-full font-black ${
                   isSelected ? "bg-black/20 text-black" : "bg-white/10 text-white/60"
                 }`}>
-                  {u.tier.toUpperCase()} · {u.jeton}J
+                  {(u.tier || "free").toUpperCase()} · {u.jeton ?? 0}J
                 </span>
               </button>
             );
@@ -333,7 +333,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
           <div className="mb-4">
             <div className="text-[10px] font-black uppercase tracking-wider text-white/40">Seçili Kullanıcı Kartı</div>
-            <h4 className="font-display text-lg font-black text-white mt-0.5">{selectedUser.name}</h4>
+            <h4 className="font-display text-lg font-black text-white mt-0.5">{selectedUser.name || selectedUser.email}</h4>
             <p className="text-[11px] font-mono text-[color:var(--accent-2)]">{selectedUser.email}</p>
           </div>
 
@@ -344,7 +344,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 📦 Paket Tanımlama Menüsü
               </label>
               <select
-                value={selectedUser.tier}
+                value={selectedUser.tier || "free"}
                 onChange={(e) => handleTierChange(selectedUser.email, e.target.value as Tier)}
                 className="glass-soft w-full rounded-xl px-3 py-2.5 text-[12px] font-bold outline-none cursor-pointer"
                 style={{ color: "var(--accent-2)" }}
@@ -399,7 +399,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
                 <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
                 <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
-                  {selectedUser.jeton} <span className="text-[10px] text-white/40 font-bold">🎓 ÜRETİM HAKKI</span>
+                  {selectedUser.jeton ?? 0} <span className="text-[10px] text-white/40 font-bold">🎓 ÜRETİM HAKKI</span>
                 </span>
               </div>
 

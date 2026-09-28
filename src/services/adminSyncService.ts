@@ -90,7 +90,20 @@ function normalizeConfig(config?: Partial<SystemConfig> | null): SystemConfig {
     rawUrl: config?.rawUrl,
     lastSyncMs: config?.lastSyncMs ?? Date.now(),
     modules: Array.isArray(config?.modules) ? config.modules : DEFAULT_MODULES,
-    users: Array.isArray(config?.users) ? config.users : DEFAULT_USERS,
+    // ★ 28.09 PANEL CRASH SİGORTASI: eski localStorage kayıtlarında tier/jeton/name
+    //   eksik olabilir → AdminUsersTab'te u.tier.toUpperCase() tüm siteyi düşürüyordu.
+    //   normalizeConfig TEK giriş kapısı: her kayıt okunmadan önce tamamlanır.
+    //   email'siz/bozuk kayıtlar tamamen atılır (u.email.toLowerCase() patlamasın).
+    users: Array.isArray(config?.users)
+      ? (config.users as ManagedUser[])
+          .filter((u): u is ManagedUser => !!u && typeof u === "object" && typeof u.email === "string" && u.email.length > 0)
+          .map((u) => ({
+            ...u,
+            name: u.name || u.email.split("@")[0],
+            tier: (u.tier || "free") as Tier,
+            jeton: Number(u.jeton) || 0,
+          }))
+      : DEFAULT_USERS,
     banLogs: Array.isArray(config?.banLogs) ? config.banLogs : [],
     announcements: Array.isArray(config?.announcements) ? config.announcements : [],
     featureLocks: config?.featureLocks && typeof config.featureLocks === "object" ? config.featureLocks : {},
