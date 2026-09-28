@@ -262,12 +262,15 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     if (soru && secim !== null) hafizlikDevamKaydet(seviye, puan.dogru, puan.toplam);
     setOzetAcik(true);
   };
-  // Yeni tur: sayaçlar sıfır, özet kapanır, ilk soru gelir
+  // Yeni tur: sayaçlar sıfır, özet kapanır, ilk soru gelir.
+  // ★ FIX (28.09): soruHazirla çağrılmıyordu — useEffect bağımlılıkları (open, seviyeSecili)
+  //   değişmediği için yeni turda soru HİÇ istenmiyor, boş ekranda kalınıyordu.
   const yeniTurBaslat = () => {
     setOzetAcik(false); setSoru(null); setSecim(null);
     setPuan({ dogru: 0, toplam: 0 }); setYanlis(0); setGecmis([]);
     yenidenDeneRef.current = 0;
     hafizlikDevamKaydet(seviye, 0, 0);
+    soruHazirla();
   };
   // Ses ref'i yok — güvenlik için boş; geri tuşu sadece state temizler.
   const hocaAudioPauseGuvenli = () => { /* future-proof: ses durdurma gerekirse */ };
