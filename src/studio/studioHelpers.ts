@@ -209,15 +209,23 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
   }
 }
 
-/** Tek edition için sure verisi — editions endpoint + tek-tek yedek endpoint */
+/** Tek edition için sure verisi — editions endpoint + tek-tek yedek endpoint.
+ *  ★ 429 KORUMASI (28.09): throttle'suz istek alquran.cloud Limit'ine takılıyordu
+ *  (canlı tarama: Kolay havuzunun 15/38 suresi HTTP 429 → "soru hazırlanamadı").
+ *  Artık her istek öncesi throttle + 429 gelirse yedek istekle dövmez, yukarı fırlatır. */
 async function surahHamCek(surah: number, edition: string): Promise<{ name: string; arabic: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }>; translated: Array<{ text: string }> } | null> {
   try {
+    await throttle();
     const json = await fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
     const arabic = json.data?.[0]?.ayahs ?? [];
     const translated = json.data?.[1]?.ayahs ?? [];
     if (arabic.length && translated.length) return { name: String(json.data?.[0]?.name ?? ""), arabic, translated };
-  } catch { /* yedek endpoint denenir */ }
+  } catch (e) {
+    if ((e as Error & { status?: number })?.status === 429) throw e; // limite takıldık — yedek istekle dövme
+    /* yedek endpoint denenir */
+  }
   try {
+    await throttle();
     const [arabicJson, translatedJson] = await Promise.all([
       fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`),
       fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/${edition}`),
@@ -242,10 +250,23 @@ export interface SureEditionData {
  * Birincil edition'da (1) ayet sayısı uyuşmazsa veya (2) Türkçe çevirilerin
  * >%20'si boşsa yedek edition (tr.yazir → tr.vakfi) denenir; uyan ilk edition dönülür.
  */
+// ★ SURE CACHE (28.09): aynı sure tekrar istenirse API'ye gitmeden dön — 429 fırtınasını
+// keser (hafızlık testi + Kur'an öğren/dinle ortak kullanır). İçerik değişmez veri.
+const sureCache = new Map<string, SureEditionData>();
+
 export async function fetchSurahEditions(surah: number, edition: string): Promise<SureEditionData> {
+  const cacheKey = `${surah}:${edition}`;
+  const cacheHit = sureCache.get(cacheKey);
+  if (cacheHit) return cacheHit;
   const denenecekler = [edition, ...turkceMealYedekleri(edition)];
   for (const ed of denenecekler) {
-    const ham = await surahHamCek(surah, ed);
+    let ham: Awaited<ReturnType<typeof surahHamCek>>;
+    try {
+      ham = await surahHamCek(surah, ed);
+    } catch (e) {
+      if ((e as Error & { status?: number })?.status === 429) throw e; // limite takıldık — diğer editionu da deneme
+      continue;
+    }
     if (!ham) continue;
     if (ham.arabic.length !== ham.translated.length) {
       console.warn(`[fetchSurahEditions] Ayet sayısı uyuşmuyor (${ed}): ar=${ham.arabic.length} tr=${ham.translated.length} — yedek edition denenir`);
@@ -258,13 +279,15 @@ export async function fetchSurahEditions(surah: number, edition: string): Promis
       continue;
     }
     if (ed !== edition) console.warn(`[fetchSurahEditions] FALLBACK: sure ${surah} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
-    return {
+    const sonuc: SureEditionData = {
       name: ham.name,
       arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: String(a.text ?? ""), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
       tr: ham.translated.map((t) => normalizeTurkishMeal(String(t.text ?? ""), ed)),
       edition: ed,
       fallbackUsed: ed !== edition,
     };
+    sureCache.set(cacheKey, sonuc);
+    return sonuc;
   }
   throw new Error("SURAH_EMPTY");
 }

@@ -35,9 +35,10 @@ interface Soru {
 //   (alquran.cloud, Diyanet meal) geldiği için içerik uydurma YOK — havuz
 //   ne kadar genişse test o kadar zengin. Kısa sureler Kolay'da; Zor'da
 //   uzun ayetli sureler (Bakara, Âl-i İmrân, Nisâ…).
-const TEST_SURELERI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 33, 36, 39, 40, 41, 43, 45, 46, 49, 55, 62, 67, 87, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
+// (101 çıkarıldı — en uzun ayeti 51 kr, soru formatı için kısa; 28.09 canlı tarama kanıtı)
+const TEST_SURELERI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 33, 36, 39, 40, 41, 43, 45, 46, 49, 55, 62, 67, 87, 93, 94, 95, 96, 97, 98, 99, 100, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
 // ★ KOLAY — kısa meşhur sureler + son cüz (Cüz 30'un tamamı: 78-114) + Fâtiha: 38 sure
-const KOLAY_SURELER = [1, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
+const KOLAY_SURELER = [1, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
 // ★ ORTA — orta uzunluk, hafızlarda popüler sureler: 24 sure
 const ORTA_SURELER = [12, 13, 14, 17, 18, 19, 20, 21, 22, 24, 25, 27, 28, 29, 31, 34, 35, 36, 47, 49, 55, 57, 62, 67, 71, 76];
 // ★ ZOR — uzun ayetli sureler (devam kısmı garantili): 52 sure
@@ -160,8 +161,14 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         if (havuz.length === 0) havuz.push(...(SEVIYELER.find(s => s.id === seviye)?.sureler ?? TEST_SURELERI));
         const sn = havuz.splice(Math.floor(Math.random() * havuz.length), 1)[0];
         // ★ KAYMA KORUMASI (28.09): merkezî çekim — tr.diyanet şüpheliyse tr.yazir → tr.vakfi fallback
+        // ★ 429 KORUMASI (28.09): alquran.cloud Limit'e takıldıysa havuzu taramayı bırak —
+        //   her deneme yeni istek atar, durumu daha da kötüleştirir. Catch bloğu halleder.
         let d: Awaited<ReturnType<typeof fetchSurahEditions>>;
-        try { d = await fetchSurahEditions(sn, "tr.diyanet"); } catch { continue; }
+        try { d = await fetchSurahEditions(sn, "tr.diyanet"); }
+        catch (e) {
+          if ((e as Error & { status?: number })?.status === 429) throw e;
+          continue; // bu sure uymadı (kısa/boş) — başka sure dene
+        }
         const ayahsTmp = d.arabic;
         const enUzun = Math.max(...ayahsTmp.map(a => a.text.length));
         if (enUzun < 55) continue; // bu sure çok kısa → başka sure dene
@@ -196,13 +203,18 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
       setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler });
     } catch {
+      // ★ 429 (rate limit) ise uzun bekleme: 1sn'lik kısa tekrarlar API'yi döver,
+      //   sürekli "soru hazırlanamadı" döngüsüne girer. 6 sn bekle → limit nefes alır.
       notify?.("⚠️ Soru hazırlanamadı — birkaç saniye içinde otomatik tekrar denecek…");
-      // ★ OTOMATİK TEKRAR: sınırsız modda takılma olmasın — 2 sn sonra sessizce yeniden dener
+      // ★ OTOMATİK TEKRAR: sınırsız modda takılma olmasın — 6 sn sonra sessizce yeniden dener
       if (yenidenDeneRef.current < 5) {
         yenidenDeneRef.current += 1;
-        window.setTimeout(() => { if (openRef.current && seviyeSeciliRef.current) soruHazirla(true); }, 2000);
+        window.setTimeout(() => { if (openRef.current && seviyeSeciliRef.current) soruHazirla(true); }, 6000);
       } else {
         notify?.("❌ Soru üretilemedi — internet bağlantını kontrol et, seviye ekranına dönmek için üstteki ← tuşunu kullan");
+        // ★ BOŞ EKRAN KALMASIN: 5 tekrar da tükendi → seviye ekranına otomatik dön.
+        //   Kullanıcı en azından seviye/tur seçimine geri döner, kilitli kalmaz.
+        window.setTimeout(() => { if (openRef.current) seviyeEkraninaDon(); }, 1500);
       }
     } finally {
       setYukleniyor(false);
