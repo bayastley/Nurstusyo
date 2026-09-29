@@ -4,6 +4,15 @@ import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { syncUserInDb } from "../components/adminHelpers";
 import type { User, LoginTab } from "../types";
 
+/** ★ Son doğrulanmış admin e-postasını okur (listeye göre filtreli — liste dışına düşen admin akışı görmez). */
+export function adminSonEmailOku(): string | null {
+  try {
+    const kayit = localStorage.getItem("nur_admin_son_email");
+    if (!kayit) return null;
+    return isAdminEmail(kayit) ? kayit : null;
+  } catch { return null; }
+}
+
 interface UseAuthOptions {
   isMasterSürüm: boolean;
   isDevMaster: boolean;
@@ -34,6 +43,12 @@ interface UseAuthReturn {
   adminAuthOpen: boolean;
   setAdminAuthOpen: (v: boolean) => void;
   openAdminDashboard: () => Promise<void>;
+  /** ★ "ADMIN OLARAK GERİ DÖN" (30.09): son doğrulanmış admin e-postası
+   *  (localStorage kalıcı). Yalnız NUR_ADMIN_EMAILS listesindekini döner,
+   *  yoksa null — normal kullanıcılar bu akışı ASLA görmez. */
+  adminSonEmail: string | null;
+  /** ★ Hatırlama bilgisini elle tazelemek için (handleLogout çağırıyor) */
+  setAdminSonEmail: (email: string | null) => void;
 }
 
 export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions): UseAuthReturn {
@@ -51,6 +66,15 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
   const [adminCodeInput, setAdminCodeInput] = useState("");
   const [adminError, setAdminError] = useState<string | null>(null);
   const [adminAuthOpen, setAdminAuthOpen] = useState(false);
+
+  // ★ ADMIN OLARAK GERİ DÖN (30.09): doğrulanmış admin e-postasını kalıcı sakla.
+  //   secureStore şifreli/kiralamalı olduğu için düz localStorage kullanıyoruz —
+  //   değer zaten PUBLIC bilgi değil ama gizli de değil (Google profili); kritik
+  //   olan bunun YETKİ değil YALNIZCA HATIRLAMA bilgisi olması: bu e-posta ile
+  //   geri dönmek yine tam sunucu zincirinden (HMAC → env whitelist → DB is_admin)
+  //   geçmek zorunda. Okuma anında listeye göre filtrelenir — listeden çıkarılan
+  //   admin akışı bir daha görmez.
+  const [adminSonEmail, setAdminSonEmail] = useState<string | null>(adminSonEmailOku);
 
   // ★ Google OAuth PKCE dönüşü — code backend'de doğrulanır
   useEffect(() => {
@@ -119,6 +143,9 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
         }
 
         if (isKurucuAdmin) {
+          // ★ Admin doğrulandı → son admin e-postasını kaydet ("admin olarak geri dön" akışı için)
+          try { localStorage.setItem("nur_admin_son_email", email); } catch { /* ignore */ }
+          setAdminSonEmail(email);
           const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
           setCurrentTier(adminTier);
           notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
@@ -180,6 +207,12 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
         setUser(verifiedUser);
         secureSet("nur_user_v1", verifiedUser);
 
+        // ★ Admin yeniden doğrulandı → hatırlama bilgisini tazele
+        if (data.user.isAdmin && isAdminEmail(data.user.email)) {
+          try { localStorage.setItem("nur_admin_son_email", data.user.email.toLowerCase()); } catch { /* ignore */ }
+          setAdminSonEmail(data.user.email.toLowerCase());
+        }
+
         // Cüzdan bilgisini secureStore'a yaz
         if (data.wallet) {
           secureSet("nur_pack_rights_v1", {
@@ -236,5 +269,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
     adminError, setAdminError,
     adminAuthOpen, setAdminAuthOpen,
     openAdminDashboard,
+    adminSonEmail,
+    setAdminSonEmail,
   };
 }

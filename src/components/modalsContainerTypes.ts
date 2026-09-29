@@ -47,6 +47,8 @@ export interface ModalsContainerProps {
   adminError: string | null;
   setAdminError: (e: string | null) => void;
   setAdminGodMode: (v: boolean) => void;
+  /** ★ "ADMIN OLARAK GERİ DÖN" (30.09): son doğrulanmış admin e-postası ya da null */
+  adminSonEmail?: string | null;
   pickingFor: string | null;
   setPickingFor: (id: string | null) => void;
   /** ★ Sekme değişince mevcut ayet arka planlarını yeni türe (img/vid) yeniden atar */

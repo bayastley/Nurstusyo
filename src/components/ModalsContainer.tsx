@@ -85,6 +85,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   adminError,
   setAdminError,
   setAdminGodMode,
+  adminSonEmail,
   pickingFor,
   setPickingFor,
   onClipKindChange,
@@ -245,7 +246,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   // ★ GOOGLE İLE GİRİŞ/KAYIT — Gmail hesabına bağlanarak kayıt olur.
   //   Google Cloud Console'dan alınan Client ID .env'e eklenir:
   //   VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-  const handleGoogleAuth = React.useCallback(async () => {
+  const handleGoogleAuth = React.useCallback(async (loginHint?: string) => {
     const clientId = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID?.trim();
 
     if (!clientId) {
@@ -278,10 +279,18 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       `&state=${state}` +
       `&code_challenge=${encodeURIComponent(challenge)}` +
       `&code_challenge_method=S256` +
-      `&prompt=select_account`;
+      `&prompt=select_account` +
+      // ★ "ADMIN OLARAK GERİ DÖN" (30.09): Google hesap seçiciye son admin
+      //   e-postası ÖNERİ olarak verilir — zorunlu değil, kullanıcı başka
+      //   hesap seçebilirdi; güvenlik yine sunucu zincirinde doğrulanır.
+      (loginHint ? `&login_hint=${encodeURIComponent(loginHint)}` : "");
 
     window.location.href = authUrl;
   }, [notify]);
+
+  // ★ ADMIN OLARAK GERİ DÖN (30.09): çıkıştan sonra tek tıkla admin hesabına dönüş.
+  //   adminSonEmail yalnız NUR_ADMIN_EMAILS listesindeki e-postayı döner — normal
+   //   kullanıcılar bu butonu ASLA görmez (useAuth'ta listeye göre filtrelenir).
 
   return (
     <>
@@ -296,12 +305,23 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           <div className="space-y-3 py-1">
             {/* ★ TEK BUTON — Google ile giriş/kayıt (sistem kendisi ayırt eder) */}
             <button
-              onClick={handleGoogleAuth}
+              onClick={() => void handleGoogleAuth()}
               className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-4 text-[13px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
             >
               <GoogleIcon size={20} />
               Google ile Devam Et
             </button>
+            {adminSonEmail && (
+              <button
+                onClick={() => void handleGoogleAuth(adminSonEmail)}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 py-3 text-[11px] font-black text-amber-300 transition hover:bg-amber-400/20 active:scale-[.98]"
+                title="Google hesap seçici son admin hesabınla açılır — güvenlik zinciri yine sunucuda doğrulanır"
+              >
+                <Shield size={14} />
+                ADMIN OLARAK GERİ DÖN
+                <span className="rounded bg-black/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-200/90">{adminSonEmail}</span>
+              </button>
+            )}
             <p className="text-center text-[9px] leading-relaxed text-white/40">
               Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
               Şifre gerekmez · Anında <b className="text-white/60">+5 ⚡ Üretim hakkı</b> hediye

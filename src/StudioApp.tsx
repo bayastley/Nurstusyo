@@ -72,7 +72,7 @@ import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PAT
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
 // ★ Yeni Hook'lar
-import { useAuth } from "./studio/useAuth";
+import { useAuth, adminSonEmailOku } from "./studio/useAuth";
 import { useTier } from "./studio/useTier";
 import { useWallet } from "./studio/useWallet";
 import { useBan } from "./studio/useBan";
@@ -191,7 +191,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [reciterId, setReciterId] = useState("maher"); // ★ Varsayılan: Maher el-Muaiqly (ömer tercihi)
 
   // ★ Hook'lar (state'lerden sonra çağrılır)
-  const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard } = useAuth({ isMasterSürüm, isDevMaster, notify });
+  const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard, adminSonEmail, setAdminSonEmail } = useAuth({ isMasterSürüm, isDevMaster, notify });
   const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify, user);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
@@ -1736,6 +1736,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     resetWallet();
     secureRemove("nur_user_v1");
     localStorage.removeItem("nur_admin_session");
+    // ★ ADMIN OLARAK GERİ DÖN (30.09): hatırlama bilgisini TAZELE — doğrulanmış
+    //   admin e-postası localStorage'da kalır (yetenek değil, konfor); liste dışına
+    //   düşen admin çıkışta akışı kaybeder. useAuth'taki state ile eşzamanlı.
+    setAdminSonEmail(adminSonEmailOku());
     notify(secenek?.sunucuOturumuKapat ? "Çıkış yapıldı." : "Hesaptan çıkıldı — misafir modundasın (oturum penceresi sonuna kadar)");
   };
 
@@ -2259,6 +2263,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         adminError={adminError}
         setAdminError={setAdminError}
         setAdminGodMode={setAdminGodMode}
+        adminSonEmail={adminSonEmail}
         pickingFor={pickingFor}
         setPickingFor={setPickingFor}
         clipKind={clipKind}
