@@ -506,7 +506,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       // Arapça harf varsa Osmanlı metninde, yoksa seçili mealette ara
       const isArabic = /[\u0600-\u06FF]/.test(q);
       const edition = isArabic ? "quran-uthmani" : mealId;
-      fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/${edition}`)
+      fetch(`/api/quran/v1/search/${encodeURIComponent(q)}/all/${edition}`)
         .then(r => r.json())
         .then((d: any) => {
           if (!live) return;
@@ -683,7 +683,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
-    fetch(`https://api.alquran.cloud/v1/surah/${surahNo}/en.transliteration`)
+    fetch(`/api/quran/v1/surah/${surahNo}/en.transliteration`)
       .then(r => r.json())
       .then((d: any) => {
         if (!live || d.code !== 200) return;

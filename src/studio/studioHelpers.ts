@@ -187,7 +187,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
     for (const ed of denenecekler) {
       try {
         await throttle();
-        const json = await fetchJSON(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`) as { data?: Array<{ text: string }> };
+        const json = await fetchJSON(`/api/quran/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`) as { data?: Array<{ text: string }> };
         const ar = (json.data?.[0]?.text ?? "") as string;
         const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, ed);
         if (ar) sonAr = ar;
@@ -225,7 +225,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
 async function surahHamCek(surah: number, edition: string): Promise<{ name: string; arabic: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }>; translated: Array<{ text: string }> } | null> {
   try {
     await throttle();
-    const json = await fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
+    const json = await fetchJSON(`/api/quran/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
     const arabic = json.data?.[0]?.ayahs ?? [];
     const translated = json.data?.[1]?.ayahs ?? [];
     if (arabic.length && translated.length) return { name: String(json.data?.[0]?.name ?? ""), arabic, translated };
@@ -236,8 +236,8 @@ async function surahHamCek(surah: number, edition: string): Promise<{ name: stri
   try {
     await throttle();
     const [arabicJson, translatedJson] = await Promise.all([
-      fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/quran-uthmani`),
-      fetchJSON(`https://api.alquran.cloud/v1/surah/${surah}/${edition}`),
+      fetchJSON(`/api/quran/v1/surah/${surah}/quran-uthmani`),
+      fetchJSON(`/api/quran/v1/surah/${surah}/${edition}`),
     ]) as [{ data?: { name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> } }, { data?: { ayahs?: Array<{ text: string }> } }];
     const arabic = arabicJson.data?.ayahs ?? [];
     const translated = translatedJson.data?.ayahs ?? [];
