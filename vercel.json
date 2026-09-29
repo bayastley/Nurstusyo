@@ -76,6 +76,10 @@
     {
       "path": "/api/push/send",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/zikir/arsivle",
+      "schedule": "5 0 * * *"
     }
   ]
 }

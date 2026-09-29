@@ -135,7 +135,7 @@ function ToplulukVitrinSayaci() {
             })}
           </div>
           <p className="mt-0.5 text-center text-[7.5px] text-white/35">
-            {pencere === "hafta" ? "Bu hafta" : `Son ${gosterilen.length} gün`}: <b className="text-amber-200/90">{pencereToplam.toLocaleString("tr-TR")}</b> zikir
+            {pencere === "hafta" ? (gosterilen.length < 7 ? `İlk ${gosterilen.length} gün` : "Bu hafta") : `Son ${gosterilen.length} gün`}: <b className="text-amber-200/90">{pencereToplam.toLocaleString("tr-TR")}</b> zikir
           </p>
         </div>
       )}

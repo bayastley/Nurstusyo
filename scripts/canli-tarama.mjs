@@ -24,6 +24,7 @@ const BEKLENEN = {
   "/api/auth/me": 401,          // girişsiz istek — doğru davranış
   "/api/referans": 401,         // girişsiz istek — doğru davranış
   "/api/push/send": 401,        // CRON koruması fail-closed — doğru davranış
+  "/api/zikir/arsivle": 401,    // CRON koruması fail-closed — doğru davranış
   "/api/analytics/track": 405,  // GET yasak (POST'u cron/analytics kullanır)
   "/api/video/sign": 405,       // POST'u kullanıcı üretimi kullanır
   "/api/render/authorize": 405, // POST'la çalışır
