@@ -223,12 +223,42 @@ export function rozetSayacGuncelle(degisiklik: Partial<Pick<RozetDurumu, "zikirT
       odulVerildiRef.verildi = true;
       const odulHak = rozetOduluHesapla(ozel.turNo);
       try {
-        // ★ GERÇEK ÜRETİM HAKKI — grantPack kota+paket zincirine yazılır;
-        //   consumeVideo bu paketten harcar. (Girişli kullanıcıda wallet sync ezme
-        //   riski notludur; rozet ödülü tüketime kadar genelde 30sn sync'ten önce
-        //   harcanır — kabul edilebilir takas, kullanıcı kararıyla etkinleştirildi.)
-        import("./tier").then(({ grantPack }) => grantPack("kisa", odulHak));
-        window.dispatchEvent(new CustomEvent("nur-rozet-odul", { detail: { hak: odulHak, tur: ozel.turNo } }));
+        // ★ SUNUCU CÜZDANINA YAZIM (29.09, kullanıcı kararı: "cihazdan bağımsız,
+        //   tekrar alınamaz"): girişli kullanıcıda ödül /api/rewards/claim →
+        //   nur_reward_claims (unique user+key → tekrar alınamaz) → nur_video_rights
+        //   (sunucu cüzdanı → her cihazda geçerli). Girişsiz kullanıcıda oturum
+        //   olmadığından yerel grantPack yolu korunur (eskiden tek yol buydu).
+        //   Sunucu 409 ALREADY_CLAIMED dönerse sessizce kabul edilir — ödül zaten
+        //   güvende, kullanıcıya yanlış uyarı gösterilmez.
+        void (async () => {
+          try {
+            const r = await fetch("/api/rewards/claim", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ eventKey: `rozet-${ozel.turNo}` }),
+            });
+            if (r.ok) {
+              const d = await r.json().catch(() => null) as { amount?: number } | null;
+              const sunucuHak = Number(d?.amount ?? odulHak);
+              window.dispatchEvent(new CustomEvent("nur-rozet-odul", { detail: { hak: sunucuHak, tur: ozel.turNo, sunucu: true } }));
+              window.dispatchEvent(new CustomEvent("nur-rozet-kazanildi", { detail: [`🎁 +${sunucuHak} üretim hakkı hesabına yazıldı — her cihazdan geçerli!`] }));
+              return;
+            }
+            if (r.status === 409) {
+              // Zaten alınmış — ödül güvende, sessizce onayla
+              window.dispatchEvent(new CustomEvent("nur-rozet-odul", { detail: { hak: odulHak, tur: ozel.turNo, sunucu: true } }));
+              return;
+            }
+            // 401 (girişsiz) / 503: yerel yola düş — ödül kaybolmasın
+            import("./tier").then(({ grantPack }) => grantPack("kisa", odulHak));
+            window.dispatchEvent(new CustomEvent("nur-rozet-odul", { detail: { hak: odulHak, tur: ozel.turNo } }));
+          } catch {
+            // Ağ hatası — yerel yola düş
+            import("./tier").then(({ grantPack }) => grantPack("kisa", odulHak));
+            window.dispatchEvent(new CustomEvent("nur-rozet-odul", { detail: { hak: odulHak, tur: ozel.turNo } }));
+          }
+        })();
       } catch { /* ödül yazımı siteyi ASLA bozmaz */ }
       const yeniOzel: RozetOzelDurum = {
         kazanimSayisi: (() => {

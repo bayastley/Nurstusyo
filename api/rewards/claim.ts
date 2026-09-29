@@ -90,6 +90,14 @@ async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs:
 
 type Kind = "kisa" | "uzun" | "tam";
 
+// ★ ROZET ÖDÜLÜ TABLOSU (sunucu kopyası — 29.09): miktar İSTEMCİDEN ASLA alınmaz.
+//   Frontend src/hafizlikIstatistik.ts ROZET_ODUL_ON_ESIK ile birebir aynı; rozet
+//   serisi tamamlandıkça tur bazlı ödül buradan hesaplanır. Değişirse İKİSİ DE değişmeli.
+const ROZET_ODUL_TABLOSU = [5, 15, 30, 50]; // 1. tur → 5, 2. → 15, 3. → 30, sonra 50
+function rozetOduluSunucu(turNo: number): number {
+  return ROZET_ODUL_TABLOSU[Math.min(Math.max(1, turNo), ROZET_ODUL_TABLOSU.length) - 1] ?? 50;
+}
+
 function userFromSession(req: VercelRequest): { id: string } | null {
   try {
     const token = String(req.headers.cookie || "").split(";").map((x) => x.trim())
@@ -113,9 +121,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const body = (req.body || {}) as { eventKey?: string; kind?: Kind };
   const eventKey = String(body.eventKey || "");
   const kind = body.kind;
-  // ★ GÜVENLİK: miktar İSTEMCİDEN ALINMAZ. Sunucu, olay türüne göre miktarı
-  //   kendisi belirler — aksi halde kullanıcı amount göndererek hediye kotasını
-  //   50 katına çıkarabilir. (Cuma=1 kısa; diğer manevi günler=1 kısa.)
+
+  // ═══ ROZET ÖDÜLÜ KANALI (29.09 — cihazdan bağımsız, tekrar alınamaz) ═══
+  //   eventKey formatı: "rozet-<turNo>" (turNo ≥ 1). Seri tamamlanınca frontend
+  //   bir kez çağırır; nur_reward_claims unique(user_id, reward_key) kısıtıyla
+  //   TEKRAR ALINAMAZ. Miktar sunucuda ROZET_ODUL_TABLOSU'ndan hesaplanır.
+  const rozetMatch = eventKey.match(/^rozet-(\d{1,3})$/);
+  if (rozetMatch) {
+    const turNo = parseInt(rozetMatch[1], 10);
+    if (!(turNo >= 1 && turNo <= 200)) return res.status(400).json({ ok: false, error: "Geçersiz rozet turu" });
+    const url2 = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+    const key2 = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (!url2 || !key2) return res.status(503).json({ ok: false, error: "Hediye servisi kullanılamıyor" });
+    const rozetMiktar = rozetOduluSunucu(turNo); // ★ miktar sunucudan — istemci amount'u yok sayılır
+    try {
+      const userCheck2 = await fetch(`${url2}/rest/v1/nur_users?id=eq.${encodeURIComponent(user.id)}&select=id`, { headers: { apikey: key2, Authorization: `Bearer ${key2}` } });
+      const varMi2 = userCheck2.ok ? await userCheck2.json().catch(() => []) : [];
+      if (!Array.isArray(varMi2) || varMi2.length === 0) {
+        await fetch(`${url2}/rest/v1/nur_users`, {
+          method: "POST",
+          headers: { apikey: key2, Authorization: `Bearer ${key2}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ id: user.id, email: user.id.includes("@") ? user.id : user.id + "@nurstudyo.com", tier: "free", created_at: new Date().toISOString() }),
+        });
+      }
+    } catch (err2: unknown) { await logServerError(req, err2, "rewards/claim:rozet-user"); }
+    const rpc2 = await fetch(`${url2}/rest/v1/rpc/nur_claim_video_reward`, {
+      method: "POST",
+      headers: { apikey: key2, Authorization: `Bearer ${key2}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_user_id: user.id, p_reward_key: eventKey, p_video_kind: "kisa", p_amount: rozetMiktar }),
+    });
+    if (!rpc2.ok) { await logServerError(req, new Error(`rozet claim RPC ${rpc2.status}`), "rewards/claim:rozet"); return res.status(503).json({ ok: false, error: "Hediye servisi kullanılamıyor" }); }
+    const row2 = ((await rpc2.json()) as Array<{ ok: boolean; remaining: number; error: string | null }>)[0];
+    if (!row2?.ok) return res.status(409).json({ ok: false, error: row2?.error || "ALREADY_CLAIMED" });
+    return res.status(200).json({ ok: true, kind: "kisa", amount: rozetMiktar, remaining: row2.remaining, tur: turNo });
+  }
+
+  // ─── Manevi gün hediyesi kanalı (cuma/kandil/…) — tarih bazlı, miktar sabit 1 ───
   if (!/^(cuma|kandil|kadir|bayram|ramazan)-\d{4}-\d{2}-\d{2}$/.test(eventKey) ||
       !["kisa", "uzun", "tam"].includes(String(kind))) {
     return res.status(400).json({ ok: false, error: "Geçersiz hediye" });
