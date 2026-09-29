@@ -2,7 +2,7 @@ import React from "react";
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette, Headphones,
-  LibraryBig, Shield, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
+  LibraryBig, Shield, ShieldOff, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
   Image as ImageIcon, Info, Package, CalendarDays, Compass, Brain, NotebookPen, Type, Wand2, Gift, Film,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
@@ -135,7 +135,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         <>
                           <LogIn size={14} style={{ color: "var(--accent)" }} />
                           <span className="flex-1 truncate" title="Hesap değiştir / yeniden giriş yap — giriş ekranını açar">{user.name}</span>
-                          <button onClick={(e) => { e.stopPropagation(); handleLogout(); }} className="text-[9px] text-red-400 hover:text-red-300">Çıkış</button>
+                          <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title="Hesabından çık — sunucu oturumun da kapatılır">Çıkış</button>
                         </>
                       ) : (
                         <>
@@ -268,11 +268,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </button>
                         {isMasterSürüm && (
                           <button
-                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); setMenuOpen(false); }}
+                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("👋 Admin modundan çıkıldı — site normal kullanıcı modunda"); setMenuOpen(false); }}
                             className="flex min-h-[42px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
+                            title="Admin yetkilerini kapatır — sayfayı normal ziyaretçi gibi gösterir; giriş/üyelik oturumun DOKUNMAZ"
                           >
-                            <Shield size={14} className="text-emerald-400" />
-                            ADMIN · ÇIKIŞ
+                            <ShieldOff size={14} className="text-emerald-400" />
+                            <span className="flex-1">ADMIN · MODU KAPAT</span>
                           </button>
                         )}
                       </div>
@@ -328,6 +329,35 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               pill'leri ÜST BAR'DAN KALDIRILDI — yer kaplamasın, arayüz tertemiz.
               Admin kontrolleri artık sol menünün altındaki ADMIN bölümünde (aşağıda). */}
           <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+            {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
+                kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
+                admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
+                Normal kullanıcıya ASLA görünmez — sunucu zaten 3 katman koruyor. */}
+            {user && (isAdminEmail(user.email) || isMasterSürüm) && (
+              <div className="hidden items-center gap-1 sm:flex">
+                <button
+                  onClick={() => { void openAdminDashboard().then(() => setModal("adminDashboard")); }}
+                  className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
+                  style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+                  title={`Admin Paneli Aç — ${user.email || ""}`}
+                >
+                  <Shield size={11} className="text-amber-400" />
+                  ADMIN
+                  {banCount > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500/25 border border-red-500/40 px-1 text-[8px] font-black text-red-300">{banCount}</span>
+                  )}
+                </button>
+                {isMasterSürüm && (
+                  <button
+                    onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("👋 Admin modundan çıkıldı — site normal kullanıcı modunda"); }}
+                    className="glass-soft rounded-full p-1.5 text-emerald-300/80 transition hover:scale-105 hover:text-emerald-300"
+                    title="Admin modundan çık — admin yetkilerini kapatır, giriş/üyelik oturumun DOKUNMAZ"
+                  >
+                    <ShieldOff size={11} />
+                  </button>
+                )}
+              </div>
+            )}
             {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) — SADECE GİRİŞ YAPMIŞ */}
             {user && (() => {
               const vault = getJetonVault();

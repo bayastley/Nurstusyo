@@ -1657,8 +1657,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   const handleForgotPassword = () => { const code = String(Math.floor(100000 + Math.random() * 900000)); setSentCode(code); setLoginTab("verify"); notify(`Doğrulama kodu: ${code}`); };
   const handleVerifyCode = () => { if (verifyCode === sentCode) { notify("Kod doğrulandı! Şifrenizi sıfırlayabilirsiniz."); setLoginTab("forgot"); } else { notify("Kod hatalı!"); } };
-  const handleLogout = () => {
-    fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
+  const handleLogout = (secenek?: { sunucuOturumuKapat?: boolean }) => {
+    // ★ DÜRÜST ÇIKIŞ (30.09): sunucuOturumuKapat=true → HttpOnly nur_session cookie'si
+    //   de sunucuda sıfırlanır (api/auth/logout). Eksik: false → yalnız istemci temizliği,
+    //   cookie ayakta kalır (hesap değiştirme karışıklığına yol açıyordu).
+    if (secenek?.sunucuOturumuKapat) fetch("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     setUser(null);
     setAdminGodMode(false);
     setIsMasterSürüm(false);
@@ -1666,7 +1669,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     resetWallet();
     secureRemove("nur_user_v1");
     localStorage.removeItem("nur_admin_session");
-    notify("Çıkış yapıldı.");
+    notify(secenek?.sunucuOturumuKapat ? "Çıkış yapıldı." : "Hesaptan çıkıldı — misafir modundasın (oturum penceresi sonuna kadar)");
   };
 
   void user; void lockTip; void adminError; void adminEmailInput;

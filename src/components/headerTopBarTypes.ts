@@ -11,7 +11,7 @@ export interface HeaderTopBarProps {
   menuOpen: boolean;
   setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
   user: User | null;
-  handleLogout: () => void;
+  handleLogout: (secenek?: { sunucuOturumuKapat?: boolean }) => void;
   setModal: (modal: ModalName) => void;
   openAdminDashboard: () => Promise<void>;
   setLibType: (type: any) => void;
