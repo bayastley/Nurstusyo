@@ -52,6 +52,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/quran/(v1/.*)",
+      "destination": "/api/quran/fetch?_p=$1"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

@@ -99,18 +99,28 @@ async function upstreamGet(url: string): Promise<{ s: number; b: string } | null
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
 
-  // Hedef yolu ayıkla: "/api/quran/" sonrası her şey (yol + query)
+  // Hedef yolu ayıkla.
+  // CANLI (Vercel): rewrite "/api/quran/(v1/.*)" → "/api/quran/fetch?_p=$1"
+  //   der ki gerçek yol + query `req.query._p` içinde taşınır — direkt oku.
+  // YEREL (Node duman testi): handler doğrudan /api/quran/v1/... adresiyle
+  //   çağrılır; `req.url` içinden ayıklanır (fallback).
   // ★ HAM yol kullanılır (decode/encode YOK): arama sorguları boşluk/Türkçe
   //   karakter içerir; istemcinin ürettiği percent-escape'ler upstream'e
   //   BİREBİR gider — çift kodlama riski sıfır, whitelist escape'li karakteri
   //   (%XX üçlüsü) kabul eder.
-  const url = String(req.url || "");
-  const i = url.indexOf("/api/quran/");
-  if (i < 0) return res.status(400).json({ ok: false, error: "Geçersiz yol" });
-  const kalan = url.slice(i + "/api/quran/".length);
-  const soruIdx = kalan.indexOf("?");
-  const yol = soruIdx < 0 ? kalan : kalan.slice(0, soruIdx);
-  const qs = soruIdx < 0 ? "" : kalan.slice(soruIdx);
+  const qp = (req.query as Record<string, unknown> | undefined)?._p;
+  const ham = typeof qp === "string" && qp.length > 0
+    ? qp
+    : (() => {
+        const url = String(req.url || "");
+        const i = url.indexOf("/api/quran/");
+        if (i < 0) return "";
+        return url.slice(i + "/api/quran/".length);
+      })();
+  if (!ham) return res.status(400).json({ ok: false, error: "Geçersiz yol" });
+  const soruIdx = ham.indexOf("?");
+  const yol = soruIdx < 0 ? ham : ham.slice(0, soruIdx);
+  const qs = soruIdx < 0 ? "" : ham.slice(soruIdx);
 
   // ★ Açık proxy koruması: yalnız v1/ altı; güvenli karakterler + %XX escape;
   //   //, ../ ve boş path reddedilir; uzunluk sınırlı.
