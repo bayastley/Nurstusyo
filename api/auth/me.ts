@@ -161,6 +161,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const user = getSessionUser(req);
     if (!user) return res.status(401).json({ ok: false, error: "Oturum bulunamadı" });
 
+    // ★ isAdmin ENV-GATED (fail-closed): oturumdaki isAdmin bayrağı TEK BAŞINA
+    //   yetmez — e-posta NUR_ADMIN_EMAILS listesinde de olmalı (katman 3).
+    //   Liste boşsa isAdmin ASLA true dönmez; DB is_admin yalnız env
+    //   onaylıyorsa geçerli sayılır.
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const emailEnvOnayli = adminEmails.length > 0 && adminEmails.includes(user.email.toLowerCase());
+
     const [users, wallets] = await Promise.all([
       supabaseRows<{ tier: "free" | "pro" | "elit"; is_admin: boolean }>(`nur_users?id=eq.${encodeURIComponent(user.id)}&select=tier,is_admin`),
       supabaseRows<{ sub_jeton: number; purchased_jeton: number; purchased_kisa: number; purchased_uzun: number; purchased_tam: number }>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton,purchased_kisa,purchased_uzun,purchased_tam`),
@@ -187,7 +194,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         name: user.name,
         picture: user.picture || "",
         verified: user.verified,
-        isAdmin: Boolean(user.isAdmin || dbUser?.is_admin),
+        isAdmin: Boolean(emailEnvOnayli && (user.isAdmin || dbUser?.is_admin)),
         tier: dbUser?.tier || user.tier || "free",
       },
       wallet: {

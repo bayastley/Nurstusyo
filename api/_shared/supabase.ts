@@ -47,8 +47,8 @@ export async function getActiveBan(userId: string, email: string) {
   return row ? { isBanned: true, reason: row.reason } : { isBanned: false, reason: "" };
 }
 
-export async function logAdminAction(data: { adminId: string; adminEmail: string; action: string; target?: string }) {
-  return request("nur_admin_audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: data.adminId, admin_email: data.adminEmail, action: data.action, target: data.target || "" }) });
+export async function logAdminAction(data: { adminId: string; adminEmail: string; action: string; target?: string; metadata?: Record<string, unknown> }) {
+  return request("nur_admin_audit_logs", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ admin_id: data.adminId, admin_email: data.adminEmail, action: data.action, target: data.target || "", metadata: data.metadata || {} }) });
 }
 
 export async function banUserInSupabase(data: { email: string; userId?: string; reason: string; bannedBy: string }) {

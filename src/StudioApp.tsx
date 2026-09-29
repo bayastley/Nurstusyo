@@ -201,14 +201,27 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const themeKey = user?.email ? `nur_theme:${user.email.toLowerCase()}` : "nur_theme";
   useEffect(() => { setThemeId(localStorage.getItem(themeKey) || "nur"); }, [themeKey]);
 
-  // ★ Admin email tanındığında master modu aktifle
+  // ★ Admin modu ÇİFT KATMANLA (30.09): e-posta eşleşmesi TEK BAŞINA god mode
+  //   vermez — /api/admin/session sunucu teyidi (HMAC + NUR_ADMIN_EMAILS +
+  //   DB is_admin) gerekir. Sunucu "ok" derse admin modu açılır; istemci
+  //   artık kendi kendine yetki veremez (VITE_ değişkeni herkese açık).
   useEffect(() => {
-    if (user?.email && isAdminEmail(user.email) && !isMasterSürüm) {
-      setAdminGodMode(true);
-      setIsMasterSürüm(true);
-      localStorage.setItem("nur_admin_session", "1");
-      console.log("[admin] Admin email tanındı:", user.email, "→ sınırsız mod aktif");
-    }
+    if (!user?.email) return;
+    if (isMasterSürüm) return; // zaten açık
+    let live = true;
+    (async () => {
+      try {
+        const r = await fetch("/api/admin/session", { cache: "no-store" });
+        if (r.ok && live) {
+          setAdminGodMode(true);
+          setIsMasterSürüm(true);
+          setServerAdminVerified(true);
+          localStorage.setItem("nur_admin_session", "1");
+          console.log("[admin] Sunucu teyidi geldi:", user.email, "→ sınırsız mod aktif");
+        }
+      } catch { /* offline: admin modu kaplı kalır — fail-closed */ }
+    })();
+    return () => { live = false; };
   }, [user?.email]);
 
   // ★ PremiumModal her açıldığında cüzdanı yenile
@@ -1475,9 +1488,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const rl = checkRateLimit("auth");
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
-    const isKurucuAdmin = isAdminEmail(email);
-    // ★ Admin olsa bile mevcut tier'ı koru, sadece free ise elit yap
-    const userTier: Tier = isKurucuAdmin ? (tier === "free" ? "elit" : tier) : tier;
+    // ★ ÇİFT KATMAN (30.09): form admin e-postasını tanımaz — bkz. studio/useManualAuthActions
+    const isKurucuAdmin = false;
+    const userTier: Tier = tier;
     const userJeton = isKurucuAdmin ? Math.max(1000, getJeton()) : getJeton();
 
     const newUser: User = {
@@ -1510,7 +1523,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const rl = checkRateLimit("auth");
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "user@nurstudio.app";
-    const isKurucuAdmin = isAdminEmail(email);
+    // ★ ÇİFT KATMAN (30.09): form admin e-postasını tanımaz — bkz. studio/useManualAuthActions
+    const isKurucuAdmin = false;
 
     const newUser: User = {
       id: uid(),

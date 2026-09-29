@@ -69,6 +69,12 @@ async function getAdmin(req: VercelRequest): Promise<SessionAdmin | null> {
   try {
     const admin = JSON.parse(fromBase64Url(payload).toString("utf8")) as SessionAdmin;
     if (!admin.id || !admin.email || !admin.verified || !admin.isAdmin || admin.exp < Math.floor(Date.now() / 1000)) return null;
+    // ★ KATMAN 3 — ENV WHITELIST (fail-closed): oturumda isAdmin bayrağı + DB
+    //   is_admin olsa bile e-posta NUR_ADMIN_EMAILS listesinde OLMALI. Liste
+    //   boş/eksikse kimse admin olamaz (26.09 canlı dersi: env yalnız
+    //   VITE_NUR_ADMIN_EMAIL'teyken herkes admin sanılmıştı).
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.length === 0 || !adminEmails.includes(admin.email.toLowerCase())) return null;
     const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
     if (!url || !key) return null;
@@ -151,7 +157,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!(await allowRequest(req, res))) return;
 
   const admin = await getAdmin(req);
-  if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
+  if (!admin) {
+    // ★ DENETİM: admin paneli giriş kapısına yapılan her yetkisiz deneme kayda geçer
+    //   (UI "Yetkisiz denemeler kaydedilir" diyordu ama kayıt yazmıyordu — 30.09 düzeltmesi).
+    try {
+      const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+      if (url && key) {
+        await fetch(`${url}/rest/v1/nur_admin_audit_logs`, {
+          method: "POST",
+          headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({
+            admin_id: "",
+            admin_email: "",
+            action: "admin_session_deny",
+            target: "admin/session",
+            metadata: { ip: String(req.headers["x-forwarded-for"] || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 200) },
+          }),
+        }).catch(() => undefined);
+      }
+    } catch { /* denetim yazımı kapı kararı ASLA etkilemez */ }
+    return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
+  }
+
+  // ★ DENETİM: başarılı admin panel girişi de kayda geçer (kim, ne zaman, hangi IP).
+  try {
+    const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (url && key) {
+      await fetch(`${url}/rest/v1/nur_admin_audit_logs`, {
+        method: "POST",
+        headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          admin_id: admin.id,
+          admin_email: admin.email,
+          action: "admin_session_ok",
+          target: "admin/session",
+          metadata: { ip: String(req.headers["x-forwarded-for"] || "").split(",")[0].trim(), userAgent: String(req.headers["user-agent"] || "").slice(0, 200) },
+        }),
+      }).catch(() => undefined);
+    }
+  } catch { /* denetim yazımı akışı ASLA bozmaz */ }
 
   return res.status(200).json({
     ok: true,

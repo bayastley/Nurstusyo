@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { checkRateLimit } from "../rateLimiter";
 import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, type Tier } from "../tier";
-import { isAdminEmail } from "../tier";
 import { syncUserInDb } from "../components/adminHelpers";
 import { uid } from "./studioHelpers";
 import type { LoginTab, ModalName, User } from "../types";
@@ -40,9 +39,13 @@ export function useManualAuthActions({
     const rl = checkRateLimit("auth");
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
-    const isKurucuAdmin = isAdminEmail(email);
-    // ★ Admin olsa bile mevcut tier'ı koru, sadece free ise elit yap
-    const userTier: Tier = isKurucuAdmin ? (tier === "free" ? "elit" : tier) : tier;
+    // ★ ÇİFT KATMAN (30.09): demo formu admin e-postasını TANIMAZ — admin
+    //   yetkisi yalnızca sunucu doğrulamalı Google oturumu + NUR_ADMIN_EMAILS
+    //   + DB is_admin zinciriyle gelir. İstemci kendi kendine god mode
+    //   veremez (eskiden form admin e-postası yazana elit + 1000 jeton
+    //   + god mode veriyordu — VITE_ değişkeni zaten herkese açık).
+    const isKurucuAdmin = false;
+    const userTier: Tier = tier;
     const userJeton = isKurucuAdmin ? Math.max(1000, getJeton()) : getJeton();
     const newUser: User = {
       id: uid(),
@@ -72,7 +75,8 @@ export function useManualAuthActions({
     const rl = checkRateLimit("auth");
     if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "user@nurstudio.app";
-    const isKurucuAdmin = isAdminEmail(email);
+    // ★ ÇİFT KATMAN (30.09): kayıt formu da admin e-postasını TANIMAZ (bkz. yukarı).
+    const isKurucuAdmin = false;
     const newUser: User = {
       id: uid(),
       name: isKurucuAdmin ? "Ömer Kaya (Kurucu Admin)" : "Yeni Kullanıcı",
