@@ -1095,18 +1095,50 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     p.src = url;
   }, [ayahUrl]);
 
+  // ★ TAM SURE SES-EKRAN SENKRONU (30.09): tek dosyada okunan ayeti süre oranından
+  //   hesaplar — startListening ve playAt AYNI handler'ı kullanır. (Yalnızca ref/setState
+  //   dokunduğu için stale closure riski yok.)
+  const tamSureSenkronBagla = (a: HTMLAudioElement, sN: number) => {
+    a.ontimeupdate = () => {
+      if (!a.duration || Number.isNaN(a.duration) || a.duration <= 0) return;
+      const ratio = a.currentTime / a.duration;
+      const totalAyah = SURAHS_DATA.find(s => s.n === sN)?.ayahs ?? 0;
+      if (totalAyah <= 0) return;
+      const cache = listenSurahCacheRef.current;
+      let yeniIdx: number;
+      if (cache && cache.s === sN && cache.ar.length === totalAyah) {
+        yeniIdx = Math.min(totalAyah - 1, weightedWordIndex(ratio, cache.ar.join(" "), totalAyah));
+      } else {
+        yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
+      }
+      if (yeniIdx !== listenAyahIdxRef.current) {
+        setListenAyahIdx(yeniIdx);
+        setListenWordProgress(-1);
+      } else if (cache && cache.s === sN && cache.ar[yeniIdx]) {
+        const ayRatio = (ratio * totalAyah) - yeniIdx;
+        setListenWordProgress(weightedWordIndex(ayRatio, cache.ar[yeniIdx], 999));
+      }
+    };
+  };
+
   const playAt = useCallback((sN: number, ayahIdx: number) => {
     const a = audioRef.current; if (!a) return;
     setListenAyahIdx(ayahIdx);
     // ★ TAM SURE MODU: tek dosya çalıyor — ayet verisini fetch etmeye gerek yok,
     //   ekran 'kesintisiz tam sure' göstergesinde kalır
-    const fsUrl = fullSurahUrl(sN);
+    // ★ KRİTİK DÜZELTME (30.09, canlı testte yakalandı): fsUrl burada MODSIZ tercih
+    //   ediliyordu — "Tek Sure"/"Sıradaki Sure" modlarında bile 2 saatlik Bakara
+    //   dosyası çalıyordu, karaoke ontimeupdate hiç kurulmuyor, ekran 1. ayette
+    //   kilitliydi. Artık tam-sure dosyası YALNIZ fullSurahMode açıksa çalar.
+    const fsUrl = fullSurahMode ? fullSurahUrl(sN) : null;
     if (fsUrl) {
       a.src = fsUrl;
       a.playbackRate = speed;
       a.loop = false;
       a.preload = "auto";
       a.load();
+      tamSureSenkronBagla(a, sN);
+      a.onended = null;
       a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
       return;
     }
@@ -1125,7 +1157,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     };
     a.onended = null; // ★ ESKİ onended TEMİZLE — besmele handler'ı yeni ayeti ezmesin
     a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, ayahIdx); }).catch(() => setIsPlaying(false));
-  }, [ayahUrl, fullSurahUrl, speed, preloadNextAyah]);
+  }, [ayahUrl, fullSurahUrl, fullSurahMode, speed, preloadNextAyah]);
 
   const startListening = useCallback((fromIdx = 0) => {
     stopAudio();
@@ -1141,40 +1173,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       a.loop = false;
       a.preload = "auto";
       a.load();
-      // ★ TAM SURE SES-EKRAN SENKRONU: tek dosyada ayet arası boşluk yoktur ama
-      //   ekran yine de okunan ayeti göstermeli. Süre oranı → tartılı ayet indeksi.
-      //   Ekran ayet değişince listenAyahIdx güncellenir → mevcut fetch efekti
-      //   (listenAyahIdx bağımlılığı) o ayetin metnini + mealini anında getirir.
-      a.ontimeupdate = () => {
-        if (!a.duration || Number.isNaN(a.duration) || a.duration <= 0) return;
-        const ratio = a.currentTime / a.duration;
-        const surahInfo = SURAHS_DATA.find(s => s.n === sN);
-        const totalAyah = surahInfo?.ayahs ?? 0;
-        if (totalAyah <= 0) return;
-        // Sure metni cache'de varsa TARTILI takip (uzun ayetler daha uzun okunur):
-        const cache = listenSurahCacheRef.current;
-        let yeniIdx: number;
-        if (cache && cache.s === sN && cache.ar.length === totalAyah) {
-          const metaText = cache.ar[Math.min(Math.floor(ratio * totalAyah), totalAyah - 1)];
-          yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
-          // Tartılı düzeltme: harf ağırlığına göre hassas konum
-          yeniIdx = weightedWordIndex(ratio, cache.ar.join(" "), totalAyah);
-          if (metaText) { /* tartılı hesap yeterli */ }
-        } else {
-          yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
-        }
-        if (yeniIdx !== listenAyahIdxRef.current) {
-          setListenAyahIdx(yeniIdx);
-          setListenWordProgress(-1);
-        } else {
-          // Aynı ayet içindeyken kelime vurgusunu da sürdür
-          const cache2 = listenSurahCacheRef.current;
-          if (cache2 && cache2.s === sN && cache2.ar[yeniIdx]) {
-            const ayRatio = (ratio * totalAyah) - yeniIdx;
-            setListenWordProgress(weightedWordIndex(ayRatio, cache2.ar[yeniIdx], 999));
-          }
-        }
-      };
+      // ★ TAM SURE SES-EKRAN SENKRONU (30.09): ortak handler'a taşındı —
+      //   süre oranı → tartılı ayet indeksi + ayet içi kelime vurgusu.
+      tamSureSenkronBagla(a, sN);
       a.onended = () => {
         // Tam sure bitince: sıradaki sure / komple kuran ayarına göre devam
         if (!wholeQuran && !nextSurahAuto) { setIsPlaying(false); return; }
