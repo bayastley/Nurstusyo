@@ -7,8 +7,13 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v4";
-const AUDIO_CACHE = "nurstudyo-audio-v4"; // ★ İş 24+59: dinlenen ayet sesleri çevrimdışı çalışsın
+const CACHE = "nurstudyo-v5";
+// ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
+//   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
+//   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
+//   Eski sürümlü adlar (v3/v4) activate'te bu adına TAŞINIR (aşağıda).
+const AUDIO_CACHE = "nurstudyo-audio";
+const AUDIO_ESKI_ADLAR = ["nurstudyo-audio-v3", "nurstudyo-audio-v4"];
 const SHELL = ["/logo.png", "/manifest.json"];
 const AUDIO_LIMIT = 120; // en fazla 120 ayet sesi (~45MB) saklanır — en eskiler silinir
 
@@ -42,9 +47,29 @@ self.addEventListener("message", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys()
-      // ★ FIX (29.09): AUDIO_CACHE korunur — eskiden her aktivasyonda siliniyordu,
-      //   çevrimdışı tilavet cache'i (indirilen ayet sesleri) deploy başına çöpe gidiyordu.
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== AUDIO_CACHE).map((k) => caches.delete(k))))
+      .then(async (keys) => {
+        // ★ FIX (29.09, güçlendirildi): AUDIO_CACHE korunur — eskiden her aktivasyonda
+        //   siliniyordu, çevrimdışı tilavet cache'i deploy başına çöpe gidiyordu.
+        //   Sürümsüz ad dönemine geçiş: eski sürümlü ses cache'lerindeki (v3/v4)
+        //   ayet sesleri AUDIO_CACHE'e TAŞINIR, sonra eskiler silinir — kullanıcının
+        //   indirdiği sesler hiç kaybolmaz (taşıma için eşleşen URL'ler atlanır).
+        for (const eski of AUDIO_ESKI_ADLAR) {
+          if (!keys.includes(eski)) continue;
+          try {
+            const hedef = await caches.open(AUDIO_CACHE);
+            const mevcut = new Set((await hedef.keys()).map((r) => r.url));
+            const kaynak = await caches.open(eski);
+            for (const istek of await kaynak.keys()) {
+              if (mevcut.has(istek.url)) continue;
+              const cevap = await kaynak.match(istek);
+              if (cevap) { await hedef.put(istek, cevap); mevcut.add(istek.url); }
+            }
+            await caches.delete(eski);
+          } catch { /* taşıma başarısız olsa da site bozulmaz; eski cache yine silinmez */ }
+        }
+        // Yabancı/eski kabuk cache'leri sil — ses cache'i (sürümsüz ad) korunur
+        return Promise.all(keys.filter((k) => k !== CACHE && !k.startsWith("nurstudyo-audio")).map((k) => caches.delete(k)));
+      })
       .then(() => self.clients.claim())
   );
 });

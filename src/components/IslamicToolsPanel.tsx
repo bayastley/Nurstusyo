@@ -695,8 +695,12 @@ function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string, string
 
 // ─── NAMAZ VAKİTLERİ ────────────────────────────────────
 // ★ ÇEVRİMDIŞI TİLAVET (İş 24+59) — Service Worker dinlenen ayet seslerini
-//   cache'e yazar (nurstudyo-audio-v3). Bu kart yalnızca DURUMU gösterir:
+//   cache'e yazar. Bu kart yalnızca DURUMU gösterir:
 //   kaç ayet sesi cihazda + çevrimdışı mı. Bilgi amaçlı, tek kart.
+// ★ AD DÜRÜSTLÜĞÜ (29.09): kart eskiden nurstudyo-audio-v3'e bakıyordu, SW ise
+//   v4'e yazıyordu → sayaç hep boş görünüyordu. Ses cache'i artık SÜRÜMSÜZ adla
+//   yaşar (sw.js AUDIO_CACHE); kabuk sürümü artsay da kullanıcı sesleri korunur.
+const AUDIO_CACHE_ADI = "nurstudyo-audio"; // sw.js AUDIO_CACHE ile birebir
 function CevrimdisiKart() {
   const [adet, setAdet] = useState<number | null>(null);
   const [cevrimdisi, setCevrimdisi] = useState(!navigator.onLine);
@@ -708,7 +712,7 @@ function CevrimdisiKart() {
     let live = true;
     (async () => {
       try {
-        const cache = await caches.open("nurstudyo-audio-v3");
+        const cache = await caches.open(AUDIO_CACHE_ADI);
         const keys = await cache.keys();
         if (live) setAdet(keys.length);
       } catch { /* yoksay */ }
