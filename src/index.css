@@ -102,6 +102,35 @@
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
+/* ═══ MOBİL SOL MENÜ DÜZENİ (dar ekran denetimi 30.09) ═══
+   Ölçülen sorunlar (360px): panel ekranın 151px altına taşıyor (uzun menü,
+   max-height yok), Güncellemeler flyout'u ekranın 125px dışına açıyor,
+   dokunma hedefleri 35px. Düzeltme: mobilde panel ekran yüksekliğine sığar ve
+   kayar, flyout panel İÇİNDE altına açılır. Masaüstü (>640px) etkilenmez. */
+@media (max-width: 640px) {
+  [data-sidebar-panel="true"] {
+    width: min(17rem, calc(100vw - 2.5rem));
+    /* panel üstteki header'a yapışık açılıyor (~149px üst boşluk) → 10rem ayır */
+    max-height: calc(100dvh - 10rem);
+    overflow-y: auto;
+    overscroll-behavior: contain; /* panel kaydırması arka sayfayı sürüklemesin */
+  }
+  [data-sidebar-flyout="true"] {
+    left: 0.5rem;
+    right: 0.5rem;
+    width: auto;
+    top: 100%;
+    z-index: 70;
+  }
+  /* Dokunma hedefi ≥42px (Apple HIG 44px) — düz CSS, Tailwind üretimine bağlı değil */
+  [data-sidebar-panel="true"] button {
+    min-height: 42px;
+  }
+  [data-sidebar-panel="true"] [data-admin-ana-btn="true"] {
+    min-height: 44px;
+  }
+}
+
 /* Ambient slow rotation for atmosphere card fallback geometry */
 @keyframes nur-spin {
   from { transform: translate(-50%, -50%) rotate(0deg); }

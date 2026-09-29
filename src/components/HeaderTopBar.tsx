@@ -167,6 +167,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
 
                       {updatesOpen && (
                         <div
+                          data-sidebar-flyout="true"
                           onMouseEnter={openUpdates}
                           onMouseLeave={closeUpdatesDelayed}
                           onClick={(e) => e.stopPropagation()}
@@ -209,7 +210,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </div>
 
                     {/* ★ ARAÇLAR — İslami yardımcı araçlar (Güncellemeler'in altında, en üst bölgede) */}
-                    <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                    <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <span className="text-base">🤲</span>
                       <span>Araçlar</span>
                       <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-bold text-emerald-300">YENİ</span>
@@ -233,13 +234,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: Moon, label: "🌙 Ramazan & Kandil", target: "ramazan" as ModalName },
                       { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName },
                     ].map((item) => (
-                      <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <button key={item.label} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
                         {item.label}
                       </button>
                     ))}
 
-                    <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                    <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
                       {t("menuSuggest")} / {t("menuComplaint")}
                     </button>
@@ -252,8 +253,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {user && (isAdminEmail(user.email) || isMasterSürüm) && (
                       <div className="mt-1 border-t border-amber-400/20 px-2 py-1.5">
                         <button
+                          data-admin-ana-btn="true"
                           onClick={() => { openAdminDashboard().then(() => setModal("adminDashboard")); setMenuOpen(false); }}
-                          className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[11px] font-black text-amber-300 transition hover:bg-amber-500/10"
+                          className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[11px] font-black text-amber-300 transition hover:bg-amber-500/10"
                         >
                           <Shield size={14} className="text-amber-400" />
                           <span className="flex-1">ADMIN PANEL</span>
@@ -267,7 +269,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         {isMasterSürüm && (
                           <button
                             onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("Admin modu kapatıldı"); setMenuOpen(false); }}
-                            className="flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
+                            className="flex min-h-[42px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
                           >
                             <Shield size={14} className="text-emerald-400" />
                             ADMIN · ÇIKIŞ
@@ -278,7 +280,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     <div className="mt-1 border-t border-white/5 px-4 py-2.5">
                       <button
                         onClick={() => { openPremium("uyelik"); setMenuOpen(false); }}
-                        className="flex w-full items-center gap-2 rounded-xl py-2 px-1 text-left text-[11px] font-bold text-[color:var(--accent-2)] transition hover:bg-white/5 hover:text-white"
+                        className="flex min-h-[42px] w-full items-center gap-2 rounded-xl py-2 px-1 text-left text-[11px] font-bold text-[color:var(--accent-2)] transition hover:bg-white/5 hover:text-white"
                       >
                         <Gem size={14} style={{ color: "var(--accent)" }} />
                         <span>{t("premium")}</span>
