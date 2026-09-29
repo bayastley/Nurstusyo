@@ -28,6 +28,10 @@ const TAZE_SN = 86_400;            // 24 saat: taze sayılır
 const BAYAT_SN = 30 * 86_400;      // 30 gün: hata anında servis edilebilir pencere
 const MAX_BOY = 4 * 1024 * 1024;   // 4MB üstü cevap cache'lenmez (sure-editions ~1MB)
 const HAFIZA_SINIR = 60;           // instance içi kayıt tavanı (FIFO)
+// ★ EDGE KATMANI: her 200 cevabı (MISS de HIT/STALE de) aynı cache başlığını
+//   taşısın — HIT yollarında set edilmezse Vercel varsayılanı
+//   (max-age=0, must-revalidate) devreye girip cache'lenebilirliği bozar.
+const EDGE_CC = `public, max-age=600, s-maxage=${TAZE_SN}, stale-while-revalidate=${BAYAT_SN}`;
 
 // ─── Instance içi cache + aynı anahtar için tek uçuş (dedup) ──
 const HAFIZA = new Map<string, { s: number; b: string; t: number }>();
@@ -141,6 +145,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const mem = HAFIZA.get(anahtar);
   if (mem && tazeMi(mem)) {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", EDGE_CC);
     res.setHeader("X-Cache", "HIT-MEM");
     res.status(200).send(mem.b);
     return;
@@ -150,6 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (us && tazeMi(us)) {
     hafizaKoy(anahtar, us.s, us.b);
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", EDGE_CC);
     res.setHeader("X-Cache", "HIT-SHARED");
     res.status(200).send(us.b);
     return;
@@ -166,7 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     void upstashSet(anahtar, cevap.s, cevap.b);
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     // ★ EDGE KATMANI: tüm kullanıcılar + Vercel bölgeleri bu cevabı paylaşır
-    res.setHeader("Cache-Control", `public, max-age=600, s-maxage=${TAZE_SN}, stale-while-revalidate=${BAYAT_SN}`);
+    res.setHeader("Cache-Control", EDGE_CC);
     res.setHeader("X-Cache", "MISS");
     res.status(200).send(cevap.b);
     return;
@@ -175,6 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ── 4) Upstream 429/hata → BAYAT servis (Kur'an metni değişmez)
   if (mem && bayatUygunMu(mem)) {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", EDGE_CC);
     res.setHeader("X-Cache", "STALE-MEM");
     res.status(200).send(mem.b);
     return;
@@ -182,6 +189,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (us && bayatUygunMu(us)) {
     hafizaKoy(anahtar, us.s, us.b);
     res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", EDGE_CC);
     res.setHeader("X-Cache", "STALE-SHARED");
     res.status(200).send(us.b);
     return;
