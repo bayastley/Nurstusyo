@@ -26,6 +26,7 @@ import crypto from "crypto";
 
 const ENV_YOLLAR = [
   "C:/Users/msı/Desktop/env klasörü/env2.txt",
+  "C:/Users/msı/Documents/env klasörü/env2.txt",
   "./env2.txt",
   "./.env.local",
 ];
