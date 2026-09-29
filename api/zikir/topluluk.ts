@@ -93,7 +93,17 @@ export default async function handler(req: any, res: any) {
     if (req.method === "GET") {
       const rows = await db<any[]>("nur_zikir_topluluk?select=toplam&limit=1").catch(() => [] as any[]);
       const toplam = Array.isArray(rows) && rows[0] ? Number(rows[0].toplam) || 0 : 0;
-      return res.status(200).json({ ok: true, toplam, aktif: true });
+      // ★ GÜNLÜK SERİ (29.09): vitrin grafiği için GERÇEK kova verisi (nur_zikir_gunluk).
+      //   Tablo henüz kurulmadıysa (42P01) veya sorgu patlarsa gunluk:null — UI grafiği
+      //   gizler, asla uydurma sıfırlar çizmez (sayı dürüstlüğü kuralı).
+      let gunluk: Array<{ gun: string; adet: number }> | null = null;
+      try {
+        const gRows = await db<any[]>("nur_zikir_gunluk?select=gun,adet&order=gun.desc&limit=60");
+        if (Array.isArray(gRows)) {
+          gunluk = gRows.map((r) => ({ gun: String(r.gun).slice(0, 10), adet: Number(r.adet) || 0 }));
+        }
+      } catch { gunluk = null; }
+      return res.status(200).json({ ok: true, toplam, aktif: true, gunluk });
     }
     if (req.method === "POST") {
       if (!(await rateLimit(req, res, "zikir:ekle", 60, 60_000))) return;

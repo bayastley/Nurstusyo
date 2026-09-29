@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon, BellRing } from "lucide-react";
 import { pushAboneOl, pushAbonelikIptal, pushAbonelikDurumu, pushDestekliyor, iosUyarisi } from "../utils/pushClient";
+import { zikirPencereDizisi, sonGunler, type ZikirGunKova } from "./zikirGrafik";
 
 // ═══════════════════════════════════════════════════════════
 // ★ NÛR ARAÇLAR — İslami Araçlar Paneli
@@ -45,10 +46,21 @@ const ZIKIR_METINLERI = ["🔴 Estagfirullah", "🌿 Sübhanallah", "❤️ Elha
 
 /** ★ TOPLULUK VİTRİN SAYACI — YALNIZCA GERÇEK SAYI (28.09 dürüstlük düzeltmesi).
  *  /api/zikir/topluluk'tan canlı toplam çekip gösterir; 45 sn'de tazelenir.
- *  Toplam 0 ise uydurma sayı yerine davet metni gösterilir. Sahte taban YASAK. */
+ *  Toplam 0 ise uydurma sayı yerine davet metni gösterilir. Sahte taban YASAK.
+ *
+ *  ★ GÜNLÜK/HAFTALIK GRAFİK (29.09): API'nin nur_zikir_gunluk kovalarından gelen
+ *    GERÇEK günlük seri çubuk grafiği olarak çizilir. Dürüstlük kuralları:
+ *    • Seri, tablonun İLK kayıtlı gününden başlar — kuruluş öncesi günler
+ *      uydurulmaz ("sahte 0" yok); veri biriktikçe grafik uzar.
+ *    • gunluk:null (tablo yok / API eski) → grafik tamamen gizlenir.
+ *    • Zikirmatik her zikirde "nur-zikir-eklendi" event'i atar → anında tazeleme. */
 function ToplulukVitrinSayaci() {
   const [toplam, setToplam] = useState<number | null>(null);
   const [aktif, setAktif] = useState(false);
+  const [gunluk, setGunluk] = useState<ZikirGunKova[] | null>(null);
+  // Görünüm: "hafta" = son 7 gün, "tum" = ilk kayıttan bugüne (en çok 60 gün)
+  const [pencere, setPencere] = useState<"hafta" | "tum">("hafta");
+  const yukleRef = useRef<() => void>(() => undefined);
   useEffect(() => {
     let live = true;
     const yukle = () => fetch("/api/zikir/topluluk")
@@ -57,20 +69,76 @@ function ToplulukVitrinSayaci() {
         if (!live || !d?.ok) return;
         setToplam(Number(d.toplam) || 0);
         setAktif(!!d.aktif);
+        setGunluk(Array.isArray(d.gunluk) ? d.gunluk : null);
       })
       .catch(() => undefined);
+    yukleRef.current = yukle;
     yukle();
     const iv = window.setInterval(yukle, 45_000);
-    return () => { live = false; window.clearInterval(iv); };
+    // Zikirmatik zikir çektinde grafiği hemen tazele (gerçek sunucu teyidiyle)
+    const zikirEklendi = () => yukle();
+    window.addEventListener("nur-zikir-eklendi", zikirEklendi);
+    return () => { live = false; window.clearInterval(iv); window.removeEventListener("nur-zikir-eklendi", zikirEklendi); };
   }, []);
+  // Grafik penceresi — saf yardımcılar (zikirGrafik.ts) hesaplar
+  const bugun = new Date().toISOString().slice(0, 10);
+  const tumDizi = useMemo(() => zikirPencereDizisi(gunluk, bugun), [gunluk]);
+  const gosterilen = pencere === "hafta" ? sonGunler(tumDizi, 7) : tumDizi;
+  const maxAdet = useMemo(() => Math.max(1, ...gosterilen.map((k) => k.adet)), [gosterilen]);
+  const pencereToplam = useMemo(() => gosterilen.reduce((s, k) => s + k.adet, 0), [gosterilen]);
+  const grafikGoster = aktif && gosterilen.length >= 1; // ilk gerçek gün tek çubukla görünür
   return (
-    <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[.07] py-2.5">
-      <span className="text-base">🌍</span>
-      <p className="text-[10px] font-bold text-white/70">
-        {aktif && toplam !== null && toplam > 0
-          ? <>Topluluk toplamı: <b className="text-amber-200">{toplam.toLocaleString("tr-TR")}</b> zikir çekildi</>
-          : <>Topluluk sayacı canlı — <b className="text-amber-200">ilk zikiri sen çek</b> 📿</>}
-      </p>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[.07] py-2.5">
+        <span className="text-base">🌍</span>
+        <p className="text-[10px] font-bold text-white/70">
+          {aktif && toplam !== null && toplam > 0
+            ? <>Topluluk toplamı: <b className="text-amber-200">{toplam.toLocaleString("tr-TR")}</b> zikir çekildi</>
+            : <>Topluluk sayacı canlı — <b className="text-amber-200">ilk zikiri sen çek</b> 📿</>}
+        </p>
+      </div>
+      {grafikGoster && (
+        <div className="rounded-xl border border-white/10 bg-white/[.03] px-2.5 pb-2 pt-1.5">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">
+              Günlük topluluk zikirleri
+            </p>
+            <div className="flex gap-1">
+              {(["hafta", "tum"] as const).map((p) => (
+                <button key={p} onClick={() => setPencere(p)}
+                  className={`rounded px-1.5 py-0.5 text-[7.5px] font-black transition ${pencere === p ? "bg-amber-500/25 text-amber-200" : "bg-white/5 text-white/40 hover:text-white/70"}`}>
+                  {p === "hafta" ? "7 GÜN" : `TÜMÜ (${tumDizi.length})`}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex h-14 items-end gap-1">
+            {gosterilen.map((k) => {
+              const yukseklik = k.adet > 0 ? Math.max(6, Math.round((k.adet / maxAdet) * 100)) : 0;
+              const gunTarih = new Date(k.gun + "T00:00:00Z");
+              const gunAdi = gunTarih.toLocaleDateString("tr-TR", { weekday: "short", timeZone: "UTC" });
+              const gunNo = k.gun.slice(8, 10);
+              const bugunMu = k.gun === bugun;
+              return (
+                <div key={k.gun} className="flex min-w-0 flex-1 flex-col items-center gap-0.5"
+                  title={`${gunNo} ${gunTarih.toLocaleDateString("tr-TR", { month: "long", timeZone: "UTC" })} · ${k.adet.toLocaleString("tr-TR")} zikir`}>
+                  <div className="flex h-11 w-full items-end">
+                    <div
+                      className={`w-full rounded-t-sm transition-all ${bugunMu ? "bg-gradient-to-t from-amber-600/70 to-amber-300" : "bg-gradient-to-t from-amber-500/40 to-amber-300/70"}`}
+                      style={{ height: yukseklik > 0 ? `${yukseklik}%` : "2px", opacity: k.adet > 0 ? 1 : 0.25 }}
+                    />
+                  </div>
+                  <span className={`text-[6.5px] font-bold leading-none ${bugunMu ? "text-amber-200" : "text-white/35"}`}>{gunNo}</span>
+                  <span className="text-[5.5px] leading-none text-white/25">{gunAdi}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-0.5 text-center text-[7.5px] text-white/35">
+            {pencere === "hafta" ? "Bu hafta" : `Son ${gosterilen.length} gün`}: <b className="text-amber-200/90">{pencereToplam.toLocaleString("tr-TR")}</b> zikir
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -152,6 +220,8 @@ function Zikirmatik() {
           if (d?.ok && d.aktif) {
             sunucuToplamRef.current = Number(d.toplam) || bekleyen;
             setSunucuToplam(sunucuToplamRef.current);
+            // ★ Vitrin grafiğini anında tazele — günlük kova sunucu teyidiyle güncellenir
+            window.dispatchEvent(new Event("nur-zikir-eklendi"));
           }
         })
         .catch(() => undefined);
