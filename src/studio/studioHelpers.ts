@@ -71,6 +71,19 @@ export function formatRemaining(ms: number): string {
   return `${second} sn`;
 }
 
+// ★ QURAN API ADRESİ (30.09): canlıda same-origin proxy (/api/quran/v1/... —
+//   Vercel fonksiyonu + ortak edge cache, rate limit biter). Yerel ön izleme /
+//   dosya / localhost'ta Vite-statik sunucu API barındıramadığı için doğrudan
+//   upstream'e gidilir — eski davranışa otomatik düşer.
+const QURAN_UPSTREAM = "https://api.alquran.cloud";
+export function quranUrl(path: string): string {
+  const canliMi = typeof window !== "undefined"
+    && window.location.protocol === "https:"
+    && window.location.hostname !== "localhost"
+    && window.location.hostname !== "127.0.0.1";
+  return canliMi ? `/api/quran/${path}` : `${QURAN_UPSTREAM}/${path}`;
+}
+
 export async function fetchJSON(url: string, timeoutMs = 12000): Promise<any> {
   const attempt = async () => {
     const controller = new AbortController();
@@ -187,7 +200,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
     for (const ed of denenecekler) {
       try {
         await throttle();
-        const json = await fetchJSON(`/api/quran/v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`) as { data?: Array<{ text: string }> };
+        const json = await fetchJSON(quranUrl(`v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`)) as { data?: Array<{ text: string }> };
         const ar = (json.data?.[0]?.text ?? "") as string;
         const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, ed);
         if (ar) sonAr = ar;
@@ -225,7 +238,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
 async function surahHamCek(surah: number, edition: string): Promise<{ name: string; arabic: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }>; translated: Array<{ text: string }> } | null> {
   try {
     await throttle();
-    const json = await fetchJSON(`/api/quran/v1/surah/${surah}/editions/quran-uthmani,${edition}`) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
+    const json = await fetchJSON(quranUrl(`v1/surah/${surah}/editions/quran-uthmani,${edition}`)) as { data?: Array<{ name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> }> };
     const arabic = json.data?.[0]?.ayahs ?? [];
     const translated = json.data?.[1]?.ayahs ?? [];
     if (arabic.length && translated.length) return { name: String(json.data?.[0]?.name ?? ""), arabic, translated };
@@ -236,8 +249,8 @@ async function surahHamCek(surah: number, edition: string): Promise<{ name: stri
   try {
     await throttle();
     const [arabicJson, translatedJson] = await Promise.all([
-      fetchJSON(`/api/quran/v1/surah/${surah}/quran-uthmani`),
-      fetchJSON(`/api/quran/v1/surah/${surah}/${edition}`),
+      fetchJSON(quranUrl(`v1/surah/${surah}/quran-uthmani`)),
+      fetchJSON(quranUrl(`v1/surah/${surah}/${edition}`)),
     ]) as [{ data?: { name?: string; ayahs?: Array<{ text: string; numberInSurah?: number; juz?: number; page?: number }> } }, { data?: { ayahs?: Array<{ text: string }> } }];
     const arabic = arabicJson.data?.ayahs ?? [];
     const translated = translatedJson.data?.ayahs ?? [];

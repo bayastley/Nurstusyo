@@ -14,7 +14,7 @@ import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
   fmtDuration, fmtSize, dimensions, uid, isWholeSurahSelected,
-  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah, normalizeTurkishMeal,
+  pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah, normalizeTurkishMeal, quranUrl,
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
 import { ADMIN_AI_KEYWORDS, ADMIN_MOTION_CLIPS } from "./adminMediaManifest";
@@ -658,7 +658,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const matchedSurahs = SURAHS.filter(s => normTr(s.name).includes(normTr(trimmed))).slice(0, 10);
     if (matchedSurahs.length > 0) { setResults(matchedSurahs.map(s => ({ s: s.n, a: 1, name: s.name, tr: `${s.count} ayet • Sure #${s.n}` }))); setSearching(false); return; }
     let live = true; setSearching(true);
-    const timer = window.setTimeout(() => { fetchJSON(`/api/quran/v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`).then((json: any) => { if (!live) return; setResults((json?.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({ s: match.surah.number, a: match.numberInSurah, name: SURAHS[match.surah.number - 1]?.name ?? match.surah.englishName, tr: match.text }))); }).catch(() => { if (live) setResults([]); }).finally(() => { if (live) setSearching(false); }); }, 420);
+    const timer = window.setTimeout(() => { fetchJSON(quranUrl(`v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`)).then((json: any) => { if (!live) return; setResults((json?.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({ s: match.surah.number, a: match.numberInSurah, name: SURAHS[match.surah.number - 1]?.name ?? match.surah.englishName, tr: match.text }))); }).catch(() => { if (live) setResults([]); }).finally(() => { if (live) setSearching(false); }); }, 420);
     return () => { live = false; window.clearTimeout(timer); };
   }, [query, lang]);
 
@@ -822,7 +822,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setVerseIndex(selectedRef.current.length);
     try {
       let ar = "", tr = knownTranslation ? normalizeTurkishMeal(knownTranslation, MEAL_EDITIONS[lang]) : "";
-      if (knownTranslation) { const json: any = await fetchJSON(`/api/quran/v1/ayah/${s}:${a}/quran-uthmani`); ar = json?.data?.text ?? ""; }
+      if (knownTranslation) { const json: any = await fetchJSON(quranUrl(`v1/ayah/${s}:${a}/quran-uthmani`)); ar = json?.data?.text ?? ""; }
       else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
       // ★ Placeholder'ı gerçek veriyle değiştir (boşsa bile güncelle — API çalışmıyorsa boş kalmasın)
       setSelected((current) => current.map((x) => x.id === id ? { ...x, ar: ar || x.ar, tr: tr || x.tr } : x));

@@ -4,7 +4,7 @@ import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
-import { fetchSurahEditions, fetchAyah } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
+import { fetchSurahEditions, fetchAyah, quranUrl } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
 // ══════════════════════════════════════════════════════════════
@@ -506,7 +506,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       // Arapça harf varsa Osmanlı metninde, yoksa seçili mealette ara
       const isArabic = /[\u0600-\u06FF]/.test(q);
       const edition = isArabic ? "quran-uthmani" : mealId;
-      fetch(`/api/quran/v1/search/${encodeURIComponent(q)}/all/${edition}`)
+      fetch(quranUrl(`v1/search/${encodeURIComponent(q)}/all/${edition}`))
         .then(r => r.json())
         .then((d: any) => {
           if (!live) return;
@@ -683,7 +683,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
-    fetch(`/api/quran/v1/surah/${surahNo}/en.transliteration`)
+    fetch(quranUrl(`v1/surah/${surahNo}/en.transliteration`))
       .then(r => r.json())
       .then((d: any) => {
         if (!live || d.code !== 200) return;

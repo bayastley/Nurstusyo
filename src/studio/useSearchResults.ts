@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SURAHS } from "../data";
 import { MEAL_EDITIONS, type Lang } from "../i18n";
 import type { SearchHit } from "../types";
-import { fetchJSON } from "./studioHelpers";
+import { fetchJSON, quranUrl } from "./studioHelpers";
 
 function normTr(value: string): string {
   return value.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -30,7 +30,7 @@ export function useSearchResults(query: string, lang: Lang) {
     let live = true;
     setSearching(true);
     const timer = window.setTimeout(() => {
-      fetchJSON(`/api/quran/v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`)
+      fetchJSON(quranUrl(`v1/search/${encodeURIComponent(trimmed)}/all/${MEAL_EDITIONS[lang]}`))
         .then((json) => {
           if (!live) return;
           setResults((json.data?.matches ?? []).slice(0, 30).map((match: { surah: { number: number; englishName: string }; numberInSurah: number; text: string }) => ({
