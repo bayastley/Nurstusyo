@@ -767,13 +767,37 @@ function RozetlerKarti() {
           const tur = ozel.kazanimSayisi[r.id] || 0;
           const esik = rozetGuncelEsik(r.id, ozel.turNo);
           const esikMetni = esik !== null ? ` · bu turda: ${esik}` : "";
+          // ★ MİNİ İLERLEME ÇUBUĞU (29.09, kullanıcı isteği): kilitli rozette bu turdaki
+          //   hedefe ne kadar kaldı tek bakışta görünür. Değer = mevcut sayaç (taban
+          //   üstünden), hedef = taban + eşik×çarpan (rozetGuncelEsik). Açık rozet ve
+          //   meta'sız rozet (streak) çubuksuz — görsel gürültü olmasın.
+          const metaAlan = r.kosulMeta?.alan;
+          const mevcut = metaAlan ? (rozetler[metaAlan] as number) ?? 0 : 0;
+          const hedef = esik ?? 0;
+          const tabanDeger = metaAlan ? (ozel.taban[metaAlan] as number) ?? 0 : 0;
+          const turIlerleme = Math.max(0, mevcut - tabanDeger);
+          const turHedef = Math.max(1, hedef - tabanDeger);
+          const oran = acik ? 1 : esik !== null ? Math.min(1, turIlerleme / turHedef) : 0;
+          const kalan = Math.max(0, hedef - mevcut);
           return (
-            <div key={r.id} className="relative" title={`${r.ad} — ${r.aciklama}${esikMetni}${tur > 0 ? ` · ${tur}× kazanıldı` : ""}`}>
+            <div key={r.id} className="relative" title={`${r.ad} — ${r.aciklama}${esikMetni}${tur > 0 ? ` · ${tur}× kazanıldı` : ""}${!acik && esik !== null ? ` · kalan: ${kalan}` : ""}`}>
               <div className={`flex aspect-square items-center justify-center rounded-lg text-base transition ${
                 acik ? "bg-amber-500/20 ring-1 ring-amber-400/40" : "bg-white/5 opacity-30 grayscale"
               }`}>
                 {r.emoji}
               </div>
+              {/* mini ilerleme çubuğu — hücrenin altına yapışık, 3px */}
+              {!acik && esik !== null && (
+                <div className="absolute inset-x-1 bottom-0.5 h-[3px] overflow-hidden rounded-full bg-black/50" aria-hidden>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.round(oran * 100)}%`,
+                      background: oran >= 1 ? "var(--accent-2)" : "linear-gradient(90deg, rgba(215,170,82,.55), rgba(215,170,82,.95))",
+                    }}
+                  />
+                </div>
+              )}
               {tur > 0 && (
                 <span className="absolute -left-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[6.5px] font-black text-white shadow" title={`${r.ad}: ${tur} kez kazanıldı`}>★{tur > 1 ? tur : ""}</span>
               )}
