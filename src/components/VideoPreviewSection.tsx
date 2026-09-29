@@ -243,7 +243,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       )}
 
       <div className="mx-auto max-w-[228px]">
-        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); setBackground(randomClip(kind)); onClipKindChangeRef.current?.(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
         {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
         {/* ★ KENDİ SESİNLE ÜRET (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla

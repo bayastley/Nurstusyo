@@ -684,11 +684,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let image = imageCache.current.get(url);
     if (!image) {
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      // ★ BLOB/DATA URL SAME-ORIGIN'dir (30.09): crossOrigin="anonymous" blob:
+      //   adreslerde bazı tarayıcılarda yüklemeyi bozabiliyor — kullanıcı dosyaları
+      //   IndexedDB→blob ile gelir, onlara crossOrigin uygulanmaz.
+      if (!url.startsWith("blob:") && !url.startsWith("data:")) img.crossOrigin = "anonymous";
       img.decoding = "async";
+      // ★ ÖLÜ GÖRSEL CACHE'TE KALMASIN: yüklenemeyen görsel cache'ten düşer —
+      //   imza adresi sonradan gelirse (videoUrl) sonraki karede taze deneme şansı doğar.
+      img.addEventListener("error", () => { if (imageCache.current.get(url) === img) imageCache.current.delete(url); }, { once: true });
       img.src = url;
       image = img;
-      imageCache.current.set(url, image);
+      imageCache.current.set(url, img);
     }
     return image;
   }, []);
@@ -696,7 +702,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let video = videoCache.current.get(url);
     if (!video) {
       const el = document.createElement("video");
-      el.crossOrigin = "anonymous"; el.src = url; el.muted = true; el.loop = true; el.playsInline = true; el.preload = "auto";
+      // ★ Blob/data URL same-origin — crossOrigin yalnız uzak (CDN) medyada (30.09)
+      if (!url.startsWith("blob:") && !url.startsWith("data:")) el.crossOrigin = "anonymous";
+      el.src = url; el.muted = true; el.loop = true; el.playsInline = true; el.preload = "auto";
       el.autoplay = true;
       el.defaultMuted = true;
       // ★ Donma koruması: bitiş/takılma anında kendini toparla
@@ -860,10 +868,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
         if (poolCat.length) {
           const chosen = poolCat[Math.floor(Math.random() * poolCat.length)];
-          setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
           // ★ KULLANICI MEDYASI KUTSAL (30.09): ana arka plan kullanıcının kendi dosyasıysa
-          //   AI onu atmosferle DEĞİŞTİREMEZ — ayet slotu AI'nın işi, ana seçim kullanıcının.
-          if (verseIndexRef.current === selectedRef.current.length && backgroundRef.current.cat !== "yuklenenler") { setBackground(chosen); }
+          //   YENİ ayetler de o dosyayla başlar — AI kullanıcının kendi seçimine sahne dayatamaz.
+          //   AI tematik sahneler yalnız kendi dosyası YOKKEN devreye girer.
+          if (backgroundRef.current?.cat === "yuklenenler") {
+            setAyahBackgrounds((current) => ({ ...current, [id]: backgroundRef.current }));
+          } else {
+            setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
+            if (verseIndexRef.current === selectedRef.current.length) { setBackground(chosen); }
+          }
         }
       }
 
@@ -955,8 +968,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     }
     if (Object.keys(next).length) {
       setAyahBackgrounds(next);
-      const first = next[items[0].id];
-      if (first) setBackground(first);
+      // ★ KULLANICI SEÇİMİ KUTSAL (30.09): ana arka plan kullanıcının kendi dosyasıysa
+      //   sekme değişimi onu rastgele bir kliple DEĞİŞTİREMEZ — yalnız slotlar yeniden atanır.
+      if (backgroundRef.current?.cat !== "yuklenenler") {
+        const first = next[items[0].id];
+        if (first) setBackground(first);
+      }
     }
   }, [smartAiEnabledRef, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah, isClipAccessibleRef]);
 
@@ -1000,6 +1017,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     let pool = combinedAllClips.filter((clip) => clip.kind === clipKind && isClipAccessible(clip));
     if (scopeCat) pool = pool.filter((clip) => clip.cat === scopeCat);
     if (pool.length === 0) { notify(t("guestLimit")); return; }
+    // ★ KULLANICI SEÇİMİ KUTSAL (30.09): "Zar" kullanıcının kendi dosyasını ezemez —
+    //   yalnız kullanıcı Yüklediklerim kategorisini bilerek uygularsa (scopeCat) atanır.
+    if (!scopeCat && backgroundRef.current?.cat === "yuklenenler") {
+      notify("📁 Kendi dosyan korundu — zar onu değiştirmez");
+      return;
+    }
     const pick = () => pool[Math.floor(Math.random() * pool.length)];
     if (!selectedRef.current.length) {
       const c = pick();
@@ -1007,21 +1030,39 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       notify(`Rastgele seçildi: ${c.label}`);
       return;
     }
+    // ★ Kullanıcının kendi dosyasına atanmış slotlar zar/çeşitlilik dalgasından muaf
+    const korunanSlotlar = scopeCat === "yuklenenler"
+      ? new Set<string>()
+      : new Set(
+          Object.entries(ayahBackgroundsRef.current)
+            .filter(([, clip]) => clip.cat === "yuklenenler")
+            .map(([id]) => id),
+        );
+    const atananlar = selectedRef.current.filter((item) => !korunanSlotlar.has(item.id));
+    if (!atananlar.length) { notify("📁 Kendi dosyaların zatanmış durumda — zar onlara dokunmadı"); return; }
+    const anaArkaPlanKorunur = backgroundRef.current?.cat === "yuklenenler" && scopeCat !== "yuklenenler";
     const next: Record<string, Clip> = {};
+    // ★ setAyahBackgrounds TÜM state'i değiştirir — korunan slotlar next'e geri yazılmalı
+    //   (yalnız hâlâ seçili ayetlere ait olanlar taşınır)
+    korunanSlotlar.forEach((id) => {
+      if (!selectedRef.current.some((item) => item.id === id)) return;
+      const korunan = ayahBackgroundsRef.current[id];
+      if (korunan) next[id] = korunan;
+    });
     if (scopeCat) {
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      selectedRef.current.forEach((item, index) => { next[item.id] = shuffled[index % shuffled.length]; });
+      atananlar.forEach((item, index) => { next[item.id] = shuffled[index % shuffled.length]; });
       const catLabel = CATEGORIES.find((c) => c.id === scopeCat)?.label ?? scopeCat;
       setAyahBackgrounds(next);
-      if (next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
-      notify(`✨ ${selectedRef.current.length} ayete "${catLabel}" içinden rastgele atmosfer atandı`);
+      if (!anaArkaPlanKorunur && next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
+      notify(`✨ ${atananlar.length} ayete "${catLabel}" içinden rastgele atmosfer atandı`);
       return;
     }
     // ★ GERÇEK ÇEŞİTLİLİK — hem kategori hem klip tekrarını engeller
     const categories = Array.from(new Set(pool.map((c) => c.cat)));
     const shuffledCats = [...categories].sort(() => Math.random() - 0.5);
     const usedIds = new Set<string>();
-    selectedRef.current.forEach((item, index) => {
+    atananlar.forEach((item, index) => {
       const cat = shuffledCats[index % shuffledCats.length];
       const catPool = pool.filter((c) => c.cat === cat);
       // Önce bu kategoride HİÇ kullanılmamış klipleri dene
@@ -1034,16 +1075,35 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       next[item.id] = chosen;
     });
     setAyahBackgrounds(next);
-    if (next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
-    notify(`✨ ${selectedRef.current.length} ayete farklı kategorilerden rastgele atmosfer atandı`);
+    if (!anaArkaPlanKorunur && next[atananlar[0]?.id]) setBackground(next[atananlar[0].id]);
+    const korunanSayi = korunanSlotlar.size;
+    notify(korunanSayi > 0
+      ? `✨ ${atananlar.length} ayete farklı kategorilerden atmosfer atandı · ${korunanSayi} kendi dosyan korundu`
+      : `✨ ${atananlar.length} ayete farklı kategorilerden rastgele atmosfer atandı`);
   }, [clipKind, combinedAllClips, notify, isClipAccessible]);
 
   const applySmartBackgrounds = useCallback(() => {
     if (!selectedRef.current.length) { notify("Önce en az bir ayet seçin"); return; }
     const wantKind = clipKindRef.current;
+    // ★ KULLANICI MEDYASI KUTSAL (30.09): AI "Aç + Uygula" kullanıcının kendi dosyalarını
+    //   EZEMEZ. Yüklediklerim slotları AI atamasından muaf — diğer slotlara sahne atanır.
+    const korunanSlotlar = new Set(
+      Object.entries(ayahBackgroundsRef.current)
+        .filter(([, clip]) => clip.cat === "yuklenenler")
+        .map(([id]) => id),
+    );
     const next: Record<string, Clip> = {};
+    // ★ setAyahBackgrounds TÜM state'i değiştirir — korunan slotlar next'e geri yazılmalı,
+    //   yoksa "korumak" yerine silmiş oluruz (30.09 düzeltmesi). Yalnız hâlâ seçili
+    //   ayetlere ait olanlar taşınır — bayat kayıt geri gelmesin.
+    korunanSlotlar.forEach((id) => {
+      if (!selectedRef.current.some((item) => item.id === id)) return;
+      const korunan = ayahBackgroundsRef.current[id];
+      if (korunan) next[id] = korunan;
+    });
     const usedIds = new Set<string>();
     selectedRef.current.forEach((item) => {
+      if (korunanSlotlar.has(item.id)) return;
       const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
       let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
       // ★ Kategoride seçili türden klip yoksa: ayet kelimeleriyle admin kategorisi taraması (Şablon V2 uyumu)
@@ -1061,8 +1121,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       next[item.id] = chosen;
     });
     setAyahBackgrounds(next);
-    if (selectedRef.current[0] && next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
-    notify("✨ Akıllı AI: Ayet kelimelerine göre sahne atandı!");
+    // ★ Ana arka plan da kutsal: kullanıcının kendi dosyasıysa AI onu değiştiremez —
+    //   yalnız kullanıcı dosyası olmayan ilk slotla ana önizlemeyi tazeler.
+    if (
+      selectedRef.current[0] &&
+      next[selectedRef.current[0].id] &&
+      backgroundRef.current?.cat !== "yuklenenler"
+    ) setBackground(next[selectedRef.current[0].id]);
+    const ezilen = korunanSlotlar.size;
+    notify(ezilen > 0 ? `✨ Akıllı AI sahne atandı · ${ezilen} kendi dosyan korundu` : "✨ Akıllı AI: Ayet kelimelerine göre sahne atandı!");
   }, [combinedAllClips, notify, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
 
   const playReciterPreview = useCallback((id: string) => {
