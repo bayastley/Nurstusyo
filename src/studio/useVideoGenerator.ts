@@ -8,6 +8,8 @@ import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
+import { duzelt, nefesAraliklariEkle, type SesSegmenti } from "./sesZamanlama";
+import type { KendiSesAktif } from "./useKendiSes";
 import type { Aspect, Mode, Output, SelectedAyah, User } from "../types";
 import { GUEST_FREE_VIDEOS } from "./useGuestTrial";
 
@@ -46,6 +48,8 @@ interface UseVideoGeneratorParams {
   setOutputs: (value: (current: Output[]) => Output[]) => void;
   setActiveOutputId: (value: string) => void;
   t: (key: any) => string;
+  /** ★ KENDİ SES (30.09): aktif kullanıcı sesi — verilirse reciter YOK SAYILIR */
+  kendiSesAktif: KendiSesAktif | null;
 }
 
 export function useVideoGenerator(params: UseVideoGeneratorParams) {
@@ -85,6 +89,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       setOutputs,
       setActiveOutputId,
       t,
+      kendiSesAktif,
     } = params;
 
     if (generating) {
@@ -113,7 +118,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       return;
     }
 
-    const surahOnlyReciter = Boolean(reciter.surahPattern);
+    // ★ KENDİ SES DALI (30.09): aktif kullanıcı sesi varsa reciter tamamen yok sayılır.
+    //   Zamanlamalar kullanıcının SESİNDEN algılanmıştır (sesZamanlama.ts) — hızlı da
+    //   okusa yavaş da, ayet/arka plan geçişleri kendi okuyuşuna kilitli.
+    const kendiSesModu = Boolean(kendiSesAktif && kendiSesAktif.segments.length);
+    const surahOnlyReciter = !kendiSesModu && Boolean(reciter.surahPattern);
     if (surahOnlyReciter && !isWholeSurahSelected(selected, SURAHS)) {
       notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
       return;
@@ -165,7 +174,29 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
       let cursor = 0;
 
-      if (surahOnlyReciter) {
+      if (kendiSesModu) {
+        setProgress(8);
+        // ★ KULLANICININ KENDİ SESİ — segmentler kendi okuyuşundan algılandı.
+        //   Tek buffer yüklenir; ayahDurations = algılanan/düzenlenen segmentler.
+        const buffer = await audioContext.decodeAudioData(await kendiSesAktif!.blob.arrayBuffer());
+        audioOffsets.push(0);
+        buffers.push(buffer);
+        usedItems.push(...selected);
+        // nefes aralığı zaten segmentlere uygulanmış (hook'ta); ham start'lar buffer içi
+        const ham: SesSegmenti[] = kendiSesAktif!.segments.map((s) => ({ start: s.start, dur: s.dur }));
+        const etkin = duzelt(ham, buffer.duration);
+        cursor = Math.min(buffer.duration, cap);
+        // cap aşımı: son ayetlerden düşme YOK — kendi sesinde kullanıcıya dürüst uyarı,
+        //   kısaltma yerine segmentler cap'a göre YENİDEN ÖLÇEKLENİR (okuyuş bozulmaz).
+        const hamToplam = etkin.length ? etkin[etkin.length - 1].start + etkin[etkin.length - 1].dur : buffer.duration;
+        const olcek = hamToplam > cap ? cap / hamToplam : 1;
+        etkin.forEach((seg) => {
+          ayahDurations.push({ start: seg.start * olcek, dur: seg.dur * olcek });
+        });
+        if (olcek < 1) notify(`ℹ️ Okuyuşun ${Math.round(hamToplam)} sn · seçili mod sınırı ${Math.round(cap)} sn — tüm ayetler korunarak hafifçe hızlandırıldı`);
+        // ayet-başına arka plan: kendiSes modunda da aynen atanmış olanlar kullanılır
+        setProgress(12);
+      } else if (surahOnlyReciter) {
         setProgress(10);
         const sNum = selected[0].s;
         const url = reciter.surahPattern!.replace("{S}", String(sNum).padStart(3, "0"));

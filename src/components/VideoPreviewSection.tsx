@@ -65,6 +65,9 @@ interface VideoPreviewSectionProps {
   progress: number;
   generateCost: number;
   aspect: "9:16" | "1:1" | "16:9" | "4:5";
+  /** ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği butonu */
+  kendiSesAktifMi: boolean;
+  onKendiSesAc: () => void;
 }
 
 function lowPowerDevice(): boolean {
@@ -88,6 +91,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
     activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, downloadVideo, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
+    kendiSesAktifMi, onKendiSesAc,
   } = props;
   const onClipKindChangeRef = useRef(props.onClipKindChange ?? (() => {}));
   onClipKindChangeRef.current = props.onClipKindChange ?? onClipKindChangeRef.current;
@@ -242,6 +246,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); setBackground(randomClip(kind)); onClipKindChangeRef.current?.(kind); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
         {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
+        {/* ★ KENDİ SESİNLE ÜRET (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
+            milisanielik senkron. ELİT olmayan tıklarsa premium'a yönlendirilir (StudioApp'te). */}
+        <button
+          onClick={onKendiSesAc}
+          className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[9.5px] font-black transition ${kendiSesAktifMi ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-500/25" : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-500/20"}`}
+          title={kendiSesAktifMi ? "Kendi sesin aktif — ayetler senkron hazır" : "Kendi okuyuşunu yükle (ELİT)"}
+        >
+          {kendiSesAktifMi ? "🎙️ Kendi sesin aktif · yönet" : "🎙️ Kendi sesinle üret"}
+          {!kendiSesAktifMi && <span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>}
+        </button>
       </div>
 
       {/* İNDİRME KLASÖRÜ — üç satır görünür, aşağı kaydırınca diğer çıktılar açılır */}

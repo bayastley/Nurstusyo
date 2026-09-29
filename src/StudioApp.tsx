@@ -78,6 +78,7 @@ import { useWallet } from "./studio/useWallet";
 import { useBan } from "./studio/useBan";
 import { usePaymentFlow } from "./studio/usePaymentFlow";
 import { useAudioPreview } from "./studio/useAudioPreview";
+import { useKendiSesiniYukle } from "./studio/useKendiSes";
 import { usePrayerTime } from "./studio/usePrayerTime";
 import { useDailyAyah } from "./studio/useDailyAyah";
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
@@ -244,6 +245,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [user]);
 
   const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
+  // ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
+  //   milisanielik ayet senkronu (sessizlik-sınırı algılama; sesZamanlama.ts)
+  const { aktif: kendiSesAktif, yukleniyor: kendiSesYukleniyor, kayitlar: kendiSesKayitlari, yukle: kendiSesYukle, yukleAyetAyri: kendiSesYukleAyetAyri, sec: kendiSesSec, sil: kendiSesSil, zamanlamaKaydet: kendiSesZamanlamaKaydet, kaldirAktif: kendiSesKaldir } = useKendiSesiniYukle({ notify });
   const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
   const { dailyPool, dailyIndex, dailyPaused, daily } = useDailyAyah({ lang, setSelected });
 
@@ -1738,6 +1742,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           generateCost={videoMaliyeti(mode, tier) * Math.max(batchFormats.length, 1)}
           aspect={aspect}
           t={t}
+          kendiSesAktifMi={Boolean(kendiSesAktif)}
+          onKendiSesAc={() => {
+            // ★ ELİT KAPISI: elit değilse modal açılmaz, premium satın almaya yönlendirilir
+            if (!isMasterSürüm && !tierAtLeast(accessTier, "elit")) {
+              notify("👑 Kendi sesinle üretim ELİT üyelere özel — premium sayfası açıldı");
+              openPremium("uyelik");
+              return;
+            }
+            if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
+            setModal("kendiSes");
+          }}
         />
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}
@@ -2166,6 +2181,19 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         t={t}
         lang={lang}
         user={user}
+        kendiSesAktif={kendiSesAktif}
+        kendiSesKayitlari={kendiSesKayitlari}
+        kendiSesYukleniyor={kendiSesYukleniyor}
+        kendiSesNefes={kendiSesAktif?.nefes ?? 0}
+        kendiSesYukle={kendiSesYukle}
+        kendiSesYukleAyetAyri={kendiSesYukleAyetAyri}
+        kendiSesSec={kendiSesSec}
+        kendiSesSil={kendiSesSil}
+        kendiSesZamanlamaKaydet={kendiSesZamanlamaKaydet}
+        kendiSesKaldir={kendiSesKaldir}
+        setPickingForAtmos={(id) => setPickingFor(id)}
+        kendiSesSeciliAyetler={selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName }))}
+        kendiSesAyahBackgrounds={ayahBackgrounds}
       />
 
       {/* COOKIE CONSENT — KVKK m.10 + Çerez Rehberi uyumlu (opt-in, eşit butonlar, envanter) */}

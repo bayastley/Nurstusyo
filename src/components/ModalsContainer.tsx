@@ -24,6 +24,7 @@ import { KelimeAtolyesiModal } from "./KelimeAtolyesiModal";
 import { ArkaPlanUreticiModal } from "./ArkaPlanUreticiModal";
 import { DavetModal } from "./DavetModal";
 import { HaftaninVideosuModal } from "./HaftaninVideosuModal";
+import { KendiSesModal } from "./KendiSesModal";
 import { ATMOSPHERE_PREVIEW_UNLOCKED, CATEGORIES, CATEGORY_LOCK_LEVEL, HARD_LOCKED_CATEGORIES, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
@@ -154,6 +155,19 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setLegalTab,
   t,
   lang,
+  kendiSesAktif,
+  kendiSesKayitlari,
+  kendiSesYukleniyor,
+  kendiSesNefes,
+  kendiSesYukle,
+  kendiSesYukleAyetAyri,
+  kendiSesSec,
+  kendiSesSil,
+  kendiSesZamanlamaKaydet,
+  kendiSesKaldir,
+  setPickingForAtmos,
+  kendiSesSeciliAyetler,
+  kendiSesAyahBackgrounds,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
   // ★ Destek Merkezi yıldız puanı (opsiyonel 1-5, veritabanına kaydedilir)
@@ -476,6 +490,32 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             notify={notify}
           />
         </ErrorBoundary>
+      )}
+
+      {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ELİT özelliği */}
+      {modal === "kendiSes" && (
+        <KendiSesModal
+          open
+          onClose={() => setModal(null)}
+          sure={kendiSesSeciliAyetler[0]?.s ?? 1}
+          seciliAyetler={kendiSesSeciliAyetler}
+          aktifSes={kendiSesAktif}
+          kayitlar={kendiSesKayitlari}
+          yukleniyor={kendiSesYukleniyor}
+          isElit={isMasterSürüm || tierAtLeast(accessTier, "elit")}
+          nefes={kendiSesNefes}
+          yukle={kendiSesYukle}
+          yukleAyetAyri={kendiSesYukleAyetAyri}
+          sec={kendiSesSec}
+          sil={kendiSesSil}
+          zamanlamaKaydet={kendiSesZamanlamaKaydet}
+          kaldirAktif={kendiSesKaldir}
+          setPickingFor={setPickingForAtmos}
+          setModal={setModal}
+          ayahBackgrounds={kendiSesAyahBackgrounds}
+          openPremium={openPremium}
+          notify={notify}
+        />
       )}
 
       {/* ADMIN AUTH MODAL */}

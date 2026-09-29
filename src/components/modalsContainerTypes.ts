@@ -3,6 +3,9 @@ import type { LibraryItem, LibraryType, Emotion } from "../dualar";
 import type { Lang } from "../i18n/base";
 import { T } from "../i18n";
 import type { ModalName, LoginTab, Tier } from "../types";
+import type { KendiSesAktif } from "../studio/useKendiSes";
+import type { StoredSes } from "../studio/sesDeposu";
+import type { SesSegmenti } from "../studio/sesZamanlama";
 
 export interface ModalsContainerProps {
   modal: ModalName;
@@ -116,4 +119,21 @@ export interface ModalsContainerProps {
   t: (key: keyof (typeof T)["tr"]) => string;
   lang: Lang;
   user?: { email?: string; googleId?: string } | null;
+  /** ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği */
+  kendiSesAktif: KendiSesAktif | null;
+  kendiSesKayitlari: StoredSes[];
+  kendiSesYukleniyor: boolean;
+  kendiSesNefes: number;
+  kendiSesYukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number) => Promise<unknown>;
+  kendiSesYukleAyetAyri: (dosya: File, sure: number, ayet: number) => Promise<boolean>;
+  kendiSesSec: (id: string) => Promise<boolean>;
+  kendiSesSil: (id: string) => Promise<void>;
+  kendiSesZamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
+  kendiSesKaldir: () => void;
+  /** Modaldan açılırken ayet-başına arka plan ataması için hedef ayet */
+  setPickingForAtmos: (id: string) => void;
+  /** Modalın senkron sırası: seçili ayetler (s, a, sName) */
+  kendiSesSeciliAyetler: Array<{ s: number; a: number; sName?: string }>;
+  /** Ayet başına atanmış arka planlar ("s:a" → Clip) */
+  kendiSesAyahBackgrounds: Record<string, Clip>;
 }
