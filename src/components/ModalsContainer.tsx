@@ -6,6 +6,8 @@ import { LegalModal } from "./LegalModal";
 import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
 import { AdminDashboardModal } from "./AdminDashboardModal";
+import { PremiumModal } from "./PremiumModal";
+import { ZipExplorer } from "./ZipExplorer";
 import ErrorBoundary from "./ErrorBoundary";
 import { AtmosferSeciciModal } from "./AtmosferSeciciModal";
 import QuranLearnModal from "./QuranLearnModal";
