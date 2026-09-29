@@ -532,9 +532,10 @@ export function addDailySubJeton(_amount: number, _cap?: number): void {
 
 /** ESKİ AD — sabitler yeni kota değerlerine bağlandı */
 export const JETON = {
-  COST_KISA: 1,
-  COST_UZUN: 1,
-  COST_TAM: 1,
+  // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): eski COST_KISA/UZUN/TAM sabitleri (1/1/1)
+  //   gerçek maliyetle (videoMaliyeti: 1/5/15) çeliştiği için SİLİNDİ — hiçbir yerde
+  //   kullanılmıyorlardı; maliyetin tek kaynağı videoMaliyeti() + VIDEO_COST.
+  //   COST_KISA = 1 eşdeğeri gerekiyorsa videoMaliyeti("short") kullan.
   DAILY_FREE: DAILY_QUOTA.free.kisa,
   DAILY_PRO: DAILY_QUOTA.pro.kisa,
   DAILY_ELIT: DAILY_QUOTA.elit.kisa,

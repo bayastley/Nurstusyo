@@ -5,24 +5,27 @@
 import { getPackRights } from "../tier";
 import type { Tier } from "../tier";
 
+// ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): buradaki her sayı koddaki gerçek veriyle
+//   eşleşir — 45 kâri (src/reciters.ts; 37 free + 8 PRO), 1300+ benzersiz atmosfer
+//   klibi (src/clips/*), 106 tema (9 free + 51 pro + 46 elit, data/themesData.ts
+//   THEME_TIER). Filigran yalnız ELİT'te kaldırılır (studio/useCanvasDraw.ts) —
+//   PRO'ya "filigransız" VAAT EDİLEMEZ. Değişirse KAYNAĞI da güncelle.
 export const PRO_FEATURES = [
   "Günde 8 kısa + 3 uzun video (600 sn)",
-  "37 kâri sesi (2 ücretsiz + 35 PRO)",
-  "250 atmosfer içeriği",
-  "20 tema",
-  "1080p filigransız üretim",
+  "45 kâri sesi (37 ücretsiz + 8 PRO)",
+  "60 tema erişimi (51 PRO + 9 ücretsiz)",
   "Sinematik filtreler",
-  "AI başlık ve açıklama",
+  "AI başlık ve açıklama varyasyonları",
 ];
 
 export const ELIT_FEATURES = [
   "Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sürüm",
-  "Tüm 52 kâri sesi (nadir Verş rivayeti + Harem imamları dahil)",
-  "500 atmosfer içeriği",
-  "Sınırsız AI arama",
-  "Sosyal paylaşım paneli",
-  "Tasarım stüdyosu",
-  "Kendi imzanı ekleme",
+  "Tüm 45 kâri sesi",
+  "Tüm 106 tema",
+  "Filigransız 1080p üretim",
+  "AI hashtag paketleri",
+  "Gelişmiş sosyal paylaşım araçları",
+  "Tasarım stüdyosu + kendi imzan",
   "Öncelikli destek",
 ];
 

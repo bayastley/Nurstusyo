@@ -37,9 +37,9 @@ interface Soru {
 //   uzun ayetli sureler (Bakara, Âl-i İmrân, Nisâ…).
 // (101 çıkarıldı — en uzun ayeti 51 kr, soru formatı için kısa; 28.09 canlı tarama kanıtı)
 const TEST_SURELERI = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 29, 31, 33, 36, 39, 40, 41, 43, 45, 46, 49, 55, 62, 67, 87, 93, 94, 95, 96, 97, 98, 99, 100, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
-// ★ KOLAY — kısa meşhur sureler + son cüz (Cüz 30'un tamamı: 78-114) + Fâtiha: 38 sure
+// ★ KOLAY — kısa meşhur sureler + son cüz (Cüz 30'un tamamı: 78-114) + Fâtiha: 37 sure
 const KOLAY_SURELER = [1, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114];
-// ★ ORTA — orta uzunluk, hafızlarda popüler sureler: 24 sure
+// ★ ORTA — orta uzunluk, hafızlarda popüler sureler: 26 sure
 const ORTA_SURELER = [12, 13, 14, 17, 18, 19, 20, 21, 22, 24, 25, 27, 28, 29, 31, 34, 35, 36, 47, 49, 55, 57, 62, 67, 71, 76];
 // ★ ZOR — uzun ayetli sureler (devam kısmı garantili): 52 sure
 const ZOR_SURELER = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16, 23, 26, 30, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 48, 50, 51, 52, 53, 54, 56, 58, 59, 60, 61, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 88, 104];

@@ -643,7 +643,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       acc += dur + 0.03;
       fitCount += 1;
     }
-    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (40:00)";
+    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (90 dk)";
     const key = `${mode}-${selected.length}-${fitCount}-${Math.round(total)}`;
     const nowMs = Date.now();
     if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;

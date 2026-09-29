@@ -328,9 +328,9 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                   {[
                     "Her gün 3 kısa video",
                     "Kısa video: 59 saniye",
-                    "2 ücretsiz hoca sesi (Sudays + Husarî)",
-                    "120 ücretsiz atmosfer seçeneği",
-                    "10 ücretsiz tema",
+                    "37 ücretsiz kâri sesi",
+                    "1300+ atmosfer klibi",
+                    "9 ücretsiz tema",
                     "Temel başlık ve açıklama üretimi",
                     "Filigranlı önizleme ve üretim",
                   ].map((f) => (
