@@ -88,11 +88,12 @@ export const KATEGORI_TIER: Record<string, "free" | "pro" | "elit"> = {
   selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
   cennet: "elit", col: "elit", ates: "elit",
   fil: "elit", // ★ FİL — lansman sonrası ELİT (29 Eylül)
-  yuklenenler: "elit", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
+  yuklenenler: "free", ari: "elit", cehennem: "elit", hurma: "elit", karinca: "elit",
 };
 
 export const HARD_LOCKED_CATEGORIES: CatId[] = [
-  "yuklenenler",
+  // ★ yuklenenler KALDIRILDI (30.09): kullanıcı kendi dosyalarıyla çalışabilmeli —
+  //   klasör kilidi değil, kişisel cihaz deposu
   "cehennem", "hurma", "ari", "karinca",
 ];
 
@@ -133,7 +134,7 @@ export const CATEGORY_LOCK_LEVEL: Record<CatId, string> = {
   selale:"Pro", daglar:"Pro", kar:"Pro", sehir:"Pro",
   cennet:"Elit", col:"Elit", ates:"Elit",
   fil:"Elit",
-  yuklenenler:"V2", ari:"V2", cehennem:"V2", hurma:"V2", karinca:"V2",
+  yuklenenler:"Ücretsiz", ari:"V2", cehennem:"V2", hurma:"V2", karinca:"V2",
 };
 
 export const TEMPLATE_CLIPS_PLACEHOLDER = true;

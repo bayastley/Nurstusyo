@@ -108,6 +108,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setAtmosCategory,
   combinedAllClips,
   onMedyaArkaPlan,
+  onMedyaSenkron,
   CATEGORY_ICONS,
   lockTip,
   setLockTip,
@@ -671,7 +672,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                       onMouseLeave={() => { if (hardLocked) setLockTip((cur) => (cur === `cat-${category.id}` ? null : cur)); }}
                       onClick={() => {
                         if (hardLocked && !isMasterSürüm) return;
-                        const candidates = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === clipKind);
+                        // ★ TÜR EŞİTLEME (30.09): klasörde yalnızca bir tür içerik varsa
+                        //   sekme ona uyar — resim yükleyen kullanıcı Hareketli sekmesinde
+                        //   boş grid + yanlış "V2 Yakında" teaser'ı görmesin.
+                        const mevcutTurlar = new Set(combinedAllClips.filter((c) => c.cat === category.id).map((c) => c.kind));
+                        const gosterilecekTur = mevcutTurlar.has(clipKind) ? clipKind : (mevcutTurlar.has("img") ? "img" : (mevcutTurlar.has("vid") ? "vid" : clipKind));
+                        if (gosterilecekTur !== clipKind) { setClipKind(gosterilecekTur); onClipKindChange?.(gosterilecekTur); }
+                        const candidates = combinedAllClips.filter((clip) => clip.cat === category.id && clip.kind === gosterilecekTur);
                         const spotlight = candidates[Math.floor(Math.random() * candidates.length)] ?? null;
                         setHeroSpotlight(spotlight);
                         setAtmosCategory(category.id);
@@ -692,6 +699,16 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* ★ DÜRÜST BOŞ DURUM (30.09): grid gerçekten boşsa sahte "YAKINDA" gösterme —
+              neden boş olduğunu söyle (yanlış sekme / boş klasör). Hata dürüst olsun. */}
+          {filteredClips.length === 0 && (
+            <div className="mb-3 rounded-xl glass-soft px-4 py-3 text-center text-[11px] font-bold text-white/60">
+              {atmosCategory !== "all"
+                ? `📁 "${CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}" klasöründe ${clipKind === "img" ? "şablon" : "hareketli video"} yok — üstteki sekmeyi değiştir ya da başka klasör dene`
+                : "Bu sekmede gösterilecek atmosfer yok — sekmeyi değiştir"}
             </div>
           )}
 
@@ -734,7 +751,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               (1438/1438 dosya OK) — V2 günü adminCategoryAccess'te "v2"→"elit"
               yapıldığında gerçek klasörler açılır; teaser kartlarıyla birlikte
               "devasa güncelleme" görüntüsü verir. */}
-          {!isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (
+          {!isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && atmosCategory === "all" && (
             <div className="mt-5 border-t border-white/10 pt-4">
               <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
                 <Lock size={11} /> Yakında: V2 ile 10 Yeni Kategori Açılıyor ({ADMIN_V2_COUNT} kategori · {ADMIN_V2_TOTAL}+ içerik hazır)
@@ -867,7 +884,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır */}
       {modal === "zip" && isMasterSürüm && (
         <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
-          <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} /></div>
+          <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} onMedyaDegisti={onMedyaSenkron} /></div>
         </Modal>
       )}
 

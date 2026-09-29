@@ -72,6 +72,8 @@ export interface ModalsContainerProps {
   combinedAllClips: Clip[];
   /** ★ Kullanıcı medyası (IndexedDB) — "Arka Plan Yap" ile gelen Clip'i stüdyoya atar */
   onMedyaArkaPlan: (medyaId: string) => void;
+  /** ★ Galeri senkronu (30.09): yükle/sil sonrası Yüklediklerim klasörünü IndexedDB'den tazele */
+  onMedyaSenkron?: () => void;
   CATEGORY_ICONS: Record<CatId, React.ElementType>;
   lockTip: string | null;
   setLockTip: React.Dispatch<React.SetStateAction<string | null>>;

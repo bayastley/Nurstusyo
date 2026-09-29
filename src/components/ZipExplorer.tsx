@@ -54,7 +54,7 @@ function formatBytes(b: number) {
   return `${b} B`;
 }
 
-export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medyaId: string) => void }> = ({ onClose, onArkaPlanYap }) => {
+export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medyaId: string, secilsinMi?: boolean) => void; onMedyaDegisti?: () => void }> = ({ onClose, onArkaPlanYap, onMedyaDegisti }) => {
   const [dosyalar, setDosyalar] = useState<MedyaDosya[]>(() => {
     try { return JSON.parse(localStorage.getItem("nur_medya_kutuphanesi") || "[]"); } catch { return []; }
   });
@@ -136,6 +136,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
       setDosyalar(yeni);
       kaydet(yeni);
       setSecili((s) => s ?? eklenen[0]);
+      onMedyaDegisti?.(); // ★ galeri (Yüklediklerim) anında tazelensin
     }
     setRedEdilen(redListe.length ? redListe : null);
     setIsleniyor(false);
@@ -146,7 +147,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
     setDosyalar(yeni);
     kaydet(yeni);
     if (secili?.id === id) setSecili(null);
-    void deleteStoredMedia(id); // ★ IndexedDB'den de sil
+    void deleteStoredMedia(id).then(() => onMedyaDegisti?.()); // ★ IndexedDB'den de sil + galeriyi tazele
     medyaOzetSil(id);
   };
 
@@ -154,7 +155,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
     setDosyalar([]);
     setSecili(null);
     try { localStorage.removeItem("nur_medya_kutuphanesi"); } catch { /* yoksay */ }
-    void clearStoredMedia(); // ★ IndexedDB'yi de boşalt
+    void clearStoredMedia().then(() => onMedyaDegisti?.()); // ★ IndexedDB'yi boşalt + galeriyi tazele
   };
 
   /** ★ ARKA PLAN YAP: seçili dosyayı stüdyo atmosferine gönder (video/resim; ses hariç) */

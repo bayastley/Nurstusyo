@@ -861,13 +861,28 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         if (poolCat.length) {
           const chosen = poolCat[Math.floor(Math.random() * poolCat.length)];
           setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
-          if (verseIndexRef.current === selectedRef.current.length) { setBackground(chosen); }
+          // ★ KULLANICI MEDYASI KUTSAL (30.09): ana arka plan kullanıcının kendi dosyasıysa
+          //   AI onu atmosferle DEĞİŞTİREMEZ — ayet slotu AI'nın işi, ana seçim kullanıcının.
+          if (verseIndexRef.current === selectedRef.current.length && backgroundRef.current.cat !== "yuklenenler") { setBackground(chosen); }
         }
       }
 
       // ★ AI kapalıyken fallback: seçili sekme türünden mushaf klibi (şablondaysa şablon)
-      const quranClips = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === clipKindRef.current);
-      if (quranClips.length && !ayahBackgroundsRef.current[id]) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
+      // ★ KULLANICI SEÇİMİ KUTSAL (30.09): kullanıcı kendi dosyasını ana arka plan yaptıysa
+      //   yeni ayet de ONUNLA başlar — otomatik atmosfer ezmesin. Kendi dosyası yoksa
+      //   yüklü klipler → mushaf sırasıyla fallback.
+      if (!ayahBackgroundsRef.current[id]) {
+        const anaArkaPlan = backgroundRef.current;
+        if (anaArkaPlan?.cat === "yuklenenler") {
+          setAyahBackgrounds((current) => ({ ...current, [id]: anaArkaPlan }));
+        } else {
+          const kullaniciKlipleri = combinedAllClips.filter((clip) => clip.cat === "yuklenenler" && clip.kind === clipKindRef.current);
+          const quranClips = kullaniciKlipleri.length
+            ? kullaniciKlipleri
+            : combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === clipKindRef.current);
+          if (quranClips.length) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
+        }
+      }
       setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
     } catch (e) {
       console.error("[addAyah] fetch hatası:", e);
@@ -902,11 +917,21 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const reassignBackgroundsForKind = useCallback((kind: "img" | "vid") => {
     const items = selectedRef.current;
     if (!items.length) return;
+    // ★ KULLANICI MEDYASI KUTSAL (30.09): "Yüklediklerim"e atanmış slotlar sekme
+    //   değişiminde ASLA ezilmez — yalnız diğerleri yeniden atanır.
+    const korunacak = Object.entries(ayahBackgroundsRef.current)
+      .filter(([, clip]) => clip.cat === "yuklenenler")
+      .map(([id]) => id);
+    const duzenlecekler = items.filter((item) => !korunacak.includes(item.id));
     const next: Record<string, Clip> = {};
+    items.forEach((item) => {
+      if (korunacak.includes(item.id)) next[item.id] = ayahBackgroundsRef.current[item.id];
+    });
+    if (!duzenlecekler.length) { notify("📁 Yüklediklerin korundu — sekme değişimi onlara dokunmadı"); return; }
     if (smartAiEnabledRef.current) {
       // Akıllı AI açıksa: her ayete yeni türde tematik sahne
       const usedIds = new Set<string>();
-      items.forEach((item) => {
+      duzenlecekler.forEach((item) => {
         const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
         let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === kind);
         if (poolCat.length === 0) {
@@ -926,7 +951,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       // Akıllı AI kapalıysa: yeni türden mushaf/nötr klip dağıt
       const pool = combinedAllClips.filter((clip) => clip.kind === kind && isClipAccessibleRef.current(clip));
       if (!pool.length) return;
-      items.forEach((item) => { next[item.id] = pool[Math.floor(Math.random() * pool.length)]; });
+      duzenlecekler.forEach((item) => { next[item.id] = pool[Math.floor(Math.random() * pool.length)]; });
     }
     if (Object.keys(next).length) {
       setAyahBackgrounds(next);
@@ -955,6 +980,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [libType, libEmotion, libSearch]);
 
   const isClipAccessible = useCallback((clip: Clip): boolean => {
+    // ★ Yüklediklerim: kullanıcının kendi dosyaları her zaman erişilebilir (kendi cihazı)
+    if (clip.cat === "yuklenenler") return true;
     if (isMasterSürüm || ATMOSPHERE_PREVIEW_UNLOCKED) return true;
     // ★ ADMIN KATEGORİ PLANI: onaylı dağıtıma göre (pro/elit tier kilidi,
     //   v2 kilitli, hidden admin-only) — adminCategoryAccess.ts okur
@@ -1192,7 +1219,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         const sNum = selected[0].s;
         const url = reciter.surahPattern!.replace("{S}", String(sNum).padStart(3, "0"));
         // ★ Muhammed el-Fakîh hocada atmosferlerin hızlı hızlı geçmesini engelle
+        // ★ KULLANICI MEDYASI KUTSAL (30.09): "Yüklediklerim" slotları ana arka planla
+        //   EZİLMEZ — kullanıcının kendi dosyası üretimde aynen kalır.
         selected.forEach((item) => {
+          const mevcut = ayahBackgroundsRef.current[item.id];
+          if (mevcut && mevcut.cat === "yuklenenler") return;
           ayahBackgroundsRef.current[item.id] = backgroundRef.current;
         });
         try {
@@ -1450,7 +1481,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ MEDYA → ARKA PLAN (28.09): Medya Yükleme'deki "Stüdyoya Arka Plan Yap" buraya gelir.
   //   IndexedDB'den blob okunur → taze blob URL'i → Clip → setBackground (+ pickingFor ise ayete atanır).
-  const medyaArkaPlanYap = useCallback(async (medyaId: string) => {
+  const medyaArkaPlanYap = useCallback(async (medyaId: string, secilsinMi = true) => {
     const row = await getStoredMedia(medyaId);
     if (!row) { notify("⚠️ Dosya kalıcı depoda bulunamadı — yeniden yüklemeyi dene"); return; }
     if (row.tur === "ses") { notify("🎵 Ses dosyası arka plan olamaz — arka plan için video/resim seç"); return; }
@@ -1458,22 +1489,45 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       const url = URL.createObjectURL(row.blob);
       const clip: Clip = { id: `medya-${row.id}`, label: row.name, cat: "yuklenenler", kind: row.tur === "resim" ? "img" : "vid", src: url };
       setMedyaClips((cur) => (cur.some((c) => c.id === clip.id) ? cur : [clip, ...cur]));
-      if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip);
+      // ★ secilsinMi=false: yalnız galeriye kaydet (Yüklediklerim klasörü), arka planı DEĞİŞTİRME
+      if (!secilsinMi) { notify(`📁 "${row.name}" Yüklediklerim klasörüne kaydedildi`); return; }
+      if (pickingFor) {
+        setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip }));
+      } else {
+        // ★ KULLANICI SEÇİMİ KUTSAL (30.09): kullanıcı kendi dosyasını "arka plan yap"
+        //   dediğinde atmosfer kalmaz — TÜM seçili ayetlere uygulanır + ana arka plan olur.
+        //   (Önceki davranış: yalnız ana arka plan; ayet slotlarındaki eski atmosferler
+        //   ezmeye devam ediyordu — kullanıcının şikâyetinin kök nedeni.)
+        setBackground(clip);
+        const items = selectedRef.current;
+        if (items.length) {
+          setAyahBackgrounds((current) => {
+            const next = { ...current };
+            items.forEach((item) => { next[item.id] = clip; });
+            return next;
+          });
+        }
+      }
       notify(`💾 "${row.name}" arka plan olarak seçildi — kalıcı depodan`);
     } catch {
       notify("⚠️ Dosya açılamadı — depolama erişimi engellenmiş olabilir");
     }
   }, [pickingFor, notify]);
 
-  // ★ AÇILIŞTA GERİ YÜKLEME: IndexedDB'deki kalıcı medya → galeride "Yüklediklerim"
-  useEffect(() => {
-    let alive = true;
-    void (async () => {
-      const clips = await medyaClipYukle();
-      if (alive && clips.length) setMedyaClips(clips);
-    })();
-    return () => { alive = false; };
+  // ★ YÜKLEDİKLERİM KLASÖRÜ (30.09): açılışta IndexedDB'deki tüm kalıcı medya
+  //   galeriye yüklenir — kişinin cihazından ekledikleri her oturumda yerinde kalsın.
+  //   (Sunucumuz yok; her şey kullanıcının kendi tarayıcısında.)
+  //   medyaClipYukle: SHA-256 bütünlük kontrolü yapar; bozuk dosyayı sessizce atlar.
+  //   Bütünlük özeti olmayan eski kayıtlar da kabul edilir — veri kaybı yok.
+  const yuklenenleriYukle = useCallback(async () => {
+    try {
+      const klipler = await medyaClipYukle();
+      setMedyaClips(klipler); // boşsa da yaz — silinen dosya galeride hayalet kalmasın
+    } catch { /* depo yoksa sessiz — site ASLA bozulmaz */ }
   }, []);
+  useEffect(() => { void yuklenenleriYukle(); }, [yuklenenleriYukle]);
+  // ★ Galeri senkronu: ZipExplorer yükle/sil/temizle sonrası çağırır
+  const onMedyaSenkron = useCallback(() => { void yuklenenleriYukle(); }, [yuklenenleriYukle]);
 
   const pickClip = (clip: Clip) => {
     // ★ TIKLAMA ANINDA ÖN İMZA: useEffect render'ı bekler, biz beklemeden imzayı
@@ -1482,7 +1536,22 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       getVideoUrl(clip, true).then((url) => { if (url) ensureVideo(url, clip.src); }).catch(() => undefined);
       void getPosterUrl(clip).catch(() => undefined);
     }
-    if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip })); else setBackground(clip);
+    if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip }));
+    else {
+      setBackground(clip);
+      // ★ KULLANICI MEDYASI KUTSAL (30.09): galeriden kendi dosyası (Yüklediklerim)
+      //   seçilirse TÜM ayet slotlarına uygulanır — eski atmosferler üretimi ezemesin.
+      if (clip.cat === "yuklenenler") {
+        const items = selectedRef.current;
+        if (items.length) {
+          setAyahBackgrounds((current) => {
+            const next = { ...current };
+            items.forEach((item) => { next[item.id] = clip; });
+            return next;
+          });
+        }
+      }
+    }
     notify(`Atmosfer seçildi: ${clip.label}`);
     setModal(null);
     setPickingFor(null);
@@ -2082,6 +2151,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         setModal={setModal}
         setRoadmapOpen={setRoadmapOpen}
         onMedyaArkaPlan={medyaArkaPlanYap}
+        onMedyaSenkron={onMedyaSenkron}
         onClipKindChange={reassignBackgroundsForKind}
         loginTab={loginTab}
         setLoginTab={setLoginTab}
