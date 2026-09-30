@@ -143,8 +143,11 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   // ★ Hook'lardan SONRA erken dönüş
   if (!open) return null;
 
+  // ★ KAPATMA FIX (30.09, kullanıcı bildirimi): onClose prop'u hiç geçilmemişti —
+  //   Modal'ın X butonu ve dış-tıklama kapatması onClose'u çağırır; undefined olunca
+  //   hiçbir şey yapmıyordu (modal takılı kalıyordu). Esc desteği Modal'da zaten var.
   return (
-    <Modal title="✍️ Kelime Atölyesi" sub="Bir kelime yaz — ayet + atmosfer önerisini tek tıkla stüdyoya al" wide>
+    <Modal title="✍️ Kelime Atölyesi" sub="Bir kelime yaz — ayet + atmosfer önerisini tek tıkla stüdyoya al" wide onClose={onClose}>
       {/* Arama satırı */}
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />

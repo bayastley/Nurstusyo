@@ -122,7 +122,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
   const girisli = Boolean(user?.id);
 
   return (
-    <Modal title="🎁 Arkadaşını Davet Et" sub="İkiniz de +3 kısa video hakkı kazanın — davet ettiğin kadar büyüsün" wide>
+    <Modal title="🎁 Arkadaşını Davet Et" sub="İkiniz de +3 kısa video hakkı kazanın — davet ettiğin kadar büyüsün" wide onClose={onClose}>
       {/* GİRİŞLİ: kodum + istatistik */}
       {girisli && (
         yukleniyor ? (
