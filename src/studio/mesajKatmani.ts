@@ -153,6 +153,14 @@ export interface MesajAyar {
   /** Font ölçeği %70–160 (100 = standart) */
   olcek: number;
   acik: boolean;
+  /** ★ HAT FONTU (01.10): yazının CSS font ailesi — kartlıkta ARABIC_FONTS'tan seçilir */
+  hatCss: string;
+  /** Hat fontunun ağırlığı — tek ağırlıklı fontlarda 400 (arabicFontWeight) */
+  hatAgirlik: number;
+  /** ★ RENK: hex — kartlıkta çubuktan (cubukRengi) seçilir; "#ffffff" = klasik beyaz */
+  renk: string;
+  /** ★ IŞILTI: 0–2 — yazının arkasına kendi rengiyle hale çizer (0 = sade) */
+  isilti: number;
 }
 
 export const VARSAYILAN_MESAJ: MesajAyar = {
@@ -162,6 +170,10 @@ export const VARSAYILAN_MESAJ: MesajAyar = {
   ofset: { x: 0, y: 0 },
   olcek: 100,
   acik: false,
+  hatCss: "Inter, sans-serif",
+  hatAgirlik: 600,
+  renk: "#ffffff",
+  isilti: 1,
 };
 
 /**
@@ -183,7 +195,9 @@ export function drawMesajYazisi(
 
   const boy = Math.round(h * 0.026 * (Math.max(70, Math.min(160, ayar.olcek)) / 100));
   const maxW = w * 0.78;
-  ctx.font = `600 ${boy}px Inter, sans-serif`;
+  const hatCss = ayar.hatCss || "Inter, sans-serif";
+  const agirlik = ayar.hatAgirlik || 600;
+  ctx.font = `${agirlik} ${boy}px ${hatCss}`;
   const satirlar = wrapText(metin, maxW);
   if (!satirlar.length) return 0;
 
@@ -201,11 +215,15 @@ export function drawMesajYazisi(
   const ox = ayar.ofset.x * w * 0.004;
   const tx = ayar.hizalama === "sol" ? w * 0.11 + ox : ayar.hizalama === "sag" ? w * 0.89 + ox : w / 2 + ox;
   ctx.textAlign = ayar.hizalama === "sol" ? "left" : ayar.hizalama === "sag" ? "right" : "center";
-  ctx.direction = "ltr";
+  // ★ YÖN OTOMATİĞİ: metinde Arapça karakter varsa RTL — hat fontuyla doğru bağlanma
+  const rtl = /[\u0600-\u06FF\u0750-\u077F]/.test(metin);
+  ctx.direction = rtl ? "rtl" : "ltr";
 
-  // Ünlem/emoji hoşgörülü okunabilirlik: güçlü gölge + hafif kontur
-  ctx.font = `600 ${boy}px Inter, sans-serif`;
-  ctx.fillStyle = "#ffffff";
+  // Okunabilirlik: hafif kontur + koyu gölge; ışıltı > 0 iken arkaya KENDİ RENGİYLE hale
+  const renk = ayar.renk || "#ffffff";
+  const isilti = Math.max(0, Math.min(2, ayar.isilti ?? 1));
+  ctx.font = `${agirlik} ${boy}px ${hatCss}`;
+  ctx.fillStyle = renk;
   ctx.strokeStyle = "rgba(0,0,0,.55)";
   ctx.lineWidth = Math.max(2, Math.round(boy * 0.16));
   ctx.shadowColor = "rgba(0,0,0,.85)";
@@ -214,6 +232,14 @@ export function drawMesajYazisi(
 
   let yy = ust + boy;
   for (const satir of satirlar) {
+    if (isilti > 0) {
+      // Işıltı geçişi: yazıyı kendi rengiyle geniş blur ile bir kez çiz → renkli hale
+      ctx.shadowColor = renk;
+      ctx.shadowBlur = Math.round(boy * 0.7 * isilti);
+      ctx.fillText(satir, tx, yy);
+      ctx.shadowColor = "rgba(0,0,0,.85)";
+      ctx.shadowBlur = Math.round(boy * 0.45);
+    }
     ctx.strokeText(satir, tx, yy);
     ctx.fillText(satir, tx, yy);
     yy += satirH;

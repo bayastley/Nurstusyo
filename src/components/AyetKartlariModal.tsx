@@ -12,23 +12,36 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Download, Search, Shuffle, Sparkles, Image as ImageIcon, Sun, Moon, Type, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, Wand2, ChevronsDown, Upload, Palette, PenLine } from "lucide-react";
+import { Check, Download, Search, Shuffle, Sparkles, Image as ImageIcon, Sun, Moon, Type, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, Wand2, ChevronsDown, Upload, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { Modal } from "./UIElements";
 import { AYET_KARTILARI, AYET_MOODS, SURE_ADLARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
+import type { Tier } from "../tier";
 import { CATEGORIES, CATEGORY_PALETTE, TEMPLATE_CLIPS } from "../clips";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { BACKGROUNDS, catLabel, BG_CATS, akilliBgSec, MOOD_COLORS, wrapCanvasText, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { CubukRenkSecici } from "./renkCubuguSecici";
+import { cubukRengi, hexToHue } from "../studio/mesajKatmani";
+import { HatFontuSeridi } from "./hatFontuSeridi";
 // ★ SRP adım 7 (30.09): bg havuzu + akıllı seçim + mood renkleri + canvas çizici ayetKartMotoru.tsx'e taşındı
 
 interface AyetKartlariModalProps {
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
+  /** ★ Hat paleti PRO+ kilidi (01.10): accessTier pro/elit ise 20 font açık */
+  accessTier?: Tier;
+  tierAtLeast?: (have: Tier, need: Tier) => boolean;
+  openPremium?: (tab?: "uyelik" | "jeton") => void;
 }
 
-export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify }) => {
+export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify, accessTier = "free", tierAtLeast, openPremium }) => {
+  // ★ HAT PALETİ PRO+ (01.10): temel stil (Aa Türkçe) herkese; 20 hat fontu pro/elit'te.
+  const hatPaletiAcik = tierAtLeast ? tierAtLeast(accessTier, "pro") : accessTier === "pro" || accessTier === "elit";
+  const hatKilitTiklandi = () => {
+    if (openPremium) { openPremium("uyelik"); return; }
+    notify?.("👑 Hat font paleti PRO+ üyelik özelliğidir — 20 klasik ve modern hat sizi bekliyor!");
+  };
   const [ayetId, setAyetId] = useState<string>(AYET_KARTILARI[0]?.id ?? "");
   const [bgId, setBgId] = useState<string>("");
   const [mood, setMood] = useState<AyetKarti["mood"] | "tumu">("tumu");
@@ -45,6 +58,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const [imgTick, setImgTick] = useState(0);
   const [ayar, setAyar] = useState<KartAyarlari>(VARSAYILAN_AYARLAR);
   const [ayarlariGoster, setAyarlariGoster] = useState(false);
+  // ★ Mesaj rengi çubuğunun mevcut konumu — seçili rengin 0-360° karşılığı (seçici işaretçisi burada durur)
+  const mesajRenkDonme = hexToHue(ayar.mesaj.renk || "#ffffff");
   // ★📸 KENDİ FOTOĞRAFIN (foto+hat sanatı kartı): kullanıcı fotoğrafı yükler,
   //   kart arka planına hat sanatı ayeti işlenir. Fotoğraf YALNIZCA tarayıcıda
   //   kalır — hiçbir sunucuya gönderilmez (KVKK dostu).
@@ -460,8 +475,30 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
                   {ayar.mesaj.acik && (
                     <div className="space-y-1.5">
                       <textarea value={ayar.mesaj.metin} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, metin: e.target.value.slice(0, 90), acik: true } }))} rows={2}
-                        placeholder="Karta yazılacak mesajın…"
+                        placeholder="Karta yazılacak mesajın… (Türkçe veya Arapça hatla)"
                         className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25" />
+
+                      {/* ★ HAT FONTU — temel stil herkese, palet PRO+ (HatFontuSeridi ortak bileşen) */}
+                      <HatFontuSeridi
+                        boy="kucuk"
+                        seciliHatCss={ayar.mesaj.hatCss}
+                        onSec={(hatCss, hatAgirlik) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, hatCss, hatAgirlik } }))}
+                        proAcik={hatPaletiAcik}
+                        kilitTiklandi={hatKilitTiklandi}
+                      />
+
+                      {/* ★ RENK — çubuktan (stüdyo ile aynı 6 duraklı palet) */}
+                      <div className="flex items-center gap-2">
+                        <CubukRenkSecici boy="kucuk" etiket="Renk" deger={mesajRenkDonme} onSec={(d) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, renk: cubukRengi(d) } }))} />
+                        <div className="flex flex-1 flex-wrap gap-1">
+                          {["#ffffff", "#f5dda6", cubukRengi(0), cubukRengi(120), cubukRengi(180), cubukRengi(240), cubukRengi(300)].map((r) => (
+                            <button key={r} type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, renk: r } }))}
+                              className={`h-5 w-5 rounded-full border transition ${ayar.mesaj.renk === r ? "ring-2 ring-white/80" : "border-white/30 hover:border-white/60"}`}
+                              style={{ background: r }} title={r} />
+                          ))}
+                        </div>
+                      </div>
+
                       <div className="grid grid-cols-3 gap-0.5">
                         {(["ust", "orta", "alt"] as const).map((k) => (
                           <button key={k} type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, konum: k } }))}
@@ -481,6 +518,12 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
                         <span className="text-[8.5px] font-bold text-white/50">Boyut</span>
                         <input type="range" min={70} max={160} step={5} value={ayar.mesaj.olcek} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, olcek: Number(e.target.value) } }))} className="h-1 flex-1 accent-[color:var(--accent)]" />
                         <span className="w-8 text-right text-[8px] tabular-nums text-white/40">{ayar.mesaj.olcek}%</span>
+                      </div>
+                      {/* ★ IŞILTI — yazının arkasına kendi rengiyle hale */}
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><IsiltiIcon size={9} style={{ color: "var(--accent)" }} /> Işıltı</span>
+                        <input type="range" min={0} max={2} step={0.25} value={ayar.mesaj.isilti} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, isilti: Number(e.target.value) } }))} className="h-1 flex-1 accent-[color:var(--accent)]" />
+                        <span className="w-8 text-right text-[8px] tabular-nums text-white/40">{ayar.mesaj.isilti}×</span>
                       </div>
                     </div>
                   )}

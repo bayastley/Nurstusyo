@@ -5,8 +5,9 @@ import { Segmented } from "./UIElements";
 import { randomClip, type Clip } from "../clips";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { T } from "../i18n";
-import { type CubukAyar, type MesajAyar } from "../studio/mesajKatmani";
+import { type CubukAyar, type MesajAyar, cubukRengi, hexToHue } from "../studio/mesajKatmani";
 import { CubukRenkSecici } from "./renkCubuguSecici";
+import { HatFontuSeridi } from "./hatFontuSeridi";
 import type { ModalName, Output, SelectedAyah, Tier } from "../types";
 
 interface VideoPreviewSectionProps {
@@ -297,6 +298,25 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               rows={2}
               className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25"
             />
+            {/* ★ HAT FONTU — kartlıkla AYNI şerit; temel herkese, palet PRO+ */}
+            <HatFontuSeridi
+              boy="kucuk"
+              seciliHatCss={mesajAyar.hatCss}
+              onSec={(hatCss, hatAgirlik) => setMesajAyar((m) => ({ ...m, hatCss, hatAgirlik }))}
+              proAcik={tierAtLeast(tier, "pro")}
+              kilitTiklandi={() => { notify("👑 Hat font paleti PRO+ üyelik özelliğidir — 20 klasik ve modern hat sizi bekliyor!"); openPremium("uyelik"); }}
+            />
+            {/* ★ MESAJ RENGİ — çubuk seçici + hızlı swatch'lar (kartlıkla aynı palet) */}
+            <div className="flex items-center gap-2">
+              <CubukRenkSecici boy="kucuk" etiket="Renk" deger={hexToHue(mesajAyar.renk || "#ffffff")} onSec={(d) => setMesajAyar((m) => ({ ...m, renk: cubukRengi(d) }))} />
+              <div className="flex flex-1 flex-wrap gap-1">
+                {["#ffffff", "#f5dda6", cubukRengi(120), cubukRengi(180), cubukRengi(240), cubukRengi(300)].map((r) => (
+                  <button key={r} type="button" onClick={() => setMesajAyar((m) => ({ ...m, renk: r }))}
+                    className={`h-5 w-5 rounded-full border transition ${mesajAyar.renk === r ? "ring-2 ring-white/80" : "border-white/30 hover:border-white/60"}`}
+                    style={{ background: r }} title={r} />
+                ))}
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-1">
               {(["ust", "orta", "alt"] as const).map((k) => (
                 <button key={k} type="button" onClick={() => setMesajAyar((m) => ({ ...m, konum: k }))}
@@ -329,6 +349,14 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             </div>
             <input type="range" min={70} max={160} step={5} value={mesajAyar.olcek}
               onChange={(e) => setMesajAyar((m) => ({ ...m, olcek: Number(e.target.value) }))}
+              className="h-1 w-full accent-[color:var(--accent)]" />
+            {/* ★ IŞILTI — yazının arkasına kendi rengiyle hale (kartlıkla aynı) */}
+            <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
+              <span>Işıltı</span>
+              <span className="tabular-nums text-white/40">{mesajAyar.isilti}×</span>
+            </div>
+            <input type="range" min={0} max={2} step={0.25} value={mesajAyar.isilti}
+              onChange={(e) => setMesajAyar((m) => ({ ...m, isilti: Number(e.target.value) }))}
               className="h-1 w-full accent-[color:var(--accent)]" />
             {(mesajAyar.ofset.x !== 0 || mesajAyar.ofset.y !== 0) && (
               <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { x: 0, y: 0 } }))}
