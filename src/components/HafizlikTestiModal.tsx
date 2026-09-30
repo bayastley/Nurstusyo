@@ -229,16 +229,31 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       const bas = tam.slice(0, kesme > 0 ? kesme : 40);
       const devam = tam.slice(bas.length).trim();
       // Yanlış seçenekler: aynı sureden VEYA komşu surelerden diğer devam parçaları
+      // ★ UZUNLUK EŞİTLİĞİ FIX (30.09, kullanıcı bildirimi): eski kesim `k.slice(0, devam.length)`
+      //   yanlış şıkları doğru devamdan ÇOK KISA yapabiliyordu (ör. devam 180 kar.
+      //   yanlış 40 kar.) → "en uzun şık doğru" taktiği testi bozuyordu. Artık her
+      //   yanlış şık, doğru devamla AYNI kelime sayısına kadar kesilir (kelime bazlı),
+      //   yani uzunluk ipucu ortadan kalkar; doğru/yanlış ayrımı yalnız hafızadan olur.
+      const devamKelime = devam.split(/\s+/).filter(Boolean).length;
+      const kelimeKes = (t: string, n: number) => { const w = t.split(/\s+/).filter(Boolean); return w.slice(0, Math.max(1, n)).join(" "); };
       const yanlisHavuz: string[] = [];
       for (const a of ayahs) {
         const t = a.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").trim();
         if (t !== tam && t.length > 25) {
           const k = t.slice(Math.floor(t.length / 3));
-          if (k !== devam) yanlisHavuz.push(k.slice(0, devam.length));
+          const aday = kelimeKes(k, devamKelime);
+          if (aday !== devam && !yanlisHavuz.includes(aday)) yanlisHavuz.push(aday);
         }
       }
       while (yanlisHavuz.length < 3) {
-        yanlisHavuz.push(devam.split(" ").reverse().join(" ").slice(0, devam.length)); // kelimeleri ters çevir
+        // ★ Dolgu üretici çeşitlilik: aynı ters-çevrilmiş metni tekrar etmesin diye her
+        //   turda farklı bir permütasyon/kesim üretir; yine de tekil olmayan atılır.
+        const baz = yanlisHavuz.length === 0 ? devam : yanlisHavuz[yanlisHavuz.length - 1];
+        let aday = baz.split(/\s+/).reverse().join(" ");
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = kelimeKes(tam, devamKelime) + " …";
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = devam.split(/\s+/).slice().sort().join(" ");
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = (baz + " " + tam).split(/\s+/).slice(0, Math.max(1, devamKelime)).join(" ");
+        if (!yanlisHavuz.includes(aday) && aday !== devam) yanlisHavuz.push(aday); else yanlisHavuz.push(aday + " ﴿﴾");
       }
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
       setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler });
