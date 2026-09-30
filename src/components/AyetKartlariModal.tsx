@@ -12,298 +12,21 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Check, Download, Search, Shuffle, Sparkles, Image as ImageIcon, Sun, Moon, Type, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, Wand2, ChevronsDown, Upload } from "lucide-react";
+import { Check, Download, Search, Shuffle, Sparkles, Image as ImageIcon, Sun, Moon, Type, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, Wand2, ChevronsDown, Upload, Palette, PenLine } from "lucide-react";
 import { Modal } from "./UIElements";
 import { AYET_KARTILARI, AYET_MOODS, SURE_ADLARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
 import { CATEGORIES, CATEGORY_PALETTE, TEMPLATE_CLIPS } from "../clips";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
+import { BACKGROUNDS, catLabel, BG_CATS, akilliBgSec, MOOD_COLORS, wrapCanvasText, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
+import { CubukRenkSecici } from "./renkCubuguSecici";
+// ★ SRP adım 7 (30.09): bg havuzu + akıllı seçim + mood renkleri + canvas çizici ayetKartMotoru.tsx'e taşındı
 
 interface AyetKartlariModalProps {
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
 }
-
-interface BgItem {
-  id: string;
-  label: string;
-  cat: string;
-  src: string;
-}
-
-// ─── ARKA PLAN HAVUZU — yüzlerce görsel, doğrudan CDN ─────────
-// TEMPLATE_CLIPS: kod kategorilerinin R2 posterleri (cdn/posters/...)
-// ADMIN_TEMPLATE_CLIPS: admin kategorilerinin R2 şablonları (cdn/templates/...)
-const BACKGROUNDS: BgItem[] = [
-  ...TEMPLATE_CLIPS.map((c) => ({ id: c.id, label: c.label, cat: c.cat as string, src: c.src })),
-  ...ADMIN_TEMPLATE_CLIPS.map((c) => ({ id: c.id, label: c.label, cat: c.cat as string, src: c.src })),
-];
-
-const catLabel = (cat: string): string =>
-  CATEGORIES.find((c) => c.id === cat)?.label ??
-  ADMIN_ATMOSPHERE_CATEGORIES.find((c) => c.id === cat)?.label ??
-  cat;
-
-const BG_CATS: string[] = (() => {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const bg of BACKGROUNDS) {
-    if (!seen.has(bg.cat)) { seen.add(bg.cat); out.push(bg.cat); }
-  }
-  return out;
-})();
-
-// ════════════════════════════════════════════════════════
-// 🎯 AKILLI SEÇ — ayetin duygu/konuşma kelimelerine göre en uygun
-// arka plan kategorisini seçen hafif eşleştirme motoru.
-// Kullanıcı tek tuş basar: hem ayet hem arka plan kendiliğinden seçilir.
-// ════════════════════════════════════════════════════════
-const AKILLI_KURALLAR: Array<{ kelimeler: string[]; bgAnahtar: string[] }> = [
-  { kelimeler: ["kâbe", "kabe", "hac", "umre", "beyt", "mescid", "namaz", "secde", "kıble", "kible"], bgAnahtar: ["namaz", "kâbe", "kabe"] },
-  { kelimeler: ["kur'an", "kuran", "kitap", "mushaf", "zikr", "okuma", "oku", "yazı", "yazi", "kalem"], bgAnahtar: ["kur'an", "kuran", "kalem"] },
-  { kelimeler: ["deniz", "dalga", "su", "nehir", "ırmak", "irmak", "pınar", "pinar", "yağmur", "yagmur"], bgAnahtar: ["deniz", "göl", "gol", "şelale", "selale"] },
-  { kelimeler: ["gece", "gündüz", "gunduz", "ay", "yıldız", "yildiz", "gökyüzü", "gokyuzu", "güneş", "gunes", "fener"], bgAnahtar: ["gece", "yıldız", "yildiz", "ay"] },
-  { kelimeler: ["tohum", "filiz", "ağaç", "agac", "bahçe", "bahce", "zeytin", "incir", "yemiş", "yemis", "meyve", "tarla", "hasat"], bgAnahtar: ["bahçe", "bahce", "orman", "doğa", "doga", "çiçek", "cicek"] },
-  { kelimeler: ["dağ", "dag", "zirve", "kaya", "mağara", "magara", "yol", "yıldırım", "yildirim"], bgAnahtar: ["dağ", "dag", "zorlu"] },
-  { kelimeler: ["ateş", "ates", "cehennem", "azap", "savaş", "savas", "kıyamet", "kiyamet", "dünya", "dunya"], bgAnahtar: ["gün batımı", "gun batimi", "dramatik", "gökyüzü", "gokyuzu"] },
-  { kelimeler: ["anne", "baba", "eş", "es", "çocuk", "cocuk", "yuva", "ev", "merhamet", "kalp"], bgAnahtar: ["çiçek", "cicek", "bahçe", "bahce", "sakin"] },
-];
-
-const akilliBgSec = (ayet: AyetKarti | undefined, havuz: BgItem[]): BgItem | null => {
-  if (!havuz.length) return null;
-  const metin = `${ayet?.title ?? ""} ${ayet?.tr ?? ""} ${ayet?.source ?? ""}`.toLocaleLowerCase("tr");
-  const catTurkce = (cat: string) => catLabel(cat).toLocaleLowerCase("tr");
-  for (const kural of AKILLI_KURALLAR) {
-    if (kural.kelimeler.some((kel) => metin.includes(kel))) {
-      const uygun = havuz.filter((b) => kural.bgAnahtar.some((anahtar) => catTurkce(b.cat).includes(anahtar) || b.label.toLocaleLowerCase("tr").includes(anahtar)));
-      if (uygun.length) return uygun[Math.floor(Math.random() * uygun.length)];
-    }
-  }
-  // Duygu fallback'i: huzur/rahmet → sakin görseller, zafer → dramatik gökyüzü, imtihan → dağ
-  const moodBg: Record<string, string[]> = {
-    huzur: ["göl", "gol", "sakin", "orman"], sabir: ["dağ", "dag", "ağaç", "agac"], sukur: ["çiçek", "cicek", "bahçe", "bahce"],
-    tevekkul: ["yıldız", "yildiz", "gece"], rahmet: ["yağmur", "yagmur", "şelale", "selale", "deniz"], sevgi: ["çiçek", "cicek", "gül"],
-    zafer: ["gün batımı", "gun batimi", "gökyüzü", "gokyuzu"], af: ["gökyüzü", "gokyuzu", "yıldız", "yildiz"], imtihan: ["dağ", "dag", "fırtına", "firtina"],
-    cennet: ["bahçe", "bahce", "cennet", "pınar", "pinar"], ilim: ["kalem", "mushaf", "kur'an", "kuran"], aile: ["çiçek", "cicek", "bahçe", "bahce"],
-  };
-  const anahtarlar = ayet ? (moodBg[ayet.mood] ?? []) : [];
-  const uygun = havuz.filter((b) => anahtarlar.some((anahtar) => catTurkce(b.cat).includes(anahtar) || b.label.toLocaleLowerCase("tr").includes(anahtar)));
-  if (uygun.length) return uygun[Math.floor(Math.random() * uygun.length)];
-  return havuz[Math.floor(Math.random() * havuz.length)];
-};
-
-const MOOD_COLORS: Record<AyetKarti["mood"], string> = {
-  huzur: "#a5b4fc",
-  sabir: "#4ade80",
-  sukur: "#f5dda6",
-  tevekkul: "#67e8f9",
-  rahmet: "#7dd3fc",
-  sevgi: "#f9a8d4",
-  zafer: "#fbbf24",
-  af: "#c4b5fd",
-  imtihan: "#fca5a5",
-  cennet: "#86efac",
-  ilim: "#93c5fd",
-  aile: "#fda4af",
-};
-
-// ════════════════════════════════════════════════════════
-// KART ÇİZİCİ — önizleme ve indirme aynı fonksiyonu kullanır
-// ════════════════════════════════════════════════════════
-
-function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const lines: string[] = [];
-  let line = "";
-  for (const word of text.split(/\s+/).filter(Boolean)) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (line && ctx.measureText(candidate).width > maxWidth) { lines.push(line); line = word; }
-    else line = candidate;
-  }
-  if (line) lines.push(line);
-  return lines;
-}
-
-// ── Kart görsel ayarları — kullanıcı kontrollü ────────────────
-export interface KartAyarlari {
-  karartma: number;      // 0–100 (varsayılan 38)
-  yaziOlcek: number;     // 70–140 (100 = standart)
-  arUstte: boolean;      // true: Arapça üstte, false: meal üstte
-  konum: "ust" | "orta" | "alt";   // metin bloğu dikey konumu
-  hizalama: "sol" | "orta" | "sag"; // metin hizalaması
-}
-
-const VARSAYILAN_AYARLAR: KartAyarlari = {
-  karartma: 38,
-  yaziOlcek: 100,
-  arUstte: true,
-  konum: "orta",
-  hizalama: "orta",
-};
-
-async function drawCard(
-  ctx: CanvasRenderingContext2D,
-  w: number,
-  h: number,
-  ayet: AyetKarti,
-  bg: BgItem | null,
-  img: HTMLImageElement | null,
-  ayar: KartAyarlari = VARSAYILAN_AYARLAR,
-): Promise<void> {
-  // 1) Kategori renk paleti + fotoğraf (cover)
-  const pal = bg ? (CATEGORY_PALETTE as Record<string, { primary: string; secondary: string; glow: string; bg: string; bg2: string }>)[bg.cat] : null;
-  const g = ctx.createLinearGradient(0, 0, w, h);
-  g.addColorStop(0, pal?.bg2 ?? "#1a1d2e");
-  g.addColorStop(1, pal?.bg ?? "#0c0d12");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
-
-  if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
-    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
-    ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
-  }
-
-  // 2) Sinematik karartma — kullanıcı ayarlı (0 = hiç karartma, 100 = tam siyah)
-  const k = Math.max(0, Math.min(100, ayar.karartma)) / 100;
-  const base = 0.10 + k * 0.55;   // üst: 0.10–0.65
-  const mid = 0.14 + k * 0.60;    // orta: 0.14–0.74
-  const bot = 0.30 + k * 0.60;    // alt: 0.30–0.90
-  const ov = ctx.createLinearGradient(0, 0, 0, h);
-  ov.addColorStop(0, `rgba(5,4,10,${base.toFixed(2)})`);
-  ov.addColorStop(0.45, `rgba(5,4,10,${mid.toFixed(2)})`);
-  ov.addColorStop(1, `rgba(5,4,10,${Math.min(0.95, bot).toFixed(2)})`);
-  ctx.fillStyle = ov;
-  ctx.fillRect(0, 0, w, h);
-
-  // 3) İnce altın çerçeve
-  ctx.strokeStyle = "rgba(215,170,82,.55)";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(22, 22, w - 44, h - 44);
-  ctx.strokeStyle = "rgba(215,170,82,.20)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(31, 31, w - 62, h - 62);
-
-  // 4) Üst süs
-  ctx.textAlign = "center";
-  ctx.direction = "ltr";
-  ctx.fillStyle = "rgba(245,221,166,.9)";
-  ctx.font = `400 ${Math.round(w * 0.024)}px Inter, sans-serif`;
-  ctx.shadowColor = "rgba(0,0,0,.6)";
-  ctx.shadowBlur = 8;
-  ctx.fillText("✦   ✦   ✦", w / 2, Math.round(h * 0.082));
-  ctx.shadowBlur = 0;
-
-  // 5) Metin bloğu — sığana kadar font küçülür; kullanıcı ayarları uygulanır
-  const innerW = w - Math.round(w * 0.15);
-  const top = Math.round(h * 0.125);
-  const bottom = Math.round(h * 0.80);
-  const avail = bottom - top;
-  const olcek = Math.max(70, Math.min(140, ayar.yaziOlcek)) / 100;
-
-  const arSegments = ayet.ar.split("\n").filter((s) => s.trim().length > 0);
-  const GAP = Math.round(h * 0.035);
-  let arSize = Math.round(w * 0.05 * olcek);   // 1080'de 54px @ %100
-  let mSize = Math.round(w * 0.028 * olcek);   // 1080'de ~30px @ %100
-  let arLines: string[] = [];
-  let mLines: string[] = [];
-  let arLH = 0;
-  let mLH = 0;
-  let totalH = 0;
-
-  for (let guard = 0; guard < 60; guard++) {
-    ctx.font = `700 ${arSize}px Amiri, 'Traditional Arabic', serif`;
-    arLines = [];
-    for (const seg of arSegments) arLines.push(...wrapCanvasText(ctx, seg, innerW));
-    arLH = Math.round(arSize * 1.85);
-    ctx.font = `600 ${mSize}px Inter, sans-serif`;
-    mLines = wrapCanvasText(ctx, ayet.tr, innerW);
-    mLH = Math.round(mSize * 1.6);
-    totalH = arLines.length * arLH + (mLines.length ? GAP + mLines.length * mLH : 0);
-    if (totalH <= avail) break;
-    if (arSize > Math.round(w * 0.024)) arSize -= 2;
-    else if (mSize > Math.round(w * 0.018)) mSize -= 1;
-    else break;
-  }
-
-  // Dikey konum: üst / orta / alt
-  const bosluk = Math.max(0, avail - totalH);
-  let baslangic = top;
-  if (ayar.konum === "orta") baslangic = top + bosluk / 2;
-  else if (ayar.konum === "alt") baslangic = top + bosluk;
-
-  // Yatay hizalama
-  const txX = ayar.hizalama === "sol" ? w * 0.14 : ayar.hizalama === "sag" ? w * 0.86 : w / 2;
-  ctx.textAlign = ayar.hizalama === "sol" ? "left" : ayar.hizalama === "sag" ? "right" : "center";
-
-  // ── Sıra: ayara göre Arapça üstte mi meal üstte mi ──
-  const drawArabic = () => {
-    let yy = baslangic + Math.round(arLH * 0.72);
-    ctx.direction = "rtl";
-    ctx.font = `700 ${arSize}px Amiri, 'Traditional Arabic', serif`;
-    ctx.fillStyle = "#f5dda6";
-    ctx.shadowColor = "rgba(0,0,0,.85)";
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 2;
-    for (const line of arLines) { ctx.fillText(line, txX, yy); yy += arLH; }
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    return yy;
-  };
-  const drawMeal = (startY: number) => {
-    let yy = startY + GAP;
-    ctx.direction = "ltr";
-    ctx.font = `600 ${mSize}px Inter, sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.shadowColor = "rgba(0,0,0,.85)";
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 2;
-    for (const line of mLines) { ctx.fillText(line, txX, yy); yy += mLH; }
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    return yy;
-  };
-
-  if (ayar.arUstte) {
-    const yy = drawArabic();
-    if (mLines.length) drawMeal(yy);
-  } else {
-    let yy = baslangic + Math.round(mLH * 0.8);
-    ctx.direction = "ltr";
-    ctx.font = `600 ${mSize}px Inter, sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.shadowColor = "rgba(0,0,0,.85)";
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 2;
-    for (const line of mLines) { ctx.fillText(line, txX, yy); yy += mLH; }
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-    yy += GAP;
-    ctx.direction = "rtl";
-    ctx.font = `700 ${arSize}px Amiri, 'Traditional Arabic', serif`;
-    ctx.fillStyle = "#f5dda6";
-    ctx.shadowColor = "rgba(0,0,0,.85)";
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 2;
-    for (const line of arLines) { ctx.fillText(line, txX, yy); yy += arLH; }
-    ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
-  }
-
-  ctx.textAlign = "center"; // kaynak & imza hep ortalı
-
-  // 6) Kaynak + imza
-  ctx.direction = "ltr";
-  ctx.font = `700 ${Math.round(w * 0.024)}px Inter, sans-serif`;
-  ctx.fillStyle = "#d7aa52";
-  ctx.shadowColor = "rgba(0,0,0,.7)";
-  ctx.shadowBlur = 10;
-  ctx.fillText(`— ${ayet.source} —`, w / 2, Math.round(h * 0.872));
-
-  ctx.font = `500 ${Math.round(w * 0.018)}px Inter, sans-serif`;
-  ctx.fillStyle = "rgba(255,255,255,.38)";
-  ctx.fillText("nurstudyo.com", w / 2, Math.round(h * 0.928));
-  ctx.shadowBlur = 0;
-}
-
-// ════════════════════════════════════════════════════════
 
 export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify }) => {
   const [ayetId, setAyetId] = useState<string>(AYET_KARTILARI[0]?.id ?? "");
@@ -692,6 +415,75 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
                     <button type="button" onClick={() => setAyar((a) => ({ ...a, yaziOlcek: Math.min(140, a.yaziOlcek + 5) }))}
                       className="glass-soft h-6 w-8 rounded-md text-[11px] font-black text-white/70 transition hover:text-white">+</button>
                   </div>
+                </div>
+
+                {/* ★ RENK ÇUBUĞU (01.10) — Arapça + meal ayrı renk; stüdyo ile aynı çekirdek */}
+                <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><Palette size={9} style={{ color: "var(--accent)" }} /> Renk Çubuğu</p>
+                    <button type="button" onClick={() => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, acik: !a.cubuk.acik } }))}
+                      className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.cubuk.acik ? "text-black" : "glass-soft text-white/50"}`}
+                      style={ayar.cubuk.acik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                      {ayar.cubuk.acik ? "AÇIK" : "KAPALI"}
+                    </button>
+                  </div>
+                  {ayar.cubuk.acik && (
+                    <div className="flex items-start justify-center gap-4">
+                      <CubukRenkSecici boy="kucuk" etiket="Arapça" deger={ayar.cubuk.donme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, donme: d } }))} />
+                      <CubukRenkSecici boy="kucuk" etiket="Meal" deger={ayar.cubuk.mealDonme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, mealDonme: d } }))} />
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-[8px] font-bold text-white/50">Çerçeve</span>
+                        <button type="button" onClick={() => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: a.cubuk.kalinlik > 0 ? 0 : 6 } }))}
+                          className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.cubuk.kalinlik > 0 ? "text-black" : "glass-soft text-white/50"}`}
+                          style={ayar.cubuk.kalinlik > 0 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+                          title="Çerçeve boyunca renk şeridi">
+                          {ayar.cubuk.kalinlik > 0 ? "AÇIK" : "YOK"}
+                        </button>
+                        {ayar.cubuk.kalinlik > 0 && (
+                          <input type="range" min={2} max={14} value={ayar.cubuk.kalinlik} onChange={(e) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: Number(e.target.value) } }))} className="mt-1 h-1 w-10 accent-[color:var(--accent)]" title="Şerit kalınlığı" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* ★ ÖZEL YAZI (01.10) — kartın içine çizilen mesaj; ayrı konum */}
+                <div className="rounded-lg border border-white/10 bg-black/20 p-2">
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><PenLine size={9} style={{ color: "var(--accent)" }} /> Özel Yazı</p>
+                    <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, acik: !a.mesaj.acik } }))}
+                      className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.mesaj.acik ? "text-black" : "glass-soft text-white/50"}`}
+                      style={ayar.mesaj.acik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                      {ayar.mesaj.acik ? "AÇIK" : "KAPALI"}
+                    </button>
+                  </div>
+                  {ayar.mesaj.acik && (
+                    <div className="space-y-1.5">
+                      <textarea value={ayar.mesaj.metin} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, metin: e.target.value.slice(0, 90), acik: true } }))} rows={2}
+                        placeholder="Karta yazılacak mesajın…"
+                        className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25" />
+                      <div className="grid grid-cols-3 gap-0.5">
+                        {(["ust", "orta", "alt"] as const).map((k) => (
+                          <button key={k} type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, konum: k } }))}
+                            className={`rounded-md py-1 text-[8px] font-black transition ${ayar.mesaj.konum === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                            style={ayar.mesaj.konum === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                            {k === "ust" ? "↑ Üst" : k === "orta" ? "↕ Orta" : "↓ Alt"}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-4 gap-1">
+                        <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, ofset: { ...a.mesaj.ofset, x: Math.max(-40, a.mesaj.ofset.x - 5) } } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">◀</button>
+                        <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, ofset: { ...a.mesaj.ofset, x: Math.min(40, a.mesaj.ofset.x + 5) } } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▶</button>
+                        <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, ofset: { ...a.mesaj.ofset, y: Math.max(-40, a.mesaj.ofset.y - 5) } } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▲</button>
+                        <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, ofset: { ...a.mesaj.ofset, y: Math.min(40, a.mesaj.ofset.y + 5) } } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▼</button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[8.5px] font-bold text-white/50">Boyut</span>
+                        <input type="range" min={70} max={160} step={5} value={ayar.mesaj.olcek} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, olcek: Number(e.target.value) } }))} className="h-1 flex-1 accent-[color:var(--accent)]" />
+                        <span className="w-8 text-right text-[8px] tabular-nums text-white/40">{ayar.mesaj.olcek}%</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sıra + Konum + Hizalama */}

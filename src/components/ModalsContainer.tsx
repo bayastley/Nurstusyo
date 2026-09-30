@@ -36,6 +36,8 @@ import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
 import { GoogleIcon, randomPkceVerifier, pkceChallenge } from "./modalHelpers";
 import { adminCatVisible } from "../adminCategoryAccess";
+import { LoginModalBolum, FullUnlockConfirmBolum, AdminAuthBolum, LibraryBolum, StoriesBolum, ThemesBolum, PrayerBolum, ContactBolum } from "./modalsContainerBolumler";
+// ★ SRP adım 8 (30.09): 8 self-contained modal modalsContainerBolumler.tsx'e taşındı
 
 const PRAYERS: Array<[string, string]> = [
   ["İmsak", "Fajr"], ["Güneş", "Sunrise"], ["Öğle", "Dhuhr"],
@@ -232,6 +234,36 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   };
   // Kilitli modallar hiç mount edilmez (içerik sızmasın)
   const v2Acik = (m: V2ModalId) => (v2Kapali(m) ? false : modal === m);
+
+  // ★ MERKEZİ ESC KAPANIŞI (01.10): taban Modal backdrop-tıklama + X ile kapanıyordu;
+  //   Esc hiçbir modalda dinlenmiyordu. Standart UX üçlüsünü tamamlar (X + dış-tıklama
+  //   + Esc) — tek yerde, tüm modallara birden. atmos'ta pickingFor da temizlenir
+  //   (onKapat birebir). Açık modal yokken dinleyici takılı kalmasın.
+  React.useEffect(() => {
+    if (!modal) return;
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setModal(null);
+      setPickingFor(null);
+    };
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [modal, setModal, setPickingFor]);
+
+  // ★ DEV-ONLY DUMAN TESTİ KANCASI: scripts/esm-tarama.mjs --duman bu kancayla
+  //   tüm modalları X/dış-tıklama/Esc üçlüsünde gezer (src/dev/modalDumanTesti.ts).
+  //   Dinamik import → canlı bundle'ına HİÇ girmez (dev şartı + tree-shake).
+  React.useEffect(() => {
+    if (!(import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) return;
+    (window as unknown as Record<string, unknown>).setNurModal = setModal;
+    void import("../dev/modalDumanTesti").then((mod) => {
+      (window as unknown as Record<string, unknown>).nurModalDumanTesti = mod.dumanTestiCalistir;
+    }).catch(() => { /* dev test kancası yüklenemedi — sessiz geç */ });
+    return () => {
+      delete (window as unknown as Record<string, unknown>).setNurModal;
+      delete (window as unknown as Record<string, unknown>).nurModalDumanTesti;
+    };
+  }, [setModal]);
   // ★ MERKEZİ GEÇİT — menüden/yol haritasından/kitaplıktan nereden çağrılırsa çağrılsın,
   //   kilitli modal bir an bile ekrana gelmez: kapanır + uyarı + yol haritası açılır.
   React.useEffect(() => {
@@ -296,106 +328,30 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
   return (
     <>
-      {/* LOGIN & REGISTER MODAL */}
+      {/* LOGIN & REGISTER MODAL — SRP adım 8: LoginModalBolum */}
       {modal === "login" && (
-        <Modal
-          title="Nûr Stüdyo'ya Hoş Geldiniz"
-          sub="Telifsiz sinematik Kur'an videoları üretin ve paylaşın"
-          onClose={() => { setModal(null); setLoginTab("login"); }}
-          wide={false}
-        >
-          <div className="space-y-3 py-1">
-            {/* ★ TEK BUTON — Google ile giriş/kayıt (sistem kendisi ayırt eder) */}
-            <button
-              onClick={() => void handleGoogleAuth()}
-              className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-4 text-[13px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
-            >
-              <GoogleIcon size={20} />
-              Google ile Devam Et
-            </button>
-            {adminSonEmail && (
-              <button
-                onClick={() => void handleGoogleAuth(adminSonEmail)}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 py-3 text-[11px] font-black text-amber-300 transition hover:bg-amber-400/20 active:scale-[.98]"
-                title="Google hesap seçici son admin hesabınla açılır — güvenlik zinciri yine sunucuda doğrulanır"
-              >
-                <Shield size={14} />
-                ADMIN OLARAK GERİ DÖN
-                <span className="rounded bg-black/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-200/90">{adminSonEmail}</span>
-              </button>
-            )}
-            <p className="text-center text-[9px] leading-relaxed text-white/40">
-              Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
-              Şifre gerekmez · Anında <b className="text-white/60">+5 ⚡ Üretim hakkı</b> hediye
-            </p>
-
-            {/* ★ KVKK: Hesap oluşturma sözleşme gereği yapılır, onay kutusu GEREKMEZ.
-                Ama pazarlama e-postası BAĞIMSIZ bir işlem olduğu için AYRI, geri
-                alınabilir bir açık rıza kutusu burada sunulur (kanunen zorunlu ayrım). */}
-            <label className="flex items-start gap-2 px-1 text-[9px] leading-relaxed text-white/40">
-              <input
-                type="checkbox"
-                checked={marketingConsent}
-                onChange={(e) => setMarketingConsent(e.target.checked)}
-                className="mt-0.5 accent-[#d7aa52]"
-              />
-              <span>
-                Yeni özellikler, indirim ve hatırlatmalardan haberdar olmak için e-posta almak istiyorum. (İsteğe bağlı, istediğiniz zaman iptal edebilirsiniz.)
-              </span>
-            </label>
-
-            {/* ★ MİSAFİR MODU */}
-            <button
-              onClick={handleGuestContinue}
-              className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">({Math.max(0, (guestTrialLeft ?? 2))} deneme videosu kaldı)</span>
-            </button>
-          </div>
-          {loginTab === "verify" && (
-            <div className="space-y-3">
-              <p className="text-[11px] text-white/50">{t("codeSent")}: {sentCode}</p>
-              <input value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder="6 haneli kod" maxLength={6} className="glass-soft w-full rounded-xl px-4 py-3 text-center text-[14px] tracking-widest text-white outline-none" />
-              <button onClick={handleVerifyCode} className="w-full rounded-xl py-3 text-[11px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("verifyBtn")}</button>
-              <button onClick={() => setLoginTab("login")} className="w-full text-center text-[10px] text-white/50 hover:text-white">{t("backToLogin")}</button>
-            </div>
-          )}
-          {loginTab === "forgot" && (
-            <div className="space-y-3">
-              <p className="text-[11px] text-white/50">{t("resetPassword")}</p>
-              <input type="password" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder={t("password")} className="glass-soft w-full rounded-xl px-4 py-3 text-[12px] text-white outline-none" />
-              <button onClick={() => { notify("Şifreniz sıfırlandı!"); setLoginTab("login"); }} className="w-full rounded-xl py-3 text-[11px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("resetPassword")}</button>
-            </div>
-          )}
-        </Modal>
+        <LoginModalBolum
+          setModal={setModal}
+          setLoginTab={setLoginTab}
+          handleGoogleAuth={(hint) => void handleGoogleAuth(hint)}
+          adminSonEmail={adminSonEmail}
+          handleGuestContinue={handleGuestContinue}
+          guestTrialLeft={guestTrialLeft}
+          marketingConsent={marketingConsent}
+          setMarketingConsent={setMarketingConsent}
+          loginTab={loginTab}
+          sentCode={sentCode}
+          verifyCode={verifyCode}
+          setVerifyCode={setVerifyCode}
+          handleVerifyCode={handleVerifyCode}
+          notify={notify}
+          t={t}
+        />
       )}
 
-      {/* FULL UNLOCK CONFIRM MODAL */}
+      {/* FULL UNLOCK CONFIRM MODAL — SRP adım 8 */}
       {fullUnlockConfirmOpen && (
-        <div
-          className="fixed inset-0 z-[96] flex select-none items-center justify-center bg-black/80 p-4 backdrop-blur-md modal-in"
-          onMouseDown={() => setFullUnlockConfirmOpen(false)}
-          onClick={() => setFullUnlockConfirmOpen(false)}
-        >
-          <div
-            className="glass modal-in relative w-full max-w-sm rounded-2xl p-5 shadow-2xl"
-            style={{ border: "1px solid rgba(215,170,82,.35)" }}
-            onMouseDown={(event) => event.stopPropagation()}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="absolute right-3 top-3 rounded-full bg-white/5 p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white" aria-label="Kapat"><X size={15} /></button>
-            <div className="mb-3 flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Hourglass size={16} /></span>
-              <div><h3 className="font-display text-sm font-black" style={{ color: "var(--accent-2)" }}>Tam Sürümü Aç</h3><p className="text-[9px] text-white/40">40 dakikaya kadar video modu</p></div>
-            </div>
-            <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Üretim hakkı</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
-            <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ Üretim hakkı</b></div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="glass-soft rounded-xl py-2.5 text-[10px] font-bold text-white/65">Vazgeç</button>
-              <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{JETON.MIKRO_KILIT_ACMA_UCRETI} ⚡ Üretim hakkı Öde ve Aç</button>
-            </div>
-          </div>
-        </div>
+        <FullUnlockConfirmBolum setFullUnlockConfirmOpen={setFullUnlockConfirmOpen} jetonCount={jetonCount} tryUnlockFullMode={tryUnlockFullMode} setMode={setMode} MIKRO_UCRET={JETON.MIKRO_KILIT_ACMA_UCRETI} />
       )}
 
       {/* PREMIUM MODAL */}
@@ -521,37 +477,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         />
       )}
 
-      {/* ADMIN AUTH MODAL */}
+      {/* ADMIN AUTH MODAL — SRP adım 8 */}
       {adminAuthOpen && (
-        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md modal-in" onMouseDown={() => setAdminAuthOpen(false)}>
-          <div className="glass modal-in relative w-full max-w-sm rounded-2xl p-6" onMouseDown={(e) => e.stopPropagation()} style={{ border: "1px solid rgba(215,170,82,.3)" }}>
-            <button className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={() => setAdminAuthOpen(false)}><X size={18} /></button>
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Shield size={16} /></span>
-              <div>
-                <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>KURUCU GİRİŞİ</h3>
-                <p className="text-[9px] text-white/40">Admin paneli için Google ile doğrulanmış admin oturumu gerekir</p>
-              </div>
-            </div>
-            <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100/80">
-              Önce Google ile admin e-postanızla giriş yapın. Giriş doğrulanınca admin paneli açılır.
-            </div>
-            {adminError && <p className="mb-3 text-[10px] text-red-400">{adminError}</p>}
-            <button
-              onClick={() => {
-                setModal("login");
-                setLoginTab("login");
-                setAdminAuthOpen(false);
-                notify("Google ile admin hesabınızdan giriş yapın");
-              }}
-              className="w-full rounded-xl py-3 text-[11px] font-black uppercase tracking-wider text-black"
-              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-            >
-              Google ile Admin Girişi Yap
-            </button>
-            <p className="mt-3 text-center text-[8px] text-white/25">Yetkisiz denemeler kaydedilir.</p>
-          </div>
-        </div>
+        <AdminAuthBolum setAdminAuthOpen={setAdminAuthOpen} setModal={setModal} setLoginTab={setLoginTab} adminError={adminError} notify={notify} />
       )}
 
       {/* ★ ATMOSFER SEÇİCİ — 30.09 SRP parçalama adım 1: AtmosferSeciciModal.tsx'e taşındı (JSX birebir korunur) */}
@@ -646,46 +574,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         onOdulAlindi={syncWallet}
       />
 
-      {/* LIBRARY MODAL */}
+      {/* LIBRARY MODAL — SRP adım 8 */}
       {modal === "library" && (
-        <Modal title="Ayet & Dua Kütüphanesi" sub="Ayet-i Kerime, Hadis-i Şerif, Kadim Dua ve Zikirler — Stüdyo'da Kullan ile videona ekle" onClose={() => setModal(null)} wide>
-          <div className="relative mb-3">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-            <input value={libSearch} onChange={(e) => setLibSearch(e.target.value)} placeholder="Ayet, sure adı veya Türkçe meal ara..." className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
-          </div>
-          <div className="mb-2.5 flex flex-wrap gap-1.5">
-            {TYPE_TABS.map((tab) => (
-              <button key={tab.id} onClick={() => setLibType(tab.id)} className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition-all ${libType === tab.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`} style={libType === tab.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>{tab.label}</button>
-            ))}
-          </div>
-          <div className="mb-3 flex flex-wrap gap-1.5 border-b border-white/5 pb-3">
-            {EMOTIONS.map((em) => (
-              <button key={em.id} onClick={() => setLibEmotion(em.id)} className={`rounded-full px-2.5 py-1 text-[9px] font-semibold transition ${libEmotion === em.id ? "text-black" : "glass-soft text-white/45 hover:text-white/75"}`} style={libEmotion === em.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>{em.label}</button>
-            ))}
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {libraryFiltered.map((item) => {
-              const badge = TYPE_BADGE[item.type];
-              return (
-                <div key={item.id} className="group relative flex flex-col rounded-2xl border border-white/10 bg-white/[.03] p-4 transition-all hover:border-[color:var(--accent)]/40 hover:bg-white/[.05]">
-                  <div className="mb-2 flex items-center gap-2">
-                    <span className="rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider" style={{ background: `${badge.color}22`, color: badge.color, border: `1px solid ${badge.color}44` }}>{badge.label}</span>
-                    <h4 className="text-[11px] font-bold text-white/90">{item.title}</h4>
-                  </div>
-                  <p className="mb-2 text-right font-arabic text-[20px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{item.ar}</p>
-                  <p className="mb-3 text-[10px] leading-relaxed text-white/60">"{item.tr}"</p>
-                  <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2.5">
-                    <span className="text-[9px] font-semibold" style={{ color: "var(--accent)" }}>{item.source}</span>
-                    <button onClick={() => useFromLibrary(item)} className="glass-soft flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[9px] font-bold text-white/80 transition hover:text-white hover:brightness-150">
-                      <Plus size={10} /> Stüdyo'da Kullan
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-            {libraryFiltered.length === 0 && <p className="col-span-2 py-8 text-center text-[11px] text-white/40">Bu filtreye uygun içerik bulunamadı.</p>}
-          </div>
-        </Modal>
+        <LibraryBolum setModal={setModal} libSearch={libSearch} setLibSearch={setLibSearch} libType={libType} setLibType={setLibType} libEmotion={libEmotion} setLibEmotion={setLibEmotion} libraryFiltered={libraryFiltered} useFromLibrary={useFromLibrary} />
       )}
 
       {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red.
@@ -696,137 +587,24 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </Modal>
       )}
 
-      {/* STORIES MODAL */}
+      {/* STORIES MODAL — SRP adım 8 */}
       {modal === "stories" && isMasterSürüm && (
-        <Modal title="Kur'an Kıssaları" sub="Admin · V2 içerikleri aktif" onClose={() => setModal(null)} wide>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {KISSAS.map((story) => (
-              <div key={`${story.s}:${story.a}`} className="rounded-2xl border border-white/10 bg-white/[.03] p-4">
-                <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{story.ref}</p>
-                <h4 className="mt-1 font-display text-sm font-bold text-white/90">{story.title}</h4>
-                <p className="mt-2 text-[10px] leading-relaxed text-white/55">{story.text}</p>
-                <button type="button" onClick={() => { addAyah(story.s, story.a); setModal(null); }} className="mt-3 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[9px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Plus size={10} /> Ayeti Stüdyoya Ekle</button>
-              </div>
-            ))}
-          </div>
-        </Modal>
+        <StoriesBolum setModal={setModal} addAyah={addAyah} />
       )}
 
-      {/* THEMES MODAL */}
+      {/* THEMES MODAL — SRP adım 8 */}
       {modal === "themes" && (
-        <Modal title={t("themesTitle")} sub={`${t("themesSub")} · ${ALL_THEMES.length} tema · ${ALL_THEMES.filter(x => themeTier(x.id) === "free").length} ücretsiz`} onClose={() => setModal(null)} wide>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
-            {ALL_THEMES.map((item) => {
-              const tTier = themeTier(item.id);
-              const locked = tTier !== "free" && !tierAtLeast(accessTier, tTier);
-              const emoji = themeEmoji(item.id);
-              return (
-                <div key={item.id} className="relative">
-                  <button onClick={() => { if (locked) { openPremium("uyelik"); return; } setThemeId(item.id); }} className={`group relative block h-24 w-full overflow-hidden rounded-xl border text-left transition ${themeId === item.id ? "ring-2" : ""} ${locked ? "opacity-75 saturate-50" : "hover:-translate-y-0.5 hover:shadow-xl"}`} style={{ background: `linear-gradient(135deg,${item.bg},${item.bg2})`, borderColor: `${item.acc}55`, boxShadow: themeId === item.id ? `0 0 0 1px ${item.acc}` : undefined }}>
-                    <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl opacity-70 drop-shadow-lg transition group-hover:scale-110">{emoji}</span>
-                    <span className="absolute left-3 top-3 h-9 w-9 rounded-full opacity-40 blur-md" style={{ background: item.acc }} />
-                    <span className="absolute right-3 bottom-3 h-3 w-3 rounded-full border border-white/20" style={{ background: item.acc2 }} />
-                    <span className="absolute bottom-2 left-3 text-[10px] font-bold" style={{ color: item.acc2 }}>{item.name}</span>
-                    {themeId === item.id ? <Check size={13} className="absolute left-2 top-2" style={{ color: item.acc }} /> : null}
-                    {locked && <span className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />}
-                  </button>
-                  {locked && <LockBadge kind={tTier === "pro" ? "pro" : "elit"} onUpgrade={() => openPremium("uyelik")} position="top-right" size="md" />}
-                </div>
-              );
-            })}
-          </div>
-        </Modal>
+        <ThemesBolum setModal={setModal} t={t} ALL_THEMES={ALL_THEMES} themeTier={themeTier} themeEmoji={themeEmoji} themeId={themeId} setThemeId={setThemeId} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
       )}
 
-      {/* PRAYER MODAL */}
+      {/* PRAYER MODAL — SRP adım 8 */}
       {modal === "prayer" && (
-        <Modal title={t("prayerTitle")} sub={`${prayerCity} • Diyanet metodu`} onClose={() => setModal(null)}>
-          <div className="relative mb-3"><MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" /><input value={prayerSearch} onChange={(event) => setPrayerSearch(event.target.value)} placeholder={t("prayerSearch")} className="glass-soft w-full rounded-xl py-2.5 pl-8 pr-3 text-[11px] outline-none placeholder:text-white/25" /></div>
-          {prayerSearch ? (
-            <div className="mb-3 grid max-h-36 grid-cols-2 gap-1 overflow-y-auto scrollbar-thin">
-              {filteredCities.map((city) => (
-                <button key={city} onClick={() => { setPrayerCity(city); setPrayerSearch(""); }} className="glass-soft rounded-lg px-2 py-1.5 text-left text-[10px] text-white/55 hover:text-white">{city}</button>
-              ))}
-            </div>
-          ) : null}
-          <div className="space-y-1">
-            {PRAYERS.map(([name, key]) => {
-              const active = nextPrayer?.key === key;
-              return (
-                <div key={key} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] ${active ? "bg-emerald-500/10 text-emerald-200" : "text-white/55"}`}>
-                  <span className="flex items-center gap-2 font-semibold">
-                    <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-400" : "bg-white/20"}`} />{name}
-                  </span>
-                  <span className="tabular-nums">{prayerTimings?.[key]?.slice(0, 5) ?? "--:--"}{active && nextPrayer ? ` • ${formatRemaining(nextPrayer.diff)}` : ""}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Modal>
+        <PrayerBolum setModal={setModal} t={t} prayerCity={prayerCity} prayerSearch={prayerSearch} setPrayerSearch={setPrayerSearch} filteredCities={filteredCities} setPrayerCity={setPrayerCity} prayerTimings={prayerTimings} nextPrayer={nextPrayer} formatRemaining={formatRemaining} />
       )}
 
-      {/* CONTACT & SUPPORT MODAL — ★ Artık veritabanına da kaydediyor + yıldız puanı */}
+      {/* CONTACT & SUPPORT MODAL — SRP adım 8 (yıldız puanı bileşende) */}
       {modal === "contact" && (
-        <Modal title="Destek & Bildirim Merkezi" sub="Öneri, soru veya sorunlarınızı destek ekibimize doğrudan iletin." onClose={() => setModal(null)}>
-          <div className="mb-3">
-            <Segmented
-              value={contactType}
-              onChange={setContactType}
-              items={[
-                { id: "oneri", label: "Geliştirme & Öneri", icon: Mail },
-                { id: "sikayet", label: "Sorun & Destek", icon: AlertTriangle },
-              ]}
-            />
-          </div>
-          {/* ★ YILDIZ PUANI — opsiyonel, admin paneldeki puan dağılımına düşer */}
-          <div className="mb-3 flex items-center justify-center gap-1.5 rounded-xl bg-white/5 py-2">
-            <span className="text-[10px] text-white/50">Sitemizi puanla:</span>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                onClick={() => setContactPuan(contactPuan === n ? null : n)}
-                className={`text-lg transition ${contactPuan && n <= contactPuan ? "grayscale-0" : "opacity-30 grayscale hover:opacity-60"}`}
-                aria-label={`${n} yıldız`}
-              >⭐</button>
-            ))}
-          </div>
-          <textarea
-            value={contactMessage}
-            onChange={(event) => setContactMessage(event.target.value)}
-            rows={5}
-            placeholder="Mesajınızı, önerinizi veya karşılaştığınız sorunu detaylıca buraya yazınız..."
-            className="glass-soft mb-3 w-full resize-none rounded-xl px-3.5 py-3 text-[11px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-[color:var(--accent)]"
-          />
-          <button
-            onClick={async () => {
-              if (!contactMessage.trim()) {
-                notify("Lütfen göndermek istediğiniz mesajı yazınız.");
-                return;
-              }
-              // ★ VERİTABANI KAYDI — mesaj admin panelin Geri Bildirim sekmesine düşer.
-              //   Kimlik bilgisi sunucu oturumundan gelir (istemciden gönderilmez).
-              try {
-                await fetch("/api/marketing/feedback", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ tur: contactType, puan: contactPuan, mesaj: contactMessage.trim() }),
-                });
-              } catch { /* DB yazımı başarısız olsa da mail akışı bozulmasın */ }
-              // E-posta akışı aynen korunur — destekte kalıcı kayıt mailde de durur
-              const subject = encodeURIComponent(contactType === "oneri" ? "Nûr Stüdyo — Öneri / Talep Bildirimi" : "Nûr Stüdyo — Destek & Sorun Bildirimi");
-              const body = encodeURIComponent(`Nûr Stüdyo Destek Birimine:\n\n${contactMessage.trim()}\n\n---\nPuan: ${contactPuan ? contactPuan + " ⭐" : "verilmedi"}\nTarih: ${new Date().toLocaleString("tr-TR")}`);
-              window.open(`mailto:destek@nurstudyo.com?subject=${subject}&body=${body}`, "_blank");
-              notify("✉️ Mesajınız iletildi — görüşünüz için teşekkürler 🌙");
-              setContactMessage("");
-              setContactPuan(null);
-              setModal(null);
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-black shadow-lg transition hover:brightness-110 active:scale-95 cursor-pointer"
-            style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-          >
-            <Send size={13} /> Destek Ekibine İlet
-          </button>
-        </Modal>
+        <ContactBolum setModal={setModal} contactType={contactType} setContactType={setContactType} contactMessage={contactMessage} setContactMessage={setContactMessage} notify={notify} />
       )}
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}

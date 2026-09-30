@@ -13,6 +13,9 @@ import { videoMaliyeti, reciterRequiredTier } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
 import type { Clip } from "../clips";
 import type { Mode, Aspect, ModalName, Tier } from "../types";
+import { InceAyarSlider, FontGalerisi, MarkaImza, MetinKonumPedi } from "./designAyarBolumleri";
+
+// ★ SRP adım 5 (30.09): slider'lar + font galerisi + marka imzası + metin pedi designAyarBolumleri.tsx'e taşındı
 
 export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   setPickingFor,
@@ -380,30 +383,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   her font KENDİ yazı tarzıyla örnek gösterir. <option> tarayıcıda
                   özel fontla çizilemediği için (kısıt) galeri yaklaşımı kullanıldı.
                   Tembel yüklemeyle uyumlu: fontun CSS'i tıklanınca yüklenir. */}
-              <details ref={galeriRef} className="mt-1">
-                <summary className="cursor-pointer text-[8px] font-bold text-white/40 hover:text-white/70"> görüntülü seç — 20 fontu kendi yazısıyla karşılaştır</summary>
-                <div className="mt-1 grid max-h-52 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-1">
-                  {ARABIC_FONTS.map((f) => {
-                    const secili = f.id === arabicFont;
-                    return (
-                      <button
-                        key={f.id}
-                        type="button"
-                        onClick={() => setArabicFont(f.id)}
-                        title={f.label}
-                        className={`rounded-md border px-1.5 py-1 text-center transition ${secili ? "border-amber-400/60 bg-amber-500/15" : "border-white/5 bg-white/[.03] hover:bg-white/[.08]"}`}
-                      >
-                        {/* ★ Tema uyumlu ALTIN yazı — beyaz değil */}
-                        <span className="block truncate text-base leading-snug text-amber-200/95" dir="rtl" lang="ar" style={{ fontFamily: f.css }}>
-                          بِسْمِ ٱللَّهِ
-                        </span>
-                        <span className={`mt-0.5 block truncate text-[7px] font-bold ${secili ? "text-amber-300" : "text-white/40"}`}>{f.label.split(" (")[0]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-1 text-[7.5px] text-white/30">Not: fontun gerçek yazısı tıkladığın anda yüklenir (tembel yükleme) — liste hızlı açılır.</p>
-              </details>
+              <FontGalerisi fonts={ARABIC_FONTS} secili={arabicFont} onSec={setArabicFont} galeriRef={galeriRef} />
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Boyutu</span>
@@ -412,130 +392,15 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <option value="normal">Normal</option>
                 <option value="buyuk">Büyük (Önerilen)</option>
               </select>
-              {/* ★ İNCE AYAR — slider ile sürükle ya da +/- ile adım adım */}
-              <span className="mt-1 flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => setTextSizeMul(textSizeMul - 0.05)}
-                  disabled={textSizeMul <= 0.5}
-                  title="Yazıyı küçült"
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >−</button>
-                <input
-                  type="range"
-                  min={0.5}
-                  max={2}
-                  step={0.05}
-                  value={textSizeMul}
-                  onChange={(e) => setTextSizeMul(parseFloat(e.target.value))}
-                  title="Sürükleyerek yazı boyutunu ayarla (50%–200%)"
-                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-amber-400"
-                  style={{ accentColor: "#fbbf24" }}
-                />
-                {/* ★ KAYMA DÜZELTMESİ (28.09): min-w yerine sabit w — dar panelde %170 yazısı
-                    slider üstüne biniyordu; shrink-0 + sabit genişlik hizayı korur */}
-                <span className="w-[46px] shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums text-white/70" title="İnce ayar çarpanı">
-                  %{Math.round(textSizeMul * 100)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setTextSizeMul(textSizeMul + 0.05)}
-                  disabled={textSizeMul >= 2}
-                  title="Yazıyı büyüt"
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >+</button>
-                {textSizeMul !== 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setTextSizeMul(1)}
-                    title="Varsayılan boyuta dön"
-                    className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
-                  >sıfırla</button>
-                )}
-              </span>
-              {/* ★ MEAL BOYUTU — Arapça'dan BAĞIMSIZ ince ayar */}
-              <span className="mt-1.5 flex items-center gap-1" title="Meal (çeviri) metninin boyutu — Arapça'dan bağımsız">
-                <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Meal</span>
-                <button
-                  type="button"
-                  onClick={() => setMealSizeMul(mealSizeMul - 0.05)}
-                  disabled={mealSizeMul <= 0.5}
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >−</button>
-                <input
-                  type="range"
-                  min={0.5}
-                  max={2}
-                  step={0.05}
-                  value={mealSizeMul}
-                  onChange={(e) => setMealSizeMul(parseFloat(e.target.value))}
-                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
-                  style={{ accentColor: "#38bdf8" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setMealSizeMul(mealSizeMul + 0.05)}
-                  disabled={mealSizeMul >= 2}
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >+</button>
-                <span className="w-[46px] shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums text-sky-300/80">
-                  %{Math.round(mealSizeMul * 100)}
-                </span>
-                {mealSizeMul !== 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setMealSizeMul(1)}
-                    title="Meal boyutunu sıfırla"
-                    className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
-                  >sıfırla</button>
-                )}
-              </span>
+              <InceAyarSlider deger={textSizeMul} setDeger={setTextSizeMul} title="Sürükleyerek yazı boyutunu ayarla (50%–200%)" />
+              <InceAyarSlider deger={mealSizeMul} setDeger={setMealSizeMul} accent="#38bdf8" etiketSinif="text-sky-300/80" onEtiket="Meal" sifirlaTitle="Meal boyutunu sıfırla" />
             </label>
             <label className="block">
               <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Işıltısı</span>
               <select value={shimmerStyle} onChange={(e) => setShimmerStyle(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
                 {SHIMMER_STYLES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
-              {/* ★ IŞILTI YOĞUNLUĞU — parıltı gücünü kullanıcı ayarlar */}
-              <span className="mt-1 flex items-center gap-1" title="Parıltının gücü — okunan kelimenin ışığı ve yazı gölgesi bu kadar güçlü parlar">
-                <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">Güç</span>
-                <button
-                  type="button"
-                  onClick={() => setShimmerIntensity(shimmerIntensity - 0.1)}
-                  disabled={shimmerIntensity <= 0.5}
-                  title="Parıltıyı azalt"
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >−</button>
-                <input
-                  type="range"
-                  min={0.5}
-                  max={2}
-                  step={0.1}
-                  value={shimmerIntensity}
-                  onChange={(e) => setShimmerIntensity(parseFloat(e.target.value))}
-                  title="Sürükleyerek parıltı gücünü ayarla (50%–200%)"
-                  className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
-                  style={{ accentColor: "#fde68a" }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShimmerIntensity(shimmerIntensity + 0.1)}
-                  disabled={shimmerIntensity >= 2}
-                  title="Parıltıyı artır"
-                  className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                >+</button>
-                <span className="min-w-[40px] rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black text-amber-200/80">
-                  %{Math.round(shimmerIntensity * 100)}
-                </span>
-                {shimmerIntensity !== 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setShimmerIntensity(1)}
-                    title="Parıltı gücünü sıfırla"
-                    className="rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
-                  >sıfırla</button>
-                )}
-              </span>
+              <InceAyarSlider deger={shimmerIntensity} setDeger={setShimmerIntensity} adim={0.1} accent="#fde68a" etiketSinif="text-amber-200/80" etiketGenislik="min-w-[40px]" onEtiket="Güç" title="Parıltının gücü — okunan kelimenin ışığı ve yazı gölgesi bu kadar güçlü parlar" sifirlaTitle="Parıltı gücünü sıfırla" />
               {/* ★ CANLI ÖNİZLEME — slider'ı sürüklerken parıltının gücü anında değişir */}
               <span
                 className="mt-1 flex h-8 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2"
@@ -562,80 +427,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             </label>
           </div>
 
-          {/* ★ MARKA / KANAL İMZASI — Elit üyeler + God Mode · konum seçilebilir */}
           {(isMasterSürüm || tierAtLeast(accessTier, "elit")) && (
-            <div className="mt-2 space-y-1.5">
-              <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider text-amber-300">
-                🛡️ Marka / Kanal İmzanız
-                <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[6.5px] font-black text-amber-300">
-                  {isMasterSürüm ? "ADMİN" : "ELİT"}
-                </span>
-                {/* ★ WATERMARK AÇ/KAPA — imza metnini silmeden videodan kaldır */}
-                <button
-                  type="button"
-                  onClick={() => setBrandOn(!brandOn)}
-                  role="switch"
-                  aria-checked={brandOn}
-                  title={brandOn ? "İmza videoda görünüyor — kapatmak için tıkla" : "İmza kapalı — açmak için tıkla"}
-                  className={`relative ml-auto inline-flex h-4 w-8 shrink-0 items-center rounded-full transition ${brandOn ? "bg-amber-400" : "bg-white/15"}`}
-                >
-                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition ${brandOn ? "translate-x-4" : "translate-x-0.5"}`} />
-                </button>
-              </span>
-              <input
-                value={brandSignature}
-                onChange={(e) => setBrandSignature(e.target.value)}
-                maxLength={28}
-                placeholder="@nurstudyo"
-                disabled={!brandOn}
-                className="glass-soft w-full rounded-lg px-2 py-1.5 text-[10px] font-bold text-white outline-none focus:border-[color:var(--accent)] disabled:opacity-40"
-              />
-
-              <span className="block text-[8px] font-bold uppercase tracking-wider text-white/45">
-                İmza Konumu
-              </span>
-              <div className="grid grid-cols-2 gap-1">
-                {([
-                  { id: "sol-ust", label: "↖ Sol Üst" },
-                  { id: "sag-ust", label: "↗ Sağ Üst" },
-                  { id: "sol-alt", label: "↙ Sol Alt" },
-                  { id: "sag-alt", label: "↘ Sağ Alt" },
-                ] as const).map((pos) => (
-                  <button
-                    key={pos.id}
-                    type="button"
-                    onClick={() => setBrandPos(pos.id)}
-                    className={`rounded-lg px-2 py-1.5 text-[9px] font-bold transition ${
-                      brandPos === pos.id
-                        ? "text-black shadow-md"
-                        : "glass-soft text-white/50 hover:text-white/80"
-                    }`}
-                    style={brandPos === pos.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-                  >
-                    {pos.label}
-                  </button>
-                ))}
-              </div>
-              <span className="block text-[8px] leading-relaxed text-white/35">
-                Altın renkte görünür · <b className="text-white/50">Sol Üst</b> önerilir (meal yazısıyla çakışmaz) · boş bırakılırsa gizlenir
-              </span>
-            </div>
+            <MarkaImza isMasterSurum={isMasterSürüm} brandSignature={brandSignature} setBrandSignature={setBrandSignature} brandOn={brandOn} setBrandOn={setBrandOn} brandPos={brandPos} setBrandPos={setBrandPos} />
           )}
-          {/* Metin konum pedi */}
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/45">Metin Konumu</span>
-            <div className="grid grid-cols-3 gap-0.5">
-              <span />
-              <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} aria-label="Yukarı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-180" /></button>
-              <span />
-              <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-40, o.x - 5) }))} aria-label="Sola" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-90" /></button>
-              <button onClick={() => setTextOffset({ x: 0, y: 0 })} aria-label="Sıfırla" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-[8px] font-black text-[color:var(--accent)] hover:brightness-125">⟲</button>
-              <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(40, o.x + 5) }))} aria-label="Sağa" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="-rotate-90" /></button>
-              <span />
-              <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} aria-label="Aşağı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} /></button>
-              <span />
-            </div>
-          </div>
+          <MetinKonumPedi setTextOffset={setTextOffset} />
           {!tierAtLeast(accessTier, "elit") && (
             <LockedOverlay kind="elit" onUpgrade={() => openPremium("uyelik")} rounded="rounded-xl" />
           )}

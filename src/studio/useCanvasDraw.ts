@@ -9,6 +9,7 @@ import { CATEGORY_PALETTE } from "../clips";
 import { getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes } from "../clips";
 import { dimensions } from "./studioHelpers";
+import { CanvasDoldurucu, cubukRengi, drawMesajYazisi, type CubukAyar, type MesajAyar } from "./mesajKatmani";
 import type { Clip, CatId } from "../clips";
 import type { SelectedAyah, Aspect, Tier } from "../types";
 
@@ -46,11 +47,18 @@ interface CanvasDrawParams {
   previewDuration: number;
   previewIsSurah: boolean;
   user: unknown;
+  /** ★ RENK ÇUBUĞU (01.10) — çerçeve iç kenarında dikey gökkuşağı şeridi (ayetKartMotoru ile paylaşımlı) */
+  cubuk: CubukAyar;
+  /** ★ ÖZEL YAZI (01.10) — kullanıcının kendi mesajı, videonun içine çizilir */
+  mesaj: MesajAyar;
 }
 
 export function useCanvasDraw(p: CanvasDrawParams) {
   useEffect(() => {
     let frame = 0, tick = 0, lastPreviewDraw = 0;
+    // ★ var() çözümleyici — renk çubuğu durağı hex olduğu için cache pratikte boş;
+    //   ileride tema renkleri (var(--accent)) çubuğa bağlanırsa hazır.
+    const doldurucu = new CanvasDoldurucu();
 
     const wrapText = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number) => {
       const lines: string[] = [];
@@ -241,7 +249,9 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               let y = centeredTop + oy;
 
               if (p.showArapca && arabicLines.length > 0) {
-                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = "rgba(255,255,255,.92)"; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = Math.round(10 * p.shimmerIntensity);
+                // ★ RENK ÇUBUĞU (01.10): acik → Arapça metni çubuktan seçilen renkle boya
+                const arapcaRenk = p.cubuk.acik ? cubukRengi(p.cubuk.donme) : "rgba(255,255,255,.92)";
+                ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`; ctx.fillStyle = arapcaRenk; ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = Math.round(10 * p.shimmerIntensity);
                 // Word-by-word highlight: SADECE aktif kelime parlar, diğeri sabit beyaz
                 const allArabicWords = (currentAyah.ar || "").split(/\s+/).filter(Boolean);
                 const totalWords = allArabicWords.length;
@@ -303,9 +313,9 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                       ctx.fillStyle = `rgba(255, 240, 170, ${Math.min(0.9, 0.35 * gi).toFixed(2)})`;
                       ctx.fillText(word, wordX, y + arabicSize * 0.8);
                       ctx.restore();
-                      // Normal boyuta dön — diğer kelimeler sabit beyaz
+                      // Normal boyuta dön — diğer kelimeler taban renk (çubuk açıkken çubuk rengi)
                       ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
-                      ctx.fillStyle = "rgba(255,255,255,.92)";
+                      ctx.fillStyle = arapcaRenk;
                       ctx.shadowColor = "rgba(0,0,0,.5)";
                       ctx.shadowBlur = 10;
                     } else {
@@ -319,7 +329,8 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,.22)"; ctx.beginPath(); ctx.moveTo(width * .28, y + 8); ctx.lineTo(width * .72, y + 8); ctx.stroke(); y += sepH;
               }
               if (p.showSubMeal && translationLines.length > 0) {
-                ctx.font = `400 ${translationSize}px Inter,sans-serif`; ctx.fillStyle = "rgba(255,255,255,.95)";
+                // ★ RENK ÇUBUĞU (01.10): meal rengi Arapça'dan BAĞIMSIZ çubuk konumu
+                ctx.font = `400 ${translationSize}px Inter,sans-serif`; ctx.fillStyle = p.cubuk.acik ? cubukRengi(p.cubuk.mealDonme) : "rgba(255,255,255,.95)";
                 
                 // Meal metnine eklenen kontur ve güçlü gölge ayarları
                 ctx.shadowColor = "rgba(0, 0, 0, 0.9)"; 
@@ -338,6 +349,11 @@ export function useCanvasDraw(p: CanvasDrawParams) {
               }
             }
           } else { ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.5)"; ctx.font = `500 ${Math.round(height * .018)}px Inter,sans-serif`; ctx.fillText("Kütüphaneden ayet seçin", width / 2, height / 2); }
+          // ★ RENK ÇUBUĞU + ÖZEL YAZI (01.10): önce çubuk, en üstte yazı.
+          //   draw() sonunda olduğundan captureStream(renderFps) bunları otomatik
+          //   videoya alır — mesaj katmanı planındaki tasarım buraya kuruldu.
+          doldurucu.cubukCiz(ctx, width, height, p.cubuk);
+          drawMesajYazisi(ctx, width, height, p.mesaj, (text, maxW) => wrapText(ctx, text, maxW));
           const realTierForWatermark = !p.user && !p.isMasterSürüm ? "free" : p.accessTier;
           if (realTierForWatermark === "free" || realTierForWatermark === "pro") {
             ctx.save(); ctx.font = `700 ${Math.round(height * 0.018)}px Inter,sans-serif`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
@@ -360,5 +376,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandOn, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandOn, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah, p.cubuk, p.mesaj]);
 }

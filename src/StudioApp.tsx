@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fixWebmDuration from "fix-webm-duration";
-import { X, AlertTriangle, Ban, BookOpen, Zap } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
@@ -68,6 +68,7 @@ import { BugunHediye } from "./components/BugunHediye";
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { RoadmapModal } from "./components/RoadmapModal";
 import { useShareActions } from "./studio/useShareActions";
+import { VARSAYILAN_CUBUK, VARSAYILAN_MESAJ, type CubukAyar, type MesajAyar } from "./studio/mesajKatmani";
 import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, startTrial, type Tier } from "./tier";
 import { secureGet, secureSet, secureRemove } from "./secureStore";
 
@@ -85,6 +86,9 @@ import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media
 import { checkRateLimit } from "./rateLimiter";
 import { getStoredMedia } from "./studio/medyaStore";
 import { medyaClipYukle } from "./components/medyaKutuphaneHelpers";
+import { ensureImageYukle, ensureVideoYukle } from "./studio/medyaOnYukleme";
+import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal } from "./components/studioAppBolumler";
+// ★ SRP adım 12 (30.09): medya ön yükleme fabrikası studio/medyaOnYukleme.ts'e taşındı
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { syncUserInDb } from "./components/adminHelpers";
 import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
@@ -400,6 +404,23 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setShimmerIntensityState(clamped);
     try { localStorage.setItem("nur_shimmer_intensity", String(clamped)); } catch { /* ignore */ }
   };
+  // ★ RENK ÇUBUĞU (01.10) — çerçeve iç kenarında dikey gökkuşağı şeridi; Arapça/meal
+  //   çizim renginden bağımsız süsleme katmanı. ayetKartMotoru ile aynı çekirdek.
+  const [cubukAyar, setCubukAyar] = useState<CubukAyar>(() => {
+    try { return { ...VARSAYILAN_CUBUK, ...(JSON.parse(localStorage.getItem("nur_renk_cubugu") || "null") || {}) }; } catch { return VARSAYILAN_CUBUK; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("nur_renk_cubugu", JSON.stringify(cubukAyar)); } catch { /* ignore */ }
+  }, [cubukAyar]);
+  // ★ ÖZEL YAZI (01.10) — kullanıcının kendi mesajı, videonun İÇİNE çizilir
+  //   (önizleme = çıktı). Ayrı konum: mesajOfset, ayet konumundan bağımsız.
+  const [mesajAyar, setMesajAyar] = useState<MesajAyar>(() => {
+    try { return { ...VARSAYILAN_MESAJ, ...(JSON.parse(localStorage.getItem("nur_mesaj_ayar") || "null") || {}) }; } catch { return VARSAYILAN_MESAJ; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("nur_mesaj_ayar", JSON.stringify(mesajAyar)); } catch { /* ignore */ }
+  }, [mesajAyar]);
+
   // ★ FONTA GÖRE OTOMATİK BOYUT: her fontun ideal çarpanı görsel dengeyi
   //   korur (naskh irice, kufi küçüktür). Kullanıcının ince ayarı ekstra çarpılır —
   //   yani elle ayar yaptığı zaman o değer her fontta GEÇERLİ kalır.
@@ -680,55 +701,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [query, lang]);
 
 
-  const ensureImage = useCallback((url: string) => {
-    let image = imageCache.current.get(url);
-    if (!image) {
-      const img = new Image();
-      // ★ BLOB/DATA URL SAME-ORIGIN'dir (30.09): crossOrigin="anonymous" blob:
-      //   adreslerde bazı tarayıcılarda yüklemeyi bozabiliyor — kullanıcı dosyaları
-      //   IndexedDB→blob ile gelir, onlara crossOrigin uygulanmaz.
-      if (!url.startsWith("blob:") && !url.startsWith("data:")) img.crossOrigin = "anonymous";
-      img.decoding = "async";
-      // ★ ÖLÜ GÖRSEL CACHE'TE KALMASIN: yüklenemeyen görsel cache'ten düşer —
-      //   imza adresi sonradan gelirse (videoUrl) sonraki karede taze deneme şansı doğar.
-      img.addEventListener("error", () => { if (imageCache.current.get(url) === img) imageCache.current.delete(url); }, { once: true });
-      img.src = url;
-      image = img;
-      imageCache.current.set(url, img);
-    }
-    return image;
-  }, []);
-  const ensureVideo = useCallback((url: string, fallbackUrl?: string) => {
-    let video = videoCache.current.get(url);
-    if (!video) {
-      const el = document.createElement("video");
-      // ★ Blob/data URL same-origin — crossOrigin yalnız uzak (CDN) medyada (30.09)
-      if (!url.startsWith("blob:") && !url.startsWith("data:")) el.crossOrigin = "anonymous";
-      el.src = url; el.muted = true; el.loop = true; el.playsInline = true; el.preload = "auto";
-      el.autoplay = true;
-      el.defaultMuted = true;
-      // ★ Donma koruması: bitiş/takılma anında kendini toparla
-      const revive = () => { try { if (el.ended) el.currentTime = 0; el.play().catch(() => undefined); } catch { /* ignore */ } };
-      el.addEventListener("ended", revive);
-      el.addEventListener("stalled", revive);
-      el.addEventListener("suspend", revive);
-      el.addEventListener("pause", revive);
-      el.play().catch(() => undefined);
-      
-      if (fallbackUrl && fallbackUrl !== url) {
-        el.addEventListener("error", () => {
-          if (el.src !== fallbackUrl) {
-            el.src = fallbackUrl;
-            el.load();
-            el.play().catch(() => undefined);
-          }
-        }, { once: true });
-      }
-      video = el;
-      videoCache.current.set(url, video);
-    }
-    return video;
-  }, []);
+  const ensureImage = useCallback((url: string) => ensureImageYukle(imageCache, url), []);
+  const ensureVideo = useCallback((url: string, fallbackUrl?: string) => ensureVideoYukle(videoCache, url, fallbackUrl), []);
 
   // ★ SEÇİLEN ATMOSFERİ ANINDA HAZIRLA: R2 klipler imza korumalı, canvas imzalı adresi
   //   senkron okuyor. Seçim anında imza yoksa tuvale poster/kaleydoskop düşüyor, video
@@ -753,6 +727,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
     showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, mealSizeMul: mealSizeFine, shimmerCfg, shimmerIntensity, cardBg, textOffset,
+    cubuk: cubukAyar, mesaj: mesajAyar,
     cineFilter, isMasterSürüm, brandSignature, brandOn, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
   });
 
@@ -1800,6 +1775,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         t={t}
         tier={tier}
         subscriptionEndsAt={subscriptionEndsAt}
+        misafirKalanHak={user || isMasterSürüm ? undefined : Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed())}
       />
 
       <StudioHeroSection />
@@ -1839,6 +1815,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setShowArapca={setShowArapca}
           showSubMeal={showSubMeal}
           setShowSubMeal={setShowSubMeal}
+          cubukAyar={cubukAyar}
+          setCubukAyar={setCubukAyar}
+          mesajAyar={mesajAyar}
+          setMesajAyar={setMesajAyar}
           setTextOffset={setTextOffset}
           textOffset={textOffset}
           selected={selected}
@@ -2059,167 +2039,20 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         </div>
       ) : null}
 
-      {/* ★ ÜRETİM ONAY BALONU — free/pro maliyet uyarısı */}
+      {/* ★ ÜRETİM ONAY BALONU — SRP adım 12: studioAppBolumler */}
       {genConfirmOpen && genConfirmData ? (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => handleGenConfirm(false)}>
-          <div className="glass modal-in max-w-sm w-[90%] rounded-3xl border border-white/10 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}>
-                <Zap size={22} className="text-white" />
-              </div>
-              <div>
-                <h3 className="font-display text-base font-black text-white">Üretim Onayı</h3>
-                <p className="text-[10px] text-white/50">Maliyet bilgisi</p>
-              </div>
-            </div>
-
-            <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Üretim türü</span>
-                <span className="font-bold text-white">{genConfirmData.mode === "short" ? "Kısa (59sn)" : genConfirmData.mode === "long" ? "Uzun (600sn)" : "Tam Sürüm"}</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Format sayısı</span>
-                <span className="font-bold text-white">{genConfirmData.formatCount} adet</span>
-              </div>
-              <div className="my-2 h-px bg-white/10" />
-              <div className="flex items-center justify-between text-[12px]">
-                <span className="font-bold text-white/70">Harcanacak jeton</span>
-                <span className="font-black" style={{ color: "var(--accent)" }}>{genConfirmData.cost} ⚡</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Kalan jetonun</span>
-                <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Üretim sonrası</span>
-                <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
-                  {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
-                </span>
-              </div>
-            </div>
-
-            {genConfirmData.remaining - genConfirmData.cost <= 0 && (
-              <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
-                ⚠️ Jetonun yetersiz! Üretim sonrası bakiyen 0 olacak.
-              </div>
-            )}
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleGenConfirm(false)}
-                className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-              >
-                İptal
-              </button>
-              <button
-                onClick={() => handleGenConfirm(true)}
-                className="flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black text-white transition shadow-lg"
-                style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
-              >
-                Üret ⚡ {genConfirmData.cost}
-              </button>
-            </div>
-          </div>
-        </div>
+        <UretimOnayBalonu genConfirmData={genConfirmData} handleGenConfirm={handleGenConfirm} />
       ) : null}
 
-      {/* ⛔ SÜRESİZ BAN ENGEL EKRANI */}
+      {/* ⛔ SÜRESİZ BAN ENGEL EKRANI — SRP adım 12 */}
       {localBanned && !isMasterSürüm && !isAdminEmail(user?.email || "") && (
-        <div className="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-black/95 p-6 backdrop-blur-2xl text-center modal-in select-none">
-          <div
-            className="glass relative max-w-md w-full rounded-3xl p-8 border text-center space-y-4 shadow-2xl"
-            style={{ borderColor: "rgba(239, 68, 68, 0.5)", background: "linear-gradient(160deg, rgba(127,29,29,0.3) 0%, rgba(12,13,18,0.98) 100%)" }}
-          >
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-red-500/20 border border-red-500/40 text-red-400 shadow-xl animate-pulse">
-              <Ban size={36} strokeWidth={2.5} />
-            </div>
-
-            <div>
-              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-red-300">
-                ERİŞİM SÜRESİZ DONDURULDU
-              </span>
-              <h2 className="font-display text-xl font-black text-white mt-3 tracking-wide">
-                SİSTEM ERİŞİMİNİZ ENGELLENMİŞTİR
-              </h2>
-            </div>
-
-            <div className="rounded-2xl border border-red-500/30 bg-black/60 p-4 text-left space-y-1.5">
-              <div className="text-[9.5px] font-black uppercase tracking-wider text-red-400">
-                Yasal Suç / İhlal Gerekçesi:
-              </div>
-              <p className="text-[11.5px] font-semibold text-white/90 leading-relaxed">
-                "{localBanReason}"
-              </p>
-            </div>
-
-            <p className="text-[10px] leading-relaxed text-white/45">
-              Hesabınız yasal suç veya platform güvenlik şartlarının ihlali nedeniyle süresiz olarak askıya alınmıştır. Ban itirazları ve yasal talepleriniz için <b className="text-white/80">destek@nurstudyo.com</b> adresiyle iletişime geçebilirsiniz.
-            </p>
-
-            <div className="pt-2 text-[9px] font-mono text-white/30 border-t border-white/10">
-              nurstudyo.com · Siber Güvenlik Denetim Protokolü
-            </div>
-          </div>
-        </div>
+        <BanEngelEkrani localBanReason={localBanReason} />
       )}
 
       {/* ALL MODALS CONTAINER */}
-      {/* ★ AKILLI HATA KILAVUZU MODALI */}
+      {/* ★ AKILLI HATA KILAVUZU MODALI — SRP adım 12 */}
       {debugGuideModal && (
-        <div
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md modal-in"
-          onMouseDown={() => setDebugGuideModal(null)}
-          onClick={() => setDebugGuideModal(null)}
-        >
-          <div
-            className="glass modal-in relative w-full max-w-md rounded-2xl p-6 shadow-2xl"
-            style={{ border: "1px solid rgba(215,170,82,.35)" }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setDebugGuideModal(null)}
-              className="absolute right-3 top-3 rounded-full bg-white/5 p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
-              aria-label="Kapat"
-            >
-              <X size={16} />
-            </button>
-
-            <div className="mb-4 flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                <AlertTriangle size={18} />
-              </span>
-              <div>
-                <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>
-                  {debugGuideModal.title}
-                </h3>
-                <p className="text-[9.5px] text-white/40">{debugGuideModal.subtitle}</p>
-              </div>
-            </div>
-
-            <div className="space-y-2.5 text-[11px] leading-relaxed text-white/80">
-              {debugGuideModal.steps.map((step, idx) => (
-                <div key={idx} className="rounded-xl border border-white/10 bg-black/30 p-3 font-semibold text-white/90">
-                  {step}
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setDebugGuideModal(null);
-                window.location.reload();
-              }}
-              className="mt-5 w-full rounded-xl py-3 text-[11px] font-black uppercase tracking-wider text-black"
-              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-            >
-              Sayfayı Yenile (F5)
-            </button>
-          </div>
-        </div>
+        <HataKilavuzModal debugGuideModal={debugGuideModal} setDebugGuideModal={setDebugGuideModal} />
       )}
 
       <ModalsContainer

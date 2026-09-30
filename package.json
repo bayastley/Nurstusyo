@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "node scripts/ai-match-test.mjs",
     "test:esm": "node scripts/esm-tarama.mjs",
+    "test:duman": "node scripts/esm-tarama.mjs --duman",
     "test:ses": "node scripts/kesfet-hoca-ses-testi.mjs",
     "test:roadmap": "node scripts/roadmap-saglik-testi.mjs"
   },

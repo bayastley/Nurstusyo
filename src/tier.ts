@@ -347,56 +347,24 @@ export function reciterRequiredTier(reciter: {
 }
 
 // ════════════════════════════════════════════════════════
-// ★ SÜRÜM TAKVİMİ
+// ★ SÜRÜM TAKVİMİ → src/version.ts'e taşındı (30.09 SRP adım 1a).
+//   Aşağıdaki köprü eski import yollarını KORUR — tüketenler değişmeden çalışır.
 // ════════════════════════════════════════════════════════
-
-export type AppVersion = "v1.0" | "v1.1" | "v1.2" | "v1.3" | "v1.4" | "v1.5" | "v1.6" | "v1.7";
-export const VERSION_SCHEDULE: Record<AppVersion, string> = {
-  "v1.0": "2026-08-28", "v1.1": "2026-09-25", "v1.2": "2026-10-23", "v1.3": "2026-11-20",
-  "v1.4": "2026-12-18", "v1.5": "2027-01-15", "v1.6": "2027-02-05", "v1.7": "2027-03-12",
-};
-const VERSION_ORDER: AppVersion[] = ["v1.0", "v1.1", "v1.2", "v1.3", "v1.4", "v1.5", "v1.6", "v1.7"];
-
-export function getCurrentVersion(): AppVersion {
-  if (typeof window === "undefined") return "v1.0";
-  const override = localStorage.getItem("nur_version_override") as AppVersion | null;
-  if (override && VERSION_ORDER.includes(override)) return override;
-  const today = new Date().toISOString().slice(0, 10);
-  return VERSION_ORDER.reduce<AppVersion>((current, version) => (today >= VERSION_SCHEDULE[version] ? version : current), "v1.0");
-}
-
-export function setVersionOverride(version: AppVersion | null): void {
-  if (typeof window === "undefined") return;
-  if (version) localStorage.setItem("nur_version_override", version);
-  else localStorage.removeItem("nur_version_override");
-}
-
-export function isVersionUnlocked(target: "v2" | "v3"): boolean {
-  const current = getCurrentVersion();
-  return VERSION_ORDER.indexOf(current) >= VERSION_ORDER.indexOf(target === "v2" ? "v1.6" : "v1.7");
-}
+export { getCurrentVersion, setVersionOverride, isVersionUnlocked } from "./version";
+export type { AppVersion } from "./version";
 
 // ════════════════════════════════════════════════════════
-// ★ ADMIN
+// ★ ADMIN → src/adminConfig.ts'e taşındı (30.09 SRP adım 1b).
+//   YETKİ SUNUCUDA — buradaki liste yalnız UI görünürlük katmanı.
 // ════════════════════════════════════════════════════════
+export { ADMIN_SECRET_PATH, ALLOWED_ADMIN_EMAILS, isAdminEmail, getAdminSession, setAdminSession } from "./adminConfig";
 
-export const ADMIN_SECRET_PATH = "/admin";
-export const ALLOWED_ADMIN_EMAILS = ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_NUR_ADMIN_EMAIL ?? "")
-  .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
-
-export function isAdminEmail(email: string): boolean {
-  return ALLOWED_ADMIN_EMAILS.includes(email.toLowerCase().trim());
-}
-
-const ADMIN_SESSION_KEY = "nur_admin_session";
-export function getAdminSession(): boolean {
-  return typeof window !== "undefined" && localStorage.getItem(ADMIN_SESSION_KEY) === "1";
-}
-export function setAdminSession(on: boolean): void {
-  if (typeof window === "undefined") return;
-  if (on) localStorage.setItem(ADMIN_SESSION_KEY, "1");
-  else localStorage.removeItem(ADMIN_SESSION_KEY);
-}
+// ════════════════════════════════════════════════════════
+// ★ MİKRO KİLİT + DAVET → src/microUnlock.ts'e taşındı (30.09 SRP adım 1c)
+// ════════════════════════════════════════════════════════
+export { hasMicroUnlock, grantMicroUnlock, microUnlockRemainingMs, DAVET_KADEMELERI, DAVET_EDILEN_GIRIS, DAVET_REFERANS_KOD_BONUS } from "./microUnlock";
+export type { MicroUnlockKey } from "./microUnlock";
+import { MICRO_UNLOCK_HOURS } from "./microUnlock";
 
 // ════════════════════════════════════════════════════════
 // ★ ÖZEL GÜN HEDİYELERİ
@@ -424,150 +392,15 @@ export function isFriday(): boolean { return serverIsFriday(); }
 export function todayServerISO(): string { return serverDateISO(); }
 
 // ════════════════════════════════════════════════════════
-// ★ MİKRO KİLİT AÇMA (24 saat)
+// ★ MİKRO KİLİT AÇMA (24 saat) → src/microUnlock.ts'e taşındı (30.09)
 // ════════════════════════════════════════════════════════
 
-export type MicroUnlockKey = "batch" | "ai_search" | "full_mode";
-const MICRO_UNLOCK_PREFIX = "nur_micro_unlock_";
-const MICRO_UNLOCK_HOURS = 24;
-
-export function hasMicroUnlock(key: MicroUnlockKey): boolean {
-  return typeof window !== "undefined" && Date.now() < Number(localStorage.getItem(MICRO_UNLOCK_PREFIX + key) || 0);
-}
-export function grantMicroUnlock(key: MicroUnlockKey): void {
-  if (typeof window !== "undefined") {
-    localStorage.setItem(MICRO_UNLOCK_PREFIX + key, String(Date.now() + MICRO_UNLOCK_HOURS * 3600000));
-  }
-}
-export function microUnlockRemainingMs(key: MicroUnlockKey): number {
-  return typeof window === "undefined" ? 0 : Math.max(0, Number(localStorage.getItem(MICRO_UNLOCK_PREFIX + key) || 0) - Date.now());
-}
-
 // ════════════════════════════════════════════════════════
-// ★ DAVET PROGRAMI — ödül olarak ek üretim hakkı verir
+// ★ DAVET PROGRAMI → src/microUnlock.ts'e taşındı (30.09)
 // ════════════════════════════════════════════════════════
 
-export const DAVET_KADEMELERI = [
-  { esik: 3, rozet: "Tohum", kind: "kisa" as VideoKind, amount: 3 },
-  { esik: 10, rozet: "Fidan", kind: "kisa" as VideoKind, amount: 8 },
-  { esik: 25, rozet: "Ağaç", kind: "uzun" as VideoKind, amount: 5 },
-  { esik: 50, rozet: "Orman", kind: "tam" as VideoKind, amount: 2, ozel: "Ömür boyu Pro" },
-] as const;
-export const DAVET_EDILEN_GIRIS = 3;
-export const DAVET_REFERANS_KOD_BONUS = 1;
-
 // ════════════════════════════════════════════════════════
-// ★ GEÇİŞ KATMANI (StudioApp.tsx uyumluluğu)
-//
-//   StudioApp.tsx henüz eski isimleri çağırıyor.
-//   Bu bölüm o çağrıları YENİ kota sistemine yönlendirir.
-//   Hiçbiri bakiye tutmaz — sadece kota/paket okur.
-//   StudioApp.tsx güncellenince bu bölüm silinebilir.
+// ★ GEÇİŞ KATMANI → src/tierCompat.ts'e taşındı (30.09 SRP adım 1d).
+//   Aşağıdaki köprü eski import yollarını KORUR — tüketenler değişmeden çalışır.
 // ════════════════════════════════════════════════════════
-
-/** Süre modu → video türü eşlemesi */
-export const MODE_TO_KIND: Record<"short" | "long" | "full", VideoKind> = {
-  short: "kisa",
-  long: "uzun",
-  full: "tam",
-};
-
-/** Her video türü kaç üretim hakkı harcar:
- *  Kısa (59 sn) = 1 hak
- *  Uzun (600 sn) = 5 hak
- *  Tam Sürüm (90 dk) = 15 hak
- */
-const VIDEO_COST: Record<"short" | "long" | "full", number> = {
-  short: 1,
-  long: 5,
-  full: 15,
-};
-
-export function videoMaliyeti(mode: "short" | "long" | "full", _tier?: Tier): number {
-  return VIDEO_COST[mode] ?? 1;
-}
-
-/** ESKİ AD — o türden bugün toplam kaç üretim yapılabilir */
-export function jetonTavani(tier: Tier, _ramadan?: boolean): number {
-  return DAILY_QUOTA[tier].kisa + DAILY_QUOTA[tier].uzun + DAILY_QUOTA[tier].tam;
-}
-
-/** ESKİ AD — toplam kalan üretim hakkı (kota + paket) */
-export function getJeton(): number {
-  const tier = getCurrentTier();
-  return (["kisa", "uzun", "tam"] as VideoKind[]).reduce((sum, k) => sum + getAvailable(k, tier), 0);
-}
-
-/**
- * ESKİ AD — HeaderTopBar eski sürümü bunu import ediyor.
- * Artık bakiye/cüzdan değildir. Sadece geriye uyumluluk için
- * toplam kullanılabilir üretim hakkını eski alan adlarıyla döndürür.
- */
-export function getJetonVault(): { subJeton: number; purchasedJeton: number; total: number } {
-  const tier = getCurrentTier();
-  const dailyLeft = (["kisa", "uzun", "tam"] as VideoKind[]).reduce((sum, k) => sum + getQuotaLeft(k, tier), 0);
-  const packs = getPackRights();
-  const packageLeft = packs.kisa + packs.uzun + packs.tam;
-  return {
-    subJeton: dailyLeft,
-    purchasedJeton: packageLeft,
-    total: dailyLeft + packageLeft,
-  };
-}
-
-/** ESKİ AD — artık dışarıdan sayı yazılamaz, işlem yapmaz */
-export function setJeton(_amount: number): void {
-  /* bakiye kavramı kaldırıldı — bilinçli olarak boş */
-}
-
-/** ESKİ AD — paket hakkı olarak kısa video ekler */
-export function addPurchasedJeton(amount: number): void {
-  grantPack("kisa", amount);
-}
-
-/** ESKİ AD — günlük kota otomatik yenilenir, işlem yapmaz */
-export function addDailySubJeton(_amount: number, _cap?: number): void {
-  /* günlük kota her gün otomatik sıfırlanır — bilinçli olarak boş */
-}
-
-/** ESKİ AD — sabitler yeni kota değerlerine bağlandı */
-export const JETON = {
-  // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): eski COST_KISA/UZUN/TAM sabitleri (1/1/1)
-  //   gerçek maliyetle (videoMaliyeti: 1/5/15) çeliştiği için SİLİNDİ — hiçbir yerde
-  //   kullanılmıyorlardı; maliyetin tek kaynağı videoMaliyeti() + VIDEO_COST.
-  //   COST_KISA = 1 eşdeğeri gerekiyorsa videoMaliyeti("short") kullan.
-  DAILY_FREE: DAILY_QUOTA.free.kisa,
-  DAILY_PRO: DAILY_QUOTA.pro.kisa,
-  DAILY_ELIT: DAILY_QUOTA.elit.kisa,
-  DAILY_FREE_RAMADAN: DAILY_QUOTA.free.kisa,
-  DAILY_PRO_RAMADAN: DAILY_QUOTA.pro.kisa,
-  DAILY_ELIT_RAMADAN: DAILY_QUOTA.elit.kisa,
-  TAVAN_FREE: DAILY_QUOTA.free.kisa,
-  TAVAN_PRO: DAILY_QUOTA.pro.kisa + DAILY_QUOTA.pro.uzun,
-  TAVAN_ELIT: DAILY_QUOTA.elit.kisa + DAILY_QUOTA.elit.uzun + DAILY_QUOTA.elit.tam,
-  TAVAN_ELIT_RAMAZAN: DAILY_QUOTA.elit.kisa + DAILY_QUOTA.elit.uzun + DAILY_QUOTA.elit.tam,
-  KAYIT_BONUSU_FREE: HEDIYE.KAYIT.amount,
-  CUMA_BONUS: HEDIYE.CUMA.amount,
-  KANDIL_BONUS: HEDIYE.KANDIL.amount,
-  BAYRAM_BONUS: HEDIYE.BAYRAM.amount,
-  KADIR_GECESI: HEDIYE.KADIR.amount,
-  DOGUM_GUNU: 2,
-  ILK_GIRIS_BUGUN: 2,
-  ILK_GIRIS_YARIN: 1,
-  TAM_SURUM_CAP_SANIYE: VIDEO_KIND_SECONDS.tam,
-  MIKRO_KILIT_SURESI_SAAT: MICRO_UNLOCK_HOURS,
-  MIKRO_KILIT_ACMA_UCRETI: 1,
-  PAKET_RAMAZAN_FREE: 5,
-  PAKET_RAMAZAN_PRO: 10,
-} as const;
-
-/** ESKİ AD — fiyat listesi yeni değerlere bağlandı */
-export const PRICING = {
-  PRO: { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" },
-  ELIT: { tl: TIER_PRICE_TRY.elit, usd: 6.0, period: "aylık" },
-  DENEME: { tl: 35, usd: 1.0, period: "tek seferlik" },
-  UYE: { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" },
-} as const;
-
-/** ESKİ AD — eski paket kartları kaldırıldı, yeni paketler pricing.ts içinde */
-export const JETON_PAKETLERI = [] as const;
+export { MODE_TO_KIND, videoMaliyeti, jetonTavani, getJeton, getJetonVault, setJeton, addPurchasedJeton, addDailySubJeton, JETON, PRICING, JETON_PAKETLERI } from "./tierCompat";

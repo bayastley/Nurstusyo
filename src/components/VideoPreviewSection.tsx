@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Pause, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
 import { randomClip, type Clip } from "../clips";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { T } from "../i18n";
+import { type CubukAyar, type MesajAyar } from "../studio/mesajKatmani";
+import { CubukRenkSecici } from "./renkCubuguSecici";
 import type { ModalName, Output, SelectedAyah, Tier } from "../types";
 
 interface VideoPreviewSectionProps {
@@ -16,6 +18,12 @@ interface VideoPreviewSectionProps {
   setShowArapca: (value: boolean) => void;
   showSubMeal: boolean;
   setShowSubMeal: (value: boolean) => void;
+  /** ★ RENK ÇUBUĞU (01.10) — çerçeve iç kenarı gökkuşağı şeridi (kartlıkla aynı çekirdek) */
+  cubukAyar: CubukAyar;
+  setCubukAyar: React.Dispatch<React.SetStateAction<CubukAyar>>;
+  /** ★ ÖZEL YAZI (01.10) — videonun içine çizilen kullanıcı mesajı */
+  mesajAyar: MesajAyar;
+  setMesajAyar: React.Dispatch<React.SetStateAction<MesajAyar>>;
   setTextOffset: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
   textOffset: { x: number; y: number };
   selected: SelectedAyah[];
@@ -84,7 +92,7 @@ function lowPowerDevice(): boolean {
 export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) => {
   const {
     canvasRef, previewWidth, previewMaximized, setPreviewMaximized, showArapca, setShowArapca,
-    showSubMeal, setShowSubMeal, setTextOffset, textOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
+    showSubMeal, setShowSubMeal, cubukAyar, setCubukAyar, mesajAyar, setMesajAyar, setTextOffset, textOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
     previewPlaying, setPreviewPlaying, setPreviewTime, randomizeBackgrounds, previewDuration,
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
@@ -222,6 +230,112 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="mx-auto flex w-full gap-1.5" style={{ maxWidth: previewWidth }}>
         <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? "Arapça Çıkar" : "Arapça Ekle"}</button>
         <button onClick={() => setShowSubMeal(!showSubMeal)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showSubMeal ? "Meal Çıkar" : "Meal Ekle"}</button>
+      </div>
+
+      {/* ★ RENK ÇUBUĞU + ÖZEL YAZI (01.10) — stüdyo kontrol paneli.
+          Çubuk: çerçeve iç kenarında dikey gökkuşağı şeridi; 12 renk düğmesi
+          çubuğu 30° adımlarla döndürür, kalınlık slider'ı şeridi inceltir/kalınlaştırır.
+          Kartlıkla (Ayet Kütüphanesi) AYNI çekirdek: mesajKatmani.ts. */}
+      <div className="mx-auto max-w-[228px] space-y-1.5">
+        <button
+          type="button"
+          onClick={() => setCubukAyar((c) => ({ ...c, acik: !c.acik }))}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/60 transition hover:text-white"
+        >
+          <Palette size={11} style={{ color: "var(--accent)" }} /> Renk Çubuğu {cubukAyar.acik ? "açık" : "kapalı"}
+        </button>
+        {cubukAyar.acik && (
+          <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
+            {/* ★ İKİ DİKEY ÇUBUK — Arapça ve meal renkleri AYRI seçilir.
+                Çubuk aşağıdan yukarı tüm renkleri taşır; sürükdükçe değişir.
+                Kartlıkla (Ayet Kütüphanesi) aynı paletten beslenir. */}
+            <div className="flex items-start justify-center gap-4">
+              <CubukRenkSecici etiket="Arapça" deger={cubukAyar.donme} onSec={(d) => setCubukAyar((c) => ({ ...c, donme: d }))} />
+              <CubukRenkSecici etiket="Meal" deger={cubukAyar.mealDonme} onSec={(d) => setCubukAyar((c) => ({ ...c, mealDonme: d }))} />
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[8px] font-bold text-white/50">Çerçeve</span>
+                <button
+                  type="button"
+                  onClick={() => setCubukAyar((c) => ({ ...c, kalinlik: c.kalinlik > 0 ? 0 : 6 }))}
+                  className={`h-5 w-10 rounded-full text-[7.5px] font-black transition ${cubukAyar.kalinlik > 0 ? "text-black" : "glass-soft text-white/50"}`}
+                  style={cubukAyar.kalinlik > 0 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+                  title="Çerçeve boyunca renk şeridi aç/kapa"
+                >
+                  {cubukAyar.kalinlik > 0 ? "AÇIK" : "YOK"}
+                </button>
+                {cubukAyar.kalinlik > 0 && (
+                  <input
+                    type="range"
+                    min={2}
+                    max={14}
+                    value={cubukAyar.kalinlik}
+                    onChange={(e) => setCubukAyar((c) => ({ ...c, kalinlik: Number(e.target.value) }))}
+                    className="mt-1 h-1 w-10 accent-[color:var(--accent)]"
+                    title="Şerit kalınlığı"
+                  />
+                )}
+              </div>
+            </div>
+            <p className="text-center text-[7.5px] text-white/35">Çubukta sürükle → renk seç · kartlıkla aynı</p>
+          </div>
+        )}
+
+        {/* ★ ÖZEL YAZI — videonun içine çizilen mesaj; ayrı konum + hizalama + ofset */}
+        <button
+          type="button"
+          onClick={() => setMesajAyar((m) => ({ ...m, acik: !m.acik }))}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/60 transition hover:text-white"
+        >
+          <PenLine size={11} style={{ color: "var(--accent)" }} /> Özel Yazı {mesajAyar.acik && mesajAyar.metin.trim() ? "· aktif" : ""}
+        </button>
+        {mesajAyar.acik && (
+          <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
+            <textarea
+              value={mesajAyar.metin}
+              onChange={(e) => setMesajAyar((m) => ({ ...m, metin: e.target.value.slice(0, 90) }))}
+              placeholder="Videonun içine yazılacak mesajın… (örn. Anneme hediye 💐)"
+              rows={2}
+              className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25"
+            />
+            <div className="grid grid-cols-2 gap-1">
+              {(["ust", "orta", "alt"] as const).map((k) => (
+                <button key={k} type="button" onClick={() => setMesajAyar((m) => ({ ...m, konum: k }))}
+                  className={`rounded-md py-1 text-[8px] font-black transition ${mesajAyar.konum === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                  style={mesajAyar.konum === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                  {k === "ust" ? "↑ Üst" : k === "orta" ? "↕ Orta" : "↓ Alt"}
+                </button>
+              ))}
+              {(["sol", "orta", "sag"] as const).map((k) => (
+                <button key={k} type="button" onClick={() => setMesajAyar((m) => ({ ...m, hizalama: k }))}
+                  className={`rounded-md py-1 text-[8px] font-black transition ${mesajAyar.hizalama === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                  style={mesajAyar.hizalama === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                  {k === "sol" ? "◧ Sol" : k === "orta" ? " ◨ Orta" : "◨ Sağ"}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
+              <span>Konum ayarı</span>
+              <span className="text-[7.5px] text-white/35">ayet konumundan bağımsız</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1">
+              <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, x: Math.max(-40, m.ofset.x - 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">◀</button>
+              <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, x: Math.min(40, m.ofset.x + 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▶</button>
+              <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, y: Math.max(-40, m.ofset.y - 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▲</button>
+              <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, y: Math.min(40, m.ofset.y + 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▼</button>
+            </div>
+            <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
+              <span>Yazı boyutu</span>
+              <span className="tabular-nums text-white/40">{mesajAyar.olcek}%</span>
+            </div>
+            <input type="range" min={70} max={160} step={5} value={mesajAyar.olcek}
+              onChange={(e) => setMesajAyar((m) => ({ ...m, olcek: Number(e.target.value) }))}
+              className="h-1 w-full accent-[color:var(--accent)]" />
+            {(mesajAyar.ofset.x !== 0 || mesajAyar.ofset.y !== 0) && (
+              <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { x: 0, y: 0 } }))}
+                className="w-full rounded-md glass-soft py-1 text-[8.5px] font-bold text-white/60 hover:text-white">⟲ Konumu sıfırla</button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mx-auto flex items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
