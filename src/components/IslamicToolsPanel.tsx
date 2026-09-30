@@ -544,17 +544,30 @@ function HatimTakibi() {
 
 // ★ ÖĞÜT VAKTİ — PWA push ile günde 4 sahih hadis bildirimi (sekme kapalıyken bile)
 // ★ OKUYUCU MODU / GECE MUŞAFI (madde 34) — kehribar renkli uyku dostu ekran tonu
-//   Sayfanın kök div'ine amber filtre uygular; tekrar tıklayınca kapanır.
+// ★ KAYMA FIX (30.09, kullanıcı bildirimi): eski uygulama #root'a CSS filter veriyordu.
+//   CSS kuralı gereği filter'lı atas, fixed konumlu çocukların (modallar, paneller —
+//   fixed inset-0) içeren bloğu HALİNE GELİR → modallar viewport'a değil 4000px+'lik
+//   root'a oturur, "ekran aşağı kayıyor, F5'siz düzelmiyor" hatası buydu.
+//   Yeni desen: layout'a DOKUNMAYAN sabit ton katmanı (backdrop-filter + pointer-events-none)
+//   — filter yerine backdrop-filter kullandığı için içeren blok oluşturmaz, tüm fixed
+//   elemanlar viewport'a bağlı kalır; tonu viewport boyunca sabit overlay olarak basar.
 const GECE_MOD_KEY = "nur_gece_mod";
 function GeceModuDugmesi() {
   const [acik, setAcik] = useState(() => { try { return localStorage.getItem(GECE_MOD_KEY) === "1"; } catch { return false; } });
   useEffect(() => {
     try { localStorage.setItem(GECE_MOD_KEY, acik ? "1" : "0"); } catch {}
-    const kok = document.getElementById("root");
-    if (kok) {
-      kok.style.filter = acik ? "sepia(.28) saturate(.9) hue-rotate(-12deg) brightness(.94)" : "";
-      kok.style.transition = "filter .4s ease";
-    }
+    const eskiKatman = document.getElementById("nur-gece-mod-katmani");
+    if (eskiKatman) eskiKatman.remove();
+    if (!acik) return;
+    const katman = document.createElement("div");
+    katman.id = "nur-gece-mod-katmani";
+    katman.style.cssText =
+      "position:fixed;inset:0;z-index:2147483000;pointer-events:none;" +
+      "backdrop-filter:sepia(.28) saturate(.9) hue-rotate(-12deg) brightness(.94);" +
+      "-webkit-backdrop-filter:sepia(.28) saturate(.9) hue-rotate(-12deg) brightness(.94);" +
+      "transition:opacity .4s ease;";
+    document.documentElement.appendChild(katman);
+    return () => { katman.remove(); };
   }, [acik]);
   return (
     <button type="button" onClick={() => setAcik(v => !v)}
