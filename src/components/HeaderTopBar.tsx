@@ -46,6 +46,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   tier,
   subscriptionEndsAt,
   setRoadmapOpen,
+  misafirKalanHak,
 }) => {
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
@@ -305,8 +306,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           </div>
           {/* ★ MOBİL HAK GÖSTERGESİ: masaüstündeki jeton/üyelik rozetleri sm:flex ile gizliydi —
               telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır.
-              NOT: absolute değil — akış içinde, dil/imsak butonlarıyla ÇAKIŞMAZ */}
-          {user && (
+              ★ RESPONSIVE TASARIM (30.09, kullanıcı emri): bu gösterge DAR ekranda (sm altı)
+              GÖRÜNÜR, ekran büyüyünce gizlenir — yerini masaüstündeki sağ rozetlere bırakır.
+              Girişli kullanıcı: jeton + tier · Misafir: kalan deneme hakkı rozeti. */}
+          {user ? (
             <div className="flex items-center gap-1.5 sm:hidden">
               <button
                 onClick={() => openPremium("jeton")}
@@ -328,6 +331,20 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <Gem size={10} style={{ color: "var(--accent)" }} />{TIER_LABEL[tier || "free"] || "Free"}
               </button>
             </div>
+          ) : (
+            /* ★ MİSAFİR HAK ROZETİ — dar ekranda kalan deneme hakkını gösterir,
+               büyüyünce gizlenir (masaüstünde giriş modalı zaten hakkı anlatır) */
+            <button
+              onClick={() => setModal("login")}
+              className="flex items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-bold sm:hidden"
+              style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)", color: "var(--accent-2)" }}
+              title={misafirKalanHak !== undefined && misafirKalanHak <= 0 ? "Deneme hakkın bitti — ücretsiz üye ol" : "Misafir deneme hakların — üye ol, +20 jeton kazan"}
+            >
+              <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                <Coins size={8} className="text-black" strokeWidth={3} />
+              </span>
+              {misafirKalanHak !== undefined && misafirKalanHak <= 0 ? "🎁 Üye Ol" : `${misafirKalanHak ?? 2} deneme`}
+            </button>
           )}
 
           {/* ★ LANSMAN TEMİZLİĞİ (kullanıcı emri 28.09): ADMIN PANEL / ADMIN·ÇIKIŞ
@@ -380,7 +397,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "♾️ SINIRSIZ" : jetonCount}
                   </span>
                   {!(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) && (
-                    <span className="text-[9px] font-bold tracking-wide text-white/50">Üretim Hakkı</span>
+                    <span className="hidden text-[9px] font-bold tracking-wide text-white/50 sm:inline">Üretim Hakkı</span>
                   )}
                 </button>
               );

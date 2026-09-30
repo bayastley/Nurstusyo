@@ -35,4 +35,6 @@ export interface HeaderTopBarProps {
   tier?: Tier;
   subscriptionEndsAt?: string | null;
   setRoadmapOpen?: (v: boolean) => void;
+  /** ★ Misafir deneme hakkı (girişsiz kullanıcı) — mobil header'da hak rozeti için */
+  misafirKalanHak?: number;
 }
