@@ -1244,11 +1244,13 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         return;
       }
     }
-    if (jetonCount < totalCost) {
-      notify(`Bu üretim için ${totalCost} jeton gerekiyor · mevcut: ${jetonCount}`);
-      openPremium("jeton");
-      return;
-    }
+    // ★ YANLIŞ KAPI FIX (30.09, kullanıcı bildirimi): buradaki jetonCount kontrolü
+    //   SADECE satın alınan paket haklarını sayıyordu — günlük kota hakkı (free: 3/gün)
+    //   hesaba katılmadığı için hakki olan kullanıcı satın alma modalına atılıyordu.
+    //   Ücretlendirme TEK DOĞRULUK KAYNAĞI olarak sunucuda yapılır: /api/render/authorize
+    //   atomik RPC ile kotayı+paketi doğru hesaplar, hakkı yoksa 402 + dürüst mesaj döner
+    //   (yukarıdaki authorize bloğu zaten bu cevabı notify ile gösterir). İkinci bir
+    //   yanlış kapı burada OLAMAZ — kaldırıldı.
     // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
     if (!isMasterSürüm && !isGuest && totalCost > 0 && (accessTier === "free" || accessTier === "pro")) {
       const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode);

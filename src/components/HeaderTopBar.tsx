@@ -293,10 +293,15 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
           </div>
 
-          <div className="absolute left-[68px] flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          {/* ★ HEADER ÇAKIŞMA FIX (30.09, kullanıcı bildirimi): logo eski haliyle
+              `absolute left-[68px]` ile akıştan kopmuştu — 640-1000px arası (yatay telefon,
+              küçük pencere) jeton/üyelik rozetleri logonun ÜZERİNE biniyordu. Artık logo
+              akış içinde (flex) — çakışma matematiksel olarak imkânsız. Dar ekranda
+              "STÜDYO" kelimesi gizlenir, marka logosu+NÛR olarak kalır. */}
+          <div className="flex shrink-0 items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             <img src="/logo.png" alt="Nûr Stüdyo Logo" className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
-            <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent)" }}>STÜDYO</span>
+            <span className="hidden font-display text-base font-black tracking-[.2em] sm:inline" style={{ color: "var(--accent)" }}>STÜDYO</span>
           </div>
           {/* ★ MOBİL HAK GÖSTERGESİ: masaüstündeki jeton/üyelik rozetleri sm:flex ile gizliydi —
               telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır.
@@ -328,7 +333,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           {/* ★ LANSMAN TEMİZLİĞİ (kullanıcı emri 28.09): ADMIN PANEL / ADMIN·ÇIKIŞ
               pill'leri ÜST BAR'DAN KALDIRILDI — yer kaplamasın, arayüz tertemiz.
               Admin kontrolleri artık sol menünün altındaki ADMIN bölümünde (aşağıda). */}
-          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <div className="ml-auto flex min-w-0 items-center gap-2 overflow-hidden">
             {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
                 kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
                 admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
