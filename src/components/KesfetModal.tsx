@@ -42,7 +42,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [acikSure, setAcikSure] = useState<number | null>(null);
   // ★ KISSA AKORDEONU (01.10): aynı ilke — kapalı kart tek satır özet, açık kartta kıssa+ders+dua
   const [acikKissa, setAcikKissa] = useState<string | null>(null);
-  // ★ KELİME YENİLE (01.10): 61 kelimelik sahih havuzdan her seferinde rastgele 15 kart — sürekli değişsin
+  // ★ KELİME YENİLE (01.10): sahih havuzdan (54 kelime) her seferinde rastgele 15 kart — sürekli değişsin
   const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
   const kelimeYenile = React.useCallback(() => {
     const havuz = [...KELIME_KARTLARI];
@@ -68,7 +68,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     );
   };
   const [hocaAyet, setHocaAyet] = useState<number>(0); // seçili ayet index'i (-1 = aramadan gelen özel ayet)
-  const [hocaOzel, setHocaOzel] = useState<{ sure: number; sureAdi: string; ayet: number } | null>(null); // ★ 01.10: "bakara 250" araması istediğin ayeti çalar
+  const [hocaOzel, setHocaOzel] = useState<{ sure: number; sureAdi: string; ayet: number; etiket?: string } | null>(null); // ★ 01.10: "bakara 250" araması istediğin ayeti çalar
   const [hocaIdx, setHocaIdx] = useState<number>(0);   // çalan kari index'i
   const [hocaCaliyor, setHocaCaliyor] = useState(false);
   const hocaAudioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -97,7 +97,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const hocaOzelAday = useMemo(() => {
     if (sekme !== "hoca" || !q) return null;
     const norm = (s: string) => s.toLocaleLowerCase("tr").replace(/[âàä]/g, "a").replace(/[îìï]/g, "i").replace(/[ûùü]/g, "u").replace(/[‘’'-]/g, "").trim();
-    const sayiya = (sn: number, an: number): { sure: number; sureAdi: string; ayet: number } | null => {
+    const sayiya = (sn: number, an: number): { sure: number; sureAdi: string; ayet: number; etiket?: string } | null => {
       const sur = SURAHS.find((x) => x.n === sn);
       if (!sur || an < 1 || an > sur.count) return null;
       return { sure: sn, sureAdi: sur.name, ayet: an };
