@@ -15,19 +15,25 @@ import { Modal } from "./UIElements";
 import { AYET_KARTILARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
 import type { Tier } from "../tier";
 import { BACKGROUNDS, catLabel, akilliBgSec, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
+import { RUH_HALLERI, ruhHaliEsle, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
+import { translate, type Lang } from "../i18n";
 import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKartBolumleri";
 
 interface AyetKartlariModalProps {
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   /** ★ Hat paleti PRO+ kilidi (01.10): accessTier pro/elit ise 20 font açık */
   accessTier?: Tier;
   tierAtLeast?: (have: Tier, need: Tier) => boolean;
   openPremium?: (tab?: "uyelik" | "jeton") => void;
 }
 
-export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify, accessTier = "free", tierAtLeast, openPremium }) => {
+export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify, lang = "tr", accessTier = "free", tierAtLeast, openPremium }) => {
+  // ★ FULL I18N (01.10): modal başlık/sub dict'ten — 5 dil (tr/en/ar/id/ur)
+  const tt = (k: string): string => translate(lang, k);
   // ★ HAT PALETİ PRO+ (01.10): temel stil (Aa Türkçe) herkese; 20 hat fontu pro/elit'te.
   const hatPaletiAcik = tierAtLeast ? tierAtLeast(accessTier, "pro") : accessTier === "pro" || accessTier === "elit";
   const hatKilitTiklandi = () => {
@@ -50,6 +56,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const [imgTick, setImgTick] = useState(0);
   const [ayar, setAyar] = useState<KartAyarlari>(VARSAYILAN_AYARLAR);
   const [ayarlariGoster, setAyarlariGoster] = useState(false);
+  // ★ AI RUH HALİ (01.10): çubuk input'unun değeri — ruhHaliUygula ile işlenir
+  const [ruhHaliMetin, setRuhHaliMetin] = useState("");
   // ★📸 KENDİ FOTOĞRAFIN (foto+hat sanatı kartı): kullanıcı fotoğrafı yükler,
   //   kart arka planına hat sanatı ayeti işlenir. Fotoğraf YALNIZCA tarayıcıda
   //   kalır — hiçbir sunucuya gönderilmez (KVKK dostu).
@@ -248,12 +256,39 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     notify?.("🎯 Akıllı AI: ayetin ruhuna uygun kart hazır!");
   }, [filteredAyets, notify]);
 
+  // ★ AI RUH HALİ (01.10): serbest metin / 30 çip → ruh eşleş → mood'a uygun
+  //   ayet + arka plan (akilliBgSec) + kart ayarları (karartma/konum/hizalama/ölçek
+  //   + mood renkli RENK ÇUBUĞU) tek tuşla. Ayet listesi de o mood'a filtrelenir.
+  const ruhHaliUygula = useCallback((ruhId?: string) => {
+    let ruh: RuhHali | undefined = ruhId ? RUH_HALLERI.find((r) => r.id === ruhId) : undefined;
+    let tam = true;
+    if (!ruh) {
+      const metin = ruhHaliMetin.trim();
+      if (!metin) { notify?.("🧠 Ruh halini yaz — örn. 'sınav stresi', 'huzur arıyorum', 'kalbi kırık'"); return; }
+      const es = ruhHaliEsle(metin);
+      ruh = es.ruh; tam = es.skor > 0;
+    }
+    const havuz = AYET_KARTILARI.filter((a) => a.mood === ruh.mood);
+    const secenek = havuz.length ? havuz : AYET_KARTILARI;
+    const ayetPick = secenek[Math.floor(Math.random() * secenek.length)];
+    if (!ayetPick) return;
+    const bgPick = akilliBgSec(ayetPick, BACKGROUNDS);
+    const { cubukDonme, ...ayarOneri } = MOOD_KART_AYARLARI[ruh.mood];
+    setAyetId(ayetPick.id);
+    if (bgPick) { setBgId(bgPick.id); setBgCat("all"); setBgSearch(""); }
+    setMood(ruh.mood); setSadeceGunun(false);
+    setAyar((a) => ({ ...a, ...ayarOneri, cubuk: { ...a.cubuk, acik: true, donme: cubukDonme, mealDonme: (cubukDonme + 150) % 360, kalinlik: a.cubuk.kalinlik || 6 } }));
+    notify?.(tam
+      ? `🧠 ${ruh.emoji} ${ruh.ad} — ${ayetPick.title} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
+      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruh.ad} — ${ayetPick.title} hazır!`);
+  }, [ruhHaliMetin, notify]);
+
   if (!open) return null;
 
   return (
     <Modal
-      title="Ayet Kütüphanesi"
-      sub={`${AYET_KARTILARI.length} ayet · 114 sure · 2.000+ arka plan — seç, kartına yaz, fotoğraf olarak indir 🌙`}
+      title={tt("v2AyetKartlariTitle")}
+      sub={tt("v2AyetKartlariSub").replace("{n}", String(AYET_KARTILARI.length))}
       onClose={onClose}
       wide
     >
@@ -276,6 +311,9 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           gununAyetiObj={gununAyetiObj}
           shuffleAyet={shuffleAyet}
           akilliAyetSec={akilliAyetSec}
+          ruhHaliMetin={ruhHaliMetin}
+          setRuhHaliMetin={setRuhHaliMetin}
+          ruhHaliUygula={ruhHaliUygula}
         />
 
         {/* ── SAĞ: KART ÖNİZLEME + İNDİR ───────────────────── */}

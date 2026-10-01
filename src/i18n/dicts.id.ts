@@ -219,6 +219,8 @@ export const idDict: Dict = {
   v2OzelGunSub: "Jumat, malam mulia dan hari suci — ide tema untuk kreator",
   v2SiteHakkindaTitle: "Apa Saja di Situs Ini?",
   v2SiteHakkindaSub: "Nûr Studio — sumber konten, pemberitahuan hak cipta dan kontak",
+  v2AyetKartlariTitle: "Perpustakaan Ayat",
+  v2AyetKartlariSub: "{n} ayat · 114 surah · 2.000+ latar belakang — pilih, tulis di kartumu, unduh sebagai foto 🌙",
   v2AyetKutuphaneTitle: "Perpustakaan Ayat & Doa",
   v2AyetKutuphaneSub: "Ayat, hadis, doa dan zikir — tambahkan ke videomu lewat Gunung di Studio",
   v2StoriesTitle: "Kisah Al-Qur'an",

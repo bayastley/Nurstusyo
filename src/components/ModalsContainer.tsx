@@ -519,7 +519,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride */}
       <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} />
       {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
-      <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
+      <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} lang={lang} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
 
       {/* ★ BU SİTEDE NE VAR — kaynaklar, telif bildirimi, iletişim (yol haritası madde 4) */}
       <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} lang={lang} />

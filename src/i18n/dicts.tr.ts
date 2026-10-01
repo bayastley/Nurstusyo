@@ -226,6 +226,8 @@ export const trDict: Dict = {
   v2OzelGunSub: "Cuma, kandiller ve mühim geceler — üreticiler için tema önerileriyle",
   v2SiteHakkindaTitle: "Bu Sitede Ne Var?",
   v2SiteHakkindaSub: "Nûr Stüdyo — içerik kaynakları, telif bildirimi ve iletişim",
+  v2AyetKartlariTitle: "Ayet Kütüphanesi",
+  v2AyetKartlariSub: "{n} ayet · 114 sure · 2.000+ arka plan — seç, kartına yaz, fotoğraf olarak indir 🌙",
   v2AyetKutuphaneTitle: "Ayet & Dua Kütüphanesi",
   v2AyetKutuphaneSub: "Ayet-i Kerime, Hadis-i Şerif, Kadim Dua ve Zikirler — Stüdyo'da Kullan ile videona ekle",
   v2StoriesTitle: "Kur'an Kıssaları",

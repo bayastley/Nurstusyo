@@ -226,6 +226,8 @@ export const enDict: Dict = {
   v2OzelGunSub: "Friday, holy nights and sacred days — theme ideas for creators",
   v2SiteHakkindaTitle: "What's on This Site?",
   v2SiteHakkindaSub: "Nûr Studio — content sources, copyright notice and contact",
+  v2AyetKartlariTitle: "Ayah Library",
+  v2AyetKartlariSub: "{n} ayat · 114 surahs · 2,000+ backgrounds — pick, write on your card, download as a photo 🌙",
   v2AyetKutuphaneTitle: "Verse & Prayer Library",
   v2AyetKutuphaneSub: "Verses, Hadith, timeless prayers and dhikr — add to your video via Use in Studio",
   v2StoriesTitle: "Qur'an Stories",

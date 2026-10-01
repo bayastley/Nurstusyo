@@ -6,8 +6,9 @@
 // ════════════════════════════════════════════════════════
 
 import React from "react";
-import { Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
+import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
+import { RUH_HALLERI } from "../data/ruhHalleri";
 import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { CubukRenkSecici } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
@@ -33,9 +34,46 @@ export const AyetSecimBolumu: React.FC<{
   shuffleAyet: () => void;
   /** 🎯 Akıllı AI: ayetin ruh haline/kelimelerine göre ayet + uyumlu arka plan kendisi seçilir */
   akilliAyetSec: () => void;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec }) => {
+  /** ★ AI RUH HALİ (01.10): serbest metin / çip → ayet + arka plan + kart ayarları */
+  ruhHaliMetin: string;
+  setRuhHaliMetin: (v: string) => void;
+  ruhHaliUygula: (ruhId?: string) => void;
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula }) => {
   return (
     <div className="order-2 lg:order-1">
+          {/* ★ AI RUH HALİ (01.10) — yaz ya da çip seç: ayet + arka plan + kart ayarı tek tuşla */}
+          <div className="mb-2.5 rounded-xl border border-[color:var(--accent)]/25 bg-white/[.03] p-2.5">
+            <div className="flex items-center gap-1.5">
+              <div className="relative min-w-0 flex-1">
+                <Sparkles size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/35" />
+                <input
+                  value={ruhHaliMetin}
+                  onChange={(e) => setRuhHaliMetin(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") ruhHaliUygula(); }}
+                  placeholder="Ruh halini yaz — sınav stresi, kalp kırıklığı, huzur arıyorum..."
+                  className="glass-soft w-full rounded-lg py-2 pl-9 pr-2.5 text-[10.5px] outline-none placeholder:text-white/30"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => ruhHaliUygula()}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
+                style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+                title="Ruh haline uygun ayet + arka plan + kart ayarları"
+              >
+                <Brain size={11} /> AI Ruh Hali
+              </button>
+            </div>
+            <div className="scrollbar-thin mt-1.5 flex max-h-[58px] flex-wrap gap-1 overflow-y-auto">
+              {RUH_HALLERI.map((r) => (
+                <button key={r.id} type="button" onClick={() => ruhHaliUygula(r.id)} title={r.ad}
+                  className="glass-soft rounded-full px-2 py-0.5 text-[8.5px] font-bold text-white/55 transition hover:text-white">
+                  {r.emoji} {r.ad}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>1 · Ayetini Seç</span>
             <div className="ml-auto flex items-center gap-1.5">
