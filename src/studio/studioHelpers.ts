@@ -224,10 +224,56 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
       ayahCacheKoy(key, result);
       return result;
     }
+    // ★ 2. SAĞLAYICI YEDEĞİ (01.10): alquran.cloud tamamen düşükse/CORS verirse api.quran.com
+    //   dene — "günün ayeti yükleniyor" sonsuz döngüsü ve hafızlık boş soru vakalarını kapatır.
+    const yedek = await quranComAyah(surah, ayah, edition);
+    if (yedek) {
+      console.warn(`[fetchAyah] 2. SAĞLAYICI: ${key} api.quran.com'dan geldi (alquran.cloud sağlıksız)`);
+      ayahCacheKoy(key, yedek);
+      return yedek;
+    }
     console.error("[fetchAyah] Tüm editionlar başarısız:", key);
     return { ar: "", tr: "" };
   } finally {
     pendingFetches--;
+  }
+}
+
+/** ★ 2. SAĞLAYICI (01.10): api.quran.com — meşhur, ACAO:* açık API. Edition → quran.com
+ *  translation id haritası (curl ile doğrulandı): 77=Diyanet TR, 52=Elmalılı, 124=Shahin,
+ *  20=Saheeh EN, 33=Endonezce, 234=Jalandhry UR. Arapça metin text_uthmani'den gelir.
+ *  Birincil sağlayıcı ölürse tüm ayet çekimleri (günün ayeti, hafızlık, mealler) buraya düşer. */
+const QURAN_COM_TRANSLATION: Record<string, number | null> = {
+  "tr.diyanet": 77,
+  "tr.yazir": 52,
+  "tr.vakfi": 124,
+  "en.sahih": 20,
+  "id.indonesian": 33,
+  "ur.jalandhry": 234,
+};
+
+export async function quranComAyah(surah: number, ayah: number, edition = "tr.yazir"): Promise<{ ar: string; tr: string } | null> {
+  try {
+    const tid = QURAN_COM_TRANSLATION[edition];
+    // Arapça: by_key + fields=text_uthmani → { verse: { text_uthmani } } (canlıda doğrulandı)
+    const arJson = await fetchJSON(`https://api.quran.com/api/v4/verses/by_key/${surah}:${ayah}?fields=text_uthmani`) as { verse?: { text_uthmani?: string } };
+    const ar = (arJson.verse?.text_uthmani ?? "").trim();
+    if (!ar) return null;
+    // Çeviri: by_key çeviriyi döndürmüyor (canlı test) → bölüm bazlı uc: /quran/translations/{id}?chapter_number={s}
+    // yanıt: { translations: [{ resource_id, text }, …] } — ayet sırasına göre hizalı
+    let tr = "";
+    if (tid) {
+      const trJson = await fetchJSON(`https://api.quran.com/api/v4/quran/translations/${tid}?chapter_number=${surah}`) as { translations?: Array<{ text?: string }> };
+      const liste = trJson.translations ?? [];
+      // quran.com çeviri metni <sup foot_note> vb. HTML kalıntıları içerebilir — temizle
+      tr = (liste[ayah - 1]?.text ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    } else {
+      tr = ar; // arapça edition: çeviri yerine metnin kendisi
+    }
+    if (!tr) return null;
+    return { ar, tr };
+  } catch {
+    return null;
   }
 }
 
