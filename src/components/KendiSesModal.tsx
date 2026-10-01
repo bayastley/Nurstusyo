@@ -48,6 +48,29 @@ interface Props {
 
 const fmt = (sn: number) => `${Math.floor(sn / 60)}:${String(Math.floor(sn % 60)).padStart(2, "0")}.${String(Math.floor((sn % 1) * 100)).padStart(2, "0")}`;
 
+/** ★ MAHREM UYARISI (01.10) — hanım kardeşlerin okuyuş sesi hakkında saygılı bilgilendirme.
+ *  Kaynak: dinimizislam.com "Kadının sesi haram mı?" (Aid=2987) — Ahzab 32, Ramuz, İbni Abidin.
+ *  Karar sorumluluğu kullanıcıya aittir; site yalnızca hatırlatır ve kaynağa yönlendirir.
+ *  (Sadece TR — uyarı fıkhî metin, çeviriye açılırsa ayrı turda değerlendirilir.) */
+const MAHREM_UYARISI = (
+  <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
+    <p className="text-[10px] font-bold text-amber-200">🕌 Hanım kardeşlerimiz için hatırlatma</p>
+    <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
+      Bazı fıkhı kaynaklara göre hanımın okuyuş sesini yabancı erkeklere duyurması caiz görülmez;
+      bu videolar herkese açık platformlara yüklenip namahrem erkeklerce dinlenebilir. Kararı
+      bilerek verin, gerekiyorsa bilgili bir âliminize danışın.
+    </p>
+    <a
+      href="https://dinimizislam.com/detay.asp?Aid=2987"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-1 inline-block text-[9px] font-bold text-amber-300/90 underline decoration-amber-400/40 underline-offset-2 hover:text-amber-200"
+    >
+      Kaynak: dinimizislam.com — "Kadının sesi haram mı?" ↗
+    </a>
+  </div>
+);
+
 export const KendiSesModal: React.FC<Props> = ({
   open, onClose, sure, seciliAyetler, aktifSes, kayitlar, yukleniyor, isElit, nefes,
   yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara,
@@ -204,6 +227,7 @@ export const KendiSesModal: React.FC<Props> = ({
 
             {/* Yükleme alanı */}
             <div className="mb-3 space-y-1.5">
+              {MAHREM_UYARISI}
               {mod === "tum" ? (
                 <button disabled={yukleniyor} onClick={() => dosyaSec("tum")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[.03] py-4 text-[11px] font-bold text-white/70 transition hover:border-[color:var(--accent)]/50 hover:bg-white/[.06] disabled:opacity-50">
                   {yukleniyor ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}

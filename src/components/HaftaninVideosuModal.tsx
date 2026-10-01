@@ -235,6 +235,26 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   </p>
                 </div>
 
+                {/* ★ MAHREM UYARISI (01.10) — hanım kardeşlerin okuyuş sesi ile üretilen videolar
+                    herkese açık vitrine önerilmeden önce saygılı hatırlatma. Kaynak:
+                    dinimizislam.com "Kadının sesi haram mı?" (Aid=2987) */}
+                <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
+                  <p className="text-[10px] font-bold text-amber-200">🕌 Hanım kardeşlerimiz için hatırlatma</p>
+                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
+                    Videonuzda hanımın okuyuş sesi varsa: bazı fıkhı kaynaklara göre hanımın sesini
+                    yabancı erkeklere duyurmak caiz görülmez; bu vitrin herkese açıktır. Kararı
+                    bilerek verin, gerekiyorsa bilgili bir âliminize danışın.
+                  </p>
+                  <a
+                    href="https://dinimizislam.com/detay.asp?Aid=2987"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-block text-[9px] font-bold text-amber-300/90 underline decoration-amber-400/40 underline-offset-2 hover:text-amber-200"
+                  >
+                    Kaynak: dinimizislam.com — "Kadının sesi haram mı?" ↗
+                  </a>
+                </div>
+
                 {benim.length > 0 && (
                   <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
                     <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/40">Benim önerilerim</p>
