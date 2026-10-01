@@ -201,8 +201,8 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
       try {
         await throttle();
         const json = await fetchJSON(quranUrl(`v1/ayah/${surah}:${ayah}/editions/quran-uthmani,${ed}`)) as { data?: Array<{ text: string }> };
-        const ar = (json.data?.[0]?.text ?? "") as string;
-        const tr = normalizeTurkishMeal((json.data?.[1]?.text ?? "") as string, ed);
+        const ar = metniTemizle((json.data?.[0]?.text ?? "") as string);
+        const tr = normalizeTurkishMeal(metniTemizle((json.data?.[1]?.text ?? "") as string), ed);
         if (ar) sonAr = ar;
         if (tr) sonTr = tr;
         // ★ Kabul koşulu: Arapça VAR ve çeviri SAĞLIKLI (kayma şüphesi yok)
@@ -220,7 +220,7 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
     }
     // Tüm editionlar denendi: Arapça geldiyse onunla dön (eskiden de ar||tr kabul ediliyordu)
     if (sonAr) {
-      const result = { ar: sonAr, tr: sonTr };
+      const result = { ar: metniTemizle(sonAr), tr: sonTr };
       ayahCacheKoy(key, result);
       return result;
     }
@@ -257,7 +257,7 @@ export async function quranComAyah(surah: number, ayah: number, edition = "tr.ya
     const tid = QURAN_COM_TRANSLATION[edition];
     // Arapça: by_key + fields=text_uthmani → { verse: { text_uthmani } } (canlıda doğrulandı)
     const arJson = await fetchJSON(`https://api.quran.com/api/v4/verses/by_key/${surah}:${ayah}?fields=text_uthmani`) as { verse?: { text_uthmani?: string } };
-    const ar = (arJson.verse?.text_uthmani ?? "").trim();
+    const ar = metniTemizle(arJson.verse?.text_uthmani ?? "");
     if (!ar) return null;
     // Çeviri: by_key çeviriyi döndürmüyor (canlı test) → bölüm bazlı uc: /quran/translations/{id}?chapter_number={s}
     // yanıt: { translations: [{ resource_id, text }, …] } — ayet sırasına göre hizalı
@@ -266,7 +266,7 @@ export async function quranComAyah(surah: number, ayah: number, edition = "tr.ya
       const trJson = await fetchJSON(`https://api.quran.com/api/v4/quran/translations/${tid}?chapter_number=${surah}`) as { translations?: Array<{ text?: string }> };
       const liste = trJson.translations ?? [];
       // quran.com çeviri metni <sup foot_note> vb. HTML kalıntıları içerebilir — temizle
-      tr = (liste[ayah - 1]?.text ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+      tr = normalizeTurkishMeal(metniTemizle((liste[ayah - 1]?.text ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ")), edition);
     } else {
       tr = ar; // arapça edition: çeviri yerine metnin kendisi
     }
@@ -326,6 +326,11 @@ const sureCache = new Map<string, SureEditionData>();
 //   içerik değişmez veri olduğu için bayatlık riski yok, yalnız bellek korunur.
 const SURE_CACHE_SINIR = 320;
 
+// ★ BOM TEMİZLİĞİ (01.10): alquran.cloud bazı metinlerin başına görünmez U+FEFF (BOM)
+//   basıyor — canvas ölçümünü bozup Arapça satırların çizilmemesine yol açıyordu
+//   ("Tüm Sureyi Ekle"de Fâtiha ayetleri boş görünüyordu). Her ayet/sure metninden sıyrılır.
+export const metniTemizle = (t: string): string => String(t ?? "").replace(/\uFEFF/g, "").trim();
+
 export async function fetchSurahEditions(surah: number, edition: string): Promise<SureEditionData> {
   const cacheKey = `${surah}:${edition}`;
   const cacheHit = sureCache.get(cacheKey);
@@ -353,8 +358,8 @@ export async function fetchSurahEditions(surah: number, edition: string): Promis
     if (ed !== edition) console.warn(`[fetchSurahEditions] FALLBACK: sure ${surah} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
     const sonuc: SureEditionData = {
       name: ham.name,
-      arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: String(a.text ?? ""), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
-      tr: ham.translated.map((t) => normalizeTurkishMeal(String(t.text ?? ""), ed)),
+      arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: metniTemizle(a.text), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
+      tr: ham.translated.map((t) => normalizeTurkishMeal(metniTemizle(t.text), ed)),
       edition: ed,
       fallbackUsed: ed !== edition,
     };

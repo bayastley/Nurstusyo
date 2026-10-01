@@ -236,9 +236,9 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 translationSize = Math.round(Math.min(trMaxSize, Math.max(10, trBase * shrink)) * p.mealSizeMul); // ★ mealSizeMul ARTIK BAĞIMSIZ (textSizeMul ile çarpılmıyordu — biri büyüyünce diğeri de büyüyordu)
                 arabicHeight = arabicSize * 1.72;
                 ctx.font = `${p.arabicFontWeight} ${arabicSize}px ${p.arabicFontCss}`;
-                arabicLines = (p.showArapca && fontHazir) ? wrapText(ctx, currentAyah.ar, arMaxW) : []; // ★ font yoksa boş bırak — fallback yanıp sönme yok
+                arabicLines = (p.showArapca && fontHazir) ? wrapText(ctx, currentAyah.ar.replace(/\uFEFF/g, "").trim(), arMaxW) : []; // ★ font yoksa boş bırak; BOM temizliği (01.10) — görünmez U+FEFF ölçümü bozuyordu
                 ctx.font = `400 ${translationSize}px Inter,sans-serif`;
-                translationLines = p.showSubMeal ? wrapText(ctx, currentAyah.tr, trMaxW) : [];
+                translationLines = p.showSubMeal ? wrapText(ctx, currentAyah.tr.replace(/\uFEFF/g, "").trim(), trMaxW) : [];
                 sepH = (arabicLines.length > 0 && translationLines.length > 0) ? translationSize * 1.35 : 0;
                 totalH = (arabicLines.length > 0 ? arabicLines.length * arabicHeight : 0) + sepH + (translationLines.length > 0 ? translationLines.length * translationSize * 1.55 : 0);
                 if (totalH <= safeH) break;
