@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 import {
   sanitize, validateEmail, validateTier, validateId,
-  rateLimit, rateLimitSilent, adminRateLimit, adminFromCookie, db,
+  rateLimit, rateLimitSilent, adminRateLimit, adminFromCookie, db, config,
 } from "./actionYardimcilar";
 
 // ★ SRP adım 6 (30.09): doğrulama + rate limit + DB yardımcıları actionYardimcilar.ts'e taşındı

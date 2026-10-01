@@ -4,7 +4,7 @@ import { SURAHS } from "../data";
 import type { Clip } from "../clips";
 import type { KendiSesAktif } from "../studio/useKendiSes";
 import type { StoredSes } from "../studio/sesDeposu";
-import type { SesSegmenti } from "../studio/sesZamanlama";
+import { baslangicKaydir, type SesSegmenti } from "../studio/sesZamanlama";
 
 // ═══════════════════════════════════════════════════════════════
 // KENDİ SESİNİ YÜKLE MODALI (30.09) — ELİT ÜYELERE ÖZEL
@@ -36,6 +36,8 @@ interface Props {
   sil: (id: string) => Promise<void>;
   zamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
   kaldirAktif: () => void;
+  /** Eski kaydı güncel motorla yeniden tara (01.10) — donmuş yanlış zamanlamaları düzeltir */
+  yenidenTara: (id: string, ayetSayisi: number) => Promise<boolean>;
   /** Ayet kartına arka plan ata (pickingFor mekanizmasıyla aynı kapı) */
   setPickingFor: (id: string | null) => void;
   setModal: (m: "atmos" | null) => void;
@@ -48,7 +50,7 @@ const fmt = (sn: number) => `${Math.floor(sn / 60)}:${String(Math.floor(sn % 60)
 
 export const KendiSesModal: React.FC<Props> = ({
   open, onClose, sure, seciliAyetler, aktifSes, kayitlar, yukleniyor, isElit, nefes,
-  yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif,
+  yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara,
   setPickingFor, setModal, ayahBackgrounds, openPremium, notify,
 }) => {
   const [mod, setMod] = useState<"tum" | "ayet">("tum");
@@ -56,12 +58,24 @@ export const KendiSesModal: React.FC<Props> = ({
   const [nefesDeger, setNefesDeger] = useState(nefes);
   const [sesliIdx, setSesliIdx] = useState<number | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  // ★ DÜZENLE MODU (01.10): taslak = HAM (nefes'siz) segment kopyası — sürgüyle ayet başlangıcı kaydırılır
+  const [taslaklar, setTaslaklar] = useState<SesSegmenti[] | null>(null);
 
   const sureMeta = useMemo(() => SURAHS[sure - 1], [sure]);
   const sureAdi = seciliAyetler[0]?.sName || sureMeta?.name || `Sure ${sure}`;
   const ayetSayisi = seciliAyetler.length;
 
   if (!open) return null;
+
+  /** Nefes uygulanmış segmentleri HAM (depo) biçimine döndür — çifte-nefes koruması:
+   *  zamanlamaKaydet ham bekler, hook gösterirken nefesi kendisi ekler. */
+  const hamSegmentler = (applied: SesSegmenti[], nefesSn: number): SesSegmenti[] =>
+    applied.map((s, i) => ({ start: Math.max(0, +(s.start - i * nefesSn).toFixed(3)), dur: s.dur }));
+  /** Editörde gösterilen: taslak varsa ham + anlık nefes kayması (çalınan gerçek zaman) */
+  const gosterilen: SesSegmenti[] =
+    aktifSes && taslaklar
+      ? taslaklar.map((s, i) => ({ start: s.start + i * (aktifSes.nefes || 0), dur: s.dur }))
+      : aktifSes?.segments ?? [];
 
   const elitKapisi = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -95,7 +109,14 @@ export const KendiSesModal: React.FC<Props> = ({
     if (!seg) return;
     const a = new Audio(aktifSes.url);
     a.currentTime = baslangicSn ?? seg.start;
+    // ★ FIX (01.10): bitiş sınırı — segment sonunda dursun. Önceden dosyanın
+    //   sonuna kadar çalıyordu ("hepsi bütün sesi okuyor" şikayetinin ikinci yarısı).
+    const son = idx < aktifSes.segments.length - 1
+      ? aktifSes.segments[idx + 1].start
+      : seg.start + seg.dur + 0.8;
+    const bitis = Math.max((baslangicSn ?? seg.start) + 0.2, son);
     a.onended = () => { setSesliIdx(null); audioRef.current = null; };
+    a.ontimeupdate = () => { if (a.currentTime >= bitis) { a.pause(); setSesliIdx(null); audioRef.current = null; } };
     audioRef.current = a;
     setSesliIdx(idx);
     a.play().catch(() => setSesliIdx(null));
@@ -163,7 +184,13 @@ export const KendiSesModal: React.FC<Props> = ({
             {aktifSes && (
               <div className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2 ring-1 ring-emerald-400/30">
                 <p className="text-[10px] font-bold text-emerald-300">✅ Aktif ses hazır · {aktifSes.kaynak === "tum-sure" ? "tek dosya" : "ayet başına"} · {aktifSes.segments.length} bölüm</p>
-                <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); }} className="mt-1 text-[9px] text-white/50 hover:text-white">Kaldır (kayıtlar saklanır)</button>
+                {aktifSes.kaynak === "tum-sure" && aktifSes.segments.length !== ayetSayisi && (
+                  <p className="mt-1 text-[9px] font-bold text-amber-300">⚠ {aktifSes.segments.length} bölüm ≠ {ayetSayisi} ayet — geçiş sayısı uyuşmuyor, yeniden analiz öner</p>
+                )}
+                <div className="mt-1 flex items-center gap-3">
+                  <button onClick={async () => { setTaslaklar(null); setDuzenleIdx(null); await yenidenTara(aktifSes.id, ayetSayisi); }} disabled={yukleniyor} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline disabled:opacity-40">🔬 Yeniden analiz et</button>
+                  <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); setTaslaklar(null); }} className="text-[9px] text-white/50 hover:text-white">Kaldır (kayıtlar saklanır)</button>
+                </div>
               </div>
             )}
 
@@ -202,31 +229,55 @@ export const KendiSesModal: React.FC<Props> = ({
               <div className="mb-3 rounded-xl bg-white/[.03] p-3 ring-1 ring-white/10">
                 <div className="mb-2 flex items-center justify-between">
                   <p className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><Scissors size={11} /> Ayet geçişleri (milisanielik)</p>
-                  {duzenleIdx === null ? (
-                    <button onClick={() => setDuzenleIdx(0)} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline">Düzenle</button>
+                  {taslaklar === null ? (
+                    <button onClick={() => { setTaslaklar(hamSegmentler(aktifSes.segments, aktifSes.nefes || 0)); setDuzenleIdx(0); }} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline">Düzenle</button>
                   ) : (
-                    <button onClick={() => setDuzenleIdx(null)} className="text-[9px] font-bold text-white/50 hover:text-white">Kapat</button>
+                    <span className="flex items-center gap-2">
+                      <button onClick={async () => { await zamanlamaKaydet(aktifSes.id, taslaklar, aktifSes.nefes || 0); setTaslaklar(null); setDuzenleIdx(null); }} className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-0.5 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30">Kaydet</button>
+                      <button onClick={() => { setTaslaklar(null); setDuzenleIdx(null); }} className="text-[9px] font-bold text-white/50 hover:text-white">Vazgeç</button>
+                    </span>
                   )}
                 </div>
                 <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                  {aktifSes.segments.map((seg, i) => {
+                  {gosterilen.map((seg, i) => {
                     const ay = seciliAyetler[i];
                     const bgVar = ay && ayahBackgrounds[`${ay.s}:${ay.a}`];
                     return (
-                      <div key={i} className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[9.5px] ${duzenleIdx === i ? "bg-[color:var(--accent)]/10 ring-1 ring-[color:var(--accent)]/50" : "bg-white/[.04]"}`}>
-                        <button onClick={() => sesCalDurdur(i)} className="w-5 shrink-0 rounded-full bg-white/10 p-1 text-white/70 hover:bg-white/20" title={i === sesliIdx ? "Durdur" : "Bu ayetin sesini dinle"}>
-                          {sesliIdx === i ? "⏸" : "▶"}
-                        </button>
-                        <span className="w-16 shrink-0 font-bold text-white/75">{ay ? `Ayet ${ay.a}` : `Bölüm ${i + 1}`}</span>
-                        <span className="w-20 shrink-0 tabular-nums text-white/45">{fmt(seg.start)}</span>
-                        <span className="flex-1 h-1.5 rounded-full bg-white/10">
-                          <span className="block h-full rounded-full bg-[color:var(--accent)]" style={{ width: `${Math.min(100, (seg.dur / Math.max(aktifSes.segments[aktifSes.segments.length - 1].start + aktifSes.segments[aktifSes.segments.length - 1].dur, 1)) * 100)}%` }} />
-                        </span>
-                        {bgVar && <Check size={11} className="shrink-0 text-emerald-400" title="Ayet arka planı atanmış" />}
-                        {duzenleIdx === i && (
-                          <span className="shrink-0 text-[8.5px] text-white/40">→ okuyuşunla hizalı</span>
-                        )}
-                      </div>
+                      <React.Fragment key={i}>
+                        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[9.5px] ${duzenleIdx === i ? "bg-[color:var(--accent)]/10 ring-1 ring-[color:var(--accent)]/50" : "bg-white/[.04]"}`}>
+                          <button onClick={() => sesCalDurdur(i, taslaklar ? seg.start : undefined)} className="w-5 shrink-0 rounded-full bg-white/10 p-1 text-white/70 hover:bg-white/20" title={i === sesliIdx ? "Durdur" : "Bu ayetin sesini dinle"}>
+                            {sesliIdx === i ? "⏸" : "▶"}
+                          </button>
+                          <span className="w-16 shrink-0 font-bold text-white/75">{ay ? `Ayet ${ay.a}` : `Bölüm ${i + 1}`}</span>
+                          <span className="w-20 shrink-0 tabular-nums text-white/45">{fmt(seg.start)}</span>
+                          <span className="flex-1 h-1.5 rounded-full bg-white/10">
+                            <span className="block h-full rounded-full bg-[color:var(--accent)]" style={{ width: `${Math.min(100, (seg.dur / Math.max(gosterilen[gosterilen.length - 1]?.start + gosterilen[gosterilen.length - 1]?.dur || 1, 1)) * 100)}%` }} />
+                          </span>
+                          {bgVar && <span title="Ayet arka planı atanmış"><Check size={11} className="shrink-0 text-emerald-400" /></span>}
+                          {taslaklar === null && duzenleIdx === i && (
+                            <span className="shrink-0 text-[8.5px] text-white/40">→ okuyuşunla hizalı</span>
+                          )}
+                        </div>
+                        {taslaklar && duzenleIdx === i && (() => {
+                          const hamToplam = taslaklar[taslaklar.length - 1].start + taslaklar[taslaklar.length - 1].dur;
+                          const altSinir = i > 0 ? taslaklar[i - 1].start + 0.2 : 0;
+                          const ustSinir = i < taslaklar.length - 1 ? taslaklar[i + 1].start - 0.2 : Math.max(0.3, hamToplam - 0.3);
+                          return (
+                            <div className="px-2.5 pb-1.5">
+                              <input
+                                type="range"
+                                min={altSinir}
+                                max={Math.max(altSinir + 0.05, ustSinir)}
+                                step={0.05}
+                                value={taslaklar[i].start}
+                                onChange={(e) => setTaslaklar(baslangicKaydir(taslaklar, i, Number(e.target.value), hamToplam))}
+                                className="h-1 w-full accent-[color:var(--accent)]"
+                              />
+                              <p className="text-[8px] text-white/35">Başlangıcı kaydır ({taslaklar[i].start.toFixed(2)} sn) — ayeti kendi okuyuşundaki yerine hizala</p>
+                            </div>
+                          );
+                        })()}
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -236,11 +287,11 @@ export const KendiSesModal: React.FC<Props> = ({
                   <input type="range" min={0} max={2} step={0.1} value={nefesDeger} onChange={(e) => setNefesDeger(Number(e.target.value))} className="h-1 flex-1 accent-[color:var(--accent)]" />
                   <span className="w-10 text-right text-[9px] tabular-nums text-white/60">{nefesDeger.toFixed(1)} sn</span>
                   <button
-                    onClick={() => zamanlamaKaydet(aktifSes.id, aktifSes.segments.map((s) => ({ ...s })), nefesDeger)}
+                    onClick={() => zamanlamaKaydet(aktifSes.id, hamSegmentler(aktifSes.segments, aktifSes.nefes || 0), nefesDeger)}
                     className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-1 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30"
                   >Uygula</button>
                 </div>
-                <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">Ayet başlangıçları okuyuşundan otomatik algılandı. Yanlış hizalanan ayet olursa nefes değerini sıfırlayıp yeniden yükleyebilir veya kaydı silebilirsin.</p>
+                <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">Bölümler sıraya birebir bağlıdır: i. bölüm = listedeki i. ayet (Fatiha'da besmele = Ayet 1). Hizalama eski kayıttan kaymışsa "🔬 Yeniden analiz et" ile güncel motorle tekrar tara; milimetrik ayar için "Düzenle" sürgüsünü kullan.</p>
               </div>
             )}
 
@@ -251,7 +302,7 @@ export const KendiSesModal: React.FC<Props> = ({
                 <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
                   {kayitlar.map((k) => (
                     <div key={k.id} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-2.5 py-1.5 text-[9.5px]">
-                      <button onClick={() => sec(k.id)} className="min-w-0 flex-1 truncate text-left font-bold text-white/75 hover:text-white" title={k.ad}>
+                      <button onClick={() => { void sec(k.id); setTaslaklar(null); setDuzenleIdx(null); }} className="min-w-0 flex-1 truncate text-left font-bold text-white/75 hover:text-white" title={k.ad}>
                         {SURAHS[k.sure - 1]?.name ?? k.sure} · {k.kaynak === "tum-sure" ? "tüm sure" : `ayet ${k.konum}`} · {k.ad}
                       </button>
                       <span className="shrink-0 tabular-nums text-white/35">{fmt(k.sure_sn)}</span>

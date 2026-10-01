@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Clip } from "../types";
+import type { Clip } from "../clips";
 import { getStoredMedia } from "./medyaStore";
 import { medyaClipYukle } from "../components/medyaKutuphaneHelpers";
 

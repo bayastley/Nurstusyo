@@ -26,6 +26,9 @@ export interface ZamanlamaSonuc {
   esik: number;
   /** Saniye başına pencere sayısı */
   pencereler: number;
+  /** ★ Hangi yöntemle bulundu: "sessizlik" = gerçek ayet geçişi algılandı,
+   *  "esit-bol" = geçiş bulunamadı → süre ayet sayısına bölündü (KABUL İNANILMAZ DEĞİL — UI'da "Ayarla" önerilir) */
+  yontem: "sessizlik" | "esit-bol";
 }
 
 const PENCERE_SN = 0.04; // 40ms pencere (~1639 örnek @48k) — kelime aralarıyla birebir hassas
@@ -34,6 +37,9 @@ const SESSIZ_SN = 0.22;  // bu kadar uzun sessizlik → yeni segment (ayet aras�
 const MIN_SEG_SN = 0.35; // bundan kısa segment parazittir, öncekine katılır
 const BAS_ETIKET_SN = 0.35; // sesin başındaki boşluk 35cm > saniyeye indirilir
 const SON_ETIKET_SN = 0.5;
+
+/** ★ Ayet geçişi adayı: aktif-olma (sesin asıl okuduğu) bölgeler arasındaki sessiz boşluklar.
+ *  Yalnız tarama içi kullanım — dışa açılmadı. */
 
 /** RMS tabanlı sessizlik sınırı taraması. PCM dışı girdi → hata fırlatır. */
 export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSonuc {
@@ -60,7 +66,21 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSon
   const kenarDizi = Array.from(rmsler.slice(0, kenar)).concat(Array.from(rmsler.slice(toplam - kenar)));
   kenarDizi.sort((a, b) => a - b);
   const taban = kenarDizi[Math.floor(kenarDizi.length / 2)] || 0.005;
-  const esik = Math.max(taban * 2.2, 0.008);
+  // ★ SAĞLAMLAŞTIRMA (01.10): RMS dağılımı İKİ-MODLUYSA (sessizlik zirvesi + konuşma zirvesi
+  //   net ayrık — kompresyonlu/az gürültülü kayıtlarda olur) eşiği iki zirvenin orta noktasından
+  //   kes; değilse eski taban×2.2 kuralı. Böylece hem az gürültülü kayıtta nefes tıkları geçiş
+  //   saymaz hem çok gürültülüde sessizlik yutulmaz.
+  const siraliRms = Array.from(rmsler).sort((a, b) => a - b);
+  const yuzdelik = (q: number): number => siraliRms[Math.min(siraliRms.length - 1, Math.floor(siraliRms.length * q))] || 0.005;
+  const q10 = yuzdelik(0.1);
+  const q60 = yuzdelik(0.6);
+  const esik = q60 > q10 * 3 ? Math.max((q10 + q60) / 2, 0.0005) : Math.max(taban * 2.2, 0.008, q60 * 0.6);
+
+  // 2b) pencere sayısı çok azsa (aşırı kısa dosya) tarayamayız
+  if (toplam < 10) {
+    const esit = boluEsit(buffer.duration, ayetSayisi);
+    return { segments: esit, total: buffer.duration, esik, pencereler: toplam, yontem: "esit-bol" };
+  }
 
   // 3) pencere → sesli/sessiz ikili dizisi + minimum süre tavanları
   const sesliPencereSay = Math.round(SESLI_SN / PENCERE_SN);
@@ -111,9 +131,36 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSon
   if (segments.length > ayetSayisi && ayetSayisi > 0) {
     segments = birlestir(segments, ayetSayisi);
   } else if (segments.length < ayetSayisi && ayetSayisi > 0) {
+    // ★ PASS-2 (01.10): eşit bölmeden ÖNCE "en büyük sessizlikten kes" dene —
+    //   kullanıcının ayet arası nefesi kısaysa (SESSIZ_SN altı) eşit bölme yanlış hizalar.
+    //   Sessiz pencere boşluklarını topla, en büyük ayetSayisi-1 tanesinden kes.
+    // ★ Yalnız ayetler ARASINDAKI boşluklar adaydır: baştaki sessizlik ayet 1'e, sondaki
+    //   sessizlik son ayete aittir — en büyük boşluk dosya sonu olur ve kesimi bozar.
+    const bosluklar: Array<{ bas: number; genislik: number }> = [];
+    let bosBas = -1;
+    for (let p = 0; p < toplam; p += 1) {
+      if (!sesli[p]) { if (bosBas < 0) bosBas = p; }
+      else { if (bosBas > 0) bosluklar.push({ bas: bosBas, genislik: p - bosBas }); bosBas = -1; }
+    }
+    const kesilecek = [...bosluklar].sort((a, b) => b.genislik - a.genislik).slice(0, Math.max(0, ayetSayisi - 1));
+    if (kesilecek.length === ayetSayisi - 1 && ayetSayisi >= 2) {
+      const sinirPencereleri = kesilecek.map((b) => b.bas + Math.floor(b.genislik / 2)).sort((a, b) => a - b);
+      // Tam kesim: baştaki sessizlik + ilk sesli blok ayet 1'e aittir (BAS_ETIKET_SN ruhu) →
+      // 1. segment 0'dan başlar; aradaki sınırlar en büyük boşlukların ortasıdır.
+      const pass2: SesSegmenti[] = [];
+      let onceki = 0;
+      for (const sinir of sinirPencereleri) {
+        pass2.push({ start: onceki * pencereSn, dur: (sinir - onceki) * pencereSn });
+        onceki = sinir;
+      }
+      pass2.push({ start: onceki * pencereSn, dur: (toplam - onceki) * pencereSn });
+      if (pass2.every((s) => s.dur >= MIN_SEG_SN)) {
+        return { segments: pass2, total, esik, pencereler: toplam, yontem: "sessizlik" };
+      }
+    }
     // bazen ayet içinde uzun duraklar kayıt kesiyor → eksikse eşit bölüm
     const esit = boluEsit(total, ayetSayisi);
-    return { segments: esit, total, esik, pencereler: toplam };
+    return { segments: esit, total, esik, pencereler: toplam, yontem: "esit-bol" };
   }
   // son segmente minimal kuyruk payı — son hece kesilmesin (tüm sessizliği yutmadan)
   if (segments.length) {
@@ -121,7 +168,7 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSon
     const uzatma = Math.min(0.15, Math.max(0, total - (son.start + son.dur)));
     son.dur += uzatma;
   }
-  return { segments, total, esik, pencereler: toplam };
+  return { segments, total, esik, pencereler: toplam, yontem: "sessizlik" };
 }
 
 /** Fazla segmentleri azaltarak ayet sayısına eşitle (en kısa boşluğu katlayarak). */

@@ -61,7 +61,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Sure ara... (ör: Bakara)"
+            placeholder={t("surahAra")}
             className="glass-soft w-full rounded-xl py-2.5 pl-8 pr-9 text-[11px] text-white outline-none placeholder:text-white/25 focus:border-[color:var(--accent)]"
           />
           {/* ★ Aramayı ve sonuç listesini temizle */}
@@ -69,7 +69,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             <button
               type="button"
               onClick={() => setQuery("")}
-              title="Aramayı temizle"
+              title={t("aramayiTemizle")}
               className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/50 transition hover:bg-red-500/25 hover:text-red-300"
             >
               <X size={11} strokeWidth={3} />
@@ -83,20 +83,20 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             {!searching && results.length ? (
               <div className="mb-1 flex items-center justify-between px-1.5">
                 <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/30">
-                  {results.length} sonuç
+                  {t("sonucSayisi").replace("{n}", String(results.length))}
                 </span>
                 <button
                   type="button"
                   onClick={() => setQuery("")}
                   className="flex items-center gap-1 rounded-md bg-white/5 px-1.5 py-0.5 text-[8.5px] font-bold text-white/45 transition hover:bg-red-500/20 hover:text-red-300"
                 >
-                  <X size={8} strokeWidth={3} /> Listeyi Kapat
+                  <X size={8} strokeWidth={3} /> {t("listeyiKapat")}
                 </button>
               </div>
             ) : null}
             {searching ? (
               <p className="flex items-center gap-2 px-2 py-2 text-[10px] text-white/35">
-                <Loader2 size={11} className="animate-spin" />Aranıyor...
+                <Loader2 size={11} className="animate-spin" />{t("araniyor")}
               </p>
             ) : null}
             {results.map((result) => (
@@ -140,7 +140,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             }}
             className="glass-soft rounded-xl px-2 py-2 text-[10px] outline-none"
           >
-            <option value="" disabled>Ayet</option>
+            <option value="" disabled>{t("ayetSecimi")}</option>
             {Array.from({ length: SURAHS[Number(surah) - 1]?.count ?? 1 }, (_, index) => (
               <option key={index + 1} value={index + 1}>{index + 1}</option>
             ))}
@@ -150,7 +150,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
         {/* Ayah list — sure seçilmemişse liste gösterme */}
         <div className="glass-soft mb-2 max-h-[350px] overflow-y-auto rounded-xl p-1.5 scrollbar-thin">
           {!surah ? (
-            <p className="px-2 py-6 text-center text-[10px] text-white/35">Önce yukarıdan bir sure seç</p>
+            <p className="px-2 py-6 text-center text-[10px] text-white/35">{t("onceSureSec")}</p>
           ) : Array.from({ length: SURAHS[Number(surah) - 1].count }, (_, i) => i + 1).map((number) => {
             const isSelected = selected.some(x => x.id === `${surah}:${number}`);
             return (
@@ -199,10 +199,9 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             </span>
             {selected.length ? (
               <button
-                onClick={() => { setSelected([]); setVerseIndex(0); setAyahBackgrounds({}); }}
-                className="text-[8.5px] font-bold text-red-400 transition hover:text-red-300"
+                onClick={() => { setSelected([]); setVerseIndex(0); setAyahBackgrounds({}); }}                  className="text-[8.5px] font-bold text-red-400 transition hover:text-red-300"
               >
-                Temizle
+                {t("temizle")}
               </button>
             ) : null}
           </div>
@@ -213,7 +212,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
                 <button
                   key={item.id}
                   onClick={() => { setPickingFor(item.id); setModal("atmos"); }}
-                  title="Bu ayete özel atmosfer seç"
+                  title={t("atmosferOzelTitle")}
                   className={`glass-soft flex items-center gap-1 rounded-full py-1 pl-2 pr-1 text-[9px] transition ${
                     index === verseIndex
                       ? "text-white ring-1 ring-[color:var(--accent)]"
@@ -240,7 +239,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             </div>
           ) : (
             <p className="py-2 text-center text-[9px] text-white/25">
-              Henüz ayet seçilmedi
+              {t("henuzSecilmedi")}
             </p>
           )}
         </div>

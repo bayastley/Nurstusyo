@@ -363,13 +363,22 @@ async function dumanTestiOrkestra() {
         continue;
       }
       const bozuk = satir.some((b) => !b.ok);
+      const uyariNotlari = satir.filter((b) => b.ok && b.uyari);
       const detay = satir.map((b) => (b.ok ? "✓" : "✗") + b.yol + (b.ok ? "" : " (" + (b.not || "hata") + ")")).join(" · ");
-      console.log("  " + (bozuk ? "✗" : "✓") + " " + modalAdi.padEnd(18) + detay);
+      // ★ ARIA DENETİMİ (01.10): ok:true ama uyari taşınan bulgular PASS'i bozmaz;
+      //   satır işareti ⚠ olur ve uyarı metni ayrı satırda basılır.
+      const isaret = bozuk ? "✗" : uyariNotlari.length ? "⚠" : "✓";
+      console.log("  " + isaret + " " + modalAdi.padEnd(18) + detay);
+      for (const u of uyariNotlari) console.log("      ↳ " + u.uyari);
     }
 
     console.log("");
     console.log("── ÖZET ──");
+    const uyariModallari = new Set(sonuc.bulgular.filter((b) => b.ok && b.uyari).map((b) => b.modal));
     console.log("  " + modallar.length + " modal · " + sonuc.toplam + " kontrol · " + sonuc.gecen + " geçti · " + sonuc.kalan + " kaldı · " + (sonuc.sureMs / 1000).toFixed(1) + " sn");
+    if (uyariModallari.size) {
+      console.log("  ⚠ Uyarılı: " + uyariModallari.size + " modal — X butonu aria-label'sız (fallback ile bulundu): " + [...uyariModallari].join(", "));
+    }
     if (sayfaHatalari.length) {
       console.log("  ⚠ Sayfa konsol hataları (" + sayfaHatalari.length + ") — ilk 5:");
       for (const h of [...new Set(sayfaHatalari)].slice(0, 5)) console.log("    " + h.slice(0, 160));

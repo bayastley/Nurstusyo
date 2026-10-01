@@ -47,6 +47,8 @@ export interface DumanBulgu {
   yol: "acilis" | "x" | "dis-tiklama" | "esc";
   ok: boolean;
   not?: string;
+  /** ★ ARIA DENETİMİ (01.10): X butonu aria-label'sız bulunduysa uyarı metni — ok:true'dan bağımsız, PASS'i bozmaz */
+  uyari?: string;
 }
 
 export interface DumanSonuc {
@@ -65,6 +67,8 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
   atmos: "Atmosfer Kütüphanesi",
   themes: "Temalar",
   prayer: "Namaz Vakitleri",
+  history: "Geçmiş (kaldırılmış)",
+  guide: "Rehber (kaldırılmış)",
   stories: "Kıssalar (admin)",
   contact: "Destek Merkezi",
   login: "Giriş / Kayıt",
@@ -88,8 +92,9 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
   kendiSes: "Kendi Sesin",
 };
 
-/** Dev'de (oturumsuz + master değil) hiç mount edilmeyenler — açılış denenmez */
-const DEV_ATLANIR: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["adminDashboard", "zip", "stories"]);
+/** Dev'de (oturumsuz + master değil) hiç mount edilmeyenler — açılış denenmez.
+ *  history/guide: ModalName'de duran ölü üyeler — ModalsContainer'da render yok (01.10). */
+const DEV_ATLANIR: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["adminDashboard", "zip", "stories", "history", "guide"]);
 
 /** Tam-ekran modal: backdrop-tıklamayla kapanmaz (bilinçli tasarım) */
 const DIS_TIKLAMA_YOK: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["quranLearn", "quranListen"]);
@@ -160,14 +165,22 @@ async function modalKapananaKadarBekle(timeoutMs = 2500): Promise<boolean> {
   return false;
 }
 
-/** Modal kökünün Kapat (X) butonunu bul: aria → tam "kapat" yazısı → title → kartın sağ-üstündeki ikon-only svg buton */
-function xButonuBul(kok: HTMLElement): HTMLButtonElement | null {
+type XBulmaKanali = "aria" | "yazi" | "title" | "geometri";
+
+/**
+ * Modal kökünün Kapat (X) butonunu bul. ★ ARIA DENETİMİ (01.10): dönüş değeri
+ * {buton, kanal} — buton aria-label ile bulunmadıysa kanal fallback'i taşır;
+ * çağıran (tekModalTur) bunu bulguya uyarı olarak yazar. Zincir:
+ * aria → tam "kapat" yazısı → title → kartın sağ-üstündeki ikon-only svg buton (geometri).
+ */
+function xButonuBul(kok: HTMLElement): { buton: HTMLButtonElement; kanal: XBulmaKanali } | null {
   const butonlar = Array.from(kok.querySelectorAll("button")) as HTMLButtonElement[];
   const aria = butonlar.find((b) => (b.getAttribute("aria-label") || "").trim().toLowerCase() === "kapat");
-  if (aria) return aria;
+  if (aria) return { buton: aria, kanal: "aria" };
   const yazi = butonlar.find((b) => (b.innerText || "").trim().toLowerCase() === "kapat");
-  if (yazi) return yazi;
-  // İzinsiz svg X (taban Modal UIElements X'i aria'sızdır): X, İÇERİK KARTININ sağ-üst
+  if (yazi) return { buton: yazi, kanal: "yazi" };
+  // Geometri fallback (savunma katmanı): f9a259c ile tüm X'ler aria'lı olsa da
+  // gelecekte aria'sız ikon-only X eklendiğinde yakalasın. X, İÇERİK KARTININ sağ-üst
   // köşesindedir — backdrop'ın değil. Kart = backdrop'ın ilk element çocuğu.
   const kart = (kok.firstElementChild as HTMLElement | null) ?? kok;
   const kartKutu = kart.getBoundingClientRect();
@@ -177,7 +190,7 @@ function xButonuBul(kok: HTMLElement): HTMLButtonElement | null {
     if ((b.innerText || "").trim()) continue; // yazılı buton X değildir
     if (!b.querySelector("svg")) continue;
     const title = (b.getAttribute("title") || "").toLowerCase();
-    if (title.includes("kapat")) return b; // ör: quranLearn "Kur'an ekranını kapat"
+    if (title.includes("kapat")) return { buton: b, kanal: "title" }; // ör: quranLearn "Kur'an ekranını kapat"
     const kutu = b.getBoundingClientRect();
     const uzaklik = Math.hypot(kartKutu.right - kutu.right, kutu.top - kartKutu.top);
     if (uzaklik < 70 && uzaklik < enIyiUzaklik) {
@@ -185,7 +198,7 @@ function xButonuBul(kok: HTMLElement): HTMLButtonElement | null {
       enYakin = b;
     }
   }
-  return enYakin;
+  return enYakin ? { buton: enYakin, kanal: "geometri" } : null;
 }
 
 /** Backdrop'a (modal kökünün kendisine) gerçek dış-tıklama olay serisi gönder */
@@ -239,22 +252,29 @@ async function tekModalTur(
     return modalAcilanaKadarBekle();
   };
 
-  // (1) X YOLU
+  // (1) X YOLU — ★ ARIA DENETİMİ: kanal !== "aria" ise ok:true olsa bile uyari taşınır
   if (await ac()) {
     const kok = modalKokBul();
-    const x = kok ? xButonuBul(kok) : null;
-    if (!x) {
+    const bulunan = kok ? xButonuBul(kok) : null;
+    if (!bulunan) {
       bulgular.push({ modal: id, yol: "x", ok: false, not: `${ad}: Kapat (X) butonu bulunamadı` });
       escGonder();
       await modalKapananaKadarBekle();
     } else {
+      const { buton: x, kanal } = bulunan;
       x.click();
       const kapandi = await modalKapananaKadarBekle();
+      const uyari = kanal === "aria"
+        ? undefined
+        : kanal === "geometri"
+          ? `${ad}: X butonu aria-label'sız — GEOMETRİ FALLBACK ile bulundu (SR erişilebilirlik eksiği, aria-label="Kapat" ekleyin)`
+          : `${ad}: X butonu aria-label'sız — ${kanal} ile bulundu (aria-label="Kapat" önerilir)`;
       bulgular.push({
         modal: id,
         yol: "x",
         ok: kapandi,
         not: kapandi ? undefined : `${ad}: X'e tıklandı ama modal ekranda kaldı`,
+        uyari,
       });
     }
   } else {

@@ -254,7 +254,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
   // ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
   //   milisanielik ayet senkronu (sessizlik-sınırı algılama; sesZamanlama.ts)
-  const { aktif: kendiSesAktif, yukleniyor: kendiSesYukleniyor, kayitlar: kendiSesKayitlari, yukle: kendiSesYukle, yukleAyetAyri: kendiSesYukleAyetAyri, sec: kendiSesSec, sil: kendiSesSil, zamanlamaKaydet: kendiSesZamanlamaKaydet, kaldirAktif: kendiSesKaldir } = useKendiSesiniYukle({ notify });
+  const { aktif: kendiSesAktif, yukleniyor: kendiSesYukleniyor, kayitlar: kendiSesKayitlari, yukle: kendiSesYukle, yukleAyetAyri: kendiSesYukleAyetAyri, sec: kendiSesSec, sil: kendiSesSil, zamanlamaKaydet: kendiSesZamanlamaKaydet, kaldirAktif: kendiSesKaldir, yenidenTara: kendiSesYenidenTara } = useKendiSesiniYukle({ notify });
   const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
   const { dailyPool, dailyIndex, dailyPaused, daily } = useDailyAyah({ lang, setSelected });
 
@@ -584,6 +584,37 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem(themeKey, theme.id); }, [theme, themeKey]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
+  // ★ MEAL-DİLİ SENKRONU (01.10) — dil değişince seçili ayetlerin mealleri yeni
+  //   edition'dan (MEAL_EDITIONS[lang]) yeniden çekilir (stüdyo tarafı). İlk
+  //   mount'ta koşmaz (prevLangRef) — mealler eklenirken o anki dilden gelmişti.
+  //   `selected` bilinçli dep dışı: tetik anındaki snapshot selectedRef'ten alınır;
+  //   dil değişimi SONRASI eklenenler addAyah'dan zaten yeni dilde gelir.
+  //   notify stabil (useCallback []); uyumsuzluk dep her değişiminde erken çıkış.
+  const prevLangRef = useRef(lang);
+  useEffect(() => {
+    const onceki = prevLangRef.current;
+    prevLangRef.current = lang;
+    if (onceki === lang) return;
+    const sureler = [...new Set(selectedRef.current.map((x) => x.s))];
+    if (!sureler.length) return;
+    const edition = MEAL_EDITIONS[lang];
+    let iptal = false;
+    void (async () => {
+      const sonuclar = await Promise.all(sureler.map(async (sn) => {
+        try { return [sn, await fetchSurah(sn, edition)] as const; } catch { return [sn, null] as const; }
+      }));
+      if (iptal) return;
+      setSelected((current) => current.map((x) => {
+        const satir = sonuclar.find(([sn, rows]) => sn === x.s && rows && rows[x.a - 1]);
+        if (!satir || !satir[1]) return x;
+        return { ...x, tr: satir[1][x.a - 1].tr };
+      }));
+      const basarili = sonuclar.filter(([, rows]) => rows).length;
+      if (basarili === sonuclar.length) notify(`🌍 Seçili ayetlerin mealleri yeni dile güncellendi (${edition})`);
+      else notify(`🌍 Mealler güncellendi (${basarili}/${sonuclar.length} sure) — kalanlar eski metinle kaldı`);
+    })();
+    return () => { iptal = true; };
+  }, [lang, notify]);
   // ★ RTL DİLİ (01.10): ar/ur seçiliyse ana grid de sağdan sola akar — CSS logical
   //   mirror'ı flex/grid üzerinden çalışır; body'ye nur-rtl sınıfı düzeltmeler için.
   const rtlMi = lang === "ar" || lang === "ur";
@@ -1343,6 +1374,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           tryUnlockElitFeature={tryUnlockElitFeature}
           applySmartBackgrounds={applySmartBackgrounds}
           onClipKindChange={reassignBackgroundsForKind}
+          background={background}
           openPremium={openPremium}
           setSelected={setSelected}
           setAyahBackgrounds={setAyahBackgrounds}
@@ -1668,6 +1700,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         kendiSesSil={kendiSesSil}
         kendiSesZamanlamaKaydet={kendiSesZamanlamaKaydet}
         kendiSesKaldir={kendiSesKaldir}
+        kendiSesYenidenTara={kendiSesYenidenTara}
         setPickingForAtmos={(id) => setPickingFor(id)}
         kendiSesSeciliAyetler={selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName }))}
         kendiSesAyahBackgrounds={ayahBackgrounds}

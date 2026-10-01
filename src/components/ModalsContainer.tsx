@@ -167,6 +167,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   kendiSesSil,
   kendiSesZamanlamaKaydet,
   kendiSesKaldir,
+  kendiSesYenidenTara,
   setPickingForAtmos,
   kendiSesSeciliAyetler,
   kendiSesAyahBackgrounds,
@@ -473,6 +474,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           sil={kendiSesSil}
           zamanlamaKaydet={kendiSesZamanlamaKaydet}
           kaldirAktif={kendiSesKaldir}
+          yenidenTara={kendiSesYenidenTara}
           setPickingFor={setPickingForAtmos}
           setModal={setModal}
           ayahBackgrounds={kendiSesAyahBackgrounds}

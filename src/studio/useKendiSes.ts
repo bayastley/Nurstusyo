@@ -102,9 +102,12 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         const url = urlTasi(dosya);
         setAktif({ id, sure, kaynak: gonderi.kaynak, segments, blob: dosya, url, nefes: 0 });
         const ekstra = Math.abs(tarama.segments.length - (konum === "tum" ? ayetSayisi : 1));
-        notify(yazildi
-          ? `🎙️ Ses yüklendi · ${konum === "tum" ? `${ayetSayisi} ayet için` : "ayet için"} ${segments.length} bölüm algılandı${ekstra > 0 ? " — ayet sınırını düzenleyebilirsin" : " · senkron hazır"}`
-          : "🎙️ Ses yüklendi (bu oturum için) · kalıcı kayıt yapılamadı");
+        // ★ DÜRÜST BİLDİRİM (01.10): eşit-böl fallback'i ayet geçişlerini GERÇEK algılamaz —
+        //   kullanıcıyı uyarmadan "senkron hazır" demek yalandı. Eşit bölünmüşse ayarla önerilir.
+        const mesaj = tarama.yontem === "esit-bol"
+          ? `⚠️ Geçişler tam yakalanamadı — süre ${segments.length} ayete eşit bölündü. "Düzenle" ile ayet başlangıçlarını milisanielik düzelt`
+          : `🎙️ Ses yüklendi · ${konum === "tum" ? `${ayetSayisi} ayet için` : "ayet için"} ${segments.length} bölüm algılandı${ekstra > 0 ? " — ayet sınırını düzenleyebilirsin" : " · senkron hazır"}`;
+        notify(yazildi ? mesaj : mesaj + " (bu oturum için — kalıcı kayıt yapılamadı)");
         return { segments, id, total: tarama.total };
       } finally {
         ctx.close().catch(() => undefined);
@@ -112,6 +115,41 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
     } catch {
       notify("⚠️ Ses dosyası çözümlenemedi — mp3/m4a/wav deneyin");
       return null;
+    } finally {
+      setYukleniyor(false);
+    }
+  }, [kayitlariTazele, notify, urlTasi]);
+
+  /** ★ YENİDEN ANALİZ (01.10): eski kayıtların donmuş (eşit-böl dönemi) zamanlamalarını
+   *  güncel motorla tekrar tarar. Nefes sıfırlanır — eski kayıttaki çifte-nefes şişmesi de
+   *  böylece temizlenir. aktif bu id ise dönen segmentlerle tazelenir. */
+  const yenidenTara = useCallback(async (id: string, ayetSayisi: number): Promise<boolean> => {
+    const row = await sesOku(id);
+    if (!row) { notify("⚠️ Kayıt bulunamadı"); return false; }
+    setYukleniyor(true);
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const ctx = new AudioCtx();
+      try {
+        const buf = await ctx.decodeAudioData(await row.blob.arrayBuffer());
+        const tarama = taramaYap(buf, Math.max(ayetSayisi, 1));
+        if (tarama.segments.length === 0) { notify("⚠️ Seste okunan bölüm algılanamadı"); return false; }
+        const segments = duzelt(tarama.segments, tarama.total);
+        await zamanlamalariGuncelle(id, segments.map((s) => ({ start: +s.start.toFixed(3), dur: +s.dur.toFixed(3) })), 0);
+        const rows = await kayitlariTazele();
+        void rows;
+        const url = urlTasi(row.blob);
+        setAktif({ id: row.id, sure: row.sure, kaynak: row.kaynak, segments, blob: row.blob, url, nefes: 0 });
+        notify(tarama.yontem === "esit-bol"
+          ? `⚠️ Geçişler yine tam yakalanamadı — ${segments.length} ayete eşit bölündü. "Düzenle" sürgüsüyle elle hizala`
+          : `🔬 Yeniden analiz tamam · ${segments.length} bölüm gerçek geçişlerden hizalandı · senkron hazır`);
+        return true;
+      } finally {
+        ctx.close().catch(() => undefined);
+      }
+    } catch {
+      notify("⚠️ Ses çözümlenemedi — yeniden analiz başarısız");
+      return false;
     } finally {
       setYukleniyor(false);
     }
@@ -154,5 +192,5 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
 
   const kaldirAktif = useCallback(() => setAktif(null), []);
 
-  return { aktif, yukleniyor, kayitlar, yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif };
+  return { aktif, yukleniyor, kayitlar, yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara };
 }

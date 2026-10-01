@@ -134,6 +134,8 @@ export interface ModalsContainerProps {
   kendiSesSil: (id: string) => Promise<void>;
   kendiSesZamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
   kendiSesKaldir: () => void;
+  /** Eski kaydın zamanlamalarını güncel motorla yeniden tara (nefes sıfırlanır) */
+  kendiSesYenidenTara: (id: string, ayetSayisi: number) => Promise<boolean>;
   /** Modaldan açılırken ayet-başına arka plan ataması için hedef ayet */
   setPickingForAtmos: (id: string) => void;
   /** Modalın senkron sırası: seçili ayetler (s, a, sName) */

@@ -41,6 +41,8 @@ interface VideoPreviewSectionProps {
   clipKind: "img" | "vid";
   setClipKind: (kind: "img" | "vid") => void;
   setBackground: (clip: Clip) => void;
+  /** Ana arka plan — "Yüklediklerim" seçiliyken clipKind değişimi onu EZMEMELİ (30.09 kuralı) */
+  background: Clip;
   smartAiEnabled: boolean;
   setSmartAiEnabled: (value: boolean) => void;
   aiTooltipHover: boolean;
@@ -95,7 +97,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     canvasRef, previewWidth, previewMaximized, setPreviewMaximized, showArapca, setShowArapca,
     showSubMeal, setShowSubMeal, cubukAyar, setCubukAyar, mesajAyar, setMesajAyar, setTextOffset, textOffset, selected, verseIndex, setVerseIndex, verseAudioRef,
     previewPlaying, setPreviewPlaying, setPreviewTime, randomizeBackgrounds, previewDuration,
-    previewTime, fmtDuration, clipKind, setClipKind, setBackground, smartAiEnabled,
+    previewTime, fmtDuration, clipKind, setClipKind, setBackground, background, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
     activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, downloadVideo, user, setLoginTab, t, handleGenerate,
