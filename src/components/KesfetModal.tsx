@@ -56,6 +56,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
   const [camiKonum, setCamiKonum] = useState("");
   const [camiAranan, setCamiAranan] = useState<string | null>(null);
+  // ★ CAMİ BULUCU — KONUMDAN AÇ (01.10, kullanıcı kararı): ortadaki büyük buton cihaz konumunu alıp haritayı açar
+  const [camiKonumAliniyor, setCamiKonumAliniyor] = useState(false);
+  const camiKonumAl = () => {
+    if (!navigator.geolocation) { notify?.("⚠️ Tarayıcın konumu desteklemiyor — şehir adı yaz"); return; }
+    setCamiKonumAliniyor(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { try { localStorage.setItem("nur_konum_izin", "1"); } catch { /* yoksay */ } setCamiAranan(`${pos.coords.latitude},${pos.coords.longitude}`); setCamiKonumAliniyor(false); },
+      () => { notify?.("⚠️ Konum izni verilmedi — şehir adı yazarak arayabilirsin"); setCamiKonumAliniyor(false); },
+      { timeout: 8000 },
+    );
+  };
   const [hocaAyet, setHocaAyet] = useState<number>(0); // seçili ayet index'i (-1 = aramadan gelen özel ayet)
   const [hocaOzel, setHocaOzel] = useState<{ sure: number; sureAdi: string; ayet: number } | null>(null); // ★ 01.10: "bakara 250" araması istediğin ayeti çalar
   const [hocaIdx, setHocaIdx] = useState<number>(0);   // çalan kari index'i
@@ -441,6 +452,12 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {sekme === "cami" && (
         <div className="space-y-3">
           <p className="text-center text-[9px] text-white/40">Bulunduğun yerin veya aradığın şehrin camilerini haritada gör 📍</p>
+          {/* ★ ORTADAKİ KONUM BUTONU (01.10): tıkla → cihaz konumu → harita anında açılır */}
+          <button type="button" onClick={camiKonumAl} disabled={camiKonumAliniyor}
+            className="mx-auto flex w-full max-w-[280px] items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-[11px] font-black text-white transition hover:brightness-110 active:scale-[.98] disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg,rgba(215,170,82,.25),rgba(215,170,82,.08))" }}>
+            {camiKonumAliniyor ? "⏳ Konum alınıyor…" : "📍 Konumumdan Bul"}
+          </button>
           <div className="flex gap-2">
             <input
               value={camiKonum}
@@ -452,16 +469,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             <button
               type="button"
               onClick={() => {
-                if (!camiKonum.trim()) {
-                  // Konum izni varsa koordinat bazlı ara, yoksa şehir iste
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => { try { localStorage.setItem("nur_konum_izin", "1"); } catch { /* yoksay */ } setCamiAranan(`${pos.coords.latitude},${pos.coords.longitude}`); },
-                      () => notify?.("⚠️ Konum izni verilmedi — şehir adı yazarak arayabilirsin"),
-                      { timeout: 8000 },
-                    );
-                  } else notify?.("⚠️ Tarayıcın konumu desteklemiyor — şehir adı yaz");
-                } else setCamiAranan(camiKonum.trim());
+                if (!camiKonum.trim()) camiKonumAl(); else setCamiAranan(camiKonum.trim());
               }}
               className="shrink-0 rounded-xl px-3.5 py-2.5 text-[10px] font-black text-black transition hover:brightness-110 active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
@@ -485,7 +493,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </a>
             </>
           )}
-          {!camiAranan && <p className="rounded-xl bg-white/[.03] px-3 py-3 text-center text-[9.5px] leading-relaxed text-white/45">Şehir yazıp Enter'a bas ya da <b className="text-white/70">Ara</b>'ya tıklayıp konum izni ver — yakınınızdaki camiler haritada listelenir.</p>}
+          {!camiAranan && <p className="rounded-xl bg-white/[.03] px-3 py-3 text-center text-[9.5px] leading-relaxed text-white/45"><b className="text-white/70">📍 Konumumdan Bul</b>'a bas ya da şehir yazıp Enter'a bas — yakınınızdaki camiler haritada listelenir.</p>}
         </div>
       )}
 
