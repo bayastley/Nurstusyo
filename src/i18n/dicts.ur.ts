@@ -1,8 +1,10 @@
 import type { Dict } from "./base";
-import { arDict } from "./dicts.ar";
+import { trDict } from "./dicts.tr";
 
 export const urDict: Dict = {
-  ...arDict,
+  // ★ URDU TAM KAPSAM (01.10): ...trDict tabanı — trDict'te olmayan yeni anahtarlar
+  //   otomatik kapsamdadır; aşağıdaki Urduca satırlar tabanı ezer.
+  ...trDict,
   dailyAyah: "آج کی آیت",
   loading: "لوڈ ہو رہا ہے...",
   menuGuide: "رہنمائی",
@@ -24,4 +26,24 @@ export const urDict: Dict = {
   energyShort: "آج",
   membership: "رکنیت",
   energyPack: "ویڈیو پیکج",
+  // ── Urduca spesifik: üstteki trDict tabanının Urduca çevirileri (01.10) ──
+  mealEkle: "ترجمہ شامل کریں",
+  mealCikar: "ہٹائیں ✗",
+  arapcaEkle: "عربی شامل کریں",
+  arapcaCikar: "عربی ہٹائیں",
+  mealGosterEkle: "ترجمہ شامل کریں",
+  mealGosterCikar: "ترجمہ ہٹائیں",
+  indirmeKlasoru: "ڈاؤن لوڈ فولڈر",
+  akilliAiAcik: "آن",
+  akilliAiKapali: "آف",
+  akilliAiAcUygula: "آن کریں + لاگو کریں",
+  akilliAiAciklama: "اسمارٹ AI فعال ہے — ہر نئی آیت کے لیے موزوں فضا خود بخود منتخب ہوتی ہے۔",
+  akilliAiKapaliAciklama: "بند ہے — آن کریں، AI آپ کی آیت کے لیے فضا منتخب کرے گا۔",
+  hocaTilavet: "⚡ قارئین / تلاوت",
+  kabeImamlari: "کعبہ کے امام",
+  telifKariler: "حقوق والے قارئین",
+  yaziTasarim: "متن اور ڈیزائن",
+  sureModu: "دورانیہ موڈ",
+  ekranFormati: "ویڈیو اسکرین فارمیٹ",
+  uretimHakki: "پروڈکشن حق",
 };

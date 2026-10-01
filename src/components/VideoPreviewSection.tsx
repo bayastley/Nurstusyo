@@ -229,8 +229,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       {lowPower && <p className="text-center text-[8px] font-bold text-emerald-300/70">Performans modu aktif</p>}
 
       <div className="mx-auto flex w-full gap-1.5" style={{ maxWidth: previewWidth }}>
-        <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? "Arapça Çıkar" : "Arapça Ekle"}</button>
-        <button onClick={() => setShowSubMeal(!showSubMeal)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showSubMeal ? "Meal Çıkar" : "Meal Ekle"}</button>
+        <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? t("arapcaCikar") : t("arapcaEkle")}</button>
+        <button onClick={() => setShowSubMeal(!showSubMeal)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showSubMeal ? t("mealGosterCikar") : t("mealGosterEkle")}</button>
       </div>
 
       {/* ★ RENK ÇUBUĞU + ÖZEL YAZI (01.10) — stüdyo kontrol paneli.
@@ -404,7 +404,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       {outputs.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
           <div className="mb-1.5 flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />İndirme Klasörü <span className="rounded-full bg-white/[.07] px-1.5 py-px text-[8px] font-black text-white/50">{outputs.length}</span></p>
+            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />{t("indirmeKlasoru")} <span className="rounded-full bg-white/[.07] px-1.5 py-px text-[8px] font-black text-white/50">{outputs.length}</span></p>
           </div>
           <div className="scrollbar-thin grid max-h-[132px] gap-1 overflow-y-auto pr-0.5">
             {outputs.map((output, idx) => (
@@ -476,7 +476,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
           <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />Akıllı AI <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>ÜCRETSİZ</span></p>
-          <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? "Ayetlere göre sahne eşleştirme aktif — yeni eklenen her ayete uygun atmosfer kendiliğinden atanır." : "Kapalı — aç, ayetinin atmosferini AI kendisi seçsin."}</p>
+          <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? t("akilliAiAciklama") : t("akilliAiKapaliAciklama")}</p>
           <button
             onMouseEnter={() => setAiTooltipHover(true)}
             onMouseLeave={() => setAiTooltipHover(false)}
@@ -484,7 +484,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             className="relative w-full rounded-xl py-2 text-[10px] font-black text-black"
             style={{ background: smartAiEnabled ? "#34d399" : "#ef4444" }}
           >
-            {aiTooltipHover ? (smartAiEnabled ? "Kapat" : "Aç + Uygula") : smartAiEnabled ? <><Sparkles size={10} className="mr-1 inline" />AÇIK</> : <><X size={10} className="mr-1 inline" />KAPALI</>}
+            {aiTooltipHover ? (smartAiEnabled ? t("close") : t("akilliAiAcUygula")) : smartAiEnabled ? <><Sparkles size={10} className="mr-1 inline" />{t("akilliAiAcik")}</> : <><X size={10} className="mr-1 inline" />{t("akilliAiKapali")}</>}
           </button>
         </div>
       </div>
@@ -492,7 +492,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="min-h-[74px] space-y-2">
         <button onClick={handleGenerate} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-[14px] font-black tracking-[.16em]" style={{ background: generating ? "#b91c1c" : "linear-gradient(135deg,var(--accent-2),var(--accent))", color: generating ? "white" : "black" }}>
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
-          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ Üretim hakkı`}
+          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
         </button>
         {/* ★ CANLI RAM GÖSTERGESİ: üretim sırasında tarayıcı belleği MB bazlı izlenir.
             90 dk hatim gibi uzun üretimlerde bellek şişerse kullanıcı önceden görür. */}

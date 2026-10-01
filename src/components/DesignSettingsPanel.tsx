@@ -190,7 +190,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
 
       {/* Reciter Selection */}
       <div className="glass rounded-2xl p-4">
-        <SectionTitle icon={Zap} title="⚡ HOCA / TİLAVET" />
+        <SectionTitle icon={Zap} title={t("hocaTilavet")} />
         <div className="mb-3 flex items-center justify-center gap-3 text-[8px] font-bold uppercase tracking-wider">
           {(["low", "mid", "high"] as const).map((risk) => {
             const c = risk === "low" ? "#34d399" : risk === "mid" ? "#fbbf24" : "#f87171";
@@ -206,7 +206,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           {(["Haram", "Telif"] as const).map((group) => (
             <div key={group} className="max-h-64 overflow-y-auto pr-1 scrollbar-thin">
               <p className="mb-1.5 flex items-center gap-1 text-[8px] font-black uppercase tracking-widest text-white/30">
-                {group === "Haram" ? "KÂBE İMAMLARI" : "TELİF KÂRİLER"} <ChevronDown size={9} className="-rotate-90" />
+                {group === "Haram" ? t("kabeImamlari") : t("telifKariler")} <ChevronDown size={9} className="-rotate-90" />
               </p>
               <div className="space-y-0.5">
                 {sortedReciters.filter((item) => item.makam === group).map((item) => {
@@ -347,7 +347,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <span className="flex h-5 w-5 items-center justify-center rounded-md" style={{ background: "rgba(255,255,255,.05)", color: "var(--accent)" }}>
                 <Palette size={11} />
               </span>
-              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">Yazı & Tasarım</h2>
+              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">{t("yaziTasarim")}</h2>
             </div>
             <div className="flex items-center gap-1.5">
               <button

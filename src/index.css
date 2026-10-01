@@ -434,3 +434,23 @@ input[type="range"].timeline::-webkit-slider-thumb {
 @media (max-width: 767px) {
   .group\/arrows > button { animation: none; opacity: .7; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   ★ RTL DİL DESTEĞİ (01.10) — ar/ur seçildiğinde body.nur-rtl
+   Mantıksal özellikler (dir=rtl) çoğu şeyi kendi çözer; burada
+   yalnız harf-aralıklı LATİN logosu ve stop-görsel düzeltmeler.
+   ══════════════════════════════════════════════════════════ */
+body.nur-rtl .font-display {
+  letter-spacing: normal !important;
+  font-family: "Noto Naskh Arabic", "Amiri", serif !important;
+}
+body.nur-rtl .tracking-\[\.15em\],
+body.nur-rtl .tracking-\[\.2em\],
+body.nur-rtl .tracking-widest,
+body.nur-rtl .tracking-wider {
+  letter-spacing: normal !important;
+}
+body.nur-rtl .tracking-\[\.15em\] *,
+body.nur-rtl .uppercase {
+  letter-spacing: normal !important;
+}

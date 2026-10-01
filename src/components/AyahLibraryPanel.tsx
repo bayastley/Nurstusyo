@@ -166,7 +166,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
               >
                 <span>
                   <b className="font-semibold">{SURAHS[Number(surah) - 1].name} {surah}:{number}</b>
-                  <span className="block text-[9px] text-white/30">{isSelected ? "Çıkar ✗" : "Meal ekle"}</span>
+                  <span className="block text-[9px] text-white/30">{isSelected ? t("mealCikar") : t("mealEkle")}</span>
                 </span>
                 {isSelected ? <Check size={11} className="text-red-400" /> : <Plus size={11} className="opacity-40 group-hover:opacity-100" />}
               </button>
