@@ -9,7 +9,7 @@
 
 import React, { useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
-import { Search, ChevronLeft } from "lucide-react";
+import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
   HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI, KISSA_LISTESI, SORU_CEVAP_ARŞIVI, TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI,
@@ -38,6 +38,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [arama, setArama] = useState("");
   const [hadisTema, setHadisTema] = useState("tumu");
   const [kartCevrildi, setKartCevrildi] = useState<number | null>(null);
+  // ★ SURE AKORDEONU (01.10): tıkla-aç/kapa — liste yer kaplamasın, uzun açıklama sadece açık karta girsin
+  const [acikSure, setAcikSure] = useState<number | null>(null);
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
@@ -92,7 +94,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   }, [sekme, q, filtreliHadisler.length]);
   const filtreliKissalar = useMemo(() => KISSA_LISTESI.filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q]);
   const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
-  const filtreliSureler = useMemo(() => SURE_BİLGİLERİ.filter((s) => !q || s.ad.toLocaleLowerCase("tr").includes(q)), [q]);
+  // ★ 01.10: arama ad + numara + konu/açıklama metnine bakar
+  const filtreliSureler = useMemo(() => SURE_BİLGİLERİ.filter((s) => !q || s.ad.toLocaleLowerCase("tr").includes(q) || s.konu.toLocaleLowerCase("tr").includes(q) || (s.aciklama ?? "").toLocaleLowerCase("tr").includes(q) || String(s.n) === q), [q]);
   const filtreliDuaRehber = useMemo(() => DUA_REHBERİ.filter((d) => !q || d.durum.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ SESLİ DUA TAKİBİ (madde 58) — okundu işaretleri refresh için
   const [duaOkunduTick, setDuaOkunduTick] = useState(0);
@@ -107,7 +110,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           <button
             key={s.id}
             type="button"
-            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
             className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
             style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
@@ -273,20 +276,39 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </>
       )}
 
-      {/* ── 22: SURE BİLGİLERİ ── */}
+      {/* ── 22: SURE BİLGİLERİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı kart tek satır konu, açık kart uzun açıklama+fazilet ── */}
       {sekme === "sure" && (
-        <div className="space-y-2">
-          {filtreliSureler.map((s) => (
-            <div key={s.n} className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{s.n}</span>
-                <h4 className="text-[12px] font-black text-white/90">Sure {s.ad}</h4>
-                <span className="ml-auto rounded-full bg-white/8 px-2 py-0.5 text-[8.5px] font-bold text-white/50">{s.inis}'de inmiştir</span>
+        <div className="space-y-1.5">
+          {filtreliSureler.map((s) => {
+            const acik = acikSure === s.n;
+            const ayetSayisi = SURAHS.find((x) => x.n === s.n)?.count;
+            return (
+              <div key={s.n} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
+                <button
+                  type="button"
+                  aria-expanded={acik}
+                  onClick={() => setAcikSure(acik ? null : s.n)}
+                  className="flex w-full items-center gap-2 p-3 text-left"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{s.n}</span>
+                  <h4 className="text-[12px] font-black text-white/90">Sure {s.ad}</h4>
+                  {ayetSayisi != null && <span className="text-[8.5px] font-bold text-white/35">{ayetSayisi} ayet</span>}
+                  <span className="ml-auto rounded-full bg-white/8 px-2 py-0.5 text-[8.5px] font-bold text-white/50">{s.inis}'de inmiştir</span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
+                </button>
+                {!acik && <p className="truncate px-3 pb-3 text-[10px] leading-relaxed text-white/50">{s.konu}</p>}
+                {acik && (
+                  <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-[10px] leading-relaxed text-white/60"><b className="text-white/80">Konu:</b> {s.konu}</p>
+                    {s.aciklama && <p className="mt-1.5 text-[10px] leading-relaxed text-white/55">{s.aciklama}</p>}
+                    <p className="mt-2 text-[10px] leading-relaxed text-emerald-200/80"><b>Fazilet:</b> {s.fazilet}</p>
+                  </div>
+                )}
               </div>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-white/60"><b className="text-white/80">Konu:</b> {s.konu}</p>
-              <p className="mt-1 text-[10px] leading-relaxed text-emerald-200/80"><b>Fazilet:</b> {s.fazilet}</p>
-            </div>
-          ))}
+            );
+          })}
+          {filtreliSureler.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">Aradığın sure listede yok — başka bir ad dene.</p>}
+          <p className="pt-1 text-center text-[8px] text-white/25">{filtreliSureler.length} sure · detay için karta dokun</p>
         </div>
       )}
 
