@@ -274,7 +274,15 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(kelimeKes(tam, devamKelime), tam);
         if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(devam.split(/\s+/).slice().sort().join(" "), tam);
         if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek((baz + " " + tam).split(/\s+/).slice(0, Math.max(1, devamKelime)).join(" "), tam);
-        if (!yanlisHavuz.includes(aday) && aday !== devam) yanlisHavuz.push(aday); else yanlisHavuz.push(aday + " ﴿﴾");
+        if (!yanlisHavuz.includes(aday) && aday !== devam) yanlisHavuz.push(aday);
+        else {
+          // ★ BANT KORUMASI (01.10): " ﴿﴾" eki bandaCek'ten SONRA ekleniyordu ve
+          //   bant üstüne taşıyordu (devam 68 kar. iken şık 91 = %134 kaçtı). Artık
+          //   ekli hâl önce maxLen'e sığdırılır, sonra eklenir — bant asla delinmez.
+          let ekle = aday + " ﴿﴾";
+          if (ekle.length > maxLen) ekle = aday.slice(0, Math.max(minLen, maxLen - 4)).trim() + " ﴿﴾";
+          yanlisHavuz.push(ekle);
+        }
       }
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
       setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler });
