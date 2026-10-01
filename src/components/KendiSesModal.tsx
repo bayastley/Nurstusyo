@@ -108,13 +108,21 @@ export const KendiSesModal: React.FC<Props> = ({
     const seg = aktifSes.segments[idx];
     if (!seg) return;
     const a = new Audio(aktifSes.url);
-    a.currentTime = baslangicSn ?? seg.start;
+    const hedefBas = baslangicSn ?? seg.start;
+    // ★ ESKİ-KAYIT KORUMASI (01.10): metadata süresi hedefin altındaysa segment oynatılamaz
+    //   (WhatsApp mp4 vakası) — sessizlik yerine net yönlendirme ver.
+    a.onloadedmetadata = () => {
+      if (Number.isFinite(a.duration) && hedefBas >= a.duration - 0.05) {
+        notify("⚠️ Bu kaydın zamanlamaları eski taramadan kalma ve sesin süresini aşıyor — '🔬 Yeniden analiz et' ile düzelt");
+      }
+    };
+    a.currentTime = hedefBas;
     // ★ FIX (01.10): bitiş sınırı — segment sonunda dursun. Önceden dosyanın
     //   sonuna kadar çalıyordu ("hepsi bütün sesi okuyor" şikayetinin ikinci yarısı).
     const son = idx < aktifSes.segments.length - 1
       ? aktifSes.segments[idx + 1].start
       : seg.start + seg.dur + 0.8;
-    const bitis = Math.max((baslangicSn ?? seg.start) + 0.2, son);
+    const bitis = Math.max(hedefBas + 0.2, son);
     a.onended = () => { setSesliIdx(null); audioRef.current = null; };
     a.ontimeupdate = () => { if (a.currentTime >= bitis) { a.pause(); setSesliIdx(null); audioRef.current = null; } };
     audioRef.current = a;

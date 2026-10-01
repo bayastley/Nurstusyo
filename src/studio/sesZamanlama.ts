@@ -41,12 +41,20 @@ const SON_ETIKET_SN = 0.5;
 /** ★ Ayet geçişi adayı: aktif-olma (sesin asıl okuduğu) bölgeler arasındaki sessiz boşluklar.
  *  Yalnız tarama içi kullanım — dışa açılmadı. */
 
-/** RMS tabanlı sessizlik sınırı taraması. PCM dışı girdi → hata fırlatır. */
-export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSonuc {
+/** RMS tabanlı sessizlik sınırı taraması. PCM dışı girdi → hata fırlatır.
+ *  ★ sureSiniri (01.10): bazı kapsayıcılar (WhatsApp mp4) metadata'da kısa süre yazar;
+ *  AudioContext decode'u daha uzun PCM çıkarabilir. Oynatıcı metadata'ya inanır →
+ *  metadata süresini aşan segmentlere seek EDİLEMEZ ("hiçbir şey çalmıyor" vakası).
+ *  Bu yüzden tarama, oynatılabilir süreyle SINIRLI tutulur; null = kısıt yok. */
+export function taramaYap(buffer: AudioBuffer, ayetSayisi: number, sureSiniri?: number | null): ZamanlamaSonuc {
   const kanal = buffer.getChannelData(0);
   const ornekHz = buffer.sampleRate;
   const pencereBoyu = Math.max(1, Math.round(PENCERE_SN * ornekHz));
-  const toplam = Math.floor(kanal.length / pencereBoyu);
+  // ★ sureSiniri: tarama ve tüm segment zamanları oynatılabilir süreyle SINIRLI tutulur
+  const sinir = typeof sureSiniri === "number" && sureSiniri > 0.5 ? sureSiniri : null;
+  const etkiliToplam = sinir ? Math.min(buffer.duration, sinir) : buffer.duration;
+  const etkiliUzunluk = sinir ? Math.min(kanal.length, Math.floor(sinir * ornekHz)) : kanal.length;
+  const toplam = Math.floor(etkiliUzunluk / pencereBoyu);
 
   // 1) pencere RMS'leri
   const rmsler = new Float32Array(toplam);
@@ -127,7 +135,8 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSon
 
   // 5) fazladan segment → ayet sayısına katla (uzun surelerde nefes araları
   //    ayet sınırını aşabilir); eksikse per-ayet eşit bölüştür.
-  const total = buffer.duration;
+  // ★ total = oynatılabilir süre (sınır varsa PCM süresi değil!) — tüm zamanlar buna bağlı
+  const total = etkiliToplam;
   if (segments.length > ayetSayisi && ayetSayisi > 0) {
     segments = birlestir(segments, ayetSayisi);
   } else if (segments.length < ayetSayisi && ayetSayisi > 0) {
@@ -149,9 +158,9 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number): ZamanlamaSon
       // 1. segment 0'dan başlar; aradaki sınırlar en büyük boşlukların ortasıdır.
       const pass2: SesSegmenti[] = [];
       let onceki = 0;
-      for (const sinir of sinirPencereleri) {
-        pass2.push({ start: onceki * pencereSn, dur: (sinir - onceki) * pencereSn });
-        onceki = sinir;
+      for (const kesim of sinirPencereleri) {
+        pass2.push({ start: onceki * pencereSn, dur: (kesim - onceki) * pencereSn });
+        onceki = kesim;
       }
       pass2.push({ start: onceki * pencereSn, dur: (toplam - onceki) * pencereSn });
       if (pass2.every((s) => s.dur >= MIN_SEG_SN)) {

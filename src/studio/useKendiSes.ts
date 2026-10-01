@@ -37,6 +37,32 @@ function yeniId(): string {
   return `kses-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
 }
 
+/** ★ OYNATILABİLİR SÜRE (01.10): HTMLAudioElement metadata'sından okunur. WhatsApp mp4 gibi
+ *  kapsayıcılarda bu, AudioContext decode'unun çıkardığı PCM'den ÇOK FARKLI olabilir
+ *  (kullanıcı vakası: metadata 0:33.30, PCM dakikalar). Oynatıcı metadata'ya inanır →
+ *  o süreyi aşan segmentlere seek EDİLEMEZ ("hiçbir şey çalmıyor"). Tarama bu süreye
+ *  sınırlandırılır; null = metadata okunamadı (sınır yok). */
+async function oynatilabilirSure(blob: Blob): Promise<number | null> {
+  try {
+    const url = URL.createObjectURL(blob);
+    return await new Promise<number | null>((coz) => {
+      const a = new Audio();
+      const bitti = (v: number | null) => {
+        window.clearTimeout(zaman);
+        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+        coz(v);
+      };
+      const zaman = window.setTimeout(() => bitti(null), 4000);
+      a.preload = "metadata";
+      a.onloadedmetadata = () => bitti(Number.isFinite(a.duration) && a.duration > 0 ? a.duration : null);
+      a.onerror = () => bitti(null);
+      a.src = url;
+    });
+  } catch {
+    return null;
+  }
+}
+
 export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
   const [aktif, setAktif] = useState<KendiSesAktif | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -77,7 +103,11 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
       const ctx = new AudioCtx();
       try {
         const buf = await ctx.decodeAudioData(await dosya.arrayBuffer());
-        const tarama = taramaYap(buf, konum === "tum" ? Math.max(ayetSayisi, 1) : 1);
+        // ★ METADATA↔PCM UYUMSUZLUĞU (01.10): oynatıcı metadata'ya inanır; tarama PCM'e.
+        //   İkisi çelişirse küçük olanı esas al — aksi halde seek edilemeyen segment üretilir.
+        const oynatilabilir = await oynatilabilirSure(dosya);
+        const sureSiniri = oynatilabilir ? Math.min(oynatilabilir, buf.duration) : buf.duration;
+        const tarama = taramaYap(buf, konum === "tum" ? Math.max(ayetSayisi, 1) : 1, sureSiniri);
         if (tarama.segments.length === 0) {
           notify("⚠️ Seste okunan bölüm algılanamadı — dosya sessiz veya bozuk olabilir");
           return null;
@@ -132,7 +162,10 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
       const ctx = new AudioCtx();
       try {
         const buf = await ctx.decodeAudioData(await row.blob.arrayBuffer());
-        const tarama = taramaYap(buf, Math.max(ayetSayisi, 1));
+        // ★ Aynı metadata sınırı yeniden analizde de geçerli (01.10)
+        const oynatilabilir = await oynatilabilirSure(row.blob);
+        const sureSiniri = oynatilabilir ? Math.min(oynatilabilir, buf.duration) : buf.duration;
+        const tarama = taramaYap(buf, Math.max(ayetSayisi, 1), sureSiniri);
         if (tarama.segments.length === 0) { notify("⚠️ Seste okunan bölüm algılanamadı"); return false; }
         const segments = duzelt(tarama.segments, tarama.total);
         await zamanlamalariGuncelle(id, segments.map((s) => ({ start: +s.start.toFixed(3), dur: +s.dur.toFixed(3) })), 0);
