@@ -40,6 +40,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [kartCevrildi, setKartCevrildi] = useState<number | null>(null);
   // ★ SURE AKORDEONU (01.10): tıkla-aç/kapa — liste yer kaplamasın, uzun açıklama sadece açık karta girsin
   const [acikSure, setAcikSure] = useState<number | null>(null);
+  // ★ KISSA AKORDEONU (01.10): aynı ilke — kapalı kart tek satır özet, açık kartta kıssa+ders+dua
+  const [acikKissa, setAcikKissa] = useState<string | null>(null);
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
@@ -110,7 +112,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           <button
             key={s.id}
             type="button"
-            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
             className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
             style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
@@ -192,21 +194,39 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </>
       )}
 
-      {/* ── 19: KISSA KÖŞESİ ── */}
+      {/* ── 19: KISSA KÖŞESİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı tek satır, açık tam kıssa+ders+dua ── */}
       {sekme === "kissa" && (
-        <div className="grid gap-2.5 sm:grid-cols-2">
-          {filtreliKissalar.map((k) => (
-            <div key={k.ad} className="rounded-2xl border border-white/10 bg-white/[.03] p-4">
-              <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{k.sure}</p>
-              <h4 className="mt-0.5 text-[12px] font-black text-white/90">{k.ad}</h4>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-white/60">{k.ozet}</p>
-              <p className="mt-2 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[9.5px] leading-relaxed text-emerald-200">💡 {k.ders}</p>
-              {/* ★ KISSANIN DUASI (28.09) — kıssanın sonunda, kıssanın ruhuyla ilgili okunacak dua */}
-              <p className="mt-2 rounded-lg px-2.5 py-1.5 text-[9.5px] leading-relaxed" style={{ background: "rgba(215,170,82,.08)", color: "var(--accent-2)" }}>
-                <span className="font-black">🤲 Bu kıssanın duası:</span> {k.dua}
-              </p>
-            </div>
-          ))}
+        <div className="space-y-1.5">
+          {filtreliKissalar.map((k) => {
+            const acik = acikKissa === k.ad;
+            return (
+              <div key={k.ad} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
+                <button
+                  type="button"
+                  aria-expanded={acik}
+                  onClick={() => setAcikKissa(acik ? null : k.ad)}
+                  className="flex w-full items-center gap-2 p-3 text-left"
+                >
+                  <span className="shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{k.sure}</span>
+                  <h4 className="min-w-0 truncate text-[12px] font-black text-white/90">{k.ad}</h4>
+                  <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
+                </button>
+                {!acik && <p className="truncate px-3 pb-3 text-[10px] leading-relaxed text-white/50">{k.ozet}</p>}
+                {acik && (
+                  <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
+                    <p className="text-[10.5px] leading-relaxed text-white/70">{k.ozet}</p>
+                    <p className="mt-2 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[9.5px] leading-relaxed text-emerald-200">💡 {k.ders}</p>
+                    {/* ★ KISSANIN DUASI (28.09) — kıssanın sonunda, kıssanın ruhuyla ilgili okunacak dua */}
+                    <p className="mt-2 rounded-lg px-2.5 py-1.5 text-[9.5px] leading-relaxed" style={{ background: "rgba(215,170,82,.08)", color: "var(--accent-2)" }}>
+                      <span className="font-black">🤲 Bu kıssanın duası:</span> {k.dua}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {filtreliKissalar.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">Aradığın kıssa listede yok — başka bir ad dene.</p>}
+          <p className="pt-1 text-center text-[8px] text-white/25">{filtreliKissalar.length} kıssa · detay için karta dokun</p>
         </div>
       )}
 
