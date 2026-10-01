@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Brain, Check, X, BarChart3 } from "lucide-react";
 import { Modal } from "./UIElements";
 import { fetchSurahEditions } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09)
-import { MEAL_EDITIONS, type Lang } from "../i18n";
+import { MEAL_EDITIONS, translate, type Lang } from "../i18n";
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,

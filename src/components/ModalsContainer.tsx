@@ -31,6 +31,7 @@ import { secureGet, secureSet } from "../secureStore";
 import { T, type Lang } from "../i18n";
 import { JETON } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
+import { V2_TEST_ACIK } from "../config/ozellikBayraklari";
 import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
@@ -223,8 +224,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     ayetPaketleri: "Hazır Ayet Paketleri",
     ozelGunTakvimi: "Özel Gün Takvimi",
   };
+  // ★ V2_TEST_ACIK (01.10): test süresince oylamadaki 6 V2 modalı herkese açık.
+  //   Bayrak false → kural birebir eski haline döner (oylama devralır). Oylama
+  //   havuzu ve v2Gate yönlendirmesi korunur — sadece giriş kilidi kısa devre.
   const v2Kapali = (m: V2ModalId): boolean =>
-    !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
+    !V2_TEST_ACIK && !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
   const v2Gate = (m: V2ModalId): boolean => {
     if (!v2Kapali(m)) return true;
     setModal(null);

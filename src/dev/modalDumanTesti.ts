@@ -38,6 +38,7 @@
 // ════════════════════════════════════════════════════════════════
 
 import type { ModalName } from "../types";
+import { V2_TEST_ACIK } from "../config/ozellikBayraklari";
 
 export type DumanTur = "tam" | "hizli";
 
@@ -106,6 +107,8 @@ const V2_MODAL_IDLERI: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["ayetKartlari"
 
 function v2KilitliMi(id: ModalAdi): boolean {
   if (!V2_MODAL_IDLERI.has(id)) return false;
+  // ★ V2_TEST_ACIK (01.10): test bayrağı açıkken V2 modalları gerçek açılış turuna girer
+  if (V2_TEST_ACIK) return false;
   try {
     const raw = localStorage.getItem("nur_system_sync_config");
     if (!raw) return true; // kilit kaydı yok = varsayılan kilitli (canlı lansman)
