@@ -121,6 +121,40 @@ export const HADIS_BANKASI: HadisKaydi[] = [
   { tema: "zikir", metin: "İki kelime vardır; hafiftirler ama terazide ağırdırlar: Sübhânallâhi ve bihamdihî, Sübhânallâhil-azîm.", kaynak: "Buhari, Tevhid, 58", derece: "sahih" },
   { tema: "zikir", metin: "La ilâhe illallah kavlini çok söyleyin; kalbi Allah'ı zikreden kimse, Allah'ın korumasındadır.", kaynak: "Tirmizi, Daavât, 7 (meâl)", derece: "hasan" },
   { tema: "zikir", metin: "Bir topluluk zikir için oturursa melekler onları kuşatır, rahmet onları kaplar, Allah onları anar.", kaynak: "Müslim, Zikir, 37", derece: "sahih" },
+
+  // ═══ İFFET & NAMUS (01.10 — "zina/iffet" araması boş dönmesin) ═══
+  { tema: "iffet", metin: "Zina eden kimse, mümin olarak zina etmez; o an iman ondan ayrılıp başının üstüne gölgelenir.", kaynak: "Buhari, Ferâiz, 14", derece: "sahih" },
+  { tema: "iffet", metin: "Her insana zinasından bir nasip yazılmıştır: gözün zinası harama bakmak, dilin zinası (haram) söylemektir; nefis ister ve arzular, ya bunu tasdik eder ya da inkâr eder.", kaynak: "Müslim, Kader, 21", derece: "sahih" },
+  { tema: "iffet", metin: "Zinaya yaklaşmayın; şüphesiz o hayâsızlıktır (fuhş) ve ne kötü bir yoldur.", kaynak: "İsrâ 17:32 (ayet — meâl)", derece: "sahih" },
+  { tema: "iffet", metin: "Mümin erkeklere ve mümin kadınlara de ki: gözlerini haramdan sakınsınlar; bu, kendileri için daha temiz olandır.", kaynak: "Nûr 24:30 (ayet — meâl)", derece: "sahih" },
+  { tema: "iffet", metin: "Kurtuluşa eren müminler, ırzlarını (namuslarını) koruyanlardır; yalnız eşlerine yönelenler hariç — onlara yaklaşanlar kınanmaz.", kaynak: "Mü'minûn 23:5-6 (ayet — meâl)", derece: "sahih" },
+  { tema: "iffet", metin: "Hayâ, imandan bir şubedir; hayâsızlık da kötülükten (fücûr) bir şubedir.", kaynak: "Buhari, Edeb, 35", derece: "sahih" },
+  { tema: "iffet", metin: "Hayâ hayrın hepsini getirir; hayâsızlık şerrin hepsini getirir.", kaynak: "Müslim, İman, 59", derece: "sahih" },
+  { tema: "iffet", metin: "Gençler! İçinizden evlenme gücü olan evlensin; gücü yetmeyen oruç tutsun — çünkü oruç, onu koruyan kalkandır.", kaynak: "Buhari, Nikâh, 3", derece: "sahih" },
+  { tema: "iffet", metin: "Allah'ım! Senden hidayeti, takvayı, iffeti ve gönül zenginliğini isterim.", kaynak: "Müslim, Zikir, 72", derece: "sahih" },
+  { tema: "iffet", metin: "Kim tövbe eder, iman eder ve salih amel işlerse, Allah onun (günahlarını) iyiliklere çevirir.", kaynak: "Furkân 25:70 (ayet — meâl)", derece: "sahih" },
+
+  // ═══ DİL & DEDİKODU (01.10 — "gıybet/dedikodu" araması boş dönmesin) ═══
+  { tema: "dil", metin: "Dedikoducu (gıybet taşıyıcı) cennete giremez.", kaynak: "Buhari, Edeb, 55", derece: "sahih" },
+  { tema: "dil", metin: "Gıybet nedir bilir misiniz? Kardeşini, hoşlanmayacağı şekilde anmandır. Söylediğin onda varsa gıybet yapmış olursun; yoksa ona iftira etmiş olursun.", kaynak: "Müslim, Birr, 70", derece: "sahih" },
+  { tema: "dil", metin: "Kıyamette müflis odur: namaz kılan, oruç tutan, zekât veren ama bu'na sövmüş, şuna iftira etmiş, şunun malını yemiş kimsedir; sevabı hak edenlerine dağıtılır.", kaynak: "Müslim, Birr, 55", derece: "sahih" },
+  { tema: "dil", metin: "Dürüstlük iyiliğe, iyilik cennete götürür; yalan kötülüğe, kötülük cehenneme götürür.", kaynak: "Buhari, Edeb, 69", derece: "sahih" },
+  { tema: "dil", metin: "Birbirinizin arkasından kötü söz (gıybet) arzu etmeyin; ey müminler! Allah'tan sakının; şüphesiz Allah çok merhametlidir.", kaynak: "Hucurât 49:12 (ayet — meâl)", derece: "sahih" },
+
+  // ═══ CÖMERTLİK (01.10) ═══
+  { tema: "cömertlik", metin: "Cömertlik, Allah'a yakınlıktır; cimrilik ise O'ndan uzaklıktır.", kaynak: "Tirmizi, Birr, 40 (meâl)", derece: "hasan" },
+  { tema: "cömertlik", metin: "Veren el, alan elden hayırlıdır.", kaynak: "Buhari, Zekât, 18", derece: "sahih" },
+  { tema: "cömertlik", metin: "Sadakanın en faziletlisi, sağlıklı ve malına gönlü bağlıyken (ihtiyaç duyarken) verilen sadakadır.", kaynak: "Buhari, Zekât, 12", derece: "sahih" },
+  { tema: "cömertlik", metin: "Kardeşine gülümsemen sadakadır; hayra çağırıp kötülükten alıkoymanda sadakadır.", kaynak: "Tirmizi, Zekât, 28", derece: "hasan" },
+  { tema: "cömertlik", metin: "Kim Allah'a güzel bir ödünç (infak) verirse, Allah onu kendisi için kat kat arttırır ve değerli bir mükâfat verir.", kaynak: "Hadîd 57:11 (ayet — meâl)", derece: "sahih" },
+
+  // ═══ MERHAMET (01.10) ═══
+  { tema: "merhamet", metin: "Merhametlilere, Rahmân olan Allah merhamet eder; yerdeki (mahlukata) merhamet edin ki göktekiler de size merhamet etsin.", kaynak: "Tirmizi, Edeb, 15", derece: "sahih" },
+  { tema: "merhamet", metin: "Bir adam yolculukta çok susadı; bir kuyuya indi, su içti, çıkınca susuzluktan dönen bir köpek gördü — sonra kuyuya inip ayakkabısıyla su taşıyıp köpeği suladı. Allah onun bu iyiliğini takdir etti ve onu affetti.", kaynak: "Buhari, Bed'ü'l-Halk, 15", derece: "sahih" },
+  { tema: "merhamet", metin: "Bir kadın, sıkışan kediyi hem su hem yemekten mahrum bırakıp (aciz bırakıp) öldürdü — bu yüzden cehenneme girdi.", kaynak: "Buhari, Enbiyâ, 54", derece: "sahih" },
+  { tema: "merhamet", metin: "Yerdeki canlıların hepsi Allah'ın âilesidir; onlara karşı en hayırlınız, onlara en iyi muamele edendir.", kaynak: "Beyhaki, Şuab, 8/386 (meâl)", derece: "hasan" },
+  { tema: "merhamet", metin: "Allah'a kulluk edin, O'na hiçbir şeyi ortak koşmayın; anne-babaya, akrabaya, yetimlere, yoksullara, yakın komşuya ve uzak komşuya, yakınınıza ve yolcuya, elinizin altında olana (çalıştırdıklarınıza) iyilik edin.", kaynak: "Nisâ 4:36 (ayet — meâl)", derece: "sahih" },
+  { tema: "merhamet", metin: "Mü'min, kendisi için sevdiğini kardeşi için de sevdiği müddetçe gerçek mümindir; şefkatli olan Allah'ın sevgisine layıktır.", kaynak: "Buhari, İman, 7", derece: "sahih" },
 ];
 
 export const HADIS_TEMALARI = [
@@ -137,6 +171,10 @@ export const HADIS_TEMALARI = [
   { id: "dua", label: "Dua", emoji: "🙌" },
   { id: "tovbe", label: "Tövbe", emoji: "🌱" },
   { id: "yetim", label: "Yetim", emoji: "🤲" },
+  { id: "iffet", label: "İffet & Namus", emoji: "🛡️" },
+  { id: "dil", label: "Dil & Dedikodu", emoji: "👄" },
+  { id: "cömertlik", label: "Cömertlik", emoji: "🎁" },
+  { id: "merhamet", label: "Merhamet", emoji: "🕊️" },
 ];
 
 /** Hadis derece rozetleri — dürüst ilmî dil: sahih/hasan/zayıf olduğu AÇIKça yazılır */
