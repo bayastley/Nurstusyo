@@ -17,13 +17,12 @@ import {
 } from "../hafizlikIstatistik";
 
 interface HafizlikTestiModalProps {
-  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  /** ★ FULL I18N + SORU MEALİ DİLİ (01.10): başlık/sub seçili dile döner; cevap sonrası
+   *  "doğrusu" satırı seçili dilin mealinden gelir (MEAL_EDITIONS[lang]) */
   lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
-  /** ★ SORU MEALİ DİLİ (01.10): cevap sonrası "doğrusu" satırı seçili dilin mealinden gelir */
-  lang?: Lang;
 }
 
 interface Soru {
@@ -282,6 +281,11 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         }
       }
       while (yanlisHavuz.length < 3) {
+        // ★ BANT SABİTLERİ (01.10 fix): minLen/maxLen bandaCek'in YEREL değişkenleriydi —
+        //   bant koruması yaması onları bu kapsamda kullanınca ReferenceError ile modal
+        //   çöküyordu ("hafızlık testine basınca hata"). Aynı formüllerle burada tanımlı.
+        const minLen = Math.floor(devam.length * 0.7);
+        const maxLen = Math.ceil(devam.length * 1.3);
         // ★ Dolgu üretici çeşitlilik: aynı ters-çevrilmiş metni tekrar etmesin diye her
         //   turda farklı bir permütasyon/kesim üretir; yine de tekil olmayan atılır.
         const baz = yanlisHavuz.length === 0 ? devam : yanlisHavuz[yanlisHavuz.length - 1];
