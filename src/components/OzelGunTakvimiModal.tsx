@@ -6,10 +6,13 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useEffect, useMemo, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { CalendarDays, BellRing, Sparkles } from "lucide-react";
 import { Modal } from "./UIElements";
 
 interface OzelGunTakvimiModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
@@ -54,7 +57,10 @@ function hicriTarihAl(date = new Date()): HicriTarih | null {
 /** Cuma kontrolü: JS getDay() 5 = Cuma */
 const cumaMi = (d: Date) => d.getDay() === 5;
 
-export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, onClose, notify }) => {
+export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, onClose, notify , lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [bildirimIstek, setBildirimIstek] = useState<"" | "ok" | "yok">("");
   // ★ CANLI TAKVİM (28.09): "bugün" sabit useMemo'da donuyordu — uygulama açık kaldıkça
   //   sayaçlar hep aynı kalıyordu. Artık modal açıkken her 60 sn'de bir tazelenir;
@@ -134,7 +140,7 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
   };
 
   return (
-    <Modal title="Özel Gün Takvimi" sub="Cuma, kandiller ve mühim geceler — üreticiler için tema önerileriyle" onClose={onClose}>
+    <Modal title={tt("v2OzelGunTitle")} sub={tt("v2OzelGunSub")} onClose={onClose}>
       {/* ── 36: HAYIRLI GÜNLER SAYACI — üstte büyük sayaç ── */}
       {siradaki[0] && (
         <div className="mb-3 flex items-center justify-between rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-500/[.12] to-emerald-500/[.06] px-4 py-3">

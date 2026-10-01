@@ -10,15 +10,20 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Brain, Check, X, BarChart3 } from "lucide-react";
 import { Modal } from "./UIElements";
 import { fetchSurahEditions } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09)
+import { MEAL_EDITIONS, type Lang } from "../i18n";
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
 } from "../hafizlikIstatistik";
 
 interface HafizlikTestiModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
+  /** ★ SORU MEALİ DİLİ (01.10): cevap sonrası "doğrusu" satırı seçili dilin mealinden gelir */
+  lang?: Lang;
 }
 
 interface Soru {
@@ -28,6 +33,8 @@ interface Soru {
   bas: string;      // ayetin ilk ~60 karakteri
   devam: string;    // doğru devam
   secenekler: string[]; // 4 seçenek (doğru dahil)
+  /** ★ SEÇİLİ DİLİN MEALİ (01.10): cevap sonrası "doğrusu" satırında gösterilir */
+  meal: string;
 }
 
 // Meşhur sureler — test havuzu (yeterli ayet sayısı + tanınırlık)
@@ -156,7 +163,10 @@ const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ g
   );
 }
 
-export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, onClose, notify }) => {
+export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, onClose, notify, lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [soru, setSoru] = useState<Soru | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [secim, setSecim] = useState<number | null>(null); // seçilen index
@@ -204,7 +214,12 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         // ★ 429 KORUMASI (28.09): alquran.cloud Limit'e takıldıysa havuzu taramayı bırak —
         //   her deneme yeni istek atar, durumu daha da kötüleştirir. Catch bloğu halleder.
         let d: Awaited<ReturnType<typeof fetchSurahEditions>>;
-        try { d = await fetchSurahEditions(sn, "tr.diyanet"); }
+        // ★ SORU MEALİ DİLİ (01.10): edition seçili dilden gelir (MEAL_EDITIONS[lang]) —
+        //   tr.diyanet yerine en.sahih / ar.alafasy / id.indonesian / ur.jalandhry…
+        //   Arapça-devam testinin KENDİSİ hep Arapça (değişmez); meal yalnız
+        //   cevap sonrası "doğrusu" satırında gösterilir. Kayma koruması aynen:
+        //   Türkçe edition'larda yazir→vakfi fallback devrede.
+        try { d = await fetchSurahEditions(sn, MEAL_EDITIONS[lang] ?? "tr.diyanet"); }
         catch (e) {
           if ((e as Error & { status?: number })?.status === 429) throw e;
           continue; // bu sure uymadı (kısa/boş) — başka sure dene
@@ -218,7 +233,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       const sn = soruPaket.sn;
       const d = soruPaket.d;
       const ayahs: Array<{ text: string }> = d.arabic;
-      void d.tr; // meal bu teste girmiyor (Arapça-devam bazlı) ama sağlıklı edition'la çekilir
+      const secilenMealler: string[] = d.tr; // ★ seçili dilin mealleri (arabic ile hizalı)
       const snAdi: string = d.name;
       // Ayet sayısı 4'ten azsa kısa sure — uygun ayet bul (devam kısmı olsun diye uzun olanı seç)
       const uzunlukSirası = ayahs.map((a, i) => ({ i, len: a.text.length })).sort((x, y) => y.len - x.len);
@@ -285,7 +300,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         }
       }
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
-      setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler });
+      setSoru({ s: sn, sn: snAdi, a: hedef.i + 1, bas, devam, secenekler, meal: secilenMealler[hedef.i] ?? "" });
     } catch {
       // ★ 429 (rate limit) ise uzun bekleme: 1sn'lik kısa tekrarlar API'yi döver,
       //   sürekli "soru hazırlanamadı" döngüsüne girer. 6 sn bekle → limit nefes alır.
@@ -360,7 +375,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const hocaAudioPauseGuvenli = () => { /* future-proof: ses durdurma gerekirse */ };
 
   return (
-    <Modal title="Hafızlık Testi" sub="Devamını getir — ayeti tamamla, hafızanı test et 🧠" onClose={onClose}>
+    <Modal title={tt("v2HafizlikTitle")} sub={tt("v2HafizlikSub")} onClose={onClose}>
       {/* ★ ZORLUK SEÇİMİ — seviye seçilmeden soru başlamaz */}
       {!seviyeSecili ? (
         <div className="space-y-2">
@@ -571,6 +586,16 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               );
             })}
           </div>
+
+          {/* ★ SEÇİLİ DİLİN MEALİ (01.10): cevap verildikten sonra ayetin mealini göster —
+              MEAL_EDITIONS[lang]'tan gelen edition'dır (en.sahih / tr.diyanet / …).
+              LTR metin dir="ltr" + sol hizalı; Arapça kaynak zaten üstte. */}
+          {secim !== null && soru.meal && (
+            <div className="mt-2 rounded-xl border border-white/10 bg-white/[.03] p-3" dir="ltr">
+              <p className="text-[8.5px] font-black uppercase tracking-widest text-white/35">{MEAL_EDITIONS[lang] === "tr.diyanet" ? "Meal" : "Translation"} · {MEAL_EDITIONS[lang]}</p>
+              <p className="mt-1 text-[10.5px] leading-relaxed text-white/70">{soru.meal}</p>
+            </div>
+          )}
 
           {/* ★ TURU BİTİR — sınırlı turda tur boyutu dolduğunda, sınırsızda her zaman görünür (28.09) */}
           {(turBoyu === 0 || puan.toplam + 1 < turBoyu) && puan.toplam > 0 && (

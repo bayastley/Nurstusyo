@@ -8,6 +8,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useEffect, useMemo, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { NotebookPen, Trash2, Search, Lock } from "lucide-react";
 import { Modal } from "./UIElements";
 import { secureGet, secureSet } from "../secureStore";
@@ -23,6 +24,8 @@ interface NotKaydi {
 }
 
 interface AyetNotlariModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
@@ -35,7 +38,10 @@ const yaz = (notlar: NotKaydi[]) => {
   try { secureSet(NOT_KEY, notlar); } catch { /* saklama kapalıysa sessiz */ }
 };
 
-export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClose, notify }) => {
+export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClose, notify , lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [notlar, setNotlar] = useState<NotKaydi[]>([]);
   const [yeniSure, setYeniSure] = useState(1);
   const [yeniAyet, setYeniAyet] = useState(1);
@@ -80,7 +86,7 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
   if (!open) return null;
 
   return (
-    <Modal title="Ayet Notlarım" sub="Tefsir okurken düşünceni yaz — şifreli saklanır, sunucuya gitmez 🔒" onClose={onClose}>
+    <Modal title={tt("v2AyetNotlariTitle")} sub={tt("v2AyetNotlariSub")} onClose={onClose}>
       {/* Gizlilik bandı */}
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-[9px] font-bold text-emerald-200/80 ring-1 ring-emerald-400/20">
         <Lock size={11} /> Notların AES ile şifreli, sadece bu cihazda saklanır — hiçbir sunucuya gönderilmez.

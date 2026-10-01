@@ -6,6 +6,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useMemo, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { Package, Plus, Video } from "lucide-react";
 import { Modal } from "./UIElements";
 
@@ -237,6 +238,8 @@ export const AYET_PAKETLERI: AyetPaketi[] = [
 ];
 
 interface AyetPaketleriModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   /** Seçilen paketin tüm ayetlerini stüdyoya ekler (mevcut addAyah akışı) */
@@ -246,7 +249,10 @@ interface AyetPaketleriModalProps {
   onStudyyeDon?: () => void;
 }
 
-export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, onClose, addAyah, notify, onStudyyeDon }) => {
+export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, onClose, addAyah, notify, onStudyyeDon , lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [secili, setSecili] = useState<string | null>(null);
   const paket = useMemo(() => AYET_PAKETLERI.find((p) => p.id === secili) ?? null, [secili]);
 
@@ -260,7 +266,7 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
   };
 
   return (
-    <Modal title="Hazır Ayet Paketleri" sub="Bir paket seç — ayetler tek tuşla stüdyoya, videon 2 dakikada hazır 🎬" onClose={onClose} wide>
+    <Modal title={tt("v2AyetPaketleriTitle")} sub={tt("v2AyetPaketleriSub")} onClose={onClose} wide>
       {!paket ? (
         <div className="grid gap-2.5 sm:grid-cols-2">
           {AYET_PAKETLERI.map((p) => (

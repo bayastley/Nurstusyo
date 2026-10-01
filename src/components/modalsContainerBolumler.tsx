@@ -230,8 +230,10 @@ export function LibraryBolum({
   setLibEmotion,
   libraryFiltered,
   useFromLibrary,
+  t,
 }: {
   setModal: (m: never) => void;
+  t: (k: string) => string;
   libSearch: string;
   setLibSearch: (v: string) => void;
   libType: LibraryType;
@@ -242,7 +244,7 @@ export function LibraryBolum({
   useFromLibrary: (item: LibraryItem) => void;
 }) {
   return (
-    <Modal title="Ayet & Dua Kütüphanesi" sub="Ayet-i Kerime, Hadis-i Şerif, Kadim Dua ve Zikirler — Stüdyo'da Kullan ile videona ekle" onClose={() => setModal(null as never)} wide>
+    <Modal title={t("v2AyetKutuphaneTitle")} sub={t("v2AyetKutuphaneSub")} onClose={() => setModal(null as never)} wide>
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
         <input value={libSearch} onChange={(e) => setLibSearch(e.target.value)} placeholder="Ayet, sure adı veya Türkçe meal ara..." className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
@@ -287,12 +289,14 @@ export function LibraryBolum({
 export function StoriesBolum({
   setModal,
   addAyah,
+  t,
 }: {
   setModal: (m: never) => void;
   addAyah: (s: number, a: number) => void;
+  t: (k: string) => string;
 }) {
   return (
-    <Modal title="Kur'an Kıssaları" sub="Admin · V2 içerikleri aktif" onClose={() => setModal(null as never)} wide>
+    <Modal title={t("v2StoriesTitle")} sub={t("v2StoriesSub")} onClose={() => setModal(null as never)} wide>
       <div className="grid gap-3 sm:grid-cols-2">
         {KISSAS.map((story) => (
           <div key={`${story.s}:${story.a}`} className="rounded-2xl border border-white/10 bg-white/[.03] p-4">
@@ -416,6 +420,7 @@ export function ContactBolum({
   contactMessage,
   setContactMessage,
   notify,
+  t,
 }: {
   setModal: (m: never) => void;
   contactType: "oneri" | "sikayet";
@@ -423,10 +428,11 @@ export function ContactBolum({
   contactMessage: string;
   setContactMessage: (v: string) => void;
   notify: (msg: string) => void;
+  t: (k: string) => string;
 }) {
   const [contactPuan, setContactPuan] = useState<number | null>(null);
   return (
-    <Modal title="Destek & Bildirim Merkezi" sub="Öneri, soru veya sorunlarınızı destek ekibimize doğrudan iletin." onClose={() => setModal(null as never)}>
+    <Modal title={t("v2DestekTitle")} sub={t("v2DestekSub")} onClose={() => setModal(null as never)}>
       <div className="mb-3">
         <Segmented
           value={contactType}

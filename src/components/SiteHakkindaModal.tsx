@@ -5,6 +5,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { BookOpen, Radio, ShieldCheck, Mail, ExternalLink, HeartHandshake, Video, Sparkles, Clapperboard, PlayCircle } from "lucide-react";
 import { Modal } from "./UIElements";
 
@@ -13,6 +14,8 @@ import { Modal } from "./UIElements";
 const TANITIM_VIDEO_YOUTUBE = "";
 
 interface SiteHakkindaModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   /** İletişim formunu (Destek Merkezi) açar — ModalsContainer içindeki setModal("contact") */
@@ -34,7 +37,10 @@ const OZELLIKLER: Array<{ ikon: React.ElementType; baslik: string; metin: string
   { ikon: Sparkles, baslik: "Ayet Kütüphanesi", metin: "Ayeti seç, kartını tasarla, fotoğraf olarak indir ve paylaş." },
 ];
 
-export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onClose, onIletisim }) => {
+export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onClose, onIletisim , lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [mesajGoster, setMesajGoster] = useState(false);
 
   // YouTube linkini embed'e çevir (watch?v=, youtu.be, shorts — hepsi)
@@ -48,7 +54,7 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
   if (!open) return null;
 
   return (
-    <Modal title="Bu Sitede Ne Var?" sub="Nûr Stüdyo — içerik kaynakları, telif bildirimi ve iletişim" onClose={onClose} wide>
+    <Modal title={tt("v2SiteHakkindaTitle")} sub={tt("v2SiteHakkindaSub")} onClose={onClose} wide>
       {/* ── TANITIM VİDEOSU ────────────────────────────── */}
       {videoEmbed && (
         <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/40">

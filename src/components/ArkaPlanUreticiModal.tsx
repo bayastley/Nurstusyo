@@ -9,6 +9,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { Check, Loader2, Sparkles, Wand2, X } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
@@ -18,6 +19,8 @@ import {
 import { CATEGORIES, CATEGORY_PALETTE, type CatId } from "../clips";
 
 export interface ArkaPlanUreticiModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
@@ -38,7 +41,10 @@ const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.l
 export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   open, onClose, notify, randomizeBackgrounds, setCinematic,
   seciliAyetSayisi = 0, accessTier = "free", isMasterSurum = false,
-}) => {
+  lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [metin, setMetin] = useState("");
   const [aktifMood, setAktifMood] = useState<MoodPreset | null>(null);
   const [tamEslesme, setTamEslesme] = useState(false);
@@ -124,7 +130,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   if (!open) return null;
 
   return (
-    <Modal title="✨ Arka Plan Üretici" sub="Ruh hâlini yaz — sahne planı + sinematik filtre tek tıkla stüdyoya" wide onClose={onClose}>
+    <Modal title={tt("v2ArkaPlanUreticiTitle")} sub={tt("v2ArkaPlanUreticiSub")} wide onClose={onClose}>
       {/* Mood girişi */}
       <div className="relative mb-3">
         <Sparkles size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />

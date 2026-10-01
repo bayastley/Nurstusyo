@@ -11,10 +11,13 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { Check, Copy, Gift, Loader2, Users, X } from "lucide-react";
 import { Modal } from "./UIElements";
 
 export interface DavetModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
@@ -37,7 +40,10 @@ interface ReferansDurum {
 
 export const DavetModal: React.FC<DavetModalProps> = ({
   open, onClose, notify, user, bekleyenDavetKodu, onOdulAlindi,
-}) => {
+  lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [durum, setDurum] = useState<ReferansDurum | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [kodGiris, setKodGiris] = useState("");
@@ -122,7 +128,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
   const girisli = Boolean(user?.id);
 
   return (
-    <Modal title="🎁 Arkadaşını Davet Et" sub="İkiniz de +3 kısa video hakkı kazanın — davet ettiğin kadar büyüsün" wide onClose={onClose}>
+    <Modal title={tt("v2DavetTitle")} sub={tt("v2DavetSub")} wide onClose={onClose}>
       {/* GİRİŞLİ: kodum + istatistik */}
       {girisli && (
         yukleniyor ? (

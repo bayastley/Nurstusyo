@@ -518,34 +518,35 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
 
       {/* ★ BU SİTEDE NE VAR — kaynaklar, telif bildirimi, iletişim (yol haritası madde 4) */}
-      <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} />
+      <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} lang={lang} />
 
       {/* ★ RAMAZAN & KANDİL MERKEZİ — hicri takvimle otomatik Ramazan modu (madde 6) */}
       <RamazanModal open={modal === "ramazan"} onClose={() => setModal(null)} prayerTimings={prayerTimings} notify={notify} />
 
       {/* ★ HAZIR AYET PAKETLERİ — tek tuşla stüdyoya paket ekle (madde 8) */}
-      <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} />
+      <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} lang={lang} />
 
       {/* ★ ÖZEL GÜN TAKVİMİ — Cuma/kandiller + tema önerisi + hatırlatıcı (madde 10) */}
-      <OzelGunTakvimiModal open={v2Acik("ozelGunTakvimi")} onClose={() => setModal(null)} notify={notify} />
+      <OzelGunTakvimiModal open={v2Acik("ozelGunTakvimi")} onClose={() => setModal(null)} notify={notify} lang={lang} />
 
       {/* ★ HAFTANIN VİDEOSU — admin onaylı topluluk vitrini (madde 17) */}
       <HaftaninVideosuModal open={modal === "haftaninVideosu"} onClose={() => setModal(null)} notify={notify} />
 
       {/* ★ KEŞFET — hadis bankası, kıssa, soru-cevap, kelime kartları, sure bilgileri, namaz rehberi, bebek duası, dua rehberi (maddeler 18-22-28-35-61) */}
-      <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} />
+      <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} lang={lang} />
 
       {/* ★ HAFIZLIK TESTİ — devamını getir, 4 seçenekli ayet tamamlama (madde 44) */}
-      <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} />
+      <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} lang={lang} />
 
       {/* ★ AYET NOTLARI — şifreli kişisel notlar, sunucuya gitmez (madde 57) */}
-      <AyetNotlariModal open={v2Acik("ayetNotlari")} onClose={() => setModal(null)} notify={notify} />
+      <AyetNotlariModal open={v2Acik("ayetNotlari")} onClose={() => setModal(null)} notify={notify} lang={lang} />
 
       {/* ★ KELİME ATÖLYESİ — kelime yaz → ayet + atmosfer önerisi → tek tık stüdyoya (İş 3) */}
       <KelimeAtolyesiModal
         open={modal === "kelimeAtolyesi"}
         onClose={() => setModal(null)}
         notify={notify}
+        lang={lang}
         addAyah={addAyah}
         randomizeBackgrounds={randomizeBackgrounds}
         accessTier={accessTier}
@@ -557,6 +558,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         open={modal === "arkaPlanUretici"}
         onClose={() => setModal(null)}
         notify={notify}
+        lang={lang}
         randomizeBackgrounds={randomizeBackgrounds}
         setCinematic={setCinematic}
         seciliAyetSayisi={seciliAyetSayisi}
@@ -569,6 +571,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         open={modal === "davet"}
         onClose={() => setModal(null)}
         notify={notify}
+        lang={lang}
         user={user}
         bekleyenDavetKodu={bekleyenDavetKodu}
         onOdulAlindi={syncWallet}
@@ -576,7 +579,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* LIBRARY MODAL — SRP adım 8 */}
       {modal === "library" && (
-        <LibraryBolum setModal={setModal} libSearch={libSearch} setLibSearch={setLibSearch} libType={libType} setLibType={setLibType} libEmotion={libEmotion} setLibEmotion={setLibEmotion} libraryFiltered={libraryFiltered} useFromLibrary={useFromLibrary} />
+        <LibraryBolum setModal={setModal} t={t} libSearch={libSearch} setLibSearch={setLibSearch} libType={libType} setLibType={setLibType} libEmotion={libEmotion} setLibEmotion={setLibEmotion} libraryFiltered={libraryFiltered} useFromLibrary={useFromLibrary} />
       )}
 
       {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red.
@@ -589,7 +592,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* STORIES MODAL — SRP adım 8 */}
       {modal === "stories" && isMasterSürüm && (
-        <StoriesBolum setModal={setModal} addAyah={addAyah} />
+        <StoriesBolum setModal={setModal} addAyah={addAyah} t={t} />
       )}
 
       {/* THEMES MODAL — SRP adım 8 */}
@@ -604,7 +607,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* CONTACT & SUPPORT MODAL — SRP adım 8 (yıldız puanı bileşende) */}
       {modal === "contact" && (
-        <ContactBolum setModal={setModal} contactType={contactType} setContactType={setContactType} contactMessage={contactMessage} setContactMessage={setContactMessage} notify={notify} />
+        <ContactBolum setModal={setModal} contactType={contactType} setContactType={setContactType} contactMessage={contactMessage} setContactMessage={setContactMessage} notify={notify} t={t} />
       )}
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}

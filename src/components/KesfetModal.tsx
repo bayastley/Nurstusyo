@@ -8,6 +8,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useMemo, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { Search, ChevronLeft } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
@@ -21,13 +22,18 @@ import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
 interface KesfetModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   initialSekme?: SekmeId;
   notify?: (msg: string) => void;
 }
 
-export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initialSekme, notify }) => {
+export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initialSekme, notify , lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
   const [arama, setArama] = useState("");
   const [hadisTema, setHadisTema] = useState("tumu");
@@ -94,7 +100,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   if (!open) return null;
 
   return (
-    <Modal title="Keşfet" sub="Hadis bankası, kıssalar, kelime kartları, namaz rehberi ve daha fazlası — sahih kaynaklarla" onClose={onClose} wide>
+    <Modal title={tt("v2KesfetTitle")} sub={tt("v2KesfetSub")} onClose={onClose} wide>
       {/* Sekmeler */}
       <div className="mb-3 flex flex-wrap gap-1.5">
         {SEKMELER.map((s) => (

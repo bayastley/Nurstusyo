@@ -16,6 +16,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useState } from "react";
+import { translate, type Lang } from "../i18n";
 import { ArrowRight, Check, Loader2, Search, X } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
@@ -26,6 +27,8 @@ import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clip
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
 
 export interface KelimeAtolyesiModalProps {
+  /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
+  lang?: Lang;
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
@@ -63,7 +66,10 @@ const HERKESE_ACIK: CatId[] = ["gol", "desen", "bulut"];
 export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   open, onClose, notify, addAyah, randomizeBackgrounds,
   accessTier = "free", isMasterSurum = false, onAfterImport,
-}) => {
+  lang = "tr" }) => {
+  // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
+
   const [kelime, setKelime] = useState("");
   const [aktifRecete, setAktifRecete] = useState<KelimeRecete | null>(null);
   const [tamEslesme, setTamEslesme] = useState(false);
@@ -147,7 +153,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   //   Modal'ın X butonu ve dış-tıklama kapatması onClose'u çağırır; undefined olunca
   //   hiçbir şey yapmıyordu (modal takılı kalıyordu). Esc desteği Modal'da zaten var.
   return (
-    <Modal title="✍️ Kelime Atölyesi" sub="Bir kelime yaz — ayet + atmosfer önerisini tek tıkla stüdyoya al" wide onClose={onClose}>
+    <Modal title={tt("v2KelimeAtolyesiTitle")} sub={tt("v2KelimeAtolyesiSub")} wide onClose={onClose}>
       {/* Arama satırı */}
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
