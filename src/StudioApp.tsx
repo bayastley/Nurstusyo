@@ -65,6 +65,7 @@ import { TelifDisclaimer } from "./components/TelifDisclaimer";
 import { telifUyarisiGerekli } from "./telifUyari";
 import { uretimIstYaz } from "./components/islamicToolsVucut";
 import { BugunHediye } from "./components/BugunHediye";
+import { GununHazirVideosu } from "./components/GununHazirVideosu";
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { RoadmapModal } from "./components/RoadmapModal";
 import { useShareActions } from "./studio/useShareActions";
@@ -1334,6 +1335,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         />
 
         {/* MIDDLE: VIDEO PREVIEW SECTION */}
+        <div className="min-w-0 space-y-2.5">
+        {/* ★ GÜNÜN HAZIR VİDEOSU (01.10): güne/mübarek güne özel kart — tıkla, önizlemeye yüklensin.
+            TIER KURALI: free'e PRO/ELİT atmosfer yüklemez; havuz üyelik katmanından seçilir. */}
+        <GununHazirVideosu
+          accessTier={accessTier}
+          ayetEkle={(s, a) => { if (!selectedRef.current.some((item) => item.id === `${s}:${a}`)) void addAyah(s, a); }}
+          arkaPlanAta={(clip) => { setBackground(clip); setAyahBackgrounds((current) => { const next = { ...current }; Object.keys(next).forEach((id) => { delete next[id]; }); return next; }); }}
+          erisilebilirKlipBul={(cat) => combinedAllClips.find((clip) => clip.cat === cat && clip.kind === clipKind && isClipAccessible(clip)) ?? null}
+          clipKind={clipKind}
+        />
         <VideoPreviewSection
           canvasRef={canvasRef}
           previewWidth={previewWidth}
@@ -1408,6 +1419,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             setModal("kendiSes");
           }}
         />
+        </div>
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}
         <DesignSettingsPanel
