@@ -17,7 +17,7 @@ import {
   HOCA_KARSILASTIRMA_AYETLER, camiHaritaUrl, camiListeUrl, KANAL_REHBERI,
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
-import { kitaplikOku, DuaSesSecici, kelimeOku, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
+import { kitaplikOku, kelimeOku, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
@@ -368,7 +368,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 35: BEBEK DUASI — KALDIRILDI (kullanıcı kararı 28.09: doğum köşesi sitede olmayacak) ── */}
 
       {/* ── 61: DUA REHBERİ — SRP adım 4b: kesfetDuaBolumu ── */}
-      {sekme === "dua" && <DuaRehberBolumu notify={notify} filtreliDuaRehber={filtreliDuaRehber} duaOkunduTick={duaOkunduTick} />}
+      {sekme === "dua" && <DuaRehberBolumu filtreliDuaRehber={filtreliDuaRehber} duaOkunduTick={duaOkunduTick} duaOkunduArttir={() => setDuaOkunduTick((v) => v + 1)} />}
 
       {/* ── 41: HOCA KARŞILAŞTIRMA ── */}
       {sekme === "hoca" && (
