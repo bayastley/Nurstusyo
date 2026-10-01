@@ -6,6 +6,7 @@ export const idDict: Dict = {
   dailyAyah: "Ayat Hari Ini",
   loading: "Memuat...",
   menuGuide: "Panduan Pengguna",
+  menuAyetKartlari: "Perpustakaan Ayat",
   menuThemes: "Galeri Tema",
   menuSuggest: "Saran Fitur",
   menuComplaint: "Lapor Masalah",

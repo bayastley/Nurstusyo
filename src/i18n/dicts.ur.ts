@@ -8,6 +8,7 @@ export const urDict: Dict = {
   dailyAyah: "آج کی آیت",
   loading: "لوڈ ہو رہا ہے...",
   menuGuide: "رہنمائی",
+  menuAyetKartlari: "آیت لائبریری",
   menuThemes: "تھیم گیلری",
   premium: "پریمیم پرو",
   tagline: "اعلیٰ معیار کی قرآن ویڈیوز بنائیں اور شیئر کریں",

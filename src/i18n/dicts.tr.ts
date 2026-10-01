@@ -4,6 +4,7 @@ export const trDict: Dict = {
   dailyAyah: "Günün Ayeti",
   loading: "Yükleniyor...",
   menuGuide: "Kullanım Kılavuzu",
+  menuAyetKartlari: "Ayet Kütüphanesi",
   menuThemes: "Tema Galerisi",
   menuSuggest: "Öneri Bildir",
   menuComplaint: "Sorun Bildir",

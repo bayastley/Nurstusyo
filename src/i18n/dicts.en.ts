@@ -4,6 +4,7 @@ export const enDict: Dict = {
   dailyAyah: "Ayah of the Day",
   loading: "Loading...",
   menuGuide: "User Guide",
+  menuAyetKartlari: "Ayah Library",
   menuThemes: "Theme Gallery",
   menuSuggest: "Suggest Feature",
   menuComplaint: "Report Issue",

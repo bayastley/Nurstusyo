@@ -220,7 +220,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09) */}
                     <div className="my-1 border-t border-white/5" />
                     {[
-                      { icon: ImageIcon, label: "Ayet Kütüphanesi", target: "ayetKartlari" as ModalName },
+                      { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
                       { icon: Compass, label: "Keşfet · Hadis & Kıssa & Rehber", target: "kesfet" as ModalName },
                       { icon: Brain, label: "Hafızlık Testi", target: "hafizlikTesti" as ModalName },
                       { icon: NotebookPen, label: "Ayet Notlarım", target: "ayetNotlari" as ModalName },
@@ -426,9 +426,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
               <span>🎁</span>Hediye Kodu
             </span>
-            {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartı fotoğraf olarak indir */}
+            {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartı fotoğraf olarak indir (i18n: menuAyetKartlari) */}
             <button onClick={() => setModal("ayetKartlari")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
-              <ImageIcon size={11} style={{ color: "var(--accent)" }} />Ayet Kütüphanesi
+              <ImageIcon size={11} style={{ color: "var(--accent)" }} />{t("menuAyetKartlari")}
             </button>
             {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
             <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>

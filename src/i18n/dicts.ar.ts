@@ -4,6 +4,7 @@ export const arDict: Dict = {
   dailyAyah: "آية اليوم",
   loading: "جاري التحميل...",
   menuGuide: "دليل الاستخدام",
+  menuAyetKartlari: "مكتبة الآيات",
   menuThemes: "معرض الثيمات",
   menuSuggest: "اقتراح",
   menuComplaint: "الإبلاغ عن مشكلة",
