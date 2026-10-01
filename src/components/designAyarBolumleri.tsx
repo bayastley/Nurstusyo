@@ -34,7 +34,7 @@ export function InceAyarSlider({
   sifirlaTitle?: string;
 }) {
   return (
-    <span className="mt-1 flex items-center gap-1" title={title}>
+    <span className="mt-1 flex w-full min-w-0 items-center gap-1" title={title}>
       {onEtiket && (
         <span className="shrink-0 text-[7.5px] font-bold uppercase tracking-wider text-white/40">{onEtiket}</span>
       )}
@@ -53,7 +53,7 @@ export function InceAyarSlider({
         value={deger}
         onChange={(e) => setDeger(parseFloat(e.target.value))}
         title={title}
-        className="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
+        className="h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/15"
         style={{ accentColor: accent }}
       />
       {/* ★ KAYMA DÜZELTMESİ (28.09): min-w yerine sabit w — dar panelde %170 yazısı

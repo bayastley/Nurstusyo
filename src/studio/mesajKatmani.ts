@@ -21,13 +21,18 @@
 
 // ─── 1. RENK ÇUBUĞU ─────────────────────────────────────
 
-/** Çubuğun alt→üst sabit durakları (altın → beyaz-altın → turkuaz → mor → kırmızı → altın) */
+/** Çubuğun alt→üst sabit durakları — TAM SPEKTRUM (01.10 "renkler eksik" düzeltmesi):
+ *  altın → krem → yeşil → turkuaz → gök mavisi → lavanta → pembe → gül kurusu → turuncu → altın */
 export const RENK_CUBUGU_DURAKLARI: readonly string[] = [
   "#d7aa52",
   "#f5e0b5",
+  "#a7f3a0",
   "#67e8f9",
+  "#60a5fa",
   "#a78bfa",
+  "#f472b6",
   "#fb7185",
+  "#fb923c",
   "#d7aa52",
 ] as const;
 
@@ -43,18 +48,19 @@ export interface CubukAyar {
 
 export const VARSAYILAN_CUBUK: CubukAyar = { donme: 0, mealDonme: 150, kalinlik: 6, acik: false };
 
-/** Donme açısını uygula: durakları döndürüp dikişsiz kapalı döngü kur */
+/** Donme açısını uygula: durakları döndürüp dikişsiz kapalı döngü kur (durak sayısından bağımsız) */
 export function cubukDuraklari(donme: number): string[] {
   const d = ((donme % 360) + 360) % 360;
-  const adim = d / 60; // 6 durak → tam tur 360°
-  const alt = Math.floor(adim), ust = Math.ceil(adim) % 6;
+  const N = RENK_CUBUGU_DURAKLARI.length; // kapalı döngü: son durak = ilk durak
+  const adim = (d / 360) * N; // tam tur 360° → N durak
+  const alt = Math.floor(adim), ust = Math.ceil(adim) % N;
   const oran = adim - alt;
   const dondurulmus = RENK_CUBUGU_DURAKLARI.map((_, i) => {
-    const a = RENK_CUBUGU_DURAKLARI[(i + alt) % 6], b = RENK_CUBUGU_DURAKLARI[(i + ust) % 6];
+    const a = RENK_CUBUGU_DURAKLARI[(i + alt) % N], b = RENK_CUBUGU_DURAKLARI[(i + ust) % N];
     return araRenk(a, b, oran);
   });
   // Kapalı döngü: son durak = ilk durak (dikişsiz geçiş)
-  dondurulmus[5] = dondurulmus[0];
+  dondurulmus[N - 1] = dondurulmus[0];
   return dondurulmus;
 }
 
@@ -75,8 +81,9 @@ function araRenk(hex1: string, hex2: string, oran: number): string {
  */
 export function cubukRengi(derece: number): string {
   const d = ((derece % 360) + 360) % 360;
-  const adim = d / 60;
-  const alt = Math.floor(adim) % 6, ust = (alt + 1) % 6;
+  const N = RENK_CUBUGU_DURAKLARI.length;
+  const adim = (d / 360) * N;
+  const alt = Math.floor(adim) % N, ust = (alt + 1) % N;
   return araRenk(RENK_CUBUGU_DURAKLARI[alt], RENK_CUBUGU_DURAKLARI[ust], adim - Math.floor(adim));
 }
 
