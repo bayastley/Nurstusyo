@@ -336,7 +336,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                 {adminMode ? "Admin Açık" : "Admin"}
               </button>
             )}
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 transition">
+            <button onClick={onClose} aria-label="Kapat" className="p-1.5 rounded-full hover:bg-white/10 transition">
               <X size={18} className="text-white/50" />
             </button>
           </div>

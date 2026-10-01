@@ -130,7 +130,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
             </h2>
             <p className="mt-0.5 text-[11px] text-white/40">Topluluğun en beğenilen üretimleri — admin onaylı vitrin</p>
           </div>
-          <button onClick={onClose} className="rounded-full p-1.5 transition hover:bg-white/10">
+          <button onClick={onClose} aria-label="Kapat" className="rounded-full p-1.5 transition hover:bg-white/10">
             <X size={18} className="text-white/50" />
           </button>
         </div>

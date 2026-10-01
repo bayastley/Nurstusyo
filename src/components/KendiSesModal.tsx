@@ -104,7 +104,7 @@ export const KendiSesModal: React.FC<Props> = ({
   return (
     <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md modal-in" onMouseDown={onClose}>
       <div className="glass modal-in relative max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-2xl p-5" onMouseDown={(e) => e.stopPropagation()} style={{ border: "1px solid rgba(215,170,82,.3)" }}>
-        <button className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={onClose}><X size={18} /></button>
+        <button aria-label="Kapat" className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={onClose}><X size={18} /></button>
 
         {/* Başlık */}
         <div className="mb-3 flex items-start gap-2.5">

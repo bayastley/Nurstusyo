@@ -151,6 +151,7 @@ export const Modal: React.FC<ModalProps> = ({
 
           <button
             onClick={onClose}
+            aria-label="Kapat"
             className="rounded-full p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white"
           >
             <X size={18} />

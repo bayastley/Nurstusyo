@@ -189,7 +189,7 @@ export function AdminAuthBolum({
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md modal-in" onMouseDown={() => setAdminAuthOpen(false)}>
       <div className="glass modal-in relative w-full max-w-sm rounded-2xl p-6" onMouseDown={(e) => e.stopPropagation()} style={{ border: "1px solid rgba(215,170,82,.3)" }}>
-        <button className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={() => setAdminAuthOpen(false)}><X size={18} /></button>
+        <button aria-label="Kapat" className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={() => setAdminAuthOpen(false)}><X size={18} /></button>
         <div className="mb-4 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Shield size={16} /></span>
           <div>

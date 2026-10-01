@@ -76,7 +76,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void }> = 
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-gold/30 bg-[#131322] shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
           <p className="text-[12px] font-black text-gold">🕋 Kâbe — Mescid-i Haram Canlı Yayın</p>
-          <button onClick={onClose} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
+          <button onClick={onClose} aria-label="Kapat" className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
         </div>
         {/* ★ KANAL SEKMELERİ */}
         <div className="flex gap-2 border-b border-white/10 px-4 py-2">

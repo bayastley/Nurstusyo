@@ -178,7 +178,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
             <p className="text-[10px] text-white/40">Video · Resim · Ses — diğer dosyalar reddedilir</p>
           </div>
         </div>
-        <button onClick={onClose} className="rounded-full p-1 text-white/40 hover:bg-white/10 hover:text-white transition">
+        <button onClick={onClose} aria-label="Kapat" className="rounded-full p-1 text-white/40 hover:bg-white/10 hover:text-white transition">
           <X size={14} />
         </button>
       </div>

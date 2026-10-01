@@ -1173,7 +1173,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             📻 {radioOn ? (radioPaused ? "RADYO DURDU" : "RADYO AÇIK") : "RADYO"}
           </button>
           {/* ★ KAPAT: en sağda — modalı kapatır (radyo açıkken bile) */}
-          <button onClick={onClose} className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title="Kur'an ekranını kapat">
+          <button onClick={onClose} aria-label="Kapat" className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title="Kur'an ekranını kapat">
           KAPAT <X size={13} />
         </button>
         </div>
