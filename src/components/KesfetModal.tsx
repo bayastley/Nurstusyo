@@ -56,7 +56,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
   const [camiKonum, setCamiKonum] = useState("");
   const [camiAranan, setCamiAranan] = useState<string | null>(null);
-  const [hocaAyet, setHocaAyet] = useState<number>(0); // seçili ayet index'i
+  const [hocaAyet, setHocaAyet] = useState<number>(0); // seçili ayet index'i (-1 = aramadan gelen özel ayet)
+  const [hocaOzel, setHocaOzel] = useState<{ sure: number; sureAdi: string; ayet: number } | null>(null); // ★ 01.10: "bakara 250" araması istediğin ayeti çalar
   const [hocaIdx, setHocaIdx] = useState<number>(0);   // çalan kari index'i
   const [hocaCaliyor, setHocaCaliyor] = useState(false);
   const hocaAudioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -64,7 +65,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
   const hocaCal = (kariIdx: number) => {
     const a = hocaAudioRef.current;
-    const ayet = HOCA_KARSILASTIRMA_AYETLER[hocaAyet];
+    const ayet = hocaAktifAyet;
     if (!a || !ayet) return;
     a.pause();
     a.src = everyAyetUrl(KARILER[kariIdx].id, ayet.sure, ayet.ayet);
@@ -79,6 +80,33 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   React.useEffect(() => () => { hocaAudioRef.current?.pause(); }, []);
 
   const q = arama.trim().toLocaleLowerCase("tr");
+
+  // ★ İSTEDİĞİN AYETİ OKUSUN (01.10): "bakara 250" / "2 255" / "2:255" gibi aramayı sure+ayet'e çevir
+  //   (Türkçe yazım toleranslı: â→a, î→i, kesme işareti ve tire yok sayılır) — q tanımlandıktan SONRA gelmeli
+  const hocaOzelAday = useMemo(() => {
+    if (sekme !== "hoca" || !q) return null;
+    const norm = (s: string) => s.toLocaleLowerCase("tr").replace(/[âàä]/g, "a").replace(/[îìï]/g, "i").replace(/[ûùü]/g, "u").replace(/[‘’'-]/g, "").trim();
+    const sayiya = (sn: number, an: number): { sure: number; sureAdi: string; ayet: number } | null => {
+      const sur = SURAHS.find((x) => x.n === sn);
+      if (!sur || an < 1 || an > sur.count) return null;
+      return { sure: sn, sureAdi: sur.name, ayet: an };
+    };
+    const mRakam = q.match(/^(\d{1,3})\s*[\s:.]\s*(\d{1,3})$/); // "2 255" / "2:255"
+    if (mRakam) return sayiya(Number(mRakam[1]), Number(mRakam[2]));
+    const mAd = q.match(/^(.+?)\s+(\d{1,3})$/); // "bakara 250"
+    if (mAd) {
+      const adN = norm(mAd[1]);
+      const sur = SURAHS.find((x) => norm(x.name) === adN || norm(x.name).includes(adN) || adN.includes(norm(x.name)));
+      if (sur) return sayiya(sur.n, Number(mAd[2]));
+    }
+    return null;
+  }, [sekme, q]);
+  React.useEffect(() => {
+    if (!hocaOzelAday) return;
+    setHocaOzel(hocaOzelAday); setHocaAyet(-1); setHocaCaliyor(false);
+    hocaAudioRef.current?.pause();
+  }, [hocaOzelAday]);
+  const hocaAktifAyet = hocaAyet === -1 && hocaOzel ? hocaOzel : HOCA_KARSILASTIRMA_AYETLER[hocaAyet] ?? null;
 
   const filtreliHadisler = useMemo(
     () => HADIS_BANKASI.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
@@ -373,8 +401,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 41: HOCA KARŞILAŞTIRMA ── */}
       {sekme === "hoca" && (
         <div className="space-y-3">
-          <p className="text-center text-[9px] text-white/40">Aynı ayeti farklı hocalardan dinle — "bu kelimeyi kim nasıl okuyor" 🎧</p>
+          <p className="text-center text-[9px] text-white/40">Aynı ayeti farklı hocalardan dinle — "bu kelimeyi kim nasıl okuyor" 🎧 · üstteki aramaya <b className="text-white/70">bakara 250</b> gibi yaz, istediğin ayeti dinle</p>
           <div className="flex flex-wrap gap-1.5">
+            {hocaOzel && (
+              <button key="ozel" type="button" onClick={() => { setHocaAyet(-1); setHocaCaliyor(false); hocaAudioRef.current?.pause(); }}
+                className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${hocaAyet === -1 ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                style={hocaAyet === -1 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                🔍 {hocaOzel.sureAdi} {hocaOzel.ayet}
+              </button>
+            )}
             {HOCA_KARSILASTIRMA_AYETLER.map((ay, i) => (
               <button key={i} type="button" onClick={() => { setHocaAyet(i); setHocaCaliyor(false); hocaAudioRef.current?.pause(); }}
                 className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${hocaAyet === i ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
@@ -383,9 +418,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </button>
             ))}
           </div>
-          {(() => { const ay = HOCA_KARSILASTIRMA_AYETLER[hocaAyet]; return (
+          {(() => { const ay = hocaAktifAyet; if (!ay) return null; return (
             <div className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-              <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{ay.etiket}</p>
+              <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{hocaAyet === -1 ? "Aramadan seçtin" : ay.etiket}</p>
               <p className="mt-0.5 text-[11px] font-bold text-white/85">{ay.sureAdi} Suresi · {ay.ayet}. Ayet</p>
               <div className="mt-2.5 grid max-h-[320px] gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2">
                 {KARILER.map((k, i) => (
