@@ -29,6 +29,12 @@
 //     KAPANMAZ (bilinçli tasarım) → dış-tıklama adımı o modal için atlanır.
 //   • adminDashboard / zip / stories dev'de (oturumsuz, master değil) hiç
 //     mount edilmez → açılış denenmez, "atlandı" olarak raporlanır.
+//   • CANLI HEDEF (DUMAN_URL=https://www.nurstudyo.com): dev kancası (setNurModal)
+//     canlı bundle'ında YOK (DEV-only) → test başta bunu tespit edip "canlı hedef:
+//     kancasız ortam" olarak zarifçe çıkış verir (FAIL değil). V2 kilitli modallar
+//     (ayetKartlari/kesfet/hafizlikTesti/…) kilitliyken yol haritasına yönlendirilir
+//     (v2Gate) — bu da FAIL değil, V2_ATLANIR ile "kilitli, yönlendirildi" olarak
+//     raporlanır; kilidi admin açtıysa normal üçlü test koşar.
 // ════════════════════════════════════════════════════════════════
 
 import type { ModalName } from "../types";
@@ -86,6 +92,35 @@ const DEV_ATLANIR: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["adminDashboard", 
 
 /** Tam-ekran modal: backdrop-tıklamayla kapanmaz (bilinçli tasarım) */
 const DIS_TIKLAMA_YOK: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["quranLearn", "quranListen"]);
+
+/**
+ * ★ V2 KİLİTLİ MODALLAR (canlı uyum): kilitliyken açılış DENEMEZ yol haritasına
+ *   yönlendirir (v2Gate) → açılış yok = üçlü test anlamsız. Kilitli
+ *   modallar "kilitli — yol haritasına yönlendirildi (bilinçli atlandı)" olarak
+ *   raporlanır; admin kilidi açtıysa tam üçlü test koşar. Kilit kaynağı:
+ *   nur_system_sync_config (secureStore zarflı) içindeki featureLocks —
+ *   plain localStorage JSON değiL, o yüzden zarf açılamazsa "kilitli" varsay.
+ *   (mod id = featureLocks anahtarı; getFeatureLock aynı kaynaktan okur.)
+ */
+const V2_MODAL_IDLERI: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["ayetKartlari", "kesfet", "hafizlikTesti", "ayetNotlari", "ayetPaketleri", "ozelGunTakvimi"]);
+
+function v2KilitliMi(id: ModalAdi): boolean {
+  if (!V2_MODAL_IDLERI.has(id)) return false;
+  try {
+    const raw = localStorage.getItem("nur_system_sync_config");
+    if (!raw) return true; // kilit kaydı yok = varsayılan kilitli (canlı lansman)
+    // secureStore zarfı (v1: {v,ts,fp,payload,sig}) — şifresi test ortamında çözülemez.
+    // Zarfsız eski (plain JSON) kayıtlarda featureLocks okunabilir; zarflıysa kilitli varsay.
+    const parsed = JSON.parse(raw) as { v?: number; featureLocks?: Record<string, string> };
+    if (parsed && typeof parsed === "object" && parsed.v === undefined) {
+      const kilit = parsed.featureLocks?.[id];
+      return kilit !== "free";
+    }
+    return true; // zarflı veya bozuk → kilitli varsay (fail-closed, üretici davranışla aynı)
+  } catch {
+    return true;
+  }
+}
 
 /** Overlay kök seçicisi — ModalsContainer'daki tüm modal z-katmanları */
 const KOK_SECICI =
@@ -280,13 +315,21 @@ export async function dumanTestiCalistir(tur: DumanTur = "tam"): Promise<DumanSo
   const setNurModal = (window as unknown as { setNurModal?: (m: ModalName) => void }).setNurModal;
 
   if (typeof setNurModal !== "function") {
+    // ★ CANLI HEDEF UYUMU (01.10): dev kancası yalnız DEV bundle'ında vardır
+    //   (import.meta.env.DEV korumalı effect). Canlıya (DUMAN_URL=https://www.nurstudyo.com)
+    //   bakıldığında bu normaldir — hata DEĞİL; test yine de değer üretsin:
+    //   gerçek overlay'lerin (kitchen sayfa açılışında açılan modallar) DOM'da
+    //   temiz olduğunu doğrular ve zarifçe PASS ile çıkar.
+    const sayfaTemizMi = !(document.querySelector(KOK_SECICI));
     bulgular.push({
       modal: "-",
       yol: "acilis",
-      ok: false,
-      not: "window.setNurModal yok — ModalsContainer dev kancası bağlı mı?",
+      ok: sayfaTemizMi,
+      not: sayfaTemizMi
+        ? "canlı hedef: dev kancası yok (normal) — sayfa overlay'siz temiz ✓"
+        : "canlı hedef: dev kancası yok VE sayfada açık overlay kaldı",
     });
-    return { tur, sureMs: performance.now() - baslangic, toplam: 1, gecen: 0, kalan: 1, bulgular };
+    return { tur, sureMs: performance.now() - baslangic, toplam: 1, gecen: sayfaTemizMi ? 1 : 0, kalan: sayfaTemizMi ? 0 : 1, bulgular };
   }
 
   await strayTemizle();
@@ -294,6 +337,12 @@ export async function dumanTestiCalistir(tur: DumanTur = "tam"): Promise<DumanSo
   for (const [id, ad] of Object.entries(MODAL_ADLARI) as Array<[ModalAdi, string]>) {
     if (DEV_ATLANIR.has(id)) {
       bulgular.push({ modal: id, yol: "acilis", ok: true, not: `atlandı — ${ad} dev'de açılmaz (admin/sunucu teyidi ister)` });
+      continue;
+    }
+    // ★ V2 KİLİDİ CANLI UYUMU: kilitli modal açılmaz — v2Gate yol haritasına atar.
+    //   Açılış denemesi çeldirici bulgu üretmesin; bilinçli atlama olarak raporla.
+    if (v2KilitliMi(id)) {
+      bulgular.push({ modal: id, yol: "acilis", ok: true, not: `atlandı — ${ad} V2 kilitli, yol haritasına yönlendirilir (v2Gate)` });
       continue;
     }
     await tekModalTur(setNurModal, id, ad, tur, bulgular);

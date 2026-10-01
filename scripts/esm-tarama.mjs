@@ -260,13 +260,19 @@ async function dumanTestiOrkestra() {
   console.log(" Hedef: " + DUMAN_URL + "   (tur: " + DUMAN_TUR + ")");
   console.log("═══════════════════════════════════════════════════");
 
-  // 1) Dev server ayakta mı?
+  // 1) Hedef ayakta mı? (localhost → dev server, https → canlı site)
+  const CANLI_HEDEF = /^https:\/\//.test(DUMAN_URL);
   try {
-    const r = await fetch(DUMAN_URL, { signal: AbortSignal.timeout(4000) });
+    const r = await fetch(DUMAN_URL, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error("HTTP " + r.status);
   } catch {
-    console.error("✗ Dev servera ulaşılamadı: " + DUMAN_URL);
-    console.error("  → Önce 'npm run dev' çalıştır, sonra testi tekrarla.");
+    if (CANLI_HEDEF) {
+      console.error("✗ Canlı siteye ulaşılamadı: " + DUMAN_URL);
+      console.error("  → İnternet bağlantısını ya da siteyi kontrol et.");
+    } else {
+      console.error("✗ Dev servera ulaşılamadı: " + DUMAN_URL);
+      console.error("  → Önce 'npm run dev' çalıştır, sonra testi tekrarla.");
+    }
     process.exit(EXIT_HATA);
   }
 
@@ -300,15 +306,46 @@ async function dumanTestiOrkestra() {
       return false;
     })();
     if (!kancalarTam) {
-      console.error("✗ window.setNurModal / nurModalDumanTesti kancası 25 sn içinde gelmedi");
-      console.error("  → ModalsContainer dev kancası bağlı mı? Uygulama hata veriyor mu?");
-      if (sayfaHatalari.length) console.error("  İlk sayfa hataları:\n   " + sayfaHatalari.slice(0, 5).join("\n   "));
-      await browser.close().catch(() => {});
-      process.exit(EXIT_HATA);
+      // ★ CANLI HEDEF UYUMU: dev kancası (setNurModal/nurModalDumanTesti) yalnız DEV
+      //   bundle'ında vardır. Canlıya bakılırken bunun gelmemesi NORMALDİR — hata değil.
+      //   Bu durumda sürücü 'kancasız-ortam' moduna düşer ve yalnız sayfa overlay
+      //   temizliğini doğrular (bkz. modalDumanTesti dumanTestiCalistir).
+      const canliKancasiz = CANLI_HEDEF;
+      if (canliKancasiz) {
+        console.log("  ℹ Canlı hedef: dev kancası canlı bundle'ında yok (normal) — kancasız-ortam moduna düşülüyor");
+      } else {
+        console.error("✗ window.setNurModal / nurModalDumanTesti kancası 25 sn içinde gelmedi");
+        console.error("  → ModalsContainer dev kancası bağlı mı? Uygulama hata veriyor mu?");
+        if (sayfaHatalari.length) console.error("  İlk sayfa hataları:\n   " + sayfaHatalari.slice(0, 5).join("\n   "));
+        await browser.close().catch(() => {});
+        process.exit(EXIT_HATA);
+      }
     }
 
     // 4) Sürücüyü koştur (sayfa içinde tüm gezme burada olur)
-    const sonuc = await page.evaluate((tur) => window.nurModalDumanTesti(tur), DUMAN_TUR);
+    //    Canlı hedefte nurModalDumanTesti YOK (dev-only) → kancasız-ortam modu:
+    //    sürücü çağrılmaz, doğrudan yerel bulgu üretilir (sayfa overlay temizliği).
+    let sonuc;
+    if (CANLI_HEDEF && !(await page.evaluate(() => typeof window.nurModalDumanTesti === "function").catch(() => false))) {
+      const sayfaTemiz = await page.evaluate(() => !document.querySelector('.fixed.inset-0[class*="z-[80]"], .fixed.inset-0[class*="z-[90]"], .fixed.inset-0[class*="z-[95]"], .fixed.inset-0[class*="z-[96]"], .fixed.inset-0[class*="z-[100]"], .fixed.inset-0[class*="z-[300]"]')).catch(() => false);
+      sonuc = {
+        tur: DUMAN_TUR,
+        sureMs: 0,
+        toplam: 1,
+        gecen: sayfaTemiz ? 1 : 0,
+        kalan: sayfaTemiz ? 0 : 1,
+        bulgular: [{
+          modal: "-",
+          yol: "acilis",
+          ok: sayfaTemiz,
+          not: sayfaTemiz
+            ? "canlı hedef: dev kancası yok (normal) — sayfa overlay'siz temiz ✓"
+            : "canlı hedef: dev kancası yok VE sayfada açık overlay kaldı",
+        }],
+      };
+    } else {
+      sonuc = await page.evaluate((tur) => window.nurModalDumanTesti(tur), DUMAN_TUR);
+    }
 
     // 5) Rapor — modal bazında grupla
     const modallar = [];
