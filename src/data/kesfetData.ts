@@ -440,6 +440,29 @@ export const KELIME_KARTLARI: KelimeKart[] = [
   { ar: "آخِرَة", tr: "Ahiret", okunus: "âhiret", ornek: "وَالْآخِرَةُ خَيْرٌ" },
   { ar: "دُنْيَا", tr: "Dünya", okunus: "dünyâ", ornek: "مَتَاعَ الْحَيَاةِ الدُّنْيَا" },
   { ar: "قِيَامَة", tr: "Kıyamet", okunus: "kıyâmet", ornek: "يَوْمَ الْقِيَامَةِ" },
+
+  // ═══ 01.10 genişletme: +21 kelime (hepsi bilinen ayet ifadelerinden; yenile havuzu için) ═══
+  { ar: "سَمِيع", tr: "İşiten (her şeyi duyan)", okunus: "semî", ornek: "إِنَّهُ سَمِيعٌ عَلِيمٌ" },
+  { ar: "عَلِيم", tr: "Bilen (her şeyi bilen)", okunus: "alîm", ornek: "وَاللَّهُ عَلِيمٌ حَكِيمٌ" },
+  { ar: "حَكِيم", tr: "Hikmetli (hüküm ve hikmet sahibi)", okunus: "hakîm", ornek: "وَاللَّهُ عَزِيزٌ حَكِيمٌ" },
+  { ar: "غَفُور", tr: "Çok bağışlayan", okunus: "gafûr", ornek: "إِنَّ اللَّهَ غَفُورٌ رَحِيمٌ" },
+  { ar: "عَظِيم", tr: "Azametli, ulu", okunus: "azîm", ornek: "لَهُم مَّغْفِرَةٌ وَأَجْرٌ عَظِيمٌ" },
+  { ar: "نَصْر", tr: "Yardım, zafer", okunus: "nasr", ornek: "إِنْ تَنْصُرُوا اللَّهَ يَنْصُرْكُمْ" },
+  { ar: "فَتْح", tr: "Açılma, zafer", okunus: "feth", ornek: "إِنَّا فَتَحْنَا لَكَ فَتْحًا مُّبِينًا" },
+  { ar: "صَبْر", tr: "Sabır", okunus: "sabr", ornek: "إِنَّ اللَّهَ مَعَ الصَّابِرِينَ" },
+  { ar: "صَدَقَة", tr: "Sadaka", okunus: "sadaka", ornek: "إِن تُبْدُوا الصَّدَقَاتِ فَنِعِمَّا هِيَ" },
+  { ar: "صِيَام", tr: "Oruç", okunus: "siyâm", ornek: "كُتِبَ عَلَيْكُمُ الصِّيَامُ" },
+  { ar: "حَجّ", tr: "Hac", okunus: "hac", ornek: "وَلِلَّهِ عَلَى النَّاسِ حِجُّ الْبَيْتِ" },
+  { ar: "زَكَاة", tr: "Zekât", okunus: "zekât", ornek: "وَآتُوا الزَّكَاةَ" },
+  { ar: "خَيْر", tr: "Hayır, iyilik", okunus: "hayr", ornek: "هُوَ خَيْرٌ لَّكُمْ" },
+  { ar: "شَهِيد", tr: "Şahit, şehit", okunus: "şehîd", ornek: "وَكَفَى بِاللَّهِ شَهِيدًا" },
+  { ar: "صَالِح", tr: "Salih (iyi, doğru amel)", okunus: "sâlih", ornek: "مَنْ عَمِلَ صَالِحًا فَلِنَفْسِهِ" },
+  { ar: "نُور", tr: "Nur, ışık", okunus: "nûr", ornek: "اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ" },
+  { ar: "مَغْفِرَة", tr: "Bağışlanma, mağfiret", okunus: "mağfiret", ornek: "مَّغْفِرَةٌ وَأَجْرٌ عَظِيمٌ" },
+  { ar: "تَقْوَى", tr: "Takva, Allah korkusu", okunus: "takvâ", ornek: "فَإِنَّ خَيْرَ الزَّادِ التَّقْوَىٰ" },
+  { ar: "جَنَّة", tr: "Cennet", okunus: "cennet", ornek: "جَنَّاتٍ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ" },
+  { ar: "نَار", tr: "Ateş, cehennem", okunus: "nâr", ornek: "أُولَئِكَ أَصْحَابُ النَّارِ" },
+  { ar: "سَبِيل", tr: "Yol, sebil", okunus: "sebîl", ornek: "إِنَّا هَدَيْنَاهُ السَّبِيلَ" },
 ];
 
 // ── 22: SURE BİLGİLERİ (01.10: 25 sureye çıkarıldı; aciklama = akordeon açılınca görünen uzun anlatım) ──

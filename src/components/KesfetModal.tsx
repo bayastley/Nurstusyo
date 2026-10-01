@@ -13,7 +13,7 @@ import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import {
   HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI, KISSA_LISTESI, SORU_CEVAP_ARŞIVI, TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI,
-  KELIME_KARTLARI, SURE_BİLGİLERİ, NAMAZ_REHBERİ, DUA_REHBERİ, BES_SART_SORULARI,
+  KELIME_KARTLARI, SURE_BİLGİLERİ, NAMAZ_REHBERİ, DUA_REHBERİ, BES_SART_SORULARI, type KelimeKart,
   HOCA_KARSILASTIRMA_AYETLER, camiHaritaUrl, camiListeUrl, KANAL_REHBERI,
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
@@ -42,6 +42,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [acikSure, setAcikSure] = useState<number | null>(null);
   // ★ KISSA AKORDEONU (01.10): aynı ilke — kapalı kart tek satır özet, açık kartta kıssa+ders+dua
   const [acikKissa, setAcikKissa] = useState<string | null>(null);
+  // ★ KELİME YENİLE (01.10): 61 kelimelik sahih havuzdan her seferinde rastgele 15 kart — sürekli değişsin
+  const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
+  const kelimeYenile = React.useCallback(() => {
+    const havuz = [...KELIME_KARTLARI];
+    for (let i = havuz.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [havuz[i], havuz[j]] = [havuz[j], havuz[i]]; }
+    setKelimeKartlari(havuz.slice(0, 15));
+    setKartCevrildi(null);
+  }, []);
+  React.useEffect(() => { if (sekme === "kelime") kelimeYenile(); }, [sekme, kelimeYenile]);
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
@@ -267,10 +276,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 21: KELİME KARTLARI (flashcard) ── */}
       {sekme === "kelime" && (
         <>
-          <p className="mb-3 text-center text-[9px] text-white/40">Karta tıkla — anlamını gör · 🔊 ile okunuşu dinle. Kur'an'da en sık geçen kelimeler 🔤</p>
+          <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
+            <p className="text-[9px] text-white/40">Karta tıkla — anlamını gör · 🔊 ile okunuşu dinle · Kur'an'da en sık geçen kelimeler 🔤</p>
+            <button type="button" onClick={kelimeYenile}
+              className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[.05] px-2.5 py-1 text-[9px] font-black text-white/70 transition hover:border-[color:var(--accent)] hover:text-white"
+              title="Kartları yenile — havuzdan rastgele 15 kelime gelir">
+              🔄 Yenile
+            </button>
+          </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {KELIME_KARTLARI.map((k, i) => (
-              <div key={i} className="relative">
+            {kelimeKartlari.map((k, i) => (
+              <div key={k.ar} className="relative">
                 <button type="button" onClick={() => setKartCevrildi(kartCevrildi === i ? null : i)}
                   className={`flex h-20 w-full flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${kartCevrildi === i ? "border-[color:var(--accent)] bg-amber-500/10" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}>
                   {kartCevrildi === i ? (
@@ -292,7 +308,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </div>
             ))}
           </div>
-          <p className="mt-3 text-center text-[8px] text-white/25">Kart 1: {KELIME_KARTLARI.length} kelime · V2'de 80 karta çıkacak</p>
+          <p className="mt-3 text-center text-[8px] text-white/25">Havuz: {KELIME_KARTLARI.length} kelime · her yenilemede rastgele {kelimeKartlari.length} kart</p>
         </>
       )}
 
