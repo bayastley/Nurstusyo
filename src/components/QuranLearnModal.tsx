@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, kabeSourcesFor, RADIO_STATIONS, ulkeToBolge, dilToBolge, type RadioBolge } from "../data/liveStreams";
+import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, RADIO_STATIONS, ulkeToBolge, dilToBolge, type RadioBolge } from "../data/liveStreams";
+import { KabeCanliModal } from "./KabeCanliModal"; // ★ SRP 01.10: Kâbe canlı overlay + HLS bağlantısı ayrıldı
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
@@ -113,11 +114,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
   }, [open]);
-  const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı
-  const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading"); // ★ canlı yayın durumu
-  const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
-  const [kabeVolume, setKabeVolume] = useState(0.8); // ★ ses seviyesi
-  const [kabeTab, setKabeTab] = useState<"quran" | "live" | "mekke">("quran"); // ★ 1) Suudi Quran TV 2) Katar Quran TV HD 3) Mescid-i Nebi (Medine)
+  const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı (gövde KabeCanliModal'da — SRP 01.10)
   // ★ KÂBE CANLI kaynakları ve 📻 RADYO kanalları → src/data/liveStreams.ts'e taşındı (saf veri)
   const [radioOn, setRadioOn] = useState(false);
   const [radioIdx, setRadioIdx] = useState(0);
@@ -461,58 +458,6 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     else if (!isPlaying) { a.muted = false; }
     return () => { if (audioRef.current) audioRef.current.muted = false; };
   }, [kabeLive, isPlaying]);
-  const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
-  const kabeHlsRef = useRef<Hls | null>(null);
-  const kabeWrapRef = useRef<HTMLDivElement | null>(null); // ★ tam ekran kapsayıcısı
-
-  // ★ Kâbe canlı HLS bağlama — doğrudan kaynak + başarısızlıkta proxy yedeği
-  const startKabeHls = useCallback(() => {
-    const video = kabeVideoRef.current;
-    if (!video) return;
-    // önceki hls örneğini temizle
-    if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
-    const sources = kabeSourcesFor(kabeTab);
-    let srcIdx = 0;
-    if (Hls.isSupported()) {
-      const hls = new Hls({ lowLatencyMode: true, backBufferLength: 30 });
-      kabeHlsRef.current = hls;
-      hls.loadSource(sources[srcIdx]);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => undefined);
-      });
-      hls.on(Hls.Events.ERROR, (_e, data) => {
-        if (!data.fatal) return;
-        // ★ Kaynak patladı → sıradaki kaynağa (proxy yedeği) otomatik geç
-        srcIdx += 1;
-        if (srcIdx < sources.length) {
-          setKabeStatus("loading");
-          hls.loadSource(sources[srcIdx]);
-          hls.startLoad();
-        } else {
-          setKabeStatus("error");
-        }
-      });
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Safari doğrudan HLS oynatır
-      video.src = sources[0];
-      video.play().catch(() => undefined);
-    } else {
-      setKabeStatus("error");
-    }
-  }, [kabeTab]); // ★ yalnız sekme değişince yeniden bağlanır; ses aç/kapa asla yayını kesmez
-
-  // Modal açılınca yayına bağlan, kapatınca temizle (yalnız Kur'an TV sekmesinde HLS çalışır)
-  useEffect(() => {
-    if (!kabeLive) { // ★ üç kanal da HLS — sekme değişince yeniden bağlan
-      if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; }
-      return;
-    }
-    setKabeStatus("loading");
-    const t = setTimeout(() => startKabeHls(), 60);
-    return () => { clearTimeout(t); if (kabeHlsRef.current) { kabeHlsRef.current.destroy(); kabeHlsRef.current = null; } };
-  }, [kabeLive, kabeTab, startKabeHls]);
-
   const surah = SURAHS_DATA.find(s => s.n === surahNo) ?? SURAHS_DATA[0];
   const ayah = ayahs.find(a => a.n === ayahNo);
 
@@ -1752,107 +1697,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         </div>
       )}
 
-      {/* ══════════ KÂBE CANLI YAYIN MODALI — iki kanal ══════════ */}
-      {kabeLive && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={() => setKabeLive(false)}>
-          <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-gold/30 bg-[#131322] shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <p className="text-[12px] font-black text-gold">🕋 Kâbe — Mescid-i Haram Canlı Yayın</p>
-              <button onClick={() => setKabeLive(false)} className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
-            </div>
-            {/* ★ KANAL SEKMELERİ */}
-            <div className="flex gap-2 border-b border-white/10 px-4 py-2">
-              <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Suudi resmî Quran TV — kesintisiz Kur'an tilaveti ve Mekke/Medine ibadet görüntüleri">
-                📖 KUR'AN TV
-              </button>
-              <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
-                📖 KUR'AN TV HD
-              </button>
-              <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Mescid-i Nebi (Medine) resmî Suudi Sunnah TV — kesintisiz yayın, YouTube'suz">
-                🕌 MEDİNE CANLI
-              </button>
-            </div>
-            <div ref={kabeWrapRef} className="relative aspect-video w-full bg-black [&:fullscreen]:aspect-auto [&:fullscreen]:h-full [&:fullscreen]:w-full">
-              {/* ★ TAM EKRAN BUTONU — sağ üstte, üç kanalda da çalışır */}
-              <button
-                onClick={() => {
-                  const el = kabeWrapRef.current;
-                  if (!el) return;
-                  if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
-                  else el.requestFullscreen().catch(() => undefined);
-                }}
-                className="absolute right-2 top-2 z-20 rounded-lg bg-black/70 px-2.5 py-1.5 text-[13px] leading-none text-white/90 backdrop-blur-sm transition hover:bg-black/90 hover:text-gold"
-                title="Tam ekran (çıkmak için tekrar bas veya ESC)"
-              >
-                ⛶
-              </button>
-              {/* ★ ÜÇ KANAL DA YouTube'suz kendi proxy'mizden HLS oynar — hata 153 ve iframe kalıntısı yok */}
-              <video
-                ref={kabeVideoRef}
-                key={kabeTab}
-                autoPlay
-                muted={kabeMuted}
-                playsInline
-                onClick={() => {
-                  // ★ EKRANA TIKLA = SES AÇ/KAPA: en doğal yol, yayın kesilmez
-                  const nm = !kabeMuted;
-                  setKabeMuted(nm);
-                  const v = kabeVideoRef.current;
-                  if (v) { v.muted = nm; v.volume = nm ? 0 : kabeVolume; }
-                }}
-                className="h-full w-full cursor-pointer"
-                onPlaying={() => setKabeStatus("playing")}
-                onError={() => setKabeStatus("error")}
-              />
-              {kabeMuted && kabeStatus === "playing" && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
-                  <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">🔇 Ses için ekrana dokun</span>
-                </div>
-              )}
-              {kabeStatus === "loading" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-                  <p className="text-[10px] font-bold text-gold/70">Canlı yayına bağlanıyor…</p>
-                </div>
-              )}
-              {kabeStatus === "error" && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                  <p className="text-[11px] font-black text-[#f5dda6]">Yayın şu an açılamadı</p>
-                  <button onClick={() => { setKabeStatus("loading"); startKabeHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
-                </div>
-              )}
-              {/* ★ SES KONTROLÜ — sağ altta: aç/kapa + kaydırıcılı seviye (yayını KESMEDEN çalışır) */}
-              {kabeStatus === "playing" && (
-                <div className="absolute bottom-2 right-2 flex items-center gap-1.5 rounded-full bg-black/70 px-2 py-1 backdrop-blur-sm">
-                  <button onClick={() => setKabeMuted(m => {
-                    const nm = !m;
-                    const v = kabeVideoRef.current;
-                    if (v) { v.muted = nm; v.volume = nm ? 0 : kabeVolume; }
-                    return nm;
-                  })} className="text-[13px] leading-none text-white/90 transition hover:text-gold" title={kabeMuted ? "Sesi aç" : "Sesi kapat"}>
-                    {kabeMuted || kabeVolume === 0 ? "🔇" : kabeVolume < 0.5 ? "🔉" : "🔊"}
-                  </button>
-                  <input
-                    type="range" min={0} max={1} step={0.05} value={kabeMuted ? 0 : kabeVolume}
-                    onChange={(e) => {
-                      const vol = Number(e.target.value);
-                      setKabeVolume(vol);
-                      setKabeMuted(vol === 0);
-                      const v = kabeVideoRef.current;
-                      if (v) { v.volume = vol; v.muted = vol === 0; }
-                    }}
-                    className="h-1 w-16 cursor-pointer accent-[#D7AA41]"
-                    title="Ses seviyesi"
-                  />
-                </div>
-              )}
-            </div>
-            <p className="px-4 py-2 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">
-              {kabeTab === "quran" ? "📖 Suudi Quran TV — kesintisiz Kur'an tilaveti + Mekke/Medine ibadet görüntüleri (ses düğmesi sağ altta)" : kabeTab === "live" ? "📖 Katar Quran TV HD — kesintisiz Kur'an tilaveti, YouTube'suz Akamai CDN (ses düğmesi sağ altta)" : "🕌 Mescid-i Nebi — Medine canlı yayın, Suudi Sunnah TV (ses düğmesi sağ altta)"}
-            </p>
-          </div>
-        </div>
-      )}
+      {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
+      <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} />
     </div>
   );
 };

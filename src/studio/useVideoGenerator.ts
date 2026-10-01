@@ -2,16 +2,17 @@ import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { reciterAudioUrl } from "../reciters";
 import { checkRateLimit } from "../rateLimiter";
-import { JETON, getJeton, setJeton as persistJetonSecure, videoMaliyeti, consumeVideo, MODE_TO_KIND } from "../tier";
+import { JETON, videoMaliyeti, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
-import { duzelt, nefesAraliklariEkle, type SesSegmenti } from "./sesZamanlama";
-import type { KendiSesAktif } from "./useKendiSes";
-import type { Aspect, Mode, Output, SelectedAyah, User } from "../types";
-import { GUEST_FREE_VIDEOS } from "./useGuestTrial";
+import { storeVideo } from "./videoStore";
+import { checkGuestGate, bumpGuestUsed } from "./useGuestTrial";
+import { telifUyarisiGerekli } from "../telifUyari";
+import { uretimIstYaz } from "../components/islamicToolsVucut";
+import type { Aspect, LoginTab, Mode, ModalName, Output, SelectedAyah, User } from "../types";
 
 interface UseVideoGeneratorParams {
   generating: boolean;
@@ -20,10 +21,8 @@ interface UseVideoGeneratorParams {
   stopGenerationRef: MutableRefObject<() => void>;
   user: User | null;
   isMasterSürüm: boolean;
-  getGuestUsed: () => number;
-  bumpGuestUsed: () => void;
-  setLoginTab: (value: "login" | "register" | "forgot" | "verify") => void;
-  setModal: (value: "login" | null) => void;
+  setLoginTab: (value: LoginTab) => void;
+  setModal: (value: ModalName) => void;
   notify: (message: string) => void;
   selected: SelectedAyah[];
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
@@ -31,79 +30,99 @@ interface UseVideoGeneratorParams {
   batchFormats: Aspect[];
   aspect: Aspect;
   mode: Mode;
-  accessTier: any;
-  renderAuthLive: boolean;
+  accessTier: Tier;
   jetonCount: number;
-  setJetonCount: (value: number) => void;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
   silenceAllAudio: () => void;
+  // ★ Telif uyarısı akışı: ilk üretim basışında bir kere uyarı → kabulde otomatik devam
+  telifDevamRef: MutableRefObject<boolean>;
+  setTelifTetik: (updater: (value: number) => number) => void;
+  // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet onayı
+  showGenerateConfirm: (cost: number, remaining: number, formatCount: number, mode: string) => Promise<boolean>;
+  videoCache: MutableRefObject<Map<string, HTMLVideoElement>>;
+  imageCache: MutableRefObject<Map<string, HTMLImageElement>>;
   ayahBackgroundsRef: MutableRefObject<Record<string, Clip>>;
   backgroundRef: MutableRefObject<Clip>;
+  verseIndexRef: MutableRefObject<number>;
+  aspectRef: MutableRefObject<Aspect>;
+  setVerseIndex: (value: number) => void;
+  setOutputs: (updater: (current: Output[]) => Output[]) => void;
+  setActiveOutputId: (value: string) => void;
   ensureImage: (url: string) => HTMLImageElement;
   ensureVideo: (url: string, fallbackUrl?: string) => HTMLVideoElement;
-  renderQuality: { renderFps: number; bitrateScale: number; audioBitrate: number };
-  aspectRef: MutableRefObject<Aspect>;
-  verseIndexRef: MutableRefObject<number>;
-  setVerseIndex: (value: number | ((value: number) => number)) => void;
-  setOutputs: (value: (current: Output[]) => Output[]) => void;
-  setActiveOutputId: (value: string) => void;
+  renderQuality: { low: boolean; renderFps: number; bitrateScale: number; audioBitrate: number };
   t: (key: any) => string;
-  /** ★ KENDİ SES (30.09): aktif kullanıcı sesi — verilirse reciter YOK SAYILIR */
-  kendiSesAktif: KendiSesAktif | null;
 }
 
+/**
+ * ★ VİDEO ÜRETİM MOTORU (01.10 — StudioApp'teki inline handleGenerate buraya taşındı)
+ *
+ * Akış: misafir kapısı → rate limit → telif uyarısı → sunucu yetkisi (/api/render/authorize)
+ * → maliyet onayı → ses indirme/decode → offline miks → canvas kaydı (adaptif FPS/bitrate,
+ * frame pump, WebM duration düzeltme) → IndexedDB saklama + üretici istatistiği.
+ */
 export function useVideoGenerator(params: UseVideoGeneratorParams) {
+  const {
+    generating,
+    setGenerating,
+    setProgress,
+    stopGenerationRef,
+    user,
+    isMasterSürüm,
+    setLoginTab,
+    setModal,
+    notify,
+    selected,
+    canvasRef,
+    reciter,
+    batchFormats,
+    aspect,
+    mode,
+    accessTier,
+    jetonCount,
+    silenceAllAudio,
+    telifDevamRef,
+    setTelifTetik,
+    showGenerateConfirm,
+    videoCache,
+    imageCache,
+    ayahBackgroundsRef,
+    backgroundRef,
+    verseIndexRef,
+    aspectRef,
+    setVerseIndex,
+    setOutputs,
+    setActiveOutputId,
+    ensureImage,
+    ensureVideo,
+    renderQuality,
+    t,
+  } = params;
+
   return useCallback(async () => {
-    const {
-      generating,
-      setGenerating,
-      setProgress,
-      stopGenerationRef,
-      user,
-      isMasterSürüm,
-      getGuestUsed,
-      bumpGuestUsed,
-      setLoginTab,
-      setModal,
-      notify,
-      selected,
-      canvasRef,
-      reciter,
-      batchFormats,
-      aspect,
-      mode,
-      accessTier,
-      renderAuthLive,
-      jetonCount,
-      setJetonCount,
-      openPremium,
-      silenceAllAudio,
-      ayahBackgroundsRef,
-      backgroundRef,
-      ensureImage,
-      ensureVideo,
-      renderQuality,
-      aspectRef,
-      verseIndexRef,
-      setVerseIndex,
-      setOutputs,
-      setActiveOutputId,
-      t,
-      kendiSesAktif,
-    } = params;
-
-    if (generating) {
-      stopGenerationRef.current();
-      return;
-    }
-
+    if (generating) { stopGenerationRef.current(); return; }
+    // ★ MİSAFİR DENEME + KÖTÜYE KULLANIM FRENİ: üye olmayan da kalan hakkı varsa
+    //   deneme videosu üretebilir ama: (1) toplam 2 hak, (2) günde en fazla 4 üretim
+    //   (sayaç silse bile), (3) iki üretim arası 2 dk cooldown — F5 spam ile seri
+    //   üretim imkansız. Hakkı/günü biten misafir kayıt modalına yönlendirilir.
+    const misafirGate = user || isMasterSürüm ? { allowed: true, remaining: 0 } : checkGuestGate();
     if (!user && !isMasterSürüm) {
-      notify("🎁 Video üretmek için lütfen Google ile 3 saniyede ücretsiz üye olun, +20 ücretsiz jeton kazanın");
-      setLoginTab("register");
-      setModal("login");
-      return;
+      if (misafirGate.reason === "bekle") {
+        notify(`⏳ Deneme videoları arasında kısa bir mola var · ${misafirGate.retryAfterSec} sn sonra tekrar dene`);
+        return;
+      }
+      if (misafirGate.reason === "günlük-sınır") {
+        notify("🌙 Bugünkü deneme hakkın doldu · yarın tekrar gelirsin ya da hemen ücretsiz üye olabilirsin");
+        setLoginTab("register");
+        setModal("login");
+        return;
+      }
+      if (!misafirGate.allowed) {
+        notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +20 jeton kazan");
+        setLoginTab("register");
+        setModal("login");
+        return;
+      }
     }
-
     const rl = checkRateLimit("video");
     if (!rl.allowed) {
       notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`);
@@ -111,29 +130,32 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     }
     if (!selected.length) { notify("Önce en az bir ayet seçin"); return; }
     if (!window.MediaRecorder) { notify("Tarayıcınız video üretimini desteklemiyor"); return; }
-
+    // ★ TELİF UYARISI — SADECE İLK üretim basışında BİR KERE:
+    //   uyarı kabul edilmemişse bayrak konur, uyarı açılır; "Anladım" deyince
+    //   üretim otomatik kaldığı yerden DEVAM eder (ikinci tıklama gerekmez).
+    //   Girişte/refresh'te ASLA çıkmaz — sadece üretim akışı tetikler.
+    if (telifUyarisiGerekli()) {
+      telifDevamRef.current = true;
+      setTelifTetik((v) => v + 1);
+      return;
+    }
+    // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
     const canvasEl = canvasRef.current;
     if (!canvasEl || typeof canvasEl.captureStream !== "function") {
       notify("⚠️ Bu tarayıcı canvas kaydını desteklemiyor · Chrome, Edge veya güncel Safari kullanın");
       return;
     }
-
-    // ★ KENDİ SES DALI (30.09): aktif kullanıcı sesi varsa reciter tamamen yok sayılır.
-    //   Zamanlamalar kullanıcının SESİNDEN algılanmıştır (sesZamanlama.ts) — hızlı da
-    //   okusa yavaş da, ayet/arka plan geçişleri kendi okuyuşuna kilitli.
-    const kendiSesModu = Boolean(kendiSesAktif && kendiSesAktif.segments.length);
-    const surahOnlyReciter = !kendiSesModu && Boolean(reciter.surahPattern);
+    const surahOnlyReciter = Boolean(reciter.surahPattern);
     if (surahOnlyReciter && !isWholeSurahSelected(selected, SURAHS)) {
       notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
       return;
     }
-
     const formatCount = Math.max(batchFormats.length, 1);
     const costPerVideo = videoMaliyeti(mode, accessTier);
     const isGuest = !user && !isMasterSürüm;
+    // God Mode ve misafir deneme videolarında jeton harcanmaz
     const isAdmin = user?.isAdmin === true;
     const totalCost = isMasterSürüm || isGuest || isAdmin ? 0 : costPerVideo * formatCount;
-
     if (!isMasterSürüm && !isGuest) {
       try {
         const response = await fetch("/api/render/authorize", {
@@ -151,123 +173,99 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         return;
       }
     }
-
-    if (jetonCount < totalCost) {
-      notify(`Bu üretim için ${totalCost} hak gerekiyor · mevcut: ${jetonCount}`);
-      openPremium("jeton");
-      return;
+    // ★ YANLIŞ KAPI FIX (30.09, kullanıcı bildirimi): jetonCount kontrolü SADECE satın
+    //   alınan paket haklarını sayıyordu — günlük kota hakkı (free: 3/gün) hesaba
+    //   katılmadığı için hakkı olan kullanıcı satın alma modalına atılıyordu.
+    //   Ücretlendirme TEK DOĞRULUK KAYNAĞI olarak sunucuda yapılır: /api/render/authorize
+    //   atomik RPC ile kotayı+paketi doğru hesaplar, hakkı yoksa 402 + dürüst mesaj döner
+    //   (yukarıdaki authorize bloğu zaten bu cevabı notify ile gösterir). İkinci bir
+    //   yanlış kapı burada OLAMAZ — kaldırıldı.
+    // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
+    if (!isMasterSürüm && !isGuest && totalCost > 0 && (accessTier === "free" || accessTier === "pro")) {
+      const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode);
+      if (!confirmed) return;
     }
-
-    let charged = false;
+    let jetonCharged = false;
     let userStopped = false;
     silenceAllAudio();
-    setGenerating(true);
-    setProgress(2);
 
-    try {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const audioContext = new AudioContextClass();
-      const buffers: AudioBuffer[] = [];
-      const usedItems: SelectedAyah[] = [];
-      const audioOffsets: number[] = [];
-      const ayahDurations: Array<{ start: number; dur: number }> = [];
-      const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
-      let cursor = 0;
-
-      if (kendiSesModu) {
-        setProgress(8);
-        // ★ KULLANICININ KENDİ SESİ — segmentler kendi okuyuşundan algılandı.
-        //   Tek buffer yüklenir; ayahDurations = algılanan/düzenlenen segmentler.
-        const buffer = await audioContext.decodeAudioData(await kendiSesAktif!.blob.arrayBuffer());
-        audioOffsets.push(0);
-        buffers.push(buffer);
-        usedItems.push(...selected);
-        // nefes aralığı zaten segmentlere uygulanmış (hook'ta); ham start'lar buffer içi
-        const ham: SesSegmenti[] = kendiSesAktif!.segments.map((s) => ({ start: s.start, dur: s.dur }));
-        const etkin = duzelt(ham, buffer.duration);
-        cursor = Math.min(buffer.duration, cap);
-        // cap aşımı: son ayetlerden düşme YOK — kendi sesinde kullanıcıya dürüst uyarı,
-        //   kısaltma yerine segmentler cap'a göre YENİDEN ÖLÇEKLENİR (okuyuş bozulmaz).
-        const hamToplam = etkin.length ? etkin[etkin.length - 1].start + etkin[etkin.length - 1].dur : buffer.duration;
-        const olcek = hamToplam > cap ? cap / hamToplam : 1;
-        etkin.forEach((seg) => {
-          ayahDurations.push({ start: seg.start * olcek, dur: seg.dur * olcek });
+    // ★ BELLEK OPTİMİZASYONU: Eski/Düşük RAM'li cihazlar için preloaded video ve resimleri temizle
+    if (renderQuality.low) {
+      try {
+        videoCache.current.forEach((video) => {
+          try {
+            video.pause();
+            video.removeAttribute("src");
+            video.load();
+          } catch {}
         });
-        if (olcek < 1) notify(`ℹ️ Okuyuşun ${Math.round(hamToplam)} sn · seçili mod sınırı ${Math.round(cap)} sn — tüm ayetler korunarak hafifçe hızlandırıldı`);
-        // ayet-başına arka plan: kendiSes modunda da aynen atanmış olanlar kullanılır
-        setProgress(12);
-      } else if (surahOnlyReciter) {
+        videoCache.current.clear();
+        imageCache.current.clear();
+      } catch (err) {
+        console.warn("Bellek temizleme hatası:", err);
+      }
+    }
+
+    setGenerating(true); setProgress(2);
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext, audioContext = new AudioContextClass();
+      const buffers: AudioBuffer[] = [], usedItems: SelectedAyah[] = [], audioOffsets: number[] = [];
+      const ayetSüreleri: Array<{ start: number; dur: number }> = [];
+      const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
+      if (surahOnlyReciter) {
         setProgress(10);
         const sNum = selected[0].s;
         const url = reciter.surahPattern!.replace("{S}", String(sNum).padStart(3, "0"));
-        selected.forEach((item) => { ayahBackgroundsRef.current[item.id] = backgroundRef.current; });
+        // ★ Muhammed el-Fakîh hocada atmosferlerin hızlı hızlı geçmesini engelle
+        // ★ KULLANICI MEDYASI KUTSAL (30.09): "Yüklediklerim" slotları ana arka planla
+        //   EZİLMEZ — kullanıcının kendi dosyası üretimde aynen kalır.
+        selected.forEach((item) => {
+          const mevcut = ayahBackgroundsRef.current[item.id];
+          if (mevcut && mevcut.cat === "yuklenenler") return;
+          ayahBackgroundsRef.current[item.id] = backgroundRef.current;
+        });
         try {
           const response = await fetch(url);
           if (response.ok) {
             const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
-            audioOffsets.push(0);
-            buffers.push(buffer);
-            usedItems.push(...selected);
+            audioOffsets.push(0); buffers.push(buffer); usedItems.push(...selected);
             cursor = Math.min(buffer.duration, cap) + 0.03;
-            const sureSuresi = cursor - 0.03;
-            const eachAyah = sureSuresi / Math.max(selected.length, 1);
-            selected.forEach((_, i) => { ayahDurations.push({ start: eachAyah * i, dur: eachAyah }); });
+            const sureSüresi = cursor - 0.03;
+            const herAyetSüresi = sureSüresi / Math.max(selected.length, 1);
+            selected.forEach((_, i) => { ayetSüreleri.push({ start: herAyetSüresi * i, dur: herAyetSüresi }); });
           }
         } catch { /* ignore */ }
       } else {
         for (let index = 0; index < selected.length; index += 1) {
-          const item = selected[index];
-          setProgress(4 + Math.round((index / selected.length) * 22));
+          const item = selected[index]; setProgress(4 + Math.round((index / selected.length) * 22));
           try {
             const response = await fetch(reciterAudioUrl(reciter.path, item.s, item.a));
             if (!response.ok) continue;
             const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
             if (cursor > 0 && cursor + buffer.duration > cap) break;
-            audioOffsets.push(cursor);
-            buffers.push(buffer);
-            usedItems.push(item);
-            ayahDurations.push({ start: cursor, dur: buffer.duration });
-            cursor += buffer.duration + 0.03;
-          } catch { /* ignore */ }
+            audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
+            ayetSüreleri.push({ start: cursor, dur: buffer.duration });
+            cursor += buffer.duration + .03;
+          } catch { }
         }
       }
-
       if (!surahOnlyReciter && usedItems.length < selected.length) {
         const dropped = selected.length - usedItems.length;
-        const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm";
+        const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (24:35)";
         notify(`⚠️ ${modeLabel} süresi aşıldı · son ${dropped} ayet eklenmedi · ${usedItems.length} ayet ile üretiliyor`);
       }
       if (!buffers.length) throw new Error("Ses dosyaları alınamadı");
-
-      const total = cursor - 0.03;
-      const offline = new OfflineAudioContext(2, Math.ceil((total + 0.1) * 48000), 48000);
-      buffers.forEach((buffer, index) => {
-        const source = offline.createBufferSource();
-        const gain = offline.createGain();
-        source.buffer = buffer;
-        const start = audioOffsets[index];
-        const end = start + buffer.duration;
-        const fadeIn = Math.min(0.06, buffer.duration * 0.1);
-        const fadeOut = Math.min(0.15, buffer.duration * 0.1);
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.92, start + fadeIn);
-        gain.gain.setValueAtTime(0.92, Math.max(start + fadeIn, end - fadeOut));
-        gain.gain.linearRampToValueAtTime(0.001, end);
-        source.connect(gain).connect(offline.destination);
-        source.start(start);
-      });
-
-      setProgress(28);
-      const rendered = await offline.startRendering();
-      const canvas = canvasRef.current;
-      if (!canvas) throw new Error("Önizleme bulunamadı");
+      const total = cursor - .03, offline = new OfflineAudioContext(2, Math.ceil((total + .1) * 48000), 48000);
+      buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index], end = start + buffer.duration; const fadeIn = Math.min(.06, buffer.duration * .1), fadeOut = Math.min(.15, buffer.duration * .1); gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.92, start + fadeIn); gain.gain.setValueAtTime(.92, Math.max(start + fadeIn, end - fadeOut)); gain.gain.linearRampToValueAtTime(0.001, end); source.connect(gain).connect(offline.destination); source.start(start); });
+      setProgress(28); const rendered = await offline.startRendering(), canvas = canvasRef.current; if (!canvas) throw new Error("Önizleme bulunamadı");
 
       const renderClips = usedItems.map((item) => ayahBackgroundsRef.current[item.id] || backgroundRef.current);
       const uniqueRenderClips = Array.from(new Map(renderClips.map((clip) => [clip.id, clip])).values());
       await Promise.all(uniqueRenderClips.map((clip) => new Promise<void>((resolve) => {
         if (clip.kind === "img") {
+          // ★ Render için 1080p sürümü önceden yükle (keskin çıktı)
           const image = ensureImage(toHiRes(clip.src));
-          ensureImage(clip.src);
+          ensureImage(clip.src); // yedek thumbnail
           if (image.complete && image.naturalWidth > 0) { resolve(); return; }
           const done = () => resolve();
           image.addEventListener("load", done, { once: true });
@@ -296,104 +294,64 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           void getPosterUrl(clip).catch(() => undefined);
         }).catch(() => { resolve(); });
       })));
-
+      // ★ Render öncesi tüm seçili videolara ısınma payı ver.
+      // R2/CDN ilk frame'i geç getirirse ilk ayetler donuk kaydoluyordu.
       await new Promise((resolve) => window.setTimeout(resolve, 1200));
       const formats = batchFormats.length ? batchFormats : [aspect];
       for (let formatIndex = 0; formatIndex < formats.length; formatIndex += 1) {
-        const outputAspect = formats[formatIndex];
-        aspectRef.current = outputAspect;
-        const [width, height] = dimensions(outputAspect);
-        canvas.width = width;
-        canvas.height = height;
+        const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect;
+        let [width, height] = dimensions(outputAspect);
+        if (renderQuality.low) {
+          width = Math.round(width * 0.66);
+          height = Math.round(height * 0.66);
+        }
+        canvas.width = width; canvas.height = height;
         verseIndexRef.current = 0;
         setVerseIndex(0);
         await new Promise((resolve) => window.setTimeout(resolve, 240));
-
-        const stream = canvas.captureStream(renderQuality.renderFps);
-        const destination = audioContext.createMediaStreamDestination();
-        const player = audioContext.createBufferSource();
-        player.buffer = rendered;
-        player.connect(destination);
+        // ★ Cihaza göre adaptif FPS/bitrate: kötü cihazlarda donma/kasma azaltılır
+        const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
+        // ★ Bazı Chrome/VLC/WebM kombinasyonlarında canvas capture sadece ilk frame'i yazıyor.
+        //   requestFrame destekleniyorsa kayıt boyunca manuel frame pompalıyoruz.
         const canvasTrack = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
-        const framePump = window.setInterval(() => { try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ } }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
-        const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]);
-        const mime = pickMime();
+        const framePump = window.setInterval(() => {
+          try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ }
+        }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
+        const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]), mime = pickMime();
         const pxCount = width * height;
         const baseBitrate = pxCount >= 1920 * 1080 ? 24_000_000 : pxCount >= 1080 * 1350 ? 20_000_000 : 16_000_000;
         const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
         const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
-        const chunks: Blob[] = [];
-        // ★ HİBRİT DİSK-AKIŞ: 5 dk üstü üretimde chunk'lar diske yazılır (RAM güvende),
-        //   ama bitince dosyadan File-BACKED URL yapılır → site içi oynatıcı + indirme
-        //   birlikte çalışır. URL diski referans gösterir, 11 GB RAM'e yüklenmez.
-        const LONG_RENDER_MS = 5 * 60 * 1000; // 5 dk üstü üretimde disk-akış modu
-        const savePicker = (window as unknown as { showSaveFilePicker?: (opts?: unknown) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
-        const useStreamDump = total * 1000 > LONG_RENDER_MS && typeof savePicker === "function";
-        let dumpStream: FileSystemWritableFileStream | null = null;
-        let saveHandle: FileSystemFileHandle | null = null;
-        let dumpedBytes = 0;
-        let dumpChain: Promise<void> = Promise.resolve();
-        // ★ İptal/işlem tamamlanmama bilinci: kullanıcı kaydet penceresini kapatırsa
-        //   RAM moduna düştüğünü BİLSİN — uzun üretimde RAM dolabilir uyarısıyla.
-        let saveDeclined = false;
-        let dumpFailed = false;
-        if (useStreamDump) {
-          try {
-            savePicker?.({ suggestedName: `nurstudyo-${usedItems[0]?.sName || "sure"}-${Math.round(total / 60)}dk.webm`, types: [{ description: "Video", accept: { "video/webm": [".webm"] } }] })
-              .then(async (handle: FileSystemFileHandle) => {
-                saveHandle = handle;
-                dumpStream = await handle.createWritable();
-              })
-              .catch(() => {
-                // kullanıcı iptal etti — RAM moduna düş, ama haber ver
-                saveDeclined = true;
-                notify(`ℹ️ Dosya kaydetme iptal edildi · üretim tarayıcı belleğinde devam ediyor${total >= 30 ? " — uzun üretimde bellek dolarsa kesilebilir" : ""}`);
-              });
-          } catch { saveDeclined = true; /* desteklenmiyor */ }
-        }
-        recorder.ondataavailable = (event) => {
-          if (!event.data.size) return;
-          // disk-akış modu aktifse chunk'ı sıralı olarak diske yaz, RAM kuyruğu kısa tut
-          if (dumpStream) {
-            const piece = event.data;
-            dumpChain = dumpChain
-              .then(() => dumpStream!.write(piece))
-              .then(() => { dumpedBytes += piece.size; })
-              .catch(() => {
-                // disk yazımı patladı (disk dolu, dosya kilidi vs.) — RAM'e düş
-                if (!dumpFailed) {
-                  dumpFailed = true;
-                  notify("⚠️ Diske yazım kesildi · üretim tarayıcı belleğinde sürüyor — bitince dosyayı hemen indirin");
-                }
-                chunks.push(piece);
-              });
-          } else {
-            chunks.push(event.data);
-          }
-        };
-        const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); });
-        const startedAt = performance.now();
-        let finished = false;
-        let safetyTimer = 0;
+        const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
         let lastVisualIndex = 0;
         let lastProgress = -1;
+        // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
+        //   canvas draw'u bloke edip video donmasına yol açıyordu.
         const syncTimer = window.setInterval(() => {
           const elapsed = (performance.now() - startedAt) / 1000;
           const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
           const nextProgress = 30 + Math.round(currentProgress * 67);
-          if (nextProgress !== lastProgress) { lastProgress = nextProgress; setProgress(nextProgress); }
+          if (nextProgress !== lastProgress) {
+            lastProgress = nextProgress;
+            setProgress(nextProgress);
+          }
           let idx = 0;
-          for (let i = 0; i < ayahDurations.length; i += 1) if (elapsed >= ayahDurations[i].start) idx = i;
+          for (let i = 0; i < ayetSüreleri.length; i += 1) {
+            if (elapsed >= ayetSüreleri[i].start) idx = i;
+          }
           if (idx !== lastVisualIndex) {
             lastVisualIndex = idx;
+            // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
+            //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
             verseIndexRef.current = idx;
             const activeClip = renderClips[idx];
             if (activeClip?.kind === "vid") {
               try {
                 const activeVideo = ensureVideo(getVideoUrlSync(activeClip), isR2Media(activeClip) ? undefined : activeClip.src);
-                const localTime = Math.max(0, elapsed - (ayahDurations[idx]?.start ?? 0));
+                const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
                 if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
-                  const nextTime = localTime % Math.max(0.5, activeVideo.duration - 0.1);
+                  const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));
                   if (Math.abs(activeVideo.currentTime - nextTime) > 0.75) activeVideo.currentTime = nextTime;
                 }
                 activeVideo.play().catch(() => undefined);
@@ -401,116 +359,73 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             }
           }
         }, 200);
-
-        const finishRecording = () => {
-          if (finished) return;
-          finished = true;
-          window.clearInterval(syncTimer);
-          window.clearInterval(framePump);
-          window.clearTimeout(safetyTimer);
-          try { player.stop(); } catch { /* ignore */ }
-          if (recorder.state !== "inactive") recorder.stop();
-        };
+        const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
         const userStop = () => { userStopped = true; finishRecording(); };
         stopGenerationRef.current = userStop;
         safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
         player.onended = finishRecording;
+        // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
         recorder.start(1000);
         player.start();
         await stopped;
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
-        // ★ disk-akış modunda bekleyen yazımlar bitmeden dosya KAPANMAZ
-        if (dumpStream) {
-          try { await dumpChain; } catch { /* ignore */ }
-          const ds = dumpStream;
-          dumpStream = null;
-          try { await ds.close(); } catch { /* ignore */ }
-        }
-        if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · hak düşmedi"); continue; }
-
-        // ★ HİBRİT: video diske yazıldı — RAM'de blob YOK ama oynatıcı + indirme
-        //   çalışır: File-URL diskten akıtılır, tarayıcı 11 GB'ı RAM'e YÜKLEMEZ.
-        if (dumpedBytes > 0 && chunks.length === 0 && saveHandle) {
-          setProgress(98);
-          try {
-            const savedFile = await saveHandle.getFile();
-            if (savedFile.size > 0) {
-              const output: Output = {
-                id: uid(),
-                url: URL.createObjectURL(savedFile),
-                mime: savedFile.type || (mime || "video/webm").split(";")[0],
-                size: savedFile.size,
-                duration: total,
-                label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`,
-                ext: (savedFile.type || "").includes("mp4") ? "mp4" : "webm",
-              };
-              setOutputs((current) => [output, ...current].slice(0, 8));
-              setActiveOutputId(output.id);
-              notify(`✅ ${Math.round(total / 60)} dk video hazır — oynatıcıdan izle veya indir (${Math.round(savedFile.size / 1e6)} MB)`);
-              continue;
-            }
-          } catch { /* dosya okunamadıysa aşağıdaki bildirim düşer */ }
-          notify(`✅ ${Math.round(total / 60)} dakikalık video diske kaydedildi (${Math.round(dumpedBytes / 1e6)} MB)`);
-          continue;
-        }
-        // ★ RAM'e düşülen durumlar: bitişte kullanıcıya bellek durumu net söylensin
-        if (saveDeclined && chunks.length > 0) {
-          setProgress(98);
-          notify(`ℹ️ Video tarayıcı belleğinde üretildi (${Math.round(chunks.reduce((s, c) => s + c.size, 0) / 1e6)} MB) — dosyayı kaydetmek için indir butonunu kullanın`);
-        } else if (dumpFailed && dumpedBytes > 0 && chunks.length > 0) {
-          setProgress(98);
-          notify(`⚠️ Üretim yarı diske yarı belleğe yazıldı — video hazır, indir butonuyla kaydedin`);
-        }
-
+        if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
+        // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
+        //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
         const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
         if (blob.type.includes("webm")) {
           blob = await new Promise<Blob>((resolve) => {
             let settled = false;
             const finish = (fixed: Blob) => { if (!settled) { settled = true; resolve(fixed); } };
             try {
-              fixWebmDuration(blob, recordedMs, (fixedBlob) => finish(fixedBlob && fixedBlob.size > 0 ? fixedBlob : blob));
+              // TikTok/WhatsApp/Galeri için duration metadata düzelt
+              fixWebmDuration(blob, recordedMs, (fixedBlob) => {
+                // MP4 olarak da dene (daha iyi uyumluluk)
+                if (fixedBlob && fixedBlob.size > 0) {
+                  finish(fixedBlob);
+                } else {
+                  finish(blob);
+                }
+              });
+              // Fallback: 5 saniye içinde düzelmezse orijinali kullan
               window.setTimeout(() => finish(blob), 5000);
-            } catch {
+            } catch (err) {
+              console.error('fixWebmDuration hatası:', err);
               finish(blob);
             }
           });
         }
-        const output: Output = {
-          id: uid(),
-          url: URL.createObjectURL(blob),
-          mime: blob.type,
-          size: blob.size,
-          duration: total,
-          label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`,
-          ext: blob.type.includes("mp4") ? "mp4" : "webm",
-        };
-        setOutputs((current) => [output, ...current].slice(0, 8));
-        setActiveOutputId(output.id);
+        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
+        setOutputs((current) => [output, ...current].slice(0, 5)); setActiveOutputId(output.id);
+        // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
+        //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).
+        void storeVideo({ id: output.id, label: output.label, mime: output.mime, ext: output.ext, size: output.size, duration: output.duration, blob });
+        // ★ ÜRETİCİ İSTATİSTİĞİ (İş 42) — başarılı üretimde yerel sayaç +1 (cihazda kalır)
+        try { uretimIstYaz(mode); window.dispatchEvent(new Event("uretim-istatistik")); } catch { /* yoksay */ }
       }
-
-      if (!isMasterSürüm && !userStopped && !charged) {
+      if (!isMasterSürüm && !userStopped && !jetonCharged) {
         setProgress(98);
-        if (isGuest) bumpGuestUsed();
+        if (isGuest) {
+          // ★ Misafir: jeton düşmez, sadece deneme hakkı azalır
+          bumpGuestUsed();
+        }
+        jetonCharged = true;
         // Authenticated production rights are consumed atomically by /api/render/authorize.
-        charged = true;
       }
       if (userStopped) { audioContext.close().catch(() => undefined); return; }
-      audioContext.close().catch(() => undefined);
-      setProgress(100);
+      audioContext.close().catch(() => undefined); setProgress(100);
       notify(t("successVideoReady"));
     } catch (error) {
+      console.error(error);
       reportRenderError(error);
       // ★ TAM TARAMA (29.09): "Ses dosyaları alınamadı" artık anlaşılır Türkçe mesaj veriyor
       if (!userStopped) notify(error instanceof Error && error.message.includes("Ses dosyaları alınamadı")
         ? "⚠️ Hoca sesleri indirilemedi — internet bağlantını kontrol edip tekrar dene"
         : "Video üretimi sırasında teknik bir takılma oluştu");
-    } finally {
-      aspectRef.current = aspect;
-      setGenerating(false);
-      window.setTimeout(() => setProgress(0), 500);
     }
-  }, [params]);
+    finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
+  }, [aspect, batchFormats, generating, jetonCount, mode, notify, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, user, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate, showGenerateConfirm, setOutputs, setActiveOutputId, setVerseIndex, setGenerating, setProgress, setLoginTab, setModal, setTelifTetik]);
 }

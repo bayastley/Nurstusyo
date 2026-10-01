@@ -234,14 +234,35 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       //   yanlış 40 kar.) → "en uzun şık doğru" taktiği testi bozuyordu. Artık her
       //   yanlış şık, doğru devamla AYNI kelime sayısına kadar kesilir (kelime bazlı),
       //   yani uzunluk ipucu ortadan kalkar; doğru/yanlış ayrımı yalnız hafızadan olur.
+      // ★ KARAKTER BANDI YAMASI (01.10, kullanıcı isteği): kelime sayısı eşit olsa bile
+      //   harf uzunlukları farklı olabilir (kısa kelimeler → belirgin kısa şık). Şimdi
+      //   her yanlış aday, doğru devamın %70–130 bandına çekilir: kısaysa kaynak metinden
+      //   ek kelimeler eklenir, uzarsa kesilir. Böylece karakter düzeyinde de ipucu kalmaz.
       const devamKelime = devam.split(/\s+/).filter(Boolean).length;
       const kelimeKes = (t: string, n: number) => { const w = t.split(/\s+/).filter(Boolean); return w.slice(0, Math.max(1, n)).join(" "); };
+      // %70–130 karakter bandına çekme: kisaysa fazladan kelime ekle, uzarsa kelime sınırında kes
+      const bandaCek = (aday: string, kaynak: string): string => {
+        let s = aday.trim();
+        const minLen = Math.floor(devam.length * 0.7);
+        const maxLen = Math.ceil(devam.length * 1.3);
+        const kaynakKelime = kaynak.split(/\s+/).filter(Boolean);
+        // Kaynak kelimeler biterse BAŞA SARAR (modulo) — kısa kaynakta bile minLen'e ulaşılır.
+        let guven = 0;
+        while (s.length < minLen && kaynakKelime.length > 0 && guven < 500) { s += " " + kaynakKelime[guven % kaynakKelime.length]; guven += 1; }
+        if (s.length > maxLen) {
+          const w = s.split(/\s+/).filter(Boolean);
+          while (w.length > 1 && w.join(" ").length > maxLen) w.pop();
+          s = w.join(" ");
+          if (s.length > maxLen) s = s.slice(0, Math.max(minLen, maxLen - 1)).trim();
+        }
+        return s;
+      };
       const yanlisHavuz: string[] = [];
       for (const a of ayahs) {
         const t = a.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").trim();
         if (t !== tam && t.length > 25) {
           const k = t.slice(Math.floor(t.length / 3));
-          const aday = kelimeKes(k, devamKelime);
+          const aday = bandaCek(kelimeKes(k, devamKelime), k);
           if (aday !== devam && !yanlisHavuz.includes(aday)) yanlisHavuz.push(aday);
         }
       }
@@ -249,10 +270,10 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         // ★ Dolgu üretici çeşitlilik: aynı ters-çevrilmiş metni tekrar etmesin diye her
         //   turda farklı bir permütasyon/kesim üretir; yine de tekil olmayan atılır.
         const baz = yanlisHavuz.length === 0 ? devam : yanlisHavuz[yanlisHavuz.length - 1];
-        let aday = baz.split(/\s+/).reverse().join(" ");
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = kelimeKes(tam, devamKelime) + " …";
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = devam.split(/\s+/).slice().sort().join(" ");
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = (baz + " " + tam).split(/\s+/).slice(0, Math.max(1, devamKelime)).join(" ");
+        let aday = bandaCek(baz.split(/\s+/).reverse().join(" "), tam);
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(kelimeKes(tam, devamKelime), tam);
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(devam.split(/\s+/).slice().sort().join(" "), tam);
+        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek((baz + " " + tam).split(/\s+/).slice(0, Math.max(1, devamKelime)).join(" "), tam);
         if (!yanlisHavuz.includes(aday) && aday !== devam) yanlisHavuz.push(aday); else yanlisHavuz.push(aday + " ﴿﴾");
       }
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
