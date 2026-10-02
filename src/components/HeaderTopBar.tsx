@@ -350,7 +350,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           {/* ★ LANSMAN TEMİZLİĞİ (kullanıcı emri 28.09): ADMIN PANEL / ADMIN·ÇIKIŞ
               pill'leri ÜST BAR'DAN KALDIRILDI — yer kaplamasın, arayüz tertemiz.
               Admin kontrolleri artık sol menünün altındaki ADMIN bölümünde (aşağıda). */}
-          <div className="ml-auto flex min-w-0 items-center gap-2 overflow-hidden">
+          {/* ★ overflow-hidden YOK (02.10 fix): dil dropdown'u bu konteynerin ALTINA
+              taşar; overflow-hidden onu klipleyip "buton açıyor ama menü görünmüyor"
+              yapışıyordu. Taşma riski yok — pill'ler zaten sm:flex/hidden ile kısalıyor. */}
+          <div className="ml-auto flex min-w-0 items-center gap-2">
             {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
                 kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
                 admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
