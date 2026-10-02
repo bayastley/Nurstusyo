@@ -259,4 +259,9 @@ export const idDict: Dict = {
   v2StoriesSub: "Admin · konten V2 aktif",
   v2DestekTitle: "Pusat Dukungan & Masukan",
   v2DestekSub: "Kirim saran, pertanyaan atau masalahmu langsung ke tim dukungan kami.",
+
+  // ── 02.10 tam kapsam: TR'de olup ID'de eksik olan 3 anahtar (EN tabanından bağımsız) ──
+  kaaba: "Masjidil Haram / Masjid Nabawi",
+  copyright: "Rekaman Studio Bebas Royalti",
+  akilliAiAcikAciklama: "Smart AI aktif — setiap ayat baru otomatis mendapat suasana yang cocok.",
 };

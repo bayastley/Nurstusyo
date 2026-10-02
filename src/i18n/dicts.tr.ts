@@ -208,6 +208,9 @@ export const trDict: Dict = {
   akilliAiAcik: "AÇIK",
   akilliAiKapali: "KAPALI",
   akilliAiAcUygula: "Aç + Uygula",
+  // ★ 02.10 isim düzeltmesi: kod t("akilliAiAciklama") çağırıyordu, TR'de anahtar
+  //   akilliAiAcikAciklama olduğu için İngilizce'ye düşüyordu. Eski ad da korunuyor.
+  akilliAiAciklama: "Ayetlere göre sahne eşleştirme aktif — yeni eklenen her ayete uygun atmosfer kendiliğinden atanır.",
   akilliAiAcikAciklama: "Ayetlere göre sahne eşleştirme aktif — yeni eklenen her ayete uygun atmosfer kendiliğinden atanır.",
   akilliAiKapaliAciklama: "Kapalı — aç, ayetinin atmosferini AI kendisi seçsin.",
   hocaTilavet: "⚡ HOCA / TİLAVET",
