@@ -127,17 +127,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!(await rateLimit(req, res, "config", 120, 60_000))) return;
   try {
     const now = encodeURIComponent(new Date().toISOString());
-    const [announcements, featureLocks, siteSettings] = await Promise.all([
+    const [announcements, featureLocks, siteSettings, roadmapVotes, roadmapFeatures] = await Promise.all([
       query<any[]>(`nur_announcements?active=eq.true&starts_at=lte.${now}&ends_at=gte.${now}&order=updated_at.desc&limit=1&select=*`),
       query<any[]>("nur_feature_locks?active=eq.true&select=feature_id,lock_level,updated_at"),
       query<any[]>("nur_site_settings?key=eq.maintenance&select=value,updated_at").catch(() => [] as any[]),
+      // ★ OYLAMA LİDERİ (01.10): oy sayımı + V2 etiketi DB'den — hata olursa boş liste (kilitler kalır)
+      query<any[]>("nur_roadmap_votes?select=feature_id").catch(() => [] as any[]),
+      query<any[]>("nur_roadmap_features?select=id,version,active").catch(() => [] as any[]),
     ]);
     const maintenanceRow = Array.isArray(siteSettings) ? siteSettings[0] : null;
     const maintenanceValue = maintenanceRow?.value && typeof maintenanceRow.value === "object" ? { ...maintenanceRow.value, updated_at: maintenanceRow.updated_at } : null;
+    // ═══ OYLAMA LİDERİ → OTOMATİK FREE (01.10 — "kilitlerin oy devraldığı" mekanizma) ═══
+    // Roadmap'in AKTİF V2 kalemleri arasındaki oy lideri bulunur; kapı modülüne
+    // karşılık geliyorsa cevapta lock_level:"free" olarak DAĞITILIR (DB'ye yazılmaz —
+    // türevsel). Admin'in o kaleme koyduğu açık kilit (free dışı) önceliklidir.
+    // Eşleşme tablosu: roadmap feature_id ↔ ModalsContainer V2 kapı modülü.
+    const V2_KAPI_ESLESME: Record<string, string> = {
+      "ayet-kutuphanesi": "ayetKartlari",
+      "hafizlik-testi": "hafizlikTesti",
+      "ayet-notlari": "ayetNotlari",
+      "ayet-paketleri": "ayetPaketleri",
+      "ozel-gun-takvimi": "ozelGunTakvimi",
+      "kesfet-merkezi": "kesfet",
+    };
+    const oySayaci: Record<string, number> = {};
+    for (const v of Array.isArray(roadmapVotes) ? roadmapVotes : []) {
+      const rid = String((v as any).feature_id || "");
+      if (rid) oySayaci[rid] = (oySayaci[rid] || 0) + 1;
+    }
+    let liderOy = 0;
+    const liderIds: string[] = [];
+    for (const f of Array.isArray(roadmapFeatures) ? roadmapFeatures : []) {
+      if ((f as any).version !== "V2" || (f as any).active === false) continue;
+      const oy = oySayaci[String((f as any).id)] || 0;
+      if (oy === 0) continue; // oysuz kalem lider olamaz — kilitler aynen kalır
+      if (oy > liderOy) { liderOy = oy; liderIds.length = 0; liderIds.push(String((f as any).id)); }
+      else if (oy === liderOy) liderIds.push(String((f as any).id));
+    }
+    const liderSatirlari = liderIds
+      .map((rid) => V2_KAPI_ESLESME[rid])
+      .filter(Boolean)
+      .map((modulId) => ({ feature_id: modulId as string, lock_level: "free" }));
+    const acikAdminKilidi = new Set((featureLocks as Array<{ feature_id: string; lock_level: string }>).filter((l) => l.lock_level !== "free").map((l) => l.feature_id));
+    const etkinKilitler = [...featureLocks, ...liderSatirlari.filter((l) => !acikAdminKilidi.has(l.feature_id))];
     const body = {
       ok: true,
       announcement: announcements[0] ?? null,
-      featureLocks,
+      featureLocks: etkinKilitler,
       maintenance: maintenanceValue,
     };
     cfgSnapshot = { at: Date.now(), body };

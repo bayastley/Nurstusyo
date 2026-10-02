@@ -1,17 +1,11 @@
 // ════════════════════════════════════════════════════════
 // ÖZELLİK BAYRAKLARI (01.10) — tek dosyada merkezi bayraklar
 //
-// ★ V2_TEST_ACIK (01.10 — SAHİBİN EMRİ): oylamadaki 6 V2 modalı
-//   (ayetKartlari · kesfet · hafizlikTesti · ayetNotlari ·
-//   ayetPaketleri · ozelGunTakvimi) TEST SÜRESİNCE HERKESE AÇIK.
-//   - Oylama listesi ve v2Gate yönlendirmesi KORUNUR — havuz
-//     bozulmaz; admin ileride oy mekanizmasını devreye aldığında
-//     bu bayrağı false yapmak yeterli, kilitler birebir geri gelir.
-//   - Atmosfer/açıklama (fallback "free") ve üyelik (tier) kilitleri
-//     BU BAYRAKTAN BAĞIMSIZDIR — onlara dokunulmadı.
-//   - Okuyucu: ModalsContainer.tsx (v2Kapali) + dev/modalDumanTesti.ts
-//     (v2KilitliMi → V2 modalları gerçek açılış turuna girer).
+// ★ V2_TEST_ACIK kaldırıldı (01.10 — SAHİBİN KARARI): bayrak kod sabiti olmaktan
+//   çıkıp admin panelindeki Kilit Yönetimi ayarına taşındı — deploy'suz aç/kapa.
+//   Yeni adres: adminSyncService.v2TestAcikMi() + V2_TEST_KILIT_ANAHTARI;
+//   kaynak: nur_feature_locks tablosunda feature_id="v2_test_acik" satırı.
+//   Oylama lideri otomatik-free: /api/config cevabına gömülür (bkz. api/config.ts).
+//   Atmosfer/açıklama (fallback "free") ve üyelik (tier) kilitleri bu ayardan
+//   BAĞIMSIZDIR — onlara dokunulmadı.
 // ════════════════════════════════════════════════════════
-
-/** Oylamadaki V2 modalları test için herkese açık (false = kilitler geri gelir) */
-export const V2_TEST_ACIK = true;

@@ -80,7 +80,11 @@ export function LoginModalBolum({
           >
             <Shield size={14} />
             ADMIN OLARAK GERİ DÖN
-            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-200/90">{adminSonEmail}</span>
+            {/* ★ GİZLİLİK (01.10): tam e-posta EKRANDA gösterilmez (ekran görüntüsü/
+                omuz-surf sızıntısı) — maskeli biçim (ba***ey@gmail.com). Gerçek adres
+                yalnızca login_hint URL parametresinde taşınır; Google seçicide yine
+                öneri olarak dolar ve yetki yine sunucuda doğrulanır. */}
+            <span className="rounded bg-black/30 px-1.5 py-0.5 text-[9px] font-bold text-amber-200/90">{adminSonEmail.replace(/^(.).*(@.*)$/, (_e, a, b) => `${a}${"*".repeat(5)}${b}`)}</span>
           </button>
         )}
         <p className="text-center text-[9px] leading-relaxed text-white/40">

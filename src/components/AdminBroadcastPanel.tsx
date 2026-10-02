@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw, CheckCircle2 } from "lucide-react";
-import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, type MaintenanceConfig } from "../services/adminSyncService";
+import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw, CheckCircle2, Rocket } from "lucide-react";
+import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, v2TestAcikMi, V2_TEST_KILIT_ANAHTARI, type MaintenanceConfig } from "../services/adminSyncService";
 import { RECITERS } from "../reciters";
 
 interface AdminBroadcastPanelProps {
@@ -110,10 +110,39 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   // ★ Aktif kilitler + işlem geçmişi (geri alma destekli)
   const [lockHistory, setLockHistory] = useState<LockHistoryEntry[]>(() => loadLockHistory());
   const [activeLocks, setActiveLocks] = useState<Record<string, FeatureLock>>(() => getSystemConfig().featureLocks);
+  // ★ V2 TEST KİLİDİ (01.10): kod sabitti; artık nur_feature_locks içinde
+  //   "v2_test_acik" satırı — deploy'suz aç/kapa. Toggle → adminAction(set_feature_lock).
+  const [v2TestAcik, setV2TestAcik] = useState<boolean>(() => v2TestAcikMi());
+  const [roadmapLider, setRoadmapLider] = useState<string>("");
+
+  // ★ OYLAMA LİDERİ GÖSTERGESİ: /api/roadmap'ten gerçek toplamlar —
+  //   en çok oyu alan aktif V2 kalemi gösterir (kapatınca free olacak olan).
+  const refreshRoadmapLider = React.useCallback(() => {
+    fetch("/api/roadmap", { cache: "no-store" }).then((r) => r.json()).then((d: any) => {
+      if (!d?.ok) return;
+      const lider = (d.v2 || []).slice().sort((a: any, b: any) => (b.votes || 0) - (a.votes || 0))[0];
+      setRoadmapLider(lider && (lider.votes || 0) > 0 ? `${lider.title} (${lider.votes} oy)` : "henüz oy yok");
+    }).catch(() => undefined);
+  }, []);
 
   const refreshLocks = () => {
     setActiveLocks({ ...getSystemConfig().featureLocks });
     setLockHistory(loadLockHistory());
+    setV2TestAcik(v2TestAcikMi());
+    refreshRoadmapLider();
+  };
+
+  // ★ V2 TEST KİLİDİ TOGGLE (01.10): açık/kapalı DB'ye yazılır; AnnouncementBar'ın
+  //   /api/config poll'u ~60 sn içinde tüm istemcilere yayar (deploy'suz).
+  const toggleV2Test = () => {
+    const yeni = !v2TestAcik;
+    setFeatureLock(V2_TEST_KILIT_ANAHTARI, yeni ? "free" : "off");
+    setV2TestAcik(yeni);
+    const history = [{ id: uid(), target: V2_TEST_KILIT_ANAHTARI, targetLabel: "V2 Test Kilidi", from: yeni ? "off" as FeatureLock : "free" as FeatureLock, to: (yeni ? "free" : "off") as FeatureLock, at: new Date().toISOString(), reverted: false }, ...loadLockHistory()];
+    saveLockHistory(history);
+    setLockHistory(history);
+    void adminAction({ action: "set_feature_lock", featureId: V2_TEST_KILIT_ANAHTARI, lockLevel: yeni ? "free" : "off" });
+    setLockStatus(yeni ? "✅ V2 test kilidi AÇILDI — 6 modül herkese açık (~60 sn'de tüm istemcilere yayılır)" : "🔒 V2 test kilidi KAPALDI — kilitler oy sıralamasına devrediyor (~60 sn'de yayılır)");
   };
 
   // ★ DB SENKRONU (28.09, kullanıcı kararı): "maher kilitlenmiyor" — kilidin DB'ye
@@ -360,6 +389,27 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
 
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Özellik Kilitleri</h4>
+        {/* ★ V2 TEST KİLİDİ (01.10): kod sabiti yerine DB ayarı — deploy'suz aç/kapa.
+            AÇIK: oylamadaki 6 V2 modülü herkese açık (mevcut canlı davranış).
+            KAPALI: kilitler oy sıralamasına devreder; en çok oyu alan V2 kalemi
+            /api/config'in otomatik-free satırıyla açılır (lider oy ≥ 1 şartı). */}
+        <div className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/[.06] p-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="flex items-center gap-1.5 text-[10.5px] font-black text-amber-200"><Rocket size={12} /> V2 Test Kilidi</p>
+              <p className="mt-0.5 text-[9px] leading-relaxed text-white/45">Açık: oylamadaki 6 modül herkese açık · Kapalı: kilitler oy sıralamasına devreder (~60 sn'de yayılır, deploy gerekmez)</p>
+              <p className="mt-1 text-[9px] font-bold text-white/60">🗳️ Oy lideri: <span className="text-amber-300">{roadmapLider || "…"}</span></p>
+            </div>
+            <button
+              type="button"
+              onClick={toggleV2Test}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-[9.5px] font-black transition ${v2TestAcik ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-red-500/25 text-red-300 hover:bg-red-500/40"}`}
+              title="V2 test kilidini aç/kapa — nur_feature_locks'a yazılır"
+            >
+              {v2TestAcik ? "AÇIK" : "KAPALI"}
+            </button>
+          </div>
+        </div>
         <div className="space-y-2">
           <div className="grid grid-cols-3 gap-1">
             {(["all", "category", "reciter"] as const).map((t) => (

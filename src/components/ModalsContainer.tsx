@@ -30,8 +30,7 @@ import { KISSAS } from "../data";
 import { secureGet, secureSet } from "../secureStore";
 import { T, type Lang } from "../i18n";
 import { JETON } from "../tier";
-import { getFeatureLock } from "../services/adminSyncService";
-import { V2_TEST_ACIK } from "../config/ozellikBayraklari";
+import { getFeatureLock, v2TestAcikMi } from "../services/adminSyncService";
 import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
@@ -225,11 +224,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     ayetPaketleri: "Hazır Ayet Paketleri",
     ozelGunTakvimi: "Özel Gün Takvimi",
   };
-  // ★ V2_TEST_ACIK (01.10): test süresince oylamadaki 6 V2 modalı herkese açık.
-  //   Bayrak false → kural birebir eski haline döner (oylama devralır). Oylama
-  //   havuzu ve v2Gate yönlendirmesi korunur — sadece giriş kilidi kısa devre.
+  // ★ V2 TEST KİLİDİ (01.10): kod sabiti değil — sunucu ayarı (nur_feature_locks
+  //   tablosunda "v2_test_acik" satırı; admin panel → Kilit Yönetimi'nden aç/kapa,
+  //   deploy'suz). Açıkken oylamadaki 6 V2 modalı herkese açık; kapalıyken kilitler
+  //   devreder: getFeatureLock "free" (admin kilidi veya /api/config'in gömdüğü
+  //   OYLAMA LİDERİ otomatik-free) olan modül açık, diğerleri yol haritasına düşer.
   const v2Kapali = (m: V2ModalId): boolean =>
-    !V2_TEST_ACIK && !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
+    !v2TestAcikMi() && !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
   const v2Gate = (m: V2ModalId): boolean => {
     if (!v2Kapali(m)) return true;
     setModal(null);

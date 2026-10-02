@@ -173,6 +173,17 @@ export function getFeatureLock(featureId: string, fallback: FeatureLock = "free"
   return getSystemConfig().featureLocks[featureId] ?? fallback;
 }
 
+// ★ V2 TEST KİLİDİ (01.10 — deploy'suz aç/kapa): kod sabiti V2_TEST_ACIK kaldırıldı;
+//   bayrak artık nur_feature_locks tablosunda feature_id="v2_test_acik" satırıdır.
+//   Admin panel (AdminBroadcastPanel → Özellik Kilitleri) üzerinden set_feature_lock
+//   ile yönetilir; AnnouncementBar /api/config poll'uyla ~60 sn içinde tüm
+//   istemcilere yayılır. Satır YOK veya "free" = AÇIK (eski canlı davranış korunur —
+//   fail-open); "off" = KAPALI (kilitler oylamaya devreder — v2Kapali kapısı).
+export const V2_TEST_KILIT_ANAHTARI = "v2_test_acik";
+export function v2TestAcikMi(): boolean {
+  return getFeatureLock(V2_TEST_KILIT_ANAHTARI, "free") !== "off";
+}
+
 export function getBanLogs(): BanLog[] {
   return getSystemConfig().banLogs ?? [];
 }
