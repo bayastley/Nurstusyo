@@ -50,7 +50,8 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
     void atanan; void kilitliKategoriler; void clipKind; // log temizliği — tier süzücü yukarıda
   };
 
-  const gunAdi = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"][new Date().getDay()];
+  // ★ Ayet referansı (02.10, kullanıcı kararı): kartın ALTINDA tek satır — "Cuma 62:9 · Kehf 18:10"
+  const ayetReferansi = kart.ayetler.map((a) => `${a.sName} ${a.s}:${a.a}`).join(" · ");
 
   return (
     <div className="relative overflow-hidden rounded-2xl border p-3.5" style={{ borderColor: ozelMi ? "rgba(215,170,82,.55)" : "rgba(255,255,255,.12)", background: ozelMi ? "linear-gradient(135deg,rgba(215,170,82,.14),rgba(215,170,82,.04))" : "rgba(255,255,255,.02)" }}>
@@ -58,14 +59,10 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
         <span className="text-xl leading-none" aria-hidden>{kart.emoji}</span>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
-            Günün Hazır Videosu
+            Günün Videosu
             {ozelMi && <span className="rounded-full bg-amber-500/25 px-2 py-0.5 text-[8px] font-black text-amber-200">mübarek gün</span>}
           </p>
-          <p className="mt-0.5 text-[11.5px] font-black text-white/90">{kart.baslik}</p>
-          <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/50">
-            {gunAdi}'ne özel · {kart.aciklama} · {kart.ayetler.map((a) => `${a.sName} ${a.s}:${a.a}`).join(" + ")}
-            {kilitliKategoriler > 0 && <span className="ml-1 text-white/30">· atmosfer üyeliğine göre seçilir</span>}
-          </p>
+          <p className="mt-0.5 text-[11.5px] font-black leading-snug text-white/90">{kart.baslik}</p>
         </div>
         <button
           type="button"
@@ -76,6 +73,9 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
           {yuklendi ? "✓ Yüklendi" : "Önizlemeye yükle"}
         </button>
       </div>
+      <p className="mt-1.5 truncate text-[10px] font-bold" style={{ color: "var(--accent-2)" }} title={ayetReferansi}>
+        {ayetReferansi}
+      </p>
     </div>
   );
 };
