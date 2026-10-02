@@ -30,13 +30,32 @@ export function usePrayerTimes(prayerCity: string, prayerSearch: string) {
 
     // ★ KULLANICI EMRİ (28.09): açılışta konum izni ASLA sorulmaz — tarayıcı
     //   onayı çıkmasın. Koordinat yalnız izin DAHA ÖNCE verilmişse sessizce kullanılır.
+    // ★ NATİVE PENCERE FIX (02.10, kullanıcı bildirimi "allow sen otomatik bas"):
+    //   localStorage bayrağı "1" olan cihazda her yüklemede getCurrentPosition çağrılıyordu;
+    //   tarayıcı izni kalıcı değilse (kullanıcı eskiden redetti / WebView kaydetmiyor)
+    //   OS "Allow geolocation?" penceresi HER AÇILIŞTA patlıyordu. Artık önce
+    //   navigator.permissions ile durum okunur: yalnız "granted" ise sessiz koordinat,
+    //   "denied"/"prompt" ise HİÇ sorulmadan şehir bazlı vakitler kullanılır.
     const izinDahaOnceVerilmis = localStorage.getItem("nur_konum_izin") === "1";
+    const sessizKonumDene = () => {
+      if (navigator.permissions?.query) {
+        navigator.permissions.query({ name: "geolocation" }).then((p) => {
+          if (p.state === "granted" && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
+              () => fetchByCity(),
+              { timeout: 5000 },
+            );
+          } else {
+            fetchByCity(); // denied/prompt → pencere HİÇ çıkmasın, şehirle devam
+          }
+        }).catch(() => fetchByCity());
+      } else {
+        fetchByCity(); // Permissions API yok → sessiz şehir bazlı (izni asla tetikleme)
+      }
+    };
     if (izinDahaOnceVerilmis && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
-        () => fetchByCity(),
-        { timeout: 5000 },
-      );
+      sessizKonumDene();
     } else {
       fetchByCity();
     }

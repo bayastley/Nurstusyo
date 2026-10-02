@@ -30,13 +30,29 @@ export function usePrayerTime(): UsePrayerTimeReturn {
     // ★ KULLANICI EMRİ (28.09): açılışta konum izni ASLA sorulmaz — tarayıcı onayı
     //   çıkmasın. Şehir bazlı vakitler (varsayılan İstanbul) yeterli. Koordinat
     //   yalnız izin DAHA ÖNCE verilmişse (localStorage işareti) sessizce kullanılır.
+    // ★ NATİVE PENCERE FIX (02.10): bayrak "1" olsa bile Permissions API "granted"
+    //   demeden getCurrentPosition ÇAĞRILMAZ — denied/prompt'ta OS "Allow geolocation?"
+    //   penceresi her açılışta patlıyordu. denied/prompt → sessizce şehir bazlı.
     const izinDahaOnceVerilmis = localStorage.getItem("nur_konum_izin") === "1";
+    const sessizKonumDene = () => {
+      if (navigator.permissions?.query) {
+        navigator.permissions.query({ name: "geolocation" }).then((p) => {
+          if (p.state === "granted" && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
+              () => fetchByCity(),
+              { timeout: 5000 }
+            );
+          } else {
+            fetchByCity(); // denied/prompt → pencere yok, şehirle devam
+          }
+        }).catch(() => fetchByCity());
+      } else {
+        fetchByCity(); // Permissions API yok → izni asla tetikleme
+      }
+    };
     if (izinDahaOnceVerilmis && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => fetchByCoords(pos.coords.latitude, pos.coords.longitude),
-        () => fetchByCity(),
-        { timeout: 5000 }
-      );
+      sessizKonumDene();
     } else {
       fetchByCity();
     }
