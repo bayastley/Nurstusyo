@@ -77,6 +77,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   const [configVersion, setConfigVersion] = useState(0);
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState("");
   const [backgroundPosterUrl, setBackgroundPosterUrl] = useState<string | undefined>();
+  // ★ ÖLÜ VİDEO YEDEĞİ (02.10): R2/CORS kapalıyken (örn. local preview) bozuk
+  //   "Medya oynatılamıyor" oynatıcısı yerine poster/gradyan gösterilir.
+  const [vidHata, setVidHata] = useState(false);
   // ★ Font galerisi: panel dışına tıklayınca kapansın
   const galeriRef = useRef<HTMLDetailsElement | null>(null);
   // ★ MASTER SIFIRLAMA — font + boyutlar + ışıltı + kart + metin konumu tek tıkla varsayılana döner
@@ -109,6 +112,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   }, []);
   useEffect(() => {
     let alive = true;
+    setVidHata(false); // atmosfer değişince hatayı sıfırla
     setBackgroundVideoUrl(background?.kind === "vid" ? getVideoUrlSync(background) : "");
     setBackgroundPosterUrl(background?.kind === "vid" ? getPosterUrlSync(background) : undefined);
     if (background?.kind !== "vid") return () => { alive = false; };
@@ -134,22 +138,23 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             className="group relative h-20 w-32 shrink-0 overflow-hidden rounded-xl border border-white/10"
           >
             {background ? (
-              background.kind === "vid" ? (
+              background.kind === "vid" && !vidHata ? (
                 <video
                   src={backgroundVideoUrl || undefined}
                   poster={backgroundPosterUrl ?? background.poster}
                   muted
                   loop
                   playsInline
-                  onError={(e) => { const v = e.currentTarget; if (!isR2Media(background) && v.src !== background.src) v.src = background.src; }}
+                  onError={(e) => {
+                    const v = e.currentTarget;
+                    if (!isR2Media(background) && v.src !== background.src) { v.src = background.src; return; }
+                    // R2 medya da yüklenemedi → bozuk oynatıcıyı kaldır, poster fallback
+                    setVidHata(true);
+                  }}
                   className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                 />
               ) : (
-                <img
-                  src={background.src}
-                  alt={background.label}
-                  className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
-                />
+                <AtmosferYedekGorsel background={background} posterUrl={backgroundPosterUrl} />
               )
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-white/5">
@@ -477,5 +482,32 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
 
       {/* ★ Video Üret butonu, Akıllı AI'nin altına (orta panele) taşındı */}
     </section>
+  );
+};
+
+// ─── ÖLÜ VİDEO YEDEĞİ (02.10) ──────────────────────────────
+// Video oynatılamadığında (R2 kapalı / CORS / offline) kırık oynatıcı yerine
+// poster → poster de gelmezse atmosfer adlı yumuşak gradyan gösterilir.
+const AtmosferYedekGorsel: React.FC<{ background: Clip; posterUrl?: string }> = ({ background, posterUrl }) => {
+  const [imgHata, setImgHata] = useState(false);
+  React.useEffect(() => setImgHata(false), [posterUrl, background.src]);
+  const poster = posterUrl ?? background.poster ?? background.src;
+  if (!imgHata) {
+    return (
+      <img
+        src={poster}
+        alt={background.label}
+        onError={() => setImgHata(true)}
+        className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+      />
+    );
+  }
+  return (
+    <div
+      className="flex h-full w-full items-center justify-center transition duration-500 group-hover:scale-110"
+      style={{ background: "linear-gradient(135deg,#1a1d2e,#2d2440 45%,#40314f)" }}
+    >
+      <span className="text-lg" aria-hidden>🌌</span>
+    </div>
   );
 };

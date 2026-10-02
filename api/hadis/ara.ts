@@ -7,7 +7,7 @@
 //  1) dorar.net — anahtarsız, ücretsiz; külliyat arama (Buhari, Müslim
 //     ve diğer kitaplar), metin + tahric (kaynak) döner.
 //  2) sunnah.com — API anahtarı varsa (HADITH_API_KEY env) kullanılır;
-//     yalnız Buhârî + Müslim, İngilizce/拉丁 metin.
+//     yalnız Buhârî + Müslim, İngilizce/Latince harf çevirisi metin.
 //
 // GÜVENLİK: yalnızca GET; origin kontrolü (_shared/security) + rate
 // limit; girdi temizlenir; dış adresler sabit (SSRF yok). Cache'li.

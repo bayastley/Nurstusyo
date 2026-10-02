@@ -1,5 +1,5 @@
 import { useCallback, type MutableRefObject } from "react";
-import { RECITERS, reciterAudioUrl } from "../reciters";
+import { RECITERS, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "../reciters";
 
 // BURASI DÜZELTİLDİ: ../types yerine doğrudan StudioApp'teki tipleri veya boş şablonu kullandık, hata vermemesi sağlandı.
 interface SelectedAyah {
@@ -30,6 +30,7 @@ export function useReciterPreview({
     silenceAllAudio();
     const prev = reciterPreviewRef.current;
     if (prev) {
+      sesZinciriSoKup(prev); // ★ yedek zincirini de sök (02.10)
       prev.pause();
       prev.oncanplaythrough = null;
       prev.onloadeddata = null;
@@ -47,16 +48,17 @@ export function useReciterPreview({
     const sample = selectedRef.current[0] ?? { s: 1, a: 1 };
     if (!target) return;
 
-    const startPreview = (src: string) => {
+    const startPreview = (kaynaklar: string[]) => {
       const prevInStart = reciterPreviewRef.current;
       if (prevInStart) {
+        sesZinciriSoKup(prevInStart);
         prevInStart.pause();
         prevInStart.onended = null;
         prevInStart.onerror = null;
         try { prevInStart.src = ""; } catch { /* ignore */ }
       }
 
-      const audio = new Audio(src);
+      const audio = new Audio();
       audio.preload = "auto";
       audio.volume = 0.88;
       try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
@@ -70,11 +72,12 @@ export function useReciterPreview({
       };
 
       audio.onended = cleanup;
-      audio.onerror = () => {
+      // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network; hepsi patlarsa uyar
+      sesZinciriBagla(audio, kaynaklar, () => {
         if (reciterPreviewRef.current !== audio) return;
         cleanup();
         notify(`⚠️ ${target?.name ?? "Kâri"} · ses kaydı şu an yüklenemedi. Lütfen başka bir kâri deneyin.`);
-      };
+      });
 
       audio.play().catch(() => {
         const onReady = () => {
@@ -94,8 +97,8 @@ export function useReciterPreview({
 
     startPreview(
       target.surahPattern
-        ? target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))
-        : reciterAudioUrl(target.path, sample.s, sample.a),
+        ? [target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))]
+        : sesKaynakZinciri(target.path, sample.s, sample.a),
     );
   }, [notify, previewReciterId, previewTimerRef, reciterPreviewRef, selectedRef, setPreviewReciterId, silenceAllAudio]);
 

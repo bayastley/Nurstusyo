@@ -4,10 +4,11 @@ import { BookOpen } from "lucide-react";
 import { StudioHeroSection } from "./studio/StudioHeroSection";
 import {
   CATEGORY_ICONS, DEFAULT_MASTER_SURUM, RENDER_AUTH_LIVE, SERVER_BAN_LIVE,
-  MODES, ASPECTS, PRAYERS, KEYWORD_CATEGORY_FALLBACK, SURAH_CATEGORY_HINT,
+  MODES, ASPECTS, PRAYERS,
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight, arabicIdealScale,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
+import { ayetKategorisiBul, adminAyetKategorisiBul } from "./studio/ayetKategori"; // ★ SRP adım 13 (02.10): ayet→kategori motoru
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
 import { checkGuestGate, bumpGuestUsed, GUEST_FREE_VIDEOS } from "./studio/useGuestTrial";
 import { useAnalytics } from "./studio/useAnalytics";
@@ -17,9 +18,7 @@ import {
   pickMime, formatRemaining, fetchJSON, fetchAyah, fetchSurah, normalizeTurkishMeal, quranUrl,
 } from "./studio/studioHelpers";
 import { QURAN_CLIPS } from "./clips-r2";
-import { ADMIN_AI_KEYWORDS, ADMIN_MOTION_CLIPS } from "./adminMediaManifest";
 import { adminCatUsable } from "./adminCategoryAccess";
-import { CLIP_AI_KEYWORDS } from "./clips/index";
 import {
   ACTIVE_CATEGORIES,
   ALL_CLIPS,
@@ -50,7 +49,7 @@ import {
   THEME_EMOJI_EXTRA,
 } from "./data";
 import { LANGS, MEAL_EDITIONS, T, type Lang } from "./i18n";
-import { RECITERS, reciterAudioUrl, RECITER_SES_TARZI, SES_TARZI_ORDER } from "./reciters";
+import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { HeaderTopBar } from "./components/HeaderTopBar";
 import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
@@ -743,81 +742,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // Canvas draw kodu useCanvasDraw hook'una taşındı
 
-  const detectCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId => {
-    void ar;
-    // ★ SIRA DÜZELTMESİ: ÖNCE ayetin KELİMELERİ, sure ipucu EN SON çare.
-    //   Eski hata: SURAH_CATEGORY_HINT baştan devreye girip "Nahl"→"arı"
-    //   kilitleyordu — "Gökten su indirdi" ayetinde bile meale bakılmıyordu.
-    const norm = (s: string) => s.toLocaleLowerCase("tr");
-    const words = norm(`${surahName} ${tr}`).split(/[^a-zçğıöşüâîû]+/i).filter(Boolean);
-    let matched: CatId | null = null;
-    let bestLen = 0;
-    for (const word of words) {
-      for (const [kw, catVal] of Object.entries(KEYWORD_CATEGORY_FALLBACK)) {
-        const kwNorm = norm(kw);
-        const isMatch = kwNorm.length <= 3 ? word === kwNorm : word.startsWith(kwNorm) || word === kwNorm;
-        if (isMatch && kwNorm.length > bestLen) {
-          matched = catVal;
-          bestLen = kwNorm.length;
-        }
-      }
-    }
-    if (matched) return matched;
-
-    const adminMediaCategories = new Set(ADMIN_MOTION_CLIPS.map((clip) => clip.cat));
-    for (const [category, keywords] of Object.entries(ADMIN_AI_KEYWORDS)) {
-      if (!adminMediaCategories.has(category as CatId)) continue;
-      const match = keywords
-        .split(/\s+/)
-        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
-      if (match) return category as CatId;
-    }
-
-    // ★ Ana R2 kategorileri için akıllı eşleşme (23 kategori: namaz, deniz, daglar...)
-    for (const [category, keywords] of Object.entries(CLIP_AI_KEYWORDS)) {
-      const match = keywords
-        .split(/\s+/)
-        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
-      if (match) return category as CatId;
-    }
-
-    // ★ ÇEŞİTLİLİK MOTORU — eşleşme yoksa artık HER ZAMAN "musaf" (Kur'an) dönmüyor.
-    //   Ayet metninden üretilen stabil hash ile estetik kategoriler arasında dağıtılır.
-    //   Böylece her ayet farklı bir atmosfer alır, aynı Kur'an görseli tekrar etmez.
-    //   Not: sure ipucu (SURAH_CATEGORY_HINT) kelime eşleşmesi başarısız olursa
-    //   hash havuzundan ÖNCE denenir — artık ayet içeriğini EZMEZ.
-    const surahKey = surahName.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    if (SURAH_CATEGORY_HINT[surahKey]) return SURAH_CATEGORY_HINT[surahKey];
-    const AESTHETIC_POOL: CatId[] = [
-      "namaz", "yildizlar", "deniz", "daglar", "gunbatimi",
-      "gece", "selale", "orman", "cicekler", "musaf",
-    ];
-    let h = 2166136261;
-    const src = `${surahName}|${tr}`;
-    for (let i = 0; i < src.length; i += 1) { h ^= src.charCodeAt(i); h = Math.imul(h, 16777619); }
-    return AESTHETIC_POOL[(h >>> 0) % AESTHETIC_POOL.length];
-  }, []);
-
-  // ★ Admin kategori ikinci tarama: kod kategorisinde seçili türde klip yoksa
-  //   (örn. bulut kategorisinin şablonu yoksa), ayet kelimelerini admin kategori
-  //   keyword'lerinde tarar. Böylece Şablon V2'de de tematik isabet sağlanır.
-  //   Not: sadece 1. taramanın (detectCategoryFromAyah) admin bölümünden FARKLI
-  //   çalışır — o zaten ADMIN_MOTION_CLIPS varken admin kategorisi döndürüyordu;
-  //   bu fonksiyon her durumda keyword→admin kategori eşleşmesini döndürür.
-  const detectAdminCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId | null => {
-    void ar;
-    const norm = (s: string) => s.toLocaleLowerCase("tr");
-    const words = norm(`${surahName} ${tr}`).split(/[^a-zçğıöşüâîû]+/i).filter(Boolean);
-    const adminMediaCategories = new Set(ADMIN_MOTION_CLIPS.map((clip) => clip.cat));
-    for (const [category, keywords] of Object.entries(ADMIN_AI_KEYWORDS)) {
-      if (!adminMediaCategories.has(category as CatId)) continue;
-      const match = keywords
-        .split(/\s+/)
-        .some((keyword) => words.some((word) => word === keyword || word.startsWith(keyword)));
-      if (match) return category as CatId;
-    }
-    return null;
-  }, []);
+  // ★ SRP adım 13 (02.10): ayet→kategori motoru studio/ayetKategori.ts'e taşındı
+  //   (saf fonksiyonlar; davranış birebir aynı). Eski isimler uç noktalar bozulmasın
+  //   diye modül düzeyi sabitlere takma ad olarak kalır.
+  const detectCategoryFromAyah = ayetKategorisiBul;
+  const detectAdminCategoryFromAyah = adminAyetKategorisiBul;
 
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
     // ★ TAM TARAMA (29.09): a=0 guard — "Ayet Ekle" butonu ayet seçilmeden basılınca
@@ -1120,37 +1049,39 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const playReciterPreview = useCallback((id: string) => {
     silenceAllAudio();
     const prev = reciterPreviewRef.current;
-    if (prev) { prev.pause(); prev.oncanplaythrough = null; prev.onloadeddata = null; prev.onended = null; prev.onerror = null; try { prev.src = ""; } catch { /* ignore */ } reciterPreviewRef.current = null; }
+    if (prev) { sesZinciriSoKup(prev); prev.pause(); prev.oncanplaythrough = null; prev.onloadeddata = null; prev.onended = null; prev.onerror = null; try { prev.src = ""; } catch { /* ignore */ } reciterPreviewRef.current = null; }
     if (previewReciterId === id) { setPreviewReciterId(null); return; }
     const target = RECITERS.find((item) => item.id === id);
     const sample = selectedRef.current[0] ?? { s: 1, a: 1 };
     if (!target) return;
-    const startPreview = (src: string) => {
+    const startPreview = (kaynaklar: string[]) => {
       const prevInStart = reciterPreviewRef.current;
       if (prevInStart) {
+        sesZinciriSoKup(prevInStart);
         prevInStart.pause();
         prevInStart.onended = null;
         prevInStart.onerror = null;
         try { prevInStart.src = ""; } catch { /* ignore */ }
       }
-      const audio = new Audio(src); audio.preload = "auto"; audio.volume = 0.88;
+      const audio = new Audio(); audio.preload = "auto"; audio.volume = 0.88;
       try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
       reciterPreviewRef.current = audio; setPreviewReciterId(id);
       const cleanup = () => { if (reciterPreviewRef.current !== audio) return; setPreviewReciterId(null); reciterPreviewRef.current = null; };
       audio.onended = cleanup;
-      // ★ ARTIK BAŞKA HOCAYA DÜŞMÜYOR — yanlış ses çalmaz, dürüstçe uyarır
-      audio.onerror = () => {
+      // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network yedeği;
+      //   hepsi patlarsa eski dürüst uyarı (yanlış hocaya düşmez)
+      sesZinciriBagla(audio, kaynaklar, () => {
         if (reciterPreviewRef.current !== audio) return;
         cleanup();
         notify(`⚠️ ${target?.name ?? "Kâri"} · ses kaydı şu an yüklenemedi. Lütfen başka bir kâri deneyin.`);
-      };
+      });
       audio.play().catch(() => { const onReady = () => { audio.removeEventListener("loadeddata", onReady); if (reciterPreviewRef.current === audio) { audio.play().catch(cleanup); } }; audio.addEventListener("loadeddata", onReady); });
       previewTimerRef.current = window.setTimeout(() => { if (reciterPreviewRef.current === audio) { audio.pause(); cleanup(); } }, 10_000);
     };
     startPreview(
       target.surahPattern
-        ? target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))
-        : reciterAudioUrl(target.path, sample.s, sample.a)
+        ? [target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))]
+        : sesKaynakZinciri(target.path, sample.s, sample.a)
     );
   }, [previewReciterId, notify, silenceAllAudio]);
 

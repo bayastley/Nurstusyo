@@ -1,6 +1,6 @@
 import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
-import { reciterAudioUrl } from "../reciters";
+import { sesKaynakZinciri } from "../reciters";
 import { checkRateLimit } from "../rateLimiter";
 import { JETON, videoMaliyeti, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
@@ -239,9 +239,18 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         for (let index = 0; index < selected.length; index += 1) {
           const item = selected[index]; setProgress(4 + Math.round((index / selected.length) * 22));
           try {
-            const response = await fetch(reciterAudioUrl(reciter.path, item.s, item.a));
-            if (!response.ok) continue;
-            const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+            // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network —
+            //    birincil kaynak kapalıyken üretim ölmesin, ilk sağlıklı kaynak kullanılır.
+            let buffer: AudioBuffer | null = null;
+            for (const sesKaynagi of sesKaynakZinciri(reciter.path, item.s, item.a)) {
+              try {
+                const response = await fetch(sesKaynagi);
+                if (!response.ok) continue;
+                buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+                break;
+              } catch { /* sıradaki ses kaynağı */ }
+            }
+            if (!buffer) continue;
             if (cursor > 0 && cursor + buffer.duration > cap) break;
             audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
             ayetSüreleri.push({ start: cursor, dur: buffer.duration });

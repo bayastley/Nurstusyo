@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { RECITERS, reciterAudioUrl } from "../reciters";
+import { RECITERS, sesKaynakZinciri, sesZinciriBagla } from "../reciters";
 import type { SelectedAyah } from "../types";
 
 interface UseAudioPreviewOptions {
@@ -70,13 +70,15 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
     const isSurahOnly = Boolean(reciter.surahPattern);
     const audioSrc = isSurahOnly
       ? reciter.surahPattern!.replace("{S}", String(current.s).padStart(3, "0"))
-      : reciterAudioUrl(reciter.path, current.s, current.a);
+      : "";
     const audio = new Audio(audioSrc);
+    // ★ YEDEK SES ZİNCİRİ (02.10): everyayah patlarsa islamic.network'e düşer
+    let zinciriIptal: (() => void) | null = null;
     try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
     audio.preload = "auto"; audio.volume = 0.9;
     let destroyed = false;
     let ayetTimer = 0;
-    const cleanup = () => { window.clearTimeout(safetyTimer); window.clearInterval(ayetTimer); audio.pause(); audio.src = ""; };
+    const cleanup = () => { window.clearTimeout(safetyTimer); window.clearInterval(ayetTimer); zinciriIptal?.(); audio.pause(); audio.src = ""; };
 
     if (isSurahOnly) {
       audio.onloadedmetadata = () => {
@@ -118,11 +120,11 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
       audio.ontimeupdate = () => { setPreviewTime(audio.currentTime); setPreviewDuration(Number.isFinite(audio.duration) ? audio.duration : 0); };
       audio.onloadedmetadata = () => setPreviewDuration(audio.duration || 0);
       audio.onended = advance;
-      audio.onerror = () => {
+      // ★ YEDEK SES ZİNCİRİ (02.10): birincil everyayah → varsa islamic.network;
+      //   hepsi patlarsa DONMA DÜZELTMESİ davranışı (sonraki ayete geç / durdur)
+      zinciriIptal = sesZinciriBagla(audio, sesKaynakZinciri(reciter.path, current.s, current.a), () => {
         if (destroyed) return;
         cleanup();
-        // ★ DONMA DÜZELTMESİ: ses dosyası yüklenemediyse DURMA — sonraki ayete geç.
-        //   Eskisi previewPlaying'i kapatıyordu → kullanıcı 2. ayete geçemiyordu.
         if (verseIndex < selected.length - 1) {
           notify("⚠️ Bu ayetin sesi yüklenemedi · sıradaki ayete geçiliyor");
           setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400);
@@ -131,7 +133,7 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
           setPreviewPlaying(false);
           notify("⚠️ Son ayetin sesi yüklenemedi · önizleme durduruldu");
         }
-      };
+      });
       audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
       // ★ onabort DÜZELTMESİ: sekme arka plana geçince tarayıcı bazen abort atar —
       //   oynatmayı KAPATMA (eskisi önizlemeyi yanlışlıkla donduruyordu); sadece sessizce

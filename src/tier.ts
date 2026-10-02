@@ -40,6 +40,37 @@ if (typeof window !== "undefined") {
 const TRIAL_KEY = "nur_trial_start";
 const TRIAL_DAYS = 7;
 
+// ════════════════════════════════════════════════════════
+// ★ SUNUCU TARAFI DENEME (02.10)
+//   Önceden deneme yalnız burada (localStorage) yaşıyordu: anahtarı
+//   silip yeniden kurunca 7 gün PRO sonsuza dek yenileniyordu.
+//   Artık gerçek başlangıç sunucuda (nur_trials tablosu,
+//   api/trial.ts) — yerel anahtar yalnız sunucudaki ERKEN
+//   başlangıcın ÖNBELLEĞİDİR; uzatma imkânsız, dolunca silinir.
+// ════════════════════════════════════════════════════════
+export async function denemeyiSunucuyaSenkronla(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const yerel = localStorage.getItem(TRIAL_KEY);
+    const res = await fetch("/api/trial", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ startedAt: yerel ? Number(yerel) : undefined }),
+    });
+    if (!res.ok) return; // sunucu yoksa/oturum yoksa yerel davranış sürer
+    const j = (await res.json()) as { serverTrial?: boolean; start?: number | null; active?: boolean };
+    if (!j.serverTrial || typeof j.start !== "number") return; // tablo yok → fallback
+    if (!j.active) {
+      // Sunucuda süresi dolmuş → yerel uzatma olasılığını da kapat
+      if (yerel) localStorage.removeItem(TRIAL_KEY);
+      return;
+    }
+    // Sunucu ERKEN başlangıcı otoriterdir — yerel ondan eski olamaz
+    if (!yerel || Number(yerel) > j.start) localStorage.setItem(TRIAL_KEY, String(j.start));
+  } catch { /* ağ hatası — yerel davranış sürer */ }
+}
+
 export function isTrialActive(): boolean {
   if (typeof window === "undefined") return false;
   const start = localStorage.getItem(TRIAL_KEY);
@@ -60,6 +91,8 @@ export function getTrialDaysLeft(): number {
 export function startTrial(): void {
   if (typeof window !== "undefined" && !localStorage.getItem(TRIAL_KEY)) {
     localStorage.setItem(TRIAL_KEY, String(Date.now()));
+    // ★ Sunucuya kalıcı kayıt (nur_trials) — anlık UI için yerel de yazılır
+    void denemeyiSunucuyaSenkronla();
   }
 }
 

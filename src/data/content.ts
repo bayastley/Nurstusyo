@@ -14,4 +14,6 @@ export { HASHTAG_CATEGORIES, HASHTAG_POOL, randomHashtagCombo } from "./hashtags
 export { TITLE_TEMPLATES, genTitle, genDesc } from "./titleTemplates";
 
 // Eski yerlerden de export et (bazı dosyalar direkt content'ten import ediyor)
-export const MEAL_FIXES: Record<number, string[]> = {};
+// ★ MEAL_FIXES (02.10): boş tablo yerine gerçek Diyanet yaması — ../meal_fixes.ts
+//   (Meryem 19'ün çöp satırları api.alquran.cloud tr.diyanet'ten temiz veriyle yenilendi).
+export { MEAL_FIXES, mealDuzelt } from "../meal_fixes";

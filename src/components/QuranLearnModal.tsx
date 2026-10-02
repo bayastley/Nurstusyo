@@ -9,6 +9,7 @@ import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volum
 import { getSurahHadith } from "../data/surahHadith";
 import { fetchSurahEditions, fetchAyah, quranUrl } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
 import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, isEnglishMeal, type Reciter, type SurahInfo } from "./quranLearnVeri";
+import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): everyayah → islamic.network
 // ★ SRP adım 11 (30.09): RECITERS/MEALS/SURAHS_DATA verisi + TafsirBox + saf yardımcılar quranLearnVeri.tsx'e taşındı
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
@@ -444,7 +445,27 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
   // ★ Mobil metin kaydırma alanı — hayalet ok butonları bunu kaydırır (sayfa sabit)
   const listenScrollRef = useRef<HTMLDivElement | null>(null);
-  if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
+  if (!audioRef.current && typeof Audio !== "undefined") {
+    const a = new Audio();
+    // ★ YEDEK SES DİNLEYİCİSİ (02.10): bu paylaşımlı elementin src atama noktaları
+    //   çok (kelime/öğren/dinle) — her noktayı zincire bağlamak yerine TEK kalıcı
+    //   dinleyici patlayan everyayah URL'sini islamic.network yedeğiyle değiştirir.
+    //   mp3quran tam-sure URL'lerinin eşleşmesi yoktur → dokunulmaz.
+    a.addEventListener("error", () => {
+      const mevcut = a.currentSrc || a.src || "";
+      if (!mevcut) return;
+      const yedek = sesUrlYedegi(mevcut);
+      if (!yedek || a.dataset.sesYedek === yedek) return;
+      const caliyordu = !a.paused;
+      a.dataset.sesYedek = yedek;
+      a.src = yedek;
+      a.load();
+      if (!caliyordu) return; // preload hatası — sessizce yedeği ısıtıyor
+      const devam = () => { a.play().catch(() => undefined); };
+      if (a.readyState >= 2) devam(); else a.addEventListener("canplay", devam, { once: true });
+    });
+    audioRef.current = a;
+  }
   // ★ Uyku modu ZATEN VARDI (uykuTimer/kurUykuZamanlayici, satır ~211) — yeni ekleme YAPMADIK.
   // ★ KALDIĞIN YERDEN DEVAM (madde 38) — dinlemede sure/ayet değişince otomatik kaydet
   useEffect(() => {

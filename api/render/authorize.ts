@@ -187,8 +187,27 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
     if (!banResponse.ok) return null;
     const bans = await banResponse.json() as Array<{ id: string }>;
 
+    // ★ SUNUCU TARAFI DENEME (02.10): nur_users.tier "free" ama nur_trials'ta
+    //   aktif (7 gün içinde) deneme kaydı varsa kota hesabı PRO üzerinden yapılır.
+    //   Böylece istemcideki localStorage denemesi bypass edilse bile sunucu
+    //   gerçek deneme süresini DB'den bilir (tek otorite).
+    let tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
+    if (tier === "free") {
+      try {
+        const trialRes = await fetch(
+          `${sb.url}/rest/v1/nur_trials?user_id=eq.${encodeURIComponent(userId)}&select=started_at&limit=1`,
+          { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
+        );
+        if (trialRes.ok) {
+          const trialRows = await trialRes.json() as Array<{ started_at?: string }>;
+          const startedAt = trialRows[0]?.started_at ? Date.parse(trialRows[0].started_at) : NaN;
+          if (Number.isFinite(startedAt) && Date.now() - startedAt < 7 * 24 * 60 * 60 * 1000) tier = "pro";
+        }
+      } catch { /* deneme tablosu yoksa/eski şemadaysa free davranışı */ }
+    }
+
     return {
-      tier: users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free",
+      tier,
       isAdmin: users[0].is_admin === true,
       banned: bans.length > 0,
     };

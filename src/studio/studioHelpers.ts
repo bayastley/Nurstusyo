@@ -157,6 +157,8 @@ function throttle(): Promise<void> {
 //   sırayla tr.yazir → tr.vakfi denenir; şüpheli yanıt KABUL EDİLMEZ.
 // ════════════════════════════════════════════════════════
 
+import { mealDuzelt } from "../meal_fixes"; // ★ Diyanet meal yaması (02.10): 19/103/105/108 için API bozuksa gerçek meal
+
 const TURKCE_MEAL_YEDEKLERI: Record<string, string[]> = {
   "tr.diyanet": ["tr.yazir", "tr.vakfi"],
   "tr.yazir": ["tr.vakfi", "tr.diyanet"],
@@ -207,7 +209,10 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
         if (tr) sonTr = tr;
         // ★ Kabul koşulu: Arapça VAR ve çeviri SAĞLIKLI (kayma şüphesi yok)
         if (ar && mealSaglikliMi(tr, ed)) {
-          const result = { ar, tr };
+          // ★ MEAL YAMASI (02.10): API Diyanet edition'da bozuk/aynı-meal dönerse tablodaki
+          //   gerçek Diyanet metni kullan (yalnız tr.diyanet, yalnız tabloda kayıtlı sureler)
+          const trYamali = ed === "tr.diyanet" ? mealDuzelt(surah, ayah, tr) : tr;
+          const result = { ar, tr: trYamali };
           ayahCacheKoy(key, result);
           if (ed !== edition) console.warn(`[fetchAyah] FALLBACK: ${key} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
           console.log("[fetchAyah] Başarılı:", key, "ar:", ar.length, "tr:", tr.length);
@@ -359,7 +364,11 @@ export async function fetchSurahEditions(surah: number, edition: string): Promis
     const sonuc: SureEditionData = {
       name: ham.name,
       arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: metniTemizle(a.text), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
-      tr: ham.translated.map((t) => normalizeTurkishMeal(metniTemizle(t.text), ed)),
+      // ★ MEAL YAMASI (02.10): tr.diyanet'te tablo kaydı varsa API metni gerçek Diyanet mealıyla değişir
+      tr: ham.translated.map((t, i) => {
+        const metin = normalizeTurkishMeal(metniTemizle(t.text), ed);
+        return ed === "tr.diyanet" ? mealDuzelt(surah, i + 1, metin) : metin;
+      }),
       edition: ed,
       fallbackUsed: ed !== edition,
     };

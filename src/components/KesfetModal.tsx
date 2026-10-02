@@ -18,6 +18,7 @@ import {
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
 import { kitaplikOku, kelimeOku, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
+import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
@@ -72,7 +73,25 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [hocaIdx, setHocaIdx] = useState<number>(0);   // çalan kari index'i
   const [hocaCaliyor, setHocaCaliyor] = useState(false);
   const hocaAudioRef = React.useRef<HTMLAudioElement | null>(null);
-  if (!hocaAudioRef.current && typeof Audio !== "undefined") { hocaAudioRef.current = new Audio(); hocaAudioRef.current.preload = "none"; }
+  if (!hocaAudioRef.current && typeof Audio !== "undefined") {
+    const hocaSes = new Audio();
+    hocaSes.preload = "none";
+    // ★ YEDEK SES DİNLEYİCİSİ (02.10): patlayan everyayah URL'si varsa islamic.network yedeği
+    hocaSes.addEventListener("error", () => {
+      const mevcut = hocaSes.currentSrc || hocaSes.src || "";
+      if (!mevcut) return;
+      const yedek = sesUrlYedegi(mevcut);
+      if (!yedek || hocaSes.dataset.sesYedek === yedek) return;
+      // ★ state kapanı (closure) bayat — canlı paused özelliğine bakılır
+      const caliyordu = !hocaSes.paused;
+      hocaSes.dataset.sesYedek = yedek;
+      hocaSes.src = yedek;
+      hocaSes.load();
+      if (!caliyordu) return; // preload hatası — sessizce yedeği ısıtıyor
+      hocaSes.play().catch(() => setHocaCaliyor(false));
+    });
+    hocaAudioRef.current = hocaSes;
+  }
 
   const hocaCal = (kariIdx: number) => {
     const a = hocaAudioRef.current;

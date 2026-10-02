@@ -1,5 +1,5 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
-import { reciterAudioUrl, type Reciter } from "../reciters";
+import { sesKaynakZinciri, sesZinciriBagla, type Reciter } from "../reciters";
 
 interface SelectedAyah {
   s: number;
@@ -53,8 +53,10 @@ export function useVerseAudioPlayback({
     const isSurahOnly = Boolean(reciter.surahPattern);
     const audioSrc = isSurahOnly
       ? reciter.surahPattern!.replace("{S}", String(current.s).padStart(3, "0"))
-      : reciterAudioUrl(reciter.path, current.s, current.a);
+      : "";
     const audio = new Audio(audioSrc);
+    // ★ YEDEK SES ZİNCİRİ (02.10): everyayah patlarsa islamic.network'e düşer
+    let zinciriIptal: (() => void) | null = null;
 
     try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
     audio.preload = "auto";
@@ -65,6 +67,7 @@ export function useVerseAudioPlayback({
     const cleanup = () => {
       window.clearTimeout(previewTimerRef.current);
       window.clearInterval(ayetTimer);
+      zinciriIptal?.(); // ölü ses dirilmesin
       audio.pause();
       audio.src = "";
     };
@@ -121,12 +124,14 @@ export function useVerseAudioPlayback({
       };
       audio.onloadedmetadata = () => setPreviewDuration(audio.duration || 0);
       audio.onended = advance;
-      audio.onerror = () => {
+      // ★ YEDEK SES ZİNCİRİ (02.10): birincil everyayah → varsa islamic.network;
+      //   hepsi patlarsa eski onerror davranışı (temizle + durdur + uyar)
+      zinciriIptal = sesZinciriBagla(audio, sesKaynakZinciri(reciter.path, current.s, current.a), () => {
         if (destroyed) return;
         cleanup();
         setPreviewPlaying(false);
         notify("⚠️ Bu kârinin ses kaydı yüklenemedi · ayet konumu korundu");
-      };
+      });
       audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
       audio.onabort = () => { if (!destroyed) setPreviewPlaying(false); };
     }

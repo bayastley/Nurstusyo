@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, type Tier } from "../tier";
+import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, denemeyiSunucuyaSenkronla, type Tier } from "../tier";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { isAdminEmail } from "../tier";
 import { syncUserInDb } from "../components/adminHelpers";
@@ -170,6 +170,11 @@ export function useAuthSession({
           persistJetonSecure(data.wallet.total);
         }
         if (data.user.isAdmin) setAdminGodMode(true);
+
+        // ★ Deneme sunucu senkronu (02.10): localStorage anahtarı silinip tekrar
+        //   kurulsa bile sunucudaki gerçek başlangıç geri yüklenir — sonsuz
+        //   deneme yenileme kapanır. Oturum açılışında bir kez çalışır.
+        void denemeyiSunucuyaSenkronla();
       } catch {
         // offline/dev durumda sessiz geç
       }

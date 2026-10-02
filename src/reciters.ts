@@ -87,6 +87,122 @@ export function reciterAudioUrl(path: string, surah: number, ayah: number): stri
   return `https://everyayah.com/data/${path}/${String(surah).padStart(3, "0")}${String(ayah).padStart(3, "0")}.mp3`;
 }
 
+// ════════════════════════════════════════════════════════
+// ★ YEDEK SES KAYNAĞI (02.10) — tek kaynağa bağımlılık giderimi
+//   Her şey everyayah.com'a bağlıydı; kapanırsa dinleme/öğrenme
+//   modu tamamen ölüyordu. Yedek: cdn.islamic.network (Islamic
+//   Network CDN, ayet-bazlı, CORS açık). Edition eşleşmesi
+//   KAYNAK DOĞRULAMALI (api.alquran.cloud/v1/edition — 02.10
+//   çekildi); bilinmeyen kâriler yedeğe düşmez, bugünkü davranış.
+// ════════════════════════════════════════════════════════
+
+/** Sure başına ayet sayıları — global ayet numarası için (6236 ayet) */
+const AYET_SAYILARI = [
+  7, 286, 200, 176, 120, 165, 206, 75, 129, 109, 123, 111, 43, 52, 99, 128, 111, 110, 98, 135,
+  112, 78, 118, 64, 77, 227, 93, 88, 69, 60, 34, 30, 73, 54, 45, 83, 182, 88, 75, 85,
+  54, 53, 89, 59, 37, 35, 38, 29, 18, 45, 60, 49, 62, 55, 78, 96, 29, 22, 24, 13,
+  14, 11, 11, 18, 12, 12, 30, 52, 52, 44, 28, 28, 20, 56, 40, 31, 50, 40, 46, 42, 29,
+  19, 36, 25, 22, 17, 19, 26, 30, 20, 15, 21, 11, 8, 8, 19, 5, 8, 8, 11,
+  11, 8, 3, 9, 5, 4, 7, 3, 6, 3, 5, 4, 5, 6,
+];
+
+/** Global ayet numarası (1..6236) — islamic.network dosya adı budur */
+export function globalAyetNo(surah: number, ayah: number): number {
+  let n = 0;
+  for (let i = 0; i < surah - 1 && i < AYET_SAYILARI.length; i++) n += AYET_SAYILARI[i];
+  return n + ayah;
+}
+
+/** everyayah klasörü → islamic.network edition (yalnız sağlam eşleşmeler) */
+export const RECITER_SES_YEDEGI: Record<string, string> = {
+  "Abdurrahmaan_As-Sudais_192kbps": "ar.abdurrahmaansudais",
+  "Abdurrahmaan_As-Sudais_64kbps": "ar.abdurrahmaansudais",
+  "Saood_ash-Shuraym_128kbps": "ar.saoodshuraym",
+  "MaherAlMuaiqly128kbps": "ar.mahermuaiqly",
+  "Hudhaify_128kbps": "ar.hudhaify",
+  "Hudhaify_64kbps": "ar.hudhaify",
+  "Muhammad_Ayyoub_128kbps": "ar.muhammadayyoub",
+  "Ibrahim_Akhdar_32kbps": "ar.ibrahimakhbar",
+  "Abdullah_Basfar_192kbps": "ar.abdullahbasfar",
+  "Abdullah_Basfar_64kbps": "ar.abdullahbasfar",
+  "ahmed_ibn_ali_al_ajamy_128kbps": "ar.ahmedajamy",
+  "Ahmed_ibn_Ali_al-Ajamy_128kbps_ketaballah.net": "ar.ahmedajamy",
+  "Husary_128kbps": "ar.husary",
+  "Husary_64kbps": "ar.husary",
+  "Husary_128kbps_Mujawwad": "ar.husarymujawwad",
+  "Husary_Mujawwad_64kbps": "ar.husarymujawwad",
+  "Abdul_Basit_Murattal_192kbps": "ar.abdulsamad",
+  "Abdul_Basit_Murattal_64kbps": "ar.abdulsamad",
+  "Muhammad_Jibreel_128kbps": "ar.muhammadjibreel",
+  "Muhammad_Jibreel_64kbps": "ar.muhammadjibreel",
+  "Abu_Bakr_Ash-Shaatree_128kbps": "ar.shaatree",
+  "Abu_Bakr_Ash-Shaatree_64kbps": "ar.shaatree",
+  "Hani_Rifai_192kbps": "ar.hanirifai",
+  "Hani_Rifai_64kbps": "ar.hanirifai",
+  "Ayman_Sowaid_64kbps": "ar.aymanswoaid",
+  "Parhizgar_48kbps": "ar.parhizgar",
+  "Alafasy_128kbps": "ar.alafasy",
+  "Alafasy_64kbps": "ar.alafasy",
+};
+
+/** Yedek URL — kârinin islamic.network karşılığı yoksa null (bugünkü davranış) */
+export function reciterAudioYedekUrl(path: string, surah: number, ayah: number): string | null {
+  const edition = RECITER_SES_YEDEGI[path];
+  if (!edition) return null;
+  return `https://cdn.islamic.network/quran/audio/128/${edition}/${globalAyetNo(surah, ayah)}.mp3`;
+}
+
+/** Herhangi bir everyayah URL'si için islamic.network yedeği (eşleşme yoksa null).
+ *  QuranLearnModal gibi PAYLAŞIMLI audio elementinde src atama noktalarını tek tek
+ *  zincire bağlamak yerine element başına TEK kalıcı hata dinleyicisi bu yardımcıyla
+ *  yedeğe düşer — mod değişimlerinde zincir sökme muhasebesi gerekmez. */
+export function sesUrlYedegi(url: string): string | null {
+  const eslesme = /everyayah\.com\/data\/([^/]+)\/(\d{3})(\d{3})\.mp3/.exec(url);
+  if (!eslesme) return null;
+  return reciterAudioYedekUrl(eslesme[1], Number(eslesme[2]), Number(eslesme[3]));
+}
+
+/** Oynatma zinciri: birincil everyayah → varsa islamic.network yedeği */
+export function sesKaynakZinciri(path: string, surah: number, ayah: number): string[] {
+  const zincir = [reciterAudioUrl(path, surah, ayah)];
+  const yedek = reciterAudioYedekUrl(path, surah, ayah);
+  if (yedek) zincir.push(yedek);
+  return zincir;
+}
+
+type ZincirliAudio = HTMLAudioElement & { __sesZinciriIptal?: () => void };
+
+/** Elemente bağlı yedek zincirini söker — src="" temizliklerinde ölü ses dirilmesin. */
+export function sesZinciriSoKup(audio: HTMLAudioElement): void {
+  const z = audio as ZincirliAudio;
+  z.__sesZinciriIptal?.();
+  z.__sesZinciriIptal = undefined;
+}
+
+/** Audio elementine hata zinciri bağlar: kaynak patlarsa sıradakine düşer;
+ *  hepsi patlarsa sonunda çağrılır (mevcut onerror davranışı oraya taşınır).
+ *  Dönen fonksiyon: zinciri söker (cleanup'ta çağrınca ölü ses dirilmez). */
+export function sesZinciriBagla(audio: HTMLAudioElement, kaynaklar: string[], hepsiPatladi?: () => void): () => void {
+  sesZinciriSoKup(audio); // çift bağlama koruması
+  let sira = 0;
+  const dene = () => {
+    if (sira >= kaynaklar.length) {
+      audio.removeEventListener("error", dene);
+      hepsiPatladi?.();
+      return;
+    }
+    audio.src = kaynaklar[sira++];
+  };
+  const iptal = () => {
+    (audio as ZincirliAudio).__sesZinciriIptal = undefined;
+    audio.removeEventListener("error", dene);
+  };
+  (audio as ZincirliAudio).__sesZinciriIptal = iptal;
+  audio.addEventListener("error", dene);
+  dene();
+  return iptal;
+}
+
 export type SesTarzi = "yuksek" | "icli" | "klasik" | "orta";
 export const SES_TARZI_ORDER: Record<SesTarzi, number> = { yuksek: 0, icli: 1, orta: 2, klasik: 3 };
 export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
