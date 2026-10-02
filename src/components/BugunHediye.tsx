@@ -170,6 +170,7 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }
       {!acik && (
         <button
           type="button"
+          data-minitur="bugun-hediye"
           onClick={() => setAcik(true)}
           className="fixed bottom-20 left-3 z-[85] flex h-10 w-10 items-center justify-center rounded-full shadow-2xl transition hover:scale-110 active:scale-95 md:bottom-4 md:left-4 md:h-11 md:w-11"
           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}

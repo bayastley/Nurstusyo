@@ -116,7 +116,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
         <div className="relative mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex items-center gap-3" data-sidebar-trigger="true">
             <div className="relative">
-              <button className="glass-soft rounded-lg p-2 text-white/70 hover:text-white" onClick={() => setMenuOpen((value) => !value)}>
+              <button data-minitur="menu" className="glass-soft rounded-lg p-2 text-white/70 hover:text-white" onClick={() => setMenuOpen((value) => !value)}>
                 {menuOpen ? <X size={17} /> : <Menu size={17} />}
               </button>
               {menuOpen && (
@@ -211,7 +211,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </div>
 
                     {/* ★ ARAÇLAR — İslami yardımcı araçlar (Güncellemeler'in altında, en üst bölgede) */}
-                    <button onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                    <button data-minitur="araclar" onClick={() => { setToolsOpen(true); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <span className="text-base">🤲</span>
                       <span>{t("menuAraclar")}</span>
                       <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-bold text-emerald-300">{t("menuYeni")}</span>
@@ -222,7 +222,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {[
                       { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
                       { icon: Compass, label: t("menuKesfet"), target: "kesfet" as ModalName },
-                      { icon: Brain, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName },
+                      { icon: Brain, data: "hafizlik-testi" as const, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName },
                       { icon: NotebookPen, label: t("menuAyetNotlari"), target: "ayetNotlari" as ModalName },
                       { icon: Type, label: t("menuKelimeAtolyesi"), target: "kelimeAtolyesi" as ModalName },
                       { icon: Wand2, label: t("menuArkaPlanUretici"), target: "arkaPlanUretici" as ModalName },
@@ -236,7 +236,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: Moon, label: t("menuRamazan"), target: "ramazan" as ModalName },
                       { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName },
                     ].map((item) => (
-                      <button key={item.target} onClick={() => { if (item.target === "__kabe") { window.dispatchEvent(new Event("nur_kabe_ac")); setMenuOpen(false); return; } if (item.target === "__hediye") { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); return; } setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <button key={item.target} {...(item.data ? { "data-minitur": item.data } : {})} onClick={() => { if (item.target === "__kabe") { window.dispatchEvent(new Event("nur_kabe_ac")); setMenuOpen(false); return; } if (item.target === "__hediye") { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); return; } setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
                         {item.label}
                       </button>
@@ -442,12 +442,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               <ImageIcon size={11} style={{ color: "var(--accent)" }} />{t("menuAyetKartlari")}
             </button>
             {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
-            <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
+            <button data-minitur="kuran-sayfalar" onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
               <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an
             </button>
             {/* ★ KÂBE CANLI — ALTIN MADEN ÖNE ÇIKARMA (02.10, kullanıcı emri): üst barda tek tık,
                 kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + " — 7/24 canlı yayın"}>
+            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + " — 7/24 canlı yayın"}>
               🕋 {t("menuKabeCanli")}
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />

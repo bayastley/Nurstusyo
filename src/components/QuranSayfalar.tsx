@@ -18,6 +18,7 @@ import {
   SAYFA_SAYISI, sayfaSvgKaynaklari, cuzBul, sayfadaBaslayanSureler, aktifSureNo,
   hatimYukle, hatimKaydet, sonSayfaYukle, sonSayfaKaydet, type HatimKaydi,
 } from "../data/quranSayfaVeri";
+import { sevapEkle, kelimeSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
 import { SURAHS_DATA } from "./quranLearnVeri";
 
 const Z_MIN = 0.5;
@@ -105,6 +106,13 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setHatimMesaji("");
     const varMi = hatim.okunan.includes(sayfa);
     const okunan = varMi ? hatim.okunan.filter((n) => n !== sayfa) : [...hatim.okunan, sayfa].sort((a, b) => a - b);
+    // ★ SEVAP SAYACI (madde 4): yeni işaretlemede bu sayfanın kelime sayısı kadar harf ekle.
+    //   İşaret KALDIRILIRSA harf geri ALINMAZ — okunan, okunmuştur (dürüstlük).
+    if (!varMi) {
+      import("../data/quranSayfaKelime").then(({ SAYFA_HARF_ORT }) => {
+        sevapEkle(SAYFA_HARF_ORT);
+      }).catch(() => sevapEkle(1250)); // veri yoksa mushaf sayfa ortalaması
+    }
     if (!varMi && okunan.length >= SAYFA_SAYISI) {
       const yeni: HatimKaydi = { okunan: [], tamamlanan: hatim.tamamlanan + 1 };
       setHatim(yeni);

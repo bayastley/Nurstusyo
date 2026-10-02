@@ -65,6 +65,8 @@ import { TelifDisclaimer } from "./components/TelifDisclaimer";
 import { telifUyarisiGerekli } from "./telifUyari";
 import { uretimIstYaz } from "./components/islamicToolsVucut";
 import { BugunHediye } from "./components/BugunHediye";
+import { MiniTur } from "./components/MiniTur"; // ★ madde 3: ilk girişte 5 duraklı tur
+import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4: dürüst aylık harf sayacı
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { RoadmapModal } from "./components/RoadmapModal";
@@ -165,7 +167,23 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
   const [lang, setLang] = useState<Lang>(() => {
     const saved = localStorage.getItem("nur_lang");
-    return LANGS.some((item) => item.code === saved) ? saved as Lang : "tr";
+    if (saved && LANGS.some((item) => item.code === saved)) return saved as Lang;
+    // ★ ENDONEZYA ODAĞI (madde 5, 02.10): dil tercihi kayıtsızsa tarayıcı diline bak —
+    //   Endonezce/Arapça/Urduca/İngilizce gelen kendi dilinde karşılanır (çeviriler hazır).
+    //   Tespit edilen dil ilk render'da nur_lang'e yazılır → sonraki girişlerde kalıcı olur;
+    //   kullanıcı farklı dil seçerse seçimi ezberin üstüne geçer.
+    try {
+      const diller = [navigator.language, ...(navigator.languages ?? [])].filter(Boolean);
+      for (const ham of diller) {
+        const kod = (ham || "").slice(0, 2).toLowerCase();
+        if (kod === "id") return "id";
+        if (kod === "ar") return "ar";
+        if (kod === "ur") return "ur";
+        if (kod === "en") return "en";
+        if (kod === "tr") return "tr";
+      }
+    } catch { /* yut */ }
+    return "tr";
   });
   // ★ Tema HESABA ÖZEL (aşağıda user tanımlandıktan sonra hesap anahtarına bağlanır)
   const [themeId, setThemeId] = useState(() => localStorage.getItem("nur_theme") || "nur");
@@ -1271,6 +1289,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }}
       />
 
+      {/* ★ SEVAP SAYACI KARTI — bu ay okunan harf (madde 4, 02.10): en üstte, kapatılabilir */}
+      <SevapSayaciKarti lang={lang} />
+
       {/* HEADER & TOP STRIP */}
       <HeaderTopBar
         daily={daily}
@@ -1738,6 +1759,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) */}
       <BugunHediye notify={notify} onHakDegisti={syncWallet} />
+
+      {/* ★ MINI TUR — ilk girişte 5 duraklı gezdirme (madde 3, 02.10) */}
+      <MiniTur lang={lang} />
 
       {/* ★ PWA KURULUM SİHİRBAZI — Ana Ekrana Ekle öğreticisi (madde 23) */}
       <PwaKurulumBanneri />

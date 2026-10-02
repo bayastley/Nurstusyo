@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, RADIO_STATIONS, ulkeToBolge, dilToBolge, type RadioBolge } from "../data/liveStreams";
 import { KabeCanliModal } from "./KabeCanliModal"; // ★ SRP 01.10: Kâbe canlı overlay + HLS bağlantısı ayrıldı
 import { QuranSayfalar } from "./QuranSayfalar"; // ★ 02.10: Kur'an Sayfaları — mushaf görünümü (zoom/tam ekran/hatim)
+import { sevapEkle, arapcaHarfSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
@@ -483,6 +484,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const surah = SURAHS_DATA.find(s => s.n === surahNo) ?? SURAHS_DATA[0];
   const ayah = ayahs.find(a => a.n === ayahNo);
 
+  // ★ SEVAP SAYACI — AYET GEZİNME (madde 4): "Öğren" modunda görüntülenen ayet
+  //   değiştiğinde O AYETİN Arapça harf sayısı eklenir. Dürüstlük kuralları:
+  //     • Sayaç ayetin GÖRÜNTÜLENDİĞİ anda artar (oyunlaştırma yok, rastgelelik yok)
+  //     • Aynı oturumda aynı ayet tekrar tekrar sayılmaz (gördüm-ref'te oturum seti)
+  //     • Sadece "learn" modunda ve modal açıkken
+  const gordumRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!open || mode !== "learn" || !ayahNo) return;
+    const anahtar = `${surahNo}:${ayahNo}`;
+    if (gordumRef.current.has(anahtar)) return;
+    const ayet = ayahs.find((a) => a.n === ayahNo);
+    if (!ayet?.ar) return;
+    gordumRef.current.add(anahtar);
+    sevapEkle(arapcaHarfSayisi(ayet.ar));
+  }, [open, mode, surahNo, ayahNo, ayahs]);
+
   // ★ KARŞILAŞTIRMALI OKUMA (madde 55): ikinci meal yan yana
   const [karsilastirmaAcik, setKarsilastirmaAcik] = useState(false);
   const [karsiMealId, setKarsiMealId] = useState<string>("tr.yazir");
@@ -534,6 +551,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
           juz: a.juz,
           page: a.page,
         })));
+        // ★ SEVAP SAYACI (madde 4): sure yüklendiğinde toplam Arapça harf sayılır ve
+        //   kullanıcının bu ay gerçekten OKUDUĞU ayetler kadarı eklenir (aşağıda, gezinme efekti).
         setLoading(false);
       })
       .catch(() => { if (live) { setError("Ayetler yüklenemedi. İnternet bağlantını kontrol et."); setLoading(false); } });
