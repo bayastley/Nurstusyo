@@ -8,7 +8,8 @@
 import React, { useState } from "react";
 import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
-import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, type RuhSayac } from "../data/ruhHalleri";
+import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, ruhHaliAd, type RuhSayac } from "../data/ruhHalleri";
+import { translate, type Lang } from "../i18n";
 import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { CubukRenkSecici } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
@@ -38,7 +39,10 @@ export const AyetSecimBolumu: React.FC<{
   ruhHaliMetin: string;
   setRuhHaliMetin: (v: string) => void;
   ruhHaliUygula: (ruhId?: string) => void;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula }) => {
+  /** ★ i18n (02.10): bölüm metinleri + çip adları seçili dilde */
+  lang?: Lang;
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr" }) => {
+  const tt = (k: string): string => translate(lang, k);
   // ★ ÇİP SAYACI (02.10): her basış localStorage'a yazılır; popüler 5 çip ÖNE
   //   sabitlenir (🏅 rozet + seçim sayısı). State tick'i sıralamayı anında günceller.
   const [ruhSayac, setRuhSayac] = useState<RuhSayac>(() => ruhSayacOku());
@@ -57,7 +61,7 @@ export const AyetSecimBolumu: React.FC<{
                   value={ruhHaliMetin}
                   onChange={(e) => setRuhHaliMetin(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") ruhHaliUygula(); }}
-                  placeholder="Ruh halini yaz — sınav stresi, kalp kırıklığı, huzur arıyorum..."
+                  placeholder={tt("akRuhHaliPlaceholder")}
                   className="glass-soft w-full rounded-lg py-2 pl-9 pr-2.5 text-[10.5px] outline-none placeholder:text-white/30"
                 />
               </div>
@@ -66,19 +70,20 @@ export const AyetSecimBolumu: React.FC<{
                 onClick={() => ruhHaliUygula()}
                 className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                title="Ruh haline uygun ayet + arka plan + kart ayarları"
+                title={lang === "tr" ? "Ruh haline uygun ayet + arka plan + kart ayarları" : undefined}
               >
-                <Brain size={11} /> AI Ruh Hali
+                <Brain size={11} /> {tt("akAiRuhHali")}
               </button>
             </div>
             <div className="scrollbar-thin mt-1.5 flex max-h-[58px] flex-wrap gap-1 overflow-y-auto">
               {cipSirasi(ruhSayac).map(({ id, sayi, populer }) => {
                 const r = RUH_HALLERI.find((x) => x.id === id)!;
+                const cipAd = ruhHaliAd(r, lang);
                 return (
-                  <button key={r.id} type="button" onClick={() => cipTikla(r.id)} title={populer ? `${r.ad} — senin favorilerinden (${sayi} seçim)` : r.ad}
+                  <button key={r.id} type="button" onClick={() => cipTikla(r.id)} title={populer ? `${cipAd} — ${sayi}×` : cipAd}
                     className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold transition ${populer ? "border border-amber-400/40 bg-amber-400/10 text-amber-200 hover:bg-amber-400/20" : "glass-soft text-white/55 hover:text-white"}`}>
                     {populer && <span className="mr-0.5" aria-hidden>🏅</span>}
-                    {r.emoji} {r.ad}{populer && <span className="ml-1 opacity-70">{sayi}×</span>}
+                    {r.emoji} {cipAd}{populer && <span className="ml-1 opacity-70">{sayi}×</span>}
                   </button>
                 );
               })}
@@ -86,7 +91,7 @@ export const AyetSecimBolumu: React.FC<{
           </div>
 
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>1 · Ayetini Seç</span>
+            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akAyetiniSec")}</span>
             <div className="ml-auto flex items-center gap-1.5">
               {/* 🎯 Akıllı AI — ayetin duygu/kelime ipuçlarından ayet + uyumlu arka plan tek tuşla */}
               <button
@@ -223,13 +228,16 @@ export const KartOnizlemeBolumu: React.FC<{
   fotoYukle: (file: File | undefined | null) => void;
   hatPaletiAcik: boolean;
   hatKilitTiklandi: () => void;
-}> = ({ previewRef, size, setSize, bg, downloading, download, ayar, setAyar, ayarlariGoster, setAyarlariGoster, kendiFoto, kendiFotoAd, setKendiFoto, setKendiFotoAd, bgId, setBgId, fotoYukle, hatPaletiAcik, hatKilitTiklandi }) => {
+  /** ★ i18n (02.10): indirme butonu + başlıklar seçili dilde */
+  lang?: Lang;
+}> = ({ previewRef, size, setSize, bg, downloading, download, ayar, setAyar, ayarlariGoster, setAyarlariGoster, kendiFoto, kendiFotoAd, setKendiFoto, setKendiFotoAd, bgId, setBgId, fotoYukle, hatPaletiAcik, hatKilitTiklandi, lang = "tr" }) => {
+  const tt = (k: string): string => translate(lang, k);
   const dim = size === "45" ? "1080 × 1350" : size === "916" ? "1080 × 1920" : "1080 × 1080";
   const mesajRenkDonme = hexToHue(ayar.mesaj.renk || "#ffffff");
   return (
     <div className="order-1 lg:order-2">
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>Kartın</span>
+            <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akKartin")}</span>
           </div>
           <div className="glass-soft rounded-2xl p-2.5">
             <canvas
@@ -251,7 +259,7 @@ export const KartOnizlemeBolumu: React.FC<{
               onClick={() => setAyarlariGoster((v) => !v)}
               className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/60 transition hover:text-white"
             >
-              <Wand2 size={11} style={{ color: "var(--accent)" }} /> Kart Ayarları {ayarlariGoster ? "▲" : "▼"}
+              <Wand2 size={11} style={{ color: "var(--accent)" }} /> {tt("akKartAyarlari")} {ayarlariGoster ? "▲" : "▼"}
             </button>
 
             {ayarlariGoster && (
@@ -505,7 +513,7 @@ export const KartOnizlemeBolumu: React.FC<{
               ) : (
                 <Download size={13} strokeWidth={2.5} />
               )}
-              {downloading ? "Hazırlanıyor…" : "FOTOĞRAF OLARAK İNDİR"}
+              {downloading ? tt("akIndirBtnHazirlaniyor") : tt("akIndirBtn")}
             </button>
           </div>
         </div>

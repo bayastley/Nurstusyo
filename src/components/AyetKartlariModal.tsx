@@ -15,7 +15,7 @@ import { Modal } from "./UIElements";
 import { AYET_KARTILARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
 import type { Tier } from "../tier";
 import { BACKGROUNDS, catLabel, akilliBgSec, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
-import { RUH_HALLERI, ruhHaliEsle, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
+import { RUH_HALLERI, ruhHaliEsle, ruhHaliAd, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
 import { translate, type Lang } from "../i18n";
 import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKartBolumleri";
 
@@ -264,7 +264,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     let tam = true;
     if (!ruh) {
       const metin = ruhHaliMetin.trim();
-      if (!metin) { notify?.("🧠 Ruh halini yaz — örn. 'sınav stresi', 'huzur arıyorum', 'kalbi kırık'"); return; }
+      // ★ i18n (02.10): boş-input uyarısı seçili dilde (EN/AR'da İngilizce/Argo yerine kendi dili)
+      if (!metin) { notify?.(tt("akRuhHaliPlaceholder")); return; }
       const es = ruhHaliEsle(metin);
       ruh = es.ruh; tam = es.skor > 0;
     }
@@ -278,10 +279,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     if (bgPick) { setBgId(bgPick.id); setBgCat("all"); setBgSearch(""); }
     setMood(ruh.mood); setSadeceGunun(false);
     setAyar((a) => ({ ...a, ...ayarOneri, cubuk: { ...a.cubuk, acik: true, donme: cubukDonme, mealDonme: (cubukDonme + 150) % 360, kalinlik: a.cubuk.kalinlik || 6 } }));
+    // ★ i18n (02.10): onay bildirimi çip adını SEÇİLİ DİLDE verir (ruhHaliAd);
+    //   ayet başlığı/arka plan etiketi içerik-özgü TR kalır (veri katmanı).
+    const ruhAd = ruhHaliAd(ruh, lang);
     notify?.(tam
-      ? `🧠 ${ruh.emoji} ${ruh.ad} — ${ayetPick.title} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
-      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruh.ad} — ${ayetPick.title} hazır!`);
-  }, [ruhHaliMetin, notify]);
+      ? `🧠 ${ruh.emoji} ${ruhAd} — ${ayetPick.title} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
+      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruhAd} — ${ayetPick.title} hazır!`);
+  }, [ruhHaliMetin, notify, lang]);
 
   if (!open) return null;
 
@@ -314,6 +318,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           ruhHaliMetin={ruhHaliMetin}
           setRuhHaliMetin={setRuhHaliMetin}
           ruhHaliUygula={ruhHaliUygula}
+          lang={lang}
         />
 
         {/* ── SAĞ: KART ÖNİZLEME + İNDİR ───────────────────── */}
@@ -337,6 +342,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           fotoYukle={fotoYukle}
           hatPaletiAcik={hatPaletiAcik}
           hatKilitTiklandi={hatKilitTiklandi}
+          lang={lang}
         />
       </div>
 
