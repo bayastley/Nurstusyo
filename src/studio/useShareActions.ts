@@ -100,6 +100,24 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
   }, [shareTitle, shareDescription]);
 
+  // ★ CİHAZIN UYGULAMA MENÜSÜ (02.10 — "kolaylık olsun"): Playlaş'a basınca artık
+  //   native paylaşımi açılmıyorsa bile kullanıcının önünde CİHAZINA GÖRE hazır
+  //   uygulama kısayolları çıkıyor: mobilde WhatsApp/Instagram/X, masaüstünde
+  //   YouTube/TikTok/WhatsApp Web + panoya kopyala. Tek satır çağrıyla VideoPreviewSection
+  //   çip şeridi bunları render eder.
+  const paylasCihazi = useCallback((output?: Output) => {
+    const mobil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    const uygulamar: Array<{ ad: string; emoji: string; islem: () => void }> = [
+      { ad: "WhatsApp", emoji: "💬", islem: shareToWhatsApp },
+      ...(mobil ? [{ ad: "Instagram", emoji: "📸", islem: shareToInstagram }] : []),
+      ...(mobil ? [{ ad: "TikTok", emoji: "🎵", islem: shareToTikTok }] : []),
+      ...(mobil ? [] : [{ ad: "YouTube", emoji: "▶️", islem: shareToYouTube }]),
+      ...(mobil ? [] : [{ ad: "WhatsApp Web", emoji: "🖥️", islem: shareToWhatsApp }]),
+      { ad: "X", emoji: "𝕏", islem: shareToX },
+    ];
+    return uygulamar.map((u) => ({ ...u, calistir: () => { u.islem(); if (output) void downloadVideo(output).catch(() => undefined); } }));
+  }, [downloadVideo, shareToInstagram, shareToTikTok, shareToWhatsApp, shareToX, shareToYouTube]);
+
   return {
     copied,
     copyShare,
@@ -110,5 +128,6 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     shareToTikTok,
     shareToInstagram,
     shareToX,
+    paylasCihazi,
   };
 }

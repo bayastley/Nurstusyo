@@ -1147,7 +1147,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   });
 
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
-  const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX } = useShareActions({ shareTitle, shareDescription, notify });
+  const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify });
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;
@@ -1397,6 +1397,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setActiveOutputId={setActiveOutputId}
           fmtSize={fmtSize}
           shareOutput={shareOutput}
+          paylasCihazi={paylasCihazi}
           downloadVideo={downloadVideo}
           user={user}
           setLoginTab={setLoginTab}

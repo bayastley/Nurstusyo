@@ -66,6 +66,7 @@ interface VideoPreviewSectionProps {
   setActiveOutputId: (id: string | null) => void;
   fmtSize: (bytes: number) => string;
   shareOutput: (output: Output) => void;
+  paylasCihazi: (output?: Output) => Array<{ ad: string; emoji: string; calistir: () => void }>;
   downloadVideo: (output: Output) => Promise<void>;
   user: unknown;
   setLoginTab: (tab: unknown) => void;
@@ -100,7 +101,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     previewTime, fmtDuration, clipKind, setClipKind, setBackground, background, smartAiEnabled,
     setSmartAiEnabled, aiTooltipHover, setAiTooltipHover, isMasterSürüm, tierAtLeast, tier,
     hasMicroUnlock, tryUnlockElitFeature, applySmartBackgrounds, openPremium, setModal,
-    activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, downloadVideo, user, setLoginTab, t, handleGenerate,
+    activeOutput, outputs, setActiveOutputId, fmtSize, shareOutput, paylasCihazi, downloadVideo, user, setLoginTab, t, handleGenerate,
     generating, progress, generateCost, aspect, notify, setSelected, setAyahBackgrounds, setPickingFor,
     kendiSesAktifMi, onKendiSesAc,
   } = props;
@@ -472,6 +473,20 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title="Videoyu cihazına kaydet"><Download size={12} />{t("download")}</a>
                 <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title="Cihazındaki uygulamalarla paylaş (WhatsApp, Instagram…)"><Share2 size={12} />{t("share")}</button>
               </div>
+              {/* ★ CİHAZ UYGULAMA ÇİPLERİ (02.10): Paylaş → cihazına göre uygulama kısayolları;
+                  tıklayınca uygulama açılır + video arka planda cihaza iner (kolay paylaşım) */}
+              {paylasCihazi(activeOutput).length > 0 && (
+                <div className="mt-2 flex flex-wrap items-center gap-1">
+                  <span className="text-[8px] font-bold text-white/35">Hızlı paylaş:</span>
+                  {paylasCihazi(activeOutput).map((u) => (
+                    <button key={u.ad} type="button" onClick={u.calistir}
+                      className="rounded-full border border-white/10 bg-white/[.04] px-2 py-1 text-[8.5px] font-bold text-white/70 transition hover:border-emerald-400/40 hover:text-emerald-300"
+                      title={`${u.ad} ile paylaş`}>
+                      {u.emoji} {u.ad}
+                    </button>
+                  ))}
+                </div>
+              )}
             </>
           ) : <p className="py-6 text-center text-[9px] text-white/30">Video çıktınız burada görünür</p>}
         </div>
