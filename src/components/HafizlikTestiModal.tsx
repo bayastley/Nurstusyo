@@ -243,64 +243,81 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       const bas = tam.slice(0, kesme > 0 ? kesme : 40);
       const devam = tam.slice(bas.length).trim();
       // Yanlış seçenekler: aynı sureden VEYA komşu surelerden diğer devam parçaları
-      // ★ UZUNLUK EŞİTLİĞİ FIX (30.09, kullanıcı bildirimi): eski kesim `k.slice(0, devam.length)`
-      //   yanlış şıkları doğru devamdan ÇOK KISA yapabiliyordu (ör. devam 180 kar.
-      //   yanlış 40 kar.) → "en uzun şık doğru" taktiği testi bozuyordu. Artık her
-      //   yanlış şık, doğru devamla AYNI kelime sayısına kadar kesilir (kelime bazlı),
-      //   yani uzunluk ipucu ortadan kalkar; doğru/yanlış ayrımı yalnız hafızadan olur.
-      // ★ KARAKTER BANDI YAMASI (01.10, kullanıcı isteği): kelime sayısı eşit olsa bile
-      //   harf uzunlukları farklı olabilir (kısa kelimeler → belirgin kısa şık). Şimdi
-      //   her yanlış aday, doğru devamın %70–130 bandına çekilir: kısaysa kaynak metinden
-      //   ek kelimeler eklenir, uzarsa kesilir. Böylece karakter düzeyinde de ipucu kalmaz.
-      const devamKelime = devam.split(/\s+/).filter(Boolean).length;
-      const kelimeKes = (t: string, n: number) => { const w = t.split(/\s+/).filter(Boolean); return w.slice(0, Math.max(1, n)).join(" "); };
-      // %70–130 karakter bandına çekme: kisaysa fazladan kelime ekle, uzarsa kelime sınırında kes
-      const bandaCek = (aday: string, kaynak: string): string => {
+      // ★ UZUNLUK EŞİTLİĞİ v3 (02.10, kullanıcı bildirimi "yine uzun şık doğru oluyor"):
+      //   önceki %70–130 bandı ÇOK GENİŞTİ — 0.7×'te kalan yanlış şık çıplak gözle belirgin
+      //   kısa kalıyor, doğru cevap pratikte sık "en uzun şık" oluyordu. Artık her yanlış,
+      //   doğru devamın uzunluğuna ±%8 sapmayla ÇEKİLİR: kısaysa kaynak ayetin
+      //   KARIŞTIRILMIŞ kelimeleriyle uzatılır, uzarsa kelime sınırında kesilir. 4 şık
+      //   neredeyse AYNI uzunlukta → "en uzun = doğru" sinyali tamamen kalkar; doğru/
+      //   yanlış ayrımı yalnız hafızadan olur. (Eski kelime-sayısı kesimi kaldırıldı —
+      //   karakter hedefi tek ölçüt; sıralı modulo tekrar da karıştırmayla değişti.)
+      const uzunlugaCek = (aday: string, kaynak: string, hedefLen: number): string => {
         let s = aday.trim();
-        const minLen = Math.floor(devam.length * 0.7);
-        const maxLen = Math.ceil(devam.length * 1.3);
-        const kaynakKelime = kaynak.split(/\s+/).filter(Boolean);
-        // Kaynak kelimeler biterse BAŞA SARAR (modulo) — kısa kaynakta bile minLen'e ulaşılır.
+        let kelimeler = kaynak.split(/\s+/).filter(Boolean);
         let guven = 0;
-        while (s.length < minLen && kaynakKelime.length > 0 && guven < 500) { s += " " + kaynakKelime[guven % kaynakKelime.length]; guven += 1; }
-        if (s.length > maxLen) {
+        // Kısa → uzat: kelimeler KARIŞTIRILARAK sürer. Yalnız ARDİŞİK tekrar engellenir
+        // ("aynı ibare arka arkaya ×3" çirkinliği); aradaki doğal tekrar kabul — aksi hâlde
+        // kısa ayetlerde tüm benzersiz kelimeler adayda zaten varken döngü hiç ilerlemez ve
+        // güven limiti dolup şık hedefin ALTINDA kalır (v4'te yakalanan 23-kr kaçak şık).
+        while (s.length < hedefLen && kelimeler.length > 0 && guven < 500) {
+          const eklenecek = kelimeler[guven % kelimeler.length];
+          if (s.split(/\s+/).slice(-1)[0] === eklenecek) {
+            guven += 1;
+            if (guven % kelimeler.length === 0) kelimeler = karistir(kelimeler);
+            continue;
+          }
+          s += " " + eklenecek;
+          guven += 1;
+          if (guven % kelimeler.length === 0) kelimeler = karistir(kelimeler);
+        }
+        // Uzun → hedefe EN YAKIN kelime-sınırı kesimi (v4.3): eski kelime-pop son aday tek
+        // kelimede takılınca hedefin ÇOK altında kalıyordu (Kolay'da devam 12 kr iken
+        // dağıtıcı 20 kr, oran 1.67 — ipucu geri gelmişti). Artık tüm prefix'ler
+        // değerlendirilir, |uzunluk − hedef| en küçük olan seçilir → granülarite ~yarım kelime.
+        if (s.length > hedefLen) {
           const w = s.split(/\s+/).filter(Boolean);
-          while (w.length > 1 && w.join(" ").length > maxLen) w.pop();
-          s = w.join(" ");
-          if (s.length > maxLen) s = s.slice(0, Math.max(minLen, maxLen - 1)).trim();
+          let enIyi = s;
+          for (let n = 1; n <= w.length; n++) {
+            const L = w.slice(0, n).join(" ").length;
+            if (Math.abs(L - hedefLen) < Math.abs(enIyi.length - hedefLen)) enIyi = w.slice(0, n).join(" ");
+          }
+          s = enIyi;
+          if (s.length > hedefLen) s = s.slice(0, Math.max(1, hedefLen)).trim();
         }
         return s;
       };
+      // ★ HEDEF UZUNLUK (v4.2): soru başına TEK hedef — doğru devam × 0.98–1.08. Kelime-
+      //   sınırı kesimi yanlışları hedefin ALTINDA bitirdiği için doğru sistematik "en uzun"
+      //   kalıyordu (3/3 ölçümle yakalandı); hedefi hafif yukarı kaydırınca kesim sonrası
+      //   yanlışlar devamın iki yanına dengeli dağılır. Aralarındaki fark ±%4-6 → sinyal yok.
+      const soruHedefi = Math.round(devam.length * (0.98 + Math.random() * 0.10));
+      const devamKelime = devam.split(/\s+/).filter(Boolean).length;
+      const kelimeKes = (t: string, n: number) => { const w = t.split(/\s+/).filter(Boolean); return w.slice(0, Math.max(1, n)).join(" "); };
       const yanlisHavuz: string[] = [];
       for (const a of ayahs) {
         const t = a.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").trim();
         if (t !== tam && t.length > 25) {
-          const k = t.slice(Math.floor(t.length / 3));
-          const aday = bandaCek(kelimeKes(k, devamKelime), k);
-          if (aday !== devam && !yanlisHavuz.includes(aday)) yanlisHavuz.push(aday);
+          // ★ KELİME GÜVENLİ KESİM (v4): eski `t.slice(len/3)` kelime ORTASINDAN kırıyordu —
+          //   şık "ْكِتَٰبَ" gibi harf döküntüsüyle başlıyordu. Artık kelime dizisinden kesilir;
+          //   dolgu kaynağı da tam (adayın kendi kelimeleri değil) → tekrar çirkinliği yok.
+          const w = t.split(/\s+/).filter(Boolean);
+          const k = w.slice(Math.max(1, Math.floor(w.length / 3))).join(" ");
+          const aday = uzunlugaCek(k, tam, soruHedefi);
+          // ★ KALİTE KAPISI (v4.3): hedefe yakın oturmayan aday reddedilir → dolgu (tam
+          //   karışımı) devreye girer. Tolerans maks(3 kr, devamın %12'si) — ±6'lık ilk
+          //   değer kısa devamlarda 18-19'luk gevşek şıkları kabul ediyordu (oran 1.36).
+          if (aday !== devam && !yanlisHavuz.includes(aday) && Math.abs(aday.length - soruHedefi) <= Math.max(3, devam.length * 0.12)) yanlisHavuz.push(aday);
         }
       }
       while (yanlisHavuz.length < 3) {
-        // ★ BANT SABİTLERİ (01.10 fix): minLen/maxLen bandaCek'in YEREL değişkenleriydi —
-        //   bant koruması yaması onları bu kapsamda kullanınca ReferenceError ile modal
-        //   çöküyordu ("hafızlık testine basınca hata"). Aynı formüllerle burada tanımlı.
-        const minLen = Math.floor(devam.length * 0.7);
-        const maxLen = Math.ceil(devam.length * 1.3);
-        // ★ Dolgu üretici çeşitlilik: aynı ters-çevrilmiş metni tekrar etmesin diye her
-        //   turda farklı bir permütasyon/kesim üretir; yine de tekil olmayan atılır.
-        const baz = yanlisHavuz.length === 0 ? devam : yanlisHavuz[yanlisHavuz.length - 1];
-        let aday = bandaCek(baz.split(/\s+/).reverse().join(" "), tam);
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(kelimeKes(tam, devamKelime), tam);
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek(devam.split(/\s+/).slice().sort().join(" "), tam);
-        if (yanlisHavuz.includes(aday) || aday === devam) aday = bandaCek((baz + " " + tam).split(/\s+/).slice(0, Math.max(1, devamKelime)).join(" "), tam);
-        if (!yanlisHavuz.includes(aday) && aday !== devam) yanlisHavuz.push(aday);
+        // ★ DOLGU KAYNAĞI = TAM (v4): aday, ayetin KARIŞTIRILMIŞ kelimelerinden kurulur —
+        //   doğal ayet dokusu, tekrarsız, ve soru hedefine (devam ±%6) çekilir.
+        //   Aynı aday tekrar üretilirse devamın tersi ile farklılaşır; yine hedef bantta.
+        const aday = uzunlugaCek(karistir(tam.split(/\s+/)).join(" "), tam, soruHedefi);
+        if (aday !== devam && !yanlisHavuz.includes(aday)) yanlisHavuz.push(aday);
         else {
-          // ★ BANT KORUMASI (01.10): " ﴿﴾" eki bandaCek'ten SONRA ekleniyordu ve
-          //   bant üstüne taşıyordu (devam 68 kar. iken şık 91 = %134 kaçtı). Artık
-          //   ekli hâl önce maxLen'e sığdırılır, sonra eklenir — bant asla delinmez.
-          let ekle = aday + " ﴿﴾";
-          if (ekle.length > maxLen) ekle = aday.slice(0, Math.max(minLen, maxLen - 4)).trim() + " ﴿﴾";
-          yanlisHavuz.push(ekle);
+          const eksi = uzunlugaCek(devam.split(/\s+/).reverse().join(" "), tam, soruHedefi);
+          yanlisHavuz.push(eksi === devam ? uzunlugaCek(kelimeKes(tam, devamKelime + 1), tam, soruHedefi) : eksi);
         }
       }
       const secenekler = karistir([devam, ...yanlisHavuz.slice(0, 3)]);
