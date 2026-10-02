@@ -75,6 +75,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mealId, setMealId] = useState<string>("tr.diyanet");
+  // ★ MEAL GÜNCELLENİYOR GÖSTERGESİ (02.10, kullanıcı isteği): yalnız meal (dil) değişince
+  //   true olur — eski meal ekranda KALIR (bayat ama görülür) + select yanında küçük çip:
+  //   "mealler güncelleniyor…". Uzun surelerde (Bakara ~1 MB) boş ekran sessizliği olmaz.
+  //   Sure değişiminde eski davranış sürer: tam yenileme + "Ayetler yükleniyor…".
+  const [mealYenileniyor, setMealYenileniyor] = useState(false);
+  const oncekiMealRef = useRef<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeWord, setActiveWord] = useState<number | null>(null);
@@ -538,7 +544,17 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   useEffect(() => {
     if (!open || mode !== "learn") return;
     let live = true;
-    setLoading(true); setError(null); setAyahs([]); setWords([]); setActiveWord(null);
+    // ★ MEAL değişimi: bayat metin EKRANDA KALSIN + çip göster (sessizlik yok).
+    //   Sure değişimi / ilk açılış: tam temizle + tam ekran yükleniyor (eski davranış).
+    const mealDegisti = oncekiMealRef.current !== null && oncekiMealRef.current !== mealId;
+    oncekiMealRef.current = mealId;
+    if (mealDegisti) {
+      setMealYenileniyor(true);
+      setError(null);
+    } else {
+      setMealYenileniyor(false);
+      setLoading(true); setError(null); setAyahs([]); setWords([]); setActiveWord(null);
+    }
     // ★ KAYMA KORUMASI (28.09): merkezî fetchSurahEditions — tr.diyanet şüpheliyse
     //   tr.yazir → tr.vakfi fallback'i çeker, ayet sayısı/çeviri sağlığı doğrulanır.
     fetchSurahEditions(surahNo, mealId)
@@ -553,9 +569,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
         })));
         // ★ SEVAP SAYACI (madde 4): sure yüklendiğinde toplam Arapça harf sayılır ve
         //   kullanıcının bu ay gerçekten OKUDUĞU ayetler kadarı eklenir (aşağıda, gezinme efekti).
+        setMealYenileniyor(false);
         setLoading(false);
       })
-      .catch(() => { if (live) { setError("Ayetler yüklenemedi. İnternet bağlantını kontrol et."); setLoading(false); } });
+      .catch(() => { if (live) { setError("Ayetler yüklenemedi. İnternet bağlantını kontrol et."); setMealYenileniyor(false); setLoading(false); } });
     return () => { live = false; };
   }, [open, mode, surahNo, mealId]);
 
@@ -1313,6 +1330,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
             <select value={mealId} onChange={(e) => setMealId(e.target.value)} className="h-8 max-w-48 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50">
               {MEALS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
+            {/* ★ MEAL GÜNCELLENİYOR çipi — meal/dil değişiminde eski metin ekranda kalırken göster */}
+            {mealYenileniyor && (
+              <span className="flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[9px] font-bold text-gold" role="status">
+                <Loader2 size={10} className="animate-spin" /> mealler güncelleniyor…
+              </span>
+            )}
             <select value={reciter} onChange={(e) => setReciter(e.target.value)} className="h-8 max-w-56 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold text-gold-light outline-none focus:border-gold/50">
               {RECITERS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
