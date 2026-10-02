@@ -23,7 +23,11 @@ export const LANGS: LangOption[] = [
 export const MEAL_EDITIONS: Record<Lang, string> = {
   tr: "tr.yazir",
   en: "en.sahih",
-  ar: "ar.alafasy",
+  // ★ AR DÜZELTMESİ (02.10): ar.alafasy metin edition'ı DEĞİL — Alafasy SES edition'ıdır.
+  //   /ayah/<n>/<ed> çağrısı metin yerine KUR'AN ARAPÇASI + audio alanı döndürüyordu;
+  //   Arap kullanıcı "meal" diye Kur'an'ın aynısını görüyordu (üstelik Besmele karışık!).
+  //   ar.muyassar = Tefsiru'l-Müyesser: sade Arapça meal — API'de ayet ayet kanıtlandı.
+  ar: "ar.muyassar",
   id: "id.indonesian",
   ur: "ur.jalandhry",
 };
