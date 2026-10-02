@@ -105,8 +105,8 @@ export { DEFAULT_V2, DEFAULT_V3 };
 
 // ★ Depolama yardımcıları (RoadmapModal'dan, SRP adım 3) — localStorage + DEFAULT birleştirme
 const STORAGE_KEY = "nur_roadmap_data_v9";
-const VOTE_KEY = "nur_roadmap_votes";
-const DEADLINE_KEY = "nur_roadmap_deadline";
+export const VOTE_KEY = "nur_roadmap_votes";
+export const DEADLINE_KEY = "nur_roadmap_deadline";
 
 export function loadFeatures(): { v2: Feature[]; v3: Feature[] } {
   try {

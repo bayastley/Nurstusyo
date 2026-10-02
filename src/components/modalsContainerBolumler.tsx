@@ -240,10 +240,12 @@ export function LibraryBolum({
   t: (k: string) => string;
   libSearch: string;
   setLibSearch: (v: string) => void;
-  libType: LibraryType;
-  setLibType: (v: LibraryType) => void;
-  libEmotion: Emotion;
-  setLibEmotion: (v: Emotion) => void;
+  // ★ 02.10 latent fix: TYPE_TABS/EMOTIONS id'leri "tumu"/"tum" sekmesini içerir —
+  //   prop tipi dar kalınca setLibType(tab.id) tip hatası veriyordu.
+  libType: LibraryType | "tumu";
+  setLibType: (v: LibraryType | "tumu") => void;
+  libEmotion: Emotion | "tum";
+  setLibEmotion: (v: Emotion | "tum") => void;
   libraryFiltered: LibraryItem[];
   useFromLibrary: (item: LibraryItem) => void;
 }) {

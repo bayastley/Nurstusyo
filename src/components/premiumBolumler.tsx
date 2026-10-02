@@ -9,8 +9,8 @@ import {
   PACKAGE_GROUP_META,
   type VideoKind,
 } from "../payments/pricing";
-import { getQuotaLeft } from "../tier";
-import { TIER_LABEL, type Tier } from "./premiumModalHelpers";
+import { getQuotaLeft, type Tier } from "../tier";
+import { TIER_LABEL } from "./premiumModalHelpers";
 
 type Rights = { kisa: number; uzun: number; tam: number };
 

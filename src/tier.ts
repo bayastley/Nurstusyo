@@ -10,6 +10,10 @@
 
 import { secureGet, secureMigrate, secureSet } from "./secureStore";
 import { serverDateISO, serverIsFriday } from "./serverTime";
+// ★ 02.10 latent fix: consumeVideo (satır ~217) videoMaliyeti çağırıyordu ama import yoktu.
+//   tierCompat zaten tier'den import ediyor (döngü var) — videoMaliyeti hoisted function
+//   declaration olduğu için ESM döngüsünde güvenli (çağrı anında modül yüklü).
+import { videoMaliyeti } from "./tierCompat";
 
 export type Tier = "free" | "pro" | "elit";
 

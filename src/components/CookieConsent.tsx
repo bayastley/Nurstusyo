@@ -73,11 +73,11 @@ interface EnvanterSatiri {
 // ★ ÇEREZ ENVANTERİ — Çerez Rehberi şartı: her çerez için ad, amaç, taraf, saklama süresi.
 //   LocalStorage/oturum anahtarları da Rehber'de "çerez" başlığında bilgilendirme kapsamındadır.
 const ENVANTER: EnvanterSatiri[] = [
-  { ad: "nur_session", taraf: "1. Taraf", amaç: "Oturum güvenliği — girişli kullanıcıların kimlik doğrulaması", süre: "Oturum / 30 gün" },
-  { ad: "nur_theme, nur_lang", taraf: "1. Taraf", amaç: "Tema ve dil tercihinin hatırlanması (işlevsel)", süre: "365 gün" },
-  { ad: "nur_cookie_consent", taraf: "1. Taraf", amaç: "Çerez tercihlerinin saklanması (bu banner)", süre: "365 gün" },
-  { ad: "nur_wallet, üretim hakkı sayacı", taraf: "1. Taraf", amaç: "Satın aldığın üretim haklarının cihazda şifreli tutulması", süre: "365 gün" },
-  { ad: "nur_push_token", taraf: "1. Taraf", amaç: "Bildirim gönderimi (yalnızca bildirim izni verdiysen)", süre: "İzin süresince" },
+  { ad: "nur_session", taraf: "1. Taraf", kategori: "necessary", amaç: "Oturum güvenliği — girişli kullanıcıların kimlik doğrulaması", süre: "Oturum / 30 gün" },
+  { ad: "nur_theme, nur_lang", taraf: "1. Taraf", kategori: "necessary", amaç: "Tema ve dil tercihinin hatırlanması (işlevsel)", süre: "365 gün" },
+  { ad: "nur_cookie_consent", taraf: "1. Taraf", kategori: "necessary", amaç: "Çerez tercihlerinin saklanması (bu banner)", süre: "365 gün" },
+  { ad: "nur_wallet, üretim hakkı sayacı", taraf: "1. Taraf", kategori: "necessary", amaç: "Satın aldığın üretim haklarının cihazda şifreli tutulması", süre: "365 gün" },
+  { ad: "nur_push_token", taraf: "1. Taraf", kategori: "necessary", amaç: "Bildirim gönderimi (yalnızca bildirim izni verdiysen)", süre: "İzin süresince" },
 ];
 
 export function CookieConsent() {

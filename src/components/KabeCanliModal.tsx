@@ -12,7 +12,7 @@ import { kabeSourcesFor } from "../data/liveStreams";
 
 type KabeTab = "quran" | "live" | "mekke";
 
-export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void }> = ({ open, onClose }) => {
+export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVideoEl?: (el: HTMLVideoElement | null) => void }> = ({ open, onClose, onVideoEl }) => {
   const [kabeStatus, setKabeStatus] = useState<"loading" | "playing" | "error">("loading");
   const [kabeMuted, setKabeMuted] = useState(true); // ★ tarayıcı ses engelini aşmak için sessiz başlar, tek tıkla açılır
   const [kabeVolume, setKabeVolume] = useState(0.8);
@@ -106,7 +106,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void }> = 
           </button>
           {/* ★ ÜÇ KANAL DA YouTube'suz kendi proxy'mizden HLS oynar — hata 153 ve iframe kalıntısı yok */}
           <video
-            ref={videoRef}
+            ref={(el) => { videoRef.current = el; onVideoEl?.(el); }}
             key={kabeTab}
             autoPlay
             muted={kabeMuted}

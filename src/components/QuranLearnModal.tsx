@@ -6,7 +6,7 @@ import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
 import { fetchSurahEditions, fetchAyah, quranUrl } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
-import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, type Reciter, type SurahInfo } from "./quranLearnVeri";
+import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, isEnglishMeal, type Reciter, type SurahInfo } from "./quranLearnVeri";
 // ★ SRP adım 11 (30.09): RECITERS/MEALS/SURAHS_DATA verisi + TafsirBox + saf yardımcılar quranLearnVeri.tsx'e taşındı
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
@@ -19,7 +19,9 @@ import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, type Recite
 
 type Mode = "learn" | "listen" | null;
 
-interface Reciter { id: string; name: string; everyayah?: string; full?: [string, number]; }
+// ★ 02.10 latent fix: yerel Reciter arayüzü silindi — quranLearnVeri'den type import'u
+//   kullanılıyordu ama aynı adla yerel kopya çakışıyordu (TS2440).
+interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
 //    (gapless tam sure) çalabilir — [klasör, sunucuNo]. Hepsi tek tek test edildi (200 OK).
@@ -413,6 +415,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
   const [loopAyahListen, setLoopAyahListen] = useState(false);
   const [repeatWord, setRepeatWord] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // ★ 02.10 latent fix: SRP ayırmasında (01.10) kaybolan ref — uyku zamanlayıcısı
+  //   Kâbe canlı yayın videosunu duraklatamıyordu. KabeCanliModal onVideoEl ile
+  //   video elemanını buraya bağlar.
+  const kabeVideoRef = useRef<HTMLVideoElement | null>(null);
   // ★ Mobil metin kaydırma alanı — hayalet ok butonları bunu kaydırır (sayfa sabit)
   const listenScrollRef = useRef<HTMLDivElement | null>(null);
   if (!audioRef.current && typeof Audio !== "undefined") audioRef.current = new Audio();
@@ -1698,7 +1704,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
       )}
 
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
-      <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} />
+      <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} onVideoEl={(el) => { kabeVideoRef.current = el; }} />
     </div>
   );
 };

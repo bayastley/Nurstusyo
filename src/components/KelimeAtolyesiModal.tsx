@@ -25,6 +25,7 @@ import {
 } from "../data/kelimeAtolyesi";
 import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clips";
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
+import type { OnerilenAyet } from "../data/kelimeAtolyesi";
 
 export interface KelimeAtolyesiModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
@@ -73,7 +74,9 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   const [kelime, setKelime] = useState("");
   const [aktifRecete, setAktifRecete] = useState<KelimeRecete | null>(null);
   const [tamEslesme, setTamEslesme] = useState(false);
-  const [ayetler, setAyetler] = useState<AyetKarti[]>([]);
+  // ★ 02.10 latent fix: ayetOner OnerilenAyet (kelimeGecti işaretli) döndürüyor —
+  //   state AyetKarti[] tipindeyken rozet alanı görünmüyordu (TS2339).
+  const [ayetler, setAyetler] = useState<OnerilenAyet[]>([]);
   const [catsGorunen, setCatsGorunen] = useState<CatId[]>([]);
   const [seciliCat, setSeciliCat] = useState<CatId | null>(null);
   /** Çoklu seçim: işaretli ayet indeksleri (varsayılan: ilk öneri) */

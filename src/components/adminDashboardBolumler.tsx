@@ -532,6 +532,5 @@ export function AdminErrorsTab({
               )}
             </div>
             );
-          }
-  );
+          })();
 }

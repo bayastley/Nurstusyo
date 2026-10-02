@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run test:esm && vite build",
+    "build": "npm run test:esm && tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "node scripts/ai-match-test.mjs",
     "test:esm": "node scripts/esm-tarama.mjs",

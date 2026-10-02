@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { X, ThumbsUp, Plus, Trash2, RotateCcw, Clock, Settings, Rocket, Edit3 } from "lucide-react";
 import { isAdminEmail } from "../tier";
 // ★ SRP adım 3 (30.09): ikon tablosu + V2/V3 özellik tanımları roadmapVeri.ts'e taşındı
-import { ICON_EMOJI as R_ICONS, DEFAULT_V2, DEFAULT_V3, getIcon, loadFeatures, saveFeatures, getStoredVotes, getDeadline, type Feature } from "./roadmapVeri";
+import { ICON_EMOJI as R_ICONS, DEFAULT_V2, DEFAULT_V3, getIcon, loadFeatures, saveFeatures, getStoredVotes, getDeadline, VOTE_KEY, DEADLINE_KEY, type Feature } from "./roadmapVeri";
+
+export interface RoadmapModalProps {
+  open: boolean;
+  onClose: () => void;
+  adminEmail?: string;
+}
 
 export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, adminEmail }) => {
   const isAdmin = adminEmail ? isAdminEmail(adminEmail) : false;
