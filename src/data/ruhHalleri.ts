@@ -115,3 +115,52 @@ export function ruhHaliEsle(metin: string): RuhHaliEslesme {
   }
   return { ruh: enIyi, skor: enIyiSkor };
 }
+
+// ─── 3. ÇİP SAYACI (02.10) — "en çok seçilen 5" öne sabitleme ──────────
+// Her ruh hali çipine basış sayısı localStorage'da tutulur (cihaza özel,
+// KVKK dostu — sunucuya hiçbir şey gitmez). Çip şeridi popüler 5'i ÖNE
+// sabitler (küçük 🏅 rozetle), gerisi sabit RUH_HALLERI sırasında gelir.
+
+const RUH_SAYAC_KEY = "nur_ruh_sayac_v1";
+
+export type RuhSayac = Record<string, number>;
+
+export function ruhSayacOku(): RuhSayac {
+  try {
+    const raw = localStorage.getItem(RUH_SAYAC_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as RuhSayac;
+    if (!parsed || typeof parsed !== "object") return {};
+    // Sadece geçerli ruh id'leri kalsın (eski/kırık anahtar temizliği)
+    const gecerli: RuhSayac = {};
+    for (const ruh of RUH_HALLERI) {
+      const n = Number(parsed[ruh.id]);
+      if (Number.isFinite(n) && n > 0) gecerli[ruh.id] = Math.min(9999, Math.floor(n));
+    }
+    return gecerli;
+  } catch { return {}; }
+}
+
+export function ruhSayacArttir(ruhId: string): RuhSayac {
+  const sayac = ruhSayacOku();
+  if (RUH_HALLERI.some((r) => r.id === ruhId)) sayac[ruhId] = (sayac[ruhId] || 0) + 1;
+  try { localStorage.setItem(RUH_SAYAC_KEY, JSON.stringify(sayac)); } catch { /* ignore */ }
+  return sayac;
+}
+
+/** Popüler N (varsayılan 5) — oyu sıfırdan büyük olanlar arasında; beraberlikte RUH_HALLERI sırası */
+export function populerRuhlar(sayac: RuhSayac, adet = 5): string[] {
+  return Object.entries(sayac)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1] || RUH_HALLERI.findIndex((r) => r.id === a[0]) - RUH_HALLERI.findIndex((r) => r.id === b[0]))
+    .slice(0, adet)
+    .map(([id]) => id);
+}
+
+/** Çip şeridinin sıralı id listesi: popüler 5 öne + gerisi sabit sıra (popülerler tekrar etmez) */
+export function cipSirasi(sayac: RuhSayac, adet = 5): Array<{ id: string; sayi: number; populer: boolean }> {
+  const populer = populerRuhlar(sayac, adet);
+  const populerSet = new Set(populer);
+  const gerisi = RUH_HALLERI.filter((r) => !populerSet.has(r.id)).map((r) => r.id);
+  return [...populer, ...gerisi].map((id) => ({ id, sayi: sayac[id] || 0, populer: populerSet.has(id) }));
+}

@@ -5,10 +5,10 @@
 // bölümler saf görünüm + callback alır.
 // ════════════════════════════════════════════════════════
 
-import React from "react";
+import React, { useState } from "react";
 import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
-import { RUH_HALLERI } from "../data/ruhHalleri";
+import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, type RuhSayac } from "../data/ruhHalleri";
 import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { CubukRenkSecici } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
@@ -39,6 +39,13 @@ export const AyetSecimBolumu: React.FC<{
   setRuhHaliMetin: (v: string) => void;
   ruhHaliUygula: (ruhId?: string) => void;
 }> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula }) => {
+  // ★ ÇİP SAYACI (02.10): her basış localStorage'a yazılır; popüler 5 çip ÖNE
+  //   sabitlenir (🏅 rozet + seçim sayısı). State tick'i sıralamayı anında günceller.
+  const [ruhSayac, setRuhSayac] = useState<RuhSayac>(() => ruhSayacOku());
+  const cipTikla = (ruhId: string) => {
+    setRuhSayac(ruhSayacArttir(ruhId));
+    ruhHaliUygula(ruhId);
+  };
   return (
     <div className="order-2 lg:order-1">
           {/* ★ AI RUH HALİ (01.10) — yaz ya da çip seç: ayet + arka plan + kart ayarı tek tuşla */}
@@ -65,12 +72,16 @@ export const AyetSecimBolumu: React.FC<{
               </button>
             </div>
             <div className="scrollbar-thin mt-1.5 flex max-h-[58px] flex-wrap gap-1 overflow-y-auto">
-              {RUH_HALLERI.map((r) => (
-                <button key={r.id} type="button" onClick={() => ruhHaliUygula(r.id)} title={r.ad}
-                  className="glass-soft rounded-full px-2 py-0.5 text-[8.5px] font-bold text-white/55 transition hover:text-white">
-                  {r.emoji} {r.ad}
-                </button>
-              ))}
+              {cipSirasi(ruhSayac).map(({ id, sayi, populer }) => {
+                const r = RUH_HALLERI.find((x) => x.id === id)!;
+                return (
+                  <button key={r.id} type="button" onClick={() => cipTikla(r.id)} title={populer ? `${r.ad} — senin favorilerinden (${sayi} seçim)` : r.ad}
+                    className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold transition ${populer ? "border border-amber-400/40 bg-amber-400/10 text-amber-200 hover:bg-amber-400/20" : "glass-soft text-white/55 hover:text-white"}`}>
+                    {populer && <span className="mr-0.5" aria-hidden>🏅</span>}
+                    {r.emoji} {r.ad}{populer && <span className="ml-1 opacity-70">{sayi}×</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
