@@ -97,6 +97,8 @@ export const urDict: Dict = {
   menuHaftaninVideosu: "ہفتے کی ویڈیو · 🎬",
   menuAyetPaketleri: "تیار آیت پیکجز",
   menuKuran: "قرآن",
+  menuKabeCanli: "کعبہ لائیو",
+  menuHediyeKodu: "تحفے کا کوڈ",
   menuSiteHakkinda: "اس سائٹ پر کیا ہے؟",
   menuRamazan: "🌙 رمضان اور مقدس راتیں",
   menuOzelGunTakvimi: "خصوصی دنوں کا کیلنڈر",

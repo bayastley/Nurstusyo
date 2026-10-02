@@ -257,6 +257,8 @@ export const enDict: Dict = {
   menuHaftaninVideosu: "Video of the Week · 🎬",
   menuAyetPaketleri: "Ready Ayah Packs",
   menuKuran: "Qur'an",
+  menuKabeCanli: "Kaaba Live",
+  menuHediyeKodu: "Gift Code",
   menuSiteHakkinda: "What's on This Site?",
   menuRamazan: "🌙 Ramadan & Holy Days",
   menuOzelGunTakvimi: "Special Days Calendar",

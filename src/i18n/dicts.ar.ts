@@ -257,6 +257,8 @@ export const arDict: Dict = {
   menuHaftaninVideosu: "فيديو الأسبوع · 🎬",
   menuAyetPaketleri: "حزم الآيات الجاهزة",
   menuKuran: "القرآن",
+  menuKabeCanli: "الكعبة المباشر",
+  menuHediyeKodu: "رمز الهدية",
   menuSiteHakkinda: "ماذا في هذا الموقع؟",
   menuRamazan: "🌙 رمضان والليالي المباركة",
   menuOzelGunTakvimi: "تقويم المناسبات",

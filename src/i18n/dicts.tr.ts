@@ -260,6 +260,8 @@ export const trDict: Dict = {
   menuHaftaninVideosu: "Haftanın Videosu · 🎬",
   menuAyetPaketleri: "Hazır Ayet Paketleri",
   menuKuran: "Kur'an",
+  menuKabeCanli: "Kâbe Canlı",
+  menuHediyeKodu: "Hediye Kodu",
   menuSiteHakkinda: "Bu Sitede Ne Var?",
   menuRamazan: "🌙 Ramazan & Kandil",
   menuOzelGunTakvimi: "Özel Gün Takvimi",

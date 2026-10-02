@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { KABE_SOURCES, QURAN_HD_SOURCES, SUNNAH_SOURCES, RADIO_STATIONS, ulkeToBolge, dilToBolge, type RadioBolge } from "../data/liveStreams";
 import { KabeCanliModal } from "./KabeCanliModal"; // ★ SRP 01.10: Kâbe canlı overlay + HLS bağlantısı ayrıldı
+import { QuranSayfalar } from "./QuranSayfalar"; // ★ 02.10: Kur'an Sayfaları — mushaf görünümü (zoom/tam ekran/hatim)
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
@@ -117,6 +118,21 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
     if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
   }, [open]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı (gövde KabeCanliModal'da — SRP 01.10)
+  const [sayfalarAcik, setSayfalarAcik] = useState(false); // ★ Kur'an Sayfaları (mushaf) — gövde QuranSayfalar.tsx
+  // ★ HEADER KÖPRÜSÜ (02.10): üst bardaki 🕋 Kâbe pill'i ve menü öğesi bu modalın state'ine
+  //   doğrudan dokunamaz — window event ile açar. Bileşen kapalıyken de mount'ta kalır
+  //   (ModalsContainer hep render eder) → dinleyici uygulama açılışından beri yaşar;
+  //   HeaderTopBar'ın setModal("quranLearn") çağrısıyla AYNI tikte React 18 batch'ler.
+  useEffect(() => {
+    const kabeAc = () => setKabeLive(true);
+    const sayfaAc = () => setSayfalarAcik(true);
+    window.addEventListener("nur_kabe_ac", kabeAc);
+    window.addEventListener("nur_kuran_sayfalar_ac", sayfaAc);
+    return () => {
+      window.removeEventListener("nur_kabe_ac", kabeAc);
+      window.removeEventListener("nur_kuran_sayfalar_ac", sayfaAc);
+    };
+  }, []);
   // ★ KÂBE CANLI kaynakları ve 📻 RADYO kanalları → src/data/liveStreams.ts'e taşındı (saf veri)
   const [radioOn, setRadioOn] = useState(false);
   const [radioIdx, setRadioIdx] = useState(0);
@@ -1174,6 +1190,11 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full border-2 border-[#161622] bg-red-500" />
             </span>
           </button>
+          {/* ★ KUR'AN SAYFALARI (02.10, kullanıcı emri): mushaf görünümü — zoom, tam ekran, hatim takibi */}
+          <button onClick={() => setSayfalarAcik(true)} className="flex items-center gap-1.5 rounded-xl border border-[#D7AA41]/40 bg-gradient-to-b from-[#3a2f14] to-[#241c0b] px-3 py-1.5 text-[11px] font-black text-[#f5dda6] transition hover:border-[#D7AA41]/70 hover:brightness-125 active:scale-95" title="Mushaf sayfaları — büyüt/küçült, tam ekran, kaldığın yerden devam + hatim takibi">
+            📖 SAYFALAR
+            <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-0.5 text-[7.5px] font-black text-emerald-300">YENİ</span>
+          </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
           <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
             📻 {radioOn ? (radioPaused ? "RADYO DURDU" : "RADYO AÇIK") : "RADYO"}
@@ -1705,6 +1726,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
 
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
       <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} onVideoEl={(el) => { kabeVideoRef.current = el; }} />
+      {/* ══════════ KUR'AN SAYFALARI — 02.10: mushaf okuma + hatim takibi */}
+      <QuranSayfalar open={sayfalarAcik} onClose={() => setSayfalarAcik(false)} />
     </div>
   );
 };

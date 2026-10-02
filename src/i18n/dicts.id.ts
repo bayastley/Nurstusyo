@@ -250,6 +250,8 @@ export const idDict: Dict = {
   menuHaftaninVideosu: "Video Minggu Ini · 🎬",
   menuAyetPaketleri: "Paket Ayat Siap Pakai",
   menuKuran: "Al-Qur'an",
+  menuKabeCanli: "Ka'bah Live",
+  menuHediyeKodu: "Kode Hadiah",
   menuSiteHakkinda: "Apa Saja di Situs Ini?",
   menuRamazan: "🌙 Ramadhan & Hari Besar",
   menuOzelGunTakvimi: "Kalender Hari Istimewa",

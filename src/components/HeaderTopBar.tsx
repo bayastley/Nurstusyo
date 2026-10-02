@@ -3,7 +3,7 @@ import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette, Headphones,
   LibraryBig, Shield, ShieldOff, Coins, Gem, ChevronDown, Check, Moon, Heart, Lightbulb,
-  Image as ImageIcon, Info, Package, CalendarDays, Compass, Brain, NotebookPen, Type, Wand2, Gift, Film,
+  Image as ImageIcon, Info, Package, CalendarDays, Compass, Brain, NotebookPen, Type, Wand2, Gift, Film, Radio,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
@@ -231,11 +231,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName },
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
                       { icon: BookOpen, label: t("menuKuran"), target: "quranLearn" as ModalName },
+                      { icon: Radio, label: t("menuKabeCanli"), target: "__kabe" },
                       { icon: Info, label: t("menuSiteHakkinda"), target: "siteHakkinda" as ModalName },
                       { icon: Moon, label: t("menuRamazan"), target: "ramazan" as ModalName },
                       { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName },
                     ].map((item) => (
-                      <button key={item.target} onClick={() => { setModal(item.target); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <button key={item.target} onClick={() => { if (item.target === "__kabe") { window.dispatchEvent(new Event("nur_kabe_ac")); setMenuOpen(false); return; } if (item.target === "__hediye") { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); return; } setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
                         {item.label}
                       </button>
@@ -288,6 +289,15 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         <span>{t("premium")}</span>
                       </button>
                     </div>
+                    {/* ★ HEDİYE KODU — en altta (02.10, kullanıcı emri: üst bardan buraya taşındı).
+                        Şimdilik bildirim verir; kod sistemi geldiğinde buraya input bağlanır. */}
+                    <button
+                      onClick={() => { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); }}
+                      className="flex min-h-[42px] w-full items-center gap-3 border-t border-white/5 px-4 py-2.5 text-left text-[11px] text-white/45 transition hover:bg-white/5 hover:text-white"
+                    >
+                      <Gift size={14} className="opacity-60" style={{ color: "var(--accent)" }} />
+                      <span>{t("menuHediyeKodu")}</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -425,10 +435,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 </div>
               ) : null}
             </div>
-            {/* ★ HEDİYE KODU */}
-            <span className="glass-soft hidden sm:inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/55">
-              <span>🎁</span>Hediye Kodu
-            </span>
+            {/* ★ HEDİYE KODU ÜST BARDAN KALDIRILDI (02.10, kullanıcı emri) —
+                sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
             {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartı fotoğraf olarak indir (i18n: menuAyetKartlari) */}
             <button onClick={() => setModal("ayetKartlari")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
               <ImageIcon size={11} style={{ color: "var(--accent)" }} />{t("menuAyetKartlari")}
@@ -436,6 +444,15 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
             <button onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
               <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an
+            </button>
+            {/* ★ KÂBE CANLI — ALTIN MADEN ÖNE ÇIKARMA (02.10, kullanıcı emri): üst barda tek tık,
+                kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
+            <button onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + " — 7/24 canlı yayın"}>
+              🕋 {t("menuKabeCanli")}
+              <span className="relative flex h-2 w-2">
+                <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                <span className="relative h-2 w-2 rounded-full bg-red-500" />
+              </span>
             </button>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
