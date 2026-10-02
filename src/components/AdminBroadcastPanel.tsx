@@ -87,6 +87,20 @@ async function adminAction(body: unknown): Promise<boolean> {
   } catch { return false; }
 }
 
+// ★ GİZLİ ÖZELLİK YAYINI (02.10 — SAHİBİN EMRİ): roadmap'teki V2/V3 kalem ↔
+//   kapı modülü ↔ kullanıcıya görünen ad — tek tablo. Paneldeki "Gizli Özellik
+//   Yayını" bölümü bu listeden beslenir: admin kalem + seviye (free/pro/elit)
+//   seçer, tek tıkla (1) kilit DB'ye açılır, (2) "Yeni Güncelleme" duyurusu
+//   yayınlanır → bütün kullanıcılara yeşil baloncuk + "Güncellemeyi Al" butonu gider.
+export const GIZLI_OZELLIK_KALEMLERI: Array<{ roadmapId: string; modul: string; ad: string }> = [
+  { roadmapId: "ayet-kutuphanesi", modul: "ayetKartlari", ad: "Ayet & Dua Kütüphanesi" },
+  { roadmapId: "hafizlik-testi", modul: "hafizlikTesti", ad: "Hafızlık Testi" },
+  { roadmapId: "ayet-notlari", modul: "ayetNotlari", ad: "Ayet Notlarım" },
+  { roadmapId: "ayet-paketleri", modul: "ayetPaketleri", ad: "Hazır Ayet Paketleri" },
+  { roadmapId: "ozel-gun-takvimi", modul: "ozelGunTakvimi", ad: "Özel Gün Takvimi" },
+  { roadmapId: "kesfet-merkezi", modul: "kesfet", ad: "Keşfet Merkezi" },
+];
+
 function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
 
 export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify }) => {
@@ -114,6 +128,11 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   //   "v2_test_acik" satırı — deploy'suz aç/kapa. Toggle → adminAction(set_feature_lock).
   const [v2TestAcik, setV2TestAcik] = useState<boolean>(() => v2TestAcikMi());
   const [roadmapLider, setRoadmapLider] = useState<string>("");
+  // ★ GİZLİ ÖZELLİK YAYINI (02.10): kalem + seviye + yayın durumu
+  const [yayinKalem, setYayinKalem] = useState<string>(GIZLI_OZELLIK_KALEMLERI[0].roadmapId);
+  const [yayinSeviye, setYayinSeviye] = useState<Exclude<FeatureLock, "off" | "maintenance" | "v2" | "v3">>("free");
+  const [yayiniyor, setYayiniyor] = useState(false);
+  const [yayinSonuc, setYayinSonuc] = useState("");
 
   // ★ OYLAMA LİDERİ GÖSTERGESİ: /api/roadmap'ten gerçek toplamlar —
   //   en çok oyu alan aktif V2 kalemi gösterir (kapatınca free olacak olan).
@@ -143,6 +162,51 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     setLockHistory(history);
     void adminAction({ action: "set_feature_lock", featureId: V2_TEST_KILIT_ANAHTARI, lockLevel: yeni ? "free" : "off" });
     setLockStatus(yeni ? "✅ V2 test kilidi AÇILDI — 6 modül herkese açık (~60 sn'de tüm istemcilere yayılır)" : "🔒 V2 test kilidi KAPALDI — kilitler oy sıralamasına devrediyor (~60 sn'de yayılır)");
+  };
+
+  // ★ GİZLİ ÖZELLİK YAYINI (02.10 — SAHİBİN EMRİ, TEK TIK AKIŞ):
+  //   (1) seçilen gizli kalem seçilen seviyeye (free/pro/elit) açılır — nur_feature_locks
+  //       (set_feature_lock) → /api/config poll'uyla ~60 sn'de TÜM istemcilere yayılır;
+  //   (2) "Yeni Güncelleme" duyurusu yayınlanır (publish_announcement, kind=update,
+  //       yanıp söner + girişte açılır) → kullanıcıda yeşil baloncuk + GÜNCELLEMESİ AL
+  //       butonu belirir; tıklayınca tarayıcı hard-refresh (Ctrl+Shift+R eşdeğeri) yapar.
+  const gizliOzellikYayinla = async () => {
+    const kalem = GIZLI_OZELLIK_KALEMLERI.find((k) => k.roadmapId === yayinKalem);
+    if (!kalem) return;
+    setYayiniyor(true);
+    setYayinSonuc("");
+    // (1) KİLİDİ AÇ — DB'ye yaz
+    setFeatureLock(kalem.modul, yayinSeviye);
+    refreshLocks();
+    const kilitOk = await adminAction({ action: "set_feature_lock", featureId: kalem.modul, lockLevel: yayinSeviye });
+    const history = [{ id: uid(), target: kalem.modul, targetLabel: kalem.ad, from: "v2" as FeatureLock, to: yayinSeviye as FeatureLock, at: new Date().toISOString(), reverted: false }, ...loadLockHistory()];
+    saveLockHistory(history);
+    setLockHistory(history);
+    // (2) DUYURU — yeşil baloncuk + Güncellemeyi Al (istersen yok sayılabilir ama varsayılan AÇIK)
+    const seviyeAdi = yayinSeviye === "free" ? "herkese açık" : yayinSeviye === "pro" ? "PRO üyelere" : "ELİT üyelere";
+    const ann: Announcement = {
+      id: uid(),
+      title: "🎉 Yeni Güncelleme Geldi!",
+      message: `${kalem.ad} artık ${seviyeAdi}! Güncellemeyi al ve hemen keşfet.`,
+      detail: `✨ ${kalem.ad}\n\nYeni güncelleme hesabına yüklendi. Aşağıdaki butona bas, sayfa tazelenir ve yeni özellik anında kullanımında.`,
+      kind: "update",
+      active: true,
+      blinking: true,
+      startsAt: new Date().toISOString(),
+      endsAt: new Date(Date.now() + 3 * 86400000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      forceOpen: false,
+      requireAck: false,
+    };
+    saveAnnouncement(ann);
+    const duyuruOk = await adminAction({ action: "publish_announcement", announcement: ann });
+    setYayiniyor(false);
+    setYayinSonuc(kilitOk && duyuruOk
+      ? `✅ ${kalem.ad} → ${yayinSeviye.toUpperCase()} açıldı + güncelleme baloncuğu tüm kullanıcılara gitti`
+      : kilitOk || duyuruOk
+        ? `⚠️ Kısmen yayınlandı (DB erişimi) — cihazda aktif, canlıda ~60 sn'de düşer`
+        : "⚠️ Supabase erişilemedi — admin oturumu gerekli");
+    if (kilitOk && duyuruOk) notify(`🚀 ${kalem.ad} yayınlandı — herkese duyuru gitti!`);
   };
 
   // ★ DB SENKRONU (28.09, kullanıcı kararı): "maher kilitlenmiyor" — kilidin DB'ye
@@ -328,6 +392,28 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      {/* ★ GİZLİ ÖZELLİK YAYINI (02.10) — kilit aç + güncelleme baloncuğu, TEK TIK */}
+      <section className="rounded-2xl border border-emerald-400/30 bg-emerald-950/10 p-4">
+        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Rocket size={15} className="text-emerald-300" /> Gizli Özellik Yayını</h4>
+        <p className="mb-3 text-[9px] leading-relaxed text-white/40">Gizlediğin (V2/V3 oylamadaki) özelliği seç → seviyeyi seç → TEK TIK: kilit herkese açılır + bütün kullanıcılara yeşil "Yeni Güncelleme" baloncuğu gider. Tıklayanların sayfası tazelenir (Ctrl+Shift+R eşdeğeri), güncelleme yüklenir.</p>
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <select value={yayinKalem} onChange={(e) => setYayinKalem(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white">
+              {GIZLI_OZELLIK_KALEMLERI.map((k) => <option key={k.roadmapId} value={k.roadmapId}>{k.ad}</option>)}
+            </select>
+            <select value={yayinSeviye} onChange={(e) => setYayinSeviye(e.target.value as typeof yayinSeviye)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white">
+              <option value="free">Free — herkese</option>
+              <option value="pro">Pro üyelere</option>
+              <option value="elit">Elit üyelere</option>
+            </select>
+          </div>
+          <button onClick={gizliOzellikYayinla} disabled={yayiniyor} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black shadow-[0_0_18px_rgba(16,185,129,.45)] transition hover:bg-emerald-400 active:scale-[.98] disabled:opacity-50">
+            <Rocket size={13} /> {yayiniyor ? "Yayınlanıyor…" : "🚀 Aktifleştir & Herkese Duyur"}
+          </button>
+          {yayinSonuc && <p className={`rounded-xl border px-3 py-2 text-[10px] font-bold ${yayinSonuc.startsWith("✅") ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-300" : "border-amber-400/25 bg-amber-500/10 text-amber-300"}`}>{yayinSonuc}</p>}
+        </div>
+      </section>
+
       <section className="rounded-2xl border border-amber-400/25 bg-black/35 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><Bell size={15} /> Canlı Duyuru</h4>
         <div className="space-y-2">

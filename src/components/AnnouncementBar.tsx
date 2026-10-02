@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Bell, CheckCircle, Gift, Sparkles, X, Trash2 } from "lucide-react";
+import { Bell, CheckCircle, Gift, Sparkles, X, Trash2, RefreshCw } from "lucide-react";
+import { getActiveAnnouncement } from "../services/adminSyncService";
 import { checkRateLimit } from "../rateLimiter";
 import type { Announcement } from "../services/adminSyncService";
 import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService";
@@ -16,7 +17,10 @@ interface AnnouncementBarProps {
 
 export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, onRewardClaimed, onTamperAttempt }) => {
   const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
-  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  // ★ LOCAL ÖNCE (02.10): admin yayını anında saveAnnouncement ile localStorage'a
+  //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
+  //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
+  const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -69,6 +73,14 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
 
+  // ★ YEREL DUYURU DİNLEYİCİ (02.10): admin yayını saveAnnouncement → nur_config_updated
+  //   event'i fırlatır; bu dinleyici baloncuğu ANINDA (poll'suz) ekrana taşır.
+  useEffect(() => {
+    const onLocal = () => setAnnouncement(getActiveAnnouncement());
+    window.addEventListener("nur_config_updated", onLocal);
+    return () => window.removeEventListener("nur_config_updated", onLocal);
+  }, []);
+
   useEffect(() => {
     if (!user?.isAdmin) {
       setIsAdmin(false);
@@ -114,6 +126,24 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               {unread && <span className="h-1.5 w-1.5 animate-ping rounded-full bg-emerald-300 transition-opacity duration-700" />}
               <span>{announcement.title}</span>
               <span className="max-w-[42vw] truncate font-medium text-white/60">{announcement.message}</span>
+            </button>
+          )}
+          {announcement && unread && (
+            <button
+              onClick={() => {
+                // ★ GÜNCELLEMESİ AL (02.10): Ctrl+Shift+R eşdeğeri tazeleme —
+                //   location.reload() önbelleği kullanabilir; hard reload
+                //   (?t= zaman damgası) Vercel'den TAZE bundle'ı garantiler.
+                try { localStorage.setItem("nur_read_announcement", announcement.id); } catch { /* ignore */ }
+                const url = new URL(window.location.href);
+                url.searchParams.set("t", Date.now().toString(36));
+                window.location.replace(url.toString());
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-emerald-400 px-3.5 py-1.5 font-black text-emerald-950 shadow-[0_0_16px_rgba(52,211,153,.55)] transition hover:bg-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,.75)] active:scale-95"
+              title="Sayfayı tazele ve güncellemeyi yükle (Ctrl+Shift+R eşdeğeri)"
+            >
+              <RefreshCw size={12} />
+              Güncellemeyi Al
             </button>
           )}
           {!announcement && (
