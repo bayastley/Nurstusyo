@@ -196,32 +196,32 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <button
                 onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-30, o.x - 5) }))}
                 className="pointer-events-auto absolute left-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
-                title="Yazıları sola kaydır"
+                title={t("vpSolaKaydir")}
               >◀</button>
               {/* Sağ */}
               <button
                 onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(30, o.x + 5) }))}
                 className="pointer-events-auto absolute right-1.5 top-1/2 -translate-y-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
-                title="Yazıları sağa kaydır"
+                title={t("vpSagaKaydir")}
               >▶</button>
               {/* Yukarı */}
               <button
                 onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))}
                 className="pointer-events-auto absolute left-1/2 top-1.5 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
-                title="Yazıları yukarı kaydır"
+                title={t("vpYukariKaydir")}
               >▲</button>
               {/* Aşağı */}
               <button
                 onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))}
                 className="pointer-events-auto absolute bottom-1.5 left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full text-white drop-shadow-[0_0_6px_rgba(255,255,255,.9)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-70 active:scale-90"
-                title="Yazıları aşağı kaydır"
+                title={t("vpAsagiKaydir")}
               >▼</button>
               {/* Ortala — sadece ofset varken görünür */}
               {(textOffset.x !== 0 || textOffset.y !== 0) && (
                 <button
                   onClick={() => setTextOffset({ x: 0, y: 0 })}
                   className="pointer-events-auto absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[11px] font-black text-white drop-shadow-[0_0_8px_rgba(255,255,255,.95)] opacity-0 transition-all duration-300 group-hover/arrows:opacity-100 max-md:opacity-80 active:scale-90"
-                  title="Ortala (sıfırla)"
+                  title={t("vpOrtala")}
                 >⟲</button>
               )}
             </div>
@@ -229,7 +229,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         </div>
       </div>
 
-      {lowPower && <p className="text-center text-[8px] font-bold text-emerald-300/70">Performans modu aktif</p>}
+      {lowPower && <p className="text-center text-[8px] font-bold text-emerald-300/70">{t("vpPerformans")}</p>}
 
       <div className="mx-auto flex w-full gap-1.5" style={{ maxWidth: previewWidth }}>
         <button onClick={() => setShowArapca(!showArapca)} className="flex-1 rounded-lg py-1.5 text-[9px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{showArapca ? t("arapcaCikar") : t("arapcaEkle")}</button>
@@ -246,7 +246,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           onClick={() => setCubukAyar((c) => ({ ...c, acik: !c.acik }))}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/60 transition hover:text-white"
         >
-          <Palette size={11} style={{ color: "var(--accent)" }} /> Renk Çubuğu {cubukAyar.acik ? "açık" : "kapalı"}
+          <Palette size={11} style={{ color: "var(--accent)" }} /> {t("vpRenkCubugu")} {cubukAyar.acik ? t("vpAcikKucuk") : t("vpKapaliKucuk")}
         </button>
         {cubukAyar.acik && (
           <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
@@ -254,18 +254,18 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 Çubuk aşağıdan yukarı tüm renkleri taşır; sürükdükçe değişir.
                 Kartlıkla (Ayet Kütüphanesi) aynı paletten beslenir. */}
             <div className="flex items-start justify-center gap-4">
-              <CubukRenkSecici etiket="Arapça" deger={cubukAyar.donme} onSec={(d) => setCubukAyar((c) => ({ ...c, donme: d }))} />
-              <CubukRenkSecici etiket="Meal" deger={cubukAyar.mealDonme} onSec={(d) => setCubukAyar((c) => ({ ...c, mealDonme: d }))} />
+              <CubukRenkSecici etiket={t("vpArapca")} deger={cubukAyar.donme} onSec={(d) => setCubukAyar((c) => ({ ...c, donme: d }))} />
+              <CubukRenkSecici etiket={t("vpMeal")} deger={cubukAyar.mealDonme} onSec={(d) => setCubukAyar((c) => ({ ...c, mealDonme: d }))} />
               <div className="flex flex-col items-center gap-1">
-                <span className="text-[8px] font-bold text-white/50">Çerçeve</span>
+                <span className="text-[8px] font-bold text-white/50">{t("vpCerceve")}</span>
                 <button
                   type="button"
                   onClick={() => setCubukAyar((c) => ({ ...c, kalinlik: c.kalinlik > 0 ? 0 : 6 }))}
                   className={`h-5 w-10 rounded-full text-[7.5px] font-black transition ${cubukAyar.kalinlik > 0 ? "text-black" : "glass-soft text-white/50"}`}
                   style={cubukAyar.kalinlik > 0 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-                  title="Çerçeve boyunca renk şeridi aç/kapa"
+                  title={t("vpCerceveTitle")}
                 >
-                  {cubukAyar.kalinlik > 0 ? "AÇIK" : "YOK"}
+                  {cubukAyar.kalinlik > 0 ? t("akilliAiAcik") : t("vpYok")}
                 </button>
                 {cubukAyar.kalinlik > 0 && (
                   <input
@@ -275,12 +275,12 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                     value={cubukAyar.kalinlik}
                     onChange={(e) => setCubukAyar((c) => ({ ...c, kalinlik: Number(e.target.value) }))}
                     className="mt-1 h-1 w-10 accent-[color:var(--accent)]"
-                    title="Şerit kalınlığı"
+                    title={t("vpKalinlikTitle")}
                   />
                 )}
               </div>
             </div>
-            <p className="text-center text-[7.5px] text-white/35">Çubukta sürükle → renk seç · kartlıkla aynı</p>
+            <p className="text-center text-[7.5px] text-white/35">{t("vpSurukleNot")}</p>
           </div>
         )}
 
@@ -290,14 +290,14 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           onClick={() => setMesajAyar((m) => ({ ...m, acik: !m.acik }))}
           className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/60 transition hover:text-white"
         >
-          <PenLine size={11} style={{ color: "var(--accent)" }} /> Özel Yazı {mesajAyar.acik && mesajAyar.metin.trim() ? "· aktif" : ""}
+          <PenLine size={11} style={{ color: "var(--accent)" }} /> {t("vpOzelYazi")} {mesajAyar.acik && mesajAyar.metin.trim() ? t("vpAktif") : ""}
         </button>
         {mesajAyar.acik && (
           <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
             <textarea
               value={mesajAyar.metin}
               onChange={(e) => setMesajAyar((m) => ({ ...m, metin: e.target.value.slice(0, 90) }))}
-              placeholder="Videonun içine yazılacak mesajın… (örn. Anneme hediye 💐)"
+              placeholder={t("vpMesajPlaceholder")}
               rows={2}
               className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25"
             />
@@ -307,11 +307,11 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               seciliHatCss={mesajAyar.hatCss}
               onSec={(hatCss, hatAgirlik) => setMesajAyar((m) => ({ ...m, hatCss, hatAgirlik }))}
               proAcik={tierAtLeast(tier, "pro")}
-              kilitTiklandi={() => { notify("👑 Hat font paleti PRO+ üyelik özelliğidir — 20 klasik ve modern hat sizi bekliyor!"); openPremium("uyelik"); }}
+              kilitTiklandi={() => { notify(t("vpHatProNotify")); openPremium("uyelik"); }}
             />
             {/* ★ MESAJ RENGİ — çubuk seçici + hızlı swatch'lar (kartlıkla aynı palet) */}
             <div className="flex items-center gap-2">
-              <CubukRenkSecici boy="kucuk" etiket="Renk" deger={hexToHue(mesajAyar.renk || "#ffffff")} onSec={(d) => setMesajAyar((m) => ({ ...m, renk: cubukRengi(d) }))} />
+              <CubukRenkSecici boy="kucuk" etiket={t("vpRenk")} deger={hexToHue(mesajAyar.renk || "#ffffff")} onSec={(d) => setMesajAyar((m) => ({ ...m, renk: cubukRengi(d) }))} />
               <div className="flex flex-1 flex-wrap gap-1">
                 {["#ffffff", "#f5dda6", cubukRengi(120), cubukRengi(180), cubukRengi(240), cubukRengi(300)].map((r) => (
                   <button key={r} type="button" onClick={() => setMesajAyar((m) => ({ ...m, renk: r }))}
@@ -325,20 +325,20 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 <button key={k} type="button" onClick={() => setMesajAyar((m) => ({ ...m, konum: k }))}
                   className={`rounded-md py-1 text-[8px] font-black transition ${mesajAyar.konum === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                   style={mesajAyar.konum === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                  {k === "ust" ? "↑ Üst" : k === "orta" ? "↕ Orta" : "↓ Alt"}
+                  {k === "ust" ? t("vpKonumUst") : k === "orta" ? t("vpKonumOrta") : t("vpKonumAlt")}
                 </button>
               ))}
               {(["sol", "orta", "sag"] as const).map((k) => (
                 <button key={k} type="button" onClick={() => setMesajAyar((m) => ({ ...m, hizalama: k }))}
                   className={`rounded-md py-1 text-[8px] font-black transition ${mesajAyar.hizalama === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                   style={mesajAyar.hizalama === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                  {k === "sol" ? "◧ Sol" : k === "orta" ? " ◨ Orta" : "◨ Sağ"}
+                  {k === "sol" ? t("vpHizaSol") : k === "orta" ? t("vpHizaOrta") : t("vpHizaSag")}
                 </button>
               ))}
             </div>
             <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
-              <span>Konum ayarı</span>
-              <span className="text-[7.5px] text-white/35">ayet konumundan bağımsız</span>
+              <span>{t("vpKonumAyari")}</span>
+              <span className="text-[7.5px] text-white/35">{t("vpKonumNot")}</span>
             </div>
             <div className="grid grid-cols-4 gap-1">
               <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, x: Math.max(-40, m.ofset.x - 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">◀</button>
@@ -347,7 +347,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { ...m.ofset, y: Math.min(40, m.ofset.y + 5) } }))} className="glass-soft rounded-md py-1 text-[9px] text-white/70 hover:text-white">▼</button>
             </div>
             <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
-              <span>Yazı boyutu</span>
+              <span>{t("vpYaziBoyutu")}</span>
               <span className="tabular-nums text-white/40">{mesajAyar.olcek}%</span>
             </div>
             <input type="range" min={70} max={160} step={5} value={mesajAyar.olcek}
@@ -355,7 +355,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               className="h-1 w-full accent-[color:var(--accent)]" />
             {/* ★ IŞILTI — yazının arkasına kendi rengiyle hale (kartlıkla aynı) */}
             <div className="flex items-center justify-between text-[8.5px] font-bold text-white/50">
-              <span>Işıltı</span>
+              <span>{t("vpIsilti")}</span>
               <span className="tabular-nums text-white/40">{mesajAyar.isilti}×</span>
             </div>
             <input type="range" min={0} max={2} step={0.25} value={mesajAyar.isilti}
@@ -363,7 +363,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               className="h-1 w-full accent-[color:var(--accent)]" />
             {(mesajAyar.ofset.x !== 0 || mesajAyar.ofset.y !== 0) && (
               <button type="button" onClick={() => setMesajAyar((m) => ({ ...m, ofset: { x: 0, y: 0 } }))}
-                className="w-full rounded-md glass-soft py-1 text-[8.5px] font-bold text-white/60 hover:text-white">⟲ Konumu sıfırla</button>
+                className="w-full rounded-md glass-soft py-1 text-[8.5px] font-bold text-white/60 hover:text-white">{t("vpKonumSifirla")}</button>
             )}
           </div>
         )}
@@ -388,7 +388,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       )}
 
       <div className="mx-auto max-w-[228px]">
-        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: "Şablon V2", icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
+        <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: t("vpSablon"), icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
         {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
         {/* ★ KENDİ SESİNLE ÜRET (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
@@ -396,9 +396,9 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <button
           onClick={onKendiSesAc}
           className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[9.5px] font-black transition ${kendiSesAktifMi ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-500/25" : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-500/20"}`}
-          title={kendiSesAktifMi ? "Kendi sesin aktif — ayetler senkron hazır" : "Kendi okuyuşunu yükle (ELİT)"}
+          title={kendiSesAktifMi ? t("vpKendiSesAktifTitle") : t("vpKendiSesTitle")}
         >
-          {kendiSesAktifMi ? "🎙️ Kendi sesin aktif · yönet" : "🎙️ Kendi sesinle üret"}
+          {kendiSesAktifMi ? t("vpKendiSesAktif") : t("vpKendiSesUret")}
           {!kendiSesAktifMi && <span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>}
         </button>
       </div>

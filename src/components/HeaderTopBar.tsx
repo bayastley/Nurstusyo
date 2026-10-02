@@ -121,7 +121,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               </button>
               {menuOpen && (
                 <>
-                  <button className="fixed inset-0 z-40 cursor-default" aria-label="Menüyü kapat" onClick={() => setMenuOpen(false)} />
+                  <button className="fixed inset-0 z-40 cursor-default" aria-label={t("hbrMenuKapat")} onClick={() => setMenuOpen(false)} />
                   <div
                     data-sidebar-panel="true"
                     className="modal-in absolute left-0 top-12 z-50 w-60 rounded-xl py-1.5 shadow-2xl"
@@ -135,13 +135,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       {user ? (
                         <>
                           <LogIn size={14} style={{ color: "var(--accent)" }} />
-                          <span className="flex-1 truncate" title="Hesap değiştir / yeniden giriş yap — giriş ekranını açar">{user.name}</span>
-                          <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title="Hesabından çık — sunucu oturumun da kapatılır">Çıkış</button>
+                          <span className="flex-1 truncate" title={t("hbrHesapDegistir")}>{user.name}</span>
+                          <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title={t("hbrCikisTitle")}>{t("hbrCikis")}</button>
                         </>
                       ) : (
                         <>
                           <UserPlus size={14} style={{ color: "var(--accent)" }} />
-                          <span>Kayıt Ol / Giriş Yap</span>
+                          <span>{t("hbrKayitGiris")}</span>
                         </>
                       )}
                     </button>
@@ -326,7 +326,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 onClick={() => openPremium("uyelik")}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-bold"
                 style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.30)", color: "var(--accent-2)" }}
-                title="Üyelik durumu"
+                title={t("hbrUyelikTitle")}
               >
                 <Gem size={10} style={{ color: "var(--accent)" }} />{TIER_LABEL[tier || "free"] || "Free"}
               </button>
@@ -338,12 +338,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               onClick={() => setModal("login")}
               className="flex items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-bold sm:hidden"
               style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)", color: "var(--accent-2)" }}
-              title={misafirKalanHak !== undefined && misafirKalanHak <= 0 ? "Deneme hakkın bitti — ücretsiz üye ol" : "Misafir deneme hakların — üye ol, +20 jeton kazan"}
+              title={misafirKalanHak !== undefined && misafirKalanHak <= 0 ? t("hbrDenemeBittiTitle") : t("hbrDenemeTitle")}
             >
               <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                 <Coins size={8} className="text-black" strokeWidth={3} />
               </span>
-              {misafirKalanHak !== undefined && misafirKalanHak <= 0 ? "🎁 Üye Ol" : `${misafirKalanHak ?? 2} deneme`}
+              {misafirKalanHak !== undefined && misafirKalanHak <= 0 ? t("hbrUyeOl") : t("hbrDenemeKalan").replace("{n}", String(misafirKalanHak ?? 2))}
             </button>
           )}
 
