@@ -136,7 +136,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             {background ? (
               background.kind === "vid" ? (
                 <video
-                  src={backgroundVideoUrl}
+                  src={backgroundVideoUrl || undefined}
                   poster={backgroundPosterUrl ?? background.poster}
                   muted
                   loop
