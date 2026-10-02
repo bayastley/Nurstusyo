@@ -13,6 +13,7 @@ import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
+import { sehirEtiketindenAd } from "./islamicToolsVeri"; // ★ dünya şehir etiketinden gerçek ad
 import { T, type Lang } from "../i18n";
 import { GoogleIcon } from "./modalHelpers";
 import type { LoginTab, Tier } from "../types";
@@ -397,7 +398,8 @@ export function PrayerBolum({
       {prayerSearch ? (
         <div className="mb-3 grid max-h-36 grid-cols-2 gap-1 overflow-y-auto scrollbar-thin">
           {filteredCities.map((city) => (
-            <button key={city} onClick={() => { setPrayerCity(city); setPrayerSearch(""); }} className="glass-soft rounded-lg px-2 py-1.5 text-left text-[10px] text-white/55 hover:text-white">{city}</button>
+            // ★ "Mekke · Suudi Arabistan" etiketli dünya şehirleri: hook'a SADECE gerçek ad gider
+            <button key={city} onClick={() => { setPrayerCity(sehirEtiketindenAd(city)); setPrayerSearch(""); }} className="glass-soft rounded-lg px-2 py-1.5 text-left text-[10px] text-white/55 hover:text-white">{city}</button>
           ))}
         </div>
       ) : null}

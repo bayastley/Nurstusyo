@@ -44,6 +44,7 @@ import {
   THEMES,
   THEME_EMOJI,
   TURKISH_CITIES,
+  DUNYA_SEHIRLERI,
   EXTRA_THEMES,
   THEME_TIER,
   THEME_EMOJI_EXTRA,
@@ -1210,7 +1211,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     return [...pool].sort((a, b) => (lockMap.get(a.id) ?? 0) - (lockMap.get(b.id) ?? 0));
   }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier, isClipAccessible]);
 
-  const filteredCities = useMemo(() => { const value = prayerSearch.trim().toLocaleLowerCase("tr"); return value ? TURKISH_CITIES.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : TURKISH_CITIES; }, [prayerSearch]);
+  // ★ ŞEHİR ARAMASI (02.10): TR + DÜNYA şehirleri birlikte aranır; dünya kayıtları
+  //   "Mekke · Suudi Arabistan" etiketiyle listelenir, seçilince gerçek ad setPrayerCity'ye gider.
+  const filteredCities = useMemo(() => {
+    const value = prayerSearch.trim().toLocaleLowerCase("tr");
+    const dunyaEtiketleri = DUNYA_SEHIRLERI.map((s) => `${s.ad} · ${s.ulke}`);
+    const havuz = [...TURKISH_CITIES, ...dunyaEtiketleri];
+    return value ? havuz.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : havuz;
+  }, [prayerSearch]);
 
   const pickClip = (clip: Clip) => {
     // ★ TIKLAMA ANINDA ÖN İMZA: useEffect render'ı bekler, biz beklemeden imzayı

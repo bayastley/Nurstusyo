@@ -6,7 +6,8 @@
 export { KISSAS } from "./kissas";
 export type { Kissa } from "./kissas";
 
-export { TURKISH_CITIES } from "./cities";
+export { TURKISH_CITIES, DUNYA_SEHIRLERI, dunyaSehriBul } from "./cities";
+export type { SehirKayit } from "./cities";
 
 export { HASHTAG_CATEGORIES, HASHTAG_POOL, randomHashtagCombo } from "./hashtags";
 

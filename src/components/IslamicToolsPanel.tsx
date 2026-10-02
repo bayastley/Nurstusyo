@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon, BellRing } from "lucide-react";
 import { pushAboneOl, pushAbonelikIptal, pushAbonelikDurumu, pushDestekliyor, iosUyarisi } from "../utils/pushClient";
 import { zikirPencereDizisi, sonGunler, type ZikirGunKova } from "./zikirGrafik";
-import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS, ZIKIRLER, CITY_OPTIONS, parsePrayerTimes, minutesFromTime } from "./islamicToolsVeri";
+import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS, ZIKIRLER, CITY_OPTIONS, sehirEtiketindenAd, parsePrayerTimes, minutesFromTime } from "./islamicToolsVeri";
 import { QiblaCompass, KazaTracker, IslamicCalendar } from "./islamicToolsBolumler";
 // ★ SRP adım 9 (30.09): veri blokları islamicToolsVeri.ts'e, kıble/kaza/takvim bileşenleri islamicToolsBolumler.tsx'e taşındı
 
@@ -115,9 +115,11 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Bugünkü Namaz Vakitleri</p>
-                    <p className="text-[9px] text-white/35 mt-1 flex items-center gap-1"><MapPin size={10} />Konumuna göre hesaplanır</p>
+                    <p className="text-[9px] text-white/35 mt-1 flex items-center gap-1"><MapPin size={10} />Şehre göre hesaplanır · TR: Diyanet · Yurtdışı: MWL</p>
                   </div>
-                  <select value={prayerCity} onChange={(event) => setPrayerCity(event.target.value)} className="max-w-[125px] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] text-white/70 outline-none">
+                  <select value={prayerCity} onChange={(event) => setPrayerCity(sehirEtiketindenAd(event.target.value))} className="max-w-[150px] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] text-white/70 outline-none" title="Şehir seç — yurtdışı dahil">
+                    {/* Seçili şehir listede yoksa (eski kayıt / konum) başa ekleyerek seçili kalır */}
+                    {!CITY_OPTIONS.includes(prayerCity) && <option value={prayerCity}>{prayerCity}</option>}
                     {CITY_OPTIONS.map((city) => <option key={city} value={city}>{city}</option>)}
                   </select>
                 </div>

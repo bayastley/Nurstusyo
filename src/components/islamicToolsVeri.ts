@@ -87,7 +87,17 @@ export function parsePrayerTimes(data: Record<string, string>): Array<{ name: st
   }));
 }
 
-export const CITY_OPTIONS = ["İstanbul", "Ankara", "İzmir", "Bursa", "Konya", "Adana", "Gaziantep", "Trabzon"];
+// ★ ŞEHİR LİSTESİ (02.10, kullanıcı emri): yalnız 8 TR şehri değildi — artık TR listesi
+//   + DÜNYA şehirleri (Mekke, Medine, Kudüs, Berlin, Jakarta…) "Şehir · Ülke" etiketiyle.
+//   Veri + koordinat kaynağı: data/cities.ts (DUNYA_SEHIRLERI).
+import { DUNYA_SEHIRLERI } from "../data";
+export const CITY_OPTIONS: string[] = [
+  "İstanbul", "Ankara", "İzmir", "Bursa", "Konya", "Adana", "Gaziantep", "Trabzon",
+  ...DUNYA_SEHIRLERI.map((s) => `${s.ad} · ${s.ulke}`),
+];
+
+/** "Mekke · Suudi Arabistan" biçimindeki etiketten gerçek şehir adını ayıklar */
+export const sehirEtiketindenAd = (etiket: string): string => etiket.split(" · ")[0];
 
 export function minutesFromTime(time: string): number | null {
   const [hours, minutes] = time.split(":").map(Number);
