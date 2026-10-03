@@ -17,9 +17,60 @@ import {
   HOCA_KARSILASTIRMA_AYETLER, camiHaritaUrl, camiListeUrl, KANAL_REHBERI,
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
+import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
 import { kitaplikOku, kelimeOku, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
+
+// ══ AKILLI SURE ARAMASI (03.10, kullanıcı kararı) ══════════
+// Türkçe şapka/ağız + Arapça harakat normalizasyonu + harf hatası toleransı:
+// "fatiah"→Fâtiha · "bakra"→Bakara · "yasin"→Yâsîn · "الملك"→Mülk · "36"→Yâsîn
+function metniHazirla(s: string): string {
+  return s
+    .toLocaleLowerCase("tr")
+    .replace(/[âàáä]/g, "a").replace(/[îìíï]/g, "i").replace(/[ûùúü]/g, "u")
+    .replace(/[êèéë]/g, "e").replace(/[ôòóö]/g, "o").replace(/ñ/g, "n")
+    .replace(/ş/g, "s").replace(/ğ/g, "g").replace(/ç/g, "c").replace(/ı/g, "i")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+// Arapça: harakat/tatveel/işaretleri at; elif-hamza çeşitlerini birleştir,
+// te-mervuta→he, elif-maksura→ya — "الفاتحه" ile "الفاتحة" aynı bulunsun
+function arapcaHazirla(s: string): string {
+  return s
+    .replace(/[\u0640\u064B-\u065F\u0670\u06D6-\u06ED\u08F0-\u08F3]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/ى/g, "ي")
+    .replace(/ة/g, "ه")
+    .replace(/[ؤئ]/g, "ي")
+    .replace(/\s+/g, "");
+}
+function levenshtein(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let onceki = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const simdiki = [i];
+    for (let j = 1; j <= b.length; j++) {
+      simdiki[j] = Math.min(onceki[j] + 1, simdiki[j - 1] + 1, onceki[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    onceki = simdiki;
+  }
+  return onceki[b.length];
+}
+// kelime ↔ metin eşleşmesi: düz alt dize + harf hatası toleransı + "el/al" takısı
+function kelimeUyar(metin: string, kelime: string): boolean {
+  if (!kelime) return true;
+  if (metin.includes(kelime)) return true;
+  const tolerans = kelime.length <= 3 ? 0 : kelime.length <= 5 ? 1 : 2;
+  if (tolerans === 0) return false;
+  const parcalar = metin.split(" ");
+  if (parcalar.some((p) => levenshtein(p, kelime) <= tolerans)) return true;
+  const kisa = kelime.length >= 5 ? kelime.replace(/^(al|el)/, "") : kelime; // "alfatiha" → "fatiha"
+  return kisa !== kelime && (metin.includes(kisa) || parcalar.some((p) => levenshtein(p, kisa) <= tolerans));
+}
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
 interface KesfetModalProps {
@@ -163,8 +214,39 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   }, [sekme, q, filtreliHadisler.length]);
   const filtreliKissalar = useMemo(() => KISSA_LISTESI.filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q]);
   const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
-  // ★ 01.10: arama ad + numara + konu/açıklama metnine bakar
-  const filtreliSureler = useMemo(() => SURE_BİLGİLERİ.filter((s) => !q || s.ad.toLocaleLowerCase("tr").includes(q) || s.konu.toLocaleLowerCase("tr").includes(q) || (s.aciklama ?? "").toLocaleLowerCase("tr").includes(q) || String(s.n) === q), [q]);
+  // ★ 03.10 AKILLI SURE ARAMASI: ad + ARAPÇA AD + numara + konu/açıklama;
+  //   kelime bazlı (sıra serbest), "sure" dolgu kelimesi yoksayılır.
+  //   Örn: "fatiah"→Fâtiha · "bakra"→Bakara · "sure mulk"→Mülk · "36"→Yâsîn · "الرحمن"→Rahmân
+  const filtreliSureler = useMemo(() => {
+    if (!q) return SURE_BİLGİLERİ;
+    const ham = q.split(/\s+/).filter(Boolean);
+    const kelimeler = ham
+      .filter((k) => ham.length <= 1 || k !== "sure")
+      .map(metniHazirla)
+      .filter(Boolean);
+    if (!kelimeler.length) return SURE_BİLGİLERİ;
+    return SURE_BİLGİLERİ.filter((s) =>
+      kelimeler.every((w) => {
+        if (/^\d{1,3}$/.test(w) && s.n === parseInt(w, 10)) return true; // "36" → Yâsîn
+        return (
+          kelimeUyar(metniHazirla(s.ad), w) ||
+          kelimeUyar(arapcaHazirla(SURE_ARAPCA[s.n] ?? ""), w) ||
+          metniHazirla(s.konu).includes(w) ||
+          metniHazirla(s.aciklama ?? "").includes(w)
+        );
+      }),
+    );
+  }, [q]);
+  // ★ 03.10: arama tam bir sure adına/numarasına/Arapça adına denk gelirse akordeon otomatik açılır
+  React.useEffect(() => {
+    if (sekme !== "sure" || !q) return;
+    const nq = metniHazirla(q);
+    const sayi = /^\d{1,3}$/.test(nq) ? parseInt(nq, 10) : null;
+    const aq = /[\u0600-\u06FF]/.test(q) ? arapcaHazirla(q) : "";
+    if (!nq && !sayi && !aq) return;
+    const tam = SURE_BİLGİLERİ.find((s) => metniHazirla(s.ad) === nq || s.n === sayi || (aq !== "" && arapcaHazirla(SURE_ARAPCA[s.n] ?? "") === aq));
+    if (tam) setAcikSure(tam.n);
+  }, [q, sekme]);
   const filtreliDuaRehber = useMemo(() => DUA_REHBERİ.filter((d) => !q || d.durum.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ SESLİ DUA TAKİBİ (madde 58) — okundu işaretleri refresh için
   const [duaOkunduTick, setDuaOkunduTick] = useState(0);
@@ -381,11 +463,13 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                 <button
                   type="button"
                   aria-expanded={acik}
-                  onClick={() => setAcikSure(acik ? null : s.n)}
+                  onClick={() => setAcikSure(acik ? (q ? s.n : null) : s.n)}
                   className="flex w-full items-center gap-2 p-3 text-left"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{s.n}</span>
                   <h4 className="text-[12px] font-black text-white/90">Sure {s.ad}</h4>
+                  {/* ★ 03.10: Arapça ad kartta görünsün — akıllı aramaya ipucu */}
+                  {SURE_ARAPCA[s.n] && <span dir="rtl" className="font-arabic text-[11px] text-white/40">{SURE_ARAPCA[s.n]}</span>}
                   {ayetSayisi != null && <span className="text-[8.5px] font-bold text-white/35">{ayetSayisi} ayet</span>}
                   <span className="ml-auto rounded-full bg-white/8 px-2 py-0.5 text-[8.5px] font-bold text-white/50">{s.inis}'de inmiştir</span>
                   <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
@@ -401,7 +485,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </div>
             );
           })}
-          {filtreliSureler.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">Aradığın sure listede yok — başka bir ad dene.</p>}
+          {filtreliSureler.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">Aradığın sure listede yok — Arapça adıyla da deneyebilirsin (örn. الملك) ya da numara yaz.</p>}
           <p className="pt-1 text-center text-[8px] text-white/25">{filtreliSureler.length} sure · detay için karta dokun</p>
         </div>
       )}
