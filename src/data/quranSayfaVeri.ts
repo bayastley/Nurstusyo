@@ -8,10 +8,14 @@
 export const SAYFA_SAYISI = 604;
 
 // ★ GÖRÜNTÜ KAYNAKLARI — sırayla denenir (1. patlarsa 2.'ye düşer)
-//   1) cdn.quran.ws: quran-svg projesinin resmî CDN'i (immutable, brotli/zstd)
-//   2) jsDelivr: aynı depoyu GitHub üzerinden yansıtan köklü CDN
+//   ★ 03.10 (kullanıcı emri: "gerçek kuran sayfaları istiyorum"): 1. kaynak artık
+//   KFGQPC Medine mushafının GERÇEK raster PNG'si (2600×4206, kitap gibi) —
+//   GovarJabbar/Quran-PNG (quran/quran.com-images üretimi, 000-604.png, test edildi:
+//   jsDelivr ~450ms/400KB). 2-3) eski SVG zinciri yedek olarak kalır (vektör, zoomda net).
+const PNG_SURUM = "master";
 const SVG_SURUM = "v1.1.1";
 const SVG_KAYNAKLARI: Array<(s: string) => string> = [
+  (s) => `https://cdn.jsdelivr.net/gh/GovarJabbar/Quran-PNG@${PNG_SURUM}/${s}.png`,
   (s) => `https://cdn.quran.ws/svg/pages/${SVG_SURUM}/hafs-kfqc/${s}.svg`,
   (s) => `https://cdn.jsdelivr.net/gh/quran-ws/quran-svg@main/mushafs/hafs/kfqc/svg/${s}.svg`,
 ];
@@ -21,6 +25,9 @@ export const sayfaSvgKaynaklari = (sayfa: number): string[] => {
   const s = String(Math.min(Math.max(1, sayfa), SAYFA_SAYISI)).padStart(3, "0");
   return SVG_KAYNAKLARI.map((yap) => yap(s));
 };
+
+/** Gerçek raster PNG mi (SVG değil)? — <img> boyutlandırma ve render ipuçları için */
+export const sayfaRasterMi = (kaynak: string): boolean => kaynak.endsWith(".png");
 
 // ★ CÜZ BAŞLANGIÇ SAYFALARI — standart Medine mushafı cüz sınırları (cüz 1 → sayfa 1 …)
 export const CUZ_BASLANGIC_SAYFA = [

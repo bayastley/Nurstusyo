@@ -15,7 +15,7 @@ import {
   RotateCcw, Loader2, MapPin, Check,
 } from "lucide-react";
 import {
-  SAYFA_SAYISI, sayfaSvgKaynaklari, cuzBul, sayfadaBaslayanSureler, aktifSureNo,
+  SAYFA_SAYISI, sayfaSvgKaynaklari, sayfaRasterMi, cuzBul, sayfadaBaslayanSureler, aktifSureNo,
   hatimYukle, hatimKaydet, sonSayfaYukle, sonSayfaKaydet, type HatimKaydi,
 } from "../data/quranSayfaVeri";
 import { sevapEkle, kelimeSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
@@ -42,6 +42,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   const [hatim, setHatim] = useState<HatimKaydi>(() => hatimYukle());
   const [hatimMesaji, setHatimMesaji] = useState("");
   const [sayfaGiris, setSayfaGiris] = useState("1"); // sayfa kutusunun ham metni (yazarken atlamasın)
+  // ★ 03.10 (kullanıcı emri): hover'da beliren oklar + kenar tıklama navigasyonu
+  const [okGorunur, setOkGorunur] = useState(false);
+  const [okDonme, setOkDonme] = useState(false); // mobil/dokunmatikte oklar hep görünür
   const kokRef = useRef<HTMLDivElement>(null);
   const sahneRef = useRef<HTMLDivElement>(null);
 
@@ -55,9 +58,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setZoom(1);
     setHatim(hatimYukle());
     setHatimMesaji("");
+    // ★ 03.10: dokunmatik cihazda hover olmaz → oklar kalıcı görünür
+    try { setOkDonme(window.matchMedia("(hover: none)").matches); } catch { setOkDonme(false); }
   }, [open]);
 
-  // Sayfa değişince: kaydı güncelle + kaynağı sıfırla + sonraki sayfayı önden yükle
+  // Sayfa değişince: kaydı güncelle + kaynağı sıfırla + sonraki ve önceki sayfayı önden yükle
   useEffect(() => {
     if (!open) return;
     sonSayfaKaydet(sayfa);
@@ -65,9 +70,12 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setKaynakIdx(0);
     setYukleniyor(true);
     setHata(false);
+    // ★ 03.10: her iki komşu da önden yüklenir — kenar tıklaması anında açılır
     const onumuz = new Image();
     onumuz.src = sayfaSvgKaynaklari(Math.min(SAYFA_SAYISI, sayfa + 1))[0];
-    return () => { onumuz.src = ""; };
+    const arkamiz = new Image();
+    arkamiz.src = sayfaSvgKaynaklari(Math.max(1, sayfa - 1))[0];
+    return () => { onumuz.src = ""; arkamiz.src = ""; };
   }, [open, sayfa]);
 
   // Hatim kaydı her değişimde diske yazılır
@@ -94,10 +102,13 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   }, [open]);
 
   const kaynaklar = useMemo(() => sayfaSvgKaynaklari(sayfa), [sayfa]);
+  const rasterMi = sayfaRasterMi(kaynaklar[kaynakIdx] || "");
   const okunanMu = hatim.okunan.includes(sayfa);
   const yuzde = Math.round((hatim.okunan.length / SAYFA_SAYISI) * 100);
   const cuz = cuzBul(sayfa);
-  const sureAdi = SURAHS_DATA[aktifSureNo(sayfa) - 1]?.name ?? "";
+  const aktifSure = SURAHS_DATA[aktifSureNo(sayfa) - 1];
+  const sureAdi = aktifSure?.name ?? "";
+  const sureTur = aktifSure?.type ?? ""; // Mekkî / Medenî — üst perdede
   const baslayanlar = sayfadaBaslayanSureler(sayfa);
 
   // ★ HATİM İŞARETİ — dürüst sayım: sayfa ancak kullanıcı "✓ Okudum" derse işaretlenir.
@@ -136,6 +147,13 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     else setSayfaGiris(String(sayfa));
   };
 
+  // ★ KENAR TIKLAMA NAVİGASYONU (03.10): ekranın en sağına tıkla → sonraki, en soluna → önceki.
+  //   Kitap okur gibi: elini sayfanın kenarına götürürsün. Orta bölge = sayfa etkileşimi (zoom vb).
+  //   Düzeltme (03.10, dev testinde yakalandı): koordinat hesabı yerine iki AYRI şerit +
+  //   ayrı handler — 90px'lik şeridin kendi rect'inden x hesaplamak hep sol düşüyordu.
+  const solKenarTikla = () => setSayfa((s) => Math.max(1, s - 1));
+  const sagKenarTikla = () => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1));
+
   if (!open) return null;
 
   return (
@@ -168,9 +186,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           </span>
         </div>
 
-        {/* ── SURE / CÜZ / SAYFA GÖSTERGESİ ── */}
-        <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-0.5 border-b border-white/5 bg-[#0a1420] px-3 py-1 text-[10px] font-bold text-[#b8b093]">
-          <span className="text-gold">✨ {sureAdi}</span>
+        {/* ── SURE / CÜZ / SAYFA GÖSTERGESİ — üst perde (03.10 güçlendirildi) ── */}
+        <div className="relative z-20 flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-0.5 border-b border-white/5 bg-[#0a1420] px-3 py-1.5 text-[10px] font-bold text-[#b8b093]">
+          <span className="text-gold">✨ {sureAdi || "—"}</span>
+          <span className="text-white/25">|</span>
+          <span className="text-[#d8cfae]">{sureTur}</span>
           <span className="text-white/25">|</span>
           <span>Cüz {cuz}</span>
           <span className="text-white/25">|</span>
@@ -190,12 +210,17 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           </div>
         )}
 
-        {/* ── SAYFA SAHNESİ — çift tık: 1x ↔ 2x zoom ── */}
+        {/* ── SAYFA SAHNESİ — çift tık zoom · hover oklar · kenar tıklama ──
+            ★ 03.10: oklar + kenar şeritleri wrapper'da (scroll dışı) — zoom'da
+            kaybolmazlar, her zaman görünür alanda sabit dururlar. */}
+        <div className="relative min-h-0 flex-1">
         <div
           ref={sahneRef}
           onDoubleClick={() => setZoom((z) => (z >= 1.9 ? 1 : 2))}
-          className="relative min-h-0 flex-1 overflow-auto bg-[#0a0912] p-3 scrollbar-thin"
-          title="Çift tıkla büyüt/küçült · Ctrl+tekerlek ile akıcı zoom"
+          onMouseEnter={() => setOkGorunur(true)}
+          onMouseLeave={() => setOkGorunur(false)}
+          className="absolute inset-0 overflow-auto bg-[#0a0912] p-3 scrollbar-thin"
+          title="Çift tıkla büyüt/küçült · Ctrl+tekerlek zoom · kenarlara tıkla: sayfa çevir"
         >
           <div className="flex min-h-full min-w-full items-center justify-center">
             {!hata ? (
@@ -210,8 +235,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 }}
                 alt={`Kur'an sayfa ${sayfa} — Kral Fahd Mushafı (Hafs)`}
                 draggable={false}
-                className="mx-auto block select-none"
-                style={{ height: `${Math.round(560 * zoom)}px`, width: "auto" }}
+                className="mx-auto block select-none rounded-[3px] shadow-[0_10px_40px_rgba(0,0,0,.55)]"
+                style={{ height: `${Math.round((rasterMi ? 700 : 560) * zoom)}px`, width: "auto" }}
               />
             ) : (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
@@ -233,6 +258,53 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               </div>
             </div>
           )}
+          {/* ★ KENAR TIKLAMA ŞERİTLERİ (03.10): en sağa tıkla → sonraki, en sola → önceki.
+              Kitap çevirir gibi — ok beklemeden kenara dokun.
+              pointer-events-none OLMAYAN katman: sahne overflow-auto olduğu için bu şeritler
+              position:fixed ile pencereye sabitlenir (modal içinde, modal yüksekliğinde). */}
+          {!hata && (
+            <div className="pointer-events-none absolute inset-0 z-10">
+              <div
+                onClick={solKenarTikla}
+                className="pointer-events-auto absolute bottom-0 left-0 top-0 w-[90px] cursor-w-resize"
+                title="← Önceki sayfa"
+                aria-label="Önceki sayfa"
+                role="button"
+              />
+              <div
+                onClick={sagKenarTikla}
+                className="pointer-events-auto absolute bottom-0 right-0 top-0 w-[90px] cursor-e-resize"
+                title="Sonraki sayfa →"
+                aria-label="Sonraki sayfa"
+                role="button"
+              />
+            </div>
+          )}
+          {/* ★ HOVER OKLARI (03.10): mouse sahnede → ortada yumuşakça belirir;
+              gitti → kaybolur. Dokunmatik cihazda (okDonme) kalıcı görünür. */}
+          {!hata && (
+            <>
+              <button
+                onClick={() => setSayfa((s) => Math.max(1, s - 1))}
+                disabled={sayfa <= 1}
+                aria-label="Önceki sayfa"
+                className={`absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                title="Önceki sayfa (←)"
+              >
+                <ChevronLeft size={22} strokeWidth={2.6} />
+              </button>
+              <button
+                onClick={() => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1))}
+                disabled={sayfa >= SAYFA_SAYISI}
+                aria-label="Sonraki sayfa"
+                className={`absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                title="Sonraki sayfa (→)"
+              >
+                <ChevronRight size={22} strokeWidth={2.6} />
+              </button>
+            </>
+          )}
+        </div>
         </div>
 
         {/* ── ALT KONTROL BARI: sayfa gezinme + zoom + tam ekran + okudum ── */}
