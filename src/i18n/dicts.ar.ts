@@ -209,6 +209,7 @@ export const arDict: Dict = {
   akilliAiKapali: "مُعطّل",
   akilliAiAcUygula: "تفعيل + تطبيق",
   akilliAiAciklama: "الذكاء الاصطناعي نشط — كل آية تُضاف تُختار لها الأجواء المناسبة تلقائياً.",
+  akilliAiAcikAciklama: "الذكاء الاصطناعي نشط — كل آية تُضاف تُختار لها الأجواء المناسبة تلقائياً.",
   akilliAiKapaliAciklama: "مُعطّل — فعّله ليختار الذكاء الاصطناعي الأجواء المناسبة لآيتك.",
   hocaTilavet: "⚡ القرّاء / التلاوة",
   kabeImamlari: "أئمة الكعبة",

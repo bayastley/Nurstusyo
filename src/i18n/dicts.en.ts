@@ -209,6 +209,7 @@ export const enDict: Dict = {
   akilliAiKapali: "OFF",
   akilliAiAcUygula: "Enable + Apply",
   akilliAiAciklama: "Smart AI is active — every newly added ayah gets a matching atmosphere automatically.",
+  akilliAiAcikAciklama: "Smart AI is active — every newly added ayah gets a matching atmosphere automatically.",
   akilliAiKapaliAciklama: "Off — turn on and AI picks the atmosphere for your ayah.",
   hocaTilavet: "⚡ RECITERS / TILAWAH",
   kabeImamlari: "KAABA IMAMS",
