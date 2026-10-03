@@ -20,6 +20,7 @@ import { KesfetModal } from "./KesfetModal";
 import { HafizlikTestiModal } from "./HafizlikTestiModal";
 import { AyetNotlariModal } from "./AyetNotlariModal";
 import { KelimeAtolyesiModal } from "./KelimeAtolyesiModal";
+import { bilinenKelimeIsaretle } from "./kesfetTemel"; // ★ 03.10: atölye aktarımı kelime kartını "bilinen" işaretler
 import { ArkaPlanUreticiModal } from "./ArkaPlanUreticiModal";
 import { DavetModal } from "./DavetModal";
 import { HaftaninVideosuModal } from "./HaftaninVideosuModal";
@@ -188,6 +189,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   // ★ KVKK: Pazarlama e-postası için AYRI, geri alınabilir açık rıza durumu.
   //   Kullanıcı giriş yaptıktan sonra bu tercih /api/marketing/consent'e yazılır.
   const [marketingConsent, setMarketingConsent] = useState(false);
+
+  // ★ KELİME ↔ ATÖLYE BAĞI (03.10): karttan "atölyede çalış" → atölye kutuya dolu açılır;
+  //   aktarım başarılı bitince kaynak kart yeşil tik (bilinen) alır.
+  const [atolyeBaslangic, setAtolyeBaslangic] = useState<{ kelime: string; ar: string } | null>(null);
   useEffect(() => {
     if (!user?.email) return;
     fetch("/api/marketing/consent", {
@@ -540,7 +545,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       <HaftaninVideosuModal open={modal === "haftaninVideosu"} onClose={() => setModal(null)} notify={notify} />
 
       {/* ★ KEŞFET — hadis bankası, kıssa, soru-cevap, kelime kartları, sure bilgileri, namaz rehberi, bebek duası, dua rehberi (maddeler 18-22-28-35-61) */}
-      <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} lang={lang} atolyeAc={(kelime, ar) => { setAtolyeBaslangic({ kelime, ar }); setModal("kelimeAtolyesi"); }} />
 
       {/* ★ HAFIZLIK TESTİ — devamını getir, 4 seçenekli ayet tamamlama (madde 44) */}
       <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} lang={lang} />
@@ -558,6 +563,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         randomizeBackgrounds={randomizeBackgrounds}
         accessTier={accessTier}
         isMasterSurum={isMasterSürüm}
+        kelimeBaslangic={atolyeBaslangic?.kelime}
+        onOgrenildi={() => { if (atolyeBaslangic) bilinenKelimeIsaretle(atolyeBaslangic.ar); }}
       />
 
       {/* ★ ARKA PLAN ÜRETİCİ LİTE — mood yaz → sahne planı + sinematik filtre (İş 4) */}

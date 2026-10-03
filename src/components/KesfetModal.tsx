@@ -18,7 +18,7 @@ import {
 } from "../data/kesfetData";
 import { SURAHS } from "../data/surahs";
 import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
-import { kitaplikOku, kelimeOku, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
+import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 
@@ -81,7 +81,8 @@ function gununKelimeleriHesapla(): KelimeKart[] {
   return Array.from({ length: adet }, (_, i) => KELIME_KARTLARI[(bas + i) % KELIME_KARTLARI.length]);
 }
 // Kelime kartı — günün kelimelerinde altın çerçeve; keşif kartlarında varsayılan kenar
-function KelimeKarti({ k, cevrildi, cevir, altin }: { k: KelimeKart; cevrildi: boolean; cevir: () => void; altin?: boolean }) {
+// ★ 03.10: ✨ atölye butonu + ✓ bilinen tiki eklendi (atölye aktarımı otomatik tikler)
+function KelimeKarti({ k, cevrildi, cevir, altin, bilinen, bilinenToggle, atolyeye }: { k: KelimeKart; cevrildi: boolean; cevir: () => void; altin?: boolean; bilinen?: boolean; bilinenToggle?: () => void; atolyeye?: () => void }) {
   return (
     <div className="relative">
       <button type="button" onClick={cevir}
@@ -111,8 +112,29 @@ function KelimeKarti({ k, cevrildi, cevir, altin }: { k: KelimeKart; cevrildi: b
         title={`Okunuşu dinle: ${k.okunus}`}
         className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
       >🔊</button>
+      {/* ★ ATÖLYEDE ÇALIŞ (03.10): bu kelimeyi Kelime Atölyesi'nde çalış — ayet+atmosfer öner, stüdyoya aktar */}
+      {atolyeye && (
+        <button type="button"
+          onClick={(e) => { e.stopPropagation(); atolyeye(); }}
+          title="Atölyede çalış — ayet + atmosfer önerisi al, tek tıkla stüdyoya aktar"
+          className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
+        >✨</button>
+      )}
+      {/* ★ BİLİNDİ TİKİ (03.10): atölyeden stüdyoya aktarılan kelime yeşil tik alır; elle de işaretlenir/kaldırılır */}
+      {bilinenToggle && (
+        <button type="button"
+          onClick={(e) => { e.stopPropagation(); bilinenToggle(); }}
+          title={bilinen ? "Bilinen kelime — tıkla: işareti kaldır" : "Öğrendin mi? Bilinen işaretle — atölyeden stüdyoya aktarımda otomatik gelir"}
+          className={`absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black shadow-md transition hover:scale-110 ${bilinen ? "bg-emerald-500 text-black ring-1 ring-emerald-300/60" : "bg-black/70 text-white/40 ring-1 ring-white/20 hover:bg-black/90"}`}
+        >{bilinen ? "✓" : "＋"}</button>
+      )}
     </div>
   );
+}
+
+// Kart anlamından atölye arama kelimesi — virgül/parantez öncesi ilk parça ("Rab (sahip…" → "Rab")
+function atolyeKelimeOner(d: KelimeKart): string {
+  return d.tr.split(/[,(]/)[0].trim() || d.tr;
 }
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
@@ -123,9 +145,11 @@ interface KesfetModalProps {
   onClose: () => void;
   initialSekme?: SekmeId;
   notify?: (msg: string) => void;
+  /** ★ 03.10: karttaki ✨ butonu — Kelime Atölyesi'ni bu kelimeyle açar (ModalsContainer bağlar) */
+  atolyeAc?: (kelime: string, kelimeAr: string) => void;
 }
 
-export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initialSekme, notify , lang = "tr" }) => {
+export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initialSekme, notify , atolyeAc, lang = "tr" }) => {
   // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
   const tt = (k: string): string => translate(lang, k);
 
@@ -153,6 +177,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     setKartCevrildi(null);
   }, [gununKelimeleri]);
   React.useEffect(() => { if (sekme === "kelime") kelimeYenile(); }, [sekme, kelimeYenile]);
+  // ★ BİLİNEN KELİMELER (03.10): atölyeden stüdyoya aktarılan kart yeşil tik alır — event ile anında tazelenir
+  const [bilinenTick, setBilinenTick] = useState(0);
+  React.useEffect(() => {
+    const tazele = () => setBilinenTick((v) => v + 1);
+    window.addEventListener("nur_kelime_bilinen", tazele);
+    return () => window.removeEventListener("nur_kelime_bilinen", tazele);
+  }, []);
+  const bilinenSet = React.useMemo(() => new Set(bilinenKelimelerOku()), [bilinenTick]);
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
@@ -524,12 +556,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {gununKelimeleri.map((k) => (
-              <KelimeKarti key={k.ar} k={k} altin cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} />
+              <KelimeKarti key={k.ar} k={k} altin cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)}
+                bilinen={bilinenSet.has(k.ar)} bilinenToggle={() => bilinenKelimeIsaretle(k.ar, !bilinenSet.has(k.ar))}
+                atolyeye={atolyeAc ? () => atolyeAc(atolyeKelimeOner(k), k.ar) : undefined} />
             ))}
           </div>
 
           <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
-            <p className="text-[9px] text-white/40">Keşif kartları — tıkla: anlamını gör · 🔊 ile okunuşu dinle · Kur'an'da en sık geçen kelimeler 🔤</p>
+            <p className="text-[9px] text-white/40">Keşif kartları — tıkla: anlamını gör · 🔊 okunuş · ✨ atölyede çalış · ✓ bilinen işaretle · Kur'ân'ın sık kelimeleri 🔤</p>
             <button type="button" onClick={kelimeYenile}
               className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[.05] px-2.5 py-1 text-[9px] font-black text-white/70 transition hover:border-[color:var(--accent)] hover:text-white"
               title="Keşif kartlarını yenile — havuzdan rastgele 15 kelime gelir">
@@ -538,7 +572,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {kelimeKartlari.map((k) => (
-              <KelimeKarti key={k.ar} k={k} cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} />
+              <KelimeKarti key={k.ar} k={k} cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)}
+                bilinen={bilinenSet.has(k.ar)} bilinenToggle={() => bilinenKelimeIsaretle(k.ar, !bilinenSet.has(k.ar))}
+                atolyeye={atolyeAc ? () => atolyeAc(atolyeKelimeOner(k), k.ar) : undefined} />
             ))}
           </div>
           <p className="mt-3 text-center text-[8px] text-white/25">Havuz: {KELIME_KARTLARI.length} kelime · bugün {gununKelimeleri.length} yeni + her yenilemede rastgele {kelimeKartlari.length} keşif kartı</p>

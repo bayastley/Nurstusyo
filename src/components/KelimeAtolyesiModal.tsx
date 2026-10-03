@@ -43,6 +43,10 @@ export interface KelimeAtolyesiModalProps {
   isMasterSurum?: boolean;
   /** Aktarım SONRASI çağrılır — stüdyo öne çıkar (isteğe bağlı) */
   onAfterImport?: () => void;
+  /** ★ 03.10: kelime kartından "atölyede çalış" ile açıldıysa kutuya yazılacak kelime */
+  kelimeBaslangic?: string;
+  /** ★ 03.10: aktarım başarılı bitince çağrılır — kelime kartı "bilinen" (yeşil tik) olur */
+  onOgrenildi?: () => void;
 }
 
 /** "Ra'd Suresi • 28. Ayet" → 28 (çözülemezse 0) */
@@ -67,6 +71,7 @@ const HERKESE_ACIK: CatId[] = ["gol", "desen", "bulut"];
 export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   open, onClose, notify, addAyah, randomizeBackgrounds,
   accessTier = "free", isMasterSurum = false, onAfterImport,
+  kelimeBaslangic, onOgrenildi,
   lang = "tr" }) => {
   // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
   const tt = (k: string): string => translate(lang, k);
@@ -89,6 +94,11 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
     });
   }, []);
   const [gonderiliyor, setGonderiliyor] = useState(false);
+
+  // ★ 03.10: karttan açılışta kutuyu doldur — reçete etkisi kelime değişince kendi kendine çalışır
+  useEffect(() => {
+    if (open && kelimeBaslangic) setKelime(kelimeBaslangic);
+  }, [open, kelimeBaslangic]);
 
   // ── Reçete çözümle (kelime değişince) ─────────────────────
   useEffect(() => {
@@ -140,6 +150,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
       notify?.(adet === 1
         ? `✨ "${aktifRecete.etiket}" stüdyoya aktarıldı — ayet + atmosfer hazır!`
         : `✨ ${adet} ayet "${aktifRecete.etiket}" temasıyla stüdyoya aktarıldı — atmosfer hazır!`);
+      onOgrenildi?.(); // ★ 03.10: kaynak kart yeşil tik alır (bilinen)
       onAfterImport?.();
       onClose();
     } catch {
@@ -147,7 +158,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
     } finally {
       setGonderiliyor(false);
     }
-  }, [aktifRecete, ayetler, seciliAyetler, seciliCat, catsGorunen, gonderiliyor, addAyah, randomizeBackgrounds, notify, onAfterImport, onClose]);
+  }, [aktifRecete, ayetler, seciliAyetler, seciliCat, catsGorunen, gonderiliyor, addAyah, randomizeBackgrounds, notify, onAfterImport, onOgrenildi, onClose]);
 
   // ★ Hook'lardan SONRA erken dönüş
   if (!open) return null;

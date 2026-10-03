@@ -18,6 +18,21 @@ export function kitaplikOku(): { isaretler: string[]; notlar: KitaplikNot[] } {
   return { isaretler, notlar };
 }
 
+// ★ KELİME ↔ ATÖLYE BAĞI (03.10): "bilinen" kelimeler cihazda tutulur —
+//   atölyeden stüdyoya aktarılan kelime kartı yeşil tik alır; tik elle de işaretlenip kaldırılabilir.
+export const BILINEN_KELIME_KEY = "nur_kelime_bilinen";
+export function bilinenKelimelerOku(): string[] {
+  try { return JSON.parse(localStorage.getItem(BILINEN_KELIME_KEY) || "[]") as string[]; } catch { return []; }
+}
+export function bilinenKelimeIsaretle(ar: string, isaretle = true): void {
+  try {
+    const liste = new Set(bilinenKelimelerOku());
+    if (isaretle) liste.add(ar); else liste.delete(ar);
+    localStorage.setItem(BILINEN_KELIME_KEY, JSON.stringify([...liste]));
+    window.dispatchEvent(new CustomEvent("nur_kelime_bilinen"));
+  } catch { /* yoksay */ }
+}
+
 // ═══ DUA REHBERİ SES MOTORU (28.09) ═══
 // Kullanıcı kararı: TTS sesi çirkin geliyordu. Cihazdaki Türkçe sesler kalite sırasına
 // göre seçilir + kadın/erkek tercihi localStorage'da saklanır. Microsoft/Google nöral
