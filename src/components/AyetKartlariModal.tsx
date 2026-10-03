@@ -224,11 +224,17 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     }
   }, [ayet, bg, bgId, kendiFoto, ayar, ensureImage, notify]);
 
+  // ★ KARIŞTIR (03.10, kullanıcı kararı): hem ayet hem arka plan rastgele değişir —
+  //   bilinçli eşleştirme YOK (uyumlu seçim Akıllı Seç'in işi).
   const shuffleBg = useCallback(() => {
-    if (!filteredBgs.length) return;
-    const pick = filteredBgs[Math.floor(Math.random() * filteredBgs.length)];
-    setBgId(pick.id);
-  }, [filteredBgs]);
+    const ayetHavuz = filteredAyets.length ? filteredAyets : AYET_KARTILARI;
+    const ayetPick = ayetHavuz[Math.floor(Math.random() * ayetHavuz.length)];
+    if (ayetPick) setAyetId(ayetPick.id);
+    const bgHavuz = filteredBgs.length ? filteredBgs : BACKGROUNDS;
+    const bgPick = bgHavuz[Math.floor(Math.random() * bgHavuz.length)];
+    if (bgPick) setBgId(bgPick.id);
+    notify?.("🔀 Karıştır: yeni ayet + yeni arka plan!");
+  }, [filteredAyets, filteredBgs, notify]);
 
   const shuffleAyet = useCallback(() => {
     if (!filteredAyets.length) return;
@@ -236,14 +242,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     setAyetId(pick.id);
   }, [filteredAyets]);
 
-  // 🎯 Akıllı Seç: rastgele ayet + o ayete uygun arka plan (duygu + kelime eşleştirmesi)
+  // 🎯 Akıllı Seç (03.10, kullanıcı kararı): AYET AYNI KALIR — sadece ayetin ruhuna
+  //   uygun arka plan (duygu + kelime eşleştirmesi) seçilir.
   const akilliSec = useCallback(() => {
-    const ayetPick = filteredAyets.length ? filteredAyets[Math.floor(Math.random() * filteredAyets.length)] : AYET_KARTILARI[0];
-    if (ayetPick) setAyetId(ayetPick.id);
-    const bgPick = akilliBgSec(ayetPick, BACKGROUNDS);
+    const bgPick = akilliBgSec(ayet, BACKGROUNDS);
     if (bgPick) { setBgId(bgPick.id); setBgCat("all"); setBgSearch(""); }
-    notify?.("🎯 Akıllı Seç: ayet + uyumlu arka plan hazır!");
-  }, [filteredAyets, notify]);
+    notify?.("🎯 Akıllı Seç: ayetin ruhuna uygun atmosfer hazır!");
+  }, [ayet, notify]);
 
   // 🎯 Akıllı AI (1·Ayetini Seç başlığındaki): aynı motor — ayet + uyumlu arka plan tek tuşla.
   //   Aktif filtrelerdeki (mood/sure/arama) havuzdan seçer; filtre sonucu boşsa tüm ayetlerden.

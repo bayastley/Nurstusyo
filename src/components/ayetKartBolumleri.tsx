@@ -558,7 +558,7 @@ export const ArkaPlanGalerisi: React.FC<{
               onClick={akilliSec}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-              title="Ayeti ve ona uygun arka planı kendisi seçer"
+              title="Ayeti korur, ayetin ruhuna uygun arka planı seçer"
             >
               <Wand2 size={11} /> Akıllı Seç
             </button>
@@ -566,7 +566,7 @@ export const ArkaPlanGalerisi: React.FC<{
               type="button"
               onClick={shuffleBg}
               className="flex items-center gap-1.5 rounded-lg glass-soft px-2.5 py-1.5 text-[9.5px] font-bold text-white/70 transition hover:text-white active:scale-95"
-              title="Sadece arka planı rastgele değiştir"
+              title="Ayeti ve arka planı rastgele değiştir"
             >
               <Shuffle size={11} style={{ color: "var(--accent)" }} /> Karıştır
             </button>
