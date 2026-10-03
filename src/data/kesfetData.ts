@@ -488,6 +488,13 @@ export const SURE_BİLGİLERİ: SureBilgi[] = [
   { n: 114, ad: "Nâs", inis: "Mekke", konu: "İnsanların, cinlerin şerrinden Allah'a sığınma.", fazilet: "Vesveseye karşı en güçlü sığınak (muavvizât); uyku öncesi çocuklara üçer kez okutulan gelenek hadislerle desteklenir.", aciklama: "Sığınma serisinin son suresi: insanların Rabbine, Melikine ve İlahına sığınılır — kalpteki vesveseyi ancak Allah'ın üç ismiyle savunabilirsin. Cin ve insan şeytanlarının fısıltısına karşı kapıyı kapatır; göğse değil, kalbe çalışan düşman daha sinsi olduğu için son sıradadır. Muavvizât'ın (sığınma surelerinin) kapanışıdır." },
 ];
 
+// ★ 114 SURE TAMAMLAMA (02.10, kullanıcı kararı): mevcut 25 meşhur sure
+//   kalır; kalan 89 sure kısa konu + fazilet olarak ek dosyadan birleşir.
+//   İniş yerleri quran.com chapters API ile doğrulanmıştır.
+import { SURE_BİLGİLERİ_EK } from "./sureBilgileriEk";
+SURE_BİLGİLERİ.push(...SURE_BİLGİLERİ_EK);
+SURE_BİLGİLERİ.sort((a, b) => a.n - b.n);
+
 // ── 28: NAMAZ ÖĞRETİCİ (rekat rekat) ────────────────────────
 export interface NamazAdim { adim: string; yazi: string; arapca?: string }
 export const NAMAZ_REHBERİ: NamazAdim[] = [
