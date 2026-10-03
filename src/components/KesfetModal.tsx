@@ -344,7 +344,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </>
       )}
 
-      {/* ── 19: KISSA KÖŞESİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı tek satır, açık tam kıssa+ders+dua ── */}
+      {/* ── 19: KISSA KÖŞESİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı tek satır, açık tam kıssa+ders+dua ──
+        ★ 03.10 (kullanıcı isteği): kapalı kartın ÖZET YAZISI da tıklanınca AÇILIR — küçültme başlık/chevron'dan */}
       {sekme === "kissa" && (
         <div className="space-y-1.5">
           {filtreliKissalar.map((k) => {
@@ -361,7 +362,11 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   <h4 className="min-w-0 truncate text-[12px] font-black text-white/90">{k.ad}</h4>
                   <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
                 </button>
-                {!acik && <p className="truncate px-3 pb-3 text-[10px] leading-relaxed text-white/50">{k.ozet}</p>}
+                {!acik && (
+                  <button type="button" onClick={() => setAcikKissa(k.ad)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                    {k.ozet}
+                  </button>
+                )}
                 {acik && (
                   <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
                     <p className="text-[10.5px] leading-relaxed text-white/70">{k.ozet}</p>
@@ -453,7 +458,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </>
       )}
 
-      {/* ── 22: SURE BİLGİLERİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı kart tek satır konu, açık kart uzun açıklama+fazilet ── */}
+      {/* ── 22: SURE BİLGİLERİ — akordeon (01.10): başlığa dokun → aç/kapa; kapalı kart tek satır konu, açık kart uzun açıklama+fazilet ──
+        ★ 03.10: kapalı kartın KONU YAZISI da tıklanınca açılır (kıssa sekmesiyle aynı davranış) */}
       {sekme === "sure" && (
         <div className="space-y-1.5">
           {filtreliSureler.map((s) => {
@@ -475,7 +481,11 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   <span className="ml-auto rounded-full bg-white/8 px-2 py-0.5 text-[8.5px] font-bold text-white/50">{s.inis}'de inmiştir</span>
                   <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
                 </button>
-                {!acik && <p className="truncate px-3 pb-3 text-[10px] leading-relaxed text-white/50">{s.konu}</p>}
+                {!acik && (
+                  <button type="button" onClick={() => setAcikSure(s.n)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                    {s.konu}
+                  </button>
+                )}
                 {acik && (
                   <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5" onClick={(e) => e.stopPropagation()}>
                     <p className="text-[10px] leading-relaxed text-white/60"><b className="text-white/80">Konu:</b> {s.konu}</p>
