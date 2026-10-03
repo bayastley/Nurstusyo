@@ -62,6 +62,12 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   const [mealDurum, setMealDurum] = useState<"bosta" | "yukleniyor" | "hazir" | "hata">("bosta");
   const [mealYeniden, setMealYeniden] = useState(0); // "Tekrar dene" tetikleyicisi
   const mealCacheRef = useRef<Map<number, MealSayfaVeri>>(new Map());
+  // ★ 03.10 (kullanıcı emri 3: "tam ekranda da yarım ekranda da ekran tam olsun"):
+  //   zoom=1 artık sabit piksel DEĞİL — sayfanın tamamının sahne alanına SIĞMASI.
+  //   Yarım ekran → sayfa küçülür ama TAMAMI görünür; aşağı kaydırma gerekmez.
+  //   Zoom > 1 serbest büyütme (kaydırma yalnız o zaman devreye girer).
+  const [sahneBoy, setSahneBoy] = useState({ g: 0, h: 0 });
+  const [dogalBoy, setDogalBoy] = useState({ g: 0, h: 0 });
   const kokRef = useRef<HTMLDivElement>(null);
   const sahneRef = useRef<HTMLDivElement>(null);
 
@@ -92,6 +98,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setKaynakIdx(0);
     setYukleniyor(true);
     setHata(false);
+    setDogalBoy({ g: 0, h: 0 }); // yeni sayfa — fit yeniden ölçülecek
     // ★ 03.10: her iki komşu da önden yüklenir — kenar tıklaması anında açılır
     const onumuz = new Image();
     onumuz.src = sayfaGorselKaynaklari(Math.min(SAYFA_SAYISI, sayfa + 1))[0];
@@ -146,8 +153,28 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     return () => el.removeEventListener("wheel", tekerlek);
   }, [open]);
 
+  // ★ SAHNE BOYUTU — ResizeObserver: tam ekran/yarım ekran/pencere boyutu değişince
+  //   fit yeniden hesaplanır (kullanıcı emri 3: ekran her koşulda TAM görünsün)
+  useEffect(() => {
+    const el = sahneRef.current;
+    if (!el || !open) return;
+    const olc = () => setSahneBoy({ g: el.clientWidth, h: el.clientHeight });
+    olc();
+    const ro = new ResizeObserver(olc);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [open]);
+
   const kaynaklar = useMemo(() => sayfaGorselKaynaklari(sayfa), [sayfa]);
   const rasterMi = sayfaRasterMi(kaynaklar[kaynakIdx] || "");
+
+  // ★ CONTAIN-FIT (kullanıcı emri 3): zoom=1 → sayfa TAMAMI ekrana sığar (genişlik VE yükseklik).
+  //   Görüntü doğal oranını korur; zoom yalnız BÜYÜTME çarpanıdır (1 = sığdır, 2 = 2x kaydırmalı).
+  const fitG = sahneBoy.g > 40 && dogalBoy.g > 0 ? Math.floor((sahneBoy.g - 32) / dogalBoy.g * 100) / 100 : 0;
+  const fitH = sahneBoy.h > 40 && dogalBoy.h > 0 ? Math.floor((sahneBoy.h - 16) / dogalBoy.h * 100) / 100 : 0;
+  const fit = Math.min(fitG, fitH);
+  const gorselH = dogalBoy.h > 0 && fit > 0 ? Math.round(dogalBoy.h * fit * zoom) : null;
+  const gorselG = dogalBoy.g > 0 && fit > 0 ? Math.round(dogalBoy.g * fit * zoom) : null;
 
   // ★ KAYNAK DEĞİŞTİRME (03.10): Arapça ↔ Meal — seçim localStorage'da kalıcı
   const kaynakDegistir = (yeni: MushafKaynak) => {
@@ -156,6 +183,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     kaynakKaydet(yeni);
     setKaynakIdx(0);
     setHata(false);
+    setDogalBoy({ g: 0, h: 0 });
     if (yeni === "arapca") { setYukleniyor(true); setImgKey((k) => k + 1); }
     else { setYukleniyor(false); }
   };
@@ -357,7 +385,12 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <img
                 key={`${sayfa}-${kaynakIdx}-${imgKey}`}
                 src={kaynaklar[kaynakIdx]}
-                onLoad={() => { setYukleniyor(false); setHata(false); }}
+                onLoad={(e) => {
+                  const gorsel = e.currentTarget;
+                  if (gorsel.naturalWidth > 0) setDogalBoy({ g: gorsel.naturalWidth, h: gorsel.naturalHeight });
+                  setYukleniyor(false);
+                  setHata(false);
+                }}
                 onError={() => {
                   // ★ CDN YEDEK ZİNCİRİ: Diyanet raster → Quran-PNG → SVG zinciri
                   if (kaynakIdx < kaynaklar.length - 1) setKaynakIdx((i) => i + 1);
@@ -366,7 +399,15 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 alt={`Kur'an sayfa ${sayfa} — Kral Fahd Mushafı (Hafs)`}
                 draggable={false}
                 className="mx-auto block select-none rounded-[3px] shadow-[0_10px_40px_rgba(0,0,0,.55)]"
-                style={{ height: `${Math.round((rasterMi ? 700 : 560) * zoom)}px`, width: "auto", background: rasterMi ? "#ffffff" : undefined }}
+                style={{
+                  // ★ CONTAIN-FIT: ölçümler hazır olana kadar görünmez (yanıp sönme yok);
+                  //   sonrası: zoom=1 → sahne içine TAM sığar, zoom>1 → kaydırmalı büyütme
+                  visibility: gorselH && gorselG ? "visible" : "hidden",
+                  height: gorselH ? `${gorselH}px` : "auto",
+                  width: gorselG ? `${gorselG}px` : "auto",
+                  maxWidth: "none",
+                  background: rasterMi ? "#ffffff" : undefined,
+                }}
               />
             ) : (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
