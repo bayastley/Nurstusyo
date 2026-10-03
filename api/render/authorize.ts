@@ -289,7 +289,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (backendEnabled) {
-    const results = [];
+    const results: Awaited<ReturnType<typeof consumeVideo>>[] = [];
     for (let i = 0; i < uniqueFormats.length; i += 1) {
       const spent = await consumeVideo(user.id, kind, quota);
       if (!spent.ok) {

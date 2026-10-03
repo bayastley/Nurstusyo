@@ -340,7 +340,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           setModal={setModal}
           setLoginTab={setLoginTab}
           handleGoogleAuth={(hint) => void handleGoogleAuth(hint)}
-          adminSonEmail={adminSonEmail}
+          adminSonEmail={adminSonEmail ?? null}
           handleGuestContinue={handleGuestContinue}
           guestTrialLeft={guestTrialLeft}
           marketingConsent={marketingConsent}

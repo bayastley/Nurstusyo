@@ -188,7 +188,7 @@ export function AdminAuthBolum({
   setAdminAuthOpen: (v: boolean) => void;
   setModal: (m: never) => void;
   setLoginTab: (v: LoginTab) => void;
-  adminError: string;
+  adminError: string | null;
   notify: (msg: string) => void;
 }) {
   return (
@@ -340,7 +340,7 @@ export function ThemesBolum({
   setThemeId: (id: string) => void;
   accessTier: Tier;
   tierAtLeast: (a: Tier, b: Tier) => boolean;
-  openPremium: (tab?: string) => void;
+  openPremium: (tab?: "uyelik" | "jeton") => void;
 }) {
   return (
     <Modal title={t("themesTitle")} sub={`${t("themesSub")} · ${ALL_THEMES.length} tema · ${ALL_THEMES.filter((x: any) => themeTier(x.id) === "free").length} ücretsiz`} onClose={() => setModal(null as never)} wide>

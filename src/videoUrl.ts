@@ -52,7 +52,7 @@ export function isR2Media(clip: VideoClip): boolean {
 }
 
 async function sign(clip: VideoClip, media: "video" | "poster", priority = false): Promise<string> {
-  if (!isR2Media(clip)) return media === "video" ? clip.src : clip.poster;
+  if (!isR2Media(clip)) return media === "video" ? clip.src ?? "" : clip.poster ?? "";
   const key = mediaKey(clip);
   if (!key) throw new Error("R2 medya kimliği eksik");
   const cacheKey = `${media}:${key}`;

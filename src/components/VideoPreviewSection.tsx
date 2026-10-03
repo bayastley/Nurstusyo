@@ -2,13 +2,14 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
-import { randomClip, type Clip } from "../clips";
+import { randomClip, type Clip, type CatId } from "../clips";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { T } from "../i18n";
 import { type CubukAyar, type MesajAyar, cubukRengi, hexToHue } from "../studio/mesajKatmani";
 import { CubukRenkSecici } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
-import type { ModalName, Output, SelectedAyah, Tier } from "../types";
+import type { ModalName, Output, SelectedAyah, Tier, LoginTab } from "../types";
+import type { MicroUnlockKey } from "../microUnlock";
 
 interface VideoPreviewSectionProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -32,9 +33,9 @@ interface VideoPreviewSectionProps {
   setVerseIndex: React.Dispatch<React.SetStateAction<number>>;
   verseAudioRef: React.RefObject<HTMLAudioElement | null>;
   previewPlaying: boolean;
-  setPreviewPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  setPreviewPlaying: (v: boolean) => void;
   setPreviewTime: (time: number) => void;
-  randomizeBackgrounds: (cat?: unknown) => void;
+  randomizeBackgrounds: (cat?: CatId) => void;
   previewDuration: number;
   previewTime: number;
   fmtDuration: (seconds: number) => string;
@@ -50,8 +51,8 @@ interface VideoPreviewSectionProps {
   isMasterSürüm: boolean;
   tierAtLeast: (have: Tier, need: Tier) => boolean;
   tier: Tier;
-  hasMicroUnlock: (key: unknown) => boolean;
-  tryUnlockElitFeature: (key: unknown, label: string) => boolean;
+  hasMicroUnlock: (key: MicroUnlockKey) => boolean;
+  tryUnlockElitFeature: (key: "batch" | "ai_search", label: string) => boolean;
   applySmartBackgrounds: () => void;
   openPremium: (tab?: "uyelik" | "jeton") => void;
   setSelected: React.Dispatch<React.SetStateAction<SelectedAyah[]>>;
@@ -69,7 +70,7 @@ interface VideoPreviewSectionProps {
   paylasCihazi: (output?: Output) => Array<{ ad: string; emoji: string; calistir: () => void }>;
   downloadVideo: (output: Output) => Promise<void>;
   user: unknown;
-  setLoginTab: (tab: unknown) => void;
+  setLoginTab: (tab: LoginTab) => void;
   notify: (message: string) => void;
   t: (key: keyof (typeof T)["tr"]) => string;
   handleGenerate: () => void;
@@ -371,11 +372,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
       <div className="mx-auto flex items-center justify-center gap-2" style={{ maxWidth: previewWidth }}>
         <button disabled={verseIndex <= 0} onClick={() => { verseAudioRef.current?.pause(); setPreviewTime(0); setVerseIndex((index) => Math.max(0, index - 1)); }} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04] disabled:opacity-30"><ChevronLeft size={18} /></button>
-        <button disabled={!selected.length} onClick={() => setPreviewPlaying((value) => {
-          // ★ Önizleme HER ZAMAN ilk seçilen ayetten başlar — son seçilenden değil
-          if (!value) { setVerseIndex(0); setPreviewTime(0); }
-          return !value;
-        })} className="flex h-12 w-12 items-center justify-center rounded-full text-black disabled:opacity-40" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{previewPlaying ? <Pause size={18} fill="black" /> : <Play size={18} fill="black" />}</button>
+        <button disabled={!selected.length} onClick={() => { if (!previewPlaying) { setVerseIndex(0); setPreviewTime(0); } setPreviewPlaying(!previewPlaying); }} className="flex h-12 w-12 items-center justify-center rounded-full text-black disabled:opacity-40" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{previewPlaying ? <Pause size={18} fill="black" /> : <Play size={18} fill="black" />}</button>
         <button disabled={verseIndex >= selected.length - 1} onClick={() => { verseAudioRef.current?.pause(); setPreviewTime(0); setVerseIndex((index) => Math.min(selected.length - 1, index + 1)); }} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04] disabled:opacity-30"><ChevronRight size={18} /></button>
         <button onClick={() => randomizeBackgrounds()} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/[.04]"><Shuffle size={14} /></button>
       </div>

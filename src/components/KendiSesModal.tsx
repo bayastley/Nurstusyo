@@ -39,7 +39,7 @@ interface Props {
   /** Eski kaydı güncel motorla yeniden tara (01.10) — donmuş yanlış zamanlamaları düzeltir */
   yenidenTara: (id: string, ayetSayisi: number) => Promise<boolean>;
   /** Ayet kartına arka plan ata (pickingFor mekanizmasıyla aynı kapı) */
-  setPickingFor: (id: string | null) => void;
+  setPickingFor: (id: string) => void;
   setModal: (m: "atmos" | null) => void;
   ayahBackgrounds: Record<string, Clip>;
   openPremium: (tab?: "uyelik" | "jeton") => void;

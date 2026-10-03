@@ -20,8 +20,12 @@
       "@/*": ["./src/*"]
     },
 
-    /* Linting */
-    "strict": false,
+    /* Linting — ★ 03.10 KALICI: strict açık (tsc --noEmit build zincirinde artık gerçek koruma;
+       HafizlikTestiModal vakası gibi null/imza hatalarını canlı çökmeye gitmeden yakalar).
+       noImplicitAny ayrıca kapalı: 142 TS7011 dönüş-tipi anotasyonu ayrı refactor — strict kalan
+       bayraklar (strictNullChecks, strictFunctionTypes, useUnknownInCatchVariables…) aktif. */
+    "strict": true,
+    "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,

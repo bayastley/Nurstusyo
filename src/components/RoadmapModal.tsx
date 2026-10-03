@@ -71,7 +71,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
 
   if (!open) return null;
 
-  const isDeadlinePassed = deadline && new Date(deadline) < new Date();
+  const isDeadlinePassed = Boolean(deadline) && new Date(deadline) < new Date();
   const daysLeft = deadline ? Math.max(0, Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000)) : null;
 
   const save = (newData: { v2: Feature[]; v3: Feature[] }) => {
