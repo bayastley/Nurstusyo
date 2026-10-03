@@ -93,7 +93,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
               </div>
               {accessTier === "free" && (
                 <button type="button" onClick={() => openPremium("uyelik")} className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/25 text-[9px] font-black text-[color:var(--accent-2)]">
-                  PRO'DA PAYLAŞIM BAŞLIĞI AÇIK
+                  {t("ssProBaslikAcik")}
                 </button>
               )}
             </div>
@@ -108,7 +108,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
               />
               {accessTier === "free" && (
                 <button type="button" onClick={() => openPremium("uyelik")} className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/25 text-[9px] font-black text-[color:var(--accent-2)]">
-                  PRO'DA AÇIKLAMA METNİ AÇIK
+                  {t("ssProAciklamaAcik")}
                 </button>
               )}
             </div>
@@ -147,14 +147,14 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
             {/* SATIR 2: Rastgele + Hashtag */}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
-                <RefreshCw size={9} />Rastgele Açıklama
+                <RefreshCw size={9} />{t("ssRastgeleAciklama")}
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
               <button onClick={async () => {
                 if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; }
                 const cur = selected[verseIndex] || selected[0];
-                if (!cur) { notify("Önce ayet seçin"); return; }
-                notify("AI başlığı üretiliyor...");
+                if (!cur) { notify(t("ssOnceAyetSecin")); return; }
+                notify(t("ssAiBaslikUretiliyor"));
                 try {
                   const res = await fetch("/api/ai/title-generate", {
                     method: "POST",
@@ -170,7 +170,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                   if (data && data.success && data.title) {
                     setShareTitle(data.title);
                     lastTitleRef.current = data.title;
-                    notify("✨ Sahih AI Başlığı üretildi!");
+                    notify(t("ssAiBaslikHazir"));
                     return;
                   }
                 } catch (err) {
@@ -184,9 +184,9 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 }
                 lastTitleRef.current = yeniBaslik;
                 setShareTitle(yeniBaslik);
-                notify("Rastgele başlık seçildi.");
+                notify(t("ssRastgeleBaslikSecildi"));
               }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
-                <RefreshCw size={9} />Rastgele Başlık
+                <RefreshCw size={9} />{t("ssRastgeleBaslik")}
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
               <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; } setVisibleTags((current) => pickRandomTags(14, current)); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
@@ -197,7 +197,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
 
             {/* Random Hashtags Pills */}
             <div className="mt-3">
-              <p className="mb-1.5 text-[9px] font-bold text-white/40">Rastgele Etiketler — tıkla → açıklamaya ekle, yenile → liste değişsin</p>
+              <p className="mb-1.5 text-[9px] font-bold text-white/40">{t("ssEtiketBilgi")}</p>
               <div className="relative rounded-xl border border-white/5 bg-black/20 p-2">
                 <div className="flex flex-wrap gap-1.5">
                   {visibleTags.map((tag) => {
@@ -208,7 +208,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                         onClick={() => {
                           if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; }
                           if (!inDesc) setShareDescription((current) => `${current.trim()} ${tag}`);
-                          notify(`${tag} açıklamaya eklendi`);
+                          notify(t("ssEtiketEklendi").replace("{tag}", tag));
                         }}
                         className={`rounded-full px-2 py-0.5 text-[8.5px] font-semibold transition ${
                           inDesc ? "text-black" : "glass-soft text-white/45 hover:text-white/70"
@@ -235,8 +235,8 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                     <FolderUp size={13} />
                   </span>
                   <div>
-                    <p className="font-bold text-white/60 text-[12px]">ZIP Dosya / Ses Ekle</p>
-                    <p className="text-[9px] text-white/30">{isMasterSürüm ? "Admin erişiminde aktif" : "V3'te aktif olacak"}</p>
+                    <p className="font-bold text-white/60 text-[12px]">{t("ssZipKart")}</p>
+                    <p className="text-[9px] text-white/30">{isMasterSürüm ? t("ssZipAdminAktif") : t("ssZipV3Bekle")}</p>
                   </div>
                 </div>
               </div>
@@ -254,8 +254,8 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                   </span>
                 </div>
                 <div>
-                  <p className="font-bold text-white/40 text-[11px]">{isMasterSürüm ? "ZIP Gezgini Aç" : "V3 Güncellemesi"}</p>
-                  <p className="mt-1 text-[9px] text-white/25">ZIP, video, görsel ve ses ekleme</p>
+                  <p className="font-bold text-white/40 text-[11px]">{isMasterSürüm ? t("ssZipGezgin") : t("ssZipV3Etiket")}</p>
+                  <p className="mt-1 text-[9px] text-white/25">{t("ssZipKartAciklama")}</p>
                 </div>
               </button>
             </div>

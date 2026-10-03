@@ -368,4 +368,22 @@ export const arDict: Dict = {
   cookieSureWhilePermitted: "طوال فترة الإذن",
   cookieConsentResetMsg: "تمت إعادة تعيين موافقتك على ملفات تعريف الارتباط. اختر تفضيلك مرة أخرى:",
   cookieOnlyNecessary: "الضروري فقط",
+
+  // ── لوحة المشاركة الاجتماعية + بطاقة ZIP (SocialSharePanel — المتبقي مكتوب يدويًا) ──
+  ssProBaslikAcik: "عنوان المشاركة يُفتح مع PRO",
+  ssProAciklamaAcik: "نص الوصف يُفتح مع PRO",
+  ssRastgeleAciklama: "وصف عشوائي",
+  ssOnceAyetSecin: "اختر آية أولاً",
+  ssAiBaslikUretiliyor: "جارٍ توليد العنوان بالذكاء الاصطناعي...",
+  ssAiBaslikHazir: "✨ تم توليد عنوان Sahih بالذكاء الاصطناعي!",
+  ssRastgeleBaslik: "عنوان عشوائي",
+  ssRastgeleBaslikSecildi: "تم اختيار عنوان عشوائي.",
+  ssEtiketBilgi: "وسوم عشوائية — انقر لإضافتها إلى الوصف، وحدّث لتغيير القائمة",
+  ssEtiketEklendi: "أُضيف {tag} إلى الوصف",
+  ssZipKart: "إضافة ملف ZIP / صوت",
+  ssZipAdminAktif: "فعّال في وصول المشرف",
+  ssZipV3Bekle: "سيُفعّل في V3",
+  ssZipGezgin: "افتح مستكشف ZIP",
+  ssZipV3Etiket: "تحديث V3",
+  ssZipKartAciklama: "إضافة ZIP وفيديو وصورة وصوت",
 };

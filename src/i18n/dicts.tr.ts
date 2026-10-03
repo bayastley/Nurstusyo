@@ -370,4 +370,22 @@ export const trDict: Dict = {
   cookieSureWhilePermitted: "İzin süresince",
   cookieConsentResetMsg: "Çerez onayın sıfırlandı. Tercihini yeniden seç:",
   cookieOnlyNecessary: "Sadece Zorunlu",
+
+  // ── Sosyal Paylaşım Paneli + ZIP kartı (SocialSharePanel — kalan hardcode) ──
+  ssProBaslikAcik: "PRO'DA PAYLAŞIM BAŞLIĞI AÇIK",
+  ssProAciklamaAcik: "PRO'DA AÇIKLAMA METNİ AÇIK",
+  ssRastgeleAciklama: "Rastgele Açıklama",
+  ssOnceAyetSecin: "Önce ayet seçin",
+  ssAiBaslikUretiliyor: "AI başlığı üretiliyor...",
+  ssAiBaslikHazir: "✨ Sahih AI Başlığı üretildi!",
+  ssRastgeleBaslik: "Rastgele Başlık",
+  ssRastgeleBaslikSecildi: "Rastgele başlık seçildi.",
+  ssEtiketBilgi: "Rastgele Etiketler — tıkla → açıklamaya ekle, yenile → liste değişsin",
+  ssEtiketEklendi: "{tag} açıklamaya eklendi",
+  ssZipKart: "ZIP Dosya / Ses Ekle",
+  ssZipAdminAktif: "Admin erişiminde aktif",
+  ssZipV3Bekle: "V3'te aktif olacak",
+  ssZipGezgin: "ZIP Gezgini Aç",
+  ssZipV3Etiket: "V3 Güncellemesi",
+  ssZipKartAciklama: "ZIP, video, görsel ve ses ekleme",
 };

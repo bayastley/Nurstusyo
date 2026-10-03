@@ -367,4 +367,22 @@ export const urDict: Dict = {
   cookieSureWhilePermitted: "جب تک اجازت فعال ہے",
   cookieConsentResetMsg: "آپ کی کوکی رضامندی ری سیٹ کر دی گئی ہے۔ اپنی ترجیح دوبارہ منتخب کریں:",
   cookieOnlyNecessary: "صرف ضروری",
+
+  // ── سوشل شیئر پینل + ZIP کارڈ (SocialSharePanel — باقی ہارڈ کوڈ) ──
+  ssProBaslikAcik: "PRO کے ساتھ شیئر کا عنوان کھلتا ہے",
+  ssProAciklamaAcik: "PRO کے ساتھ تفصیل کا متن کھلتا ہے",
+  ssRastgeleAciklama: "بے ترتیب تفصیل",
+  ssOnceAyetSecin: "پہلے آیت منتخب کریں",
+  ssAiBaslikUretiliyor: "AI عنوان بنایا جا رہا ہے…",
+  ssAiBaslikHazir: "✨ صحیح AI عنوان تیار ہو گیا!",
+  ssRastgeleBaslik: "بے ترتیب عنوان",
+  ssRastgeleBaslikSecildi: "بے ترتیب عنوان منتخب ہو گیا۔",
+  ssEtiketBilgi: "بے ترتیب ہیش ٹیگ — تفصیل میں شامل کرنے کے لیے کلک کریں، فہرست بدلنے کے لیے تازہ کریں",
+  ssEtiketEklendi: "{tag} تفصیل میں شامل کر دیا گیا",
+  ssZipKart: "ZIP فائل / آڈیو شامل کریں",
+  ssZipAdminAktif: "ایڈمن رسائی میں فعال",
+  ssZipV3Bekle: "V3 میں فعال ہوگا",
+  ssZipGezgin: "ZIP ایکسپلورر کھولیں",
+  ssZipV3Etiket: "V3 اپ ڈیٹ",
+  ssZipKartAciklama: "ZIP، ویڈیو، تصویر اور آڈیو شامل کرنا",
 };

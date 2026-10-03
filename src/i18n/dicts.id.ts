@@ -365,4 +365,22 @@ export const idDict: Dict = {
   cookieSureWhilePermitted: "Selama izin aktif",
   cookieConsentResetMsg: "Persetujuan cookie Anda telah diatur ulang. Pilih preferensi Anda lagi:",
   cookieOnlyNecessary: "Hanya Wajib",
+
+  // ── Panel berbagi sosial + kart ZIP (SocialSharePanel — sisa hardcode) ──
+  ssProBaslikAcik: "Judul berbagi terbuka dengan PRO",
+  ssProAciklamaAcik: "Teks deskripsi terbuka dengan PRO",
+  ssRastgeleAciklama: "Deskripsi Acak",
+  ssOnceAyetSecin: "Pilih ayat terlebih dahulu",
+  ssAiBaslikUretiliyor: "Judul AI sedang dibuat...",
+  ssAiBaslikHazir: "✨ Judul AI Sahih berhasil dibuat!",
+  ssRastgeleBaslik: "Judul Acak",
+  ssRastgeleBaslikSecildi: "Judul acak dipilih.",
+  ssEtiketBilgi: "Tag acak — klik untuk menambah ke deskripsi, segarkan untuk mengubah daftar",
+  ssEtiketEklendi: "{tag} ditambahkan ke deskripsi",
+  ssZipKart: "Tambah File ZIP / Audio",
+  ssZipAdminAktif: "Aktif pada akses admin",
+  ssZipV3Bekle: "Aktif di V3",
+  ssZipGezgin: "Buka Penjelajah ZIP",
+  ssZipV3Etiket: "Pembaruan V3",
+  ssZipKartAciklama: "Menambahkan ZIP, video, gambar, dan audio",
 };

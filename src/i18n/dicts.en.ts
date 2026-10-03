@@ -368,4 +368,22 @@ export const enDict: Dict = {
   cookieSureWhilePermitted: "While the permission is active",
   cookieConsentResetMsg: "Your cookie consent has been reset. Choose your preference again:",
   cookieOnlyNecessary: "Necessary Only",
+
+  // ── Social Share Panel + ZIP card (SocialSharePanel — remaining hardcodes) ──
+  ssProBaslikAcik: "Share title unlocks with PRO",
+  ssProAciklamaAcik: "Description text unlocks with PRO",
+  ssRastgeleAciklama: "Random Description",
+  ssOnceAyetSecin: "Pick a verse first",
+  ssAiBaslikUretiliyor: "AI title is being generated...",
+  ssAiBaslikHazir: "✨ Sahih AI title generated!",
+  ssRastgeleBaslik: "Random Title",
+  ssRastgeleBaslikSecildi: "Random title selected.",
+  ssEtiketBilgi: "Random tags — click to add to description, refresh to reshuffle",
+  ssEtiketEklendi: "{tag} added to description",
+  ssZipKart: "Add ZIP File / Audio",
+  ssZipAdminAktif: "Active in admin access",
+  ssZipV3Bekle: "Coming in V3",
+  ssZipGezgin: "Open ZIP Explorer",
+  ssZipV3Etiket: "V3 Update",
+  ssZipKartAciklama: "Add ZIP, video, image and audio",
 };
