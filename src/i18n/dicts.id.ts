@@ -664,4 +664,66 @@ export const idDict: Dict = {
   ksYenileTitle: "Segarkan kart penemuan — 15 kata acak datang dari pool",
   ksHavuzNot: "Pool: {toplam} kata · {bugun} baru hari ini + {kesif} kart penemuan acak per penyegaran",
   ksOkunusDinle: "Dengarkan pelafalan:",
+  // ════ 04.10 MODAL LEGAL ════
+  legalTitle: "Informasi Hukum dan Perjanjian",
+  legalSubtitle: "Portal Perjanjian Korporat nurstudyo.com",
+  legalTabTos: "Syarat Layanan",
+  legalTabKvkk: "Pemberitahuan Perlindungan Data",
+  legalTabPrivacy: "Privasi & Cookie",
+  legalTabRefund: "Pembelian & Pengembalian",
+  legalBodyTos:
+    "DEFINISI PLATFORM DAN BATAS TANGGUNG JAWAB\n\n" +
+    "Nûr Stüdyo (nurstudyo.com) adalah platform produksi video digital berbasis AI untuk kreator konten Islami. Platform berbentuk usaha perorangan yang hanya menyediakan jasa perantara perangkat lunak dan tidak mengklaim hak cipta atas konten media apa pun.\n\n" +
+    "TANGGUNG JAWAB KONTEN\n\n" +
+    "Seluruh tanggung jawab hak cipta, lisensi dan publikasi yang timbul dari publikasi konten suara, gambar, teks dan video yang diproduksi di platform kepada pihak ketiga sepenuhnya menjadi tanggungan pengguna. Nûr Stüdyo tidak menerima tanggung jawab hukum maupun pidana dalam lingkup ini.\n\n" +
+    "AKUN DAN AKSES\n\n" +
+    "Autentikasi dengan akun Google wajib untuk menggunakan layanan platform. Keamanan akun menjadi tanggung jawab pengguna.\n\n" +
+    "HUKUM YANG BERLAKU\n\n" +
+    "Ketentuan ini tunduk pada hukum Turki; pengadilan Republik Turki berwenang menyelesaikan sengketa.\n\n" +
+    "Pembaruan terakhir: Agustus 2026 · destek@nurstudyo.com",
+  legalBodyKvkk:
+    "PEMBERITAHUAN UNDANG-UNDANG PERLINDUNGAN DATA PRIBADI TURKI (KVKK No. 6698, Pasal 10)\n\n" +
+    "PENGENDALI DATA\n" +
+    "Usaha perorangan penyedia layanan nurstudyo.com (Nûr Stüdyo).\nKontak: destek@nurstudyo.com\n\n" +
+    "DATA YANG DIOLAH DAN TUJUANNYA\n" +
+    "Nama, email dan foto profil via login Google (OAuth); status keanggotaan dan kredit produksi; preferensi bahasa dan tema. Data ini hanya diolah untuk autentikasi, penyediaan layanan (produksi video dan kredit), menjawab permintaan dukungan, dan pemenuhan kewajiban hukum.\n\n" +
+    "DASAR HUKUM (Pasal 5)\n" +
+    "Pelaksanaan perjanjian (5/2-c), kewajiban hukum (5/2-ç), kepentingan yang sah (5/2-f) dan perlindungan hak Anda (5/2-e). Data sensitif tidak diolah.\n\n" +
+    "TRANSFER\n" +
+    "Data Anda hanya dibagikan sebatas kebutuhan layanan dengan: Google (sesi OAuth), Supabase (basis data) dan iyzico (pembayaran). Transfer ke luar negeri hanya melalui server penyedia tersebut.\n\n" +
+    "METODE PENGUMPULAN: sepenuhnya elektronik, melalui penggunaan situs dan alur pendaftaran.\n\n" +
+    "MASA PENYIMPANAN: selama keanggotaan; dihapus setelah masa simpan hukum berakhir.\n\n" +
+    "HAK ANDA (Pasal 11)\n" +
+    "Mengetahui apakah data Anda diolah, meminta informasi, meminta perbaikan dan penghapusan, mengetahui penerima pihak ketiga, menolak hasil analisis otomatis yang merugikan, dan menuntut ganti rugi atas kerugian. Kirim permintaan ke destek@nurstudyo.com — dijawaban maksimal dalam 30 hari. Anda juga berhak mengadu ke Dewan Perlindungan Data via kvkk.gov.tr.\n\n" +
+    "COOKIE: di luar cookie yang benar-benar diperlukan, cookie analitik/pemasaran hanya berjalan dengan persetujuan Anda; ubah kapan saja melalui tombol 🍪 di bagian bawah halaman.\n\n" +
+    "CATATAN VERBİS: sebagai usaha perorangan skala kecil (di bawah 50 karyawan dan neraca di bawah 100 juta TL) kami dikecualikan dari pendaftaran VERBİS (Keputusan Dewan 2025/1572); ini tidak menghapus kewajiban pemberitahuan dan persetujuan.\n\n" +
+    "Pembaharuan terakhir: September 2026",
+  legalBodyPrivacy:
+    "KEBIJAKAN PRIVASI & COOKIE\n\n" +
+    "DATA YANG DIKUMPULKAN\n" +
+    "• Informasi akun Google (nama, email, foto) — hanya verifikasi sesi\n" +
+    "• Preferensi tema dan bahasa\n" +
+    "• Status keanggotaan dan kredit produksi (LocalStorage terenkripsi di perangkat)\n" +
+    "• Aktivitas undangan dan voting — untuk fitur komunitas\n\n" +
+    "KEBIJAKAN COOKIE\n" +
+    "Cookie yang benar-benar diperlukan (sesi, keamanan, preferensi) berjalan tanpa persetujuan. Cookie analitik dan pemasaran HANYA berjalan dengan persetujuan Anda; saat ini tidak ada cookie analitik/iklan pihak ketiga di situs. Ubah persetujuan kapan saja melalui tombol 🍪 di bagian bawah halaman.\n\n" +
+    "PIHAK KETIGA\n" +
+    "Google (autentikasi), Supabase (penyimpanan data), iyzico (pembayaran — data kart tidak pernah sampai ke kami, sesuai PCI DSS). Tidak ada cookie iklan/pelacakan sisi server.\n\n" +
+    "Pembaharuan terakhir: September 2026 · destek@nurstudyo.com",
+  legalBodyRefund:
+    "CAKUPAN LAYANAN DIGITAL\n\n" +
+    "Keanggotaan bulanan dan paket produksi video sekali beli adalah layanan digital yang diberikan seketika. Jumlah yang dibayar langsung merupakan biaya layanan. Tidak ada pengisian saldo, dompet digital, atau unit mirip uang di platform.\n\n" +
+    "PERJANJIAN PENJUALAN JARAK JAUH\n\n" +
+    "Pengguna menerima sebelum menyelesaikan pembelian bahwa layanan bersifat konten/layanan digital, akan diberikan secara elektronik segera setelah pembayaran, dan penyediaan layanan dimulai bersamaan dengan dimulainya proses produksi video.\n\n" +
+    "PELAKSANAAN LAYANAN\n\n" +
+    "Saat produksi video dimulai, sistem memproduksi video digital pribadi sesuai ayat, suara, atmosfer, format dan pengaturan desain pilihan pengguna. Ini layanan digital personal yang dimulai atas permintaan pengguna.\n\n" +
+    "HAK PENCABUTAN\n\n" +
+    "Berdasarkan UU Perlindungan Konsumen Turki No. 6502 dan Peraturan Perjanjian Jarak Jauh: hak pencabutan tidak dapat digunakan pada layanan digital yang pelaksanaannya dimulai seketika dengan persetujuan tegas. Pengguna tidak dapat meminta pengembalian dana setelah memulai produksi video, video selesai dibuat, atau memanfaatkan layanan sebagian.\n\n" +
+    "PAKET YANG SAMA SEKALI BELUM DIGUNAKAN\n\n" +
+    "Jika tidak ada satu video pun diproduksi dari paket sekali beli dan pelaksanaan layanan belum dimulai, pengembalian dana dapat diminta dengan menghubungi destek@nurstudyo.com dalam 7 hari sejak tanggal pembelian. Pengembalian tidak diberikan jika satu video sudah diproduksi, paket digunakan sebagian, atau proses produksi sudah dimulai.\n\n" +
+    "KESALAHAN TEKNIS\n" +
+    "Jika pembayaran diterima tetapi keanggotaan atau paket produksi tidak diaktifkan, hubungi destek@nurstudyo.com dengan bukti pembayaran. Permintaan ditinjau maksimal dalam 2 hari kerja.\n\n" +
+    "KEAMANAN PEMBAYARAN\n\n" +
+    "Pembayaran diproses melalui infrastruktur iyzico yang sesuai PCI DSS dengan SSL 256-bit. Data kart tidak disimpan di platform kami.\n\n" +
+    "Pembaruan terakhir: Agustus 2026 · destek@nurstudyo.com",
 };

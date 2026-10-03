@@ -667,4 +667,58 @@ export const enDict: Dict = {
   ksYenileTitle: "Refresh discovery cards — 15 random words come from the pool",
   ksHavuzNot: "Pool: {toplam} words · {bugun} new today + {kesif} random discovery cards per refresh",
   ksOkunusDinle: "Listen to pronunciation:",
+  // ════ 04.10 LEGAL MODAL: moved from getPaymentCopy legalBody (verbatim EN) ════
+  legalTitle: "Legal Information",
+  legalSubtitle: "Please read the following agreements carefully.",
+  legalTabTos: "Terms of Service",
+  legalTabKvkk: "GDPR / KVKK",
+  legalTabPrivacy: "Privacy Policy",
+  legalTabRefund: "Refund Policy",
+  legalBodyTos:
+    "PLATFORM DEFINITION & LIABILITY\n\n" +
+    "Nûr Studio (nurstudyo.com) is an AI-powered digital video production platform for Islamic content creators.\n\n" +
+    "CONTENT RESPONSIBILITY\n\n" +
+    "Publishing liability belongs exclusively to the user.\n\n" +
+    "GOVERNING LAW\n\n" +
+    "Laws of the Republic of Turkey. Turkish courts have jurisdiction.\n\n" +
+    "Last updated: August 2026 · support@nurstudyo.com",
+  legalBodyKvkk:
+    "KVKK (TURKISH DATA PROTECTION LAW) NOTICE\n\n" +
+    "DATA CONTROLLER\n" +
+    "Nûr Studio, sole proprietorship operating nurstudyo.com.\nContact: support@nurstudyo.com\n\n" +
+    "PERSONAL DATA & PURPOSE\n" +
+    "Name, email and profile photo via Google OAuth (account verification); membership and production-credit status; language and theme preferences. Processed solely to authenticate you, deliver the service (video production, credits), respond to support requests and fulfil legal obligations.\n\n" +
+    "LEGAL GROUNDS (Art. 5)\n" +
+    "Contract performance (2-c), legal obligation (2-ç), legitimate interest (2-f) and protection of rights (2-e). No sensitive data is processed.\n\n" +
+    "TRANSFERS\n" +
+    "Shared only with service providers to the extent necessary: Google (OAuth session), Supabase (database) and iyzico (payments). Transfers abroad occur only through these providers' servers.\n\n" +
+    "COLLECTION METHOD: fully electronic, through your use of the site and the registration flow.\n\n" +
+    "RETENTION: during membership; deleted once statutory retention periods expire.\n\n" +
+    "YOUR RIGHTS (Art. 11)\n" +
+    "To learn whether your data is processed, request information, request correction and deletion, learn third-party recipients, object to automated analysis, and claim compensation for damage. Email support@nurstudyo.com — answered within 30 days. You may also complain to the Data Protection Board via kvkk.gov.tr.\n\n" +
+    "COOKIES: beyond strictly necessary cookies, analytics/marketing cookies run only with your consent; change it anytime via the 🍪 button at the bottom-left.\n\n" +
+    "VERBIS NOTE: as a small-scale sole proprietorship (under 50 employees and balance sheet below TRY 100M), the registry exemption applies (Board decision 2025/1572); notification and consent duties remain in force.\n\n" +
+    "Last updated: September 2026",
+  legalBodyPrivacy:
+    "PRIVACY & COOKIE POLICY\n\n" +
+    "DATA COLLECTED\n" +
+    "• Google account info (name, email, photo) — session verification only\n" +
+    "• Theme and language preferences\n" +
+    "• Membership status and production credits (encrypted LocalStorage on your device)\n" +
+    "• Invite and voting activity — for community features\n\n" +
+    "COOKIE POLICY\n" +
+    "Strictly necessary cookies (session, security, preferences) run without consent. Analytics and marketing cookies run ONLY with your consent; no third-party analytics/ad cookies are currently used. Change your choice anytime via the 🍪 button at the bottom-left.\n\n" +
+    "THIRD PARTIES\n" +
+    "Google (auth), Supabase (data storage), iyzico (payments — card data never reaches us, PCI DSS compliant). No server-side advertising or tracking cookies.\n\n" +
+    "Last updated: September 2026 · support@nurstudyo.com",
+  legalBodyRefund:
+    "DIGITAL SERVICE SCOPE\n\n" +
+    "Purchased memberships and one-time video production packages are instantly delivered digital services. The amount paid is a service fee. There is no wallet, balance top-up or money-like unit on the platform.\n\n" +
+    "RIGHT OF WITHDRAWAL\n\n" +
+    "Not available for instantly performed digital services with explicit consent under Turkish consumer law.\n\n" +
+    "COMPLETELY UNUSED PACKAGE\n\n" +
+    "If no video has been produced from a one-time package, contact support@nurstudyo.com within 7 days. Partial use is non-refundable.\n\n" +
+    "PAYMENT SECURITY\n\n" +
+    "Payments are processed through iyzico secure payment infrastructure with PCI DSS and 256-bit SSL. No card data is stored on our platform.\n\n" +
+    "Last updated: August 2026 · support@nurstudyo.com",
 };

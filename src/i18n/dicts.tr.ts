@@ -669,4 +669,70 @@ export const trDict: Dict = {
   ksYenileTitle: "Keşif kartlarını yenile — havuzdan rastgele 15 kelime gelir",
   ksHavuzNot: "Havuz: {toplam} kelime · bugün {bugun} yeni + her yenilemede rastgele {kesif} keşif kartı",
   ksOkunusDinle: "Okunuşu dinle:",
+  // ════ 04.10 YASAL MODAL: getPaymentCopy'den Dict anahtarlarına taşındı (birebir) ════
+  legalTitle: "Yasal Bilgilendirme ve Sözleşmeler",
+  legalSubtitle: "nurstudyo.com Kurumsal Sözleşme Portalı",
+  legalTabTos: "Kullanım Şartları",
+  legalTabKvkk: "KVKK Aydınlatma",
+  legalTabPrivacy: "Gizlilik & Çerez",
+  legalTabRefund: "Satın Alma & İade",
+  legalBodyTos:
+    "PLATFORM TANIMI VE SORUMLULUK SINIRI\n\n" +
+    "Nûr Stüdyo (nurstudyo.com), İslami içerik üreticilerine yönelik yapay zeka destekli dijital video üretim platformudur. Platform; şahıs firması olarak kurulmuş olup yalnızca yazılım aracılık hizmeti sunmakta, herhangi bir medya içeriği telif hakkı iddiasında bulunmamaktadır.\n\n" +
+    "İÇERİK SORUMLULUĞU\n\n" +
+    "Platformda üretilen tüm ses, görüntü, metin ve video içeriklerin üçüncü taraflara yayınlanmasından doğan her türlü telif, lisans ve yayın sorumluluğu münhasıran kullanıcıya aittir. Nûr Stüdyo bu kapsamda hiçbir hukuki ya da cezai sorumluluk kabul etmez.\n\n" +
+    "HESAP VE ERİŞİM\n\n" +
+    "Platform hizmetlerinden yararlanmak için Google hesabı ile kimlik doğrulama zorunludur. Hesabın güvenliği kullanıcının sorumluluğundadır.\n\n" +
+    "UYGULANACAK HUKUK\n\n" +
+    "İşbu koşullar Türk Hukuku'na tabidir. Uyuşmazlıklarda Türkiye Cumhuriyeti mahkemeleri yetkilidir.\n\n" +
+    "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
+  legalBodyKvkk:
+    "6698 SAYILI KVKK AYDINLATMA METNİ (m.10)\n\n" +
+    "VERİ SORUMLUSU\n" +
+    "nurstudyo.com hizmetini sunan şahıs firması (Nûr Stüdyo).\nİletişim: destek@nurstudyo.com\n\n" +
+    "İŞLENEN VERİLER VE AMACI\n" +
+    "Google ile giriş (OAuth) ile alınan ad-soyad, e-posta ve profil fotoğrafı; üyelik ve üretim hakkı durumu; dil ve tema tercihleriniz. Bu veriler yalnızca kimlik doğrulama, hizmetin sunulması (video üretimi, üretim hakları), destek taleplerine yanıt verilmesi ve yasal yükümlülüklerin yerine getirilmesi amacıyla işlenir.\n\n" +
+    "HUKUKİ SEBEPLER (KVKK m.5)\n" +
+    "Sözleşmenin kurulması/ifası (m.5/2-c), hukuki yükümlülük (m.5/2-ç), meşru menfaat (m.5/2-f) ve hakkınızı korumak (m.5/2-e). Özel nitelikli (hassas) veri işlenmez.\n\n" +
+    "AKTARIM\n" +
+    "Verileriniz; altyapı ve ödeme hizmeti aldığımız Google (OAuth oturumu), Supabase (veritabanı) ve iyzico (ödeme) ile yalnızca hizmet için gerekli ölçüde paylaşılır. Yurt dışına aktarım yalnızca bu sağlayıcıların sunucularına yapılır.\n\n" +
+    "TOPLAMA YÖNTEMİ\n" +
+    "Tamamen elektronik ortamda; site kullanımınız ve kayıt akışı aracılığıyla.\n\n" +
+    "SAKLAMA SÜRESİ\n" +
+    "Üyelik süresince; üyelik sonunda yasal saklama süreleri dolunca silinir.\n\n" +
+    "HAKLARINIZ (KVKK m.11)\n" +
+    "Verilerinizin işlenip işlenmediğini öğrenme, bilgi isteme, düzeltme, silme/yok etme, aktarıldığı 3. kişileri bilme, otomatik analiz sonucu aleyhinize çıkan sonuçlara itiraz ve zarara uğramanız halinde tazminat isteme haklarınız vardır. Taleplerinizi destek@nurstudyo.com'a iletin; en geç 30 gün içinde yanıtlanır. KVKK Kurulu'na kvkk.gov.tr üzerinden şikâyet hakkınız da saklıdır.\n\n" +
+    "ÇEREZLER\n" +
+    "Zorunlu çerezler dışındaki çerezler yalnızca onayınızla çalışır; onayınızı sayfa altındaki 🍪 düğmesinden her an geri alabilirsiniz.\n\n" +
+    "VERBİS NOTU\n" +
+    "Şahıs firması olarak 50'den az çalışan ve 100 milyon TL altı bilanço eşiği nedeniyle VERBİS kaydından istisnayız (Kurul kararı 2025/1572); bu durum aydınlatma ve rıza yükümlülüklerini ortadan kaldırmaz.\n\n" +
+    "Son güncelleme: Eylül 2026",
+  legalBodyPrivacy:
+    "GİZLİLİK & ÇEREZ POLİTİKASI\n\n" +
+    "TOPLANAN VERİLER\n" +
+    "• Google hesap bilgileri (ad, e-posta, profil fotoğrafı) — yalnızca oturum doğrulama\n" +
+    "• Tema ve dil tercihleri\n" +
+    "• Üyelik durumu ve üretim hakları (cihazda şifreli LocalStorage)\n" +
+    "• Davet ve oylama hareketleri — topluluk özellikleri için\n\n" +
+    "ÇEREZ POLİTİKASI\n" +
+    "Zorunlu çerezler (oturum, güvenlik, tercihler) rıza gerektirmeksizin kullanılır. Analitik ve pazarlama çerezleri YALNIZCA onayınızla devreye girer; şu anda sitede 3. taraf analitik/reklam çerezi kullanılmamaktadır. Onayınızı sayfa altındaki 🍪 düğmesinden her an değiştirebilirsiniz.\n\n" +
+    "3. TARAFLAR\n" +
+    "Google (oturum), Supabase (veri depolama), iyzico (ödeme — kart bilgisi bize ulaşmaz, PCI DSS uyumlu). Sunucu taraflı reklam/izleme çerezi yoktur.\n\n" +
+    "Son güncelleme: Eylül 2026 · destek@nurstudyo.com",
+  legalBodyRefund:
+    "DİJİTAL HİZMET KAPSAMI\n\n" +
+    "Satın alınan aylık üyelikler ve tek seferlik video üretim paketleri anında ifa edilen dijital hizmetlerdir. Ödenen tutar doğrudan hizmet bedelidir. Platformda bakiye yükleme, cüzdan veya para benzeri bir sistem bulunmaz.\n\n" +
+    "MESAFELİ SATIŞ SÖZLEŞMESİ\n\n" +
+    "Kullanıcı, satın alma işlemini tamamlamadan önce hizmetin dijital içerik / dijital hizmet niteliğinde olduğunu, ödeme sonrası hizmetin elektronik ortamda derhal sunulacağını ve video üretim sürecinin başlatılmasıyla hizmetin ifasına başlanacağını kabul eder.\n\n" +
+    "HİZMETİN İFASI\n\n" +
+    "Video üretimi başlatıldığında sistem kullanıcının seçtiği ayet, ses, atmosfer, format ve tasarım ayarlarına göre kişiye özel dijital video üretir. Bu işlem kullanıcı talebiyle başlatılan kişiselleştirilmiş dijital hizmettir.\n\n" +
+    "CAYMA HAKKI\n\n" +
+    "6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca; kullanıcının açık onayıyla anında ifasına başlanan dijital hizmetlerde cayma hakkı kullanılamaz. Kullanıcı video üretimini başlattıktan, video oluşturulduktan veya hizmetten kısmen yararlandıktan sonra iade talep edemez.\n\n" +
+    "HİÇ KULLANILMAMIŞ PAKET\n\n" +
+    "Satın alınan tek seferlik paketten hiç video üretilmemişse ve hizmet ifasına hiç başlanmamışsa, satın alma tarihinden itibaren 7 gün içinde destek@nurstudyo.com adresine başvurularak iade talep edilebilir. Bir kez video üretildiyse, paket kısmen kullanıldıysa veya üretim süreci başlatıldıysa iade yapılmaz.\n\n" +
+    "TEKNİK HATA\n\n" +
+    "Hizmet bedeli ödenmesine rağmen üyelik veya video üretim paketi tanımlanmamışsa ödeme dekontu ile destek@nurstudyo.com adresine başvurulabilir. Talep en geç 2 iş günü içinde incelenir.\n\n" +
+    "ÖDEME GÜVENLİĞİ\n\n" +
+    "Ödemeler PCI DSS uyumlu iyzico güvenli ödeme altyapısı üzerinden 256-bit SSL ile alınır. Kart bilgisi platformumuzda saklanmaz.\n\n" +
+    "Son güncelleme: Ağustos 2026 · destek@nurstudyo.com",
 };
