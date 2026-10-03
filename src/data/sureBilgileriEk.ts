@@ -12,7 +12,7 @@
 //   "okunması güzeldir" tarzı temkinli dil.
 // ════════════════════════════════════════════════════════
 
-import type { SureBilgi } from "./kesfetData";
+import type { SureBilgi } from "./sureData";
 
 export const SURE_BİLGİLERİ_EK: SureBilgi[] = [
   { n: 3, ad: "Âl-i İmrân", inis: "Mekke", konu: "Vahyin haklığı, İmran ailesi ve Meryem kıssası; Uhud'un dersleri.", fazilet: "Bakara'yla birlikte bağışlanma ve sabır duası olarak okunması güzeldir; kıyamette iki büyük sure duasıdır." },

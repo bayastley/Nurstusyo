@@ -11,11 +11,17 @@ import React, { useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
-import {
-  HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI, KISSA_LISTESI, SORU_CEVAP_ARŞIVI, TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI,
-  KELIME_KARTLARI, SURE_BİLGİLERİ, NAMAZ_REHBERİ, DUA_REHBERİ, BES_SART_SORULARI, type KelimeKart,
-  HOCA_KARSILASTIRMA_AYETLER, camiHaritaUrl, camiListeUrl, KANAL_REHBERI,
-} from "../data/kesfetData";
+import { HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
+import { KISSA_LISTESI } from "../data/kissaData";
+import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
+import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
+import { SURE_BİLGİLERİ } from "../data/sureData";
+import { NAMAZ_REHBERİ } from "../data/namazData";
+import { DUA_REHBERİ } from "../data/duaData";
+import { HOCA_KARSILASTIRMA_AYETLER } from "../data/hocaData";
+import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
+import { KANAL_REHBERI } from "../data/kanalData";
+import { TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI } from "../data/tecvidData";
 import { SURAHS } from "../data/surahs";
 import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
 import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";

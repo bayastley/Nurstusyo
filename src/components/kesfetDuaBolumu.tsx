@@ -9,8 +9,8 @@
 // ════════════════════════════════════════════════════════
 
 import React from "react";
-import { DUA_REHBERİ } from "../data/kesfetData";
-import type { DuaRehber } from "../data/kesfetData";
+import { DUA_REHBERİ } from "../data/duaData";
+import type { DuaRehber } from "../data/duaData";
 
 export function DuaRehberBolumu({
   filtreliDuaRehber,
