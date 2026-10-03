@@ -166,7 +166,14 @@ export function CookieConsent() {
                 <span className="text-sm font-semibold text-white">{t("cookieNecessaryTitle")}</span>
                 <p className="text-xs text-white/50">{t("cookieNecessaryDesc")}</p>
               </div>
-              <div className="h-6 w-11 rounded-full bg-emerald-500 opacity-60 relative">
+              {/* Zorunlu çerez toggle'ı etkileşimsizdir — ekran okuyucuya "açık, devre dışı" duyurulur */}
+              <div
+                role="switch"
+                aria-checked="true"
+                aria-disabled="true"
+                aria-label={t("cookieNecessaryTitle")}
+                className="h-6 w-11 rounded-full bg-emerald-500 opacity-60 relative"
+              >
                 <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow" />
               </div>
             </div>
@@ -178,7 +185,7 @@ export function CookieConsent() {
                 <p className="text-xs text-white/50">{t("cookieAnalyticsDesc")}</p>
               </div>
               <div className="relative">
-                <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="peer sr-only" />
+                <input type="checkbox" checked={analytics} onChange={(e) => setAnalytics(e.target.checked)} className="peer sr-only" role="switch" aria-checked={analytics} />
                 <div className={`h-6 w-11 rounded-full transition-colors ${analytics ? "bg-emerald-500" : "bg-white/20"}`} />
                 <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${analytics ? "right-0.5" : "right-5.5"}`} />
               </div>
@@ -191,7 +198,7 @@ export function CookieConsent() {
                 <p className="text-xs text-white/50">{t("cookieMarketingDesc")}</p>
               </div>
               <div className="relative">
-                <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="peer sr-only" />
+                <input type="checkbox" checked={marketing} onChange={(e) => setMarketing(e.target.checked)} className="peer sr-only" role="switch" aria-checked={marketing} />
                 <div className={`h-6 w-11 rounded-full transition-colors ${marketing ? "bg-emerald-500" : "bg-white/20"}`} />
                 <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${marketing ? "right-0.5" : "right-5.5"}`} />
               </div>
@@ -199,24 +206,28 @@ export function CookieConsent() {
 
             {/* ENVANTER — Rehber şartı: ad + amaç + taraf + süre */}
             <div className="border-t border-white/5 pt-2">
-              <button type="button" onClick={() => setShowEnvanter((v) => !v)} className="text-[11px] font-bold text-[var(--accent)] hover:text-white">
+              <button type="button" onClick={() => setShowEnvanter((v) => !v)} aria-expanded={showEnvanter} aria-controls="cookie-envanter" className="text-[11px] font-bold text-[var(--accent)] hover:text-white">
                 {showEnvanter ? t("cookieInventoryHide") : t("cookieInventoryShow")}
               </button>
-              {showEnvanter && (
-                <div className="mt-2 space-y-1.5">
+              {/* ★ a11y: id her zaman DOM'da (aria-controls geçerli); kapalıyken display:none.
+                  Izgara: mobil 1 sütun, ≥sm 2 sütun — min-w-0 + break-words uzun çerez
+                  adlerinin kolonu taşımasını engeller. role=list/listitem: ekran okuyucu
+                  "liste, 5 öğe" diye duyurur. */}
+              <div id="cookie-envanter" className={showEnvanter ? "mt-2" : "hidden"}>
+                <ul role="list" className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                   {ENVANTER.map((s) => (
-                    <div key={s.ad} className="rounded-lg bg-black/30 px-3 py-2 text-[10.5px] leading-snug text-white/70">
+                    <li key={s.ad} className="min-w-0 break-words rounded-lg bg-black/30 px-3 py-2 text-[10.5px] leading-snug text-white/70">
                       <span className="font-mono font-bold text-white/90">{s.ad}</span>
                       <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] text-white/60">{t(s.tarafKey)}</span>
                       <p className="mt-0.5">{t("cookiePurposeLabel")} {t(s.amaçKey)}</p>
                       <p>{t("cookieDurationLabel")} {t(s.süreKey)}</p>
-                    </div>
+                    </li>
                   ))}
-                  <p className="text-[9.5px] text-white/40">
-                    {t("cookieNoThirdParty")}
-                  </p>
-                </div>
-              )}
+                </ul>
+                <p className="mt-1.5 text-[9.5px] text-white/40">
+                  {t("cookieNoThirdParty")}
+                </p>
+              </div>
             </div>
 
             <p className="text-xs text-white/40">
