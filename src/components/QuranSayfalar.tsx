@@ -15,8 +15,8 @@ import {
   RotateCcw, Loader2, MapPin, Check,
 } from "lucide-react";
 import {
-  SAYFA_SAYISI, sayfaSvgKaynaklari, sayfaRasterMi, cuzBul, sayfadaBaslayanSureler, aktifSureNo,
-  hatimYukle, hatimKaydet, sonSayfaYukle, sonSayfaKaydet, type HatimKaydi,
+  SAYFA_SAYISI, sayfaGorselKaynaklari, sayfaRasterMi, cuzBul, sayfadaBaslayanSureler, aktifSureNo,
+  hatimYukle, hatimKaydet, sonSayfaYukle, sonSayfaKaydet, kaynakYukle, kaynakKaydet, type HatimKaydi, type MushafKaynak,
 } from "../data/quranSayfaVeri";
 import { sevapEkle, kelimeSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
 import { SURAHS_DATA } from "./quranLearnVeri";
@@ -27,6 +27,17 @@ const Z_MAX = 3;
 const adimla = (z: number, yon: number) => Math.min(Z_MAX, Math.max(Z_MIN, Math.round((z + yon * 0.2) * 10) / 10));
 
 interface Props { open: boolean; onClose: () => void; }
+
+// ★ Meal sayfa verisi — /api/diyanet-sayfa yanıtının istemci tipi (03.10)
+interface MealSayfaVeri {
+  ok: true;
+  sayfa: number;
+  cuz: number;
+  mealSure: string;
+  quranSure: string;
+  kaynak: string;
+  ayatlar: Array<{ sureId: number; ayetId: number; numara: string; meal: string; sureAdi: string; sureInfo: string }>;
+}
 
 export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   // ★ LAZY BAŞLANGIÇ (02.10): LS mount anında SENKRON okunur — StrictMode çift-effect
@@ -45,6 +56,12 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   // ★ 03.10 (kullanıcı emri): hover'da beliren oklar + kenar tıklama navigasyonu
   const [okGorunur, setOkGorunur] = useState(false);
   const [okDonme, setOkDonme] = useState(false); // mobil/dokunmatikte oklar hep görünür
+  // ★ 03.10 (kullanıcı emri 2): 2 buton — Arapça (Diyanet beyaz mushaf) / Meal (Diyanet mealı)
+  const [kaynak, setKaynak] = useState<MushafKaynak>(() => kaynakYukle());
+  const [mealVeri, setMealVeri] = useState<MealSayfaVeri | null>(null);
+  const [mealDurum, setMealDurum] = useState<"bosta" | "yukleniyor" | "hazir" | "hata">("bosta");
+  const [mealYeniden, setMealYeniden] = useState(0); // "Tekrar dene" tetikleyicisi
+  const mealCacheRef = useRef<Map<number, MealSayfaVeri>>(new Map());
   const kokRef = useRef<HTMLDivElement>(null);
   const sahneRef = useRef<HTMLDivElement>(null);
 
@@ -58,6 +75,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setZoom(1);
     setHatim(hatimYukle());
     setHatimMesaji("");
+    setKaynakIdx(0);
+    setHata(false);
+    setYukleniyor(true);
+    setMealVeri(null);
+    setMealDurum("bosta");
     // ★ 03.10: dokunmatik cihazda hover olmaz → oklar kalıcı görünür
     try { setOkDonme(window.matchMedia("(hover: none)").matches); } catch { setOkDonme(false); }
   }, [open]);
@@ -72,11 +94,34 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setHata(false);
     // ★ 03.10: her iki komşu da önden yüklenir — kenar tıklaması anında açılır
     const onumuz = new Image();
-    onumuz.src = sayfaSvgKaynaklari(Math.min(SAYFA_SAYISI, sayfa + 1))[0];
+    onumuz.src = sayfaGorselKaynaklari(Math.min(SAYFA_SAYISI, sayfa + 1))[0];
     const arkamiz = new Image();
-    arkamiz.src = sayfaSvgKaynaklari(Math.max(1, sayfa - 1))[0];
+    arkamiz.src = sayfaGorselKaynaklari(Math.max(1, sayfa - 1))[0];
     return () => { onumuz.src = ""; arkamiz.src = ""; };
   }, [open, sayfa]);
+
+  // ★ MEAL MODU (03.10): sayfa/kaynak değişince Diyanet mealını çek (proxy + istemci cache)
+  useEffect(() => {
+    if (!open || kaynak !== "meal") { setMealDurum("bosta"); setMealVeri(null); return; }
+    const vardi = mealCacheRef.current.get(sayfa);
+    if (vardi) { setMealVeri(vardi); setMealDurum("hazir"); return; }
+    let iptal = false;
+    setMealDurum("yukleniyor");
+    setMealVeri(null);
+    fetch(`/api/diyanet-sayfa?sayfa=${sayfa}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (iptal) return;
+        if (d && d.ok) {
+          const veri = d as MealSayfaVeri;
+          mealCacheRef.current.set(sayfa, veri);
+          setMealVeri(veri);
+          setMealDurum("hazir");
+        } else setMealDurum("hata");
+      })
+      .catch(() => { if (!iptal) setMealDurum("hata"); });
+    return () => { iptal = true; };
+  }, [open, kaynak, sayfa, mealYeniden]);
 
   // Hatim kaydı her değişimde diske yazılır
   useEffect(() => { if (open) hatimKaydet(hatim); }, [hatim, open]);
@@ -101,8 +146,19 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     return () => el.removeEventListener("wheel", tekerlek);
   }, [open]);
 
-  const kaynaklar = useMemo(() => sayfaSvgKaynaklari(sayfa), [sayfa]);
+  const kaynaklar = useMemo(() => sayfaGorselKaynaklari(sayfa), [sayfa]);
   const rasterMi = sayfaRasterMi(kaynaklar[kaynakIdx] || "");
+
+  // ★ KAYNAK DEĞİŞTİRME (03.10): Arapça ↔ Meal — seçim localStorage'da kalıcı
+  const kaynakDegistir = (yeni: MushafKaynak) => {
+    if (yeni === kaynak) return;
+    setKaynak(yeni);
+    kaynakKaydet(yeni);
+    setKaynakIdx(0);
+    setHata(false);
+    if (yeni === "arapca") { setYukleniyor(true); setImgKey((k) => k + 1); }
+    else { setYukleniyor(false); }
+  };
   const okunanMu = hatim.okunan.includes(sayfa);
   const yuzde = Math.round((hatim.okunan.length / SAYFA_SAYISI) * 100);
   const cuz = cuzBul(sayfa);
@@ -169,6 +225,24 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           </button>
           <span className="text-[11px] font-black tracking-wider text-gold">📖 KUR'AN SAYFALARI</span>
 
+          {/* ★ KAYNAK BUTONLARI (03.10): Arapça = Diyanet beyaz mushaf · Meal = Diyanet mealı */}
+          <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1E293B] p-0.5" role="group" aria-label="Görünüm kaynağı">
+            <button
+              onClick={() => kaynakDegistir("arapca")}
+              className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "arapca" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
+              title="Diyanet mushafı — beyaz sayfa, gerçek Kral Fahd Hafs hatlı mushaf"
+            >
+              Arapça
+            </button>
+            <button
+              onClick={() => kaynakDegistir("meal")}
+              className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "meal" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
+              title="Diyanet İşleri Başkanlığı mealı — sayfa sayfa Türkçe çeviri (beyaz sayfa)"
+            >
+              Meal
+            </button>
+          </div>
+
           {/* ★ KALDIĞIN YERDEN DEVAM çipi — kayıttan başka sayfaya geçtiyse göster */}
           {kayitliSayfa > 1 && sayfa !== kayitliSayfa && (
             <button
@@ -223,20 +297,76 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           title="Çift tıkla büyüt/küçült · Ctrl+tekerlek zoom · kenarlara tıkla: sayfa çevir"
         >
           <div className="flex min-h-full min-w-full items-center justify-center">
-            {!hata ? (
+            {kaynak === "meal" ? (
+              /* ★ MEAL SAYFASI (03.10): Diyanet mealı — beyaz kâğıt görünümü, zoom fontu büyütür */
+              <div
+                className="mx-auto max-w-[92vw] select-none rounded-md bg-[#fdfaf2] px-5 py-7 text-[#2b2416] shadow-[0_10px_44px_rgba(0,0,0,.65)] sm:px-9 sm:py-9"
+                style={{ width: `${Math.round(660 * zoom)}px` }}
+              >
+                {mealDurum === "yukleniyor" && (
+                  <div className="flex items-center justify-center gap-2 py-20 text-[13px] font-bold text-[#8a6d1f]">
+                    <Loader2 size={15} className="animate-spin" /> meal sayfası yükleniyor…
+                  </div>
+                )}
+                {mealDurum === "hata" && (
+                  <div className="flex flex-col items-center gap-3 py-16 text-center">
+                    <span className="text-3xl">📡</span>
+                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">Diyanet meal sayfası şu an yüklenemedi — bağlantını kontrol edip tekrar dener misin?</p>
+                    <button
+                      onClick={() => { mealCacheRef.current.delete(sayfa); setMealYeniden((n) => n + 1); }}
+                      className="flex items-center gap-1.5 rounded-xl bg-[#c9a227] px-3.5 py-1.5 text-[11px] font-black text-[#2b2416] transition hover:brightness-110 active:scale-95"
+                    >
+                      <RotateCcw size={12} /> Tekrar dene
+                    </button>
+                  </div>
+                )}
+                {mealDurum === "hazir" && mealVeri && (
+                  <>
+                    <div className="mb-5 border-b border-[#c9a227]/40 pb-3 text-center">
+                      <div className="text-[15px] font-black text-[#8a6d1f]">{mealVeri.mealSure || ""} Suresi · Sayfa {mealVeri.sayfa}</div>
+                      <div className="mt-0.5 text-[10px] font-semibold text-[#8b7b52]">Cüz {mealVeri.cuz} · {mealVeri.kaynak}</div>
+                    </div>
+                    <div className="space-y-4">
+                      {mealVeri.ayatlar.map((a, i) => (
+                        <div key={`${a.sureId}-${a.ayetId}-${i}`}>
+                          {(i === 0 || mealVeri.ayatlar[i - 1].sureId !== a.sureId) && (
+                            <div className="mb-3 text-center">
+                              <div className="text-[13px] font-black text-[#8a6d1f]">— {a.sureAdi} Suresi —</div>
+                              {a.sureInfo && <p className="mx-auto mt-1 max-w-[520px] text-[10.5px] italic leading-relaxed text-[#7c6f4e]" dangerouslySetInnerHTML={{ __html: a.sureInfo }} />}
+                            </div>
+                          )}
+                          <p className="flex gap-2.5 leading-[1.9]" style={{ fontSize: `${Math.max(11, Math.round(14.5 * zoom))}px` }}>
+                            <span
+                              className="mt-0.5 flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full border border-[#c9a227]/70 bg-[#f3e8c8] px-1.5 font-black text-[#8a6d1f]"
+                              style={{ fontSize: `${Math.max(9, Math.round(10 * zoom))}px` }}
+                            >
+                              {a.numara}
+                            </span>
+                            <span className="flex-1">{a.meal}</span>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-6 border-t border-[#c9a227]/30 pt-2.5 text-center text-[9.5px] font-semibold text-[#a99c78]">
+                      📖 Kaynak: {mealVeri.kaynak} · kuran.diyanet.gov.tr
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : !hata ? (
               <img
                 key={`${sayfa}-${kaynakIdx}-${imgKey}`}
                 src={kaynaklar[kaynakIdx]}
                 onLoad={() => { setYukleniyor(false); setHata(false); }}
                 onError={() => {
-                  // ★ CDN YEDEK ZİNCİRİ: cdn.quran.ws patlarsa jsDelivr devreye girer
+                  // ★ CDN YEDEK ZİNCİRİ: Diyanet raster → Quran-PNG → SVG zinciri
                   if (kaynakIdx < kaynaklar.length - 1) setKaynakIdx((i) => i + 1);
                   else setHata(true);
                 }}
                 alt={`Kur'an sayfa ${sayfa} — Kral Fahd Mushafı (Hafs)`}
                 draggable={false}
                 className="mx-auto block select-none rounded-[3px] shadow-[0_10px_40px_rgba(0,0,0,.55)]"
-                style={{ height: `${Math.round((rasterMi ? 700 : 560) * zoom)}px`, width: "auto" }}
+                style={{ height: `${Math.round((rasterMi ? 700 : 560) * zoom)}px`, width: "auto", background: rasterMi ? "#ffffff" : undefined }}
               />
             ) : (
               <div className="flex flex-col items-center gap-3 py-16 text-center">

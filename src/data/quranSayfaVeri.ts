@@ -8,22 +8,24 @@
 export const SAYFA_SAYISI = 604;
 
 // ★ GÖRÜNTÜ KAYNAKLARI — sırayla denenir (1. patlarsa 2.'ye düşer)
-//   ★ 03.10 (kullanıcı emri: "gerçek kuran sayfaları istiyorum"): 1. kaynak artık
-//   KFGQPC Medine mushafının GERÇEK raster PNG'si (2600×4206, kitap gibi) —
-//   GovarJabbar/Quran-PNG (quran/quran.com-images üretimi, 000-604.png, test edildi:
-//   jsDelivr ~450ms/400KB). 2-3) eski SVG zinciri yedek olarak kalır (vektör, zoomda net).
-const PNG_SURUM = "master";
+//   ★ 03.10 (kullanıcı emri 2: "kuranı burdan al ... kaynak diyanet ekle, sayfalar beyaz olucak"):
+//   1) Diyanet mushafı — kuran.diyanet.gov.tr/mushaf beyaz sayfalar (1280×2185, paletli,
+//      opak beyaz zemin). Diyanet 0-tabanlı görsel indeksi kullanır: "1. Sayfa | Fâtiha" → 000.png
+//      (03.10 preview network log ile doğrulandı). <img> için CORS gerekmez — doğrudan bağlanır.
+//   2) Quran-PNG (jsDelivr) — KFGQPC raster 2600×4206
+//   3-4) SVG zinciri — vektör yedek
 const SVG_SURUM = "v1.1.1";
-const SVG_KAYNAKLARI: Array<(s: string) => string> = [
-  (s) => `https://cdn.jsdelivr.net/gh/GovarJabbar/Quran-PNG@${PNG_SURUM}/${s}.png`,
-  (s) => `https://cdn.quran.ws/svg/pages/${SVG_SURUM}/hafs-kfqc/${s}.svg`,
-  (s) => `https://cdn.jsdelivr.net/gh/quran-ws/quran-svg@main/mushafs/hafs/kfqc/svg/${s}.svg`,
+const GORSEL_KAYNAKLARI: Array<{ ad: string; url: (n: number) => string }> = [
+  { ad: "diyanet", url: (n) => `https://kuran.diyanet.gov.tr/mushaf/data/pages/2X/${String(n - 1).padStart(3, "0")}.png` },
+  { ad: "quran-png", url: (n) => `https://cdn.jsdelivr.net/gh/GovarJabbar/Quran-PNG@master/${String(n).padStart(3, "0")}.png` },
+  { ad: "svg-cdn", url: (n) => `https://cdn.quran.ws/svg/pages/${SVG_SURUM}/hafs-kfqc/${String(n).padStart(3, "0")}.svg` },
+  { ad: "svg-jsdelivr", url: (n) => `https://cdn.jsdelivr.net/gh/quran-ws/quran-svg@main/mushafs/hafs/kfqc/svg/${String(n).padStart(3, "0")}.svg` },
 ];
 
 /** Sayfa numarası (1-604) için kaynak URL'lerini sırayla döndürür */
-export const sayfaSvgKaynaklari = (sayfa: number): string[] => {
-  const s = String(Math.min(Math.max(1, sayfa), SAYFA_SAYISI)).padStart(3, "0");
-  return SVG_KAYNAKLARI.map((yap) => yap(s));
+export const sayfaGorselKaynaklari = (sayfa: number): string[] => {
+  const n = Math.min(Math.max(1, sayfa), SAYFA_SAYISI);
+  return GORSEL_KAYNAKLARI.map((k) => k.url(n));
 };
 
 /** Gerçek raster PNG mi (SVG değil)? — <img> boyutlandırma ve render ipuçları için */
@@ -78,6 +80,16 @@ export const aktifSureNo = (sayfa: number): number => {
 // ── localStorage anahtarları (tutarlı "nur_" öneki) ──
 export const LS_SON_SAYFA = "nur_kuran_sayfa";       // son okunan sayfa (sayı)
 export const LS_HATIM = "nur_kuran_hatim";           // { okunan: number[], tamamlanan: number }
+
+// ★ 03.10: görünüm kaynağı — "arapca" (Diyanet beyaz mushaf sayfası) | "meal" (Diyanet mealı)
+export type MushafKaynak = "arapca" | "meal";
+export const LS_KAYNAK = "nur_kuran_kaynak";
+export const kaynakYukle = (): MushafKaynak => {
+  try { return localStorage.getItem(LS_KAYNAK) === "meal" ? "meal" : "arapca"; } catch { return "arapca"; }
+};
+export const kaynakKaydet = (kaynak: MushafKaynak): void => {
+  try { localStorage.setItem(LS_KAYNAK, kaynak); } catch { /* yut */ }
+};
 
 export interface HatimKaydi { okunan: number[]; tamamlanan: number; }
 
