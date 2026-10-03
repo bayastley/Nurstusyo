@@ -100,8 +100,34 @@ async function upstreamGet(url: string): Promise<{ s: number; b: string } | null
   }
 }
 
+// ─── Flood koruması (03.10 güvenlik turu) ───
+// Edge cache (s-maxage=1gün) aynı isteği paylaşır ama bilinmeyen ayet kombinasyonlarıyla
+// yapılan istekler upstream'e gider — IP başına dakikalık tavan, diyanet-sayfa deseniyle aynı.
+const IZINLI_KOKEN = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"]);
+const __RL = new Map<string, number[]>();
+function limitAsildi(req: VercelRequest): boolean {
+  const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket?.remoteAddress || "x";
+  const simdi = Date.now();
+  const pencere = (__RL.get(ip) || []).filter((t) => t >= simdi - 60_000);
+  if (pencere.length >= 120) { __RL.set(ip, pencere); return true; }
+  pencere.push(simdi);
+  __RL.set(ip, pencere);
+  if (__RL.size > 4000) { for (const k of __RL.keys()) { __RL.delete(k); if (__RL.size <= 2000) break; } }
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+
+  // ★ Güvenlik duvarı: site dışı köken reddi (origin/referer yoksa server-to-server sayılır)
+  const koken = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  if (koken && !IZINLI_KOKEN.has(koken)) {
+    return res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  }
+  if (limitAsildi(req)) {
+    res.setHeader("Retry-After", "60");
+    return res.status(429).json({ ok: false, error: "Çok hızlı — biraz bekle" });
+  }
 
   // Hedef yolu ayıkla.
   // CANLI (Vercel): rewrite "/api/quran/(v1/.*)" → "/api/quran/fetch?_p=$1"
