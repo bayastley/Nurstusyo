@@ -395,6 +395,83 @@ export const BES_SART_SORULARI: BesSartSoru[] = [
     ],
     kaynak: "Diyanet İlmihal — Kurban · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
   },
+  {
+    sart: "Namaz",
+    soru: "Namazda eller nasıl bağlanır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Erkek göbeğinin altında, sağ el sol elin üstünde; kadın göğsü üzerinde bağlar." },
+      { mezhep: "Şâfiî", metin: "Göğüs üstünde — sağ el sol bileğin üstünde sarılır." },
+      { mezhep: "Mâlikî", metin: "Sırtın yanlarında serbest bırakılır (sadl) — el ele bağlanmaz." },
+      { mezhep: "Hanbelî", metin: "Göğüs üstünde; bir rivayette göbek altı da nakledilmiştir." },
+    ],
+    kaynak: "Diyanet İlmihal — Namaz · İbn Âbidîn, Reddü'l-Muhtâr · Muvatta · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Namaz",
+    soru: "Vitir namazının hükmü nedir, kaç rekattır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Vâciptir — sürekli terk eden günâha girer. 3 rekat tek selamla kılınır; kunut son rekatta okunur." },
+      { mezhep: "Şâfiî", metin: "Sünnet-i müekked; 1-11 rekat arası seçilebilir, kunut ikinci rekatta kıraat sonrası gelir." },
+      { mezhep: "Mâlikî", metin: "Sünnet; 3 rekat tek selamla, kunut ikinci rekatta rükûdan sonra okunur." },
+      { mezhep: "Hanbelî", metin: "Sünnet-i müekked; 3'ten 13 rekata kadar sayılar caiz, kunutun yeri esnektir." },
+    ],
+    kaynak: "Diyanet İlmihal — Vitir · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Namaz",
+    soru: "Cemaatle namazın hükmü nedir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Erkek mükelleflere vâciptir — mazeretsiz terk eden azarlanır; kadınlara nafiledir." },
+      { mezhep: "Şâfiî", metin: "Erkek ve kadına sünnet-i müekkededir; terki hoş görülmez." },
+      { mezhep: "Mâlikî", metin: "Azimet derecesinde (vâcip-e yakın) — mazeretsiz terk eden cezalandırılabilir." },
+      { mezhep: "Hanbelî", metin: "Erkeklere vâciptir; terk eden azarlanır." },
+    ],
+    kaynak: "Diyanet İlmihal — Cemaat · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Namaz",
+    soru: "Namazda (başkaları duyacak şekilde) gülmek neyi bozar?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Hem namazı hem abdesti bozar — yeniden abdest alınıp namaz tekrarlanır." },
+      { mezhep: "Şâfiî", metin: "Namazı bozar, abdesti bozmaz." },
+      { mezhep: "Mâlikî", metin: "Namazı bozar, abdesti bozmaz." },
+      { mezhep: "Hanbelî", metin: "Namazı bozar, abdesti bozmaz." },
+    ],
+    kaynak: "Diyanet İlmihal — Sehv secdeleri · İbn Âbidîn, Reddü'l-Muhtâr",
+  },
+  {
+    sart: "Namaz",
+    soru: "Vücuttan akan kan abdesti bozar mı?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Yerinden akıp etrafa yayılan kan abdesti bozar (çoğunluk rivayeti)." },
+      { mezhep: "Şâfiî", metin: "Bozmaz — azı çoğu fark etmez, kan abdeste etki etmez." },
+      { mezhep: "Mâlikî", metin: "Bozmaz." },
+      { mezhep: "Hanbelî", metin: "Bozmaz — çıkan kan miktarıyla ilgili olmadan abdesti etkilemez." },
+    ],
+    kaynak: "Diyanet İlmihal — Tâhâret · İbn Âbidîn, Reddü'l-Muhtâr · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Zekât",
+    soru: "Altın ve gümüş zekât nisabı birlikte mi hesaplanır?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Ayırı ayrı nisaptır: ticari mal değeri gümüş nisabıyla hesaplanır; kullanılan takılar zekâtsızdır." },
+      { mezhep: "Şâfiî", metin: "Birleşik nisap: altın+gümüş toplam değeri nisaba ulaşırsa zekât düşer." },
+      { mezhep: "Mâlikî", metin: "Birlikte hesap edilir; takıların kullanılıp kullanılmaması bakılmaksızın zekât vaciptir." },
+      { mezhep: "Hanbelî", metin: "Birlikte hesap edilir; kadın takılarına da zekât vacip kabul edilir." },
+    ],
+    kaynak: "Diyanet İlmihal — Zekât nisabı · İbn Âbidîn, Reddü'l-Muhtâr · İbn Kudâme, el-Muğnî",
+  },
+  {
+    sart: "Hac",
+    soru: "Haccın rüknleri mezheplere göre hangileridir?",
+    cevaplar: [
+      { mezhep: "Hanefî", metin: "Rüknler: ihram, Arafat vakfesi ve tavaf-ı ziyaret. Sa'y ve diğer menasik vaciptir — terklerinde dem gerekir, hac bozulmaz." },
+      { mezhep: "Şâfiî", metin: "Rüknler: ihram, tavaf, sa'y ve vakfe — rüknden biri terk edilirse hac geçersizdir." },
+      { mezhep: "Mâlikî", metin: "Rüknler: ihram, tavaf, sa'y, vakfe (Şâfiî gibi)." },
+      { mezhep: "Hanbelî", metin: "Rüknler: ihram, tavaf, sa'y, vakfe; terk edilemez, telâfisi yoktur." },
+    ],
+    kaynak: "Diyanet İlmihal — Hac · İbn Âbidîn, Reddü'l-Muhtâr · Nevevî, el-Mecmû' · İbn Kudâme, el-Muğnî",
+  },
 ];
 
 // ── 21: KELİME KARTLARI ("Kur'an'da 80 sık kelime" — ilk 40) ──

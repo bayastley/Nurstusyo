@@ -94,6 +94,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [acikSure, setAcikSure] = useState<number | null>(null);
   // ★ KISSA AKORDEONU (01.10): aynı ilke — kapalı kart tek satır özet, açık kartta kıssa+ders+dua
   const [acikKissa, setAcikKissa] = useState<string | null>(null);
+  // ★ SORU-C EVAP AKORDEONU (03.10, kullanıcı kararı): üç büyük liste aynı tıkla-aç deseninde —
+  //   kapalı kartta soru + tek satır cevap özeti, açık kartta mezhep bazlı cevaplar/kaynak
+  const [acikSoru, setAcikSoru] = useState<number | null>(null);
+  const [acikGenelSoru, setAcikGenelSoru] = useState<number | null>(null);
   // ★ KELİME YENİLE (01.10): sahih havuzdan (54 kelime) her seferinde rastgele 15 kart — sürekli değişsin
   const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
   const kelimeYenile = React.useCallback(() => {
@@ -214,6 +218,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   }, [sekme, q, filtreliHadisler.length]);
   const filtreliKissalar = useMemo(() => KISSA_LISTESI.filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q]);
   const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
+  // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
+  const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ 03.10 AKILLI SURE ARAMASI: ad + ARAPÇA AD + numara + konu/açıklama;
   //   kelime bazlı (sıra serbest), "sure" dolgu kelimesi yoksayılır.
   //   Örn: "fatiah"→Fâtiha · "bakra"→Bakara · "sure mulk"→Mülk · "36"→Yâsîn · "الرحمن"→Rahmân
@@ -262,7 +268,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           <button
             key={s.id}
             type="button"
-            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
             className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
             style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
@@ -385,36 +391,78 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </div>
       )}
 
-      {/* ── 20: SORU-CEVAP ── */}
+      {/* ── 20: SORU-CEVAP — akordeon (03.10, kullanıcı kararı): üç büyük liste aynı tıkla-aç deseninde ──
+        Kapalı kart: soru + tek satır cevap özeti (yazısı da tıklanınca açılır) · Açık kart: mezhep bazlı cevaplar + kaynak.
+        Küçültme başlık/chevron'dan — kıssa/sure akordeonlarıyla birebir aynı davranış. */}
       {sekme === "soru" && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {/* ★ İSLAM'IN 5 ŞARTI — MEZHEPLERE GÖRE FIKHİ SORU-CEVAP (28.09, kullanıcı kararı) */}
           <p className="mt-1 mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">🕌 İslam'ın 5 Şartı — mezheplere göre fıkhi soru-cevap</p>
-          {BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)).map((b, bi) => (
-            <div key={`bs-${bi}`} className="rounded-xl border border-emerald-400/20 bg-emerald-500/[.04] p-3.5">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] font-black text-emerald-300">{b.sart}</span>
-                <p className="text-[11.5px] font-black text-white/90">❓ {b.soru}</p>
-              </div>
-              <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
-                {b.cevaplar.map((c) => (
-                  <div key={c.mezhep} className="rounded-lg border border-white/10 bg-white/[.03] p-2.5">
-                    <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{c.mezhep}</p>
-                    <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{c.metin}</p>
+          {filtreliBesSart.map((b, bi) => {
+            const acik = acikSoru === bi;
+            return (
+              <div key={`bs-${bi}`} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
+                <button
+                  type="button"
+                  aria-expanded={acik}
+                  onClick={() => setAcikSoru(acik ? null : bi)}
+                  className="flex w-full items-center gap-2 p-3 text-left"
+                >
+                  <span className="shrink-0 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[8px] font-black text-emerald-300">{b.sart}</span>
+                  <h4 className="min-w-0 truncate text-[11.5px] font-black text-white/90">❓ {b.soru}</h4>
+                  <span className="ml-auto shrink-0 rounded-full bg-white/8 px-2 py-0.5 text-[8px] font-bold text-white/45">{b.cevaplar.length} görüş</span>
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
+                </button>
+                {!acik && (
+                  <button type="button" onClick={() => setAcikSoru(bi)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                    {b.cevaplar[0]?.mezhep}: {b.cevaplar[0]?.metin}
+                  </button>
+                )}
+                {acik && (
+                  <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
+                    <div className="grid gap-1.5 sm:grid-cols-2">
+                      {b.cevaplar.map((c) => (
+                        <div key={c.mezhep} className="rounded-lg border border-white/10 bg-white/[.03] p-2.5">
+                          <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{c.mezhep}</p>
+                          <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{c.metin}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {b.kaynak}</p>
                   </div>
-                ))}
+                )}
               </div>
-              <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {b.kaynak}</p>
-            </div>
-          ))}
+            );
+          })}
           <p className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">Genel soru-cevap arşivi</p>
-          {filtreliSorular.map((s, i) => (
-            <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-              <p className="text-[11.5px] font-black text-white/90">❓ {s.soru}</p>
-              <p className="mt-1.5 text-[10px] leading-relaxed text-white/65">{s.cevap}</p>
-              <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {s.kaynak} · Kesin hüküm için Diyanet İşleri Başkanlığı'na danışın</p>
-            </div>
-          ))}
+          {filtreliSorular.map((s, i) => {
+            const acik = acikGenelSoru === i;
+            return (
+              <div key={i} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
+                <button
+                  type="button"
+                  aria-expanded={acik}
+                  onClick={() => setAcikGenelSoru(acik ? null : i)}
+                  className="flex w-full items-center gap-2 p-3 text-left"
+                >
+                  <h4 className="min-w-0 truncate text-[11.5px] font-black text-white/90">❓ {s.soru}</h4>
+                  <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
+                </button>
+                {!acik && (
+                  <button type="button" onClick={() => setAcikGenelSoru(i)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                    {s.cevap}
+                  </button>
+                )}
+                {acik && (
+                  <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
+                    <p className="text-[10px] leading-relaxed text-white/65">{s.cevap}</p>
+                    <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {s.kaynak} · Kesin hüküm için Diyanet İşleri Başkanlığı'na danışın</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <p className="pt-1 text-center text-[8px] text-white/25">{filtreliBesSart.length} mezhepli soru · {filtreliSorular.length} genel soru · detay için karta dokun</p>
           <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-center text-[9px] text-amber-200/80">⚠️ Buradaki cevaplar genel bilgi amaçlıdır — kendi fetvamızı vermeyiz, Diyanet'e yönlendiririz.</p>
         </div>
       )}
