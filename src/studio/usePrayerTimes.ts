@@ -65,6 +65,7 @@ export function usePrayerTimes(prayerCity: string, prayerSearch: string) {
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;
+    // name = TR ad (PRAYERS sabiti); render tarafında vakitAdi() ile dile çevrilir
     let next: { name: string; key: string; diff: number } | null = null;
     for (const [name, key] of PRAYERS) {
       const value = prayerTimings[key];

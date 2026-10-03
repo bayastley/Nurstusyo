@@ -50,19 +50,19 @@ const ORTA_SURELER = [12, 13, 14, 17, 18, 19, 20, 21, 22, 24, 25, 27, 28, 29, 31
 // ★ ZOR — uzun ayetli sureler (devam kısmı garantili): 52 sure
 const ZOR_SURELER = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16, 23, 26, 30, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 48, 50, 51, 52, 53, 54, 56, 58, 59, 60, 61, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 88, 104];
 const SEVIYELER = [
-  { id: "kolay", ad: "Kolay", emoji: "🌱", sureler: KOLAY_SURELER, aciklama: "Kısa meşhur sureler — Yâsîn, İhlâs, Felak tarzı" },
-  { id: "orta", ad: "Orta", emoji: "🌿", sureler: ORTA_SURELER, aciklama: "Orta sureler — Kehf, Yâsîn, MÜlk, Rahmân" },
-  { id: "zor", ad: "Zor", emoji: "🏔️", sureler: ZOR_SURELER, aciklama: "Uzun ayetli sureler — Bakara, Âl-i İmrân, Nisâ" },
+  { id: "kolay", adKey: "hafizlikSeviyeKolay", emoji: "🌱", sureler: KOLAY_SURELER, aciklamaKey: "hafizlikKolayAciklama" },
+  { id: "orta", adKey: "hafizlikSeviyeOrta", emoji: "🌿", sureler: ORTA_SURELER, aciklamaKey: "hafizlikOrtaAciklama" },
+  { id: "zor", adKey: "hafizlikSeviyeZor", emoji: "🏔️", sureler: ZOR_SURELER, aciklamaKey: "hafizlikZorAciklama" },
 ] as const;
 type SeviyeId = typeof SEVIYELER[number]["id"];
 // ★ TUR BOYUTU SEÇİLEBİLİR (28.09, kullanıcı kararı): "5 soru ne demek, daha çok olsun,
 //   yüzlerce gerekirse insanlar vakit harcasın" → 5/15/30/Sınırsız mod. Havuz canlı
 //   API'den geldiği için sınırsız modda sorular bitmez.
 const TUR_BOYUTLARI = [
-  { id: 5, label: "5 soru", emoji: "⚡" },
-  { id: 15, label: "15 soru", emoji: "🔥" },
-  { id: 30, label: "30 soru", emoji: "🏆" },
-  { id: 0, label: "Sınırsız", emoji: "♾️" },
+  { id: 5, n: 5, emoji: "⚡" },
+  { id: 15, n: 15, emoji: "🔥" },
+  { id: 30, n: 30, emoji: "🏆" },
+  { id: 0, n: 0, emoji: "♾️" },
 ] as const;
 const TUR_BOYUTU = 5; // varsayılan — kullanıcı seçer
 
@@ -80,7 +80,7 @@ function karistir<T>(arr: T[]): T[] {
 //   düşüyorsa son sorularda zorlanıyorsun, yükseliyorsa formdasın. Yalnız sınırsız
 //   modda görünür (sınırlı tur zaten kısa; 5/15/30 soruda grafiğin anlamı yok).
 //   Kırmızı nokta = o soruya yanlış, yeşil = doğru. %50 kesikli referans çizgisi var.
-const PerformansCizgisi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ gecmis }) => {
+const PerformansCizgisi: React.FC<{ gecmis: Array<{ dogru: boolean }>; tt: (k: string) => string }> = ({ gecmis, tt }) => {
   const W = 100, H = 40, PAD = 3;
   const son20 = gecmis.slice(-20);
   if (son20.length < 2) return null;
@@ -97,8 +97,8 @@ const PerformansCizgisi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ ge
   return (
     <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-2.5">
       <div className="mb-1 flex items-center justify-between text-[8.5px] font-black uppercase tracking-widest">
-        <span className="text-white/40">📈 Canlı performans — son {son20.length} soru</span>
-        <span className={sonRenk}>%{Math.round(son)}</span>
+        <span className="text-white/40">{tt("hafizlikPerformans").replace("{n}", String(son20.length))}</span>
+        <span className={sonRenk}>{tt("hafizlikSon").replace("{n}", String(Math.round(son)))}</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label="Son 20 sorunun doğruluk çizgisi">
         <defs>
@@ -126,7 +126,7 @@ const PerformansCizgisi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ ge
 //   soru-soru dökümü — yeşil sütun = doğru, kırmızı = yanlış; üstünde altın çizgi
 //   turun içindeki anlık doğruluk yüzdesini gösterir (başta düştün mü, toparladın mı
 //   tek bakışta görünür). Sınırsız modda 60+ soru olsa da sütunlar ölçeklenir.
-const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ gecmis }) => {
+const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }>; tt: (k: string) => string }> = ({ gecmis, tt }) => {
   const n = gecmis.length;
   if (n < 2) return null;
   const H = 40, COL = 10, PAD = 4;
@@ -140,8 +140,8 @@ const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ g
   return (
     <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-2.5">
       <div className="mb-1 flex items-center justify-between text-[8.5px] font-black uppercase tracking-widest">
-        <span className="text-white/40">📊 Turun doğruluk grafiği — {n} soru</span>
-        <span className={sonRenk}>son: %{son}</span>
+        <span className="text-white/40">{tt("hafizlikTurGrafigi").replace("{n}", String(n))}</span>
+        <span className={sonRenk}>{tt("hafizlikSon").replace("{n}", String(son))}</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label="Turun soru soru doğruluk grafiği">
         <defs>
@@ -157,7 +157,7 @@ const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }> }> = ({ g
         ))}
         <path d={cizgi} fill="none" stroke="url(#haf-tur-cizgi)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
       </svg>
-      <p className="mt-1 text-center text-[7.5px] text-white/30">🟩 doğru · 🟥 yanlış · 📈 çizgi = o ana kadarki doğruluk</p>
+      <p className="mt-1 text-center text-[7.5px] text-white/30">{tt("hafizlikGrafikNot")}</p>
     </div>
   );
 }
@@ -325,13 +325,13 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     } catch {
       // ★ 429 (rate limit) ise uzun bekleme: 1sn'lik kısa tekrarlar API'yi döver,
       //   sürekli "soru hazırlanamadı" döngüsüne girer. 6 sn bekle → limit nefes alır.
-      notify?.("⚠️ Soru hazırlanamadı — birkaç saniye içinde otomatik tekrar denecek…");
+      notify?.(tt("hafizlikSoruUyari"));
       // ★ OTOMATİK TEKRAR: sınırsız modda takılma olmasın — 6 sn sonra sessizce yeniden dener
       if (yenidenDeneRef.current < 5) {
         yenidenDeneRef.current += 1;
         window.setTimeout(() => { if (openRef.current && seviyeSeciliRef.current) soruHazirla(true); }, 6000);
       } else {
-        notify?.("❌ Soru üretilemedi — internet bağlantını kontrol et, seviye ekranına dönmek için üstteki ← tuşunu kullan");
+        notify?.(tt("hafizlikSoruHata"));
         // ★ BOŞ EKRAN KALMASIN: 5 tekrar da tükendi → seviye ekranına otomatik dön.
         //   Kullanıcı en azından seviye/tur seçimine geri döner, kilitli kalmaz.
         window.setTimeout(() => { if (openRef.current) seviyeEkraninaDon(); }, 1500);
@@ -409,47 +409,47 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-black text-amber-200">Kaldığın yerden devam</p>
                 <p className="text-[8.5px] text-white/50">
-                  Son turun: {SEVIYELER.find((s) => s.id === devam.seviye)?.ad ?? devam.seviye} · {devam.dogru}/{devam.toplam}
-                  {devam.tarih ? ` · ${new Date(devam.tarih).toLocaleDateString("tr-TR")}` : ""}
+                  {tt("hafizlikSonTur").replace("{seviye}", SEVIYELER.find((s) => s.id === devam.seviye) ? tt(SEVIYELER.find((s) => s.id === devam.seviye)!.adKey) : String(devam.seviye)).replace("{d}", String(devam.dogru)).replace("{t}", String(devam.toplam))}
+                  {devam.tarih ? ` · ${new Date(devam.tarih).toLocaleDateString(lang === "tr" ? "tr-TR" : lang === "ar" ? "ar" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "en-US")}` : ""}
                 </p>
               </div>
-              <span className="shrink-0 rounded-lg bg-amber-500/20 px-2 py-1 text-[8.5px] font-black text-amber-200">Başla →</span>
+              <span className="shrink-0 rounded-lg bg-amber-500/20 px-2 py-1 text-[8.5px] font-black text-amber-200">{tt("hafizlikBasla")}</span>
             </button>
           )}
 
           {/* ★ İSTATİSTİK GÖRÜNÜMÜ (madde 52) */}
           <button type="button" onClick={() => setIstGoster((v) => !v)} className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9.5px] font-bold text-white/60 transition hover:text-white">
-            <BarChart3 size={11} /> {istGoster ? "İstatistiği Gizle" : "Hafızlık İstatistiklerim"}
+            <BarChart3 size={11} /> {istGoster ? tt("hafizlikIstGizle") : tt("hafizlikIstGoster")}
           </button>
           {istGoster && (
             <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
               {ist.toplamSoru === 0 ? (
-                <p className="text-center text-[9.5px] text-white/40">Henüz soru çözmedin — ilk turunla istatistik başlar 📊</p>
+                <p className="text-center text-[9.5px] text-white/40">{tt("hafizlikIstBos")}</p>
               ) : (
                 <>
                   <div className="mb-2 grid grid-cols-3 gap-1.5 text-center">
                     <div className="rounded-lg bg-white/5 py-1.5">
                       <p className="text-[13px] font-black text-emerald-300">{ist.toplamDogru}</p>
-                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Doğru</p>
+                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("hafizlikDogru")}</p>
                     </div>
                     <div className="rounded-lg bg-white/5 py-1.5">
                       <p className="text-[13px] font-black text-white/80">{ist.toplamSoru}</p>
-                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Soru</p>
+                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("hafizlikSoru")}</p>
                     </div>
                     <div className="rounded-lg bg-white/5 py-1.5">
                       <p className="text-[13px] font-black text-amber-300">{Math.round((ist.toplamDogru / ist.toplamSoru) * 100)}%</p>
-                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Başarı</p>
+                      <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("hafizlikBasari")}</p>
                     </div>
                   </div>
                   {Object.entries(ist.sureler).length > 0 && (
                     <>
-                      <p className="mb-1 text-[8.5px] font-black uppercase tracking-widest text-white/40">Sure dağılımı (en çok çalıştıkların)</p>
+                      <p className="mb-1 text-[8.5px] font-black uppercase tracking-widest text-white/40">{tt("hafizlikSureDagilimi")}</p>
                       <div className="space-y-1">
                         {Object.entries(ist.sureler)
                           .sort((a, b) => b[1].tekrar - a[1].tekrar).slice(0, 5)
                           .map(([sureNo, k]) => (
                             <div key={sureNo} className="flex items-center gap-2 text-[9px]">
-                              <span className="w-16 shrink-0 truncate text-white/70">Sure {sureNo}</span>
+                              <span className="w-16 shrink-0 truncate text-white/70">{tt("hafizlikSureN").replace("{n}", sureNo)}</span>
                               <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
                                 <div className="h-full rounded-full" style={{ width: `${Math.round((k.dogru / k.tekrar) * 100)}%`, background: "linear-gradient(90deg,#34d399,#10b981)" }} />
                               </div>
@@ -461,7 +461,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
                   )}
                   {ist.zorlanilan.length > 0 && (
                     <p className="mt-2 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-[9px] leading-relaxed text-amber-200/90">
-                      💡 Zorlandığın sureler: {ist.zorlanilan.slice(0, 5).join(", ")} — bu sureleri tekrar okumanı öneririz
+                      {tt("hafizlikZorlanilan").replace("{sureler}", ist.zorlanilan.slice(0, 5).join(", "))}
                     </p>
                   )}
                 </>
@@ -469,34 +469,34 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
             </div>
           )}
 
-          <p className="mb-2 text-center text-[10px] text-white/50">Zorluk seviyesi seç:</p>
+          <p className="mb-2 text-center text-[10px] text-white/50">{tt("hafizlikSeviyeSec")}</p>
           {SEVIYELER.map((s) => (
             <button key={s.id} type="button"
               onClick={() => { setSeviye(s.id); setSeviyeSecili(true); setPuan({ dogru: 0, toplam: 0 }); setYanlis(0); setGecmis([]); setOzetAcik(false); yenidenDeneRef.current = 0; hafizlikDevamKaydet(s.id, 0, 0); }}
               className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/[.03] p-3.5 text-left transition hover:border-white/25 hover:bg-white/[.05]">
               <span className="text-2xl">{s.emoji}</span>
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-black text-white/90">{s.ad}</p>
-                <p className="text-[9px] text-white/50">{s.aciklama}</p>
+                <p className="text-[12px] font-black text-white/90">{tt(s.adKey)}</p>
+                <p className="text-[9px] text-white/50">{tt(s.aciklamaKey)}</p>
               </div>
               <span className="shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                {turBoyu === 0 ? "♾️" : `${turBoyu} soru`}
+                {turBoyu === 0 ? "♾️" : tt("hafizlikNSoru").replace("{n}", String(turBoyu))}
               </span>
             </button>
           ))}
           {/* ★ TUR BOYUTU SEÇİCİ (28.09) — 5/15/30/Sınırsız */}
           <div className="mt-3 rounded-xl border border-white/10 bg-white/[.03] p-3">
-            <p className="mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/40">Tur boyutu — kaç soru?</p>
+            <p className="mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/40">{tt("hafizlikTurBoyutu")}</p>
             <div className="grid grid-cols-4 gap-1.5">
               {TUR_BOYUTLARI.map((t) => (
                 <button key={t.id} type="button" onClick={() => setTurBoyu(t.id)}
                   className={`rounded-lg py-1.5 text-[9px] font-black transition ${turBoyu === t.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                   style={turBoyu === t.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                  {t.emoji} {t.label}
+                  {t.emoji} {t.n === 0 ? tt("hafizlikSinirsiz") : tt("hafizlikNSoru").replace("{n}", String(t.n))}
                 </button>
               ))}
             </div>
-            {turBoyu === 0 && <p className="mt-1.5 text-center text-[8.5px] text-white/35">♾️ Sınırsız modda sorular bitmez — durmak istediğinde üstteki "Turu Bitir" ile özet gör, X ile çıkarsan istatistiğin kayıtlı kalır</p>}
+            {turBoyu === 0 && <p className="mt-1.5 text-center text-[8.5px] text-white/35">{tt("hafizlikSinirsizNot")}</p>}
           </div>
         </div>
       ) : ozetAcik ? (
@@ -505,50 +505,50 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         {(() => {
           const toplam = puan.toplam || 1;
           const yuzde = Math.round((puan.dogru / toplam) * 100);
-          const tabir = yuzde >= 80 ? { ad: "İYİ", emoji: "🌟", renk: "text-emerald-300", bg: "bg-emerald-500/10 border-emerald-400/30", mesaj: "Maşâallah! Hafızanın sağlam — bu tempoyla devam!" }
-            : yuzde >= 60 ? { ad: "ORTA", emoji: "🌿", renk: "text-amber-300", bg: "bg-amber-500/10 border-amber-400/30", mesaj: "Fena değil — zorlandığın yerleri tekrar edince İyi olacak." }
-            : { ad: "ZAYIF", emoji: "🌱", renk: "text-red-300", bg: "bg-red-500/10 border-red-400/30", mesaj: "Endişelenme — tekrar, hafızlığın anası. Aynı sureleri bir daha oku." };
+          const tabir = yuzde >= 80 ? { ad: tt("hafizlikIyi"), emoji: "🌟", renk: "text-emerald-300", bg: "bg-emerald-500/10 border-emerald-400/30", mesaj: tt("hafizlikIyiMesaj") }
+            : yuzde >= 60 ? { ad: tt("hafizlikOrtaTabir"), emoji: "🌿", renk: "text-amber-300", bg: "bg-amber-500/10 border-amber-400/30", mesaj: tt("hafizlikOrtaMesaj") }
+            : { ad: tt("hafizlikZayif"), emoji: "🌱", renk: "text-red-300", bg: "bg-red-500/10 border-red-400/30", mesaj: tt("hafizlikZayifMesaj") };
           const yanlislar = gecmis.filter((g) => !g.dogru);
           return (
             <>
               <div className={`mb-3 rounded-xl border p-4 text-center ${tabir.bg}`}>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/45">Tur özeti</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hafizlikTurOzeti")}</p>
                 <p className={`mt-1 font-display text-[22px] font-black ${tabir.renk}`}>{tabir.emoji} {tabir.ad}</p>
-                <p className="mt-0.5 text-[13px] font-black text-white">✓ {puan.dogru} doğru · ✗ {yanlis} yanlış · {puan.dogru}/{puan.toplam} (%{yuzde})</p>
+                <p className="mt-0.5 text-[13px] font-black text-white">{tt("hafizlikSkor").replace("{d}", String(puan.dogru)).replace("{y}", String(yanlis)).replace("{t}", String(puan.toplam)).replace("{p}", String(yuzde))}</p>
                 <p className="mt-1.5 text-[10px] leading-relaxed text-white/70">{tabir.mesaj}</p>
-                {yuzde >= 80 && <p className="mt-1 text-[9px] font-bold text-emerald-300/80">🎁 İpucu: Bugünün Hediyesi'nde sana hafızlığa uygun hediyeler var — ana ekrandaki 🎁 butonuna bak!</p>}
-                {yanlislar.length > 0 && <p className="mt-1 text-[9px] text-amber-200/70">📖 Hafızlığa uygun: aşağıdaki ayetleri bugün 3 kez oku, yarın aynı testte zorlanmazsın.</p>}
+                {yuzde >= 80 && <p className="mt-1 text-[9px] font-bold text-emerald-300/80">{tt("hafizlikHediyeIpucu")}</p>}
+                {yanlislar.length > 0 && <p className="mt-1 text-[9px] text-amber-200/70">{tt("hafizlikUygun")}</p>}
               </div>
 
               {/* ★ TURUN TAMAMININ GRAFİĞİ (29.09): soru-soru yeşil/kırmızı sütunlar + anlık doğruluk çizgisi */}
-              {puan.toplam >= 2 && <TurDogrulukGrafigi gecmis={gecmis} />}
+              {puan.toplam >= 2 && <TurDogrulukGrafigi gecmis={gecmis} tt={tt} />}
 
               {yanlislar.length > 0 && (
                 <div className="mb-3 space-y-1.5">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/45">Neden yanlış? — doğrusuyla birlikte</p>
+                  <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hafizlikNedenYanlis")}</p>
                   {yanlislar.map((y, i) => (
                     <div key={i} className="rounded-xl border border-red-400/20 bg-red-500/[.06] p-2.5">
-                      <p className="text-[9.5px] font-black text-red-200">✗ {y.sn} · {y.a}. Ayet — devamını bilemedin</p>
+                      <p className="text-[9.5px] font-black text-red-200">{tt("hafizlikBilemedin").replace("{sure}", y.sn).replace("{a}", String(y.a))}</p>
                       <p className="mt-1 text-right font-arabic text-[12px] leading-relaxed text-emerald-200/90" dir="rtl">{y.devam}</p>
-                      <p className="mt-1 text-[8.5px] text-white/45">↑ Doğrusu bu — bugün 3 kez okuman yeterli</p>
+                      <p className="mt-1 text-[8.5px] text-white/45">{tt("hafizlikDogrusu")}</p>
                     </div>
                   ))}
                 </div>
               )}
 
               {yanlislar.length === 0 && puan.toplam > 0 && (
-                <p className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-center text-[10px] font-bold text-emerald-200">🏆 Tek yanlışın yok — kurban ol, sen gerçek hafızsın!</p>
+                <p className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2.5 text-center text-[10px] font-bold text-emerald-200">{tt("hafizlikHafiz")}</p>
               )}
 
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={yeniTurBaslat}
                   className="rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
                   style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                  Yeni Tur Başlat →
+                  {tt("hafizlikYeniTur")}
                 </button>
                 <button type="button" onClick={() => { setOzetAcik(false); seviyeEkraninaDon(); }}
                   className="rounded-xl border border-white/15 py-3 text-[11px] font-bold text-white/70 transition hover:bg-white/5 hover:text-white">
-                  ← Seviye Değiştir
+                  {tt("hafizlikSeviyeDegistir")}
                 </button>
               </div>
             </>
@@ -559,31 +559,31 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
       <>
       {/* ★ GERİ TUŞU + Seviye göstergesi + puan bandı (28.09) */}
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-white/[.04] px-2.5 py-2 text-[10px] font-bold text-white/60">
-        <button type="button" onClick={seviyeEkraninaDon} title="Seviye ekranına dön"
+        <button type="button" onClick={seviyeEkraninaDon} title={tt("hafizlikSeviyeyeDonTitle")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/8 text-white/70 transition hover:bg-white/15 hover:text-white">←</button>
         <Brain size={13} className="shrink-0" style={{ color: "var(--accent)" }} />
-        <span className="shrink-0">{SEVIYELER.find(s => s.id === seviye)?.emoji} {SEVIYELER.find(s => s.id === seviye)?.ad}</span>
+        <span className="shrink-0">{SEVIYELER.find(s => s.id === seviye)?.emoji} {SEVIYELER.find(s => s.id === seviye) ? tt(SEVIYELER.find(s => s.id === seviye)!.adKey) : ""}</span>
         <span className="shrink-0">·</span>
         <span className="shrink-0">✓ <b className="text-emerald-300">{puan.dogru}</b> · ✗ <b className="text-red-300">{yanlis}</b></span>
-        <span className="ml-auto shrink-0">Tur: <b className="text-white/80">{turBoyu === 0 ? `${puan.toplam}` : `${Math.min(puan.toplam + (soru ? 1 : 0), turBoyu)}/${turBoyu}`}</b></span>
+        <span className="ml-auto shrink-0">{tt("hafizlikTurLabel")} <b className="text-white/80">{turBoyu === 0 ? `${puan.toplam}` : `${Math.min(puan.toplam + (soru ? 1 : 0), turBoyu)}/${turBoyu}`}</b></span>
       </div>
 
       {/* ★ CANLI PERFORMANS GRAFİĞİ — yalnız sınırsız modda; her cevaptan sonra güncellenir */}
-      {turBoyu === 0 && gecmis.length >= 2 && <PerformansCizgisi gecmis={gecmis} />}
+      {turBoyu === 0 && gecmis.length >= 2 && <PerformansCizgisi gecmis={gecmis} tt={tt} />}
 
       {yukleniyor && (
         <div className="flex h-32 items-center justify-center gap-2 text-[11px] font-bold text-white/40">
           <span className="h-4 w-4 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-          Soru hazırlanıyor…
+          {tt("hafizlikSoruHazirlaniyor")}
         </div>
       )}
 
       {soru && !yukleniyor && (
         <>
           <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-4">
-            <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/40">{soru.sn} · {soru.a}. Ayet</p>
+            <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/40">{soru.sn} · {tt("hafizlikAyetN").replace("{a}", String(soru.a))}</p>
             <p className="text-right font-arabic text-[17px] leading-relaxed" dir="rtl" style={{ color: "var(--accent-2)" }}>{soru.bas} …</p>
-            <p className="mt-1.5 text-center text-[9px] text-white/35">Bu ayetin DEVAMI hangisi?</p>
+            <p className="mt-1.5 text-center text-[9px] text-white/35">{tt("hafizlikDevamSoru")}</p>
           </div>
 
           <div className="space-y-1.5">
@@ -613,7 +613,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               LTR metin dir="ltr" + sol hizalı; Arapça kaynak zaten üstte. */}
           {secim !== null && soru.meal && (
             <div className="mt-2 rounded-xl border border-white/10 bg-white/[.03] p-3" dir="ltr">
-              <p className="text-[8.5px] font-black uppercase tracking-widest text-white/35">{MEAL_EDITIONS[lang] === "tr.diyanet" ? "Meal" : "Translation"} · {MEAL_EDITIONS[lang]}</p>
+              <p className="text-[8.5px] font-black uppercase tracking-widest text-white/35">{MEAL_EDITIONS[lang] === "tr.diyanet" ? tt("hafizlikMealEtiket") : tt("hafizlikTranslationEtiket")} · {MEAL_EDITIONS[lang]}</p>
               <p className="mt-1 text-[10.5px] leading-relaxed text-white/70">{soru.meal}</p>
             </div>
           )}
@@ -622,7 +622,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
           {(turBoyu === 0 || puan.toplam + 1 < turBoyu) && puan.toplam > 0 && (
             <button type="button" onClick={turOzetiGoster}
               className="mt-2 w-full rounded-xl border border-white/15 py-2 text-[10px] font-bold text-white/60 transition hover:bg-white/5 hover:text-white">
-              Turu Bitir → Özet
+              {tt("hafizlikTuruBitir")}
             </button>
           )}
           <button
@@ -642,7 +642,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
             className="mt-4 w-full rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >
-            {turBoyu > 0 && puan.toplam >= turBoyu ? "Turu Bitir → Özet" : "Sıradaki Soru →"}
+            {turBoyu > 0 && puan.toplam >= turBoyu ? tt("hafizlikTuruBitir") : tt("hafizlikSiradakiSoru")}
           </button>
         </>
         )}

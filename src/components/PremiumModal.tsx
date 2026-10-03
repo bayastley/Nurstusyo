@@ -11,6 +11,7 @@ import {
   type BillingPeriod,
 } from "../payments/pricing";
 import { getPackRights, getQuotaLeft, getCurrentTier } from "../tier";
+import { translate } from "../i18n";
 import type { Tier } from "../tier";
 import type { PremiumModalProps, PremiumTab } from "./premiumModalHelpers";
 import { DAILY_QUOTA, TIER_LABEL, emptyRights, readPackRights, PRO_FEATURES, ELIT_FEATURES } from "./premiumModalHelpers";
@@ -34,7 +35,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   user,
   packRights: packRightsProp,
   subscriptionEndsAt,
+  lang,
 }) => {
+  // ★ 04.10 TUR 2: modalın tüm metinleri seçili dile döner (lang prop yoksa LS'ten)
+  const dil = (lang as string) || (typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr") || "tr";
+  const t = (k: string): string => translate(dil, k);
   // ★ Eski "jeton" sekmesi → yeni "paket" sekmesi
   const wanted = premiumTab ?? initialTab ?? "uyelik";
   const normalized: "uyelik" | "paket" = wanted === "uyelik" ? "uyelik" : "paket";
@@ -77,7 +82,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
         setTermsHighlight(true);
         setTimeout(() => setTermsHighlight(false), 2500);
       }, 100);
-      toast("⚠️ Satın alma koşullarını kabul etmeniz gerekiyor");
+      toast(t("satinKabulGerekli"));
       return;
     }
 
@@ -86,13 +91,13 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
     // ★ Gmail girişi zorunlu: Elit/Pro üyelik veren HER ürün için geçerli
     //   (aylık, yıllık ve ömür boyu dahil — sadece SUB_*_1M değil).
     if (!hasGmailLogin && targetProduct?.grantTier) {
-      toast("⚠️ NÛR PRO/ELİT satın almak için önce Google ile giriş yapmalısınız");
+      toast(t("satinGirisGerekli"));
       return;
     }
 
     // ★ Mevcut tier kontrolü — aynı tier'da uyarı göster (süre uzatılacak)
     if (targetProduct?.grantTier && activeTier === targetProduct.grantTier) {
-      toast("ℹ️ Mevcut üyeliğiniz uzatılacak — kalan sürenizin üzerine eklenecek");
+      toast(t("satinUzatilacak"));
     }
 
     // Ödeme akışı bağlıysa oraya git
@@ -107,7 +112,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       setTier?.("pro");
       setCurrentTier?.("pro");
       onPurchase?.("pro");
-      toast("✅ NÛR PRO üyeliğin aktif edildi");
+      toast(t("satinProAktif"));
       closeModal();
       return;
     }
@@ -115,12 +120,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       setTier?.("elit");
       setCurrentTier?.("elit");
       onPurchase?.("elit");
-      toast("👑 NÛR ELİT üyeliğin aktif edildi · tüm kilitler açıldı");
+      toast(t("satinElitAktif"));
       closeModal();
       return;
     }
     if (targetProduct?.videoCount) onTokenPurchase?.(targetProduct.videoCount);
-    toast("Ödeme sayfasına yönlendiriliyorsun...");
+    toast(t("satinYonlendiriliyor"));
   };
 
   return (
@@ -158,7 +163,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           type="button"
           onClick={closeModal}
           className="absolute right-4 top-5 z-20 rounded-full bg-white/5 p-2 text-white/40 transition hover:bg-white/10 hover:text-white"
-          aria-label="Kapat"
+          aria-label={t("close")}
         >
           <X size={16} />
         </button>
@@ -173,16 +178,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             <Sparkles size={14} className="animate-glow" style={{ color: "#d7aa52" }} />
           </div>
           <h2 className="shimmer-text font-display text-[26px] font-black tracking-wide sm:text-[32px]">
-            ÜYELİK &amp; PAKETLER
+            {t("uyelikBaslik")}
           </h2>
           <p className="mx-auto mt-2 max-w-md text-[11px] leading-relaxed text-white/45">
-            Her gün yenilenen üretim hakkıyla üret. Daha fazlası için tek seferlik paket al.
+            {t("uyelikAltBaslik")}
           </p>
         </div>
 
-        <PremiumKotaGostergesi activeTier={activeTier} remainingDays={remainingDays} packRightsProp={packRightsProp} />
+        <PremiumKotaGostergesi activeTier={activeTier} remainingDays={remainingDays} packRightsProp={packRightsProp} dil={dil} />
 
-        <PremiumAlinanPaketler packRightsProp={packRightsProp} />
+        <PremiumAlinanPaketler packRightsProp={packRightsProp} dil={dil} />
 
         {/* SEKMELER */}
         <div className="mx-7 mt-5 flex gap-1.5 rounded-2xl border border-white/10 bg-black/50 p-1.5">
@@ -194,7 +199,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             }`}
             style={tab === "uyelik" ? { background: "linear-gradient(135deg,#f5dda6,#d7aa52)" } : undefined}
           >
-            <Crown size={13} /> Aylık Üyelik
+            <Crown size={13} /> {t("uyelikTab")}
           </button>
           <button
             type="button"
@@ -204,7 +209,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             }`}
             style={tab === "paket" ? { background: "linear-gradient(135deg,#f5dda6,#d7aa52)" } : undefined}
           >
-            <Zap size={13} /> Tek Seferlik Paket
+            <Zap size={13} /> {t("paketTab")}
           </button>
         </div>
 
@@ -215,8 +220,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
             {/* PERİYOT SEÇİCİ: Aylık / Yıllık (indirimli) */}
             <div className="mb-4 flex flex-wrap justify-center gap-1.5 rounded-2xl border border-white/10 bg-black/40 p-1.5">
               {([
-                { id: "monthly" as BillingPeriod, label: "Aylık" },
-                { id: "annual" as BillingPeriod, label: "Yıllık · %10-20 İndirim" },
+                { id: "monthly" as BillingPeriod, label: t("periyotAylik") },
+                { id: "annual" as BillingPeriod, label: t("periyotYillik") },
               ]).map((opt) => (
                 <button
                   key={opt.id}
@@ -241,24 +246,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <Sparkles size={18} style={{ color: "#34d399" }} />
-                  <h3 className="font-display text-[15px] font-black tracking-wide text-white">ÜCRETSİZ</h3>
+                  <h3 className="font-display text-[15px] font-black tracking-wide text-white">{t("tierUcretsiz").toLocaleUpperCase(dil === "tr" ? "tr-TR" : "en-US")}</h3>
                 </div>
 
                 <div className="mt-3 flex items-end gap-1">
                   <span className="font-display text-[34px] font-black leading-none text-emerald-300">₺0</span>
-                  <span className="mb-1 text-[10px] font-bold text-white/35">/ her zaman</span>
+                  <span className="mb-1 text-[10px] font-bold text-white/35">{t("fiyatHerZaman")}</span>
                 </div>
 
                 <ul className="mt-4 space-y-1.5">
-                  {[
-                    "Her gün 3 kısa video",
-                    "Kısa video: 59 saniye",
-                    "37 ücretsiz kâri sesi",
-                    "1300+ atmosfer klibi",
-                    "9 ücretsiz tema",
-                    "Temel başlık ve açıklama üretimi",
-                    "Filigranlı önizleme ve üretim",
-                  ].map((f) => (
+                  {[0, 1, 2, 3, 4, 5, 6].map((i) => t(`planUcretsizOzellik${i}`)).map((f) => (
                     <li key={f} className="flex items-start gap-1.5 text-[10.5px] leading-snug text-white/70">
                       <Check size={11} className="mt-0.5 shrink-0 text-emerald-300" />
                       {f}
@@ -271,16 +268,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                   disabled
                   className="mt-5 w-full rounded-xl bg-white/10 py-3 text-[12px] font-black text-white/45"
                 >
-                  Mevcut ücretsiz plan
+                  {t("planMevcutUcretsiz")}
                 </button>
               </div>
 
               {(period === "annual" ? ANNUAL_SUBSCRIPTION_CODES : SUBSCRIPTION_CODES).map((code) => {
                 const p = PRODUCTS[code];
                 const isElit = p.grantTier === "elit";
-                const features = isElit ? ELIT_FEATURES : PRO_FEATURES;
+                const features = (isElit ? ELIT_FEATURES : PRO_FEATURES).map((_, i) => t(`plan${isElit ? "Elit" : "Pro"}Ozellik${i}`));
                 const current = tier === p.grantTier;
-                const periodLabel = period === "annual" ? "/ yıl" : "/ ay";
+                const periodLabel = period === "annual" ? t("fiyatYil") : t("fiyatAy");
 
                 return (
                   <div
@@ -299,7 +296,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         className="absolute right-4 top-4 flex items-center gap-1 rounded-full px-2 py-0.5 text-[8px] font-black text-black"
                         style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}
                       >
-                        <Flame size={9} /> EN POPÜLER
+                        <Flame size={9} /> {t("planEnPopuler")}
                       </span>
                     )}
 
@@ -310,7 +307,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         <Gem size={18} style={{ color: "#d7aa52" }} />
                       )}
                       <h3 className="font-display text-[15px] font-black tracking-wide text-white">
-                        {isElit ? "NÛR ELİT" : "NÛR PRO"}
+                        {isElit ? t("tierElit") : t("tierPro")}
                       </h3>
                     </div>
 
@@ -325,12 +322,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     </div>
                     {period === "annual" && (
                       <p className="mt-1 text-[9.5px] font-bold" style={{ color: isElit ? "#f5dda6" : "#34d399" }}>
-                        Aylık {formatPrice(PRODUCTS[isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M"])} yerine ayda ortalama ₺{Math.round(p.amountMinor / 100 / 12)} · %{isElit ? 20 : 10} indirim
+                        {t("planYillikKazanc").replace("{aylik}", formatPrice(PRODUCTS[isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M"])).replace("{ortalama}", String(Math.round(p.amountMinor / 100 / 12))).replace("{yuzde}", String(isElit ? 20 : 10))}
                       </p>
                     )}
 
                     <ul className="mt-4 space-y-1.5">
-                      {features.map((f) => (
+                      {features.map((f, fi) => (
                         <li key={f} className="flex items-start gap-1.5 text-[10.5px] leading-snug text-white/70">
                           <Check size={11} className="mt-0.5 shrink-0" style={{ color: isElit ? "#f5dda6" : "#34d399" }} />
                           {f}
@@ -343,14 +340,14 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                       {(["kisa", "uzun", "tam"] as VideoKind[]).map((kind) => {
                         const q = DAILY_QUOTA[p.grantTier ?? "free"]?.[kind] ?? 0;
                         const emoji = kind === "kisa" ? "🎬" : kind === "uzun" ? "🎞️" : "🎥";
-                        const label = kind === "kisa" ? "Kısa" : kind === "uzun" ? "Uzun" : "Tam";
+                        const label = kind === "kisa" ? t("kotaKisa") : kind === "uzun" ? t("kotaUzun") : t("kotaTam");
                         return (
                           <div key={kind} className="rounded-lg bg-white/5 p-2 text-center">
                             <p className="text-[10px]">{emoji}</p>
                             <p className="font-mono text-[13px] font-black" style={{ color: q > 0 ? (isElit ? "#f5dda6" : "#d7aa52") : "rgba(255,255,255,0.2)" }}>
                               {q > 0 ? q : "—"}
                             </p>
-                            <p className="text-[7px] font-bold text-white/30">{label}/gün</p>
+                            <p className="text-[7px] font-bold text-white/30">{label}{t("kotaGunde")}</p>
                           </div>
                         );
                       })}
@@ -374,7 +371,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                             }
                       }
                     >
-                      {current ? "Mevcut üyeliğin" : isElit ? "ELİT OL" : "PRO'YA GEÇ"}
+                      {current ? t("planMevcutUyelik") : isElit ? t("planElitOl") : t("planProyaGec")}
                     </button>
                   </div>
                 );
@@ -404,7 +401,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                     >
                       <p className="text-[19px]">{meta.emoji}</p>
                       <p className="mt-1 text-[11px] font-black text-white">{meta.label}</p>
-                      <p className="mt-0.5 text-[8.5px] leading-tight text-white/40">{meta.sub}</p>
+                      <p className="mt-0.5 text-[8.5px] leading-tight text-white/40">{t(`pk${kind.charAt(0).toUpperCase()}${kind.slice(1)}Sub`)}</p>
                     </button>
                   );
                 })}
@@ -434,19 +431,19 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                           className="absolute left-1/2 top-0 flex -translate-x-1/2 items-center gap-0.5 rounded-b-md px-2 py-0.5 text-[7.5px] font-black text-black"
                           style={{ background: meta.accent }}
                         >
-                          <Star size={8} /> EN ÇOK TERCİH
+                          <Star size={8} /> {t("planEnCokTercih")}
                         </span>
                       )}
 
                       <p className="mt-3 font-display text-[30px] font-black leading-none" style={{ color: meta.accent }}>
                         {p.videoCount}
                       </p>
-                      <p className="mt-0.5 text-[9px] font-bold text-white/45">video</p>
+                      <p className="mt-0.5 text-[9px] font-bold text-white/45">{t("planVideoAdet")}</p>
 
                       <div className="my-3 h-px" style={{ background: `linear-gradient(90deg,transparent,${meta.accent}55,transparent)` }} />
 
                       <p className="font-display text-[19px] font-black text-white">{formatPrice(p)}</p>
-                      <p className="mt-0.5 text-[8px] text-white/30">Tek seferlik video üretim paketi</p>
+                      <p className="mt-0.5 text-[8px] text-white/30">{t("planTekSeferlikNot")}</p>
 
                       <button
                         type="button"
@@ -454,7 +451,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         className="mt-3 w-full rounded-lg py-2 text-[10.5px] font-black text-black transition hover:brightness-110 active:scale-[0.96] active:brightness-95"
                         style={{ background: `linear-gradient(135deg, ${meta.accent}, ${meta.accent}cc)` }}
                       >
-                        Satın Al
+                        {t("planSatinAl")}
                       </button>
                     </div>
                   );
@@ -462,13 +459,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               </div>
 
               <p className="mt-4 rounded-xl border border-white/10 bg-black/40 p-3 text-center text-[9.5px] leading-relaxed text-white/40">
-                Paketler tek seferliktir ve süresi dolmaz. Günlük üyelik hakkın bittiğinde
-                otomatik olarak paketinden kullanılır.
+                {t("planPaketNot")}
               </p>
             </>
           )}
 
-          <PremiumSozlesme accepted={accepted} setAccepted={setAccepted} termsOpen={termsOpen} setTermsOpen={setTermsOpen} termsHighlight={termsHighlight} termsRef={termsRef} />
+          <PremiumSozlesme accepted={accepted} setAccepted={setAccepted} termsOpen={termsOpen} setTermsOpen={setTermsOpen} termsHighlight={termsHighlight} termsRef={termsRef} dil={dil} />
 
         </div>
       </div>

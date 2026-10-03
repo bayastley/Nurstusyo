@@ -616,7 +616,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* PRAYER MODAL — SRP adım 8 */}
       {modal === "prayer" && (
-        <PrayerBolum setModal={setModal} t={t} prayerCity={prayerCity} prayerSearch={prayerSearch} setPrayerSearch={setPrayerSearch} filteredCities={filteredCities} setPrayerCity={setPrayerCity} prayerTimings={prayerTimings} nextPrayer={nextPrayer} formatRemaining={formatRemaining} />
+        <PrayerBolum setModal={setModal} t={t} lang={lang} prayerCity={prayerCity} prayerSearch={prayerSearch} setPrayerSearch={setPrayerSearch} filteredCities={filteredCities} setPrayerCity={setPrayerCity} prayerTimings={prayerTimings} nextPrayer={nextPrayer} formatRemaining={formatRemaining} />
       )}
 
       {/* CONTACT & SUPPORT MODAL — SRP adım 8 (yıldız puanı bileşende) */}

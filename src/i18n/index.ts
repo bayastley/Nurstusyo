@@ -34,6 +34,33 @@ export function translate(lang: Lang | string | null | undefined, key: string): 
   return dict[key] || T.tr[key] || T.en[key] || key;
 }
 
+// ─── 04.10 TUR 2: yerelleştirme yardımcıları (üst bar, vakitler, sure eki) ───
+
+/** Dil adı — LANGS etiketinin yerine, seçili dilin sözlüğünden */
+export function dilAdi(lang: Lang | string | null | undefined, kod: string): string {
+  return translate(lang, `dil${kod.toUpperCase()}`);
+}
+
+/** Namaz vakti adı — PRAYERS'taki Türkçe adı seçili dile çevirir */
+export function vakitAdi(lang: Lang | string | null | undefined, trAd: string): string {
+  return translate(lang, `vakit${trAd}`);
+}
+
+/** "3 sa 15 dk" → seçili dilin birimleriyle aynı süre */
+export function sureceCevir(lang: Lang | string | null | undefined, metin: string): string {
+  return metin
+    .replace(/\bsa\b/g, translate(lang, "birimSaat"))
+    .replace(/\bdk\b/g, translate(lang, "birimDakika"))
+    .replace(/\bsn\b/g, translate(lang, "birimSaniye"))
+    .replace(/\bdk'ya\b/g, translate(lang, "birimDakika"));
+}
+
+/** Sure adı + ek: tr → "Bakara Suresi", diğerleri → "Bakara" / "Surah Bakara" gerekmiyorsa çıplak ad */
+export function sureBirlestir(lang: Lang | string | null | undefined, ad: string): string {
+  if (lang === "tr") return `${ad} Suresi`;
+  return ad;
+}
+
 // ─── Yasal metinler (TR-first · bakiye/jeton/kredi kavramı YOKTUR) ───
 type LegalBundle = {
   legalTitle: string;

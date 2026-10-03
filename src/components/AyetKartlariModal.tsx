@@ -352,19 +352,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       </div>
 
       {/* ── ALTTA: ARKA PLAN GALERİSİ ────────────────────── */}
-      <ArkaPlanGalerisi
-        bgSearch={bgSearch}
-        setBgSearch={setBgSearch}
-        bgCat={bgCat}
-        setBgCat={setBgCat}
-        filteredBgs={filteredBgs}
-        visibleCount={visibleCount}
-        bgId={bgId}
-        setBgId={setBgId}
-        loadMoreRef={loadMoreRef}
-        akilliSec={akilliSec}
-        shuffleBg={shuffleBg}
-      />
+      <ArkaPlanGalerisi bgSearch={bgSearch} setBgSearch={setBgSearch} bgCat={bgCat} setBgCat={setBgCat} filteredBgs={filteredBgs} visibleCount={visibleCount} bgId={bgId} setBgId={setBgId} loadMoreRef={loadMoreRef} akilliSec={akilliSec} shuffleBg={shuffleBg} lang={lang} />
     </Modal>
   );
 };

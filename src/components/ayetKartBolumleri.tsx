@@ -43,6 +43,19 @@ export const AyetSecimBolumu: React.FC<{
   lang?: Lang;
 }> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr" }) => {
   const tt = (k: string): string => translate(lang, k);
+  // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
+  const moodEtiketi = (id: string): string => {
+    const m = AYET_MOODS.find((x) => x.id === id);
+    if (!m) return id;
+    const trLabel = m.label;
+    const harita: Record<string, string> = {
+      "Tümü": "akTumu", "Huzur": "akMoodHuzur", "Sabır": "akMoodSabir", "Şükür": "akMoodSukur",
+      "Tevekkül": "akMoodTevekkul", "Rahmet": "akMoodRahmet", "Sevgi": "akMoodSevgi",
+      "Zafer & Umut": "akMoodZafer", "Af & Tövbe": "akMoodAf", "İmtihan": "akMoodImtihan",
+      "Cennet": "akMoodCennet", "İlim & Hikmet": "akMoodIlim", "Aile & Yuva": "akMoodAile",
+    };
+    return harita[trLabel] ? tt(harita[trLabel]) : trLabel;
+  };
   // ★ ÇİP SAYACI (02.10): her basış localStorage'a yazılır; popüler 5 çip ÖNE
   //   sabitlenir (🏅 rozet + seçim sayısı). State tick'i sıralamayı anında günceller.
   const [ruhSayac, setRuhSayac] = useState<RuhSayac>(() => ruhSayacOku());
@@ -70,7 +83,7 @@ export const AyetSecimBolumu: React.FC<{
                 onClick={() => ruhHaliUygula()}
                 className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                title={lang === "tr" ? "Ruh haline uygun ayet + arka plan + kart ayarları" : undefined}
+                title={lang === "tr" ? tt("akAkilliSecim") : undefined}
               >
                 <Brain size={11} /> {tt("akAiRuhHali")}
               </button>
@@ -99,17 +112,17 @@ export const AyetSecimBolumu: React.FC<{
                 onClick={akilliAyetSec}
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                title="Ayeti ve ona uygun arka planı kendisi seçer"
+                title={tt("akAkilliSecim")}
               >
-                <Wand2 size={11} /> Akıllı AI
+                <Wand2 size={11} /> {tt("akAkilliAI")}
               </button>
               <button
                 type="button"
                 onClick={shuffleAyet}
                 className="flex items-center gap-1.5 rounded-lg glass-soft px-2.5 py-1.5 text-[9.5px] font-bold text-white/70 transition hover:text-white active:scale-95"
-                title="Rastgele ayet"
+                title={tt("akRastgeleTitle")}
               >
-                <Sparkles size={11} style={{ color: "var(--accent)" }} /> Rastgele
+                <Sparkles size={11} style={{ color: "var(--accent)" }} /> {tt("akRastgele")}
               </button>
             </div>
           </div>
@@ -123,7 +136,7 @@ export const AyetSecimBolumu: React.FC<{
           >
             <span className="text-lg">⭐</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[10.5px] font-black" style={{ color: "var(--accent-2)" }}>Günün Ayeti</span>
+              <span className="block text-[10.5px] font-black" style={{ color: "var(--accent-2)" }}>{tt("akGununAyeti")}</span>
               <span className="block truncate text-[9px] text-white/50">{gununAyetiObj.title} · {gununAyetiObj.source}</span>
             </span>
             <span className="shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>Karta Al</span>
@@ -139,7 +152,7 @@ export const AyetSecimBolumu: React.FC<{
                 className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${mood === m.id && !sadeceGunun ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
                 style={mood === m.id && !sadeceGunun ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
               >
-                {m.emoji} {m.label}
+                {m.emoji} {m.id === "tumu" ? tt("akTumu") : moodEtiketi(m.id)}
               </button>
             ))}
           </div>
@@ -150,9 +163,9 @@ export const AyetSecimBolumu: React.FC<{
               value={sureFiltre === "tumu" ? "" : String(sureFiltre)}
               onChange={(e) => { setSureFiltre(e.target.value ? Number(e.target.value) : "tumu"); setSadeceGunun(false); }}
               className="glass-soft shrink-0 rounded-xl px-2 py-2.5 text-[10px] font-bold text-white/80 outline-none"
-              title="Sureye göre filtrele"
+              title={tt("akSureFiltreTitle")}
             >
-              <option value="">📖 Tüm sureler</option>
+              <option value="">📖 {tt("akTumSureler")}</option>
               {SURE_ADLARI.map((ad, i) => (
                 <option key={ad} value={i + 1}>{i + 1}. {ad}</option>
               ))}
@@ -162,7 +175,7 @@ export const AyetSecimBolumu: React.FC<{
               <input
                 value={ayetSearch}
                 onChange={(e) => setAyetSearch(e.target.value)}
-                placeholder="Ayet ara — meal, başlık veya sure adı..."
+                placeholder={tt("akAyetAra")}
                 className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30"
               />
             </div>
@@ -182,7 +195,7 @@ export const AyetSecimBolumu: React.FC<{
                 >
                   <div className="mb-1 flex items-center gap-2">
                     <span className="rounded-full px-1.5 py-0.5 text-[7.5px] font-black tracking-wide" style={{ background: `${mc}22`, color: mc, border: `1px solid ${mc}44` }}>
-                      {AYET_MOODS.find((m) => m.id === a.mood)?.label}
+                      {AYET_MOODS.find((m) => m.id === a.mood) ? moodEtiketi(a.mood) : ""}
                     </span>
                     <span className="text-[10px] font-bold text-white/85">{a.title}</span>
                     <span className="ml-auto text-[8.5px] font-semibold text-white/40">{a.source}</span>
@@ -199,7 +212,7 @@ export const AyetSecimBolumu: React.FC<{
               </button>
             )}
             {filteredAyets.length === 0 && (
-              <p className="py-6 text-center text-[11px] text-white/40">Bu filtreye uygun ayet bulunamadı.</p>
+              <p className="py-6 text-center text-[11px] text-white/40">{tt("akBulunamadi")}</p>
             )}
           </div>
         </div>
@@ -267,7 +280,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 {/* Karartma */}
                 <div>
                   <div className="mb-1 flex items-center justify-between text-[9px] font-bold text-white/60">
-                    <span className="flex items-center gap-1"><Moon size={10} style={{ color: "var(--accent)" }} /> Karartma (ışıklı arka planda artır)</span>
+                    <span className="flex items-center gap-1"><Moon size={10} style={{ color: "var(--accent)" }} /> {tt("akKarartma")}</span>
                     <span className="tabular-nums text-white/40">{ayar.karartma}%</span>
                   </div>
                   <input type="range" min={0} max={100} value={ayar.karartma}
@@ -278,7 +291,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 {/* Yazı boyutu */}
                 <div>
                   <div className="mb-1 flex items-center justify-between text-[9px] font-bold text-white/60">
-                    <span className="flex items-center gap-1"><Type size={10} style={{ color: "var(--accent)" }} /> Yazı boyutu</span>
+                    <span className="flex items-center gap-1"><Type size={10} style={{ color: "var(--accent)" }} /> {tt("akYaziBoyutu")}</span>
                     <span className="tabular-nums text-white/40">{ayar.yaziOlcek}%</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -295,30 +308,30 @@ export const KartOnizlemeBolumu: React.FC<{
                 {/* ★ RENK ÇUBUĞU (01.10) — Arapça + meal ayrı renk; stüdyo ile aynı çekirdek */}
                 <div className="rounded-lg border border-white/10 bg-black/20 p-2">
                   <div className="mb-1.5 flex items-center justify-between">
-                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><Palette size={9} style={{ color: "var(--accent)" }} /> Renk Çubuğu</p>
+                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><Palette size={9} style={{ color: "var(--accent)" }} /> {tt("akRenkCubugu")}</p>
                     <button type="button" onClick={() => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, acik: !a.cubuk.acik } }))}
                       className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.cubuk.acik ? "text-black" : "glass-soft text-white/50"}`}
                       style={ayar.cubuk.acik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                      {ayar.cubuk.acik ? "AÇIK" : "KAPALI"}
+                      {ayar.cubuk.acik ? tt("akAcik") : tt("akKapali")}
                     </button>
                   </div>
                   {ayar.cubuk.acik && (
                     <>
                     <div className="flex items-start justify-center gap-4">
-                      <CubukRenkSecici boy="kucuk" etiket="Arapça" deger={ayar.cubuk.donme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, donme: d } }))} />
-                      <CubukRenkSecici boy="kucuk" etiket="Meal" deger={ayar.cubuk.mealDonme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, mealDonme: d } }))} />
+                      <CubukRenkSecici boy="kucuk" etiket={tt("akArapca")} deger={ayar.cubuk.donme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, donme: d } }))} />
+                      <CubukRenkSecici boy="kucuk" etiket={tt("hafizlikMealEtiket")} deger={ayar.cubuk.mealDonme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, mealDonme: d } }))} />
                       {/* ★ ÇERÇEVE RENGİ (03.10): gökkuşağı kaydırıcısı — Arapça/Meal'den bağımsız; düz renkler altta */}
-                      <CubukRenkSecici boy="kucuk" etiket="Çerçeve" deger={ayar.cubuk.cerceveDonme ?? 0} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, cerceveModu: "gokkusagi", cerceveDonme: d } }))} />
+                      <CubukRenkSecici boy="kucuk" etiket={tt("akCerceve")} deger={ayar.cubuk.cerceveDonme ?? 0} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, cerceveModu: "gokkusagi", cerceveDonme: d } }))} />
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-[8px] font-bold text-white/50">Şerit</span>
+                        <span className="text-[8px] font-bold text-white/50">{tt("akSerit")}</span>
                         <button type="button" onClick={() => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: a.cubuk.kalinlik > 0 ? 0 : 6 } }))}
                           className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.cubuk.kalinlik > 0 ? "text-black" : "glass-soft text-white/50"}`}
                           style={ayar.cubuk.kalinlik > 0 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-                          title="Çerçeve boyunca renk şeridi">
-                          {ayar.cubuk.kalinlik > 0 ? "AÇIK" : "YOK"}
+                          title={tt("akSeritTitle")}>
+                          {ayar.cubuk.kalinlik > 0 ? tt("akAcik") : tt("akYok")}
                         </button>
                         {ayar.cubuk.kalinlik > 0 && (
-                          <input type="range" min={2} max={14} value={ayar.cubuk.kalinlik} onChange={(e) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: Number(e.target.value) } }))} className="mt-1 h-1 w-10 accent-[color:var(--accent)]" title="Şerit kalınlığı" />
+                          <input type="range" min={2} max={14} value={ayar.cubuk.kalinlik} onChange={(e) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: Number(e.target.value) } }))} className="mt-1 h-1 w-10 accent-[color:var(--accent)]" title={tt("akSeritKalinlik")} />
                         )}
                       </div>
                     </div>
@@ -336,17 +349,17 @@ export const KartOnizlemeBolumu: React.FC<{
                 {/* ★ ÖZEL YAZI (01.10) — kartın içine çizilen mesaj; ayrı konum */}
                 <div className="rounded-lg border border-white/10 bg-black/20 p-2">
                   <div className="mb-1.5 flex items-center justify-between">
-                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><PenLine size={9} style={{ color: "var(--accent)" }} /> Özel Yazı</p>
+                    <p className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><PenLine size={9} style={{ color: "var(--accent)" }} /> {tt("akOzelYazi")}</p>
                     <button type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, acik: !a.mesaj.acik } }))}
                       className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.mesaj.acik ? "text-black" : "glass-soft text-white/50"}`}
                       style={ayar.mesaj.acik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                      {ayar.mesaj.acik ? "AÇIK" : "KAPALI"}
+                      {ayar.mesaj.acik ? tt("akAcik") : tt("akKapali")}
                     </button>
                   </div>
                   {ayar.mesaj.acik && (
                     <div className="space-y-1.5">
                       <textarea value={ayar.mesaj.metin} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, metin: e.target.value.slice(0, 90), acik: true } }))} rows={2}
-                        placeholder="Karta yazılacak mesajın… (Türkçe veya Arapça hatla)"
+                        placeholder={tt("akMesajPlaceholder")}
                         className="glass-soft w-full resize-none rounded-md px-2 py-1.5 text-[9.5px] text-white/90 outline-none placeholder:text-white/25" />
 
                       {/* ★ HAT FONTU — temel stil herkese, palet PRO+ (HatFontuSeridi ortak bileşen) */}
@@ -375,7 +388,7 @@ export const KartOnizlemeBolumu: React.FC<{
                           <button key={k} type="button" onClick={() => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, konum: k } }))}
                             className={`rounded-md py-1 text-[8px] font-black transition ${ayar.mesaj.konum === k ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                             style={ayar.mesaj.konum === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                            {k === "ust" ? "↑ Üst" : k === "orta" ? "↕ Orta" : "↓ Alt"}
+                            {k === "ust" ? tt("akUst") : k === "orta" ? tt("akOrta") : tt("akAlt")}
                           </button>
                         ))}
                       </div>
@@ -392,7 +405,7 @@ export const KartOnizlemeBolumu: React.FC<{
                       </div>
                       {/* ★ IŞILTI — yazının arkasına kendi rengiyle hale */}
                       <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><IsiltiIcon size={9} style={{ color: "var(--accent)" }} /> Işıltı</span>
+                        <span className="flex items-center gap-1 text-[8.5px] font-bold text-white/50"><IsiltiIcon size={9} style={{ color: "var(--accent)" }} /> {tt("akIsilti")}</span>
                         <input type="range" min={0} max={2} step={0.25} value={ayar.mesaj.isilti} onChange={(e) => setAyar((a) => ({ ...a, mesaj: { ...a.mesaj, isilti: Number(e.target.value) } }))} className="h-1 flex-1 accent-[color:var(--accent)]" />
                         <span className="w-8 text-right text-[8px] tabular-nums text-white/40">{ayar.mesaj.isilti}×</span>
                       </div>
@@ -403,11 +416,11 @@ export const KartOnizlemeBolumu: React.FC<{
                 {/* Sıra + Konum + Hizalama */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <p className="mb-1 flex items-center gap-1 text-[8.5px] font-bold text-white/50"><ArrowUpDown size={9} /> Sıra</p>
+                    <p className="mb-1 flex items-center gap-1 text-[8.5px] font-bold text-white/50"><ArrowUpDown size={9} /> {tt("akSira")}</p>
                     <button type="button"
                       onClick={() => setAyar((a) => ({ ...a, arUstte: !a.arUstte }))}
                       className="w-full rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/75 transition hover:text-white">
-                      {ayar.arUstte ? "قرآن üstte" : "Meal üstte"}
+                      {ayar.arUstte ? tt("akKuranUstte") : tt("akMealUstte")}
                     </button>
                   </div>
                   <div>
@@ -435,7 +448,7 @@ export const KartOnizlemeBolumu: React.FC<{
                         style={ayar.hizalama === "orta" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
                         <AlignCenter size={10} className="mx-auto" />
                       </button>
-                      <button type="button" onClick={() => setAyar((a) => ({ ...a, hizalama: "sag" }))} title="Sağa yasla"
+                      <button type="button" onClick={() => setAyar((a) => ({ ...a, hizalama: "sag" }))} title={tt("akSagaYasla")}
                         className={`rounded-md py-1.5 transition ${ayar.hizalama === "sag" ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                         style={ayar.hizalama === "sag" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
                         <AlignRight size={10} className="mx-auto" />
@@ -464,8 +477,8 @@ export const KartOnizlemeBolumu: React.FC<{
                 <div className="mt-2 flex items-center gap-2">
                   <img src={kendiFoto.src} alt="Yüklenen fotoğraf" className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/20" />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[9px] font-bold text-white/80">{kendiFotoAd || "Fotoğraf hazır ✓"}</p>
-                    <p className="text-[8px] text-emerald-300">✓ Kart arka planı olarak seçildi</p>
+                    <p className="truncate text-[9px] font-bold text-white/80">{kendiFotoAd || tt("akFotografYuklendi")}</p>
+                    <p className="text-[8px] text-emerald-300">{tt("akFotografSecildi")}</p>
                   </div>
                   <button
                     type="button"
@@ -545,11 +558,13 @@ export const ArkaPlanGalerisi: React.FC<{
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
   akilliSec: () => void;
   shuffleBg: () => void;
-}> = ({ bgSearch, setBgSearch, bgCat, setBgCat, filteredBgs, visibleCount, bgId, setBgId, loadMoreRef, akilliSec, shuffleBg }) => {
+  lang?: Lang;
+}> = ({ bgSearch, setBgSearch, bgCat, setBgCat, filteredBgs, visibleCount, bgId, setBgId, loadMoreRef, akilliSec, shuffleBg, lang = "tr" }) => {
+  const tt = (k: string): string => translate(lang, k);
   return (
     <div className="mt-5 border-t border-white/10 pt-4">
         <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>2 · Arka Plan Seç</span>
+          <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akAdim2")}</span>
           <span className="rounded-full bg-white/5 px-2 py-0.5 text-[9px] font-bold text-white/45">{BACKGROUNDS.length.toLocaleString("tr-TR")} hazır · {BG_CATS.length} kategori</span>
           <div className="ml-auto flex items-center gap-1.5">
             {/* 🎯 Akıllı Seç — ayet + uyumlu arka plan tek tuşla */}
@@ -558,7 +573,7 @@ export const ArkaPlanGalerisi: React.FC<{
               onClick={akilliSec}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-              title="Ayeti korur, ayetin ruhuna uygun arka planı seçer"
+              title={tt("akAkilliSecim")}
             >
               <Wand2 size={11} /> Akıllı Seç
             </button>
@@ -566,7 +581,7 @@ export const ArkaPlanGalerisi: React.FC<{
               type="button"
               onClick={shuffleBg}
               className="flex items-center gap-1.5 rounded-lg glass-soft px-2.5 py-1.5 text-[9.5px] font-bold text-white/70 transition hover:text-white active:scale-95"
-              title="Ayeti ve arka planı rastgele değiştir"
+              title={tt("akRastgeleBg")}
             >
               <Shuffle size={11} style={{ color: "var(--accent)" }} /> Karıştır
             </button>
@@ -579,7 +594,7 @@ export const ArkaPlanGalerisi: React.FC<{
           <input
             value={bgSearch}
             onChange={(e) => setBgSearch(e.target.value)}
-            placeholder="Ne istersen yaz — deniz, kâbe, yıldız, bahçe, bulut... (kategoriden bulur)"
+            placeholder={tt("akBgAra")}
             className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-24 text-[11px] outline-none placeholder:text-white/30"
           />
           {/* Kategori sayısı çok olduğu için dropdown'a taşındı */}
@@ -589,7 +604,7 @@ export const ArkaPlanGalerisi: React.FC<{
             className="glass-soft absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1.5 text-[9.5px] font-bold text-white/75 outline-none"
             title="Kategoriye göre süz"
           >
-            <option value="all">Tümü</option>
+            <option value="all">{tt("akTumu")}</option>
             {BG_CATS.map((cat) => (
               <option key={cat} value={cat}>{catLabel(cat)}</option>
             ))}
@@ -634,7 +649,7 @@ export const ArkaPlanGalerisi: React.FC<{
           </div>
         )}
         {filteredBgs.length === 0 && (
-          <p className="py-6 text-center text-[11px] text-white/40">Bu filtreyle arka plan bulunamadı.</p>
+          <p className="py-6 text-center text-[11px] text-white/40">{tt("akBgBulunamadi")}</p>
         )}
       </div>
   );

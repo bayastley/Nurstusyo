@@ -9,6 +9,7 @@
 // ════════════════════════════════════════════════════════
 
 import React from "react";
+import { translate } from "../i18n";
 import { gununVideosunuBul, type GununVideoKarti } from "../data/gununVideosu";
 import { KATEGORI_TIER, type CatId, type Clip } from "../clips";
 import { tierAtLeast, type Tier } from "../tier";
@@ -25,6 +26,9 @@ export interface GununHazirVideosuProps {
 }
 
 export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier, ayetEkle, arkaPlanAta, erisilebilirKlipBul, clipKind }) => {
+  // ★ 04.10 TUR 2: kart etiketleri seçili dilde (başlık verisi TR havuzundan gelir)
+  const dil = (typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr") || "tr";
+  const gt = (k: string): string => translate(dil, k);
   const { kart, ozelMi } = React.useMemo(() => gununVideosunuBul(), []);
   const [yuklendi, setYuklendi] = React.useState(false);
 
@@ -59,8 +63,8 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
         <span className="text-xl leading-none" aria-hidden>{kart.emoji}</span>
         <div className="min-w-0 flex-1">
           <p className="flex flex-wrap items-center gap-1.5 text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
-            Günün Videosu
-            {ozelMi && <span className="rounded-full bg-amber-500/25 px-2 py-0.5 text-[8px] font-black text-amber-200">mübarek gün</span>}
+            {gt("gvBaslik")}
+            {ozelMi && <span className="rounded-full bg-amber-500/25 px-2 py-0.5 text-[8px] font-black text-amber-200">{gt("gvMubarek")}</span>}
           </p>
           <p className="mt-0.5 text-[11.5px] font-black leading-snug text-white/90">{kart.baslik}</p>
         </div>
@@ -70,7 +74,7 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
           className="shrink-0 rounded-xl px-3 py-2 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
         >
-          {yuklendi ? "✓ Yüklendi" : "Önizlemeye yükle"}
+          {yuklendi ? gt("gvYuklendi") : gt("gvYukle")}
         </button>
       </div>
       <p className="mt-1.5 truncate text-[10px] font-bold" style={{ color: "var(--accent-2)" }} title={ayetReferansi}>

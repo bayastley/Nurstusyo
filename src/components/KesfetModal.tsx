@@ -88,7 +88,9 @@ function gununKelimeleriHesapla(): KelimeKart[] {
 }
 // Kelime kartı — günün kelimelerinde altın çerçeve; keşif kartlarında varsayılan kenar
 // ★ 03.10: ✨ atölye butonu + ✓ bilinen tiki eklendi (atölye aktarımı otomatik tikler)
-function KelimeKarti({ k, cevrildi, cevir, altin, bilinen, bilinenToggle, atolyeye }: { k: KelimeKart; cevrildi: boolean; cevir: () => void; altin?: boolean; bilinen?: boolean; bilinenToggle?: () => void; atolyeye?: () => void }) {
+// ★ 04.10: title metinleri 5 dile — dil prop ile
+function KelimeKarti({ k, cevrildi, cevir, altin, bilinen, bilinenToggle, atolyeye, dil = "tr" }: { k: KelimeKart; cevrildi: boolean; cevir: () => void; altin?: boolean; bilinen?: boolean; bilinenToggle?: () => void; atolyeye?: () => void; dil?: string }) {
+  const ktt = (key: string): string => translate(dil, key);
   return (
     <div className="relative">
       <button type="button" onClick={cevir}
@@ -115,14 +117,14 @@ function KelimeKarti({ k, cevrildi, cevir, altin, bilinen, bilinenToggle, atolye
           latin okunuş öncelikli okunur; cihaz Arapça sesi yoksa latin metin okunur */}
       <button type="button"
         onClick={(e) => { e.stopPropagation(); kelimeOku(k); }}
-        title={`Okunuşu dinle: ${k.okunus}`}
+        title={`${ktt("ksOkunusDinle")} ${k.okunus}`}
         className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
       >🔊</button>
       {/* ★ ATÖLYEDE ÇALIŞ (03.10): bu kelimeyi Kelime Atölyesi'nde çalış — ayet+atmosfer öner, stüdyoya aktar */}
       {atolyeye && (
         <button type="button"
           onClick={(e) => { e.stopPropagation(); atolyeye(); }}
-          title="Atölyede çalış — ayet + atmosfer önerisi al, tek tıkla stüdyoya aktar"
+          title={ktt("ksAtolyedeCalis")}
           className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
         >✨</button>
       )}
@@ -130,7 +132,7 @@ function KelimeKarti({ k, cevrildi, cevir, altin, bilinen, bilinenToggle, atolye
       {bilinenToggle && (
         <button type="button"
           onClick={(e) => { e.stopPropagation(); bilinenToggle(); }}
-          title={bilinen ? "Bilinen kelime — tıkla: işareti kaldır" : "Öğrendin mi? Bilinen işaretle — atölyeden stüdyoya aktarımda otomatik gelir"}
+          title={bilinen ? ktt("ksBilinenTitle") : ktt("ksOgrenTitle")}
           className={`absolute -bottom-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-black shadow-md transition hover:scale-110 ${bilinen ? "bg-emerald-500 text-black ring-1 ring-emerald-300/60" : "bg-black/70 text-white/40 ring-1 ring-white/20 hover:bg-black/90"}`}
         >{bilinen ? "✓" : "＋"}</button>
       )}
@@ -158,6 +160,22 @@ interface KesfetModalProps {
 export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initialSekme, notify , atolyeAc, lang = "tr" }) => {
   // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
   const tt = (k: string): string => translate(lang, k);
+  // ★ 04.10 TUR 2: sekme/hadis teması/derece adları 5 dilde — TR veri anahtarları sabit kalır
+  const SEKME_KEY: Record<string, string> = {
+    hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
+    sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", hoca: "ksHocaKarsilastir",
+    cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
+  };
+  const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
+  const TEMA_KEY: Record<string, string> = {
+    tumu: "ksTemaTumu", sabir: "ksTemaSabir", sukur: "ksTemaSukur", "ana-baba": "ksTemaAnaBaba",
+    "komşuluk": "ksTemaKomsuluk", ahlak: "ksTemaAhlak", zikir: "ksTemaZikir", hayir: "ksTemaHayir",
+    namaz: "ksTemaNamaz", ilim: "ksTemaIlim", dua: "ksTemaDua", tovbe: "ksTemaTovbe", yetim: "ksTemaYetim",
+    iffet: "ksTemaIffet", dil: "ksTemaDil", "cömertlik": "ksTemaComertlik", merhamet: "ksTemaMerhamet",
+  };
+  const hadisTemaAdi = (id: string): string => (TEMA_KEY[id] ? tt(TEMA_KEY[id]) : id);
+  const DERECE_KEY: Record<string, string> = { sahih: "ksDereceSahih", hasan: "ksDereceHasan", zayif: "ksDereceZayif", kulliyat: "ksDereceKulliyat" };
+  const dereceAdi = (d?: string): string => (d && DERECE_KEY[d] ? tt(DERECE_KEY[d]) : (d && HADIS_DERECE_ETIKETI[d]?.label) || "");
 
   const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
   const [arama, setArama] = useState("");
@@ -199,11 +217,11 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   // ★ CAMİ BULUCU — KONUMDAN AÇ (01.10, kullanıcı kararı): ortadaki büyük buton cihaz konumunu alıp haritayı açar
   const [camiKonumAliniyor, setCamiKonumAliniyor] = useState(false);
   const camiKonumAl = () => {
-    if (!navigator.geolocation) { notify?.("⚠️ Tarayıcın konumu desteklemiyor — şehir adı yaz"); return; }
+    if (!navigator.geolocation) { notify?.(tt("ksKonumDestekYok")); return; }
     setCamiKonumAliniyor(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => { try { localStorage.setItem("nur_konum_izin", "1"); } catch { /* yoksay */ } setCamiAranan(`${pos.coords.latitude},${pos.coords.longitude}`); setCamiKonumAliniyor(false); },
-      () => { notify?.("⚠️ Konum izni verilmedi — şehir adı yazarak arayabilirsin"); setCamiKonumAliniyor(false); },
+      () => { notify?.(tt("ksKonumIzinYok")); setCamiKonumAliniyor(false); },
       { timeout: 8000 },
     );
   };
@@ -356,7 +374,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
             style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            {s.emoji} {s.label}
+            {s.emoji} {sekmeAdi(s.id)}
           </button>
         ))}
       </div>
@@ -365,7 +383,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {sekme !== "kelime" && (
         <div className="relative mb-3">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-          <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder="Ara…" className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
+          <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
         </div>
       )}
 
@@ -377,7 +395,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               <button key={t.id} type="button" onClick={() => setHadisTema(t.id)}
                 className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${hadisTema === t.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                 style={hadisTema === t.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
-                {t.emoji} {t.label}
+                {t.emoji} {hadisTemaAdi(t.id)}
               </button>
             ))}
           </div>
@@ -397,7 +415,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                         h.derece === "hasan" ? "bg-sky-500/20 text-sky-300" :
                         "bg-amber-500/20 text-amber-300"}`}
                     >
-                      {dr.label}
+                      {dereceAdi(h.derece)}
                     </span>
                   )}
                 </div>
@@ -406,13 +424,13 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             })}
             {filtreliHadisler.length === 0 && (
               <div className="py-4 text-center">
-                <p className="text-[11px] text-white/40">Yerel bankada bulunamadı — külliyatta aranıyor…</p>
-                {kuliyatYukleniyor && <p className="mt-2 text-[10px] text-white/30">📚 Buhârî + Müslim taranıyor</p>}
+                <p className="text-[11px] text-white/40">{tt("ksYerelBulunamadi")}</p>
+                {kuliyatYukleniyor && <p className="mt-2 text-[10px] text-white/30">{tt("ksKulliyatTaranıyor")}</p>}
                 {!kuliyatYukleniyor && kuliyatSonuc.length > 0 && (
                   <p className="mt-1 text-[9.5px] text-emerald-300">✓ {kuliyatSonuc.length} hadis bulundu — aşağıda</p>
                 )}
                 {!kuliyatYukleniyor && kuliyatSonuc.length === 0 && (
-                  <p className="mt-1 text-[9.5px] text-white/30">Külliyatta da bulunamadı — farklı bir kelime dene</p>
+                  <p className="mt-1 text-[9.5px] text-white/30">{tt("ksKulliyatYok")}</p>
                 )}
               </div>
             )}
@@ -423,8 +441,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   <p className={`text-[10.5px] leading-relaxed ${h.dil === "ar" ? "text-right font-arabic text-[13px]" : "text-white/80"}`} dir={h.dil === "ar" ? "rtl" : undefined}>
                     {h.metin}
                   </p>
-                  <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[8px] font-black text-emerald-300">
-                    {h.derece === "sahih" ? "Sahih" : h.derece === "hasan" ? "Hasan" : h.derece === "zayif" ? "Zayıf" : "Külliyat"}
+                  <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[8px] font-black text-emerald-300">                      {dereceAdi(h.derece) || ""}
                   </span>
                 </div>
                 <p className="mt-1.5 text-[8.5px] text-white/40">— {h.kaynak}</p>
@@ -453,7 +470,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   <ChevronDown className={`ml-auto h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
                 </button>
                 {!acik && (
-                  <button type="button" onClick={() => setAcikKissa(k.ad)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                  <button type="button" onClick={() => setAcikKissa(k.ad)} title={tt("ksGenislet")} className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
                     {k.ozet}
                   </button>
                 )}
@@ -463,14 +480,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                     <p className="mt-2 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[9.5px] leading-relaxed text-emerald-200">💡 {k.ders}</p>
                     {/* ★ KISSANIN DUASI (28.09) — kıssanın sonunda, kıssanın ruhuyla ilgili okunacak dua */}
                     <p className="mt-2 rounded-lg px-2.5 py-1.5 text-[9.5px] leading-relaxed" style={{ background: "rgba(215,170,82,.08)", color: "var(--accent-2)" }}>
-                      <span className="font-black">🤲 Bu kıssanın duası:</span> {k.dua}
+                      <span className="font-black">{tt("ksKissaDuasi")}</span> {k.dua}
                     </p>
                   </div>
                 )}
               </div>
             );
           })}
-          {filtreliKissalar.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">Aradığın kıssa listede yok — başka bir ad dene.</p>}
+          {filtreliKissalar.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">{tt("ksKissaYok")}</p>}
           <p className="pt-1 text-center text-[8px] text-white/25">{filtreliKissalar.length} kıssa · detay için karta dokun</p>
         </div>
       )}
@@ -481,7 +498,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {sekme === "soru" && (
         <div className="space-y-1.5">
           {/* ★ İSLAM'IN 5 ŞARTI — MEZHEPLERE GÖRE FIKHİ SORU-CEVAP (28.09, kullanıcı kararı) */}
-          <p className="mt-1 mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">🕌 İslam'ın 5 Şartı — mezheplere göre fıkhi soru-cevap</p>
+          <p className="mt-1 mb-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ks5Sart")}</p>
           {filtreliBesSart.map((b, bi) => {
             const acik = acikSoru === bi;
             return (
@@ -498,7 +515,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-white/40 transition-transform duration-200 ${acik ? "rotate-180" : ""}`} />
                 </button>
                 {!acik && (
-                  <button type="button" onClick={() => setAcikSoru(bi)} title="Genişlet" className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
+                  <button type="button" onClick={() => setAcikSoru(bi)} title={tt("ksGenislet")} className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
                     {b.cevaplar[0]?.mezhep}: {b.cevaplar[0]?.metin}
                   </button>
                 )}
@@ -518,7 +535,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </div>
             );
           })}
-          <p className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">Genel soru-cevap arşivi</p>
+          <p className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-center text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ksGenelArsiv")}</p>
           {filtreliSorular.map((s, i) => {
             const acik = acikGenelSoru === i;
             return (
@@ -562,28 +579,28 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
             {gununKelimeleri.map((k) => (
-              <KelimeKarti key={k.ar} k={k} altin cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)}
+              <KelimeKarti key={k.ar} k={k} altin cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} dil={lang}
                 bilinen={bilinenSet.has(k.ar)} bilinenToggle={() => bilinenKelimeIsaretle(k.ar, !bilinenSet.has(k.ar))}
                 atolyeye={atolyeAc ? () => atolyeAc(atolyeKelimeOner(k), k.ar) : undefined} />
             ))}
           </div>
 
           <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
-            <p className="text-[9px] text-white/40">Keşif kartları — tıkla: anlamını gör · 🔊 okunuş · ✨ atölyede çalış · ✓ bilinen işaretle · Kur'ân'ın sık kelimeleri 🔤</p>
+            <p className="text-[9px] text-white/40">{tt("ksKesifKartNot")}</p>
             <button type="button" onClick={kelimeYenile}
               className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[.05] px-2.5 py-1 text-[9px] font-black text-white/70 transition hover:border-[color:var(--accent)] hover:text-white"
-              title="Keşif kartlarını yenile — havuzdan rastgele 15 kelime gelir">
-              🔄 Yenile
+              title={tt("ksYenileTitle")}>
+              {tt("ksYenile")}
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
             {kelimeKartlari.map((k) => (
-              <KelimeKarti key={k.ar} k={k} cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)}
+              <KelimeKarti key={k.ar} k={k} cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} dil={lang}
                 bilinen={bilinenSet.has(k.ar)} bilinenToggle={() => bilinenKelimeIsaretle(k.ar, !bilinenSet.has(k.ar))}
                 atolyeye={atolyeAc ? () => atolyeAc(atolyeKelimeOner(k), k.ar) : undefined} />
             ))}
           </div>
-          <p className="mt-3 text-center text-[8px] text-white/25">Havuz: {KELIME_KARTLARI.length} kelime · bugün {gununKelimeleri.length} yeni + her yenilemede rastgele {kelimeKartlari.length} keşif kartı</p>
+          <p className="mt-3 text-center text-[8px] text-white/25">{tt("ksHavuzNot").replace("{toplam}", String(KELIME_KARTLARI.length)).replace("{bugun}", String(gununKelimeleri.length)).replace("{kesif}", String(kelimeKartlari.length))}</p>
         </>
       )}
 

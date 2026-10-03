@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
-import { LANGS, T, type Lang } from "../i18n";
+import { LANGS, T, translate, dilAdi, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft } from "../tier";
 import { TIER_LABEL } from "./premiumModalHelpers";
@@ -105,8 +105,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
         <div className="bg-gradient-to-r from-emerald-600/90 to-green-600/90 border-b border-emerald-400/30">
           <div className="mx-auto flex max-w-[1500px] items-center justify-center gap-2 px-4 py-1.5 text-[11px] text-white font-semibold">
             <Sparkles size={13} className="animate-pulse text-yellow-300" />
-            <span>🎉 ÜCRETSİZ PRO DENEMEN AKTİF — <b className="text-yellow-200">{getTrialDaysLeft()} gün</b> kaldı</span>
-            <button className="ml-2 rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold hover:bg-white/30 transition" onClick={() => openPremium("uyelik")}>Hemen Üye Ol →</button>
+            <span>🎉 {translate(lang, "trialAktif").replace("{n}", String(getTrialDaysLeft()))}</span>
+            <button className="ml-2 rounded-full bg-white/20 px-2.5 py-0.5 text-[10px] font-bold hover:bg-white/30 transition" onClick={() => openPremium("uyelik")}>{translate(lang, "trialHemenUye")}</button>
           </div>
         </div>
       )}
@@ -157,7 +157,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] transition hover:bg-white/5 ${updatesOpen ? "bg-white/5 text-white" : "text-white/65 hover:text-white"}`}
                       >
                         <Sparkles size={14} style={{ color: "var(--accent)" }} />
-                        <span className="flex-1">Güncellemeler</span>
+                        <span className="flex-1">{t("hbrGuncellemeler")}</span>
                         <span className="flex items-center gap-1">
                           <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[7.5px] font-black text-amber-300">
                             {dynamicModules.filter((m) => m.active && m.lock !== "free").length + 1 + 6}
@@ -185,7 +185,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             <p className="text-[9.5px] font-black uppercase tracking-widest" style={{ color: "var(--accent-2)" }}>
                               Yakında Gelecek Modüller
                             </p>
-                            <p className="mt-0.5 text-[8.5px] text-white/35">V2 & V3 güncelleme takvimi — oylama yol haritasında</p>
+                            <p className="mt-0.5 text-[8.5px] text-white/35">{t("hbrV2V3Takvim")}</p>
                           </div>
 
                           {/* ★ YOL HARİTASI — V2 kilidi KALDIRILDI (topluluk oylaması):
@@ -198,8 +198,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                               className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] font-bold text-white/85 transition hover:bg-white/5"
                             >
                               <span className="text-base">🚀</span>
-                              <span className="min-w-0 flex-1 truncate">Güncelleme Yol Haritası</span>
-                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">🗳️ OYLA</span>
+                              <span className="min-w-0 flex-1 truncate">{t("hbrYolHaritasi")}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">{t("hbrOyla")}</span>
                             </button>
                           </div>
 
@@ -236,7 +236,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: Moon, label: t("menuRamazan"), target: "ramazan" as ModalName },
                       { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName },
                     ].map((item) => (
-                      <button key={item.target} {...(item.data ? { "data-minitur": item.data } : {})} onClick={() => { if (item.target === "__kabe") { window.dispatchEvent(new Event("nur_kabe_ac")); setMenuOpen(false); return; } if (item.target === "__hediye") { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); return; } setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <button key={item.target} {...(item.data ? { "data-minitur": item.data } : {})} onClick={() => { if (item.target === "__kabe") { window.dispatchEvent(new Event("nur_kabe_ac")); setMenuOpen(false); return; } if (item.target === "__hediye") { notify(t("hbrHediyeKodNot")); setMenuOpen(false); return; } setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
                         {item.label}
                       </button>
@@ -260,7 +260,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                           className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[11px] font-black text-amber-300 transition hover:bg-amber-500/10"
                         >
                           <Shield size={14} className="text-amber-400" />
-                          <span className="flex-1">ADMIN PANEL</span>
+                          <span className="flex-1">{t("hbrAdminPanel")}</span>
                           {banCount > 0 && (
                             <span className="flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-red-500/20 border border-red-500/40 px-1 text-[8.5px] font-black text-red-300">
                               <Lightbulb size={9} className="animate-pulse text-amber-300" fill="currentColor" />
@@ -270,12 +270,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         </button>
                         {isMasterSürüm && (
                           <button
-                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("👋 Admin modundan çıkıldı — site normal kullanıcı modunda"); setMenuOpen(false); }}
+                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify(t("hbrAdminCikisNot")); setMenuOpen(false); }}
                             className="flex min-h-[42px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
-                            title="Admin yetkilerini kapatır — sayfayı normal ziyaretçi gibi gösterir; giriş/üyelik oturumun DOKUNMAZ"
+                            title={t("hbrAdminKapatTitle")}
                           >
                             <ShieldOff size={14} className="text-emerald-400" />
-                            <span className="flex-1">ADMIN · MODU KAPAT</span>
+                            <span className="flex-1">{t("hbrAdminKapat")}</span>
                           </button>
                         )}
                       </div>
@@ -292,7 +292,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     {/* ★ HEDİYE KODU — en altta (02.10, kullanıcı emri: üst bardan buraya taşındı).
                         Şimdilik bildirim verir; kod sistemi geldiğinde buraya input bağlanır. */}
                     <button
-                      onClick={() => { notify("🎁 Hediye kodu sisteme geliyor — şimdilik Bugünün Hediyesi butonundan günlük hediyeni al!"); setMenuOpen(false); }}
+                      onClick={() => { notify(t("hbrHediyeKodNot")); setMenuOpen(false); }}
                       className="flex min-h-[42px] w-full items-center gap-3 border-t border-white/5 px-4 py-2.5 text-left text-[11px] text-white/45 transition hover:bg-white/5 hover:text-white"
                     >
                       <Gift size={14} className="opacity-60" style={{ color: "var(--accent)" }} />
@@ -325,7 +325,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 onClick={() => openPremium("jeton")}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-black tabular-nums"
                 style={{ background: "rgba(215,170,82,.12)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)", color: "var(--accent-2)" }}
-                title="Üretim hakların"
+                title={t("hbrUretimHaklarin")}
               >
                 <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                   <Coins size={8} className="text-black" strokeWidth={3} />
@@ -374,7 +374,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   onClick={() => { void openAdminDashboard().then(() => setModal("adminDashboard")); }}
                   className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
                   style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-                  title={`Admin Paneli Aç — ${user.email || ""}`}
+                  title={`${t("hbrAdminPillTitle")} — ${user.email || ""}`}
                 >
                   <Shield size={11} className="text-amber-400" />
                   ADMIN
@@ -384,9 +384,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 </button>
                 {isMasterSürüm && (
                   <button
-                    onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify("👋 Admin modundan çıkıldı — site normal kullanıcı modunda"); }}
+                    onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify(t("hbrAdminCikisNot")); }}
                     className="glass-soft rounded-full p-1.5 text-emerald-300/80 transition hover:scale-105 hover:text-emerald-300"
-                    title="Admin modundan çık — admin yetkilerini kapatır, giriş/üyelik oturumun DOKUNMAZ"
+                    title={t("hbrAdminKapatTitle")}
                   >
                     <ShieldOff size={11} />
                   </button>
@@ -401,16 +401,16 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   onClick={() => openPremium("jeton")}
                   className="glass-soft group relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tabular-nums transition hover:scale-105 sm:flex cursor-pointer"
                   style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.3)" }}
-                  title={(isMasterSürüm || isAdminEmail(user?.email || "")) ? `♾️ SINIRSIZ — Admin (${user?.email || ""})` : `Kısa: ${getPackRights().kisa} | Uzun: ${getPackRights().uzun} | Tam: ${getPackRights().tam}`}
+                  title={(isMasterSürüm || isAdminEmail(user?.email || "")) ? `${t("hbrSinirsizAdmin")} (${user?.email || ""})` : t("hbrHakOzet").replace("{k}", String(getPackRights().kisa)).replace("{u}", String(getPackRights().uzun)).replace("{t}", String(getPackRights().tam))}
                 >
                   <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                     <Coins size={9} className="text-black" strokeWidth={3} />
                   </span>
                   <span className="transition-all group-hover:text-white">
-                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "♾️ SINIRSIZ" : jetonCount}
+                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? t("hbrSinirsiz") : jetonCount}
                   </span>
                   {!(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) && (
-                    <span className="hidden text-[9px] font-bold tracking-wide text-white/50 sm:inline">Üretim Hakkı</span>
+                    <span className="hidden text-[9px] font-bold tracking-wide text-white/50 sm:inline">{t("hbrUretimHakki")}</span>
                   )}
                 </button>
               );
@@ -428,7 +428,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   {LANGS.map((item) => (
                     <button key={item.code} onClick={() => { setLang(item.code); setLangOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] text-white/65 hover:bg-white/5">
                       <span>{item.flag}</span>
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1">{dilAdi(lang, item.code)}</span>
                       {item.code === lang ? <Check size={11} style={{ color: "var(--accent)" }} /> : null}
                     </button>
                   ))}
@@ -443,11 +443,11 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </button>
             {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
             <button data-minitur="kuran-sayfalar" onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
-              <BookOpen size={11} style={{ color: "var(--accent)" }} />Kur'an
+              <BookOpen size={11} style={{ color: "var(--accent)" }} />{t("hbrKuran")}
             </button>
             {/* ★ KÂBE CANLI — ALTIN MADEN ÖNE ÇIKARMA (02.10, kullanıcı emri): üst barda tek tık,
                 kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + " — 7/24 canlı yayın"}>
+            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
               🕋 {t("menuKabeCanli")}
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
@@ -460,7 +460,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
               </span>
               <Moon size={11} />
-              <span className="hidden sm:inline">{nextPrayer ? `${nextPrayer.name} ${formatRemaining(nextPrayer.diff)}` : prayerCity}</span>
+              <span className="hidden sm:inline">{nextPrayer ? `${vakitAdi(lang, nextPrayer.name)} ${sureceCevir(lang, formatRemaining(nextPrayer.diff))}` : prayerCity}</span>
             </button>
           </div>
         </div>

@@ -14,7 +14,7 @@ import { LockBadge } from "./LockBadge";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
 import { sehirEtiketindenAd } from "./islamicToolsVeri"; // ★ dünya şehir etiketinden gerçek ad
-import { T, type Lang } from "../i18n";
+import { T, translate, sureceCevir, type Lang } from "../i18n";
 import { GoogleIcon } from "./modalHelpers";
 import type { LoginTab, Tier } from "../types";
 
@@ -380,6 +380,7 @@ export function PrayerBolum({
   prayerTimings,
   nextPrayer,
   formatRemaining,
+  lang = "tr",
 }: {
   setModal: (m: never) => void;
   t: (k: string) => string;
@@ -391,7 +392,9 @@ export function PrayerBolum({
   prayerTimings: Record<string, string> | null;
   nextPrayer: { name: string; key: string; diff: number } | null;
   formatRemaining: (ms: number) => string;
+  lang?: string;
 }) {
+  const vakitCevir = (trAd: string): string => translate(lang, `vakit${trAd}`) === `vakit${trAd}` ? trAd : translate(lang, `vakit${trAd}`);
   return (
     <Modal title={t("prayerTitle")} sub={`${prayerCity} • Diyanet metodu`} onClose={() => setModal(null as never)}>
       <div className="relative mb-3"><MapPin size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" /><input value={prayerSearch} onChange={(event) => setPrayerSearch(event.target.value)} placeholder={t("prayerSearch")} className="glass-soft w-full rounded-xl py-2.5 pl-8 pr-3 text-[11px] outline-none placeholder:text-white/25" /></div>
@@ -409,9 +412,9 @@ export function PrayerBolum({
           return (
             <div key={key} className={`flex items-center justify-between rounded-xl px-3 py-2.5 text-[11px] ${active ? "bg-emerald-500/10 text-emerald-200" : "text-white/55"}`}>
               <span className="flex items-center gap-2 font-semibold">
-                <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-400" : "bg-white/20"}`} />{name}
+                <span className={`h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-400" : "bg-white/20"}`} />{vakitCevir(name)}
               </span>
-              <span className="tabular-nums">{prayerTimings?.[key]?.slice(0, 5) ?? "--:--"}{active && nextPrayer ? ` • ${formatRemaining(nextPrayer.diff)}` : ""}</span>
+              <span className="tabular-nums">{prayerTimings?.[key]?.slice(0, 5) ?? "--:--"}{active && nextPrayer ? ` • ${sureceCevir(lang, formatRemaining(nextPrayer.diff))}` : ""}</span>
             </div>
           );
         })}

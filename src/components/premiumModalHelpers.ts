@@ -41,6 +41,15 @@ export const TIER_LABEL: Record<Tier, string> = {
   elit: "NÛR ELİT",
 };
 
+// ★ 04.10 TUR 2: dil bazlı tier etiketi (PremiumKotaGostergesi rozetinde kullanılır)
+export const TIER_LABEL_TR: Record<string, Record<Tier, string>> = {
+  tr: { free: "Ücretsiz", pro: "NÛR PRO", elit: "NÛR ELİT" },
+  en: { free: "Free", pro: "NÛR PRO", elit: "NÛR ELITE" },
+  ar: { free: "مجاني", pro: "NÛR PRO", elit: "NÛR ELITE" },
+  id: { free: "Gratis", pro: "NÛR PRO", elit: "NÛR ELITE" },
+  ur: { free: "مفت", pro: "NÛR PRO", elit: "NÛR ELITE" },
+};
+
 export const emptyRights = { kisa: 0, uzun: 0, tam: 0 };
 
 export function quotaText(kind: string, tier: Tier): string {
