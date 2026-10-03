@@ -8,6 +8,7 @@ import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
+import type { KendiSesAktif } from "./useKendiSes";
 import { storeVideo } from "./videoStore";
 import { checkGuestGate, bumpGuestUsed } from "./useGuestTrial";
 import { telifUyarisiGerekli } from "../telifUyari";
@@ -27,6 +28,8 @@ interface UseVideoGeneratorParams {
   selected: SelectedAyah[];
   canvasRef: MutableRefObject<HTMLCanvasElement | null>;
   reciter: any;
+  // ★ KENDİ SESİNLE ÜRETİM (03.10): aktif kendi-sesi kaydı varsa üretim onunla yapılır
+  kendiSesAktif: KendiSesAktif | null;
   batchFormats: Aspect[];
   aspect: Aspect;
   mode: Mode;
@@ -53,6 +56,18 @@ interface UseVideoGeneratorParams {
   t: (key: any) => string;
 }
 
+/** ★ KENDİ SESİ KESİCİ (03.10): tam kayıt buffer'ından bir ayet segmentini kesip
+ *  bağımsız AudioBuffer'a kopyalar (segmentler: ayet sırasına birebir). */
+function ayetParcasi(tam: AudioBuffer, seg: { start: number; dur: number }, ctx: BaseAudioContext): AudioBuffer {
+  const bas = Math.max(0, Math.floor(seg.start * tam.sampleRate));
+  const boy = Math.max(1, Math.min(Math.floor(seg.dur * tam.sampleRate), tam.length - bas));
+  const parcasi = ctx.createBuffer(Math.min(tam.numberOfChannels, 2), boy, tam.sampleRate);
+  for (let ch = 0; ch < parcasi.numberOfChannels; ch += 1) {
+    parcasi.copyToChannel(tam.getChannelData(Math.min(ch, tam.numberOfChannels - 1)).subarray(bas, bas + boy), ch);
+  }
+  return parcasi;
+}
+
 /**
  * ★ VİDEO ÜRETİM MOTORU (01.10 — StudioApp'teki inline handleGenerate buraya taşındı)
  *
@@ -74,6 +89,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     selected,
     canvasRef,
     reciter,
+    kendiSesAktif,
     batchFormats,
     aspect,
     mode,
@@ -212,7 +228,48 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       const buffers: AudioBuffer[] = [], usedItems: SelectedAyah[] = [], audioOffsets: number[] = [];
       const ayetSüreleri: Array<{ start: number; dur: number }> = [];
       const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
-      if (surahOnlyReciter) {
+      // ★ KENDİ SESİNLE ÜRETİM (03.10, kullanıcı bildirimi): "Kendi sesin aktif" görünüyor ama
+      //   üretim hâlâ reciter URL'lerinden ses indiriyordu. Artık aktif kendi-sesi kaydı varsa
+      //   üretim ONUNLA yapılır: blob bir kez decode edilir, segmentler (ayet sırasına birebir)
+      //   kesilip zaman çizgisine dizilir — ayet geçişleri kullanıcının okuyuşuna kilitlenir.
+      //   Sure uyuşmazlığı / decode hatası → dürüst uyarı + hocanın sesiyle devam.
+      let kendiKullandi = false;
+      const kendi = kendiSesAktif;
+      const kendiUygun = Boolean(kendi && selected.length && selected.every((item) => item.s === kendi.sure) && kendi.segments.length > 0);
+      if (kendi && !kendiUygun) {
+        notify(`⚠️ Kendi sesin ${kendi.sure}. suresine ait — seçili ayetlerle uyuşmuyor, hocanın sesiyle üretiliyor`);
+      }
+      if (kendi && kendiUygun) {
+        try {
+          setProgress(8);
+          const tamBuffer = await audioContext.decodeAudioData(await kendi.blob.arrayBuffer());
+          const enBuyukAyet = Math.max(...selected.map((item) => item.a));
+          // Segment→ayet eşlemesi: tüm-sure kaydı (segment sayısı ≥ en büyük ayet no) → indeks = ayet no - 1;
+          // seçili alt küme için kaydedilmiş kısa kayıt → sıralama pozisyonu.
+          const konumaGore = kendi.segments.length >= enBuyukAyet;
+          const sirali = [...selected].sort((a, b) => a.a - b.a);
+          const siralamaPozisyonu = new Map(sirali.map((item, i) => [item.id, i] as const));
+          let dustu = 0;
+          for (let index = 0; index < selected.length; index += 1) {
+            const item = selected[index];
+            const seg = kendi.segments[konumaGore ? item.a - 1 : (siralamaPozisyonu.get(item.id) ?? index)];
+            if (!seg) { dustu += 1; continue; }
+            if (cursor > 0 && cursor + seg.dur > cap) { dustu += 1; continue; }
+            const parcasi = ayetParcasi(tamBuffer, seg, audioContext);
+            audioOffsets.push(cursor); buffers.push(parcasi); usedItems.push(item);
+            ayetSüreleri.push({ start: cursor, dur: parcasi.duration });
+            cursor += parcasi.duration + .03;
+          }
+          if (buffers.length) {
+            kendiKullandi = true;
+            notify(`🎙️ Video kendi sesinle üretiliyor · ${usedItems.length} ayet`);
+          }
+          if (dustu && buffers.length) notify(`⚠️ ${dustu} ayet kendi sesinle eşleşmedi — o ayetler eklenmedi`);
+        } catch {
+          notify("⚠️ Kendi sesin çözümlenemedi — hocanın sesiyle devam ediliyor");
+        }
+      }
+      if (!kendiKullandi && surahOnlyReciter) {
         setProgress(10);
         const sNum = selected[0].s;
         const url = reciter.surahPattern!.replace("{S}", String(sNum).padStart(3, "0"));
@@ -235,7 +292,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             selected.forEach((_, i) => { ayetSüreleri.push({ start: herAyetSüresi * i, dur: herAyetSüresi }); });
           }
         } catch { /* ignore */ }
-      } else {
+      } else if (!kendiKullandi) {
         for (let index = 0; index < selected.length; index += 1) {
           const item = selected[index]; setProgress(4 + Math.round((index / selected.length) * 22));
           try {
@@ -258,7 +315,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           } catch { }
         }
       }
-      if (!surahOnlyReciter && usedItems.length < selected.length) {
+      if (!kendiKullandi && !surahOnlyReciter && usedItems.length < selected.length) {
         const dropped = selected.length - usedItems.length;
         const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (24:35)";
         notify(`⚠️ ${modeLabel} süresi aşıldı · son ${dropped} ayet eklenmedi · ${usedItems.length} ayet ile üretiliyor`);
@@ -407,7 +464,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             }
           });
         }
-        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
+        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${kendiKullandi ? "🎙️ Kendi sesin" : reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
         setOutputs((current) => [output, ...current].slice(0, 5)); setActiveOutputId(output.id);
         // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
         //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).
@@ -436,5 +493,5 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         : "Video üretimi sırasında teknik bir takılma oluştu");
     }
     finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
-  }, [aspect, batchFormats, generating, jetonCount, mode, notify, reciter, selected, silenceAllAudio, t, accessTier, isMasterSürüm, user, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate, showGenerateConfirm, setOutputs, setActiveOutputId, setVerseIndex, setGenerating, setProgress, setLoginTab, setModal, setTelifTetik]);
+  }, [aspect, batchFormats, generating, jetonCount, mode, notify, reciter, kendiSesAktif, selected, silenceAllAudio, t, accessTier, isMasterSürüm, user, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate, showGenerateConfirm, setOutputs, setActiveOutputId, setVerseIndex, setGenerating, setProgress, setLoginTab, setModal, setTelifTetik]);
 }

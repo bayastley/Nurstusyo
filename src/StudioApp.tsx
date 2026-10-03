@@ -1089,7 +1089,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const handleGenerate = useVideoGenerator({
     generating, setGenerating, setProgress, stopGenerationRef,
     user, isMasterSürüm, setLoginTab, setModal, notify,
-    selected, canvasRef, reciter, batchFormats, aspect, mode, accessTier, jetonCount,
+    selected, canvasRef, reciter, kendiSesAktif, batchFormats, aspect, mode, accessTier, jetonCount,
     silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm,
     videoCache, imageCache, ayahBackgroundsRef, backgroundRef,
     verseIndexRef, aspectRef, setVerseIndex, setOutputs, setActiveOutputId,
