@@ -39,6 +39,7 @@ import {
   genDesc,
   genTitle,
   HASHTAG_POOL,
+  hashtagPool,
   SURAHS,
   THEMES,
   THEME_EMOJI,
@@ -466,14 +467,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const [showArapca, setShowArapca] = useState(true);
   const [showSubMeal, setShowSubMeal] = useState(true);
 
-  const [shareTitle, setShareTitle] = useState(() => genTitle());
-  const [shareDescription, setShareDescription] = useState(() => genDesc());
+  // ★ 03.10 (5 dil): paylaşım başlığı/açıklaması/hashtag başlangıcı seçili dilde üretilir
+  const [shareTitle, setShareTitle] = useState(() => genTitle(undefined, 2, 255, lang));
+  const [shareDescription, setShareDescription] = useState(() => genDesc(undefined, 2, 255, undefined, lang));
   const pickRandomTags = useCallback((count = 14, avoid?: string[]) => {
-    const shuffled = [...HASHTAG_POOL].sort(() => Math.random() - 0.5);
+    const shuffled = [...hashtagPool(lang)].sort(() => Math.random() - 0.5);
     const filtered = avoid?.length ? shuffled.filter((t) => !avoid.includes(t)) : shuffled;
     const pool = filtered.length >= count ? filtered : shuffled;
     return pool.slice(0, count);
-  }, []);
+  }, [lang]);
   const [visibleTags, setVisibleTags] = useState<string[]>(() => pickRandomTags(14));
   // copied → useShareActions hook'unda
   // dailyPool, dailyIndex, dailyPaused → useDailyAyah hook'unda
@@ -810,7 +812,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           if (quranClips.length) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
         }
       }
-      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(`${meta.name} Suresi`, s, a, reciter.name)); notify(`${meta.name} ${s}:${a} eklendi`);
+      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciter.name, lang)); notify(`${meta.name} ${s}:${a} eklendi`);
     } catch (e) {
       console.error("[addAyah] fetch hatası:", e);
       // ★ HATA: Placeholder'ı listeden çıkar

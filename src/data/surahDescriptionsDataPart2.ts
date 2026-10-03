@@ -13,7 +13,7 @@ export const SURAH_DESCRIPTIONS_PART_2: Record<number, string[]> = {
     "Fussilet Suresi'nde 'Sabret, çünkü Allah'ın vaadi haktır' denir. Sabret, Allah sana yardım edecek. Bu sure sabrın meyvelerini gösterir.",
   ],
   42: [ // Şura
-    "Şura Suresi, Allah'ın birliğini ve peygamberliğin الشريفliğini anlatır. 'Allah her şeyin sahibidir' — bu bir gerçek, bir teslimiyet. Bu sureyi dinle, Allah'a teslim ol.",
+    "Şura Suresi, Allah'ın birliğini ve peygamberliğin şerifliğini anlatır. 'Allah her şeyin sahibidir' — bu bir gerçek, bir teslimiyet. Bu sureyi dinle, Allah'a teslim ol.",
     "Şura Suresi'nde 'Allah size zorluk değil, kolaylık diler' denir. Allah seni zorlamaz, seni kolaylaştırır. Bu sure bir müjde, bir rahatlatma.",
   ],
   43: [ // Zuhruf

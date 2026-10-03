@@ -9,7 +9,7 @@ export type { Kissa } from "./kissas";
 export { TURKISH_CITIES, DUNYA_SEHIRLERI, dunyaSehriBul } from "./cities";
 export type { SehirKayit } from "./cities";
 
-export { HASHTAG_CATEGORIES, HASHTAG_POOL, randomHashtagCombo } from "./hashtags";
+export { HASHTAG_CATEGORIES, HASHTAG_POOL, hashtagPool, randomHashtagCombo } from "./hashtags";
 
 export { TITLE_TEMPLATES, genTitle, genDesc } from "./titleTemplates";
 

@@ -37,7 +37,7 @@ interface SocialSharePanelProps {
   shareToYouTube?: () => void;
   shareToTikTok?: () => void;
   shareToInstagram?: () => void;
-  pickDesc: (sName?: string, s?: number, a?: number, r?: string) => string;
+  pickDesc: (sName?: string, s?: number, a?: number, r?: string, lang?: string) => string;
 }
 
 export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
@@ -73,6 +73,8 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
   pickDesc,
 }) => {
   void setTosOpen;
+  // ★ 03.10 (5 dil): başlık/açıklama üretimi seçili dilde — "tr" hardcode kalktı
+  const dil = localStorage.getItem("nur_lang") || "tr";
   return (
     <>
       <section className="mx-auto max-w-[1500px] px-4 pb-5">
@@ -146,7 +148,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
 
             {/* SATIR 2: Rastgele + Hashtag */}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
+              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName, dil); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName, dil); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
                 <RefreshCw size={9} />{t("ssRastgeleAciklama")}
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
@@ -176,10 +178,10 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 } catch (err) {
                   console.error("AI başlık üretilemedi, lokale geçiliyor:", err);
                 }
-                let yeniBaslik = genTitle(cur.sName, cur.s, cur.a, "tr", cur.tr);
+                let yeniBaslik = genTitle(cur.sName, cur.s, cur.a, dil, cur.tr);
                 let tries = 0;
                 while (yeniBaslik === lastTitleRef.current && tries < 6) {
-                  yeniBaslik = genTitle(cur.sName, cur.s, cur.a, "tr", cur.tr);
+                  yeniBaslik = genTitle(cur.sName, cur.s, cur.a, dil, cur.tr);
                   tries += 1;
                 }
                 lastTitleRef.current = yeniBaslik;

@@ -57,6 +57,32 @@ export const DESC_INTRO: Record<string, string[]> = {
     "🤲 مع الدعاء: سورة {S} {N}:{A}",
     "🕋 في رحاب الكعبة: {S} {N}:{A}",
   ],
+  // ─── Endonezce giriş havuzu (03.10, 5 dil) ───
+  id: [
+    "📌 {S} {N}:{A} — Ayat Mulia",
+    "📖 Surah {S} · Ayat {N}:{A}",
+    "✨ Ayat hari ini: {S} {N}:{A}",
+    "🕌 Surah {S} {N}:{A} — tilawah yang menenangkan",
+    "🌿 Ayat yang menyentuh jiwa: {S} {N}:{A}",
+    "💫 Penyembuhan hati: Surah {S} {N}:{A}",
+    "🌙 Tilawah malam · {S} {N}:{A}",
+    "📿 Sebagai dzikir: {S} {N}:{A}",
+    "🤲 Dengan doa: Surah {S} {N}:{A}",
+    "🕋 Di hadapan Kabah: {S} {N}:{A}",
+  ],
+  // ─── Urduca giriş havuzu (03.10, 5 dil) ───
+  ur: [
+    "📌 {S} {N}:{A} — مکمل آیت",
+    "📖 سورہ {S} · آیت {N}:{A}",
+    "✨ آج کی آیت: {S} {N}:{A}",
+    "🕌 سورہ {S} {N}:{A} — سکون دینے والی تلاوت",
+    "🌿 روح کو چھو لینے والی آیت: {S} {N}:{A}",
+    "💫 دل کے لیے شفا: سورہ {S} {N}:{A}",
+    "🌙 رات کی تلاوت · {S} {N}:{A}",
+    "📿 ذکر کی نیت سے: {S} {N}:{A}",
+    "🤲 دعا کے ساتھ: سورہ {S} {N}:{A}",
+    "🕋 خانہ کعبہ کے سائے میں: {S} {N}:{A}",
+  ],
 };
 
 

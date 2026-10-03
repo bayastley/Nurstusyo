@@ -69,6 +69,32 @@ export const DESC_EMOTIONAL_LINES: Record<string, string[]> = {
     "استمع لكل كلمة واكتبها في قلبك.",
     "بعد الاستماع لهذه الآية ارفع يديك وادعُ الله.",
   ],
+  // ─── Endonezce duygusal açıklama (03.10, 5 dil) ───
+  id: [
+    "Semoga menjadi penghiburan bagi setiap hati yang lelah, kesepian, atau tak terlihat. Ayat ini bukan sekadar video — ini pengingat bahwa Allah tak pernah meninggalkanmu.",
+    "Biarkan ayat ini sampai bukan sekadar konten, melainkan pengingat untuk hatimu.",
+    "Mungkin kata-kata ini adalah ketenangan yang dibutuhkan jiwamu hari ini.",
+    "Allah tidak menelantarkan hamba-Nya; kadang jawabannya tersembunyi dalam satu ayat.",
+    "Jika ini menyentuhmu, tulis 'Amin' dan bagikan kepada yang membutuhkannya.",
+    "Nabi ﷺ menangis saat membaca ayat-ayat ini. Kamu pun boleh menangis.",
+    "Dengarkan setiap kata dan tuliskan di hatimu.",
+    "Setelah mendengarkan ayat ini, angkat tangan dan berdoalah.",
+    "Jika hari ini berat, akhiri malammu dengan ayat ini.",
+    "Al-Quran adalah lautan; engel setetes yang minum darinya.",
+  ],
+  // ─── Urduca duygusal açıklama (03.10, 5 dil) ───
+  ur: [
+    "یہ آیت ہر اس دل کے لیے تسلی بنے جو تھکا، تنہا یا بے یار معلوم ہوتا ہے۔ یہ محض ویڈیو نہیں — یہ یاد دہانی ہے کہ اللہ نے کبھی تنہا نہیں چھوڑا۔",
+    "یہ آیت آپ تک صرف مواد کے طور پر نہیں، دل کی یاد دہانی کے طور پر پہنچے۔",
+    "شاید یہ کلمات وہ سکون ہیں جس کی آپ کی روح کو آج ضرورت تھی۔",
+    "اللہ اپنے بندے کو تنہا نہیں چھوڑتا؛ کبھی کبھی جواب ایک آیت میں چھپا ہوتا ہے۔",
+    "اگر یہ آپ کو چھو گیا تو 'آمین' لکھیں اور ضرورت مند کے ساتھ شیئر کریں۔",
+    "نبی کریم ﷺ ان آیات کی تلاوت پر روتے تھے۔ آپ بھی رو سکتے ہیں۔",
+    "ہر کلمہ غور سے سنیں اور اپنے دل میں لکھ لیں۔",
+    "یہ آیت سننے کے بعد ہاتھ اٹھا کر دعا کریں۔",
+    "اگر آج دن برا گزرا تو رات کا اختتام اس آیت کے ساتھ کریں۔",
+    "قرآن ایک سمندر ہے؛ آپ اس سے ایک قطرہ کی طرح پی سکتے ہیں۔",
+  ],
 };
 
 
@@ -134,3 +160,77 @@ export const PROMO_LINES_EN: string[] = [
   "🌟 This video was made with www.nurstudyo.com. You can create yours too!",
   "🎬 www.nurstudyo.com — AI-powered Islamic video creation.",
 ];
+
+// ═══════════════════════════════════════════════════════════════
+// ★ ÇOK DİLLİ CTA + PROMO (03.10, 5 dil) — genDesc artık dili seçer;
+//   ar/id/ur kullanıcıya TR/EN CTA yerine kendi dilinde çağrı gider.
+// ═══════════════════════════════════════════════════════════════
+export const CTA_POOL_MULTI: Record<string, string[]> = {
+  tr: CTA_POOL_TR,
+  en: CTA_POOL_EN,
+  ar: [
+    "💚 إعجاب، واكتب 'آمين' في التعليقات، وشاركها مع من تحب.",
+    "📲 أرسل هذا الفيديو إلى شخص يحتاجه اليوم.",
+    "🤍 إن لامست هذه الآية قلبك فلا تنسَ الإعجاب.",
+    "🌟 اشترك وفعّل الإشعارات ليصل إليك آية جديدة كل يوم.",
+    "🙏 أدعو لكل من شاهد هذا الفيديو.",
+    "💬 اكتب في التعليقات الكلمة التي لامست قلبك — قد تكون شفاءً لغيرك.",
+    "🔔 فعّل الإشعارات كي لا يفوتك آية جديدة.",
+    "🌙 كن سببًا في دعاة أحدهم الليلة: شارك.",
+    "🤲 حتى 'آمين' واحدة أجر كبير: اكتبها في التعليقات.",
+    "📹 هذا الفيديو أُنتج بواسطة www.nurstudyo.com — أنشئ فيديوهاتك الإسلامية في ٣ دقائق!",
+  ],
+  id: [
+    "💚 Sukai, tulis 'Amin' di komentar, dan bagikan dengan yang tersayang.",
+    "📲 Kirim video ini kepada seseorang yang membutuhkannya hari ini.",
+    "🤍 Jika ayat ini menyentuh hatimu, jangan lupa suka.",
+    "🌟 Berlangganan, aktifkan notifikasi, dan beri hatimu ayat baru setiap hari.",
+    "🙏 Aku mendoakan setiap yang menonton video ini.",
+    "💬 Tulis di komentar kata yang menyentuh hatimu — mungkin jadi syifa bagi orang lain.",
+    "🔔 Aktifkan notifikasi agar tidak ketinggalan ayat baru.",
+    "🌙 Jadilah perantara doa seseorang malam ini: bagikan.",
+    "🤲 Sekadar 'Amin' pun pahala besar: tulis di komentar.",
+    "📹 Video ini dibuat dengan www.nurstudyo.com — buat video Islammu sendiri dalam 3 menit!",
+  ],
+  ur: [
+    "💚 لائک کریں، کمنٹس میں 'آمین' لکھیں اور عزیزوں کے ساتھ شیئر کریں۔",
+    "📲 یہ ویڈیو کسی ایسے شخص کو بھیجیں جسے آج ضرورت ہے۔",
+    "🤍 اگر یہ آیت آپ کے دل کو چھو جائے تو لائک کرنا نہ بھولیں۔",
+    "🌟 سبسکرائب کریں، نوٹیفکیشن آن کریں، ہر روز نئی آیت سے دل سیراب کریں۔",
+    "🙏 اس ویڈیو کو دیکھنے والے ہر شخص کے لیے دعا کرتا ہوں۔",
+    "💬 کمنٹس میں وہ کلمہ لکھیں جو دل کو چھو گیا — شاید کسی اور کے لیے شفا بن جائے۔",
+    "🔔 نوٹیفکیشن آن کریں کہ نئی آیت سب سے پہلے آپ تک پہنچے۔",
+    "🌙 آج رات کسی کی دعا کا ذریعہ بنیں: شیئر کریں۔",
+    "🤲 صرف ایک 'آمین' بھی بڑا ثواب ہے: کمنٹس میں لکھیں۔",
+    "📹 یہ ویڈیو www.nurstudyo.com سے تیار ہوئی — ۳ منٹ میں اپنی اسلامی ویڈیو بنائیں!",
+  ],
+};
+
+export const PROMO_LINES_MULTI: Record<string, string[]> = {
+  tr: PROMO_LINES,
+  en: PROMO_LINES_EN,
+  ar: [
+    "📹 أُنتج هذا الفيديو بواسطة www.nurstudyo.com — استوديو فيديو إسلامي مدعوم بالذكاء الاصطناعي.",
+    "🎬 الإنتاج: www.nurstudyo.com — إنشاء المحتوى الإسلامي أصبح سهلًا جدًا.",
+    "🌟 مع www.nurstudyo.com يمكنك إنتاج فيديوهات إسلامية رائعة بالذكاء الاصطناعي.",
+    "📽️ تم توليده بواسطة www.nurstudyo.com — أنشئ محتوى إسلاميًا مذهلًا في دقائق.",
+    "🎥 www.nurstudyo.com — عنوانك الوحيد لإنتاج الفيديو الإسلامي.",
+    "📹 www.nurstudyo.com — أنشئ فيديوهات قرآنية في ٣ دقائق.",
+  ],
+  id: [
+    "📹 Video ini dibuat dengan www.nurstudyo.com — studio video Islami berbasis AI.",
+    "🎬 Produksi: www.nurstudyo.com — membuat konten Islami kini sangat mudah.",
+    "🌟 Dengan www.nurstudyo.com kamu pun bisa membuat video Islami indah dengan AI.",
+    "📽️ Dibuat oleh www.nurstudyo.com — konten Islami menakjubkan dalam hitungan menit.",
+    "🎥 www.nurstudyo.com — alamat utama produksi video Islami.",
+    "📹 www.nurstudyo.com — buat video Quran dalam 3 menit.",
+  ],
+  ur: [
+    "📹 یہ ویڈیو www.nurstudyo.com سے تیار ہوئی — AI پر مبنی اسلامی ویڈیو اسٹوڈیو۔",
+    "🎬 تیاری: www.nurstudyo.com — اسلامی مواد بنانا اب بہت آسان۔",
+    "🌟 www.nurstudyo.com کے ساتھ آپ بھی AI سے خوبصورت اسلامی ویڈیوز بنا سکتے ہیں۔",
+    "📽️ www.nurstudyo.com نے تیار کیا — منٹوں میں شاندار اسلامی مواد بنائیں۔",
+    "🎥 www.nurstudyo.com — اسلامی ویڈیو پروڈکشن کا واحد مقام۔",
+    "📹 www.nurstudyo.com — ۳ منٹ میں قرآن ویڈیوز بنائیں۔",
+  ],
+};

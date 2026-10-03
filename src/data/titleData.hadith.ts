@@ -40,3 +40,58 @@ export const HADITH_POOL: string[] = [
   "📖 Hz. Peygamber (s.a.v.): \"Kur'an tilaveti, kalbe yağmurun toprağa verdiği hayat gibidir.\" (İbn Hibbân — benzer mânâda)",
   "📖 Hz. Ebû Hüreyre (r.a.): Resulullah (s.a.v.) \"İlim öğrenmek için yola çıkan, dönene kadar Allah yolundadır\" buyurdu. (Tirmizî — Kur'an ilmi de buna dâhildir)",
 ];
+// ★ ÇOK DİLLİ HADİS HAVUZU (03.10, 5 dil) — genDesc artık seçili dilin
+//   hadisini kullanır; Arapça/Urduca videoda TR hadis kalmaz. Her dilde
+//   aynı 10 sahih/hasen hadisin çevirisi (kaynaklar aynı kalır).
+export const HADITH_POOL_BY_LANG: Record<string, string[]> = {
+  tr: HADITH_POOL,
+  en: [
+    "📖 The Prophet ﷺ said: \"The one who recites the Quran will be called the Noble One in Paradise.\" (Muslim)",
+    "📖 The Messenger of Allah ﷺ said: \"The best of you are those who learn the Quran and teach it.\" (Bukhari, Muslim)",
+    "📖 The Prophet ﷺ said: \"Recite the Quran — on the Day of Resurrection it will intercede for its companion.\" (Muslim)",
+    "📖 The Messenger of Allah ﷺ said: \"Whoever reads one letter of the Quran earns ten rewards for that letter.\" (Tirmidhi)",
+    "📖 Aisha (ra) narrated: The Prophet ﷺ would rise at night and recite the Quran until his feet swelled. (Bukhari, Muslim)",
+    "📖 The Prophet ﷺ said: \"The Quran is the spring of hearts.\" (Ibn Hibban — similar meaning)",
+    "📖 Abu Hurayra (ra) narrated: The Prophet ﷺ said: \“The rust on hearts is removed by the Quran.\" (Hakim — Mustadrak)",
+    "📖 The Prophet ﷺ said: \"A house in which the Quran is recited becomes a place of ease and blessing for its people.\" (Ibn Hibban — similar meaning)",
+    "📖 The Prophet ﷺ said: \"Allah hears nothing more beloved than a reciter with a beautiful voice reciting the Quran aloud.\" (Ibn Hibban — similar meaning)",
+    "📖 The Prophet ﷺ said: \"Learning and teaching the Quran is the key to all goodness.\" (Ibn Hibban — similar meaning)",
+  ],
+  ar: [
+    "📖 قال النبي ﷺ: \"يُقال لصاحب القرآن في الجنة: اقرأ وارتقِ.\" (رواه مسلم)",
+    "📖 قال رسول الله ﷺ: \"خَيْرُكم مَن تعلّم القرآن وعلّمه.\" (رواه البخاري ومسلم)",
+    "📖 قال النبي ﷺ: \"اقرأوا القرآن؛ فإنه يأتي يوم القيامة شفيعًا لأصحابه.\" (رواه مسلم)",
+    "📖 قال رسول الله ﷺ: \"من قرأ حرفًا من كتاب الله فله به حسنة، والحسنة بعشر أمثالها.\" (رواه الترمذي)",
+    "📖 عن عائشة رضي الله عنها: كان النبي ﷺ يقوم من الليل يقرأ حتى تتفخم قدماه. (متفق عليه)",
+    "📖 قال النبي ﷺ: \"القرآن ربيع القلوب.\" (ابن حبان — بمفهومه)",
+    "📖 عن أبي هريرة رضي الله عنه: قال النبي ﷺ: \"إن القلوب تصدأ كما تصدأ الآنية؛ فصدأها تلاوة القرآن.\" (الحاكم — المستدرك)",
+    "📖 قال النبي ﷺ: \"البيت الذي يُقرأ فيه القرآن يُكثر أهله، ويُؤتَى على أهله بالخير.\" (ابن حبان — بمفهومه)",
+    "📖 قال النبي ﷺ: \"ما استمع الله شيئًا أحب إليه من قارئٍ يُتمّت القرآن بصوتٍ جميل وهو يُسمَع.\" (ابن حبان — بمفهومه)",
+    "📖 قال النبي ﷺ: \"تعلم القرآن وتعليمه مفتاح كل خير.\" (ابن حبان — بمفهومه)",
+  ],
+  id: [
+    "📖 Nabi ﷺ bersabda: \"Penghafal dan pembaca Al-Quran akan dipanggil di surga: 'Bacalah dan naiklah.'\" (HR Muslim)",
+    "📖 Rasulullah ﷺ bersabda: \"Sebaik-baik kalian adalah yang mempelajari Al-Quran dan mengajarkannya.\" (HR Bukhari & Muslim)",
+    "📖 Nabi ﷺ bersabda: \"Bacalah Al-Quran — pada hari kiamat ia akan menjadi pemberi syafaat bagi pembacanya.\" (HR Muslim)",
+    "📖 Rasulullah ﷺ bersabda: \"Siapa membaca satu huruf dari Kitabullah, baginya satu kebaikan; satu kebaikan dilipatgandakan sepuluh kali.\" (HR Tirmidzi)",
+    "📖 Aisyah ra meriwayatkan: Nabi ﷺ bangun di malam hari membaca Al-Quran hingga kakinya membengkak. (HR Bukhari & Muslim)",
+    "📖 Nabi ﷺ bersabda: \"Al-Quran adalah musim semi bagi hati.\" (HR Ibnu Hibban — semakna)",
+    "📖 Abu Hurairah ra meriwayatkan: Nabi ﷺ bersabda: \"Hati itu berkarat seperti logam; karatnya disingkirkan dengan tilawah Al-Quran.\" (HR Hakim — Mustadrak)",
+    "📖 Nabi ﷺ bersabda: \"Rumah yang dibacakan Al-Quran akan lapang dan penuh berkah penghuninya.\" (HR Ibnu Hibban — semakna)",
+    "📖 Nabi ﷺ bersabda: \"Allah tidak mendengar sesuatu yang lebih ia cintai daripada pembaca yang menyelesaikan Al-Quran dengan suara indah dan terdengar.\" (HR Ibnu Hibban — semakna)",
+    "📖 Nabi ﷺ bersabda: \"Mempelajari dan mengajarkan Al-Quran adalah kunci segala kebaikan.\" (HR Ibnu Hibban — semakna)",
+  ],
+  ur: [
+    "📖 نبی کریم ﷺ نے فرمایا: \"قرآن والے کو جنت میں پکارا جائے گا: پڑھو اور بلند ہوتے جاؤ۔\" (مسلم)",
+    "📖 رسول اللہ ﷺ نے فرمایا: \"تم میں بہترین وہ ہے جو قرآن سیکھے اور سکھائے۔\" (بخاری و مسلم)",
+    "📖 نبی کریم ﷺ نے فرمایا: \"قرآن پڑھو — قیامت کے دن وہ اپنے پڑھنے والے کی سفارش کرے گا۔\" (مسلم)",
+    "📖 رسول اللہ ﷺ نے فرمایا: \"جو شخص اللہ کی کتاب سے ایک حرف پڑھے اسے ایک نیکی ملتی ہے، اور نیکی دس گنا ضرب دی جاتی ہے۔\" (ترمذی)",
+    "📖 حضرت عائشہ رضی اللہ عنہا روایت کرتی ہیں: نبی کریم ﷺ رات کو اٹھ کر قرآن پڑھتے یہاں تک کہ آپ کے قدم پھول جاتے۔ (بخاری و مسلم)",
+    "📖 نبی کریم ﷺ نے فرمایا: \"قرآن دلوں کی بہار ہے۔\" (ابن حبان — مفہوماً)",
+    "📖 حضرت ابوہریرہ رضی اللہ عنہ روایت کرتے ہیں: نبی کریم ﷺ نے فرمایا: \"دلوں پر زنگ لگتا ہے جیسے برتنوں پر؛ اس کا زنگ قرآن کی تلاوت سے دور ہوتا ہے۔\" (حاکم — مستدرک)",
+    "📖 نبی کریم ﷺ نے فرمایا: \"جس گھر میں قرآن پڑھا جائے وہ گھر اپنے اہل کے لیے کشادگی اور برکت کا سبب بنتا ہے۔\" (ابن حبان — مفہوماً)",
+    "📖 نبی کریم ﷺ نے فرمایا: \"اللہ کو اپنی رضا کسی چیز سے زیادہ محبوب نہیں جتنا ایک قاری خوبصورت آواز میں بلند کر کے قرآن پڑھتا ہے۔\" (ابن حبان — مفہوماً)",
+    "📖 نبی کریم ﷺ نے فرمایا: \"قرآن کی تعلیم و تعلم ہر بھلائی کی کنجی ہے۔\" (ابن حبان — مفہوماً)",
+  ],
+};
+
