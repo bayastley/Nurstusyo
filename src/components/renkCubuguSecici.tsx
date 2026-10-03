@@ -54,3 +54,27 @@ export const CubukRenkSecici: React.FC<{
     </div>
   );
 };
+
+// ★ ÇERÇEVE DÜZ RENKLERİ (03.10) — gökkuşağının dışındaki tek renk şerit seçenekleri;
+//   stüdyo + kartlık aynı düğme takımı. "renkleri çoğalt + çerçeve siyahda olsun" istemi.
+const CERCEVE_DUZ_RENKLERI: Array<{ renk: string; ad: string }> = [
+  { renk: "#000000", ad: "Siyah" },
+  { renk: "#111827", ad: "Antrasit" },
+  { renk: "#ffffff", ad: "Beyaz" },
+  { renk: "#d7aa52", ad: "Altın" },
+  { renk: "#1e3a8a", ad: "Lacivert" },
+  { renk: "#7f1d1d", ad: "Bordo" },
+];
+
+export const CerceveDuzRenkleri: React.FC<{ aktifDuz?: string; onSec: (renk: string) => void }> = ({ aktifDuz, onSec }) => (
+  <div className="flex items-center justify-center gap-1.5">
+    {CERCEVE_DUZ_RENKLERI.map((r) => (
+      <button key={r.renk} type="button" onClick={() => onSec(r.renk)}
+        title={`Çerçeve rengi: ${r.ad}`}
+        aria-label={`Çerçeve rengi: ${r.ad}`}
+        className={`h-4 w-4 rounded-full border transition hover:scale-110 ${aktifDuz === r.renk ? "border-white/80 ring-2 ring-[color:var(--accent)]" : "border-white/30"}`}
+        style={{ background: r.renk }}
+      />
+    ))}
+  </div>
+);

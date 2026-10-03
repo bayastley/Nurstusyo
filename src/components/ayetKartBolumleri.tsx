@@ -11,7 +11,7 @@ import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariDat
 import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, ruhHaliAd, type RuhSayac } from "../data/ruhHalleri";
 import { translate, type Lang } from "../i18n";
 import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
-import { CubukRenkSecici } from "./renkCubuguSecici";
+import { CubukRenkSecici, CerceveDuzRenkleri } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
 import { cubukRengi, hexToHue } from "../studio/mesajKatmani";
 
@@ -303,11 +303,14 @@ export const KartOnizlemeBolumu: React.FC<{
                     </button>
                   </div>
                   {ayar.cubuk.acik && (
+                    <>
                     <div className="flex items-start justify-center gap-4">
                       <CubukRenkSecici boy="kucuk" etiket="Arapça" deger={ayar.cubuk.donme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, donme: d } }))} />
                       <CubukRenkSecici boy="kucuk" etiket="Meal" deger={ayar.cubuk.mealDonme} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, mealDonme: d } }))} />
+                      {/* ★ ÇERÇEVE RENGİ (03.10): gökkuşağı kaydırıcısı — Arapça/Meal'den bağımsız; düz renkler altta */}
+                      <CubukRenkSecici boy="kucuk" etiket="Çerçeve" deger={ayar.cubuk.cerceveDonme ?? 0} onSec={(d) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, cerceveModu: "gokkusagi", cerceveDonme: d } }))} />
                       <div className="flex flex-col items-center gap-1">
-                        <span className="text-[8px] font-bold text-white/50">Çerçeve</span>
+                        <span className="text-[8px] font-bold text-white/50">Şerit</span>
                         <button type="button" onClick={() => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, kalinlik: a.cubuk.kalinlik > 0 ? 0 : 6 } }))}
                           className={`h-5 w-9 rounded-full text-[7px] font-black transition ${ayar.cubuk.kalinlik > 0 ? "text-black" : "glass-soft text-white/50"}`}
                           style={ayar.cubuk.kalinlik > 0 ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
@@ -319,6 +322,14 @@ export const KartOnizlemeBolumu: React.FC<{
                         )}
                       </div>
                     </div>
+                    {/* ★ DÜZ RENK ŞERİDİ (03.10): tek renk çerçeve — Siyah varsayılan ("çerçeve siyahda olsun") */}
+                    {ayar.cubuk.kalinlik > 0 && (
+                      <div className="pt-0.5">
+                        <CerceveDuzRenkleri aktifDuz={(ayar.cubuk.cerceveModu ?? "gokkusagi") === "duz" ? (ayar.cubuk.cerceveDuz || "#000000") : undefined}
+                          onSec={(renk) => setAyar((a) => ({ ...a, cubuk: { ...a.cubuk, cerceveModu: "duz", cerceveDuz: renk } }))} />
+                      </div>
+                    )}
+                    </>
                   )}
                 </div>
 

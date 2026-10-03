@@ -6,7 +6,7 @@ import { randomClip, type Clip, type CatId } from "../clips";
 import { ADMIN_TEMPLATE_CLIPS } from "../adminMediaManifest";
 import { T } from "../i18n";
 import { type CubukAyar, type MesajAyar, cubukRengi, hexToHue } from "../studio/mesajKatmani";
-import { CubukRenkSecici } from "./renkCubuguSecici";
+import { CubukRenkSecici, CerceveDuzRenkleri } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
 import type { ModalName, Output, SelectedAyah, Tier, LoginTab } from "../types";
 import type { MicroUnlockKey } from "../microUnlock";
@@ -257,6 +257,9 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             <div className="flex items-start justify-center gap-4">
               <CubukRenkSecici etiket={t("vpArapca")} deger={cubukAyar.donme} onSec={(d) => setCubukAyar((c) => ({ ...c, donme: d }))} />
               <CubukRenkSecici etiket={t("vpMeal")} deger={cubukAyar.mealDonme} onSec={(d) => setCubukAyar((c) => ({ ...c, mealDonme: d }))} />
+              {/* ★ ÇERÇEVE RENGİ (03.10): gökkuşağı şeridinin KENDİ kaydırıcısı — Arapça/Meal'den bağımsız;
+                  sürükle → çerçeve gökkuşağı moduna geçer. Düz renkler alttaki düğme takımından. */}
+              <CubukRenkSecici etiket={t("vpCerceve")} deger={cubukAyar.cerceveDonme ?? 0} onSec={(d) => setCubukAyar((c) => ({ ...c, cerceveModu: "gokkusagi", cerceveDonme: d }))} />
               <div className="flex flex-col items-center gap-1">
                 <span className="text-[8px] font-bold text-white/50">{t("vpCerceve")}</span>
                 <button
@@ -281,6 +284,13 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 )}
               </div>
             </div>
+            {/* ★ DÜZ RENK ŞERİDİ (03.10): tek renk çerçeve — Siyah varsayılan ("çerçeve siyahda olsun") */}
+            {cubukAyar.kalinlik > 0 && (
+              <div className="pt-0.5">
+                <CerceveDuzRenkleri aktifDuz={(cubukAyar.cerceveModu ?? "gokkusagi") === "duz" ? (cubukAyar.cerceveDuz || "#000000") : undefined}
+                  onSec={(renk) => setCubukAyar((c) => ({ ...c, cerceveModu: "duz", cerceveDuz: renk }))} />
+              </div>
+            )}
             <p className="text-center text-[7.5px] text-white/35">{t("vpSurukleNot")}</p>
           </div>
         )}

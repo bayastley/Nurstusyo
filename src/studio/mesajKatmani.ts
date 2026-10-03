@@ -44,9 +44,15 @@ export interface CubukAyar {
   /** Çerçeve şeridi kalınlığı (0 = şerit yok) */
   kalinlik: number;
   acik: boolean;
+  /** ★ ÇERÇEVE RENGİ (03.10): "gokkusagi" = 10 duraklı şerit, "duz" = tek renk şerit */
+  cerceveModu?: "gokkusagi" | "duz";
+  /** Gökkuşağı modunda çerçeve şeridinin döngü konumu 0-360° — Arapça/Meal'den bağımsız */
+  cerceveDonme?: number;
+  /** Düz modda şerit rengi (hex) — varsayılan siyah */
+  cerceveDuz?: string;
 }
 
-export const VARSAYILAN_CUBUK: CubukAyar = { donme: 0, mealDonme: 150, kalinlik: 6, acik: false };
+export const VARSAYILAN_CUBUK: CubukAyar = { donme: 0, mealDonme: 150, kalinlik: 6, acik: false, cerceveModu: "duz", cerceveDonme: 0, cerceveDuz: "#000000" };
 
 /** Donme açısını uygula: durakları döndürüp dikişsiz kapalı döngü kur (durak sayısından bağımsız) */
 export function cubukDuraklari(donme: number): string[] {
@@ -129,17 +135,24 @@ export class CanvasDoldurucu {
   cubukCiz(ctx: CanvasRenderingContext2D, w: number, h: number, ayar: CubukAyar): void {
     if (!ayar.acik || ayar.kalinlik <= 0) return;
     const kal = Math.max(1, Math.min(40, Math.round(ayar.kalinlik)));
-    const duraklar = cubukDuraklari(ayar.donme);
-    const grad = ctx.createLinearGradient(0, h, 0, 0); // alt→üst
-    duraklar.forEach((renk, i) => grad.addColorStop(i / (duraklar.length - 1), this.coz(renk)));
+    const mod = ayar.cerceveModu ?? "gokkusagi";
     ctx.save();
-    ctx.fillStyle = grad;
+    if (mod === "duz") {
+      // ★ DÜZ ŞERİT (03.10): tek renk — varsayılan siyah; "çerçeve siyahda olsun"
+      ctx.fillStyle = this.coz(ayar.cerceveDuz || "#000000");
+    } else {
+      // Gökkuşağı şeridi — çerçevenin KENDİ döngü konumu (Arapça/Meal'den bağımsız)
+      const duraklar = cubukDuraklari(ayar.cerceveDonme ?? ayar.donme);
+      const grad = ctx.createLinearGradient(0, h, 0, 0); // alt→üst
+      duraklar.forEach((renk, i) => grad.addColorStop(i / (duraklar.length - 1), this.coz(renk)));
+      ctx.fillStyle = grad;
+    }
     // 4 kenar (iç kenar çerçevesi) — tek path
     ctx.fillRect(0, 0, w, kal);                    // üst
     ctx.fillRect(0, h - kal, w, kal);              // alt
     ctx.fillRect(0, 0, kal, h);                    // sol
     ctx.fillRect(w - kal, 0, kal, h);              // sağ
-    // Hafif iç parlama: çubuğun iç kenarına 1px açık çizgi
+    // Hafif iç parlama: çubuğun iç kenarına 1px açık çizgi (siyah şeritte keskin kenar verir)
     ctx.fillStyle = "rgba(255,255,255,.35)";
     if (kal >= 4) {
       ctx.fillRect(0, kal, w, 1); ctx.fillRect(0, h - kal - 1, w, 1);
