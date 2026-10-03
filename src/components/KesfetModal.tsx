@@ -73,7 +73,7 @@ function kelimeUyar(metin: string, kelime: string): boolean {
 }
 
 // ★ GÜNÜN KELİMELERİ (03.10): güne göre deterministik 5 kelime — yerel gün no × 5 kaydırma;
-//   her gün öncekiyle kesişmeyen 5'li gelir, havuzda tam tur (54 kelime) 54 günde döner
+//   her gün öncekiyle kesişmeyen 5'li gelir, havuzda tam tur (100 kelime) 100 günde döner
 function gununKelimeleriHesapla(): KelimeKart[] {
   const gunNo = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
   const adet = Math.min(5, KELIME_KARTLARI.length);
@@ -90,7 +90,15 @@ function KelimeKarti({ k, cevrildi, cevir, altin }: { k: KelimeKart; cevrildi: b
         {cevrildi ? (
           <>
             <p className="text-[10.5px] font-black leading-tight text-amber-200">{k.tr}</p>
-            <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
+            {k.meal ? (
+              <>
+                {/* ★ 03.10: havuzdaki yeni kelimeler ayet ifadesi + meal satırıyla geliyor */}
+                <p dir="rtl" className="mt-0.5 font-arabic text-[7.5px] leading-tight text-white/45 line-clamp-2">{k.ornek}</p>
+                <p className="mt-0.5 px-1 text-[6.5px] leading-tight text-white/40 line-clamp-2">{k.meal}</p>
+              </>
+            ) : (
+              <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
+            )}
           </>
         ) : (
           <p className="font-arabic text-lg text-white/90">{k.ar}</p>

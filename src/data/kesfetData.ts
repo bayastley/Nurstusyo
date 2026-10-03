@@ -480,7 +480,7 @@ export const BES_SART_SORULARI: BesSartSoru[] = [
 ];
 
 // ── 21: KELİME KARTLARI ("Kur'an'da 80 sık kelime" — ilk 40) ──
-export interface KelimeKart { ar: string; tr: string; okunus: string; ornek: string }
+export interface KelimeKart { ar: string; tr: string; okunus: string; ornek: string; meal?: string }
 export const KELIME_KARTLARI: KelimeKart[] = [
   { ar: "اللَّه", tr: "Allah", okunus: "Allâh", ornek: "Bismillâh…" },
   { ar: "رَبّ", tr: "Rab (sahip, terbiye eden)", okunus: "Rabb", ornek: "Rabbü'l-âlemîn" },
@@ -538,6 +538,55 @@ export const KELIME_KARTLARI: KelimeKart[] = [
   { ar: "صَالِح", tr: "Salih (iyi, doğru amel)", okunus: "sâlih", ornek: "مَنْ عَمِلَ صَالِحًا فَلِنَفْسِهِ" },
   { ar: "مَغْفِرَة", tr: "Bağışlanma, mağfiret", okunus: "mağfiret", ornek: "مَّغْفِرَةٌ وَأَجْرٌ عَظِيمٌ" },
   { ar: "سَبِيل", tr: "Yol, sebil", okunus: "sebîl", ornek: "إِنَّا هَدَيْنَاهُ السَّبِيلَ" },
+
+  // ═══ 03.10 genişletme: 54 → 100 kelime — her yeni kelime bilinen bir ayet ifadesi +
+  //   meal satırıyla (sure ref) geliyor; okunus alanı TTS uyumlu Türkçe-latin (kelimeOku yedeği) ═══
+  { ar: "رَحْمَٰن", tr: "Rahmân (merhameti kuşatan)", okunus: "Rahmân", ornek: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", meal: "Rahmân ve Rahîm olan Allah'ın adıyla (Fâtiha 1:1)" },
+  { ar: "حَمْد", tr: "Hamd, övgü", okunus: "hamd", ornek: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ", meal: "Hamd, âlemlerin Rabbi Allah'a mahsustur (Fâtiha 1:2)" },
+  { ar: "صِرَاط", tr: "Yol, sırat", okunus: "sırât", ornek: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ", meal: "Bizi dosdoğru yola ilet (Fâtiha 1:6)" },
+  { ar: "هُدَى", tr: "Hidayet, doğru yol", okunus: "hudâ", ornek: "هُدًى لِّلْمُتَّقِينَ", meal: "Takva sahipleri için hidayettir (Bakara 2:2)" },
+  { ar: "غَيْب", tr: "Gayb, görünmeyen", okunus: "gayb", ornek: "الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ", meal: "Gayba inananlar (Bakara 2:3)" },
+  { ar: "مُفْلِحُون", tr: "Kurtuluşa erenler", okunus: "muflihûn", ornek: "أُولَٰئِكَ هُمُ الْمُفْلِحُونَ", meal: "İşte onlar, kurtuluşa erenlerdir (Bakara 2:5)" },
+  { ar: "نَفْس", tr: "Nefs, can, benlik", okunus: "nefs", ornek: "لَّا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا", meal: "Allah kimseyi gücünün yettiğinden fazlasıyla yükümlü tutmaz (Bakara 2:286)" },
+  { ar: "آيَة", tr: "Âyet, işaret", okunus: "âyet", ornek: "تِلْكَ آيَاتُ اللَّهِ نَتْلُوهَا عَلَيْكَ بِالْحَقِّ", meal: "Bunlar, sana hak olarak okuduğumuz Allah'ın âyetleridir (Bakara 2:252)" },
+  { ar: "سُورَة", tr: "Sure", okunus: "sure", ornek: "فَأْتُوا بِسُورَةٍ مِّن مِّثْلِهِ", meal: "Onun benzeri bir sure getirin (Bakara 2:23)" },
+  { ar: "قُرْآن", tr: "Kur'ân", okunus: "Kur'ân", ornek: "شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ", meal: "Kur'ân'ın indirildiği Ramazan ayı (Bakara 2:185)" },
+  { ar: "حَلَال", tr: "Helâl, serbest", okunus: "helâl", ornek: "قُلْ أُحِلَّ لَكُمُ الطَّيِّبَاتُ", meal: "De ki: Size temiz şeyler helâl kılındı (Mâide 5:4)" },
+  { ar: "حَرَام", tr: "Haram, yasak", okunus: "harâm", ornek: "إِنَّمَا حَرَّمَ عَلَيْكُمُ الْمَيْتَةَ", meal: "Allah size ancak leşi haram kıldı (Bakara 2:173)" },
+  { ar: "حَسَنَة", tr: "Hasene, iyi amel", okunus: "hasene", ornek: "مَنْ جَاءَ بِالْحَسَنَةِ فَلَهُ عَشْرُ أَمْثَالِهَا", meal: "Kim bir iyilikle gelirse ona on katı vardır (En'âm 6:160)" },
+  { ar: "عَذَاب", tr: "Azap", okunus: "azâb", ornek: "وَلَهُمْ عَذَابٌ أَلِيمٌ", meal: "Onlar için acı bir azap vardır (Bakara 2:104)" },
+  { ar: "مَلَائِكَة", tr: "Melekler", okunus: "melâike", ornek: "لَا يَعْصُونَ اللَّهَ مَا أَمَرَهُمْ", meal: "Melekler, Allah'ın emrettiklerinde isyan etmez (Tahrîm 66:6)" },
+  { ar: "رَسُول", tr: "Resûl, elçi", okunus: "resûl", ornek: "رَسُولٌ مِّنَ اللَّهِ يَتْلُو صُحُفًا مُّطَهَّرَةً", meal: "Allah'tan gelen, tertemiz sahifeleri okuyan bir elçi (Beyyine 98:2)" },
+  { ar: "نَبِيّ", tr: "Nebî, peygamber", okunus: "nebî", ornek: "وَخَاتَمَ النَّبِيِّينَ", meal: "Peygamberlerin sonuncusu (Ahzâb 33:40)" },
+  { ar: "شَيْطَان", tr: "Şeytan", okunus: "şeytân", ornek: "إِنَّ الشَّيْطَانَ لَكُمْ عَدُوٌّ فَاتَّخِذُوهُ عَدُوًّا", meal: "Şüphesiz şeytan sizin düşmanınızdır, onu düşman edinin (Fâtır 35:6)" },
+  { ar: "فِتْنَة", tr: "Fitne, imtihan", okunus: "fitne", ornek: "وَنَبْلُوكُم بِالشَّرِّ وَالْخَيْرِ فِتْنَةً", meal: "Sizi şer ve hayırla deneyeceğiz (Enbiyâ 21:35)" },
+  { ar: "جِهَاد", tr: "Cihad, çaba", okunus: "cihâd", ornek: "وَجَاهِدُوا فِي اللَّهِ حَقَّ جِهَادِهِ", meal: "Allah yolunda O'na yakışır biçimde cihad edin (Hac 22:78)" },
+  { ar: "حِكْمَة", tr: "Hikmet", okunus: "hikmet", ornek: "يُؤْتِي الْحِكْمَةَ مَن يَشَاءُ", meal: "Hikmeti dilediğine verir (Bakara 2:269)" },
+  { ar: "قَوْم", tr: "Kavim, topluluk", okunus: "kavm", ornek: "يَا قَوْمِ اعْبُدُوا اللَّهَ مَا لَكُم مِّنْ إِلَٰهٍ غَيْرُهُ", meal: "Ey kavmim! Sizin Allah'tan başka ilâhınız yoktur (Hûd 11:50)" },
+  { ar: "أُمَّة", tr: "Ümmet", okunus: "ümmet", ornek: "وَكَذَٰلِكَ جَعَلْنَاكُمْ أُمَّةً وَسَطًا", meal: "Sizi böylece orta bir ümmet yaptık (Bakara 2:143)" },
+  { ar: "يَقِين", tr: "Yakîn, kesin bilgi", okunus: "yakîn", ornek: "إِنَّ هَٰذَا لَهُوَ حَقُّ الْيَقِينِ", meal: "Şüphesiz bu, kesin bilgi olan hak kelimedir (Vâkıa 56:95)" },
+  { ar: "سَلَام", tr: "Selâm, esenlik", okunus: "selâm", ornek: "وَاللَّهُ يَدْعُو إِلَىٰ دَارِ السَّلَامِ", meal: "Allah, selâm yurduna çağırır (Yûnus 10:25)" },
+  { ar: "خَوْف", tr: "Korku", okunus: "havf", ornek: "لَا خَوْفٌ عَلَيْهِمْ وَلَا هُمْ يَحْزَنُونَ", meal: "Onlara korku yoktur, üzülmeyecekler de (Yûnus 10:62)" },
+  { ar: "حُزْن", tr: "Hüzün, üzüntü", okunus: "hüzün", ornek: "لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا", meal: "Üzülme, Allah bizimledir (Tevbe 9:40)" },
+  { ar: "فَرَح", tr: "Sevinç", okunus: "ferah", ornek: "قُلْ بِفَضْلِ اللَّهِ وَبِرَحْمَتِهِ فَبِذَٰلِكَ فَلْيَفْرَحُوا", meal: "De ki: Allah'ın lütfu ve rahmetiyle sevinin (Yûnus 10:58)" },
+  { ar: "تَوَكُّل", tr: "Tevekkül", okunus: "tevekkül", ornek: "فَعَلَيْهِ تَوَكَّلْتُ وَإِلَيْهِ مَتَابِ", meal: "Ben ona (Allah'a) tevekkül ettim, dönüş O'nadır (Hûd 11:88)" },
+  { ar: "عِزَّة", tr: "İzzet, şeref", okunus: "izzet", ornek: "فَإِنَّ الْعِزَّةَ لِلَّهِ جَمِيعًا", meal: "Bütün izzet Allah'ındır (Yûnus 10:65)" },
+  { ar: "وَكِيل", tr: "Vekîl, koruyucu", okunus: "vekîl", ornek: "حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ", meal: "Allah bize yeter, O ne güzel vekîldir (Âl-i İmrân 3:173)" },
+  { ar: "لَيْل", tr: "Gece", okunus: "leyl", ornek: "وَاللَّيْلِ إِذَا يَغْشَىٰ", meal: "Karartığı zaman geceye andolsun (Leyl 92:1)" },
+  { ar: "شَمْس", tr: "Güneş", okunus: "şems", ornek: "وَالشَّمْسِ وَضُحَاهَا", meal: "Güneşe ve ziyâsına andolsun (Şems 91:1)" },
+  { ar: "قَمَر", tr: "Ay", okunus: "kamer", ornek: "وَالْقَمَرِ إِذَا اتَّسَقَ", meal: "Ayın yarıldığı zamana andolsun (Kamer 54:1)" },
+  { ar: "بَحْر", tr: "Deniz", okunus: "bahr", ornek: "مَّرْجُ الْبَحْرَيْنِ يَلْتَقِيَانِ", meal: "İki deniz, birbirine karışarak kavuşur (Rahmân 55:19)" },
+  { ar: "مَاء", tr: "Su", okunus: "mâ", ornek: "وَجَعَلْنَا مِنَ الْمَاءِ كُلَّ شَيْءٍ حَيٍّ", meal: "Her canlı şeyi sudan yaptık (Enbiyâ 21:30)" },
+  { ar: "شَجَرَة", tr: "Ağaç", okunus: "şecere", ornek: "كَلِمَةً طَيِّبَةً كَشَجَرَةٍ طَيِّبَةٍ", meal: "Güzel söz, kökü sabit güzel ağaç gibidir (İbrâhîm 14:24)" },
+  { ar: "طَعَام", tr: "Yemek, azık", okunus: "taâm", ornek: "وَيُطْعِمُونَ الطَّعَامَ عَلَىٰ حُبِّهِ", meal: "Sevdikleri yemeği (fakirlere) yedirirler (İnsan 76:8)" },
+  { ar: "يَتِيم", tr: "Yetim", okunus: "yetîm", ornek: "فَأَمَّا الْيَتِيمَ فَلَا تَقْهَرْ", meal: "Artık yetimi incitme (Duhâ 93:9)" },
+  { ar: "إِخْوَة", tr: "Kardeşler", okunus: "ihvân", ornek: "إِنَّمَا الْمُؤْمِنُونَ إِخْوَةٌ", meal: "Müminler ancak kardeştir (Hucurât 49:10)" },
+  { ar: "مَسْجِد", tr: "Mescid", okunus: "mescid", ornek: "إِنَّمَا يَعْمُرُ مَسَاجِدَ اللَّهِ مَنْ آمَنَ بِاللَّهِ", meal: "Allah'ın mescidlerini imar eden, Allah'a iman edendir (Tevbe 9:18)" },
+  { ar: "رِضْوَان", tr: "Rızâ, hoşnutluk", okunus: "rıdvân", ornek: "وَرِضْوَانٌ مِّنَ اللَّهِ أَكْبَرُ", meal: "Allah'ın rızası ise daha büyüktür (Tevbe 9:72)" },
+  { ar: "نِعْمَة", tr: "Nimet", okunus: "nimet", ornek: "وَإِن تَعُدُّوا نِعْمَتَ اللَّهِ لَا تُحْصُوهَا", meal: "Allah'ın nimetini saymaya kalksanız bitiremezsiniz (Nahl 16:18)" },
+  { ar: "كَرِيم", tr: "Kerîm, cömert", okunus: "kerîm", ornek: "إِنَّهُ لَقُرْآنٌ كَرِيمٌ", meal: "Şüphesiz o, şerefli bir Kur'ân'dır (Bürûc 85:21)" },
+  { ar: "بَصِير", tr: "Basîr (her şeyi gören)", okunus: "basîr", ornek: "إِنَّهُ هُوَ السَّمِيعُ الْبَصِيرُ", meal: "Şüphesiz O, işitendir, görendir (Mü'min 40:20)" },
+  { ar: "تَدَبُّر", tr: "Tefekkür, derin düşünme", okunus: "tedebbür", ornek: "أَفَلَا يَتَدَبَّرُونَ الْقُرْآنَ", meal: "Kur'ân'ı düşünmüyorlar mı? (Nisâ 4:82)" },
 ];
 
 // ── 22: SURE BİLGİLERİ (01.10: 25 sureye çıkarıldı; aciklama = akordeon açılınca görünen uzun anlatım) ──
