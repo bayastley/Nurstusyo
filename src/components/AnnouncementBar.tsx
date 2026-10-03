@@ -7,6 +7,7 @@ import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService"
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 import type { User } from "../types";
+import { translate } from "../i18n";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
@@ -16,6 +17,8 @@ interface AnnouncementBarProps {
 }
 
 export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, onRewardClaimed, onTamperAttempt }) => {
+  // ★ i18n (03.10): şerit + kalıcı takvim metinleri seçili dilde (05: prompt-2)
+  const t = (key: string) => translate(localStorage.getItem("nur_lang"), key);
   const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
   // ★ LOCAL ÖNCE (02.10): admin yayını anında saveAnnouncement ile localStorage'a
   //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
@@ -98,7 +101,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
 
   const claim = async () => {
     const limit = checkRateLimit("general");
-    if (!limit.allowed) return notify("Lutfen butona bu kadar hizli basmayin");
+    if (!limit.allowed) return notify(t("rateLimitNotice"));
     if (!holyDay.canClaim) return;
     const result = await claimHolyDayReward(holyDay.eventKey, holyDay.rewardKind, holyDay.rewardAmount);
     notify(result.message);
@@ -140,16 +143,16 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
                 window.location.replace(url.toString());
               }}
               className="flex items-center gap-1.5 rounded-full bg-emerald-400 px-3.5 py-1.5 font-black text-emerald-950 shadow-[0_0_16px_rgba(52,211,153,.55)] transition hover:bg-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,.75)] active:scale-95"
-              title="Sayfayı tazele ve güncellemeyi yükle (Ctrl+Shift+R eşdeğeri)"
+              title={t("annGetUpdateTitle")}
             >
               <RefreshCw size={12} />
-              Güncellemeyi Al
+              {t("annGetUpdateBtn")}
             </button>
           )}
           {!announcement && (
             <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 font-semibold">
               <Bell size={12} className="text-white/35" />
-              Duyuru yok · Lütfen takipte kalın
+              {t("noAnnouncementYet")}
             </span>
           )}
           {holyDay.type !== "none" && (
@@ -159,14 +162,14 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               {holyDay.type === "claim" && (
                 <button disabled={holyDay.isClaimed} onClick={claim} className="flex items-center gap-1 rounded-full bg-amber-300 px-3 py-1 font-black text-black disabled:opacity-45">
                   {holyDay.isClaimed ? <CheckCircle size={11} /> : <Gift size={11} />}
-                  {holyDay.isClaimed ? "Odul alindi" : "Hediyeni al"}
+                  {holyDay.isClaimed ? t("rewardClaimedMsg") : t("claimRewardBtn")}
                 </button>
               )}
             </div>
           )}
           {isAdmin && (
             <button onClick={() => setAdminPanelOpen(true)} className="flex items-center gap-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 text-[9px] font-black text-emerald-300">
-              <Bell size={11} /> Duyuru ve Kilitlar
+              <Bell size={11} /> {t("annKilitlerBtn")}
             </button>
           )}
           {isAdmin && announcement && (
@@ -180,12 +183,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
                   });
                 } catch { /* ignore */ }
                 setAnnouncement(null);
-                notify("Duyuru kaldırıldı · Sayfa yenilenince tüm kullanıcılarda gider");
+                notify(t("annKalindiMsg"));
               }}
               className="flex items-center gap-1 rounded-full border border-red-400/30 bg-red-500/10 px-2.5 py-1.5 text-[9px] font-black text-red-300 hover:bg-red-500/20"
-              title="Duyuruyu kaldır"
+              title={t("annKaldirBtn")}
             >
-              <Trash2 size={10} /> Duyuruyu Kaldır
+              <Trash2 size={10} /> {t("annKaldirBtn")}
             </button>
           )}
         </div>
@@ -199,7 +202,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
             <h3 className="font-display text-xl font-black text-white">{announcement.title}</h3>
             <p className="mt-2 text-sm font-semibold text-amber-100/80">{announcement.message}</p>
             {announcement.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{announcement.detail}</p>}
-            {announcement.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">Okudum</button>}
+            {announcement.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">{t("announcementAck")}</button>}
           </article>
         </div>
       )}

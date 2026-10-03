@@ -273,35 +273,35 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
               onClick={() => openLegalTab("tos")}
               className="flex items-center gap-1 transition hover:text-[color:var(--accent-2)] cursor-pointer"
             >
-              <span>🔗</span> Kullanım Şartları
+              <span>🔗</span> {t("footerTosLink")}
             </button>
             <span className="hidden text-white/10 sm:inline">•</span>
             <button
               onClick={() => openLegalTab("kvkk")}
               className="flex items-center gap-1 transition hover:text-[color:var(--accent-2)] cursor-pointer"
             >
-              <span>🔗</span> KVKK Aydınlatma Metni
+              <span>🔗</span> {t("footerKvkkLink")}
             </button>
             <span className="hidden text-white/10 sm:inline">•</span>
             <button
               onClick={() => openLegalTab("gizlilik")}
               className="flex items-center gap-1 transition hover:text-[color:var(--accent-2)] cursor-pointer"
             >
-              <span>🔗</span> Gizlilik ve Çerez Politikası
+              <span>🔗</span> {t("footerGizlilikLink")}
             </button>
             <span className="hidden text-white/10 sm:inline">•</span>
             <button
               onClick={() => openLegalTab("iade")}
               className="flex items-center gap-1 transition hover:text-[color:var(--accent-2)] cursor-pointer"
             >
-              <span>🔗</span> Satın Alma & İade Koşulları
+              <span>🔗</span> {t("footerIadeLink")}
             </button>
             <span className="hidden text-white/10 sm:inline">•</span>
             <FeedbackBox />
           </div>
 
           <p className="font-display text-[10.5px] font-medium tracking-[.06em] text-white/40">
-            © 2026 nurstudyo.com. Tüm hakları saklıdır. İyiliğe ve hayra vesile olmak dileğiyle...
+            © 2026 nurstudyo.com. {t("footerTelifSatiri")} {t("footerTag")}
           </p>
           <p className="mt-2 text-[8px] text-white/20">Pexels • EveryAyah • AlQuran Cloud • Aladhan</p>
         </div>

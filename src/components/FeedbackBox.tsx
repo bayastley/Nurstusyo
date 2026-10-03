@@ -1,19 +1,21 @@
 import React, { useState } from "react";
 import { MessageSquareHeart, Send, X } from "lucide-react";
+import { translate } from "../i18n";
 
 // ════════════════════════════════════════════════════════
 // GERİ BİLDİRİM KUTUSU — öneri / şikayet / özellik isteği
 // Misafir + üye herkes yazabilir. POST /api/marketing/feedback
 // Kullanıcı bilgisi sunucu oturumundan gelir (istemciden gönderilmez).
+// ★ i18n (03.10): tüm metinler t() anahtarlarına taşındı (05: footer).
 // ════════════════════════════════════════════════════════
 
 type FeedbackTur = "oneri" | "sikayet" | "ozellik" | "diger";
 
-const TUR_SECENEKLERI: Array<{ key: FeedbackTur; label: string; emoji: string }> = [
-  { key: "oneri", label: "Öneri", emoji: "💡" },
-  { key: "ozellik", label: "Özellik İsteği", emoji: "✨" },
-  { key: "sikayet", label: "Şikayet", emoji: "😔" },
-  { key: "diger", label: "Diğer", emoji: "✉️" },
+const TUR_SECENEKLERI: Array<{ key: FeedbackTur; labelKey: string; emoji: string }> = [
+  { key: "oneri", labelKey: "fbTurOneri", emoji: "💡" },
+  { key: "ozellik", labelKey: "fbTurOzellik", emoji: "✨" },
+  { key: "sikayet", labelKey: "fbTurSikayet", emoji: "😔" },
+  { key: "diger", labelKey: "fbTurDiger", emoji: "✉️" },
 ];
 
 export const FeedbackBox: React.FC = () => {
@@ -23,6 +25,8 @@ export const FeedbackBox: React.FC = () => {
   const [mesaj, setMesaj] = useState("");
   const [gonderiyor, setGonderiyor] = useState(false);
   const [sonuc, setSonuc] = useState<"ok" | "hata" | null>(null);
+  // ★ i18n: dil localStorage'dan (nur_lang), fallback translate() içinde TR→EN
+  const t = (key: string) => translate(localStorage.getItem("nur_lang"), key);
 
   async function gonder() {
     if (mesaj.trim().length < 5 || gonderiyor) return;
@@ -56,7 +60,7 @@ export const FeedbackBox: React.FC = () => {
         onClick={() => setOpen(true)}
         className="flex items-center gap-1 transition hover:text-[color:var(--accent-2)] cursor-pointer"
       >
-        <span>💬</span> Görüş & Öneri
+        <span>💬</span> {t("fbTetik")}
       </button>
 
       {/* Açılır panel */}
@@ -72,11 +76,11 @@ export const FeedbackBox: React.FC = () => {
                   <MessageSquareHeart size={16} />
                 </span>
                 <div>
-                  <h3 className="font-bold text-[15px] text-white">Görüşünü Payla 🌙</h3>
-                  <p className="text-[10px] text-white/40">Seninle daha iyisi yapalım — sadakatimiz sana</p>
+                  <h3 className="font-bold text-[15px] text-white">{t("fbBaslik")}</h3>
+                  <p className="text-[10px] text-white/40">{t("fbAltBaslik")}</p>
                 </div>
               </div>
-              <button onClick={() => setOpen(false)} className="text-white/40 transition hover:text-white" aria-label="Kapat">
+              <button onClick={() => setOpen(false)} className="text-white/40 transition hover:text-white" aria-label={t("close")}>
                 <X size={18} />
               </button>
             </div>
@@ -84,37 +88,37 @@ export const FeedbackBox: React.FC = () => {
             {sonuc === "ok" ? (
               <div className="py-8 text-center">
                 <p className="text-3xl">✨</p>
-                <p className="mt-2 font-bold text-[14px] text-emerald-400">Mesajın ulaştı!</p>
-                <p className="mt-1 text-[11px] text-white/50">Görüşün için teşekkürler. Hayra vesile oldun 🌙</p>
+                <p className="mt-2 font-bold text-[14px] text-emerald-400">{t("fbOkBaslik")}</p>
+                <p className="mt-1 text-[11px] text-white/50">{t("fbOkAlt")}</p>
               </div>
             ) : (
               <>
                 {/* Tür seçimi */}
                 <div className="mb-3 flex flex-wrap gap-1.5">
-                  {TUR_SECENEKLERI.map((t) => (
+                  {TUR_SECENEKLERI.map((tt) => (
                     <button
-                      key={t.key}
-                      onClick={() => setTur(t.key)}
+                      key={tt.key}
+                      onClick={() => setTur(tt.key)}
                       className={`rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition ${
-                        tur === t.key
+                        tur === tt.key
                           ? "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40"
                           : "bg-white/5 text-white/50 hover:bg-white/10"
                       }`}
                     >
-                      {t.emoji} {t.label}
+                      {tt.emoji} {t(tt.labelKey)}
                     </button>
                   ))}
                 </div>
 
                 {/* Puan (opsiyonel) */}
                 <div className="mb-3 flex items-center gap-1.5">
-                  <span className="text-[11px] text-white/40">Sitemizi puanla:</span>
+                  <span className="text-[11px] text-white/40">{t("fbPuanla")}</span>
                   {[1, 2, 3, 4, 5].map((n) => (
                     <button
                       key={n}
                       onClick={() => setPuan(puan === n ? null : n)}
                       className={`text-lg transition ${puan && n <= puan ? "grayscale-0" : "opacity-30 grayscale"}`}
-                      aria-label={`${n} yıldız`}
+                      aria-label={`${n} ${t("fbYildizAria")}`}
                     >
                       ⭐
                     </button>
@@ -125,7 +129,7 @@ export const FeedbackBox: React.FC = () => {
                 <textarea
                   value={mesaj}
                   onChange={(e) => setMesaj(e.target.value.slice(0, 1000))}
-                  placeholder="Önerin, şikayetin ya da isteğin… (en az 5 karakter)"
+                  placeholder={t("fbMesajPlaceholder")}
                   rows={4}
                   className="w-full resize-none rounded-xl border border-white/10 bg-black/40 p-3 text-[12px] text-white placeholder-white/25 outline-none transition focus:border-amber-500/50"
                 />
@@ -133,7 +137,7 @@ export const FeedbackBox: React.FC = () => {
 
                 {sonuc === "hata" && (
                   <p className="mb-2 rounded-lg bg-red-500/10 px-3 py-2 text-[11px] text-red-400">
-                    Mesaj gönderilemedi, birazdan tekrar dene 🙏
+                    {t("fbHata")}
                   </p>
                 )}
 
@@ -144,9 +148,9 @@ export const FeedbackBox: React.FC = () => {
                   style={{ background: "linear-gradient(135deg,#fbbf24,#f59e0b)" }}
                 >
                   <Send size={14} />
-                  {gonderiyor ? "Gönderiliyor…" : "Gönder"}
+                  {gonderiyor ? t("fbGonderiliyor") : t("fbGonder")}
                 </button>
-                <p className="mt-2 text-center text-[9px] text-white/25">Mesajın admin paneline gelir — kimlik bilgisi otomatik eklenir</p>
+                <p className="mt-2 text-center text-[9px] text-white/25">{t("fbGizlilikNotu")}</p>
               </>
             )}
           </div>
