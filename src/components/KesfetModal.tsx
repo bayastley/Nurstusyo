@@ -72,6 +72,41 @@ function kelimeUyar(metin: string, kelime: string): boolean {
   return kisa !== kelime && (metin.includes(kisa) || parcalar.some((p) => levenshtein(p, kisa) <= tolerans));
 }
 
+// ★ GÜNÜN KELİMELERİ (03.10): güne göre deterministik 5 kelime — yerel gün no × 5 kaydırma;
+//   her gün öncekiyle kesişmeyen 5'li gelir, havuzda tam tur (54 kelime) 54 günde döner
+function gununKelimeleriHesapla(): KelimeKart[] {
+  const gunNo = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
+  const adet = Math.min(5, KELIME_KARTLARI.length);
+  const bas = (gunNo * adet) % KELIME_KARTLARI.length;
+  return Array.from({ length: adet }, (_, i) => KELIME_KARTLARI[(bas + i) % KELIME_KARTLARI.length]);
+}
+// Kelime kartı — günün kelimelerinde altın çerçeve; keşif kartlarında varsayılan kenar
+function KelimeKarti({ k, cevrildi, cevir, altin }: { k: KelimeKart; cevrildi: boolean; cevir: () => void; altin?: boolean }) {
+  return (
+    <div className="relative">
+      <button type="button" onClick={cevir}
+        className={`flex h-20 w-full flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${cevrildi ? "border-[color:var(--accent)] bg-amber-500/10" : altin ? "border-white/25 bg-white/[.06] hover:border-white/40" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}
+        style={altin && !cevrildi ? { borderColor: "var(--accent-2)", boxShadow: "0 0 10px rgba(215,170,82,.18)" } : undefined}>
+        {cevrildi ? (
+          <>
+            <p className="text-[10.5px] font-black leading-tight text-amber-200">{k.tr}</p>
+            <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
+          </>
+        ) : (
+          <p className="font-arabic text-lg text-white/90">{k.ar}</p>
+        )}
+      </button>
+      {/* ★ OKUNUŞ SESİ (28.09, kullanıcı kararı): tarayıcı TTS ile Arapça okunuş —
+          latin okunuş öncelikli okunur; cihaz Arapça sesi yoksa latin metin okunur */}
+      <button type="button"
+        onClick={(e) => { e.stopPropagation(); kelimeOku(k); }}
+        title={`Okunuşu dinle: ${k.okunus}`}
+        className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
+      >🔊</button>
+    </div>
+  );
+}
+
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
 interface KesfetModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
@@ -89,7 +124,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
   const [arama, setArama] = useState("");
   const [hadisTema, setHadisTema] = useState("tumu");
-  const [kartCevrildi, setKartCevrildi] = useState<number | null>(null);
+  const [kartCevrildi, setKartCevrildi] = useState<string | null>(null); // ★ 03.10: index yerine kelime anahtarı — sıralama değişse de çevrilen kart kaymaz
   // ★ SURE AKORDEONU (01.10): tıkla-aç/kapa — liste yer kaplamasın, uzun açıklama sadece açık karta girsin
   const [acikSure, setAcikSure] = useState<number | null>(null);
   // ★ KISSA AKORDEONU (01.10): aynı ilke — kapalı kart tek satır özet, açık kartta kıssa+ders+dua
@@ -98,14 +133,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   //   kapalı kartta soru + tek satır cevap özeti, açık kartta mezhep bazlı cevaplar/kaynak
   const [acikSoru, setAcikSoru] = useState<number | null>(null);
   const [acikGenelSoru, setAcikGenelSoru] = useState<number | null>(null);
-  // ★ KELİME YENİLE (01.10): sahih havuzdan (54 kelime) her seferinde rastgele 15 kart — sürekli değişsin
+  // ★ KELİME YENİLE (01.10): sahih havuzdan her seferinde rastgele 15 keşif kartı — günün 5'i hariç (03.10)
   const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
+  // ★ GÜNÜN KELİMELERİ (03.10): deterministik — oturum boyunca sabit, gün değişince yenilenir
+  const gununKelimeleri = React.useMemo(gununKelimeleriHesapla, []);
   const kelimeYenile = React.useCallback(() => {
-    const havuz = [...KELIME_KARTLARI];
+    const gununAr = new Set(gununKelimeleri.map((k) => k.ar));
+    const havuz = KELIME_KARTLARI.filter((k) => !gununAr.has(k.ar));
     for (let i = havuz.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [havuz[i], havuz[j]] = [havuz[j], havuz[i]]; }
     setKelimeKartlari(havuz.slice(0, 15));
     setKartCevrildi(null);
-  }, []);
+  }, [gununKelimeleri]);
   React.useEffect(() => { if (sekme === "kelime") kelimeYenile(); }, [sekme, kelimeYenile]);
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
@@ -467,42 +505,35 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         </div>
       )}
 
-      {/* ── 21: KELİME KARTLARI (flashcard) ── */}
+      {/* ── 21: KELİME KARTLARI (flashcard) ──
+        ★ 03.10: GÜNÜN KELİMELERİ — güne göre deterministik 5 kelime üstte altın rozetli;
+        altında rastgele keşif kartları (günün 5'i hariç) */}
       {sekme === "kelime" && (
         <>
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
+            <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>🌟 GÜNÜN KELİMELERİ</span>
+            <p className="text-[9px] text-white/40">her gün 5 yeni kelime — günlük seçim cihazının tarihine göre</p>
+          </div>
+          <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {gununKelimeleri.map((k) => (
+              <KelimeKarti key={k.ar} k={k} altin cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} />
+            ))}
+          </div>
+
           <div className="mb-3 flex flex-wrap items-center justify-center gap-2.5">
-            <p className="text-[9px] text-white/40">Karta tıkla — anlamını gör · 🔊 ile okunuşu dinle · Kur'an'da en sık geçen kelimeler 🔤</p>
+            <p className="text-[9px] text-white/40">Keşif kartları — tıkla: anlamını gör · 🔊 ile okunuşu dinle · Kur'an'da en sık geçen kelimeler 🔤</p>
             <button type="button" onClick={kelimeYenile}
               className="flex items-center gap-1 rounded-full border border-white/15 bg-white/[.05] px-2.5 py-1 text-[9px] font-black text-white/70 transition hover:border-[color:var(--accent)] hover:text-white"
-              title="Kartları yenile — havuzdan rastgele 15 kelime gelir">
+              title="Keşif kartlarını yenile — havuzdan rastgele 15 kelime gelir">
               🔄 Yenile
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {kelimeKartlari.map((k, i) => (
-              <div key={k.ar} className="relative">
-                <button type="button" onClick={() => setKartCevrildi(kartCevrildi === i ? null : i)}
-                  className={`flex h-20 w-full flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${kartCevrildi === i ? "border-[color:var(--accent)] bg-amber-500/10" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}>
-                  {kartCevrildi === i ? (
-                    <>
-                      <p className="text-[10.5px] font-black leading-tight text-amber-200">{k.tr}</p>
-                      <p className="mt-0.5 px-1 text-[7px] leading-tight text-white/40">{k.ornek.slice(0, 26)}</p>
-                    </>
-                  ) : (
-                    <p className="font-arabic text-lg text-white/90">{k.ar}</p>
-                  )}
-                </button>
-                {/* ★ OKUNUŞ SESİ (28.09, kullanıcı kararı): tarayıcı TTS ile Arapça okunuş —
-                    latin okunuş öncelikli okunur; cihaz Arapça sesi yoksa latin metin okunur */}
-                <button type="button"
-                  onClick={(e) => { e.stopPropagation(); kelimeOku(k); }}
-                  title={`Okunuşu dinle: ${k.okunus}`}
-                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-[9px] shadow-md ring-1 ring-white/20 transition hover:scale-110 hover:bg-black/90"
-                >🔊</button>
-              </div>
+            {kelimeKartlari.map((k) => (
+              <KelimeKarti key={k.ar} k={k} cevrildi={kartCevrildi === k.ar} cevir={() => setKartCevrildi(kartCevrildi === k.ar ? null : k.ar)} />
             ))}
           </div>
-          <p className="mt-3 text-center text-[8px] text-white/25">Havuz: {KELIME_KARTLARI.length} kelime · her yenilemede rastgele {kelimeKartlari.length} kart</p>
+          <p className="mt-3 text-center text-[8px] text-white/25">Havuz: {KELIME_KARTLARI.length} kelime · bugün {gununKelimeleri.length} yeni + her yenilemede rastgele {kelimeKartlari.length} keşif kartı</p>
         </>
       )}
 
