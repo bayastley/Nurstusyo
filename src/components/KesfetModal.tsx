@@ -222,7 +222,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     const ham = q.split(/\s+/).filter(Boolean);
     const kelimeler = ham
       .filter((k) => ham.length <= 1 || k !== "sure")
-      .map(metniHazirla)
+      // ★ Arapça kelime metniHazirla'da siliniyor → Arapça normalize'a düş ("الملك" → Mülk)
+      .map((k) => metniHazirla(k) || arapcaHazirla(k))
       .filter(Boolean);
     if (!kelimeler.length) return SURE_BİLGİLERİ;
     return SURE_BİLGİLERİ.filter((s) =>
