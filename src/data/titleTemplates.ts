@@ -41,7 +41,9 @@ function titlePool(lang: string): string[] {
  */
 function sureAdiCevir(surahName: string, s: number, lang: string): string {
   if (lang === "ar" || lang === "ur") return SURE_ARAPCA[s] ?? surahName;
-  return surahName;
+  // ★ 03.10: en/id şablonları "Surah {S}" yazdığından gelen ad "Bakara Suresi" ise
+  //   "Surah Bakara Suresi" olur — TR ekini soyup çıplak adı veriyoruz.
+  return surahName.replace(/\s+Suresi$/u, "");
 }
 
 /**
