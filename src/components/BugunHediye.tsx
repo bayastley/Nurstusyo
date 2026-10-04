@@ -97,9 +97,12 @@ export interface BugunHediyeProps {
   notify: (msg: string) => void;
   /** Header'daki üretim hakkı sayacını anında tazelemek için — hak gerçek cüzdana yazıldıktan sonra çağrılır */
   onHakDegisti?: () => void;
+  /** ★ GİRİŞ KONTROLÜ (04.10): hediye YALNIZ girişli kullanıcılara verilir —
+   *  girişsiz ziyaretçiye gösterilmez (kullanıcı kararı). Email oturumdan gelir. */
+  userEmail?: string | null;
 }
 
-export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }) => {
+export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti, userEmail }) => {
   const [acik, setAcik] = useState(false);
   const [hediye, setHediye] = useState<{ tur: "hadis" | "zikir" | "video" | "hafizlik"; baslik: string; metin: string; kaynak?: string } | null>(null);
   const [hakkiAlindi, setHakkiAlindi] = useState(false);
@@ -157,11 +160,14 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti }
       }
     } catch { /* yut */ }
     // ★ Kutuyu kapatma — "ne aldım?" ekranına geç (kullanıcı kararı 28.09)
+    // ★ KAPAT FİX (04.10): setAcik(false) yoktu — onay ekranı "Harika, Kapat" ile
+    //   kapanınca acik:true kaldığı için hediye kutusu GERİ AÇILIYORDU. Artık kapanır.
+    setAcik(false);
     setAlindi(hediye);
   }, [hediye, notify]);
 
-  if (!hediye || (!acik && (() => { try { return localStorage.getItem(HEDIYE_GUN_KEY) === bugunStr(); } catch { return false; } })()) && !alindi) {
-    // Bugün alındıysa (onay ekranı kapalıysa) hiçbir şey gösterme
+  if (!hediye || !userEmail || (!acik && (() => { try { return localStorage.getItem(HEDIYE_GUN_KEY) === bugunStr(); } catch { return false; } })()) && !alindi) {
+    // Bugün alındıysa (onay ekranı kapalıysa) veya kullanıcı girişsizse hiçbir şey gösterme
     return null;
   }
 
