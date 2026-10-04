@@ -1530,7 +1530,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode }) => {
                     {mushafModu ? (
                       /* ★ MUSHAF SAYFASI — ayetler tek blok, sonraki ayete doğal akış; tıklanan ayet yanar */
                       <div ref={centerListRef} className="max-h-[340px] overflow-y-auto rounded-xl bg-[#F5EDD8] px-4 py-3 scrollbar-thin shadow-inner" style={{ backgroundImage: "linear-gradient(rgba(138,116,64,.06) 1px, transparent 1px)", backgroundSize: "100% 2.4rem" }}>
-                        <p className="mb-2 text-center font-arabic text-base font-bold text-[#8a7440]" dir="rtl">﴿﷽﴾</p>
+                        {/* ★ 04.10: U+FDFD ligatürü Google Translate'te "Bismillahirrahmanirrahim" oluyordu — sabit Arapça yazım + notranslate */}
+                        <p className="notranslate mb-2 text-center font-arabic text-base font-bold text-[#8a7440]" translate="no" dir="rtl">﴿بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ﴾</p>
                         <p className="text-right font-arabic text-[17px] leading-[2.4] text-[#2c2416]" dir="rtl">
                           {ayahs.map(a => (
                             <span

@@ -11,7 +11,10 @@ export function StudioHeroSection() {
   const t = (key: string) => translate(lang, key);
   return (
     <section className="relative mx-auto max-w-[1500px] px-4 pb-3 pt-10 text-center sm:pt-14">
-      <div className="ornament font-arabic text-[42px] leading-none" style={{ color: "var(--accent)" }}>﷽</div>
+      {/* ★ 04.10: Basmala — U+FDFD ligatürü yerine sabit Arapça yazım + notranslate.
+          Ligatürü Google Translate "Bismillahirrahmanirrahim" diye çeviriyordu;
+          basmala hiçbir dilde çevrilmez, Arapça kalır. */}
+      <div className="ornament font-arabic notranslate text-[42px] leading-none" style={{ color: "var(--accent)" }} translate="no" dir="rtl">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
       <h1 className="shimmer-text mt-4 font-display text-[clamp(28px,4.8vw,56px)] font-black tracking-[.12em]">{t("heroBaslik")}</h1>
       <div className="tagline-viewport mx-auto mt-3 w-full max-w-3xl overflow-hidden">
         <div className="tagline-track">
