@@ -17,7 +17,8 @@ import {
   type MoodPreset,
 } from "../data/arkaplanUretici";
 // ★ 04.10: mood çipleri + mood adları seçili dilde görüntülenir (tıklamada TR anahtar korunur)
-import { moodOneriGorunum, moodAdGorunum } from "../data/arkaplanCokDil";
+import { moodOneriGorunum, moodAdGorunum, moodPlanGorunum, senaryoGorunum } from "../data/arkaplanCokDil";
+import { kategoriAdGorunum } from "../data/kategoriCokDil";
 import { CATEGORIES, CATEGORY_PALETTE, type CatId } from "../clips";
 
 export interface ArkaPlanUreticiModalProps {
@@ -39,6 +40,8 @@ export interface ArkaPlanUreticiModalProps {
 }
 
 const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
+// ★ 04.10: kategori adı seçili dilde (çeviri yoksa TR label)
+const catLabelDil = (cat: CatId, l: Lang): string => kategoriAdGorunum(cat, catLabel(cat), l);
 
 export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   open, onClose, notify, randomizeBackgrounds, setCinematic,
@@ -119,14 +122,14 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   const senaryoNotu = useCallback((): string => {
     if (!aktifMood) return "";
     if (cats.length === 0) return "";
-    if (senaryo === "tek") return tt("auNotTek").replace("{k}", catLabel(cats[0]));
+    if (senaryo === "tek") return tt("auNotTek").replace("{k}", catLabelDil(cats[0], lang));
     if (senaryo === "cift") {
       const destek = cats[1] ?? cats[0];
-      return tt("auNotCift").replace("{k1}", catLabel(cats[0])).replace("{k2}", catLabel(destek));
+      return tt("auNotCift").replace("{k1}", catLabelDil(cats[0], lang)).replace("{k2}", catLabelDil(destek, lang));
     }
     const orta = cats[1] ?? cats[0];
     const final = cats[2] ?? orta;
-    return tt("auNotYolculuk").replace("{k1}", catLabel(cats[0])).replace("{k2}", catLabel(orta)).replace("{k3}", catLabel(final));
+    return tt("auNotYolculuk").replace("{k1}", catLabelDil(cats[0], lang)).replace("{k2}", catLabelDil(orta, lang)).replace("{k3}", catLabelDil(final, lang));
   }, [aktifMood, cats, senaryo, lang, tt]);
 
   if (!open) return null;
@@ -174,7 +177,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
               {!tamEslesme && (
                 <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
               )}
-            </div>              <p className="text-[10px] leading-relaxed text-white/55">{aktifMood.plan}</p>
+            </div>              <p className="text-[10px] leading-relaxed text-white/55">{moodPlanGorunum(aktifMood.id, aktifMood.plan, lang)}</p>
             <p className="mt-2 text-[8.5px] italic text-white/35">{tt("auDurustNot")}</p>
           </div>
 
@@ -191,8 +194,8 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
                       borderColor: secili ? "var(--accent)" : "rgba(255,255,255,.10)",
                       background: secili ? "rgba(255,255,255,.07)" : "rgba(255,255,255,.03)",
                     }}>
-                    <p className="text-[11px] font-bold text-white/85">{m.emoji} {m.ad}</p>
-                    <p className="mt-0.5 text-[8.5px] leading-relaxed text-white/45">{m.aciklama}</p>
+                    <p className="text-[11px] font-bold text-white/85">{m.emoji} {senaryoGorunum(m.id, m.ad, m.aciklama, lang).ad}</p>
+                    <p className="mt-0.5 text-[8.5px] leading-relaxed text-white/45">{senaryoGorunum(m.id, m.ad, m.aciklama, lang).aciklama}</p>
                     {secili && <Check size={11} strokeWidth={3} className="mt-1" style={{ color: "var(--accent)" }} />}
                   </button>
                 );
@@ -214,7 +217,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
                       background: i === 0 ? `${pal.primary}22` : "rgba(255,255,255,.04)",
                       color: i === 0 ? pal.secondary : "rgba(255,255,255,.6)",
                     }}>
-                    {catLabel(cat)}
+                    {catLabelDil(cat, lang)}
                     <span className="text-[7.5px] font-black tracking-wider text-white/40">{rol}</span>
                   </span>
                 );

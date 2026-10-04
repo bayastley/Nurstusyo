@@ -60,3 +60,37 @@ export const MOOD_AD_COKDIL: Record<string, Partial<Record<Lang, string>>> = {
 export function moodAdGorunum(moodId: string, trAd: string, lang: Lang): string {
   return MOOD_AD_COKDIL[moodId]?.[lang] ?? trAd;
 }
+
+/** 11 mood plan cümlesi (TR verideki plan alanının çevirisi) */
+export const MOOD_PLAN_COKDIL: Record<string, Partial<Record<Lang, string>>> = {
+  "huzur":     { en: "Calm lake + night sky + geometric pattern trio, with a soft cinematic filter.", ar: "ثلاثية البحيرة الهادئة + سماء الليل + الزخرفة الهندسية، بفلتر سينمائي ناعم.", id: "Trio danau tenang + langit malam + pola geometris, dengan filter sinematik lembut.", ur: "پرسکون جھیل + رات کا آسمان + ہندسی نقش کی triplet، نرم سینمائی فلٹر کے ساتھ۔" },
+  "nur":       { en: "Starry sky + mosque silhouette, glowing with the warm golden 'Light' filter.", ar: "سماء مرصعة بالنجوم + ظل المسجد، تتوهج بفلتر «النور» الذهبي الدافئ.", id: "Langit berbintang + siluet masjid, bersinar dengan filter 'Cahaya' emas hangat.", ur: "ستاروں بھرا آسمان + مسجد کا سایہ، گرم سنہری «نور» فلٹر سے چمکتا ہے۔" },
+  "gece":      { en: "Deep-blue night palette: moon + stars + clouds, with the deep 'Night' filter.", ar: "لوحة ليل زرقاء عميقة: قمر + نجوم + سحاب، بفلتر «الليل» العميق.", id: "Palet malam biru tua: bulan + bintang + awan, dengan filter 'Malam' yang dalam.", ur: "گہرا نیلی رات کا پیلیٹ: چاند + ستارے + بادل، گہرے «رات» فلٹر کے ساتھ۔" },
+  "gunbatimi": { en: "Sunset + sea reflection, cinematic feel with the 'Golden Hour' filter.", ar: "غروب + انعكاس البحر، إحساس سينمائي بفلتر «الساعة الذهبية».", id: "Matahari terbenam + pantulan laut, nuansa sinematik dengan filter 'Jam Keemasan'.", ur: "غروبِ آفتاب + سمندر کا عکس، «سنہری لمحہ» فلٹر کے ساتھ سینمائی احساس۔" },
+  "kabe":      { en: "Kaaba + Islamic architecture, with the golden contrast of 'Kaaba Accent'.", ar: "الكعبة + العمارة الإسلامية، بالتباين الذهبي «الليلات الكعبة».", id: "Ka'bah + arsitektur Islam, dengan kontras emas 'Aksen Ka'bah'.", ur: "کعبہ + اسلامی فن تعمیر، «کعبہ نمایاں» کے سنہری تضاد کے ساتھ۔" },
+  "yesil":     { en: "Gardens of paradise + forest, vivid green with the 'Emerald' filter.", ar: "حدائق الجنة + الغابة، أخضر حيوي بفلتر «الزمرد».", id: "Taman surga + hutan, hijau cerah dengan filter 'Zamrud'.", ur: "جنت کے باغ + جنگل، «زمرد» فلٹر کے ساتھ شاداب سبز۔" },
+  "deniz":     { en: "Sea + waterfall flow, soft contrast; the peace of water.", ar: "البحر + جريان الشلال، تباين ناعم؛ سكينة الماء.", id: "Laut + aliran air terjun, kontras lembut; kedamaian air.", ur: "سمندر + آبشار کا بہاؤ، نرم تضاد؛ پانی کا سکون۔" },
+  "vahset":    { en: "Mountains + snowy peaks, black-and-white cinema: grandeur and resolve.", ar: "الجبال + قمم مثلثة، سينما أبيض وأسود: هيبة وعزيمة.", id: "Gunung + puncak bersalju, sinema hitam-putih: keagungan dan tekad.", ur: "پہاڑ + برفانی چوٹیاں، سیاہ و سفید سینما: عظمت اور عزم۔" },
+  "imtihan":   { en: "Stormy clouds + turbulent sea, with a dramatic dark filter.", ar: "سحاب عاصف + بحر مضطرب، بفلتر داكن درامي.", id: "Awan badai + laut bergolak, dengan filter gelap dramatis.", ur: "طوفانی بادل + متلاطم سمندر، ڈرامائی گہرے فلٹر کے ساتھ۔" },
+  "saf":       { en: "Snow + cloud whiteness, neutral cinema tone: simplicity.", ar: "بياض الثلج + السحاب، نغمة سينمائية محايدة: البساطة.", id: "Keputihan salju + awan, nada sinema netral: kesederhanaan.", ur: "برف کی سفیدی + بادل، غیر جانبدار سینمائی لہجہ: سادگی۔" },
+  "sanat":     { en: "Geometric pattern + architectural detail, golden accent: a handcrafted feel.", ar: "زخرفة هندسية + تفصيل معماري، لمسة ذهبية: إحساس الصناعة اليدوية.", id: "Pola geometris + detail arsitektur, aksen emas: nuansa kerajinan tangan.", ur: "ہندسی نقش + تعمیری تفصیل، سنہری نمایاں: دستکاری کا احساس۔" },
+  "kuranyolu": { en: "Mushaf + pattern, warm reading light: a scene close to the Word.", ar: "المصحف + الزخرفة، ضوء قراءة دافئ: مشهد قريب من الكلمة.", id: "Mushaf + pola, cahaya baca hangat: adegan dekat dengan Sabda.", ur: "مصحف + نقش، گرم مطالعاتی روشنی: کلام کے قریب منظر۔" },
+};
+
+/** Mood plan cümlesinin seçili dildeki görünümü — çeviri yoksa TR plan */
+export function moodPlanGorunum(moodId: string, trPlan: string, lang: Lang): string {
+  return MOOD_PLAN_COKDIL[moodId]?.[lang] ?? trPlan;
+}
+
+/** 3 senaryo modunun ad + açıklaması */
+export const SENARYO_COKDIL: Record<string, Partial<Record<Lang, { ad: string; aciklama: string }>>> = {
+  "tek":      { en: { ad: "Single Scene", aciklama: "The whole video in one atmosphere: the strongest sense of unity." }, ar: { ad: "مشهد واحد", aciklama: "الفيديو كله في جو واحد: أقوى إحساس بالوحدة." }, id: { ad: "Adegan Tunggal", aciklama: "Seluruh video dalam satu suasana: rasa kesatuan paling kuat." }, ur: { ad: "ایک منظر", aciklama: "پوری ویڈیو ایک ماحول میں: اتحاد کا سب سے مضبوط احساس۔" } },
+  "cift":     { en: { ad: "Dual Cut", aciklama: "Main + support category alternating: a sense of rhythm." }, ar: { ad: "مونتاج ثنائي", aciklama: "فئة رئيسية + داعمة بالتناوب: إحساس بالإيقاع." }, id: { ad: "Potongan Ganda", aciklama: "Kategori utama + pendukung bergantian: rasa ritme." }, ur: { ad: "دوہری ترتیب", aciklama: "بنیادی + معاون زمرے باری باری: رفتار کا احساس۔" } },
+  "yolculuk": { en: { ad: "Journey", aciklama: "Calm opening → dramatic middle → hopeful finale: a story arc." }, ar: { ad: "رحلة", aciklama: "افتتاح هادئ → وسط درامي → خاتمة مشرقة: قوس حكاية." }, id: { ad: "Perjalanan", aciklama: "Pembuka tenang → tengah dramatis → final penuh harapan: lengkung cerita." }, ur: { ad: "سفر", aciklama: "پرسکون آغاز → ڈرامائی درمیان → امید بھرا اختتام: کہانی کا قوس۔" } },
+};
+
+/** Senaryo modunun seçili dildeki görünümü — çeviri yoksa TR veri */
+export function senaryoGorunum(id: string, trAd: string, trAciklama: string, lang: Lang): { ad: string; aciklama: string } {
+  const c = SENARYO_COKDIL[id]?.[lang];
+  return c ? { ad: c.ad, aciklama: c.aciklama } : { ad: trAd, aciklama: trAciklama };
+}

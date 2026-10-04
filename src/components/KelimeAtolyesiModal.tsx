@@ -27,6 +27,7 @@ import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clip
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
 // ★ 04.10: öneri çipleri seçili dilde GÖRÜNÜR; tıklamada TR anahtar kutuya yazılır
 import { cipGorunum, receteEtiketGorunum } from "../data/kelimeCipCokDil";
+import { kategoriAdGorunum } from "../data/kategoriCokDil";
 import type { OnerilenAyet } from "../data/kelimeAtolyesi";
 // ★ 04.10 TUR 4: önerilen ayetlerin mealı/kaynağı site dilinde (kullanıcı talebi)
 import { gorunenMeal, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
@@ -61,6 +62,8 @@ function ayetNoFromSource(source: string): number {
 }
 
 const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
+// ★ 04.10: kategori adı seçili dilde
+const catLabelDil = (cat: CatId, l: Lang): string => kategoriAdGorunum(cat, catLabel(cat), l);
 
 // ── Tier duyarlı kategori filtresi — KATEGORI_TIER ile aynı kaynak ──
 const TIER_SIRA: Record<"free" | "pro" | "elit", number> = { free: 0, pro: 1, elit: 2 };
@@ -286,7 +289,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                       background: secili ? `${pal.primary}22` : "rgba(255,255,255,.04)",
                       color: secili ? pal.secondary : "rgba(255,255,255,.6)",
                     }}>
-                    {catLabel(cat)}
+                    {catLabelDil(cat, lang)}
                     {secili && <Check size={11} strokeWidth={3} />}
                   </button>
                 );
