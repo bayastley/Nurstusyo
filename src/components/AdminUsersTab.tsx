@@ -26,6 +26,13 @@ interface AdminUsersTabProps {
   jetonDelta: number;
   setJetonDelta: (v: number) => void;
   handleDirectJetonSet: (email: string, amount: number) => void;
+  /** ★ 04.10: tür bazlı üretim hakkı — kisa/uzun/tam ayrı verip harcatıyoruz */
+  rightsKind: "kisa" | "uzun" | "tam";
+  setRightsKind: (k: "kisa" | "uzun" | "tam") => void;
+  videoRights: { kisa: number; uzun: number; tam: number } | null;
+  rightsLoading: boolean;
+  handleSetVideoRights: (email: string, kind: "kisa" | "uzun" | "tam", amount: number, mode: "set" | "gift") => void;
+  refreshVideoRights: (email: string) => void;
   selectedEmail: string;
   setSelectedEmail: (v: string) => void;
   filteredUsers: ManagedUser[];
@@ -45,6 +52,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
   selectedUser, banReasonInput, setBanReasonInput,
   handleBan, handleUnban, handleTierChange, handleResetRights, handleResetSingleRight,
   jetonDelta, setJetonDelta, handleDirectJetonSet,
+  rightsKind, setRightsKind, videoRights, rightsLoading, handleSetVideoRights, refreshVideoRights,
   selectedEmail, setSelectedEmail, filteredUsers, currentUserEmail,
   handleUserHistory, userHistory, loadingHistory, historyEmail, setHistoryEmail, setUserHistory,
 }) => {
@@ -391,19 +399,41 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               </details>
             </div>
 
-            {/* Üretim hakkı bakiyesi yönetimi */}
+            {/* ★ ÜRETİM HAKKI VER — TÜR SEÇMELİ (04.10, admin isteği: "kısa/orta/uzun seçeyim"):
+                Haklar nur_video_rights tablosuna (kisa/uzun/tam) yazılır — üretim izni
+                (nur_consume_video) BU tablodan harcar. Eski jeton bakiyesi ölü veriydi. */}
             <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                🪙 ⚡ Üretim Hakkı Bakiye Yönetimi
+                🪙 ⚡ Üretim Hakkı Ver — Kısa / Orta / Uzun
               </label>
-              <div className="flex items-center justify-between bg-white/5 rounded-xl p-2">
-                <span className="text-[10px] text-white/50 font-medium">Mevcut Bakiye:</span>
-                <span className="font-display text-xl font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
-                  {selectedUser.jeton ?? 0} <span className="text-[10px] text-white/40 font-bold">🎓 ÜRETİM HAKKI</span>
-                </span>
+
+              {/* Mevcut hak durumu — tür bazlı */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["kisa", "uzun", "tam"] as const).map((k) => (
+                  <div key={k} className={`rounded-xl border p-2 text-center transition ${rightsKind === k ? "border-[color:var(--accent-2)]/60 bg-white/10" : "border-white/10 bg-white/5"}`}>
+                    <div className="text-[8.5px] font-bold uppercase tracking-wide text-white/45">{k === "kisa" ? "Kısa" : k === "uzun" ? "Orta" : "Uzun"}</div>
+                    <div className="font-display text-base font-black tabular-nums" style={{ color: "var(--accent-2)" }}>
+                      {rightsLoading ? "…" : (videoRights?.[k] ?? 0)}
+                    </div>
+                  </div>
+                ))}
               </div>
 
-              {/* Elle bakiye tanımlama */}
+              {/* Tür seçici */}
+              <div className="flex items-center gap-1 pt-0.5">
+                {(["kisa", "uzun", "tam"] as const).map((k) => (
+                  <button
+                    key={k}
+                    onClick={() => setRightsKind(k)}
+                    className={`flex-1 rounded-lg py-1.5 text-[9px] font-black transition ${rightsKind === k ? "text-black" : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"}`}
+                    style={rightsKind === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+                  >
+                    {k === "kisa" ? "🎬 Kısa (59 sn)" : k === "uzun" ? "🎞️ Orta (600 sn)" : "📽️ Uzun (90 dk)"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Miktar + TANIMLA (seçilen türe MUTLAK yaz) */}
               <div className="flex items-center gap-1.5 pt-1">
                 <input
                   type="number"
@@ -414,7 +444,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   className="glass-soft h-9 flex-1 rounded-xl px-3 font-mono text-[12px] font-bold text-white outline-none placeholder:text-white/30"
                 />
                 <button
-                  onClick={() => handleDirectJetonSet(selectedUser.email, jetonDelta)}
+                  onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, jetonDelta, "set")}
                   className="flex h-9 items-center justify-center gap-1 rounded-xl px-4 text-[11px] font-black text-black transition hover:brightness-110 active:scale-95"
                   style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                 >
@@ -422,26 +452,30 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 </button>
               </div>
 
-              {/* Hızlı seçim butonları */}
+              {/* Hızlı EKLEME butonları — seçilen türün hakkının ÜZERİNE ekler */}
               <div className="flex items-center gap-1 pt-1">
                 {[50, 100, 500, 1000].map((amt) => (
                   <button
                     key={amt}
-                    onClick={() => handleDirectJetonSet(selectedUser.email, amt)}
+                    onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, amt, "gift")}
                     className="flex-1 rounded-lg bg-white/5 py-1 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition"
+                    title={`Seçili türe +${amt} hak ekler`}
                   >
-                    ={amt}
+                    +{amt}
                   </button>
                 ))}
               </div>
 
-              {/* Bakiye Sıfırla */}
+              {/* Seçili türü sıfırla */}
               <button
-                onClick={() => handleDirectJetonSet(selectedUser.email, 0)}
+                onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, 0, "set")}
                 className="mt-1 w-full rounded-lg border border-red-500/30 bg-red-500/10 py-1.5 text-[9.5px] font-black text-red-400 transition hover:bg-red-500/20 active:scale-95"
               >
-                🔄 BAKİYEYİ SIFIRLA
+                🔄 SEÇİLİ TÜRÜ SIFIRLA
               </button>
+              <p className="text-[8.5px] leading-relaxed text-white/35">
+                Orta = 600 sn'ye kadar video · Uzun = 90 dk'ya kadar tam sürüm. Haklar anında geçerli olur — kullanıcı üretimde bu türden harcar.
+              </p>
             </div>
           </div>
 

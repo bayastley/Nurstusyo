@@ -37,6 +37,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
   const [jetonDelta, setJetonDelta] = useState<number>(50);
+  // ★ 04.10 TÜR BAZLI ÜRETİM HAKKI: admin kisa/uzun/tam seçip verir — nur_video_rights
+  //   tablosuna yazılır (tüketim BU tablodan harcar; eski sub_jeton ölü veriydi).
+  const [rightsKind, setRightsKind] = useState<"kisa" | "uzun" | "tam">("kisa");
+  const [videoRights, setVideoRights] = useState<{ kisa: number; uzun: number; tam: number } | null>(null);
+  const [rightsLoading, setRightsLoading] = useState(false);
 
   // Ban reason input state
   const [banReasonInput, setBanReasonInput] = useState<string>("");
@@ -344,6 +349,48 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
+  // ★ TÜR BAZLI ÜRETİM HAKKI (04.10) — seçili kullanıcının kalan haklarını çek
+  const refreshVideoRights = async (email: string) => {
+    if (!email) { setVideoRights(null); return; }
+    setRightsLoading(true);
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "get_video_rights", target: email.trim().toLowerCase() }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; rights?: { kisa: number; uzun: number; tam: number } } | null;
+      setVideoRights(data?.ok && data.rights ? data.rights : { kisa: 0, uzun: 0, tam: 0 });
+    } catch { setVideoRights({ kisa: 0, uzun: 0, tam: 0 }); }
+    finally { setRightsLoading(false); }
+  };
+
+  // ★ TÜR BAZLI ÜRETİM HAKKI VER — mode "set" = mutlak, "gift" = üzerine ekle
+  const handleSetVideoRights = async (email: string, kind: "kisa" | "uzun" | "tam", amount: number, mode: "set" | "gift") => {
+    const target = email.trim().toLowerCase();
+    const safeAmount = Math.max(0, Math.floor(amount));
+    if (mode === "set" && safeAmount === 0 && !window.confirm(`${target} kullanıcısının ${kind === "kisa" ? "KISA" : kind === "uzun" ? "ORTA (600 sn)" : "UZUN (90 dk)"} hakları 0'a çekilecek. Emin misiniz?`)) return;
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "set_video_rights", target, kind, amount: safeAmount, mode }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; remaining?: number } | null;
+      if (!response.ok || !data?.ok) { notify(`❌ Hak verilmedi: ${data?.error || "bilinmeyen hata"}`); return; }
+      const ad = kind === "kisa" ? "Kısa (59 sn)" : kind === "uzun" ? "Orta (600 sn)" : "Uzun (90 dk)";
+      notify(mode === "gift"
+        ? `⚡ ${target} · ${ad} +${safeAmount} hak eklendi · kalan: ${data.remaining}`
+        : `⚡ ${target} · ${ad} ${safeAmount} hak olarak tanımlandı · kalan: ${data.remaining}`);
+      await refreshVideoRights(target);
+    } catch { notify("❌ Sunucuya ulaşılamadı — hak verilemedi"); }
+  };
+
+  // Seçili kullanıcı değişince hak durumunu tazele
+  useEffect(() => {
+    if (selectedUser?.email) refreshVideoRights(selectedUser.email);
+    else setVideoRights(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUser?.email]);
+
   // ★ HAKLARI SIFIRLA — satın alınan tüm hakları, jetonu ve aboneliği sıfırla
   const handleResetRights = async (email: string) => {
     const resetState = await serverManage("reset_rights", { email });
@@ -634,6 +681,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
               jetonDelta={jetonDelta}
               setJetonDelta={setJetonDelta}
               handleDirectJetonSet={handleDirectJetonSet}
+              rightsKind={rightsKind}
+              setRightsKind={setRightsKind}
+              videoRights={videoRights}
+              rightsLoading={rightsLoading}
+              handleSetVideoRights={handleSetVideoRights}
+              refreshVideoRights={refreshVideoRights}
               selectedEmail={selectedEmail}
               setSelectedEmail={setSelectedEmail}
               filteredUsers={filteredUsers}

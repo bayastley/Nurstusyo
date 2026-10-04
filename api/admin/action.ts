@@ -254,6 +254,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         subIptal = true;
       }
       return res.status(200).json({ ok: true, kind, subscriptionCancelled: subIptal });
+    } else if (action === "set_video_rights") {
+      // ★ ÜRETİM HAKKI VER — TÜR BAZLI (04.10, admin isteği: "kısa/orta/uzun seçebileyim"):
+      //   Tüketim /api/render/authorize → nur_consume_video RPC ile nur_video_rights
+      //   tablosundan yapılır. Eski change_jeton nur_wallets.sub_jeton'a yazıyordu —
+      //   o kolon artık hiçbir yerde OKUNMUYOR (ölü veri), bu yüzden admin'in verdiği
+      //   haklar üretimde görünmüyordu. Bu aksiyon DOĞRU tabloya tür bazlı yazar:
+      //   kind: kisa | uzun | tam · mode: "set" (mutlak) | "gift" (üzerine ekle)
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const kind = String(body.kind || "");
+      if (!("kisa uzun tam".split(" ")).includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz hak türü" });
+      const amount = Math.max(0, Math.min(100000, Number(body.amount) || 0));
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+      if (!users[0]?.id) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı" });
+      const uid = users[0].id;
+      let hedef = amount;
+      if (body.mode === "gift") {
+        const rows = await db<any[]>(`nur_video_rights?user_id=eq.${encodeURIComponent(uid)}&video_kind=eq.${kind}&select=remaining`);
+        hedef = Math.min(100000, (rows[0]?.remaining ?? 0) + amount);
+      }
+      // merge-duplicates upsert: satır yoksa oluşur, varsa remaining = hedef yazılır
+      await db("nur_video_rights?on_conflict=user_id,video_kind", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify({ user_id: uid, video_kind: kind, remaining: hedef, updated_at: new Date().toISOString() }) });
+      return res.status(200).json({ ok: true, kind, remaining: hedef, mode: body.mode === "gift" ? "gift" : "set" });
+    } else if (action === "get_video_rights") {
+      // ★ TÜR BAZLI HAK DURUMU — admin panelde seçili kullanıcının kalan haklarını gösterir
+      const email = validateEmail(body.target);
+      if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
+      const users = await db<any[]>(`nur_users?email=eq.${encodeURIComponent(email)}&select=id`);
+      if (!users[0]?.id) return res.status(404).json({ ok: false, error: "Kullanıcı bulunamadı" });
+      const rows = await db<any[]>(`nur_video_rights?user_id=eq.${encodeURIComponent(users[0].id)}&select=video_kind,remaining`);
+      const rights: Record<string, number> = { kisa: 0, uzun: 0, tam: 0 };
+      for (const row of rows) { if (row.video_kind in rights) rights[row.video_kind] = Math.max(0, Number(row.remaining) || 0); }
+      return res.status(200).json({ ok: true, rights });
     } else if (action === "reset_rights") {
       // ★ TÜM HAKLARI SIFIRLA — tier, cüzdan, abonelik hepsini temizle
       const email = validateEmail(body.target);
