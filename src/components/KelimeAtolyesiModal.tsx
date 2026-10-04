@@ -25,6 +25,8 @@ import {
 } from "../data/kelimeAtolyesi";
 import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clips";
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
+// ★ 04.10: öneri çipleri seçili dilde GÖRÜNÜR; tıklamada TR anahtar kutuya yazılır
+import { cipGorunum, receteEtiketGorunum } from "../data/kelimeCipCokDil";
 import type { OnerilenAyet } from "../data/kelimeAtolyesi";
 // ★ 04.10 TUR 4: önerilen ayetlerin mealı/kaynağı site dilinde (kullanıcı talebi)
 import { gorunenMeal, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
@@ -185,7 +187,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
           className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-9 text-[11px] outline-none placeholder:text-white/30"
         />
         {kelime && (
-          <button type="button" onClick={() => setKelime("")} title="Temizle"
+          <button type="button" onClick={() => setKelime("")} title={tt("kaTemizle")}
             className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/50 transition hover:bg-red-500/25 hover:text-red-300">
             <X size={11} strokeWidth={3} />
           </button>
@@ -197,8 +199,9 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
         <div className="mb-1 flex flex-wrap gap-1.5">
           {KELIME_ONERILERI.map((o) => (
             <button key={o} type="button" onClick={() => setKelime(o)}
+              title={o}
               className="glass-soft rounded-full px-3 py-1.5 text-[10px] font-bold text-white/60 transition hover:text-white">
-              {o}
+              {cipGorunum(o, lang)}
             </button>
           ))}
         </div>
@@ -212,7 +215,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
             <div className="mb-1 flex items-center gap-2">
               <span className="text-[18px]">{aktifRecete.emoji}</span>
               <h4 className="font-display text-[13px] font-bold" style={{ color: "var(--accent-2)" }}>
-                {aktifRecete.etiket} Teması
+                {aktifRecete.id === "fallback" ? aktifRecete.etiket : tt("kaTemaBaslik").replace("{t}", receteEtiketGorunum(aktifRecete.id, aktifRecete.etiket, lang))}
               </h4>
               {!tamEslesme && (
                 <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
@@ -227,12 +230,12 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
           {/* Ayet önerileri — çoklu seçim: istediğin kadar kartı işaretle */}
           <div>
             <div className="mb-1.5 flex items-center justify-between">
-              <p className="text-[9px] font-black tracking-wider text-white/40">Ayet önerileri · işaretlediklerin aktarılır</p>
+              <p className="text-[9px] font-black tracking-wider text-white/40">{tt("kaAyetOneriBaslik")}</p>
               {ayetler.length > 0 && (
                 <button type="button"
                   onClick={() => setSeciliAyetler(seciliAyetler.size === ayetler.length ? new Set() : new Set(ayetler.map((_, i) => i)))}
                   className="text-[8.5px] font-bold text-white/45 underline-offset-2 transition hover:text-white/80 hover:underline">
-                  {seciliAyetler.size === ayetler.length ? "hiçbiri" : "tümünü seç"}
+                  {seciliAyetler.size === ayetler.length ? tt("kaHicbiri") : tt("kaTumunuSec")}
                 </button>
               )}
             </div>
@@ -249,7 +252,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                     {k.kelimeGecti && (
                       <span className="absolute right-2 top-2 rounded-full px-1.5 py-0.5 text-[7px] font-black"
                         style={{ background: "rgba(255,255,255,.10)", color: "var(--accent-2)" }}>
-                        ✍️ kelime geçiyor
+                        ✍️ {tt("kaKelimeGeciyor")}
                       </span>
                     )}
                     <p className={`mb-1 text-right font-arabic text-[15px] leading-relaxed ${secili ? "" : "opacity-80"} ${k.kelimeGecti ? "pt-4" : ""}`} style={{ color: "var(--accent-2)" }}>{k.ar}</p>
@@ -265,16 +268,12 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                 );
               })}
             </div>
-            <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">
-              İşaretlediğin ayetler sırayla stüdyoya eklenir (API'den tam metinleri gelir); stüdyo listesinden ekleyip çıkarabilirsin.
-              "✍️ kelime geçiyor" rozeti, yazdığın kelimenin ayetin mealinde bulunduğunu gösterir.
-              Ayet havuzu Ayet Kütüphanesi'nden, atmosfer R2 kütüphanesinden seçilir.
-            </p>
+            <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">{tt("kaAyetDipnot")}</p>
           </div>
 
           {/* Atmosfer önerileri */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">Atmosfer önerileri</p>
+            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">{tt("kaAtmosferBaslik")}</p>
             <div className="flex flex-wrap gap-1.5">
               {catsGorunen.map((cat) => {
                 const pal = CATEGORY_PALETTE[cat];
@@ -293,9 +292,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                 );
               })}
             </div>
-            <p className="mt-1 text-[8.5px] text-white/35">
-              Aktarırken seçtiğin kategoriden rastgele klip atanır; stüdyoda tek tıkla değiştirebilirsin.
-            </p>
+            <p className="mt-1 text-[8.5px] text-white/35">{tt("kaAtmosferDipnot")}</p>
           </div>
 
           {/* Aktar butonu */}
@@ -304,10 +301,10 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
             {gonderiliyor ? <Loader2 size={14} className="animate-spin" /> : <ArrowRight size={14} strokeWidth={3} />}
             {gonderiliyor
-              ? "Stüdyoya aktarılıyor..."
+              ? tt("kaAktariliyor")
               : seciliAyetler.size > 1
-                ? `${seciliAyetler.size} Ayeti Stüdyoya Aktar`
-                : "Stüdyoya Aktar"}
+                ? tt("kaAktarCoklu").replace("{n}", String(seciliAyetler.size))
+                : tt("kaAktar")}
           </button>
         </div>
       )}

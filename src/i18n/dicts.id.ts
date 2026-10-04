@@ -908,4 +908,18 @@ export const idDict: Dict = {
   rmzKandilKadir: "Lailatul Qadar",
   rmzKandilKurbanArefe: "Hari Arafah (Iduladha)",
   rmzKandilMevlid: "Maulid Nabi",
+  // ─── 04.10 TUR 9: Loket Kata — sisa permukaan TR ───
+  kaTemizle: "Hapus",
+  kaTemaEki: "Tema",
+  kaTemaBaslik: "Tema {t}",
+  kaAyetOneriBaslik: "Saran ayat · yang kamu tandai akan diimpor",
+  kaHicbiri: "tidak ada",
+  kaTumunuSec: "pilih semua",
+  kaKelimeGeciyor: "katamu di ayat",
+  kaAyetDipnot: "Ayat yang kamu tandai ditambahkan ke studio secara berurutan (teks lengkap dari API); kamu bisa menambah atau menghapusnya dari daftar studio. Lencana «✍️ katamu di ayat» berarti katamu ada dalam terjemahan ayat. Ayat diambil dari Perpustakaan Ayat, suasana dari pustaka R2.",
+  kaAtmosferBaslik: "Saran suasana",
+  kaAtmosferDipnot: "Saat mengimpor, klip acak dari kategori terpilih ditetapkan; bisa diganti sekali klik di studio.",
+  kaAktariliyor: "Mengimpor ke studio...",
+  kaAktar: "Impor ke Studio",
+  kaAktarCoklu: "Impor {n} Ayat ke Studio",
 };

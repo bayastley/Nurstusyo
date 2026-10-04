@@ -917,4 +917,18 @@ export const trDict: Dict = {
   rmzKandilKadir: "Kadir Gecesi",
   rmzKandilKurbanArefe: "Kurban Bayramı Arefesi",
   rmzKandilMevlid: "Mevlid Kandili",
+  // ─── 04.10 TUR 9: Kelime Atölyesi kalan TR yüzeyler (kullanıcı ekranı — çipler + reçete kartı) ───
+  kaTemizle: "Temizle",
+  kaTemaEki: "Teması",
+  kaTemaBaslik: "{t} Teması",
+  kaAyetOneriBaslik: "Ayet önerileri · işaretlediklerin aktarılır",
+  kaHicbiri: "hiçbiri",
+  kaTumunuSec: "tümünü seç",
+  kaKelimeGeciyor: "kelime geçiyor",
+  kaAyetDipnot: "İşaretlediğin ayetler sırayla stüdyoya eklenir (API'den tam metinleri gelir); stüdyo listesinden ekleyip çıkarabilirsin. \"✍️ kelime geçiyor\" rozeti, yazdığın kelimenin ayetin mealinde bulunduğunu gösterir. Ayet havuzu Ayet Kütüphanesi'nden, atmosfer R2 kütüphanesinden seçilir.",
+  kaAtmosferBaslik: "Atmosfer önerileri",
+  kaAtmosferDipnot: "Aktarırken seçtiğin kategoriden rastgele klip atanır; stüdyoda tek tıkla değiştirebilirsin.",
+  kaAktariliyor: "Stüdyoya aktarılıyor...",
+  kaAktar: "Stüdyoya Aktar",
+  kaAktarCoklu: "{n} Ayeti Stüdyoya Aktar",
 };

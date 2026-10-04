@@ -903,4 +903,18 @@ export const enDict: Dict = {
   rmzKandilKadir: "Laylat al-Qadr",
   rmzKandilKurbanArefe: "Day of Arafah (Eid al-Adha)",
   rmzKandilMevlid: "Mawlid al-Nabi",
+  // ─── 04.10 TUR 9: Word Workshop remaining TR surfaces ───
+  kaTemizle: "Clear",
+  kaTemaEki: "Theme",
+  kaTemaBaslik: "{t} Theme",
+  kaAyetOneriBaslik: "Verse suggestions · the ones you mark get imported",
+  kaHicbiri: "none",
+  kaTumunuSec: "select all",
+  kaKelimeGeciyor: "word in verse",
+  kaAyetDipnot: "The verses you mark are added to the studio in order (full texts come from the API); you can add or remove them from the studio list. The \"✍️ word in verse\" badge means your word appears in the verse's translation. Verses come from the Verse Library, atmospheres from the R2 library.",
+  kaAtmosferBaslik: "Atmosphere suggestions",
+  kaAtmosferDipnot: "On import, a random clip from the selected category is assigned; you can change it with one click in the studio.",
+  kaAktariliyor: "Importing to studio...",
+  kaAktar: "Import to Studio",
+  kaAktarCoklu: "Import {n} Verses to Studio",
 };
