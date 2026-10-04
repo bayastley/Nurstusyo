@@ -26,6 +26,8 @@ import {
 import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clips";
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
 import type { OnerilenAyet } from "../data/kelimeAtolyesi";
+// ★ 04.10 TUR 4: önerilen ayetlerin mealı/kaynağı site dilinde (kullanıcı talebi)
+import { gorunenMeal, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
 
 export interface KelimeAtolyesiModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
@@ -82,6 +84,11 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   // ★ 02.10 latent fix: ayetOner OnerilenAyet (kelimeGecti işaretli) döndürüyor —
   //   state AyetKarti[] tipindeyken rozet alanı görünmüyordu (TS2339).
   const [ayetler, setAyetler] = useState<OnerilenAyet[]>([]);
+  const [mealTick, setMealTick] = useState(0); // ★ TUR 4: çeviri meal gelince listeyi tazeler
+  useEffect(() => {
+    if (!open || !ayetler.length) return;
+    void mealleriTasi(ayetler, lang, () => setMealTick((v) => v + 1));
+  }, [open, lang, ayetler]);
   const [catsGorunen, setCatsGorunen] = useState<CatId[]>([]);
   const [seciliCat, setSeciliCat] = useState<CatId | null>(null);
   /** Çoklu seçim: işaretli ayet indeksleri (varsayılan: ilk öneri) */
@@ -246,8 +253,8 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                       </span>
                     )}
                     <p className={`mb-1 text-right font-arabic text-[15px] leading-relaxed ${secili ? "" : "opacity-80"} ${k.kelimeGecti ? "pt-4" : ""}`} style={{ color: "var(--accent-2)" }}>{k.ar}</p>
-                    <p className="mb-1.5 line-clamp-2 text-[9.5px] leading-relaxed text-white/60">{k.tr}</p>
-                    <p className="text-[8.5px] font-bold" style={{ color: "var(--accent)" }}>{k.source}</p>
+                    <p className="mb-1.5 line-clamp-2 text-[9.5px] leading-relaxed text-white/60">{gorunenMeal(k, lang)}</p>
+                    <p className="text-[8.5px] font-bold" style={{ color: "var(--accent)" }}>{kartKaynagi(lang, k.source)}</p>
                     {secili && (
                       <span className="absolute left-2 top-2 flex h-4 w-4 items-center justify-center rounded-full"
                         style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>

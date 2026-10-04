@@ -41,7 +41,10 @@ export const AyetSecimBolumu: React.FC<{
   ruhHaliUygula: (ruhId?: string) => void;
   /** ★ i18n (02.10): bölüm metinleri + çip adları seçili dilde */
   lang?: Lang;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr" }) => {
+  /** ★ 04.10 TUR 4: kart mealı/kaynağı seçili dilde (yoksa kartın TR verisi) */
+  mealCevir?: (k: AyetKarti) => string;
+  kaynakCevir?: (k: AyetKarti) => string;
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -56,6 +59,9 @@ export const AyetSecimBolumu: React.FC<{
     };
     return harita[trLabel] ? tt(harita[trLabel]) : trLabel;
   };
+  // ★ 04.10 TUR 4: meal/kaynak görünümleri — çevirici verilmediyse kartın TR verisi
+  const mealGorunum = mealCevir ?? ((k: AyetKarti) => k.tr);
+  const kaynakGorunum = kaynakCevir ?? ((k: AyetKarti) => k.source);
   // ★ ÇİP SAYACI (02.10): her basış localStorage'a yazılır; popüler 5 çip ÖNE
   //   sabitlenir (🏅 rozet + seçim sayısı). State tick'i sıralamayı anında günceller.
   const [ruhSayac, setRuhSayac] = useState<RuhSayac>(() => ruhSayacOku());
@@ -137,9 +143,9 @@ export const AyetSecimBolumu: React.FC<{
             <span className="text-lg">⭐</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-black" style={{ color: "var(--accent-2)" }}>{tt("akGununAyeti")}</span>
-              <span className="block truncate text-[9px] text-white/50">{gununAyetiObj.title} · {gununAyetiObj.source}</span>
+              <span className="block truncate text-[9px] text-white/50">{gununAyetiObj.title} · {kaynakGorunum(gununAyetiObj)}</span>
             </span>
-            <span className="shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>Karta Al</span>
+            <span className="shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{tt("akKartaAl")}</span>
           </button>
 
           {/* Duygu filtreleri */}
@@ -198,17 +204,17 @@ export const AyetSecimBolumu: React.FC<{
                       {AYET_MOODS.find((m) => m.id === a.mood) ? moodEtiketi(a.mood) : ""}
                     </span>
                     <span className="text-[10px] font-bold text-white/85">{a.title}</span>
-                    <span className="ml-auto text-[8.5px] font-semibold text-white/40">{a.source}</span>
+                    <span className="ml-auto text-[8.5px] font-semibold text-white/40">{kaynakGorunum(a)}</span>
                     {active && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent)] text-black"><Check size={10} strokeWidth={3} /></span>}
                   </div>
                   <p className="text-right font-arabic text-[15px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.ar.split("\n")[0]}{a.ar.includes("\n") ? " …" : ""}</p>
-                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">"{a.tr.length > 90 ? `${a.tr.slice(0, 90)}…` : a.tr}"</p>
+                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">{(() => { const m = mealGorunum(a); return `"${m.length > 90 ? `${m.slice(0, 90)}…` : m}"`; })()}</p>
                 </button>
               );
             })}
             {ayetVisibleCount < filteredAyets.length && (
               <button type="button" onClick={() => setAyetVisibleCount((v) => v + 40)} className="block w-full rounded-xl border border-white/10 bg-white/[.03] py-2 text-[10px] font-bold text-white/55 transition hover:border-white/25 hover:text-white">
-                Daha fazla göster ({filteredAyets.length - ayetVisibleCount} ayet daha)
+                {tt("akDahaFazla").replace("{n}", String(filteredAyets.length - ayetVisibleCount))}
               </button>
             )}
             {filteredAyets.length === 0 && (

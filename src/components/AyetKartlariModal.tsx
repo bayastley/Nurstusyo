@@ -18,6 +18,8 @@ import { BACKGROUNDS, catLabel, akilliBgSec, drawCard, type BgItem, type KartAya
 import { RUH_HALLERI, ruhHaliEsle, ruhHaliAd, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
 import { translate, type Lang } from "../i18n";
 import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKartBolumleri";
+// ★ 04.10 TUR 4: kart mealı/kaynağı site diline göre (kullanıcı talebi)
+import { gorunenMeal, gorunenKart, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
 
 interface AyetKartlariModalProps {
   open: boolean;
@@ -38,7 +40,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const hatPaletiAcik = tierAtLeast ? tierAtLeast(accessTier, "pro") : accessTier === "pro" || accessTier === "elit";
   const hatKilitTiklandi = () => {
     if (openPremium) { openPremium("uyelik"); return; }
-    notify?.("👑 Hat font paleti PRO+ üyelik özelliğidir — 20 klasik ve modern hat sizi bekliyor!");
+    notify?.(tt("akNotifHatPro"));
   };
   const [ayetId, setAyetId] = useState<string>(AYET_KARTILARI[0]?.id ?? "");
   const [bgId, setBgId] = useState<string>("");
@@ -53,6 +55,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const [fontsReady, setFontsReady] = useState(0);
   const [visibleCount, setVisibleCount] = useState(24);
   const [ayetVisibleCount, setAyetVisibleCount] = useState(40);
+  const [mealTick, setMealTick] = useState(0); // ★ TUR 4: çeviri meal cache'e düşünce listeyi tazeler
   const [imgTick, setImgTick] = useState(0);
   const [ayar, setAyar] = useState<KartAyarlari>(VARSAYILAN_AYARLAR);
   const [ayarlariGoster, setAyarlariGoster] = useState(false);
@@ -109,22 +112,32 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   }, [bgSearch, bgCat]);
 
   const ayet = useMemo(() => AYET_KARTILARI.find((a) => a.id === ayetId) ?? AYET_KARTILARI[0], [ayetId]);
+  // ★ TUR 4: seçili dil TR değilse görünür kartların meallerini seçili dilde getir
+  //   (sure-bazlı cache; gelen cevap listeyi mealTick ile tazeler; hata → TR kalır)
+  useEffect(() => {
+    if (!open) return;
+    const gorunen = filteredAyets.slice(0, ayetVisibleCount);
+    void mealleriTasi([...gorunen, ayet, gununAyetiObj].filter(Boolean), lang, () => setMealTick((v) => v + 1));
+  }, [open, lang, filteredAyets, ayetVisibleCount, ayet, gununAyetiObj]);
+  // Canvas kartı (önizleme + indirme) çevrilmiş meal/kaynakla çizilir;
+  // Akıllı seçim/mood eşleştirme hâlâ orijinal TR veriyle çalışır (TR kelime motoru).
+  const ayetGorunum = useMemo<AyetKarti>(() => gorunenKart(ayet, lang), [ayet, lang, mealTick]);
   const bg = useMemo(() => (bgId === "kendi-foto" ? kendiFotoBg : BACKGROUNDS.find((b) => b.id === bgId) ?? null), [bgId, kendiFotoBg]);
 
   // 📸 Foto yükleme — FileReader ile dataURL → Image (tamamen yerel)
   const fotoYukle = useCallback((file: File | undefined | null) => {
-    if (!file || !file.type.startsWith("image/")) { notify?.("Lütfen bir fotoğraf dosyası seç (JPG/PNG)"); return; }
-    if (file.size > 12 * 1024 * 1024) { notify?.("Fotoğraf çok büyük — 12 MB altı seç"); return; }
+    if (!file || !file.type.startsWith("image/")) { notify?.(tt("akNotifFotoTipi")); return; }
+    if (file.size > 12 * 1024 * 1024) { notify?.(tt("akNotifFotoBuyuk")); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
-      img.onload = () => { setKendiFoto(img); setKendiFotoAd(file.name); setBgId("kendi-foto"); setImgTick((v) => v + 1); notify?.("📸 Fotoğrafın hazır — ayetini seç, kartını indir!"); };
-      img.onerror = () => notify?.("Fotoğraf okunamadı — başka bir dosya dene");
+      img.onload = () => { setKendiFoto(img); setKendiFotoAd(file.name); setBgId("kendi-foto"); setImgTick((v) => v + 1); notify?.(tt("akNotifFotoHazir")); };
+      img.onerror = () => notify?.(tt("akNotifOkunamadiDene"));
       img.src = String(reader.result);
     };
-    reader.onerror = () => notify?.("Fotoğraf okunamadı");
+    reader.onerror = () => notify?.(tt("akNotifOkunamadi"));
     reader.readAsDataURL(file);
-  }, [notify]);
+  }, [notify, lang]);
 
   // ── Arka plan görselini yükle (CORS-ok, canvas'ta kullanılabilir) ──
   // ★ BUG DÜZELTMESİ (28.09, kullanıcı kararı): "galeriden resim seçtim ama üstüne ayet
@@ -166,12 +179,12 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     (async () => {
       const img = await ensureImage(bg);
       if (!alive) return;
-      try { await drawCard(ctx, w, h, ayet, bg, img, ayar); } catch { /* degrade etme */ }
+      try { await drawCard(ctx, w, h, ayetGorunum, bg, img, ayar); } catch { /* degrade etme */ }
       // Fontlar sonradan geldiyse bir kez daha net çiz
-      if (fontsReady > 0) { try { await drawCard(ctx, w, h, ayet, bg, img, ayar); } catch { /* noop */ } }
+      if (fontsReady > 0) { try { await drawCard(ctx, w, h, ayetGorunum, bg, img, ayar); } catch { /* noop */ } }
     })();
     return () => { alive = false; };
-  }, [open, ayet, bg, size, fontsReady, imgTick, ayar, ensureImage, kendiFoto]);
+  }, [open, ayet, ayetGorunum, bg, size, fontsReady, imgTick, ayar, ensureImage, kendiFoto]);
 
   // ── Sonsuz kaydırma (galeri) ─────────────────────────────
   useEffect(() => { setVisibleCount(24); }, [bgSearch, bgCat]);
@@ -192,7 +205,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     if (!ayet) return;
     // ★ EMNİYET (28.09): kendi-foto seçili ama fotoğraf yüklenmemişse kullanıcıya net söyle
     if (bgId === "kendi-foto" && !kendiFoto) {
-      notify?.("📸 Önce fotoğrafını yükle — sağ üstteki 'Fotoğraf Yükle' kutusundan seç");
+      notify?.(tt("akNotifFotoOnce"));
       return;
     }
     setDownloading(true);
@@ -205,7 +218,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("canvas");
       const img = await ensureImage(bg);
-      await drawCard(ctx, w, h, ayet, bg, img, ayar);
+      await drawCard(ctx, w, h, ayetGorunum, bg, img, ayar);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("blob");
       const url = URL.createObjectURL(blob);
@@ -216,13 +229,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       a.click();
       a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 5000);
-      notify?.("✅ Ayet kartı indirildi — fotoğraf galerine/indirilenlere kaydedildi 🌙");
+      notify?.(tt("akNotifIndirildi"));
     } catch {
-      notify?.("❌ Kart oluşturulamadı — lütfen tekrar dener misin?");
+      notify?.(tt("akNotifHata"));
     } finally {
       setDownloading(false);
     }
-  }, [ayet, bg, bgId, kendiFoto, ayar, ensureImage, notify]);
+  }, [ayet, ayetGorunum, bg, bgId, kendiFoto, ayar, ensureImage, notify, lang]);
 
   // ★ KARIŞTIR (03.10, kullanıcı kararı): hem ayet hem arka plan rastgele değişir —
   //   bilinçli eşleştirme YOK (uyumlu seçim Akıllı Seç'in işi).
@@ -233,8 +246,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     const bgHavuz = filteredBgs.length ? filteredBgs : BACKGROUNDS;
     const bgPick = bgHavuz[Math.floor(Math.random() * bgHavuz.length)];
     if (bgPick) setBgId(bgPick.id);
-    notify?.("🔀 Karıştır: yeni ayet + yeni arka plan!");
-  }, [filteredAyets, filteredBgs, notify]);
+    notify?.(tt("akNotifKaristir"));
+  }, [filteredAyets, filteredBgs, notify, lang]);
 
   const shuffleAyet = useCallback(() => {
     if (!filteredAyets.length) return;
@@ -247,8 +260,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const akilliSec = useCallback(() => {
     const bgPick = akilliBgSec(ayet, BACKGROUNDS);
     if (bgPick) { setBgId(bgPick.id); setBgCat("all"); setBgSearch(""); }
-    notify?.("🎯 Akıllı Seç: ayetin ruhuna uygun atmosfer hazır!");
-  }, [ayet, notify]);
+    notify?.(tt("akNotifAkilli"));
+  }, [ayet, notify, lang]);
 
   // 🎯 Akıllı AI (1·Ayetini Seç başlığındaki): aynı motor — ayet + uyumlu arka plan tek tuşla.
   //   Aktif filtrelerdeki (mood/sure/arama) havuzdan seçer; filtre sonucu boşsa tüm ayetlerden.
@@ -258,8 +271,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     if (ayetPick) setAyetId(ayetPick.id);
     const bgPick = akilliBgSec(ayetPick, BACKGROUNDS);
     if (bgPick) { setBgId(bgPick.id); setBgCat("all"); setBgSearch(""); }
-    notify?.("🎯 Akıllı AI: ayetin ruhuna uygun kart hazır!");
-  }, [filteredAyets, notify]);
+    notify?.(tt("akNotifAkilli"));
+  }, [filteredAyets, notify, lang]);
 
   // ★ AI RUH HALİ (01.10): serbest metin / 30 çip → ruh eşleş → mood'a uygun
   //   ayet + arka plan (akilliBgSec) + kart ayarları (karartma/konum/hizalama/ölçek
@@ -324,6 +337,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           setRuhHaliMetin={setRuhHaliMetin}
           ruhHaliUygula={ruhHaliUygula}
           lang={lang}
+          mealCevir={(k) => gorunenMeal(k, lang)}
+          kaynakCevir={(k) => kartKaynagi(lang, k.source)}
         />
 
         {/* ── SAĞ: KART ÖNİZLEME + İNDİR ───────────────────── */}
