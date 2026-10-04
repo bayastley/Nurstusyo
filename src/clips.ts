@@ -185,13 +185,15 @@ export const MOTION_CLIPS: Clip[] = [
   ...cat("cennet",   CENNET_DATA),
   ...cat("daglar",   DAGLAR_DATA),
   // 🐘 FİL: Pexels API'den çekilen GERÇEK linklerle (kalıp URL değil — 403 sorununu önler)
+  // ★ 04.10: poster R2'den (posters/fil/{id}.jpg) — Pexels thumb kalıbı 36/56 ID'de
+  //   404 veriyordu; posterler ffmpeg ile R2'ye üretildi, thumb artık hiç istenmez.
   ...FIL_LINKS.map((v, i): Clip => ({
     id: `fil-${i + 1}`,
     label: `Fil ${i + 1}`,
     cat: "fil",
     kind: "vid" as const,
     src: v.url,
-    poster: thumb(v.id),
+    poster: `${R2_BASE}/posters/fil/${v.id}.jpg`,
     pexelsId: v.id,
     r2: `${R2_BASE}/videos/fil/${v.id}.mp4`,
     r2Poster: `${R2_BASE}/posters/fil/${v.id}.jpg`,

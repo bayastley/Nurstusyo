@@ -69,7 +69,14 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
 
   const shareToWhatsApp = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
-    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+    // ★ 04.10: masaüstünde wa.me yerine WhatsApp Web'e DİREKT git — wa.me masaüstünde
+    //   ara "Uygulamayı aç / WhatsApp Web'e git" ekranı gösteriyordu (ve telefon
+    //   bağlı değilse kullanıcısı karanlık bir hata ekranında kalıyordu).
+    const masaustu = !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    const hedef = masaustu
+      ? `https://web.whatsapp.com/send?text=${text}`
+      : `https://wa.me/?text=${text}`;
+    window.open(hedef, "_blank", "noopener,noreferrer");
   }, [shareTitle, shareDescription]);
 
   const shareToYouTube = useCallback(() => {
