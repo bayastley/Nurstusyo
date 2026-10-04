@@ -533,7 +533,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} lang={lang} />
 
       {/* ★ RAMAZAN & KANDİL MERKEZİ — hicri takvimle otomatik Ramazan modu (madde 6) */}
-      <RamazanModal open={modal === "ramazan"} onClose={() => setModal(null)} prayerTimings={prayerTimings} notify={notify} />
+      <RamazanModal open={modal === "ramazan"} onClose={() => setModal(null)} prayerTimings={prayerTimings} notify={notify} lang={lang} />
 
       {/* ★ HAZIR AYET PAKETLERİ — tek tuşla stüdyoya paket ekle (madde 8) */}
       <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} lang={lang} />

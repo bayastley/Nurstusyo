@@ -11,6 +11,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Moon, Sunrise, Sunset, Star, Heart } from "lucide-react";
 import { Modal } from "./UIElements";
+import { translate, type Lang } from "../i18n";
+import { AMELLER_COKDIL, HICRI_AY_ADLARI_COKDIL } from "../data/ramazanCokDil";
 
 interface RamazanModalProps {
   open: boolean;
@@ -18,32 +20,33 @@ interface RamazanModalProps {
   /** Bugünün namaz vakitleri ("HH:MM") — İftar=Maghrib, İmsak=Fajr */
   prayerTimings?: Record<string, string> | null;
   notify?: (msg: string) => void;
+  /** ★ FULL I18N (04.10): başlık/sayaç/amel metinleri seçili dile döner */
+  lang?: Lang;
 }
 
 // ─── HİCRİ TARİH YARDIMCILARI ──────────────────────────────
 interface HicriTarih { yil: number; ay: number; gun: number; ayAdi: string }
 
-function hicriTarihAl(date = new Date()): HicriTarih | null {
+function hicriTarihAl(date = new Date(), lang: Lang = "tr"): HicriTarih | null {
   try {
     const fmt = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "numeric", year: "numeric" });
     const parts = fmt.formatToParts(date);
     const al = (t: string) => Number(parts.find((p) => p.type === t)?.value?.replace(/\D/g, "") ?? 0);
-    const ayFmt = new Intl.DateTimeFormat("tr-u-ca-islamic-umalqura", { month: "long" });
-    return { yil: al("year"), ay: al("month"), gun: al("day"), ayAdi: ayFmt.format(date) };
+    const ay = al("month");
+    // ★ i18n (04.10): ay adı Intl locale yerine çok dil diziden — her tarayıcıda aynı
+    return { yil: al("year"), ay, gun: al("day"), ayAdi: HICRI_AY_ADLARI_COKDIL[lang]?.[ay - 1] ?? "" };
   } catch { return null; }
 }
 
-const HICRI_AY_ADLARI = ["Muharrem", "Safer", "Rebiülevvel", "Rebiülahir", "Cemaziyelevvel", "Cemaziyelahir", "Recep", "Şaban", "Ramazan", "Şevval", "Zilkade", "Zilhicce"];
-
-// Kandil geceleri — hicri sabit (ay, gün)
+// Kandil geceleri — hicri sabit (ay, gün); ad = i18n sözlük anahtarı (rmzKandil*)
 const KANDILLER: Array<{ ad: string; ay: number; gun: number; emoji: string }> = [
-  { ad: "Recep Ayının İlk Cuma Gecesi (Regaib)", ay: 7, gun: 1, emoji: "🌟" },
-  { ad: "Miraç Kandili", ay: 7, gun: 27, emoji: "🪜" },
-  { ad: "Berat Kandili", ay: 8, gun: 15, emoji: "🌕" },
-  { ad: "Ramazan Bayramı Öncesi (Arefe)", ay: 9, gun: 29, emoji: "🌙" },
-  { ad: "Kadir Gecesi", ay: 9, gun: 27, emoji: "✨" },
-  { ad: "Kurban Bayramı Arefesi", ay: 12, gun: 9, emoji: "🤲" },
-  { ad: "Mevlid Kandili", ay: 3, gun: 12, emoji: "💚" },
+  { ad: "rmzKandilRegaib", ay: 7, gun: 1, emoji: "🌟" },
+  { ad: "rmzKandilMirac", ay: 7, gun: 27, emoji: "🪜" },
+  { ad: "rmzKandilBerat", ay: 8, gun: 15, emoji: "🌕" },
+  { ad: "rmzKandilRamazanArefe", ay: 9, gun: 29, emoji: "🌙" },
+  { ad: "rmzKandilKadir", ay: 9, gun: 27, emoji: "✨" },
+  { ad: "rmzKandilKurbanArefe", ay: 12, gun: 9, emoji: "🤲" },
+  { ad: "rmzKandilMevlid", ay: 3, gun: 12, emoji: "💚" },
 ];
 
 // ─── 30 GÜNLÜK AMEL ÖNERİLERİ (deterministik: gün → öneri) ──
@@ -83,9 +86,9 @@ const AMELLER: Array<{ amel: string; detay: string }> = [
 const bugunStr = () => new Date().toISOString().slice(0, 10);
 
 // ★ HAYIRLI GÜNLER SAYACI (madde 36): Cuma'ya kalan süre, Ramazan'a X gün
+//   (i18n: metin render'da tt() ile üretilir — burada yalnız sayılar)
 function hayirliGunBilgisi(simdi: Date, hicri: HicriTarih | null) {
   const cumaKalan = (5 - simdi.getDay() + 7) % 7; // 0 = bugün Cuma
-  const cumaMetni = cumaKalan === 0 ? "Bugün Cuma! 🕌" : `Cuma'ya ${cumaKalan} gün`;
   // Ramazan'a kalan (yaklaşık, aylık ortalama): ay 9'a kaç ay var
   let ramazanGun = -1;
   if (hicri) {
@@ -93,12 +96,13 @@ function hayirliGunBilgisi(simdi: Date, hicri: HicriTarih | null) {
     ramazanGun = hicri.ay === 9 ? 0 : Math.round(ayFark * 29.53 + (1 - hicri.gun));
     if (ramazanGun > 355) ramazanGun = -1; // fazladan tur dönmesin
   }
-  return { cumaMetni, ramazanGun };
+  return { cumaKalan, ramazanGun };
 }
 
 // ★ ORUÇ TAKİBİ (madde 50): günlük işaretleme + kaza sayacı — cihazda kalır
 const ORUC_KEY = "nur_oruc_takip_v1";
-function OrucTakibi({ ramazanda }: { ramazanda: boolean }) {
+function OrucTakibi({ ramazanda, lang }: { ramazanda: boolean; lang: Lang }) {
+  const tt = (k: string): string => translate(lang, k);
   const [kayit, setKayit] = useState<{ tutulan: string[]; kaza: number }>(() => {
     try { return JSON.parse(localStorage.getItem(ORUC_KEY) || "") ?? { tutulan: [], kaza: 0 }; } catch { return { tutulan: [], kaza: 0 }; }
   });
@@ -120,19 +124,19 @@ function OrucTakibi({ ramazanda }: { ramazanda: boolean }) {
 
   return (
     <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-      <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-white/45">🌙 Oruç Takibi {ramazanda ? "· Ramazan" : ""}</p>
+      <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("rmzOrucEtiket")} {ramazanda ? tt("rmzOrucRamazanEki") : ""}</p>
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="text-[10.5px] font-bold text-white/85">Bugün oruçtum</p>
-          <p className="text-[8.5px] text-white/40">Toplam {kayit.tutulan.length} gün işaretli · bu yılın kaydı cihazında kalır</p>
+          <p className="text-[10.5px] font-bold text-white/85">{tt("rmzBugunOructum")}</p>
+          <p className="text-[8.5px] text-white/40">{tt("rmzOrucSayac").replace("{n}", String(kayit.tutulan.length))}</p>
         </div>
         <button type="button" onClick={isaretle}
           className={`rounded-lg px-3 py-2 text-[10px] font-black transition active:scale-95 ${bugunTutmus ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
-          {bugunTutmus ? "✓ İşaretli" : "İşaretle"}
+          {bugunTutmus ? tt("rmzIsaretli") : tt("rmzIsaretle")}
         </button>
       </div>
       <div className="mt-2.5 flex items-center justify-between border-t border-white/5 pt-2.5">
-        <p className="text-[9.5px] text-white/55">Kaza borcu: <b className="text-amber-200">{kayit.kaza} gün</b></p>
+        <p className="text-[9.5px] text-white/55">{tt("rmzKazaBorcu").replace("{n}", String(kayit.kaza))}</p>
         <div className="flex gap-1">
           <button type="button" onClick={() => kazaEkle(1)} className="rounded-md bg-white/8 px-2 py-1 text-[9px] font-bold text-white/60 hover:bg-white/15">+</button>
           <button type="button" onClick={() => kazaEkle(-1)} className="rounded-md bg-white/8 px-2 py-1 text-[9px] font-bold text-white/60 hover:bg-white/15">−</button>
@@ -151,7 +155,9 @@ function bugununSaati(hhmm: string): Date | null {
   return d;
 }
 
-export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, prayerTimings, notify }) => {
+export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, prayerTimings, notify, lang = "tr" }) => {
+  // ★ FULL I18N (04.10): prop lang → sözlük; eksik anahtar TR fallback
+  const tt = (k: string): string => translate(lang, k);
   const [simdi, setSimdi] = useState(new Date());
 
   useEffect(() => {
@@ -160,29 +166,30 @@ export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, praye
     return () => window.clearInterval(timer);
   }, [open]);
 
-  const hicri = useMemo(() => (open ? hicriTarihAl(simdi) : null), [open, simdi]);
+  const hicri = useMemo(() => (open ? hicriTarihAl(simdi, lang) : null), [open, simdi, lang]);
   const ramazanda = hicri?.ay === 9;
 
   // ── İftar / İmsak geri sayımı (Ramazan modunda) ──
   const sayac = useMemo(() => {
     if (!ramazanda || !prayerTimings) return null;
     const fmt = (ms: number) => {
-      if (ms <= 0) return "vakti girdi 🌙";
+      if (ms <= 0) return tt("rmzVaktiGirdi");
       const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
-      return `${h}s ${m}dk`;
+      return `${h}${tt("rmzSaat")} ${m}${tt("rmzDakika")} ${tt("rmzKalan")}`;
     };
     const maghrib = bugununSaati(prayerTimings.Maghrib ?? "");
     const fajr = bugununSaati(prayerTimings.Fajr ?? "");
     const iftara = maghrib ? maghrib.getTime() - simdi.getTime() : null;
     const imsaka = fajr ? (fajr.getTime() - simdi.getTime() > 0 ? fajr.getTime() - simdi.getTime() : fajr.getTime() + 86_400_000 - simdi.getTime()) : null;
     return { iftar: prayerTimings.Maghrib ?? "--:--", imsak: prayerTimings.Fajr ?? "--:--", iftara, imsaka, fmt };
-  }, [ramazanda, prayerTimings, simdi]);
+  }, [ramazanda, prayerTimings, simdi, lang, tt]);
 
   // ── Günlük amel — hicri gün numarasına göre deterministik ──
   const amel = useMemo(() => {
-    const idx = ((hicri?.gun ?? new Date().getDate()) - 1) % AMELLER.length;
-    return AMELLER[Math.max(0, idx)];
-  }, [hicri, simdi]);
+    const idx = Math.max(0, ((hicri?.gun ?? new Date().getDate()) - 1) % AMELLER.length);
+    // ★ i18n (04.10): amel önerisi seçili dilde (veri katmanı: ramazanCokDil.ts)
+    return AMELLER_COKDIL[lang]?.[idx] ?? AMELLER[idx];
+  }, [hicri, simdi, lang]);
 
   // ── Sıradaki kandil ──
   const siradakiKandil = useMemo(() => {
@@ -202,44 +209,44 @@ export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, praye
 
   return (
     <Modal
-      title={ramazanda ? "🌙 Ramazan'ın " + hicri?.gun + ". Günü" : "🌙 Ramazan & Kandil Merkezi"}
-      sub={hicri ? `${hicri.ayAdi} ${hicri.gun} · ${hicri.yil} Hicri` : undefined}
+      title={ramazanda ? tt("rmzGunBasligi").replace("{n}", String(hicri?.gun ?? "")) : tt("rmzBaslik")}
+      sub={hicri ? `${hicri.ayAdi} ${hicri.gun} · ${hicri.yil} ${tt("rmzHicriYil")}` : undefined}
       onClose={onClose}
     >
       {/* ── HAYIRLI GÜNLER SAYACI (madde 36) ────────── */}
-      {(() => { const g = hayirliGunBilgisi(simdi, hicri); return (
+      {(() => { const g = hayirliGunBilgisi(simdi, hicri); const bugunCuma = g.cumaKalan === 0; return (
         <div className="mb-3 grid grid-cols-2 gap-2">
-          <div className={`rounded-xl border p-2.5 text-center ${g.cumaMetni.startsWith("Bugün") ? "border-emerald-400/30 bg-emerald-500/10" : "border-white/10 bg-white/[.03]"}`}>
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/45">🕌 Cuma</p>
-            <p className={`mt-0.5 text-[11px] font-black ${g.cumaMetni.startsWith("Bugün") ? "text-emerald-200" : "text-white/80"}`}>{g.cumaMetni}</p>
+          <div className={`rounded-xl border p-2.5 text-center ${bugunCuma ? "border-emerald-400/30 bg-emerald-500/10" : "border-white/10 bg-white/[.03]"}`}>
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/45">🕌 {tt("rmzCuma")}</p>
+            <p className={`mt-0.5 text-[11px] font-black ${bugunCuma ? "text-emerald-200" : "text-white/80"}`}>{bugunCuma ? tt("rmzBugunCuma") : tt("rmzCumayaKaldi").replace("{n}", String(g.cumaKalan))}</p>
           </div>
           <div className="rounded-xl border border-white/10 bg-white/[.03] p-2.5 text-center">
-            <p className="text-[9px] font-black uppercase tracking-widest text-white/45">🌙 Ramazan</p>
-            <p className="mt-0.5 text-[11px] font-black text-white/80">{g.ramazanGun === 0 ? "Ramazan'dayız!" : g.ramazanGun > 0 ? `${g.ramazanGun} gün kaldı` : "≈"}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{tt("rmzRamazanEtiket")}</p>
+            <p className="mt-0.5 text-[11px] font-black text-white/80">{g.ramazanGun === 0 ? tt("rmzRamazandayiz") : g.ramazanGun > 0 ? tt("rmzGunKaldi").replace("{n}", String(g.ramazanGun)) : "≈"}</p>
           </div>
         </div>
       ); })()}
 
       {/* ── ORUÇ TAKİBİ (madde 50) ─────────────────── */}
-      <OrucTakibi ramazanda={ramazanda} />
+      <OrucTakibi ramazanda={ramazanda} lang={lang} />
 
       {/* ── RAMAZAN MODU ─────────────────────────────── */}
       {ramazanda && sayac && (
         <>
           <div className="mb-3 grid grid-cols-2 gap-2">
             <div className="rounded-xl border border-amber-400/25 bg-gradient-to-b from-amber-500/15 to-transparent p-3 text-center">
-              <p className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-amber-300/80"><Sunrise size={11} /> İmsak</p>
+              <p className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-amber-300/80"><Sunrise size={11} /> {tt("rmzImsak")}</p>
               <p className="mt-1 text-xl font-black tabular-nums text-amber-200">{sayac.imsak}</p>
-              <p className="text-[8.5px] text-white/45">{sayac.imsaka !== null ? `${sayac.fmt(sayac.imsaka)} kaldı` : ""}</p>
+              <p className="text-[8.5px] text-white/45">{sayac.imsaka !== null ? sayac.fmt(sayac.imsaka) : ""}</p>
             </div>
             <div className="rounded-xl border border-orange-400/25 bg-gradient-to-b from-orange-500/15 to-transparent p-3 text-center">
-              <p className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-orange-300/80"><Sunset size={11} /> İftar</p>
+              <p className="flex items-center justify-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-orange-300/80"><Sunset size={11} /> {tt("rmzIftar")}</p>
               <p className="mt-1 text-xl font-black tabular-nums text-orange-200">{sayac.iftar}</p>
-              <p className="text-[8.5px] text-white/45">{sayac.iftara !== null ? `${sayac.fmt(sayac.iftara)} kaldı` : ""}</p>
+              <p className="text-[8.5px] text-white/45">{sayac.iftara !== null ? sayac.fmt(sayac.iftara) : ""}</p>
             </div>
           </div>
           <div className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-white/[.04] py-2 text-[10px] font-bold text-white/60">
-            <Moon size={12} style={{ color: "var(--accent)" }} /> 30 günlük yolculuğun {hicri?.gun}. günündesin · {30 - (hicri?.gun ?? 0)} gün kaldı
+            <Moon size={12} style={{ color: "var(--accent)" }} /> {tt("rmzYolculuk").replace("{g}", String(hicri?.gun ?? 0)).replace("{k}", String(30 - (hicri?.gun ?? 0)))}
           </div>
         </>
       )}
@@ -247,7 +254,7 @@ export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, praye
       {/* ── GÜNLÜK AMEL ÖNERİSİ ──────────────────────── */}
       <div className="mb-3 rounded-xl border border-emerald-400/20 bg-emerald-500/[.07] p-3.5">
         <p className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-emerald-300/80">
-          <Heart size={11} /> Bugünün Ameli
+          <Heart size={11} /> {tt("rmzAmeli")}
         </p>
         <h4 className="text-[13px] font-black text-emerald-200">{amel.amel}</h4>
         <p className="mt-1 text-[9.5px] leading-relaxed text-white/60">{amel.detay}</p>
@@ -257,12 +264,12 @@ export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, praye
       {siradakiKandil && (
         <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-3.5">
           <p className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">
-            <Star size={11} style={{ color: "var(--accent)" }} /> Sıradaki Kandil / Mühim Gün
+            <Star size={11} style={{ color: "var(--accent)" }} /> {tt("rmzSiradakiKandil")}
           </p>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] font-bold text-white/85">{siradakiKandil.emoji} {siradakiKandil.ad}</p>
+            <p className="text-[11px] font-bold text-white/85">{siradakiKandil.emoji} {tt(siradakiKandil.ad)}</p>
             <span className="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-              ≈ {siradakiKandil.gun} gün
+              {tt("rmzGunBadge").replace("{n}", String(siradakiKandil.gun))}
             </span>
           </div>
         </div>
@@ -270,19 +277,19 @@ export const RamazanModal: React.FC<RamazanModalProps> = ({ open, onClose, praye
 
       {/* ── KANDİL TAKVİMİ ───────────────────────────── */}
       <div className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-        <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-white/45">Kandil & Mühim Geceler (Hicri)</p>
+        <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("rmzTakvim")}</p>
         <div className="space-y-1.5">
           {KANDILLER.map((k) => {
             const buAyda = hicri?.ay === k.ay;
             return (
               <div key={k.ad} className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[10px] ${buAyda ? "bg-amber-500/10 text-amber-200" : "text-white/60"}`}>
-                <span>{k.emoji} {k.ad}</span>
-                <span className="shrink-0 text-[9px] font-bold text-white/40">{HICRI_AY_ADLARI[k.ay - 1]} {k.gun}</span>
+                <span>{k.emoji} {tt(k.ad)}</span>
+                <span className="shrink-0 text-[9px] font-bold text-white/40">{HICRI_AY_ADLARI_COKDIL[lang]?.[k.ay - 1] ?? ""} {k.gun}</span>
               </div>
             );
           })}
         </div>
-        <p className="mt-2 text-center text-[8px] text-white/25">Tarihler Hicri takvimle cihazından hesaplanır · Ramazan girdiğinde bu sayfa otomatik iftar/imsak sayacına döner</p>
+        <p className="mt-2 text-center text-[8px] text-white/25">{tt("rmzNotAlt")}</p>
       </div>
     </Modal>
   );
