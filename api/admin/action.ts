@@ -3,7 +3,7 @@ import crypto from "crypto";
 import {
   sanitize, validateEmail, validateTier, validateId,
   rateLimit, rateLimitSilent, adminRateLimit, adminFromCookie, db, config,
-} from "./actionYardimcilar";
+} from "./actionYardimcilar.js";
 
 // ★ SRP adım 6 (30.09): doğrulama + rate limit + DB yardımcıları actionYardimcilar.ts'e taşındı
 //   (logServerError bilinçli burada — hata kaydı endpoint'e özel fingerprint üretir)
