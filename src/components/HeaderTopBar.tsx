@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
-import { LANGS, T, translate, dilAdi, vakitAdi, sureceCevir, type Lang } from "../i18n";
+import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft } from "../tier";
 import { TIER_LABEL } from "./premiumModalHelpers";
@@ -419,16 +419,18 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
               <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("premium")}
             </button>
-            <div className="relative">
+            <div className="relative notranslate" translate="no">
+              {/* ★ 04.10: dil seçici — sade kodlar (TR/EN/AR/ID/UR) + notranslate.
+                  dilAdi() isimlerini Google Translate bozuyordu ("di!TR", "şeyretme"…);
+                  kullanıcı emri: sadece kodlar, hiçbir dilde çevrilmesin. */}
               <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>
-                {LANGS.find((item) => item.code === lang)?.flag}<ChevronDown size={10} />
+                <span className="font-black tracking-wide">{(lang || "tr").toUpperCase()}</span><ChevronDown size={10} />
               </button>
               {langOpen ? (
-                <div className="glass modal-in absolute right-0 top-10 z-50 w-40 rounded-xl p-1.5 shadow-2xl">
+                <div className="glass modal-in absolute right-0 top-10 z-50 w-24 rounded-xl p-1.5 shadow-2xl">
                   {LANGS.map((item) => (
                     <button key={item.code} onClick={() => { setLang(item.code); setLangOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] text-white/65 hover:bg-white/5">
-                      <span>{item.flag}</span>
-                      <span className="flex-1">{dilAdi(lang, item.code)}</span>
+                      <span className="flex-1 font-black tracking-wide">{item.code.toUpperCase()}</span>
                       {item.code === lang ? <Check size={11} style={{ color: "var(--accent)" }} /> : null}
                     </button>
                   ))}
