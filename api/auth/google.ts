@@ -46,7 +46,7 @@ function base64Url(value: Buffer | string): string {
 }
 
 function createSessionToken(user: Record<string, unknown>): string {
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (secret.length < 20) throw new Error("NUR_SESSION_SECRET veya GOOGLE_CLIENT_SECRET tanımlı değil");
   // ★ Açık 10 notu: GOOGLE_CLIENT_SECRET fallback'i geçici uyumluluktur.
   //   Vercel'de NUR_SESSION_SECRET tanımlanınca bu uyarı kaybolur; o zaman

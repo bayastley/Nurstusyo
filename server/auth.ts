@@ -46,7 +46,7 @@ const COOKIE_NAME = "nur_session";
 const MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 function sessionSecret(): string {
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (!secret || secret.length < 20) throw new Error("NUR_SESSION_SECRET veya GOOGLE_CLIENT_SECRET tanımlı değil");
   return secret;
 }
@@ -85,7 +85,7 @@ export function createSessionToken(user: Omit<AuthUser, "iat" | "exp">): string 
 export function verifySessionToken(token: string | undefined): AuthUser | null {
   if (!token || !token.includes(".")) return null;
   // ★ Eksik NUR_SESSION_SECRET fonksiyonu çökertmesin: oturumu geçersiz say
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (!secret || secret.length < 20) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;

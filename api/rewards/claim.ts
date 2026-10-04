@@ -103,7 +103,7 @@ function userFromSession(req: VercelRequest): { id: string } | null {
     const token = String(req.headers.cookie || "").split(";").map((x) => x.trim())
       .find((x) => x.startsWith("nur_session="))?.slice("nur_session=".length);
     const [payload, signature] = decodeURIComponent(token || "").split(".");
-    const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+    const secret = process.env.NUR_SESSION_SECRET || "";
     if (!payload || !signature || secret.length < 20) return null;
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64url");
     if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;

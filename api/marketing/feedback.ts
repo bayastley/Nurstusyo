@@ -120,7 +120,7 @@ function base64UrlDecode(input: string): Buffer {
 function getSession(req: VercelRequest): SessionInfo | null {
   const token = parseCookies(req)[COOKIE_NAME];
   if (!token || !token.includes(".")) return null;
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (secret.length < 20) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;

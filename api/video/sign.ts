@@ -71,7 +71,7 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
   const cookie = String(req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
   if (!cookie) return null;
   const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (!payload || !signature || secret.length < 20) return null;
   const expected = base64Url(crypto.createHmac("sha256", secret).update(payload).digest());
   const actualBuffer = Buffer.from(signature);

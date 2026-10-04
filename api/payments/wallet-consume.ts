@@ -96,7 +96,7 @@ function userFromSession(req: { headers: Record<string, string | string[] | unde
     const token = parseCookies(String(req.headers.cookie || ""))[COOKIE_NAME] || "";
     if (!token.includes(".")) return null;
     const [payload, signature] = token.split(".");
-    const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+    const secret = process.env.NUR_SESSION_SECRET || "";
     // ★ Boş/kısa secret ile doğrulama YAPMA — aksi halde HMAC("") tahmin
     //   edilebilir olur ve herkes geçerli oturum üretebilir.
     if (!payload || !signature || secret.length < 20) return null;

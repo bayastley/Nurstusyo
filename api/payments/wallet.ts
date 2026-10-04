@@ -111,7 +111,7 @@ function fromBase64Url(input: string): Buffer {
 }
 
 function sessionSecret(): string {
-  return process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || '';
+  return process.env.NUR_SESSION_SECRET || '';
 }
 
 function signPayload(payload: string): string {

@@ -1,0 +1,268 @@
+// AYET_KARTILARI_MEGA — parça 3/3 (otomatik bölme; bölüm yorumları bağlamla taşındı)
+import type { AyetKarti } from "../ayetKartlariData";
+
+export const MEGA_PARCA3: AyetKarti[] = [
+  // ═ ÂDIYÂT (100) ═══════════════════════════════════════
+  { id: "mg-100-6", mood: "sabir", title: "İnsan Rabbine", source: "Âdiyât Suresi • 6. Ayet",
+    ar: "إِنَّ الْإِنسَانَ لِرَبِّهِ لَكَنُودٌ",
+    tr: "İnsan, Rabbine karşı nankördür." },
+  // ═ ASR (103) ══════════════════════════════════════════
+  { id: "mg-103-1", mood: "sabir", title: "Zaman Kasidesi", source: "Asr Suresi • 1-3. Ayetler",
+    ar: "وَالْعَصْرِ إِنَّ الْإِنسَانَ لَفِي خُسْرٍ إِلَّا الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ وَتَوَاصَوْا بِالْحَقِّ وَتَوَاصَوْا بِالصَّبْرِ",
+    tr: "Asra yemin olsun ki insan hüsrandadır; iman edip salih amel işleyen, birbirlerine hakkı ve sabrı tavsiye edenler hariç." },
+  // ═ HUMAZE (104) ═══════════════════════════════════════
+  { id: "mg-104-1", mood: "sabir", title: "Dedikoducu", source: "Humaze Suresi • 1. Ayet",
+    ar: "وَيْلٌ لِّكُلِّ هُمَزَةٍ لُّمَزَةٍ",
+    tr: "Yazıklar olsun her alay edip tipleyene." },
+  // ═ FÎL (105) ══════════════════════════════════════════
+  { id: "mg-105-1", mood: "zafer", title: "Fil Sahibini", source: "Fîl Suresi • 1. Ayet",
+    ar: "أَلَمْ تَرَ كَيْفَ فَعَلَ رَبُّكَ بِأَصْحَابِ الْفِيلِ",
+    tr: "Rabbinin fil sahiplerine ne yaptığını görmedin mi?" },
+  // ═ KUREYŞ (106) ═══════════════════════════════════════
+  { id: "mg-106-3", mood: "sukur", title: "Bu Beytin Rabbine", source: "Kureyş Suresi • 3. Ayet",
+    ar: "فَلْيَعْبُدُوا رَبَّ هَٰذَا الْبَيْتِ",
+    tr: "Bu Beyt'in Rabbine kulluk etsinler." },
+  // ═ MAÛN (107) ═════════════════════════════════════════
+  { id: "mg-107-4", mood: "sabir", title: "Namazına Gaflet", source: "Maûn Suresi • 4. Ayet",
+    ar: "فَوَيْلٌ لِّلْمُصَلِّينَ الَّذِينَ هُمْ عَن صَلَاتِهِمْ سَاهُونَ",
+    tr: "Yazık o namaz kılanlara ki, namazlarını önemsemiyorlar." },
+  // ═ KEVSER (108) ═══════════════════════════════════════
+  { id: "mg-108-1", mood: "aile", title: "Kevser Verildi", source: "Kevser Suresi • 1. Ayet",
+    ar: "إِنَّا أَعْطَيْنَاكَ الْكَوْثَرَ",
+    tr: "Şüphesiz sana Kevser'i verdik." },
+  // ═ KÂFİRÛN (109) ══════════════════════════════════════
+  { id: "mg-109-6", mood: "aile", title: "Sizin Dininiz", source: "Kâfirûn Suresi • 6. Ayet",
+    ar: "لَكُمْ دِينُكُمْ وَلِيَ دِينِ",
+    tr: "Sizin dininiz size, benim dinim bana." },
+  // ═ NASR (110) ═════════════════════════════════════════
+  { id: "mg-110-1", mood: "zafer", title: "Yardım ve Zafer", source: "Nasr Suresi • 1. Ayet",
+    ar: "إِذَا جَاءَ نَصْرُ اللَّهِ وَالْفَتْحُ",
+    tr: "Allah'ın yardımı ve zafer geldiğinde." },
+  { id: "mg-110-2", mood: "zafer", title: "Fetilenler Girdiğinde", source: "Nasr Suresi • 2. Ayet",
+    ar: "وَرَأَيْتَ النَّاسَ يَدْخُلُونَ فِي دِينِ اللَّهِ أَفْوَاجًا",
+    tr: "İnsanların Allah'ın dinine guruplar guruplar girdiğini gördüğünde." },
+  { id: "mg-110-3", mood: "af", title: "Hamd ile Tesbih", source: "Nasr Suresi • 3. Ayet",
+    ar: "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ إِنَّهُ كَانَ تَوَّابًا",
+    tr: "Rabbini hamd ile tespih et ve O'ndan bağışlanma dile; O, tövbeleri kabul edendir." },
+  // ═ İHLÂS (112) ═════════════════════════════════════════
+  { id: "mg-112-1", mood: "huzur", title: "O Bir'dir", source: "İhlâs Suresi • 1-4. Ayetler",
+    ar: "قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ",
+    tr: "De ki: O, Allah'tır, Bir'dir; Allah her şeyden bağımsızdır; doğurmamış, doğrulmamıştır." },
+  // ═ FELEK (113) ═════════════════════════════════════════
+  { id: "mg-113-1", mood: "huzur", title: "Felak'a Sığınılır", source: "Felek Suresi • 1. Ayet",
+    ar: "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ",
+    tr: "De ki: Sabahın Rabbine sığınırım." },
+  // ═ NÂS (114) ═══════════════════════════════════════════
+  { id: "mg-114-1", mood: "huzur", title: "Nâs'a Sığınılır", source: "Nâs Suresi • 1. Ayet",
+    ar: "قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
+    tr: "De ki: İnsanların Rabbine sığınırım." },
+  // ═ MÜLK (67) ═══════════════════════════════════════════
+  { id: "mg-67-1", mood: "zafer", title: "Mülk O'nun", source: "Mülk Suresi • 1. Ayet",
+    ar: "تَبَارَكَ الَّذِي بِيَدِهِ الْمُلْكُ وَهُوَ عَلَىٰ كُلِّ شَيْءٍ قَدِيرٌ",
+    tr: "Ne yücedir O ki, mülk elinde ve O, her şeye gücü yeter." },
+  { id: "mg-67-2", mood: "imtihan", title: "Hangisi Güzel İş", source: "Mülk Suresi • 2. Ayet",
+    ar: "الَّذِي خَلَقَ الْمَوْتَ وَالْحَيَاةَ لِيَبْلُوَكُمْ أَيُّكُمْ أَحْسَنُ عَمَلًا",
+    tr: "O, ölümü ve hayatı yarattı; hanginizin amelinin daha güzel olduğunu sınamak için." },
+  // ═ HAKKA (69) ══════════════════════════════════════════
+  { id: "mg-69-52", mood: "sukur", title: "Rabbin Adını Tespih Et", source: "Hâkka Suresi • 52. Ayet",
+    ar: "فَسَبِّحْ بِاسْمِ رَبِّكَ الْعَظِيمِ",
+    tr: "O halde büyük Rabbinin adını tespih et." },
+  // ═ MAÂRİC (70) ═════════════════════════════════════════
+  { id: "mg-70-19", mood: "sabir", title: "İnsan Sabırsız", source: "Maâric Suresi • 19. Ayet",
+    ar: "إِنَّ الْإِنسَانَ خُلِقَ هَلُوعًا",
+    tr: "İnsan sabırsız olarak yaratılmıştır." },
+  { id: "mg-70-23", mood: "sabir", title: "Namazı Sürdürenler", source: "Maâric Suresi • 23. Ayet",
+    ar: "وَالَّذِينَ هُمْ عَلَىٰ صَلَاتِهِمْ دَائِمُونَ",
+    tr: "Onlar, namazlarını devamlı surette eda ederler." },
+  // ═ NÛH (71) ═════════════════════════════════════════════
+  { id: "mg-71-10", mood: "af", title: "Bağışlanma İsteyin", source: "Nûh Suresi • 10. Ayet",
+    ar: "فَقُلْتُ اسْتَغْفِرُوا رَبَّكُمْ إِنَّهُ كَانَ غَفَّارًا",
+    tr: "Ben de dedim ki: Rabbinizden bağışlanma dileyin; O çok bağışlayandır." },
+  { id: "mg-71-28", mood: "af", title: "Nûh'un Son Duası", source: "Nûh Suresi • 28. Ayet",
+    ar: "رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَلِمَن دَخَلَ بَيْتِيَ مُؤْمِنًا",
+    tr: "Rabbim, beni, anne-babamı ve inançlı olarak evime gireni bağışla." },
+  // ═ CİN (72) ═════════════════════════════════════════════
+  { id: "mg-72-18", mood: "huzur", title: "Mescitler Allah'ındır", source: "Cin Suresi • 18. Ayet",
+    ar: "وَأَنَّ الْمَسَاجِدَ لِلَّهِ فَلَا تَدْعُوا مَعَ اللَّهِ أَحَدًا",
+    tr: "Mescitler Allah'ındır; Allah ile beraber kimseye dua etmeyin." },
+  // ═ MUZEMMİL (73) ═══════════════════════════════════════
+  { id: "mg-73-9", mood: "tevekkul", title: "Doğu ve Batı'nın Rabb", source: "Müzzemmil Suresi • 9. Ayet",
+    ar: "رَبُّ الْمَشْرِقِ وَالْمَغْرِبِ لَا إِلَٰهَ إِلَّا هُوَ فَاتَّخِذْهُ وَكِيلًا",
+    tr: "Doğunun ve batının Rabbi O'dur; O'ndan başka ilâh yoktur, O'na vekil tut." },
+  { id: "mg-73-20", mood: "sabir", title: "Okumayı Kolaylaştırır", source: "Müzzemmil Suresi • 20. Ayet",
+    ar: "إِنَّ رَبَّكَ يَعْلَمُ أَنَّكَ تَقُومُ أَدْنَىٰ مِن ثُلُثَيِ اللَّيْلِ",
+    tr: "Rabbin, senin gecenin üçte ikisinden fazlasını, yarısını ve üçte birini kıyam ettiğini biliyor." },
+  // ═ İNSÂN (76) ═══════════════════════════════════════════
+  { id: "mg-76-9", mood: "sevgi", title: "Yalnız Sizin Yüzünüz İçin", source: "İnsân Suresi • 9. Ayet",
+    ar: "إِنَّمَا نُطْعِمُكُمْ لِوَجْهِ اللَّهِ",
+    tr: "Biz size yalnız Allah'ın yüzü için yediriyoruz." },
+  { id: "mg-76-22", mood: "sukur", title: "Emeğin Karşılığı", source: "İnsân Suresi • 22. Ayet",
+    ar: "إِنَّ هَٰذَا كَانَ لَكُمْ جَزَاءً وَكَانَ سَعْيُكُم مَّشْكُورًا",
+    tr: "Bu, sizin için bir karşılıktır; çalışmanız şükranlığı hak etmiştir." },
+  // ═ MURSALÂT (77) ═══════════════════════════════════════
+  { id: "mg-77-45", mood: "sabir", title: "Yalanlayanların Vay Hali", source: "Murselât Suresi • 45. Ayet",
+    ar: "وَيْلٌ يَوْمَئِذٍ لِّلْمُكَذِّبِينَ",
+    tr: "O gün yalanlayanların vay haline!" },
+  // ═ NEBE (78) ═════════════════════════════════════════════
+  { id: "mg-78-1", mood: "huzur", title: "Büyük Haber", source: "Nebe Suresi • 1. Ayet",
+    ar: "عَمَّ يَتَسَاءَلُونَ",
+    tr: "Birbirlerine neyi soruyorlar?" },
+  { id: "mg-78-2", mood: "huzur", title: "Büyük Haberi", source: "Nebe Suresi • 2. Ayet",
+    ar: "عَنِ النَّبَإِ الْعَظِيمِ",
+    tr: "O büyük haberden." },
+  // ═ NEZIÂT (79) ═══════════════════════════════════════════
+  { id: "mg-79-40", mood: "huzur", title: "Rabbinin Huzurundan Korkan", source: "Neziât Suresi • 40. Ayet",
+    ar: "وَأَمَّا مَنْ خَافَ مَقَامَ رَبِّهِ وَنَهَى النَّفْسَ عَنِ الْهَوَىٰ",
+    tr: "Ama kim Rabbinin huzurunda durmaktan korkar ve nefsini arzulardan alıkoyarsa." },
+  { id: "mg-79-41", mood: "cennet", title: "Cennet Yurdu", source: "Neziât Suresi • 41. Ayet",
+    ar: "فَإِنَّ الْجَنَّةَ هِيَ الْمَأْوَىٰ",
+    tr: "Şüphesiz cennet onun yurdudur." },
+  // ═ ABESE (80) ════════════════════════════════════════════
+  { id: "mg-80-10", mood: "sevgi", title: "Zengin Önemsiz", source: "Abese Suresi • 10. Ayet",
+    ar: "فَأَنتَ لَهُ تَصْدَىٰ",
+    tr: "Sen ona yöneliyorsun." },
+  { id: "mg-80-17", mood: "sabir", title: "İnsanın Nankörlüğü", source: "Abese Suresi • 17. Ayet",
+    ar: "قُتِلَ الْإِنسَانُ مَا أَكْفَرَهُ",
+    tr: "İnsan nasıl da nankördü!" },
+  // ═ TEKVÎR (81) ═══════════════════════════════════════════
+  { id: "mg-81-27", mood: "ilim", title: "Âlemlere Öğüt", source: "Tekvîr Suresi • 27. Ayet",
+    ar: "إِنْ هُوَ إِلَّا ذِكْرٌ لِّلْعَالَمِينَ",
+    tr: "Bu, âlemler için yalnızca bir öğüttür." },
+  // ═ İNŞİKÂK (84) ══════════════════════════════════════════
+  { id: "mg-84-6", mood: "sabir", title: "Emek ve Karşılık", source: "İnşikâk Suresi • 6. Ayet",
+    ar: "يَا أَيُّهَا الْإِنسَانُ إِنَّكَ كَادِحٌ إِلَىٰ رَبِّكَ كَدْحًا فَمُلَاقِيهِ",
+    tr: "Ey insan, sen Rabbine doğru yorulup duruyorsun; onunla karşılaşacaksın." },
+  // ═ BURÛC (85) ════════════════════════════════════════════
+  { id: "mg-85-11", mood: "cennet", title: "İman Edip Salih Amel", source: "Burûc Suresi • 11. Ayet",
+    ar: "إِنَّ الَّذِينَ آمَنُوا وَعَمِلُوا الصَّالِحَاتِ لَهُمْ جَنَّاتٌ تَجْرِي مِن تَحْتِهَا الْأَنْهَارُ",
+    tr: "İnanıp salih amel işleyenler için altından ırmaklar akan cennetler vardır." },
+  // ═ TÂRIK (86) ════════════════════════════════════════════
+  { id: "mg-86-17", mood: "zafer", title: "İnkârcılara Vakit Ver", source: "Târik Suresi • 17. Ayet",
+    ar: "فَأَعْطِ الْكَافِرَ يَوْمًا فَيَا مِهَادًا",
+    tr: "İnkârcılara gönlünce bir süre tanı; onlara fırsat ver." },
+  // ═ A'lâ (87) ═════════════════════════════════════════════
+  { id: "mg-87-1", mood: "sukur", title: "Yüce Rabbin", source: "A'lâ Suresi • 1. Ayet",
+    ar: "سَبِّحِ اسْمَ رَبِّكَ الْأَعْلَى",
+    tr: "Yüce Rabbinin adını tespih et." },
+  { id: "mg-87-8", mood: "huzur", title: "Kolaylaştırırız", source: "A'lâ Suresi • 8. Ayet",
+    ar: "وَنُيَسِّرُكَ لِلْيُسْرَىٰ",
+    tr: "Seni en kolaya muvaffak kılacağız." },
+  // ═ GÂŞİYE (88) ═══════════════════════════════════════════
+  { id: "mg-88-21", mood: "ilim", title: "Sen Yalnız Öğütçüsün", source: "Gâşiye Suresi • 21. Ayet",
+    ar: "فَذَكِّرْ إِنَّمَا أَنتَ مُذَكِّرٌ",
+    tr: "Öğüt ver; sen yalnızca bir öğütçüsün." },
+  // ═ FECR ve LÂYL ══════════════════════════════════════════
+  { id: "mg-92-4", mood: "huzur", title: "Emekleriniz Farklıdır", source: "Leyl Suresi • 4. Ayet",
+    ar: "إِنَّ سَعْيَكُمْ لَشَتَّىٰ",
+    tr: "Emekleriniz elbette farklıdır." },
+  { id: "mg-93-4", mood: "huzur", title: "Sonra Hayırlısı", source: "Duhâ Suresi • 4. Ayet",
+    ar: "وَلَلْآخِرَةُ خَيْرٌ لَّكَ مِنَ الْأُولَىٰ",
+    tr: "Şüphesiz ahiret sizin için dünyadan hayırlıdır." },
+  { id: "mg-93-5", mood: "aile", title: "Rabbin Verir", source: "Duhâ Suresi • 5. Ayet",
+    ar: "وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰ",
+    tr: "Rabbin sana verecek ve sen de razı olacaksın." },
+  // ═ Rahmân (55) ═══════════════════════════════════════════
+  { id: "mg-55-1", mood: "rahmet", title: "Rahmân", source: "Rahmân Suresi • 1. Ayet",
+    ar: "الرَّحْمَٰنُ",
+    tr: "Rahmân (Allah)." },
+  { id: "mg-55-13", mood: "sukur", title: "Hangi Nimeti İnkar", source: "Rahmân Suresi • 13. Ayet",
+    ar: "فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ",
+    tr: "Rabbinizin hangi nimetlerini inkâr ediyorsunuz?" },
+  // ═ VAÂRIA (56) ═══════════════════════════════════════════
+  { id: "mg-56-10", mood: "zafer", title: "Öncüler", source: "Vâkıa Suresi • 10. Ayet",
+    ar: "وَالسَّابِقُونَ السَّابِقُونَ",
+    tr: "Öncüler, öncüler." },
+  { id: "mg-56-11", mood: "zafer", title: "Yaklaştırılanlar", source: "Vâkıa Suresi • 11. Ayet",
+    ar: "أُولَٰئِكَ الْمُقَرَّبُونَ",
+    tr: "İşte onlar, Allah'a yaklaştırılmışlardır." },
+  // ═ HADÎD (57) ═════════════════════════════════════════════
+  { id: "mg-57-4", mood: "huzur", title: "Neredeysen O Yanında", source: "Hadîd Suresi • 4. Ayet",
+    ar: "وَهُوَ مَعَكُمْ أَيْنَ مَا كُنتُمْ وَاللَّهُ بِمَا تَعْمَلُونَ بَصِيرٌ",
+    tr: "Nerede olursanız O sizinle beraberdir; Allah, yaptıklarınızı görendir." },
+  { id: "mg-57-20", mood: "huzur", title: "Dünya Süsü", source: "Hadîd Suresi • 20. Ayet",
+    ar: "اعْلَمُوا أَنَّمَا الْحَيَاةُ الدُّنْيَا لَعِبٌ وَلَهْوٌ",
+    tr: "Bilin ki dünya hayatı ancak bir oyun ve eğlencedir." },
+  // ═ MUCÂDELE (58) ═════════════════════════════════════════
+  { id: "mg-58-21", mood: "zafer", title: "Galip Gelmeye Yazıldı", source: "Mucâdele Suresi • 21. Ayet",
+    ar: "كَتَبَ اللَّهُ لَأَغْلِبَنَّ أَنَا وَرُسُلِي إِنَّ اللَّهَ قَوِيٌّ عَزِيزٌ",
+    tr: "Allah yazmıştır: Ben ve elçilerim mutlaka galip geleceğiz; Allah güçlüdür, üstündür." },
+  // ═ HAŞR (59) ═════════════════════════════════════════════
+  { id: "mg-59-9", mood: "sevgi", title: "Kardeşine Tercih", source: "Haşr Suresi • 9. Ayet",
+    ar: "وَيُؤْثِرُونَ عَلَىٰ أَنفُسِهِمْ وَلَوْ كَانَ بِهِمْ خَصَاصَةٌ",
+    tr: "Kendileri sıkıntıda olsalar bile onları kendilerine tercih ederler." },
+  { id: "mg-59-21", mood: "imtihan", title: "Kur'an Dağ Etseler", source: "Haşr Suresi • 21. Ayet",
+    ar: "لَوْ أَنزَلْنَا هَٰذَا الْقُرْآنَ عَلَىٰ جَبَلٍ لَّرَأَيْتَهُ خَاشِعًا مُّتَصَدِّعًا مِّنْ خَشْيَةِ اللَّهِ",
+    tr: "Bu Kur'an'ı bir dağa indirmiş olsaydık, onu Allah korkusundan titreyip parçalanmış görürdün." },
+  { id: "mg-59-23", mood: "huzur", title: "Es-Selâm", source: "Haşr Suresi • 23. Ayet",
+    ar: "هُوَ اللَّهُ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْمَلِكُ الْقُدُّوسُ السَّلَامُ",
+    tr: "O Allah'tır; O'ndan başka ilâh yoktur, meliktir, kutsaldır, selâmdır." },
+  // ═ MÜMTEHİNE (60) ════════════════════════════════════════
+  { id: "mg-60-8", mood: "sevgi", title: "Adaletli Davranın", source: "Mümtehine Suresi • 8. Ayet",
+    ar: "لَا يَنْهَاكُمُ اللَّهُ عَنِ الَّذِينَ لَمْ يُقَاتِلُوكُمْ فِي الدِّينِ وَلَمْ يُخْرِجُوكُم مِّن دِيَارِكُمْ أَن تَبَرُّوهُمْ وَتُقْسِطُوا إِلَيْهِمْ",
+    tr: "Allah, sizinle savaşmayan ve sizi yurtlarından çıkarmayanlara iyilik etmenizi ve onlara adaletli davranmanızı yasaklamıyor." },
+  // ═ SAFF (61) ═══════════════════════════════════════════════
+  { id: "mg-61-13", mood: "aile", title: "Yakın Zafer", source: "Saff Suresi • 13. Ayet",
+    ar: "نَصْرٌ مِّنَ اللَّهِ وَفَتْحٌ قَرِيبٌ وَبَشِّرِ الْمُؤْمِنِينَ",
+    tr: "Allah'tan bir yardım ve yakın bir zafer; müjdele inananları." },
+  { id: "mg-61-14", mood: "zafer", title: "Allah'a Yardımcılar", source: "Saff Suresi • 14. Ayet",
+    ar: "يَا أَيُّهَا الَّذِينَ آمَنُوا كُونُوا أَنصَارَ اللَّهِ",
+    tr: "Ey iman edenler, Allah'ın yardımcıları olun." },
+  // ═ CUMA (62) ═══════════════════════════════════════════════
+  { id: "mg-62-9", mood: "huzur", title: "Cuma Ezanı", source: "Cuma Suresi • 9. Ayet",
+    ar: "يَا أَيُّهَا الَّذِينَ آمَنُوا إِذَا نُودِيَ لِلصَّلَاةِ مِن يَوْمِ الْجُمُعَةِ فَاسْعَوْا إِلَىٰ ذِكْرِ اللَّهِ",
+    tr: "Ey iman edenler, Cuma günü namaz için çağrı yapıldığında Allah'ı anmaya koşun." },
+  { id: "mg-62-10", mood: "sukur", title: "Namaz Bitince", source: "Cuma Suresi • 10. Ayet",
+    ar: "فَإِذَا قُضِيَتِ الصَّلَاةُ فَانتَشِرُوا فِي الْأَرْضِ وَابْتَغُوا مِن فَضْلِ اللَّهِ",
+    tr: "Namaz bitince yeryüzüne dağılın ve Allah'ın lütfunu arayın." },
+  // ═ MÜNAFİKÛN (63) ═════════════════════════════════════════
+  { id: "mg-63-9", mood: "aile", title: "Mal & Çocuk Aldatır", source: "Münafikûn Suresi • 9. Ayet",
+    ar: "يَا أَيُّهَا الَّذِينَ آمَنُوا لَا تُلْهِكُمْ أَمْوَالُكُمْ وَلَا أَوْلَادُكُمْ عَن ذِكْرِ اللَّهِ",
+    tr: "Ey iman edenler, mallarınız ve çocuklarınız sizi Allah'ı anmaktan alıkoymasın." },
+  { id: "mg-63-10", mood: "sukur", title: "Vermeden Önce", source: "Münafikûn Suresi • 10. Ayet",
+    ar: "وَأَنفِقُوا مِن مَّا رَزَقْنَاكُم مِّن قَبْلِ أَن يَأْتِيَ أَحَدَكُمُ الْمَوْتُ",
+    tr: "Sizden birine ölüm gelmeden önce, size verdiğimiz şeylerden harcayın." },
+  // ═ TAHÂRİM (66) ═══════════════════════════════════════════
+  { id: "mg-66-8", mood: "af", title: "Samimi Tövbe", source: "Tahrîm Suresi • 8. Ayet",
+    ar: "يَا أَيُّهَا الَّذِينَ آمَنُوا تُوبُوا إِلَى اللَّهِ تَوْبَةً نَّصُوحًا",
+    tr: "Ey iman edenler, samimi bir tövbe ile Allah'a dönün." },
+  // ═ MÛZZEMMİL - HUCURÂT ════════════════════════════════════
+  { id: "mg-49-10", mood: "aile", title: "Kardeşler", source: "Hucurât Suresi • 10. Ayet",
+    ar: "إِنَّمَا الْمُؤْمِنُونَ إِخْوَةٌ فَأَصْلِحُوا بَيْنَ أَخَوَيْكُمْ",
+    tr: "İnananlar birbirlerinin kardeşleridir; kardeşlerinizi sulhunuzu tesis edin." },
+  { id: "mg-49-13", mood: "sevgi", title: "En Değerli", source: "Hucurât Suresi • 13. Ayet",
+    ar: "إِنَّ أَكْرَمَكُمْ عِندَ اللَّهِ أَتْقَاكُمْ",
+    tr: "Allah katında en değerliniz, O'na karşı en takvalı olanınızdır." },
+  { id: "mg-49-12", mood: "af", title: "Söylenti Yerine", source: "Hucurât Suresi • 12. Ayet",
+    ar: "وَاجْتَنِبُوا كَثِيرًا مِّنَ الظَّنِّ إِنَّ بَعْضَ الظَّنِّ إِثْمٌ",
+    tr: "Zannın çoğundan kaçının; çünkü zannın bir kısmı günahtır." },
+  { id: "mg-49-9", mood: "aile", title: "Aralarını Düzelt", source: "Hucurât Suresi • 9. Ayet",
+    ar: "وَإِن طَائِفَتَانِ مِنَ الْمُؤْمِنِينَ اقْتَتَلُوا فَأَصْلِحُوا بَيْنَهُمَا",
+    tr: "İnananlardan iki grup savaşırsa aralarını düzeltin." },
+  { id: "mg-49-6", mood: "huzur", title: "Fâsık Haberi", source: "Hucurât Suresi • 6. Ayet",
+    ar: "يَا أَيُّهَا الَّذِينَ آمَنُوا إِن جَاءَكُم فَاسِقٌ بِنَبَإٍ فَتَبَيَّنُوا",
+    tr: "Ey iman edenler, fâsık bir kimse size bir haber getirirse doğruluğunu araştırın." },
+  // ═ KAFT (50) ═══════════════════════════════════════════════
+  { id: "mg-50-16", mood: "huzur", title: "Şahdamarından Yakın", source: "Kâf Suresi • 16. Ayet",
+    ar: "وَنَحْنُ أَقْرَبُ إِلَيْهِ مِنْ حَبْلِ الْوَرِيدِ",
+    tr: "Biz ona şah damarından daha yakınız." },
+  // ═ ZÂRİYÂT (51) ═══════════════════════════════════════════
+  { id: "mg-51-56", mood: "aile", title: "İnsan ve Cinlerin Yaratılış Amacı", source: "Zâriyât Suresi • 56. Ayet",
+    ar: "وَمَا خَلَقْتُ الْجِنَّ وَالْإِنسَ إِلَّا لِيَعْبُدُونِ",
+    tr: "Ben cinleri ve insanları yalnızca Bana kulluk etsinler diye yarattım." },
+  // ═ TÛR (52) ════════════════════════════════════════════════
+  { id: "mg-52-48", mood: "sabir", title: "Sabret, Rabbini Bekle", source: "Tûr Suresi • 48. Ayet",
+    ar: "وَاصْبِرْ لِحُكْمِ رَبِّكَ فَإِنَّكَ بِأَعْيُنِنَا",
+    tr: "Rabbinin hükmüne sabret; elbette sen Bizim gözümüzün önündesin." },
+  // ═ KUMAR (75) ═════════════════════════════════════════════
+  { id: "mg-75-4", mood: "huzur", title: "Parmakları Toplar", source: "Kıyâme Suresi • 4. Ayet",
+    ar: "بَلْ قَادِرُونَ عَلَىٰ أَن يُسَوِّيَ بَنَانَهُ",
+    tr: "Hayır, parmak uçlarını bile yeniden düzenlemeye gücü yeter." },
+  // ═ MUTAFFİFÎN (83) ════════════════════════════════════════
+  { id: "mg-83-26", mood: "sukur", title: "Mühürlenmiş Keyif", source: "Mutaffifîn Suresi • 26. Ayet",
+    ar: "خِتَامُهُ مِسْكٌ وَفِي ذَٰلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ",
+    tr: "Onun mühürü misktir; bunun için yarışanlar yarışsın." },
+  // ═ TEVBE (9) → Fatih'ten kısa destekler ═══════════════════
+  { id: "mg-9-129", mood: "aile", title: "Vekil Olarak O Yeter", source: "Tevbe Suresi • 129. Ayet",
+    ar: "حَسْبِيَ اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ",
+    tr: "Bana Allah yeter; O'ndan başka ilâh yoktur. O'na tevekkül ettim; O, yüce Arş'ın sahibidir." },
+];

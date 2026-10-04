@@ -36,7 +36,7 @@ function requireAuth(req: VercelRequest, res: VercelResponse): { id: string; ema
   if (!cookie) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
   const token = decodeURIComponent(cookie.slice("nur_session=".length));
   const [payload, signature] = token.split(".");
-  const secret = process.env.NUR_SESSION_SECRET || process.env.GOOGLE_CLIENT_SECRET || "";
+  const secret = process.env.NUR_SESSION_SECRET || "";
   if (!payload || !signature || secret.length < 20) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
   const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   const sigBuf = Buffer.from(signature);
