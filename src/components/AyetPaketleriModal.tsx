@@ -5,10 +5,14 @@
 // stüdyoya eklenir (mevcut addAyah akışı üzerinden — stüdyo bozulmaz).
 // ════════════════════════════════════════════════════════
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { Package, Plus, Video } from "lucide-react";
 import { Modal } from "./UIElements";
+// ★ 04.10: paket ad/açıklama seçili dilde; ayet satırlarında çevrilmiş meal
+import { paketGorunum } from "../data/ayetPaketleriCokDil";
+import { gorunenMeal, mealleriTasi } from "../data/ayetMealCokDil";
+import { SURE_ADLARI } from "../data/ayetKartlariData";
 
 export interface AyetPaketiOgesi { s: number; a: number; baslik?: string }
 export interface AyetPaketi {
@@ -255,12 +259,25 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
 
   const [secili, setSecili] = useState<string | null>(null);
   const paket = useMemo(() => AYET_PAKETLERI.find((p) => p.id === secili) ?? null, [secili]);
+  // ★ 04.10: satır başlığı seçili dilde ayetin MEALİ (TR başlık veri katmanında kalır) —
+  //   meal gelmediyse TR başlık. Sureler açılışta arka planda taşınır.
+  const [, setMealTick] = useState(0);
+  // source: sureNoFromSource sure ADI bekler → "Bakara Suresi • 255. Ayet" biçimi
+  const satirKaynagi = (o: { s: number; a: number }) => `${SURE_ADLARI[o.s - 1] ?? ""} Suresi • ${o.a}. Ayet`;
+  useEffect(() => {
+    if (!open) return;
+    void mealleriTasi(AYET_PAKETLERI.flatMap((p) => p.ayetler).map((o) => ({ source: satirKaynagi(o) })), lang, () => setMealTick((v) => v + 1));
+  }, [open, lang]);
+  const satirBasligi = (o: { s: number; a: number; baslik?: string }) => {
+    const m = gorunenMeal({ tr: o.baslik ?? "", source: satirKaynagi(o) }, lang);
+    return m || o.baslik || "";
+  };
 
   if (!open) return null;
 
   const paketEkle = (p: AyetPaketi) => {
     p.ayetler.forEach((o) => addAyah(o.s, o.a));
-    notify(`✨ "${p.ad}" paketi stüdyoya eklendi (${p.ayetler.length} ayet) — atmosfer atayıp video üretebilirsin`);
+    notify(tt("apEklendi").replace("{ad}", paketGorunum(p.id, p.ad, p.aciklama, lang).ad).replace("{n}", String(p.ayetler.length)));
     onClose();
     onStudyyeDon?.();
   };
@@ -278,39 +295,39 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
             >
               <div className="mb-1.5 flex items-center gap-2">
                 <span className="text-xl">{p.emoji}</span>
-                <h4 className="text-[12px] font-black" style={{ color: p.renk }}>{p.ad}</h4>
-                <span className="ml-auto rounded-full bg-white/5 px-2 py-0.5 text-[8.5px] font-bold text-white/45">{p.ayetler.length} ayet</span>
+                <h4 className="text-[12px] font-black" style={{ color: p.renk }}>{paketGorunum(p.id, p.ad, p.aciklama, lang).ad}</h4>
+                <span className="ml-auto rounded-full bg-white/5 px-2 py-0.5 text-[8.5px] font-bold text-white/45">{tt("apSayiEtiket").replace("{n}", String(p.ayetler.length))}</span>
               </div>
-              <p className="text-[9.5px] leading-relaxed text-white/55">{p.aciklama}</p>
+              <p className="text-[9.5px] leading-relaxed text-white/55">{paketGorunum(p.id, p.ad, p.aciklama, lang).aciklama}</p>
             </button>
           ))}
         </div>
       ) : (
         <>
           <button type="button" onClick={() => setSecili(null)} className="mb-3 flex items-center gap-1.5 rounded-lg glass-soft px-2.5 py-1.5 text-[10px] font-bold text-white/60 transition hover:text-white">
-            ◀ Paketlere dön
+            ◀ {tt("apDon")}
           </button>
           <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[.03] p-3.5">
             <span className="text-2xl">{paket.emoji}</span>
             <div className="min-w-0">
-              <h4 className="text-[12.5px] font-black" style={{ color: paket.renk }}>{paket.ad}</h4>
-              <p className="text-[9.5px] text-white/55">{paket.aciklama}</p>
+              <h4 className="text-[12.5px] font-black" style={{ color: paket.renk }}>{paketGorunum(paket.id, paket.ad, paket.aciklama, lang).ad}</h4>
+              <p className="text-[9.5px] text-white/55">{paketGorunum(paket.id, paket.ad, paket.aciklama, lang).aciklama}</p>
             </div>
           </div>
           <div className="space-y-1.5">
             {paket.ayetler.map((o) => (
               <div key={`${o.s}:${o.a}`} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.02] px-3 py-2">
                 <div className="min-w-0">
-                  <p className="text-[10.5px] font-bold text-white/85">{o.baslik}</p>
-                  <p className="text-[9px] text-white/45">Sure {o.s} · Ayet {o.a}</p>
+                  <p className="text-[10.5px] font-bold text-white/85">{satirBasligi(o)}</p>
+                  <p className="text-[9px] text-white/45">{tt("apSatirAlt").replace("{s}", String(o.s)).replace("{a}", String(o.a))}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => addAyah(o.s, o.a)}
                   className="flex shrink-0 items-center gap-1 rounded-lg glass-soft px-2 py-1.5 text-[9px] font-bold text-white/65 transition hover:text-white"
-                  title="Sadece bu ayeti ekle"
+                  title={tt("apSadeceEkle")}
                 >
-                  <Plus size={10} /> Ekle
+                  <Plus size={10} /> {tt("apEkle")}
                 </button>
               </div>
             ))}
@@ -321,10 +338,10 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-[11.5px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >
-            <Video size={14} /> Paketin tamamını stüdyoya ekle ({paket.ayetler.length} ayet)
+            <Video size={14} /> {tt("apTamaminiEkle").replace("{n}", String(paket.ayetler.length))}
           </button>
           <p className="mt-2 text-center text-[8.5px] text-white/30">
-            <Package size={9} className="mr-1 inline" />Ayetler stüdyoda seçili gelir — rastgele atmosfer atayıp doğrudan üretim ekranına geçebilirsin.
+            <Package size={9} className="mr-1 inline" />{tt("apDipnot")}
           </p>
         </>
       )}

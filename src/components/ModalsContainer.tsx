@@ -525,7 +525,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       />
 
       {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride */}
-      <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} />
+      <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} lang={lang} />
       {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
       <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} lang={lang} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
 
@@ -611,7 +611,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* THEMES MODAL — SRP adım 8 */}
       {modal === "themes" && (
-        <ThemesBolum setModal={setModal} t={t} ALL_THEMES={ALL_THEMES} themeTier={themeTier} themeEmoji={themeEmoji} themeId={themeId} setThemeId={setThemeId} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
+        <ThemesBolum setModal={setModal} t={t} ALL_THEMES={ALL_THEMES} themeTier={themeTier} themeEmoji={themeEmoji} themeId={themeId} setThemeId={setThemeId} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} lang={lang} />
       )}
 
       {/* PRAYER MODAL — SRP adım 8 */}

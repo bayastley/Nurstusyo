@@ -16,6 +16,8 @@ import {
   MOOD_ONERILERI, SENARYO_MODLARI, catsForTierMood, moodBul,
   type MoodPreset,
 } from "../data/arkaplanUretici";
+// ★ 04.10: mood çipleri + mood adları seçili dilde görüntülenir (tıklamada TR anahtar korunur)
+import { moodOneriGorunum, moodAdGorunum } from "../data/arkaplanCokDil";
 import { CATEGORIES, CATEGORY_PALETTE, type CatId } from "../clips";
 
 export interface ArkaPlanUreticiModalProps {
@@ -117,15 +119,15 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   const senaryoNotu = useCallback((): string => {
     if (!aktifMood) return "";
     if (cats.length === 0) return "";
-    if (senaryo === "tek") return `Tüm sahne "${catLabel(cats[0])}" kategorisinden kurulacak.`;
+    if (senaryo === "tek") return tt("auNotTek").replace("{k}", catLabel(cats[0]));
     if (senaryo === "cift") {
       const destek = cats[1] ?? cats[0];
-      return `Ana sahne "${catLabel(cats[0])}" + destek sahne "${catLabel(destek)}" — Uygula'ya basınca İKİ kategori birden atanır, ayetler iki atmosfer arasında dönüşümlü dağıtılır.`;
+      return tt("auNotCift").replace("{k1}", catLabel(cats[0])).replace("{k2}", catLabel(destek));
     }
     const orta = cats[1] ?? cats[0];
     const final = cats[2] ?? orta;
-    return `Yolculuk planı: açılış "${catLabel(cats[0])}" → orta "${catLabel(orta)}" → final "${catLabel(final)}" — Uygula'ya basınca ÜÇ kategori sırayla atanır, hikâye yayı otomatik kurulur.`;
-  }, [aktifMood, cats, senaryo]);
+    return tt("auNotYolculuk").replace("{k1}", catLabel(cats[0])).replace("{k2}", catLabel(orta)).replace("{k3}", catLabel(final));
+  }, [aktifMood, cats, senaryo, lang, tt]);
 
   if (!open) return null;
 
@@ -141,7 +143,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
           className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-9 text-[11px] outline-none placeholder:text-white/30"
         />
         {metin && (
-          <button type="button" onClick={() => setMetin("")} title="Temizle"
+          <button type="button" onClick={() => setMetin("")} title={tt("kaTemizle")}
             className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white/50 transition hover:bg-red-500/25 hover:text-red-300">
             <X size={11} strokeWidth={3} />
           </button>
@@ -152,9 +154,9 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
       {!aktifMood && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {MOOD_ONERILERI.map((o) => (
-            <button key={o} type="button" onClick={() => setMetin(o)}
+            <button key={o} type="button" onClick={() => setMetin(o)} title={o}
               className="glass-soft rounded-full px-3 py-1.5 text-[10px] font-bold text-white/60 transition hover:text-white">
-              {o}
+              {moodOneriGorunum(o, lang)}
             </button>
           ))}
         </div>
@@ -167,21 +169,18 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
             <div className="mb-1 flex items-center gap-2">
               <span className="text-[18px]">{aktifMood.emoji}</span>
               <h4 className="font-display text-[13px] font-bold" style={{ color: "var(--accent-2)" }}>
-                {aktifMood.ad} Sahnesi
+                {moodAdGorunum(aktifMood.id, aktifMood.ad, lang)} {tt("auSahneEki")}
               </h4>
               {!tamEslesme && (
                 <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
               )}
-            </div>
-            <p className="text-[10px] leading-relaxed text-white/55">{aktifMood.plan}</p>
-            <p className="mt-2 text-[8.5px] italic text-white/35">
-              Dürüst not: bu, hazır R2 kütüphanesinden akıllı bir kompozisyon — gerçek AI görsel üretimi şimdilik kapalı.
-            </p>
+            </div>              <p className="text-[10px] leading-relaxed text-white/55">{aktifMood.plan}</p>
+            <p className="mt-2 text-[8.5px] italic text-white/35">{tt("auDurustNot")}</p>
           </div>
 
           {/* Senaryo modu */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">Senaryo ritmi</p>
+            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">{tt("auSenaryoBaslik")}</p>
             <div className="grid gap-2 sm:grid-cols-3">
               {SENARYO_MODLARI.map((m) => {
                 const secili = senaryo === m.id;
@@ -203,11 +202,11 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
 
           {/* Kategori önizleme */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">Sahne kategorileri</p>
+            <p className="mb-1.5 text-[9px] font-black tracking-wider text-white/40">{tt("auKategoriBaslik")}</p>
             <div className="flex flex-wrap gap-1.5">
               {cats.map((cat, i) => {
                 const pal = CATEGORY_PALETTE[cat];
-                const rol = i === 0 ? "ana" : i === 1 ? "destek" : "final";
+                const rol = i === 0 ? tt("auRolAna") : i === 1 ? tt("auRolDestek") : tt("auRolFinal");
                 return (
                   <span key={cat} className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-bold"
                     style={{
@@ -227,7 +226,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
           {/* Uyarı: ayet seçili değilse */}
           {seciliAyetSayisi === 0 && (
             <p className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-2.5 text-[9.5px] leading-relaxed text-amber-200/90">
-              ℹ️ Henüz ayet seçmedin — sahne yine de ana arka plan olarak atanır; ayet ekleyince her ayete bu temadan klip dağıtmak için stüdyodaki "Rastgele Ata"yı kullanabilirsin.
+              ℹ️ {tt("auAyetUyari")}
             </p>
           )}
 
@@ -236,7 +235,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
             className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[12px] font-black text-black transition hover:brightness-110 disabled:opacity-50"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
             {uygulaniyor ? <Loader2 size={14} className="animate-spin" /> : <Wand2 size={14} strokeWidth={3} />}
-            {uygulaniyor ? "Stüdyoya uygulanıyor..." : "Stüdyoya Uygula"}
+            {uygulaniyor ? tt("auUygulaniyor") : tt("auUygula")}
           </button>
         </div>
       )}

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
+import { temaAdGorunum } from "../data/temalarCokDil";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
 import { sehirEtiketindenAd } from "./islamicToolsVeri"; // ★ dünya şehir etiketinden gerçek ad
@@ -330,6 +331,7 @@ export function ThemesBolum({
   accessTier,
   tierAtLeast,
   openPremium,
+  lang,
 }: {
   setModal: (m: never) => void;
   t: (k: string) => string;
@@ -341,9 +343,11 @@ export function ThemesBolum({
   accessTier: Tier;
   tierAtLeast: (a: Tier, b: Tier) => boolean;
   openPremium: (tab?: "uyelik" | "jeton") => void;
+  lang?: string;
 }) {
+  const dil = (lang ?? "tr") as Lang;
   return (
-    <Modal title={t("themesTitle")} sub={`${t("themesSub")} · ${ALL_THEMES.length} tema · ${ALL_THEMES.filter((x: any) => themeTier(x.id) === "free").length} ücretsiz`} onClose={() => setModal(null as never)} wide>
+    <Modal title={t("themesTitle")} sub={t("themesSub").replace("{n}", String(ALL_THEMES.length)).replace("{u}", String(ALL_THEMES.filter((x: any) => themeTier(x.id) === "free").length))} onClose={() => setModal(null as never)} wide>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-4">
         {ALL_THEMES.map((item: any) => {
           const tTier = themeTier(item.id);
@@ -355,7 +359,7 @@ export function ThemesBolum({
                 <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl opacity-70 drop-shadow-lg transition group-hover:scale-110">{emoji}</span>
                 <span className="absolute left-3 top-3 h-9 w-9 rounded-full opacity-40 blur-md" style={{ background: item.acc }} />
                 <span className="absolute right-3 bottom-3 h-3 w-3 rounded-full border border-white/20" style={{ background: item.acc2 }} />
-                <span className="absolute bottom-2 left-3 text-[10px] font-bold" style={{ color: item.acc2 }}>{item.name}</span>
+                <span className="absolute bottom-2 left-3 text-[10px] font-bold" style={{ color: item.acc2 }}>{temaAdGorunum(item.id, item.name, dil)}</span>
                 {themeId === item.id ? <Check size={13} className="absolute left-2 top-2" style={{ color: item.acc }} /> : null}
                 {locked && <span className="absolute inset-0 bg-black/30 backdrop-blur-[1px]" />}
               </button>

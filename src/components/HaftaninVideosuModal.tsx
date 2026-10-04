@@ -129,9 +129,9 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
           <div>
             <h2 className="flex items-center gap-2 text-lg font-black text-white">
               <Film size={18} style={{ color: "var(--accent-2)" }} />
-              Haftanın Videosu
+              {tt("hvBaslik")}
             </h2>
-            <p className="mt-0.5 text-[11px] text-white/40">Topluluğun en beğenilen üretimleri — admin onaylı vitrin</p>
+            <p className="mt-0.5 text-[11px] text-white/40">{tt("hvAltBaslik")}</p>
           </div>
           <button onClick={onClose} aria-label="Kapat" className="rounded-full p-1.5 transition hover:bg-white/10">
             <X size={18} className="text-white/50" />
@@ -145,14 +145,14 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
             className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${sekme === "vitrin" ? "text-black" : "text-white/60 hover:text-white"}`}
             style={sekme === "vitrin" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            🏆 Vitrin
+            🏆 {tt("hvVitrin")}
           </button>
           <button
             onClick={() => setSekme("gonder")}
             className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition ${sekme === "gonder" ? "text-black" : "text-white/60 hover:text-white"}`}
             style={sekme === "gonder" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <Send size={11} className="mr-1 inline" /> Videomu Öner
+            <Send size={11} className="mr-1 inline" /> {tt("hvOner")}
           </button>
         </div>
 
@@ -161,15 +161,13 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
           {sekme === "vitrin" && (
             yukleniyor ? (
               <p className="flex items-center justify-center gap-2 py-10 text-[11px] text-white/40">
-                <Loader2 size={14} className="animate-spin" /> Yükleniyor…
+                <Loader2 size={14} className="animate-spin" /> {tt("hvYukleniyor")}
               </p>
             ) : vitrin.length === 0 ? (
               <div className="py-10 text-center">
                 <p className="text-3xl">🎬</p>
-                <p className="mt-3 text-[12px] font-bold text-white/70">İlk ışıklar yakında ✨</p>
-                <p className="mx-auto mt-1 max-w-sm text-[10.5px] leading-relaxed text-white/40">
-                  Topluluğun en beğenilen videoları burada sergilenecek — moderasyon ekibimiz onayladıkça vitrin dolmaya başlar. Sen de stüdyoda ürettiğin videoyu "Videomu Öner" sekmesinden gönderebilirsin 🚀
-                </p>
+                <p className="mt-3 text-[12px] font-bold text-white/70">{tt("hvIlkIsiklar")}</p>
+                <p className="mx-auto mt-1 max-w-sm text-[10.5px] leading-relaxed text-white/40">{tt("hvBosAciklama")}</p>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -197,7 +195,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 rounded-lg bg-emerald-500/15 px-2.5 py-1 text-[9.5px] font-black text-emerald-300 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/25"
                         >
-                          <ExternalLink size={10} /> İzle
+                          <ExternalLink size={10} /> {tt("hvIzle")}
                         </a>
                         <button
                           onClick={() => begen(v.id)}
@@ -205,7 +203,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                             v.begendim ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-300/50" : "bg-white/10 text-white/60 hover:bg-white/20"
                           }`}
                         >
-                          <ThumbsUp size={10} /> {v.begeni > 0 ? v.begeni : "Beğen"}
+                          <ThumbsUp size={10} /> {v.begeni > 0 ? v.begeni : tt("hvBegen")}
                         </button>
                       </div>
                     </div>
@@ -220,47 +218,37 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
             !oturumlu ? (
               <div className="py-10 text-center">
                 <p className="text-3xl">🔐</p>
-                <p className="mt-3 text-[12px] font-bold text-white/70">Giriş yapman gerekiyor</p>
-                <p className="mx-auto mt-1 max-w-sm text-[10.5px] leading-relaxed text-white/40">
-                  Video önerisi gönderebilmek için Google ile giriş yap — sol üst menüden 3 saniyede üye ol.
-                </p>
+                <p className="mt-3 text-[12px] font-bold text-white/70">{tt("hvGirisGerek")}</p>
+                <p className="mx-auto mt-1 max-w-sm text-[10.5px] leading-relaxed text-white/40">{tt("hvGirisAciklama")}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 <div className="rounded-xl border border-sky-400/25 bg-sky-500/[0.08] p-3">
                   <p className="flex items-center gap-1.5 text-[10.5px] font-bold text-sky-200">
-                    <Sparkles size={11} /> Nasıl çalışır?
+                    <Sparkles size={11} /> {tt("hvNasil")}
                   </p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-white/55">
-                    Ürettiğin videoyu YouTube/Instagram gibi bir platforma yükle, linkini buraya yapıştır.
-                    Admin onayladıktan sonra videon vitrinde sergilenir; beğeni toplayanlar haftanın birincisi olur.
-                    Her hafta 1 öneri hakkın var. <b className="text-white/75">Videonun kendisi sitede saklanmaz</b> — yalnızca link ve başlık.
-                  </p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-white/55" dangerouslySetInnerHTML={{ __html: tt("hvNasilAciklamaHtml") }} />
                 </div>
 
                 {/* ★ MAHREM UYARISI (01.10) — hanım kardeşlerin okuyuş sesi ile üretilen videolar
                     herkese açık vitrine önerilmeden önce saygılı hatırlatma. Kaynak:
                     dinimizislam.com "Kadının sesi haram mı?" (Aid=2987) */}
                 <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
-                  <p className="text-[10px] font-bold text-amber-200">🕌 Hanım kardeşlerimiz için hatırlatma</p>
-                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
-                    Videonuzda hanımın okuyuş sesi varsa: bazı fıkhı kaynaklara göre hanımın sesini
-                    yabancı erkeklere duyurmak caiz görülmez; bu vitrin herkese açıktır. Kararı
-                    bilerek verin, gerekiyorsa bilgili bir âliminize danışın.
-                  </p>
+                  <p className="text-[10px] font-bold text-amber-200">🕌 {tt("hvHanimBaslik")}</p>
+                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">{tt("hvHanimAciklama")}</p>
                   <a
                     href="https://dinimizislam.com/detay.asp?Aid=2987"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-1 inline-block text-[9px] font-bold text-amber-300/90 underline decoration-amber-400/40 underline-offset-2 hover:text-amber-200"
                   >
-                    Kaynak: dinimizislam.com — "Kadının sesi haram mı?" ↗
+                    {tt("hvHanimKaynak")}
                   </a>
                 </div>
 
                 {benim.length > 0 && (
                   <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
-                    <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/40">Benim önerilerim</p>
+                    <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/40">{tt("hvBenimOneriler")}</p>
                     <div className="space-y-1.5">
                       {benim.map((b) => (
                         <div key={b.id} className="flex items-center justify-between gap-2 text-[10px]">
@@ -270,7 +258,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                             b.durum === "reddedildi" ? "bg-red-500/20 text-red-300" :
                             "bg-amber-500/20 text-amber-300"
                           }`}>
-                            {b.durum === "onayli" ? "✓ Vitrinde" : b.durum === "reddedildi" ? "Reddedildi" : "⏳ Onay bekliyor"}
+                            {b.durum === "onayli" ? tt("hvVitrinde") : b.durum === "reddedildi" ? tt("hvReddedildi") : tt("hvOnayBekliyor")}
                           </span>
                         </div>
                       ))}
@@ -279,7 +267,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                 )}
 
                 <div>
-                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">Video başlığı *</label>
+                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hvLabelBaslik")}</label>
                   <input
                     value={baslik}
                     onChange={(e) => setBaslik(e.target.value)}
@@ -289,7 +277,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">Video linki *</label>
+                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hvLabelLink")}</label>
                   <input
                     value={link}
                     onChange={(e) => setLink(e.target.value)}
@@ -299,7 +287,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">Ayet / sure bilgisi</label>
+                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hvLabelSure")}</label>
                   <input
                     value={sureBilgi}
                     onChange={(e) => setSureBilgi(e.target.value)}
@@ -309,7 +297,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">Açıklama</label>
+                  <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hvLabelAciklama")}</label>
                   <textarea
                     value={aciklama}
                     onChange={(e) => setAciklama(e.target.value)}
@@ -326,7 +314,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                 >
                   {gonderiyor ? <Loader2 size={14} className="animate-spin" /> : <Send size={13} />}
-                  {gonderiyor ? "Gönderiliyor…" : "Önerimi Gönder"}
+                  {gonderiyor ? tt("hvGonderiliyor") : tt("hvGonder")}
                 </button>
               </div>
             )

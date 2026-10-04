@@ -597,7 +597,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
         setMealYenileniyor(false);
         setLoading(false);
       })
-      .catch(() => { if (live) { setError("Ayetler yüklenemedi. İnternet bağlantını kontrol et."); setMealYenileniyor(false); setLoading(false); } });
+      .catch(() => { if (live) { setError(ttQL("qrYuklenemedi")); setMealYenileniyor(false); setLoading(false); } });
     return () => { live = false; };
   }, [open, mode, surahNo, mealId]);
 
@@ -1258,10 +1258,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
           </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
           <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
-            📻 {radioOn ? (radioPaused ? "RADYO DURDU" : "RADYO AÇIK") : "RADYO"}
+            📻 {radioOn ? (radioPaused ? ttQL("qrRadyoDurdu") : ttQL("qrRadyoAcik")) : ttQL("qrRadyo")}
           </button>
           {/* ★ KAPAT: en sağda — modalı kapatır (radyo açıkken bile) */}
-          <button onClick={onClose} aria-label="Kapat" className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title="Kur'an ekranını kapat">
+          <button onClick={onClose} aria-label={ttQL("qrKapat")} className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttQL("qrEkranKapatTitle")}>
           KAPAT <X size={13} />
         </button>
         </div>
@@ -1276,7 +1276,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
           </span>
           {/* ★ AKILLI RADYO düğmesi: bölge önerisini aç/kapa (isteğe bağlı — kullanıcı serbest) */}
           <button onClick={() => { const yeni = !akilliAcik; setAkilliAcik(yeni); try { localStorage.setItem("nur_akilli_radyo_bolge", yeni ? (akilliBolge || "genel") : "kapat"); } catch { /* yut */ } if (yeni) setRadioNote(`🌍 Akıllı Radyo açık — ${akilliBolge === "tr" ? "Türkiye" : akilliBolge === "ar" ? "Arap bölgesi" : akilliBolge === "yabanci" ? "uluslararası" : "evrensel"} kanalları öne alındı`); }} className={`shrink-0 rounded-lg px-2 py-1 text-[10px] font-black transition active:scale-95 ${akilliAcik ? "bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30" : "bg-white/5 text-white/50 hover:bg-white/10"}`} title={akilliAcik ? "Akıllı Radyo açık — bölgenize göre kanallar öne alınıyor. Kapatırsanız tüm kanallar eşit sıralanır." : "Akıllı Radyo kapalı — tüm kanallar eşit. Açarsanız bölgenize göre önerilir."}>
-            🌍 {akilliAcik ? "AKILLI" : "TÜMÜ"}
+            🌍 {akilliAcik ? ttQL("qrAkilli") : ttQL("qrTumu")}
           </button>
           <select
             value={radioIdx}
@@ -1286,18 +1286,18 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
           >
             {siraliKanallar.map(i => <option key={RADIO_STATIONS[i].url} value={i}>{RADIO_STATIONS[i].ad}{akilliAcik && akilliBolge && RADIO_STATIONS[i].bolge === akilliBolge ? " ★" : ""}</option>)}
           </select>
-          <span className={`hidden min-w-0 flex-1 truncate text-[10px] font-bold sm:block ${radioNote ? "text-amber-300" : radioPaused ? "text-white/50" : "text-sky-200/60"}`} title={radioNote || (radioPaused ? "DURDURULDU — başlatmak için ▶" : "CANLI TİLAVET — 7/24 kesintisiz")}>{radioNote || (radioPaused ? "⏸ DURDURULDU" : "CANLI TİLAVET — 7/24 kesintisiz")}</span>
+          <span className={`hidden min-w-0 flex-1 truncate text-[10px] font-bold sm:block ${radioNote ? "text-amber-300" : radioPaused ? "text-white/50" : "text-sky-200/60"}`} title={radioNote || (radioPaused ? ttQL("qrDurdurulduTitle") : ttQL("qrCanliTilavet"))}>{radioNote || (radioPaused ? `⏸ ${ttQL("qrDurduruldu")}` : ttQL("qrCanliTilavet"))}</span>
           {radioErr ? (
             <button onClick={() => { // ★ BAŞTAN BAŞLAT: liste 1. kanaldan itibaren yeniden denenir
               radioFallbackRef.current = 0;
               setRadioErr(false);
-              setRadioNote("🔄 Kanal listesi baştan deneniyor…");
+              setRadioNote(`🔄 ${ttQL("qrKanalTekrar")}`);
               setRadioIdx(0);
               setRadioRetryCount(c => c + 1); // aynı kanalsa da efekti zorla tetikle
-            }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title="Tüm kanallar denendi — 1. kanaldan baştan dene">↻ Tekrar dene</button>
+            }} className="rounded-lg bg-sky-500/20 px-2 py-1 text-[10px] font-black text-sky-200 hover:bg-sky-500/30" title={ttQL("qrKanalTitle")}>↻ {ttQL("qrTekrarDene")}</button>
           ) : (
-            <button onClick={() => (radioPaused ? resumeRadio() : pauseRadio())} className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${radioPaused ? "bg-emerald-500/25 text-emerald-200 hover:bg-emerald-500/40" : "bg-amber-500/20 text-amber-200 hover:bg-amber-500/35"}`} title={radioPaused ? "Radyoyu başlat" : "Radyoyu durdur (kanal seçili kalır)"}>
-              {radioPaused ? "▶ BAŞLAT" : "⏸ DURDUR"}
+            <button onClick={() => (radioPaused ? resumeRadio() : pauseRadio())} className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${radioPaused ? "bg-emerald-500/25 text-emerald-200 hover:bg-emerald-500/40" : "bg-amber-500/20 text-amber-200 hover:bg-amber-500/35"}`} title={radioPaused ? ttQL("qrRadyoBaslatTitle") : ttQL("qrRadyoDurdurTitle")}>
+              {radioPaused ? `▶ ${ttQL("qrBaslat")}` : `⏸ ${ttQL("qrDurdur")}`}
             </button>
           )}
           <button onClick={() => setRadioMuted(m => !m)} className="text-[13px] leading-none text-sky-100/90 transition hover:text-sky-300" title={radioMuted ? "Sesi aç" : "Sessize al"}>
@@ -1320,7 +1320,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
                 onChange={(e) => { setQuery(e.target.value); setSearchOpen(true); }}
                 onFocus={() => setSearchOpen(true)}
                 onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
-                placeholder="Sure ara veya ayette kelime ara (rahmet, sabır, نور...)"
+                placeholder={ttQL("qrSureAra")}
                 className="h-8 w-full rounded-xl border border-white/10 bg-[#1E293B] pl-8 pr-3 text-[11px] outline-none placeholder:text-[#5a5443] focus:border-gold/50"
               />
               {searchOpen && (filteredSurahs.length > 0 || ayahResults.length > 0 || searching) && (
@@ -1335,7 +1335,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
                     </button>
                   ))}
                   {(ayahResults.length > 0 || searching) && (
-                    <p className="px-2.5 pt-2 pb-1 text-[8px] font-black uppercase tracking-widest text-[#655f4c]">{searching ? "Ayetler aranıyor…" : "Ayetlerde geçen kelimeler"}</p>
+                    <p className="px-2.5 pt-2 pb-1 text-[8px] font-black uppercase tracking-widest text-[#655f4c]">{searching ? ttQL("qrAranuyor") : ttQL("qrKelimeler")}</p>
                   )}
                   {ayahResults.map((r, idx) => (
                     <button key={`${r.s}:${r.a}:${idx}`} onClick={() => { setSurahNo(r.s); setAyahNo(r.a); setActiveWord(null); setQuery(""); setSearchOpen(false); setAyahResults([]); }} className="flex w-full flex-col gap-0.5 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-gold/10">
@@ -1724,7 +1724,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
               <div className="relative z-10 flex w-full flex-col items-center gap-3">
                 {isPlaying && listenAyahData ? (
                   <>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ Çalıyor — {besmelePlaying ? "BESMELE" : fullSurahMode ? "TAM SURE (kesintisiz)" : wholeQuran ? "KOMPLE KUR'AN" : nextSurahAuto ? "SIRADAKİ SURE" : "TEK SURE"} · {besmelePlaying ? "Sure Başlangıcı" : `${listenAyahData.n}. Ayet`}</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-gold/70">♪ {ttQL("qrCaluyor")} — {besmelePlaying ? ttQL("qrBesmele") : fullSurahMode ? ttQL("qoTamSure") : wholeQuran ? ttQL("qoKompleKuran") : nextSurahAuto ? ttQL("qoSiradakiSure") : ttQL("qoTekSure")} · {besmelePlaying ? ttQL("qrSureBaslangici") : `${listenAyahData.n}. ${ttQL("qrAyet")}`}</span>
                     {/* ★ MOBİL KAYDIRMA: uzun ayet ekrana sığmayınca parmakla sayfayı oynatmak yerine
                         buradaki hayalet oklarla ARAPÇA + MEAL birlikte kaydırılır (sayfa sabit kalır).
                         Masaüstünde fare kartın üstüne gelince oklar belirir, çekince kaybolur. */}
@@ -1758,9 +1758,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
                     </div>
                   </>
                 ) : isPlaying ? (
-                  <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-[#b8b093]">ayet yükleniyor…</span></div>
+                  <div className="flex items-center gap-2 py-4"><Loader2 size={14} className="animate-spin text-gold" /> <span className="text-[11px] text-[#b8b093]">{ttQL("qoKelimelerYukleniyor")}</span></div>
                 ) : (
-                  <p className="text-[11px] text-[#8f8870]">Başlat'a bas — sure, seçtiğin hoca sesiyle okunur.</p>
+                  <p className="text-[11px] text-[#8f8870]">{ttQL("qrBaslatIpucu")}</p>
                 )}
               </div>
             </div>
@@ -1774,20 +1774,20 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
               </div>
               {/* Uyku modu mevcut kurUykuZamanlayici ile çalışıyor (UI zaten var) */}
               <div className="flex items-center gap-3">
-                <button onClick={() => startListening(Math.max(0, listenAyahIdx - 1))} className="rounded-full bg-white/[.06] p-2.5 text-[#b8b093] transition hover:bg-white/10 active:scale-95" title="Önceki ayet">⏮</button>
+                <button onClick={() => startListening(Math.max(0, listenAyahIdx - 1))} className="rounded-full bg-white/[.06] p-2.5 text-[#b8b093] transition hover:bg-white/10 active:scale-95" title={ttQL("qoOncekiAyet")}>⏮</button>
                 {isPlaying ? (
                   <button onClick={stopListening} className="rounded-full bg-gold p-4 text-slate-950 shadow-lg shadow-gold/20 transition hover:brightness-110 active:scale-90"><Pause size={22} /></button>
                 ) : (
                   <button onClick={() => startListening(listenAyahIdx)} className="rounded-full bg-gold p-4 text-slate-950 shadow-lg shadow-gold/20 transition hover:brightness-110 active:scale-90"><Play size={22} /></button>
                 )}
-                <button onClick={() => startListening(Math.min(listenSurahInfo.ayahs - 1, listenAyahIdx + 1))} className="rounded-full bg-white/[.06] p-2.5 text-[#b8b093] transition hover:bg-white/10 active:scale-95" title="Sonraki ayet">⏭</button>
+                <button onClick={() => startListening(Math.min(listenSurahInfo.ayahs - 1, listenAyahIdx + 1))} className="rounded-full bg-white/[.06] p-2.5 text-[#b8b093] transition hover:bg-white/10 active:scale-95" title={ttQL("qoSonrakiAyet")}>⏭</button>
               </div>
               <button onClick={() => setLoopAyahListen(v => !v)} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[9px] font-black transition ${loopAyahListen ? "border-emerald-900/30 bg-emerald-950/40 text-emerald-400" : "border-white/10 bg-white/[.04] text-[#7a745f]"}`}>
                 <span className={`h-1.5 w-1.5 rounded-full ${loopAyahListen ? "animate-pulse bg-emerald-400" : "bg-white/30"}`} />
-                AYET DÖNGÜSÜ {loopAyahListen ? "AÇIK" : "KAPALI"}
+                {ttQL("qrAyetDongusu")} {loopAyahListen ? ttQL("qrAcik") : ttQL("qrKapali")}
               </button>
             </div>
-            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">{RECITERS.length} kari · ayet ayet akış · Komple Kur'an: 6236 ayet · kaynak: everyayah.com (telifsiz paylaşım izinli)</p>
+            <p className="mt-3 text-center text-[8px] font-bold uppercase tracking-widest text-[#5a5443]">{ttQL("qrKariBilgi").replace("{n}", String(RECITERS.length))}</p>
           </div>
         </div>
       )}
