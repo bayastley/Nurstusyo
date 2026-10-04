@@ -631,11 +631,26 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         return { ...x, tr: satir[1][x.a - 1].tr };
       }));
       const basarili = sonuclar.filter(([, rows]) => rows).length;
-      if (basarili === sonuclar.length) notify(`🌍 Seçili ayetlerin mealleri yeni dile güncellendi (${edition})`);
-      else notify(`🌍 Mealler güncellendi (${basarili}/${sonuclar.length} sure) — kalanlar eski metinle kaldı`);
+      if (basarili === sonuclar.length) notify(t("mlSenkronTamam").replace("{edition}", edition));
+      else notify(t("mlSenkronKismi").replace("{basarili}", String(basarili)).replace("{toplam}", String(sonuclar.length)));
     })();
     return () => { iptal = true; };
   }, [lang, notify]);
+  // ★ PAYLAŞIM METNİ DİL SENKRONU (04.10): dil değişince başlık/açıklama/hashtag
+  //   havuzları da YENİ DİLDE yeniden üretilir — aksi halde panel eski dilde TR metin
+  //   göstermeye devam ediyordu ("başlıkları da çevir" — kullanıcı talebi).
+  //   İlk mount'ta koşmaz: useState initializer zaten seçili dille üretti.
+  //   Seçili ayet varsa o ayetin bilgisiyle üretilir; yoksa varsayılan Bakara 2:255.
+  const prevPaylasLangRef = useRef(lang);
+  useEffect(() => {
+    const onceki = prevPaylasLangRef.current;
+    prevPaylasLangRef.current = lang;
+    if (onceki === lang) return;
+    const cur = selectedRef.current[verseIndexRef.current] ?? selectedRef.current[0];
+    setShareTitle(genTitle(cur?.sName, cur?.s ?? 2, cur?.a ?? 255, lang, cur?.tr ?? ""));
+    setShareDescription(genDesc(cur?.sName ?? "Bakara", cur?.s ?? 2, cur?.a ?? 255, reciter.name, lang));
+    setVisibleTags(pickRandomTags(14));
+  }, [lang, notify, reciter.name, pickRandomTags]);
   // ★ RTL DİLİ (01.10): ar/ur seçiliyse ana grid de sağdan sola akar — CSS logical
   //   mirror'ı flex/grid üzerinden çalışır; body'ye nur-rtl sınıfı düzeltmeler için.
   const rtlMi = lang === "ar" || lang === "ur";
@@ -812,7 +827,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           if (quranClips.length) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
         }
       }
-      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciter.name, lang)); notify(`${meta.name} ${s}:${a} eklendi`);
+      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciter.name, lang)); notify(t("ssAyetEklendi").replace("{name}", meta.name).replace("{s}", String(s)).replace("{a}", String(a)));
     } catch (e) {
       console.error("[addAyah] fetch hatası:", e);
       // ★ HATA: Placeholder'ı listeden çıkar
@@ -1099,7 +1114,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   });
 
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
-  const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify });
+  const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify, t });
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimings) return null;

@@ -1,9 +1,12 @@
 import { useCallback, useState } from "react";
+import { T } from "../i18n";
 
 interface ShareActionsInput {
   shareTitle: string;
   shareDescription: string;
   notify: (msg: string) => void;
+  /** ★ 04.10: notify + promo metinleri seçili dilde — hardcoded TR kalktı */
+  t: (key: keyof (typeof T)["tr"]) => string;
 }
 
 interface Output {
@@ -16,14 +19,14 @@ interface Output {
  * ★ PAYLAŞIM FONKSİYONLARI — StudioApp.tsx'ten çıkarıldı (parçalama)
  * WhatsApp, YouTube, TikTok, Instagram, X paylaşım linkleri
  */
-export function useShareActions({ shareTitle, shareDescription, notify }: ShareActionsInput) {
+export function useShareActions({ shareTitle, shareDescription, notify, t }: ShareActionsInput) {
   const [copied, setCopied] = useState(false);
 
   const copyShare = useCallback(async () => {
     const content = `${shareTitle}\n\n${shareDescription}`;
     try { await navigator.clipboard.writeText(content); } catch { const textarea = document.createElement("textarea"); textarea.value = content; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); textarea.remove(); }
-    setCopied(true); window.setTimeout(() => setCopied(false), 1600); notify("Paylaşım metni kopyalandı");
-  }, [notify, shareDescription, shareTitle]);
+    setCopied(true); window.setTimeout(() => setCopied(false), 1600); notify(t("shKopyalandi"));
+  }, [notify, shareDescription, shareTitle, t]);
 
   // ★ Videoyu cihaza indirir (paylaşım desteklenmeyen cihazlarda yedek yol)
   const downloadVideo = useCallback(async (output: Output) => {
@@ -41,7 +44,7 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
   }, []);
 
   const shareOutput = useCallback(async (output: Output) => {
-    const promoText = "Bu video nurstudyo.com yapay zeka otomasyonu ile 1 dakikada üretilmiştir. Siz de telifsiz ve sinematik Kur'an videoları üretmek için ziyaret edin!";
+    const promoText = t("shPromoVideo");
     const shareText = `${promoText}\n\n${shareDescription}`;
     try {
       const blob = await (await fetch(output.url)).blob();
@@ -57,15 +60,15 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
       //    dosyayı elle paylaşabilir
       await downloadVideo(output);
       try { await navigator.clipboard.writeText(`${shareTitle}\n\n${shareText}`); } catch { /* ignore */ }
-      notify(" video cihazına indirildi — indirme klasöründen WhatsApp/Instagram'a atabilirsin (başlık+açıklama panoda)");
+      notify(t("shCihazaIndirildiPano"));
     } catch (e) {
       // Kullanıcı paylaş menüsünü kapattıysa hata değildir
       if ((e as { name?: string })?.name === "AbortError") return;
       // Video paylaşılamadı → en azından indirsin
       await downloadVideo(output);
-      notify(" video cihazına indirildi — uygulamalarından paylaşabilirsin");
+      notify(t("shCihazaIndirildi"));
     }
-  }, [downloadVideo, notify, shareDescription, shareTitle]);
+  }, [downloadVideo, notify, shareDescription, shareTitle, t]);
 
   const shareToWhatsApp = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
@@ -84,23 +87,23 @@ export function useShareActions({ shareTitle, shareDescription, notify }: ShareA
     navigator.clipboard.writeText(text).catch(() => undefined);
     window.open("https://studio.youtube.com/channel/upload", "_blank", "noopener,noreferrer");
     // ★ PLATFORM ÖNERİSİ: YouTube başlığı otomatik kopyalar — kullanıcıya haber ver
-    notify("📋 Başlık + açıklama kopyalandı — YouTube yüklerken başlık kutusuna yapıştır");
-  }, [notify, shareTitle, shareDescription]);
+    notify(t("shYtKopyalandi"));
+  }, [notify, shareTitle, shareDescription, t]);
 
   const shareToTikTok = useCallback(() => {
     const text = `${shareTitle}\n\n${shareDescription}`;
     navigator.clipboard.writeText(text).catch(() => undefined);
     window.open("https://www.tiktok.com/creator-center/upload", "_blank", "noopener,noreferrer");
-    notify("📋 Başlık + açıklama kopyalandı — TikTok açıklamasına yapıştır");
-  }, [notify, shareTitle, shareDescription]);
+    notify(t("shTtKopyalandi"));
+  }, [notify, shareTitle, shareDescription, t]);
 
   const shareToInstagram = useCallback(() => {
     // ★ REELS HATIRLATMASI: Instagram dosya paylaşımını kabul etmez — video önce
     //   cihaza inmeli; Reels sadece 9:16 dikey formatı tam ekran kabul eder.
     navigator.clipboard.writeText(`${shareTitle}\n\n${shareDescription}`).catch(() => undefined);
     window.open("https://www.instagram.com/reels/", "_blank", "noopener,noreferrer");
-    notify("📱 Videoyu cihazından Reels'e yükle · Reels 9:16 dikey format ister — videon hazır (metin panoda)");
-  }, [notify, shareTitle, shareDescription]);
+    notify(t("shIgReels"));
+  }, [notify, shareTitle, shareDescription, t]);
 
   const shareToX = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);

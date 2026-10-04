@@ -397,7 +397,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="mx-auto max-w-[228px]">
         <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: t("vpSablon"), icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
-        {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR")} şablon hazır · Akıllı AI ayetinize uygun şablonu seçer</p>}
+        {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{t("vpSablonHazir").replace("{n}", ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR"))}</p>}
         {/* ★ KENDİ SESİNLE ÜRET (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
             milisanielik senkron. ELİT olmayan tıklarsa premium'a yönlendirilir (StudioApp'te). */}
         <button
@@ -451,16 +451,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                     document.body.removeChild(a);
                     URL.revokeObjectURL(objectUrl);
                   }
-                  notify(`${outputs.length} video sırayla indirildi.`);
+                  notify(t("vpTopluIndirildi").replace("{n}", String(outputs.length)));
                 } catch (error) {
                   console.error("[Toplu indirme]", error);
-                  notify("İndirme sırasında bir video alınamadı.");
+                  notify(t("vpTopluIndirHata"));
                 }
               }}
               className="mt-2 flex w-full items-center justify-center gap-1 rounded-xl py-2 text-[9.5px] font-black text-black transition active:scale-[.98]"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              <Download size={10} />{outputs.length} Videoyu İndir
+              <Download size={10} />{t("vpTopluIndir").replace("{n}", String(outputs.length))}
             </button>
           )}
         </div>
@@ -477,29 +477,29 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <p className="truncate text-[9px] text-white/60">{activeOutput.label}</p>
               <p className="mb-3 text-[8px] text-white/40">{fmtDuration(activeOutput.duration)} · {fmtSize(activeOutput.size)}</p>
               <div className="grid grid-cols-2 gap-1.5">
-                <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title="Videoyu cihazına kaydet"><Download size={12} />{t("download")}</a>
-                <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title="Cihazındaki uygulamalarla paylaş (WhatsApp, Instagram…)"><Share2 size={12} />{t("share")}</button>
+                <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title={t("vpKaydetTitle")}><Download size={12} />{t("download")}</a>
+                <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("vpPaylasTitle")}><Share2 size={12} />{t("share")}</button>
               </div>
               {/* ★ CİHAZ UYGULAMA ÇİPLERİ (02.10): Paylaş → cihazına göre uygulama kısayolları;
                   tıklayınca uygulama açılır + video arka planda cihaza iner (kolay paylaşım) */}
               {paylasCihazi(activeOutput).length > 0 && (
                 <div className="mt-2 flex flex-wrap items-center gap-1">
-                  <span className="text-[8px] font-bold text-white/35">Hızlı paylaş:</span>
+                  <span className="text-[8px] font-bold text-white/35">{t("vpHizliPaylas")}</span>
                   {paylasCihazi(activeOutput).map((u) => (
                     <button key={u.ad} type="button" onClick={u.calistir}
                       className="rounded-full border border-white/10 bg-white/[.04] px-2 py-1 text-[8.5px] font-bold text-white/70 transition hover:border-emerald-400/40 hover:text-emerald-300"
-                      title={`${u.ad} ile paylaş`}>
+                      title={t("vpIlePaylas").replace("{ad}", u.ad)}>
                       {u.emoji} {u.ad}
                     </button>
                   ))}
                 </div>
               )}
             </>
-          ) : <p className="py-6 text-center text-[9px] text-white/30">Video çıktınız burada görünür</p>}
+          ) : <p className="py-6 text-center text-[9px] text-white/30">{t("vpCiktiBos")}</p>}
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
-          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />Akıllı AI <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>ÜCRETSİZ</span></p>
+          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />{t("vpAkilliAiAd")} <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("vpUcretsiz")}</span></p>
           <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? t("akilliAiAciklama") : t("akilliAiKapaliAciklama")}</p>
           <button
             onMouseEnter={() => setAiTooltipHover(true)}
@@ -526,8 +526,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             color: ramMb > 3000 ? "#ef4444" : ramMb > 1500 ? "#fbbf24" : "rgba(255,255,255,.55)",
             background: ramMb > 3000 ? "rgba(239,68,68,.08)" : "rgba(255,255,255,.03)",
           }}>
-            <span>💾 Bellek: {ramMb} MB</span>
-            <span className="opacity-70">{ramMb > 3000 ? "⚠️ yüksek — bitince indirin" : ramMb > 1500 ? "orta düzey" : "sağlıklı"}</span>
+            <span>💾 {t("vpRam")}: {ramMb} MB</span>
+            <span className="opacity-70">{ramMb > 3000 ? t("vpRamYuksek") : ramMb > 1500 ? t("vpRamOrta") : t("vpRamSaglikli")}</span>
           </div>
         )}
       </div>

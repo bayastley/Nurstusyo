@@ -192,7 +192,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
               <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; } setVisibleTags((current) => pickRandomTags(14, current)); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
-                <Shuffle size={9} />Hashtag
+                <Shuffle size={9} />{t("ssHashtagBtn")}
                 {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
             </div>
