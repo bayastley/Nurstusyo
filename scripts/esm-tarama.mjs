@@ -280,6 +280,16 @@ async function dumanTestiOrkestra() {
   const { chromium } = await import("playwright-core");
   const browser = await chromium.launch({ channel: "chrome", headless: true });
   const page = await browser.newPage();
+  // ★ 04.10: tanıtım katmanları testi blokluyordu — MiniTur (ADIM 1/5) + PWA kurulum
+  //   kartı overlay olarak kapanış tıklamalarına araya giriyordu. Test context'i taze
+  //   olduğundan bu ikisi her koşuşta çıkıyordu; görüldü bayraklarını önceden işaretle.
+  await page.addInitScript(() => {
+    try {
+      localStorage.setItem("nur_minitur_gordu", "1");
+      localStorage.setItem("nur_pwa_banner_kapat", String(Date.now()));
+      localStorage.setItem("nur_pwa_kuruldu", "1");
+    } catch { /* yut */ }
+  });
   const sayfaHatalari = [];
   page.on("pageerror", (h) => sayfaHatalari.push("pageerror: " + (h?.message || h)));
   page.on("console", (m) => { if (m.type() === "error") sayfaHatalari.push("console: " + m.text()); });
@@ -288,10 +298,27 @@ async function dumanTestiOrkestra() {
     await page.goto(DUMAN_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
 
     // Çerez banner'ı overlay'i testi kirletmesin (z-[9999])
-    await page.evaluate(() => {
-      const b = [...document.querySelectorAll("button")].find((x) => (x.innerText || "").trim() === "Hepsini Kabul Et");
-      if (b) b.click();
-    }).catch(() => {});
+    // ★ 04.10 iki düzeltme: (1) buton metni "Tümünü Kabul Et" — eski "Hepsini Kabul Et"
+    //   eşleşmiyordu; /Kabul Et/ ile metinden bağımsız bulunur. (2) Banner mount'u
+    //   domcontentloaded'dan SONRA geliyor: ilk evaluate boşa gidiyordu — 5 sn'ye kadar
+    //   yokla-tıkla ve banner'ın gerçekten kalktığını doğrula.
+    await (async () => {
+      for (let i = 0; i < 25; i++) {
+        const tiklandi = await page.evaluate(() => {
+          const b = [...document.querySelectorAll("button")].find((x) => /Kabul Et/.test((x.innerText || "").trim()));
+          if (b) { b.click(); return true; }
+          return false;
+        }).catch(() => false);
+        if (tiklandi) {
+          const kalkti = await page.waitForFunction(
+            () => ![...document.querySelectorAll("button")].some((x) => /Kabul Et/.test((x.innerText || "").trim())),
+            { timeout: 5000 }
+          ).then(() => true).catch(() => false);
+          if (kalkti) return;
+        }
+        await page.waitForTimeout(200);
+      }
+    })();
 
     // 3) Kancaları bekle: setNurModal (ModalsContainer) + nurModalDumanTesti (sürücü chunk)
     const kancalarTam = await (async () => {
