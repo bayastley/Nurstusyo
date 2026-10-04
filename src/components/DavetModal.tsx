@@ -78,7 +78,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
         const d = await res.json();
         if (!live) return;
         if (d?.ok) {
-          notify?.(d.mesaj || "Davet ödülün hesabına eklendi!");
+          notify?.(d.mesaj || tt("dmOdulEklendi"));
           onOdulAlindi?.();
         }
       } catch { /* sessiz — kod girerek tekrar denenebilir */ }
@@ -99,25 +99,25 @@ export const DavetModal: React.FC<DavetModalProps> = ({
       });
       const d = await res.json();
       if (d?.ok) {
-        notify?.(d.mesaj || "Davet ödülün hesabına eklendi!");
+        notify?.(d.mesaj || tt("dmOdulEklendi"));
         setKodGiris("");
         onOdulAlindi?.();
       } else {
-        notify?.(d?.error || "Davet kodu kullanılamadı");
+        notify?.(d?.error || tt("dmKodKullanilamadi"));
       }
     } catch {
       notify?.(tt("dmUlasilamadi"));
     } finally {
       setGonderiliyor(false);
     }
-  }, [kodGiris, gonderiliyor, notify, onOdulAlindi]);
+  }, [kodGiris, gonderiliyor, notify, onOdulAlindi, lang, tt]);
 
   const kopyala = useCallback(async (metin: string, tur: "kod" | "link") => {
     try {
       await navigator.clipboard.writeText(metin);
       setKopyalandi(tur);
       window.setTimeout(() => setKopyalandi(null), 2000);
-      notify?.(tur === "kod" ? "Davet kodu kopyalandı 📋" : "Davet linki kopyalandı 📋");
+      notify?.(tur === "kod" ? tt("dmKodKopyalandi") : tt("dmLinkKopyalandi"));
     } catch {
       notify?.(tt("dmKopyalanamadi"));
     }
@@ -133,13 +133,13 @@ export const DavetModal: React.FC<DavetModalProps> = ({
       {girisli && (
         yukleniyor ? (
           <div className="flex items-center justify-center gap-2 py-8 text-[11px] text-white/50">
-            <Loader2 size={14} className="animate-spin" /> Davet kartın hazırlanıyor...
+            <Loader2 size={14} className="animate-spin" /> {tt("dmYukleniyor")}
           </div>
         ) : durum?.aktif && durum.kod ? (
           <div className="space-y-3">
             {/* Kod kartı */}
             <div className="rounded-2xl border border-white/10 bg-white/[.03] p-3.5">
-              <p className="mb-2 text-[9px] font-black tracking-wider text-white/40">DAVET KODUN</p>
+              <p className="mb-2 text-[9px] font-black tracking-wider text-white/40">{tt("dmKodun")}</p>
               <div className="flex items-center gap-2">
                 <span className="flex-1 rounded-xl border border-dashed border-[color:var(--accent)]/50 bg-black/30 py-2.5 text-center font-display text-[22px] font-black tracking-[0.3em]" style={{ color: "var(--accent-2)" }}>
                   {durum.kod}
@@ -147,7 +147,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
                 <button type="button" onClick={() => kopyala(durum.kod!, "kod")}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition hover:brightness-125"
                   style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                  title="Kodu kopyala">
+                  title={tt("dmKodKopyala")}>
                   {kopyalandi === "kod" ? <Check size={15} strokeWidth={3} className="text-black" /> : <Copy size={15} className="text-black" />}
                 </button>
               </div>
@@ -155,7 +155,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
                 <span className="flex-1 truncate rounded-xl bg-black/30 px-3 py-2 text-[9.5px] text-white/45">{durum.link}</span>
                 <button type="button" onClick={() => kopyala(durum.link!, "link")}
                   className="glass-soft flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white/70 transition hover:text-white"
-                  title="Linki kopyala">
+                  title={tt("dmLinkKopyala")}>
                   {kopyalandi === "link" ? <Check size={14} strokeWidth={3} /> : <Copy size={14} />}
                 </button>
               </div>
@@ -167,30 +167,27 @@ export const DavetModal: React.FC<DavetModalProps> = ({
                 <div className="flex items-center justify-center gap-1.5 text-[20px] font-black" style={{ color: "var(--accent-2)" }}>
                   <Users size={16} /> {durum.davetSayisi ?? 0}
                 </div>
-                <p className="mt-0.5 text-[8.5px] font-bold tracking-wider text-white/40">DAVET EDİLEN DOST</p>
+                <p className="mt-0.5 text-[8.5px] font-bold tracking-wider text-white/40">{tt("dmDavetEdilen")}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-white/[.03] p-3 text-center">
                 <div className="flex items-center justify-center gap-1.5 text-[20px] font-black" style={{ color: "var(--accent-2)" }}>
                   <Gift size={16} /> +{durum.toplamOdul ?? 0}
                 </div>
-                <p className="mt-0.5 text-[8.5px] font-bold tracking-wider text-white/40">KAZANILAN KISA VİDEO</p>
+                <p className="mt-0.5 text-[8.5px] font-bold tracking-wider text-white/40">{tt("dmKazanilanVideo")}</p>
               </div>
             </div>
 
             {durum.kademe && (
               <p className="text-center text-[10px] font-bold" style={{ color: "var(--accent)" }}>
-                Seviyen: {durum.kademe}
+                {tt("dmSeviyen").replace("{n}", String(durum.kademe))}
               </p>
             )}
 
-            <p className="rounded-xl border border-white/5 bg-black/20 p-2.5 text-[9px] leading-relaxed text-white/40">
-              Dostum kayıt olup kodunu girdiğinde ikinize de anında +3 kısa video hakkı yazılır.
-              Haklar sunucuda verildiği için hangi cihazdan girersen geçerlidir.
-            </p>
+            <p className="whitespace-pre-line rounded-xl border border-white/5 bg-black/20 p-2.5 text-[9px] leading-relaxed text-white/40">{tt("dmNasil")}</p>
           </div>
         ) : (
           <p className="rounded-xl border border-amber-400/25 bg-amber-400/10 p-3 text-[10px] leading-relaxed text-amber-200/90">
-            ⏳ Davet sistemi şu anda hazırlanıyor — veritabanı açılınca kodun burada görünecek.
+            ⏳ {tt("dmHazirlaniyor")}
           </p>
         )
       )}
@@ -198,7 +195,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
       {/* KOD GİRME — girişli (başkasının kodunu girme) veya girişsiz (kaydet yönlendirme) */}
       {girisli ? (
         <div className="mt-4 border-t border-white/5 pt-3">
-          <p className="mb-2 text-[9px] font-black tracking-wider text-white/40">ELİNDE KOD VAR MI?</p>
+          <p className="mb-2 text-[9px] font-black tracking-wider text-white/40">{tt("dmElindeKod")}</p>
           <div className="flex gap-2">
             <input
               value={kodGiris}
@@ -211,15 +208,14 @@ export const DavetModal: React.FC<DavetModalProps> = ({
               className="flex items-center gap-1.5 rounded-xl px-4 text-[11px] font-black text-black transition hover:brightness-110 disabled:opacity-40"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
               {gonderiliyor ? <Loader2 size={13} className="animate-spin" /> : <Gift size={13} />}
-              Kullan
+              {tt("dmKullan")}
             </button>
           </div>
         </div>
       ) : (
         <div className="mt-4 border-t border-white/5 pt-3">
           <p className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-[10px] leading-relaxed text-white/60">
-            🎁 Elinde bir davet kodu mu var? Kayıt olduktan sonra buraya gir — sen de +3 kısa video hakkı kazanırsın.
-            Henüz üye değilsen <strong style={{ color: "var(--accent-2)" }}>kayıt ol</strong>, sonra bu kodu kullan.
+            🎁 {tt("dmGirissiz1")} <strong style={{ color: "var(--accent-2)" }}>{tt("dmKayitOl")}</strong>{tt("dmGirissiz2")}
           </p>
         </div>
       )}
@@ -227,7 +223,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
       {/* Kapat */}
       <button type="button" onClick={onClose}
         className="glass-soft mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-[10px] font-bold text-white/60 transition hover:text-white">
-        <X size={12} /> Kapat
+        <X size={12} /> {tt("dmKapat")}
       </button>
     </Modal>
   );
