@@ -106,7 +106,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
         notify?.(d?.error || "Davet kodu kullanılamadı");
       }
     } catch {
-      notify?.("Sunucuya ulaşılamadı — tekrar dene");
+      notify?.(tt("dmUlasilamadi"));
     } finally {
       setGonderiliyor(false);
     }
@@ -119,9 +119,9 @@ export const DavetModal: React.FC<DavetModalProps> = ({
       window.setTimeout(() => setKopyalandi(null), 2000);
       notify?.(tur === "kod" ? "Davet kodu kopyalandı 📋" : "Davet linki kopyalandı 📋");
     } catch {
-      notify?.("Kopyalanamadı — elle seçip kopyala");
+      notify?.(tt("dmKopyalanamadi"));
     }
-  }, [notify]);
+  }, [notify, lang]);
 
   if (!open) return null;
 
@@ -204,7 +204,7 @@ export const DavetModal: React.FC<DavetModalProps> = ({
               value={kodGiris}
               onChange={(e) => setKodGiris(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8))}
               onKeyDown={(e) => { if (e.key === "Enter") kodKullan(); }}
-              placeholder="DOST KODU (ör: NUR7KX)"
+              placeholder={tt("dmDostKodu")}
               className="glass-soft flex-1 rounded-xl px-3 py-2.5 text-center text-[13px] font-black tracking-[0.25em] text-white outline-none placeholder:font-normal placeholder:tracking-normal placeholder:text-white/25"
             />
             <button type="button" onClick={kodKullan} disabled={gonderiliyor || kodGiris.length < 4}

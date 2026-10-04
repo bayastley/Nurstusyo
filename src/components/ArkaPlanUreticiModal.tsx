@@ -78,7 +78,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
   const uygula = useCallback(async () => {
     if (!aktifMood || uygulaniyor) return;
     if (cats.length === 0) {
-      notify?.("Bu mood için erişilebilir kategori bulunamadı");
+      notify?.(tt("apErisimYok"));
       return;
     }
     setUygulaniyor(true);
@@ -107,7 +107,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
       notify?.(`✨ "${aktifMood.ad}" sahnesi stüdyoya uygulandı — ${kategoriSayisi} kategori ${aktifMood.filtre !== "orijinal" ? "+ sinematik filtre " : ""}kullanıldı!`);
       onClose();
     } catch {
-      notify?.("Uygulama sırasında bir sorun oldu — tekrar dene");
+      notify?.(tt("apUygulamaHata"));
     } finally {
       setUygulaniyor(false);
     }
@@ -137,7 +137,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
         <input
           value={metin}
           onChange={(e) => setMetin(e.target.value)}
-          placeholder="Nasıl bir sahne istersin? (ör: huzurlu bir gece, Kâbe'ye yolculuk)"
+          placeholder={tt("apSahnePlaceholder")}
           className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-9 text-[11px] outline-none placeholder:text-white/30"
         />
         {metin && (

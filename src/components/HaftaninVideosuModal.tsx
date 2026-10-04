@@ -7,6 +7,8 @@
 
 import React, { useEffect, useState } from "react";
 import { X, ThumbsUp, Film, Send, Sparkles, ExternalLink, Loader2 } from "lucide-react";
+// ★ 04.10 TUR 6: notify/placeholder kalıntıları LS bazlı çeviri (kullanıcı ekranı)
+import { translate } from "../i18n";
 
 interface HaftaninVideosuModalProps {
   open: boolean;
@@ -36,6 +38,7 @@ interface BenimVideo {
 }
 
 export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open, onClose, notify }) => {
+  const tt = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
   const [vitrin, setVitrin] = useState<VitrinVideo[]>([]);
   const [benim, setBenim] = useState<BenimVideo[]>([]);
   const [oturumlu, setOturumlu] = useState(false);
@@ -70,8 +73,8 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
 
   const gonder = async () => {
     if (gonderiyor) return;
-    if (baslik.trim().length < 4) { notify?.("Başlık en az 4 karakter olmalı"); return; }
-    if (!/^https?:\/\//i.test(link.trim())) { notify?.("Video linki http(s) ile başlamalı (YouTube, Instagram vb.)"); return; }
+    if (baslik.trim().length < 4) { notify?.(tt("hvBaslikKisa")); return; }
+    if (!/^https?:\/\//i.test(link.trim())) { notify?.(tt("hvLinkHata")); return; }
     setGonderiyor(true);
     try {
       const r = await fetch("/api/hafta/video", {
@@ -91,12 +94,12 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
       } else {
         notify?.(d?.error || "Öneri gönderilemedi");
       }
-    } catch { notify?.("Sunucuya ulaşılamadı"); }
+    } catch { notify?.(tt("hvUlasilamadi")); }
     finally { setGonderiyor(false); }
   };
 
   const begen = async (videoId: string) => {
-    if (!oturumlu) { notify?.("🔐 Beğenmek için giriş yapman gerekiyor"); return; }
+    if (!oturumlu) { notify?.(tt("hvBegenGiris")); return; }
     setVitrin((prev) => prev.map((v) => v.id === videoId ? {
       ...v, begendim: !v.begendim, begeni: Math.max(0, v.begeni + (v.begendim ? -1 : 1)),
     } : v));
@@ -281,7 +284,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                     value={baslik}
                     onChange={(e) => setBaslik(e.target.value)}
                     maxLength={100}
-                    placeholder="ör: Fatiha Suresi — Gün Batımı atmosferi"
+                    placeholder={tt("hvBaslikOrnek")}
                     className="w-full rounded-xl bg-white/10 px-3 py-2.5 text-[11px] text-white outline-none placeholder:text-white/25 focus:bg-white/15"
                   />
                 </div>
@@ -301,7 +304,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                     value={sureBilgi}
                     onChange={(e) => setSureBilgi(e.target.value)}
                     maxLength={120}
-                    placeholder="ör: Bakara 255 — Ayete'l-Kürsî"
+                    placeholder={tt("hvAyetOrnek")}
                     className="w-full rounded-xl bg-white/10 px-3 py-2.5 text-[11px] text-white outline-none placeholder:text-white/25 focus:bg-white/15"
                   />
                 </div>
@@ -312,7 +315,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                     onChange={(e) => setAciklama(e.target.value)}
                     maxLength={500}
                     rows={3}
-                    placeholder="Videonu bir-iki cümleyle anlat…"
+                    placeholder={tt("hvVideoAnlat")}
                     className="w-full resize-none rounded-xl bg-white/10 px-3 py-2.5 text-[11px] text-white outline-none placeholder:text-white/25 focus:bg-white/15"
                   />
                 </div>

@@ -19,6 +19,7 @@ import {
   KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip,
 } from "../clips";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
+import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
 import { getAdminCatAccess, ADMIN_V2_COUNT, ADMIN_V2_TOTAL } from "../adminCategoryAccess";
 import { getFeatureLock } from "../services/adminSyncService";
 import { COMING_SOON_ATMOSPHERES } from "./modalHelpers";
@@ -132,7 +133,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
               <button
                 onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full glass-soft text-white/60 transition hover:text-white active:scale-90"
-                title="Kategorilere dön"
+                title={translate(localStorage.getItem("nur_lang"), "atmKategorilereDon")}
               >
                 ◀
               </button>

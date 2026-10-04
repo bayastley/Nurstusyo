@@ -6,6 +6,8 @@
 
 import React from "react";
 import { ChevronDown } from "lucide-react";
+import { translate } from "../i18n"; // ★ TUR 6: title/etiket kalıntıları LS bazlı çeviri
+const ttDA = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
 
 // ── İNCE AYAR SLIDER — −/+ butonlu, yüzdeli, sıfırlamalı (3 kullanım: yazı/meal/ışıltı) ──
 export function InceAyarSlider({
@@ -42,7 +44,7 @@ export function InceAyarSlider({
         type="button"
         onClick={() => setDeger(deger - adim)}
         disabled={deger <= min}
-        title="Küçült"
+        title={ttDA("daKucult")}
         className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
       >−</button>
       <input
@@ -65,7 +67,7 @@ export function InceAyarSlider({
         type="button"
         onClick={() => setDeger(deger + adim)}
         disabled={deger >= max}
-        title="Büyüt"
+        title={ttDA("daBuyut")}
         className="h-6 w-6 shrink-0 rounded-md bg-white/10 text-[12px] font-black leading-none text-white/80 transition hover:bg-white/20 disabled:opacity-30"
       >+</button>
       {deger !== 1 && (
@@ -74,7 +76,7 @@ export function InceAyarSlider({
           onClick={() => setDeger(1)}
           title={sifirlaTitle}
           className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
-        >sıfırla</button>
+        >{ttDA("daSifirla")}</button>
       )}
     </span>
   );

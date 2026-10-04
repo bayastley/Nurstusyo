@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Mic, Upload, Trash2, Check, Image as ImageIcon, Scissors, Loader2, Crown, X } from "lucide-react";
 import { SURAHS } from "../data";
 import type { Clip } from "../clips";
+import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
 import type { KendiSesAktif } from "../studio/useKendiSes";
 import type { StoredSes } from "../studio/sesDeposu";
 import { baslangicKaydir, type SesSegmenti } from "../studio/sesZamanlama";
@@ -245,7 +246,7 @@ export const KendiSesModal: React.FC<Props> = ({
                       <button
                         onClick={() => { setPickingFor(`${ay.s}:${ay.a}`); setModal("atmos"); }}
                         className="flex items-center gap-1 rounded-lg bg-white/5 px-2 py-1.5 text-[9px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-                        title="Bu ayete özel arka plan seç"
+                        title={translate(localStorage.getItem("nur_lang"), "ksKendiSesBg")}
                       >
                         <ImageIcon size={11} />
                         {ayahBackgrounds[`${ay.s}:${ay.a}`] ? <Check size={10} className="text-emerald-400" /> : "arka plan"}

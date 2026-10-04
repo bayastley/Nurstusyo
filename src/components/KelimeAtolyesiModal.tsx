@@ -131,7 +131,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
   const aktar = useCallback(async () => {
     if (!aktifRecete || gonderiliyor) return;
     if (seciliAyetler.size === 0) {
-      notify?.("Önce en az bir ayet işaretle — kartlara tıklayarak seçebilirsin");
+      notify?.(tt("kaAyetIsaretle"));
       return;
     }
     setGonderiliyor(true);
@@ -148,7 +148,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
         }
       }
       if (gecerli.length === 0) {
-        notify?.("Ayet kaynakları çözümlenemedi — atmosfer yine de uygulandı");
+        notify?.(tt("kaKaynakHata"));
       }
       // Atmosfer: seçilen (veya reçetenin ilk görünür) kategoriden rastgele klip
       const cat: CatId | undefined = seciliCat ?? catsGorunen[0];
@@ -161,7 +161,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
       onAfterImport?.();
       onClose();
     } catch {
-      notify?.("Aktarım sırasında bir sorun oldu — tekrar dene");
+      notify?.(tt("kaAktarimHata"));
     } finally {
       setGonderiliyor(false);
     }
@@ -181,7 +181,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
         <input
           value={kelime}
           onChange={(e) => setKelime(e.target.value)}
-          placeholder="Bir kelime yaz... (ör: sabır, deniz, huzur)"
+          placeholder={tt("kaKelimePlaceholder")}
           className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-9 text-[11px] outline-none placeholder:text-white/30"
         />
         {kelime && (

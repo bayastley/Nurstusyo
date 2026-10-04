@@ -132,10 +132,10 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
         new Notification("🌟 Mühim Gün Hatırlatıcısı açık", { body: "Cuma ve kandil gecelerinden tema önerisi alacaksın.", icon: "/logo.png" });
       } catch { /* SW gerekli platformlarda sessiz */ }
       setBildirimIstek("ok");
-      notify?.("✅ Mühim gün hatırlatıcısı açıldı — sıradaki özel günde tema önerisi gelecek");
+      notify?.(tt("ogHatirlaticiAcildi"));
     } else {
       setBildirimIstek("yok");
-      notify?.("⚠️ Bildirim izni verilmedi — tarayıcı ayarlarından açabilirsin");
+      notify?.(tt("ogIzinYok"));
     }
   };
 

@@ -14,6 +14,8 @@ import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyar
 import { CubukRenkSecici, CerceveDuzRenkleri } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
 import { cubukRengi, hexToHue } from "../studio/mesajKatmani";
+// ★ 04.10 TUR 6: title/tooltip kalıntıları LS bazlı tt (translate yukarıda importlu)
+const ttLS = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
 
 // ─── SOL: AYET SEÇİMİ ──────────────────────────────────────
 
@@ -608,7 +610,7 @@ export const ArkaPlanGalerisi: React.FC<{
             value={bgCat}
             onChange={(e) => setBgCat(e.target.value)}
             className="glass-soft absolute right-1.5 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1.5 text-[9.5px] font-bold text-white/75 outline-none"
-            title="Kategoriye göre süz"
+            title={ttLS("akSuzTitle")}
           >
             <option value="all">{tt("akTumu")}</option>
             {BG_CATS.map((cat) => (

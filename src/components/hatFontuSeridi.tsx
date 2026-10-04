@@ -10,6 +10,8 @@ import React from "react";
 import { Lock } from "lucide-react";
 import { ARABIC_FONTS, arabicFontWeight } from "../studio/studioConstants";
 
+import { translate } from "../i18n"; // ★ TUR 6: title kalıntıları LS bazlı çeviri
+
 export const HatFontuSeridi: React.FC<{
   seciliHatCss: string;
   onSec: (hatCss: string, hatAgirlik: number) => void;
@@ -18,6 +20,7 @@ export const HatFontuSeridi: React.FC<{
   boy?: "kucuk" | "normal";
 }> = ({ seciliHatCss, onSec, proAcik, kilitTiklandi, boy = "normal" }) => {
   const kucuk = boy === "kucuk";
+  const tt = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
   return (
     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-thin">
       <button
@@ -25,9 +28,9 @@ export const HatFontuSeridi: React.FC<{
         onClick={() => onSec("Inter, sans-serif", 600)}
         className={`shrink-0 rounded-md px-2 py-1 text-[9px] font-bold transition ${seciliHatCss === "Inter, sans-serif" ? "text-black" : "glass-soft text-white/60 hover:text-white"}`}
         style={seciliHatCss === "Inter, sans-serif" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-        title="Türkçe/latin metin — standart yazı tipi (herkese açık)"
+        title={tt("hfTurkce")}
       >
-        Aa Türkçe
+        {tt("hfAa")}
       </button>
       {proAcik ? (
         ARABIC_FONTS.map((f) => (
@@ -42,7 +45,7 @@ export const HatFontuSeridi: React.FC<{
               direction: "rtl",
               ...(seciliHatCss === f.css ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : {}),
             }}
-            title={`${f.label} — mesajını bu hatla yaz`}
+            title={tt("hfHatTitle").replace("{ad}", f.label)}
           >
             نموذج
           </button>
@@ -52,9 +55,9 @@ export const HatFontuSeridi: React.FC<{
           type="button"
           onClick={kilitTiklandi}
           className="shrink-0 rounded-md bg-white/[.04] px-2.5 py-1 text-[9px] font-black text-amber-300/90 ring-1 ring-amber-400/25 transition hover:bg-amber-400/10"
-          title="Hat font paleti PRO+ üyelik özelliğidir — 20 klasik ve modern hat"
+          title={tt("akNotifHatPro")}
         >
-          <Lock size={8} className="mr-1 inline" /> Hat Paleti PRO+
+          <Lock size={8} className="mr-1 inline" /> {tt("hfPaleti")}
         </button>
       )}
     </div>

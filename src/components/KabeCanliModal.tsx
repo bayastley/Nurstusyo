@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import Hls from "hls.js";
 import { kabeSourcesFor } from "../data/liveStreams";
+import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
 
 type KabeTab = "quran" | "live" | "mekke";
 
@@ -100,7 +101,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
               else el.requestFullscreen().catch(() => undefined);
             }}
             className="absolute right-2 top-2 z-20 rounded-lg bg-black/70 px-2.5 py-1.5 text-[13px] leading-none text-white/90 backdrop-blur-sm transition hover:bg-black/90 hover:text-gold"
-            title="Tam ekran (çıkmak için tekrar bas veya ESC)"
+            title={translate(localStorage.getItem("nur_lang"), "kbeTamEkran")}
           >
             ⛶
           </button>
