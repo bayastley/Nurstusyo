@@ -17,7 +17,7 @@ import {
   type MoodPreset,
 } from "../data/arkaplanUretici";
 // ★ 04.10: mood çipleri + mood adları seçili dilde görüntülenir (tıklamada TR anahtar korunur)
-import { moodOneriGorunum, moodAdGorunum, moodPlanGorunum, senaryoGorunum } from "../data/arkaplanCokDil";
+import { moodOneriGorunum, moodAdGorunum, moodPlanGorunum, senaryoGorunum, moodMetinCevir } from "../data/arkaplanCokDil";
 import { kategoriAdGorunum } from "../data/kategoriCokDil";
 import { CATEGORIES, CATEGORY_PALETTE, type CatId } from "../clips";
 
@@ -66,11 +66,12 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
       setCats([]);
       return;
     }
-    const sonuc = moodBul(q);
+    // ★ i18n (04.10): kutudaki metin seçili dilde olabilir → çip ters-haritası ile TR'ye çevirip ara
+    const sonuc = moodBul(moodMetinCevir(q, lang));
     setAktifMood(sonuc.preset);
     setTamEslesme(sonuc.tam);
     setCats(catsForTierMood(sonuc.preset.cats, accessTier, isMasterSurum));
-  }, [metin, open, accessTier, isMasterSurum]);
+  }, [metin, open, accessTier, isMasterSurum, lang]);
 
   // ── Uygula: mevcut stüdyo akışlarıyla sahne kur ───────────
   // ★ ÇEŞİTLİLİK DÜZELTMESİ (28.09, kullanıcı kararı): "hep aynı şeyler çıkmasın" —
@@ -157,7 +158,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
       {!aktifMood && (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {MOOD_ONERILERI.map((o) => (
-            <button key={o} type="button" onClick={() => setMetin(o)} title={o}
+            <button key={o} type="button" onClick={() => setMetin(moodOneriGorunum(o, lang))} title={o}
               className="glass-soft rounded-full px-3 py-1.5 text-[10px] font-bold text-white/60 transition hover:text-white">
               {moodOneriGorunum(o, lang)}
             </button>

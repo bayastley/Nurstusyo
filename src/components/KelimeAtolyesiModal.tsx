@@ -26,7 +26,7 @@ import {
 import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clips";
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
 // ★ 04.10: öneri çipleri seçili dilde GÖRÜNÜR; tıklamada TR anahtar kutuya yazılır
-import { cipGorunum, receteEtiketGorunum } from "../data/kelimeCipCokDil";
+import { cipGorunum, cipMetinCevir, receteEtiketGorunum } from "../data/kelimeCipCokDil";
 import { kategoriAdGorunum } from "../data/kategoriCokDil";
 import type { OnerilenAyet } from "../data/kelimeAtolyesi";
 // ★ 04.10 TUR 4: önerilen ayetlerin mealı/kaynağı site dilinde (kullanıcı talebi)
@@ -122,7 +122,8 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
       setSeciliCat(null);
       return;
     }
-    const sonuc = receteBul(kelime);
+    // ★ i18n (04.10): kutudaki metin seçili dilde olabilir → ters-harita ile TR anahtara çevirip ara
+    const sonuc = receteBul(cipMetinCevir(kelime, lang));
     const gorunen = catsForTier(sonuc.recete.cats, accessTier, isMasterSurum);
     setAktifRecete(sonuc.recete);
     setTamEslesme(sonuc.tam);
@@ -130,7 +131,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
     setSeciliAyetler(new Set([0])); // varsayılan: ilk öneri işaretli
     setCatsGorunen(gorunen.length ? gorunen : HERKESE_ACIK);
     setSeciliCat(null); // null = reçetenin ilk görünür kategorisi kullanılır
-  }, [kelime, open, accessTier, isMasterSurum]);
+  }, [kelime, open, accessTier, isMasterSurum, lang]);
 
   // ── Aktar: tek tık → stüdyo (seçilen TÜM ayetler sırayla) ──
   const aktar = useCallback(async () => {
@@ -201,7 +202,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
       {!aktifRecete && (
         <div className="mb-1 flex flex-wrap gap-1.5">
           {KELIME_ONERILERI.map((o) => (
-            <button key={o} type="button" onClick={() => setKelime(o)}
+            <button key={o} type="button" onClick={() => setKelime(cipGorunum(o, lang))}
               title={o}
               className="glass-soft rounded-full px-3 py-1.5 text-[10px] font-bold text-white/60 transition hover:text-white">
               {cipGorunum(o, lang)}

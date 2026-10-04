@@ -40,6 +40,17 @@ export function moodOneriGorunum(trMetin: string, lang: Lang): string {
   return MOOD_ONERI_GORUNUM[trMetin]?.[lang] ?? trMetin;
 }
 
+/** Ters harita: dilde görünen metin → TR çip metni (moodBul motoru TR anahtarla çalışır) */
+export function moodMetinCevir(gorunenMetin: string, lang: Lang): string {
+  if (lang === "tr") return gorunenMetin;
+  const g = gorunenMetin.trim();
+  if (!g) return gorunenMetin;
+  for (const [tr, diller] of Object.entries(MOOD_ONERI_GORUNUM)) {
+    if (diller[lang] === g) return tr;
+  }
+  return gorunenMetin;
+}
+
 /** 11 mood presetinin görünen adı — sahne kartı başlığı */
 export const MOOD_AD_COKDIL: Record<string, Partial<Record<Lang, string>>> = {
   "huzur":      { en: "Peace",           ar: "السكينة",      id: "Ketenangan",     ur: "سکون" },

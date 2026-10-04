@@ -52,6 +52,17 @@ export function cipGorunum(trKelime: string, lang: Lang): string {
   return CIP_GORUNUM[trKelime]?.[lang] ?? trKelime;
 }
 
+/** Ters harita: dilde görünen çip metni → TR anahtar kelime (receteBul TR anahtarla çalışır) */
+export function cipMetinCevir(gorunen: string, lang: Lang): string {
+  if (lang === "tr") return gorunen;
+  const g = gorunen.trim();
+  if (!g) return gorunen;
+  for (const [tr, diller] of Object.entries(CIP_GORUNUM)) {
+    if (diller[lang] === g) return tr;
+  }
+  return gorunen;
+}
+
 // ── Reçete tema adları (56) — reçete kartı başlığındaki etiket için ──
 //   satır/açıklama metinleri (derin cümleler) TR kalır — veri katmanı.
 export const RECETE_ETIKET: Record<string, Partial<Record<Lang, string>>> = {
