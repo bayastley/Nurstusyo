@@ -36,9 +36,15 @@ function isOldOrIosDevice(): boolean {
   const ua = navigator.userAgent || "";
   // iOS/iPadOS (Safari) tarihsel olarak WebM'i hiç oynatamaz — sadece MP4/H.264 destekler.
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && (navigator as any).maxTouchPoints > 1);
+  // ★ 04.10: TÜM mobil tarayıcılar MP4 öncelikli. Modern Android Chrome WebM kaydını
+  //   desteklese de; galeri/TikTok/Instagram gibi hedef uygulamaların çoğu WebM'i
+  //   oynatamıyor ya da sadece İLK frame'i gösterip sesi kesiyordu (kullanıcı
+  //   bildirimi: "galeriye düşünce ilk ayet sesi çıkıyor, video donuyor").
+  //   MP4/H.264 her cihazda garantili oynar — mobilde hep MP4, masaüstünde WebM.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
   // Eski/düşük donanımlı Android tarayıcılar da MP4/H.264'ü WebM'e göre çok daha güvenilir oynatır.
   const isOldAndroidWebView = /Android\s([0-6])\./.test(ua) || /; wv\)/.test(ua);
-  return isIOS || isOldAndroidWebView;
+  return isIOS || isMobile || isOldAndroidWebView;
 }
 
 export function pickMime(): string {
@@ -46,7 +52,9 @@ export function pickMime(): string {
   //   video/img elementinde oynatamaz (kayıt sırasında MediaRecorder WebM
   //   üretse bile, kullanıcı "önizle/indir" dediğinde video açılmaz).
   //   Bu yüzden iOS ve eski Android'de MP4/H.264 önceliklendirilir.
-  //   Modern masaüstü/Android tarayıcılarda ise VP8 (daha hafif encode,
+  //   ★ 04.10: Mobil Chrome dahil TÜM mobil tarayıcılar artık MP4 öncelikli
+  //   (isOldOrIosDevice'a bak) — galeride donan video düzeltmesi.
+  //   Modern masaüstü tarayıcılarda ise VP8 (daha hafif encode,
   //   daha az donma riski) öncelikli kalır.
   const mp4First = ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4", "video/webm;codecs=vp8,opus", "video/webm"];
   const webmFirst = ["video/webm;codecs=vp8,opus", "video/webm", "video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/webm;codecs=vp9,opus", "video/mp4"];

@@ -225,6 +225,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     setGenerating(true); setProgress(2);
     try {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext, audioContext = new AudioContextClass();
+      // ★ MOBİL SES DÜZELTMESİ (04.10, kullanıcı bildirimi: "galeride ilk ayet sesi çıkıyor,
+      //   video donuyor"): Mobil tarayıcılar AudioContext'i suspended başlatır — media
+      //   stream'in ses kanalı sessiz kalır ya da yarım akar. Kayıt başlamadan ÖNCE
+      //   resume() ile unlock edilir (kullanıcı jesti içinde olduğumuz için serbest).
+      if (audioContext.state === "suspended") { try { await audioContext.resume(); } catch { /* ignore */ } }
       const buffers: AudioBuffer[] = [], usedItems: SelectedAyah[] = [], audioOffsets: number[] = [];
       const ayetSüreleri: Array<{ start: number; dur: number }> = [];
       const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE; let cursor = 0;
@@ -362,7 +367,9 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       })));
       // ★ Render öncesi tüm seçili videolara ısınma payı ver.
       // R2/CDN ilk frame'i geç getirirse ilk ayetler donuk kaydoluyordu.
-      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      // ★ 04.10: mobilde ısınma 1200ms → 2500ms — telefon tarayıcıları video
+      //   decode'u yavaş ısıtıyor; kısa ısınmada ilk ayet donuk kaydoluyordu.
+      await new Promise((resolve) => window.setTimeout(resolve, renderQuality.low ? 2500 : 1200));
       const formats = batchFormats.length ? batchFormats : [aspect];
       for (let formatIndex = 0; formatIndex < formats.length; formatIndex += 1) {
         const outputAspect = formats[formatIndex]; aspectRef.current = outputAspect;
@@ -431,8 +438,13 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
         player.onended = finishRecording;
         // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
-        recorder.start(1000);
+        // ★ 04.10 MOBİL: recorder.start'tan ~250ms ÖNCE player başlar + küçük tolerate.
+        //   Mobil tarayıcıda MediaRecorder, MediaStream'e sonradan katılan ses kanalını
+        //   bazı sürümlerde tam almıyordu → ilk ayet sesi + donuk kare. Önce player,
+        //   250ms sonra recorder — ses kanalı kayıt başladığında AKTİF oluyor.
         player.start();
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+        recorder.start(1000);
         await stopped;
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
