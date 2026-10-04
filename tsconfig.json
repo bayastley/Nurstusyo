@@ -28,8 +28,7 @@
     "noImplicitAny": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": false
+    "noFallthroughCasesInSwitch": true
   },
   "include": ["src", "api", "server", "vite.config.ts"]
 }
