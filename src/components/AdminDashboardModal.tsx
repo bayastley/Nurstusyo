@@ -167,6 +167,46 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     }
   };
 
+  // ★ AKTİF BANLI KULLANICI LİSTESİ (04.10, admin isteği): sunucu nur_ban_logs'tan
+  //   unbanned=false kayıtlar — panelde 10'ar sayfalı gösterilir, Ban Kaldır butonu çalışır.
+  const [bannedUsers, setBannedUsers] = useState<Array<{ id?: string; user_email: string; reason: string; banned_by?: string; created_at?: string }>>([]);
+  const [bannedLoading, setBannedLoading] = useState(false);
+  const [banPage, setBanPage] = useState(0);
+  const [unbanBusy, setUnbanBusy] = useState<string | null>(null);
+
+  const loadBannedUsers = async () => {
+    setBannedLoading(true);
+    try {
+      const response = await fetch("/api/admin/action", {
+        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "list_banned_users" }),
+      });
+      const data = await response.json().catch(() => null) as { ok?: boolean; users?: Array<{ id?: string; user_email: string; reason: string; banned_by?: string; created_at?: string }> } | null;
+      setBannedUsers(data?.ok && data.users ? data.users : []);
+    } catch { setBannedUsers([]); }
+    finally { setBannedLoading(false); }
+  };
+
+  // Ban & Siber Denetim sekmesi açılınca sunucudan taze çek
+  useEffect(() => {
+    if (activeTab === "banLogs") void loadBannedUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // ★ LİSTEDEN BAN KALDIR — sunucu + yerel + liste yenileme tek akış
+  const handleUnbanFromList = async (email: string) => {
+    if (!isAdminEmail(currentUserEmail)) {
+      notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
+      return;
+    }
+    if (!window.confirm(`${email} kullanıcısının banı kaldırılsın mı?\n\nKullanıcı anında siteye girebilir ve video üretebilir.`)) return;
+    setUnbanBusy(email);
+    try {
+      await handleUnban(email);
+      await loadBannedUsers();
+    } finally { setUnbanBusy(null); }
+  };
+
   const handleUnban = async (email: string) => {
     if (!isAdminEmail(currentUserEmail)) {
       notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
@@ -651,9 +691,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     <AdminPanelKabuk
       activeTab={activeTab}
       setActiveTab={setActiveTab}
-      onClose={onClose}
-      banLogs={banLogs}
-      errorStats={errorStats}
+      onClose={onClose}        banLogs={banLogs}
+        bannedCount={bannedUsers.length || undefined}
+        errorStats={errorStats}
       errorAlarm={errorAlarm}
       feedbackStats={feedbackStats}
     >
@@ -720,7 +760,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
           {activeTab === "broadcast" && <AdminBroadcastPanel notify={notify} />}
 
           {/* TAB 4: BAN & SİBER DENETİM LOGLARI — SRP adım 10: adminDashboardBolumler */}
-          {activeTab === "banLogs" && <AdminBanLogsTab banLogs={banLogs} />}
+          {activeTab === "banLogs" && (
+            <AdminBanLogsTab
+              banLogs={banLogs}
+              bannedUsers={bannedUsers}
+              bannedLoading={bannedLoading}
+              banPage={banPage}
+              setBanPage={setBanPage}
+              onUnban={handleUnbanFromList}
+              unbanBusy={unbanBusy}
+              onReload={loadBannedUsers}
+            />
+          )}
 
           {/* TAB: HAFTANIN VİDEOSU — admin onay kuyruğu */}
           {activeTab === "haftaVideo" && (

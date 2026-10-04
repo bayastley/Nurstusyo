@@ -212,6 +212,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const email = validateEmail(body.target);
       if (!email) return res.status(400).json({ ok: false, error: "Geçersiz e-posta" });
       await db(`nur_ban_logs?user_email=eq.${encodeURIComponent(email)}&unbanned=eq.false`, { method: "PATCH", body: JSON.stringify({ unbanned: true }) });
+    } else if (action === "list_banned_users") {
+      // ★ AKTİF BANLI KULLANICILAR (04.10, admin isteği: "banlılar listelensin, Ban Kaldır butonu çalışsın")
+      //   Sunucudaki nur_ban_logs'tan unbanned=false kayıtlar — email'e göre tekilleştirilir,
+      //   en yeni ban üstte. Panel 10'ar sayfalı gösterir, her satırda Ban Kaldır butonu var.
+      const rows = await db<any[]>("nur_ban_logs?unbanned=eq.false&order=created_at.desc&limit=100&select=id,user_id,user_email,reason,banned_by,created_at").catch(() => [] as any[]);
+      const gorulen = new Set<string>();
+      const bannedUsers = rows.filter((r) => {
+        const e = String(r.user_email || "").toLowerCase().trim();
+        if (!e || gorulen.has(e)) return false;
+        gorulen.add(e);
+        return true;
+      });
+      return res.status(200).json({ ok: true, users: bannedUsers });
     } else if (action === "delete_announcement") {
       const announcementId = body.announcementId ? validateId(body.announcementId) : null;
       if (body.announcementId && !announcementId) return res.status(400).json({ ok: false, error: "Geçersiz ID" });

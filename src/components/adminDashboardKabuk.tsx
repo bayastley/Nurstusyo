@@ -16,11 +16,13 @@ export const AdminPanelKabuk: React.FC<{
   setActiveTab: (t: AdminTab) => void;
   onClose: () => void;
   banLogs: BanLog[];
+  /** ★ 04.10: sunucudaki aktif ban sayısı — sekme rozeti gerçek banlı sayısını gösterir */
+  bannedCount?: number;
   errorStats: { total24h: number; unique24h: number; turDagilimi?: Record<string, number> } | null;
   errorAlarm: "ok" | "warn" | "alarm";
   feedbackStats: { toplam: number } | null;
   children: React.ReactNode;
-}> = ({ activeTab, setActiveTab, onClose, banLogs, errorStats, errorAlarm, feedbackStats, children }) => {
+}> = ({ activeTab, setActiveTab, onClose, banLogs, bannedCount, errorStats, errorAlarm, feedbackStats, children }) => {
   return (
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-3 md:p-6 backdrop-blur-md modal-in"
@@ -94,7 +96,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "banLogs" ? { background: "linear-gradient(135deg,#f87171,#dc2626)" } : { background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}
           >
             <Lightbulb size={13} className={banLogs.length > 0 ? "animate-pulse text-amber-300" : ""} fill={banLogs.length > 0 ? "currentColor" : "none"} />
-            <span>Ban & Siber Denetim ({banLogs.length})</span>
+            <span>Ban & Siber Denetim ({bannedCount ?? banLogs.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("errors")}

@@ -92,7 +92,7 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
 const ACCESS_CACHE = new Map<string, { data: { tier: Tier; isAdmin: boolean; banned: boolean }; at: number }>();
 const ACCESS_TTL_MS = 60_000;
 
-async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^['"]+|['"]+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return null;
@@ -104,7 +104,12 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
     if (!userResponse.ok) return null;
     const users = await userResponse.json() as Array<{ tier?: Tier; is_admin?: boolean }>;
     if (!users[0]) return null;
-    const banResponse = await fetch(`${url}/rest/v1/nur_ban_logs?user_id=eq.${encodeURIComponent(userId)}&unbanned=eq.false&select=id&limit=1`, { headers, cache: "no-store" });
+    // ★ 04.10: email ile de bak (api/render/authorize ile aynı kural) — nur_users'ta
+    //   kaydı olmayan ban satırları burada da etki etmesin diye.
+    const banQuery = userEmail
+      ? `or=(user_id.eq.${encodeURIComponent(userId)},user_email.eq.${encodeURIComponent(userEmail)})`
+      : `user_id=eq.${encodeURIComponent(userId)}`;
+    const banResponse = await fetch(`${url}/rest/v1/nur_ban_logs?${banQuery}&unbanned=eq.false&select=id&limit=1`, { headers, cache: "no-store" });
     if (!banResponse.ok) return null;
     const bans = await banResponse.json() as Array<{ id: string }>;
     const tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
@@ -245,7 +250,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const access = await loadServerAccess(sessionUser.id);
+    const access = await loadServerAccess(sessionUser.id, sessionUser.email);
     if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
     if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
     const { clipId, pexelsId, cat, clipFile } = req.body || {};

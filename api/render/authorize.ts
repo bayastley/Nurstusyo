@@ -168,7 +168,7 @@ function supabaseConfig() {
   return { url, key };
 }
 
-async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
   const sb = supabaseConfig();
   if (!sb) return null;
   try {
@@ -180,8 +180,13 @@ async function loadServerAccess(userId: string): Promise<{ tier: Tier; isAdmin: 
     const users = await userResponse.json() as Array<{ tier?: Tier; is_admin?: boolean }>;
     if (!users[0]) return null;
 
+    // ★ BAN KONTROLÜ DÜZELTMESİ (04.10, "banlama çalışmıyor"): eski sorgu yalnız
+    //   user_id ile arıyordu — nur_users'ta kaydı olmayan (veya user_id'si null
+    //   yazılmış) ban satırları üretimde HİÇ etki etmiyordu. Artık user_id VEYA
+    //   email ile bakılır (api/auth/me.ts ile aynı or= kalıbı).
+    const emailFiltre = userEmail ? `,user_email.eq.${encodeURIComponent(userEmail)}` : "";
     const banResponse = await fetch(
-      `${sb.url}/rest/v1/nur_ban_logs?user_id=eq.${encodeURIComponent(userId)}&unbanned=eq.false&select=id&limit=1`,
+      `${sb.url}/rest/v1/nur_ban_logs?or=(user_id.eq.${encodeURIComponent(userId)}${emailFiltre})&unbanned=eq.false&select=id&limit=1`,
       { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
     );
     if (!banResponse.ok) return null;
@@ -251,7 +256,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
 
-  const access = await loadServerAccess(user.id);
+  const access = await loadServerAccess(user.id, user.email);
   if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
   if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
 
