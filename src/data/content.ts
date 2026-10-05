@@ -14,6 +14,6 @@ export { HASHTAG_CATEGORIES, HASHTAG_POOL, hashtagPool, randomHashtagCombo } fro
 export { TITLE_TEMPLATES, genTitle, genDesc } from "./titleTemplates";
 
 // Eski yerlerden de export et (bazı dosyalar direkt content'ten import ediyor)
-// ★ MEAL_FIXES (02.10): boş tablo yerine gerçek Diyanet yaması — ../meal_fixes.ts
-//   (Meryem 19'ün çöp satırları api.alquran.cloud tr.diyanet'ten temiz veriyle yenilendi).
-export { MEAL_FIXES, mealDuzelt } from "../meal_fixes";
+// ★ MEAL_FIXES KALDIRILDI (05.10): tablo API'nin bozuk tr.diyanet verisini (sure 19 birleşik
+//   ayetler) aynen kopyalıyordu; yerini fetchSurahEditions'taki birleşme kapısı + yedek
+//   edition zinciri aldı (tr.diyanet → tr.yazir → tr.vakfi).

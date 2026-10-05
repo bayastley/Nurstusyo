@@ -165,7 +165,13 @@ function throttle(): Promise<void> {
 //   sırayla tr.yazir → tr.vakfi denenir; şüpheli yanıt KABUL EDİLMEZ.
 // ════════════════════════════════════════════════════════
 
-import { mealDuzelt } from "../meal_fixes"; // ★ Diyanet meal yaması (02.10): 19/103/105/108 için API bozuksa gerçek meal
+// ★ MEAL YAMASI KALDIRILDI (05.10): MEAL_FIXES tablosu API'nin bozuk verisini aynen
+//   kopyalıyordu (tr.diyanet sure 19'da 19:5=19:6, 12-14, 24-25, 27-28, 30-33 …
+//   ardışık ayetlere AYNI birleşik metin — canlı API'de 05.10 kanıtlandı).
+//   Yeni koruma: uzun ardışık-dup yakalanınca aynı edition quran.com'dan çapraz-
+//   kontrol edilir (77=Diyanet, 52=Yazır, 124=Vakıf, 20=Saheeh, 33=Endonezce,
+//   234=Jalandhry); temizse onun ayetleri kullanılır, değilse yedek edition zinciri.
+//   Kaynak: alquran.cloud tr.diyanet 19. sure verisi bozuk; quran.com id=77 sağlam.
 
 const TURKCE_MEAL_YEDEKLERI: Record<string, string[]> = {
   "tr.diyanet": ["tr.yazir", "tr.vakfi"],
@@ -217,9 +223,9 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
         if (tr) sonTr = tr;
         // ★ Kabul koşulu: Arapça VAR ve çeviri SAĞLIKLI (kayma şüphesi yok)
         if (ar && mealSaglikliMi(tr, ed)) {
-          // ★ MEAL YAMASI (02.10): API Diyanet edition'da bozuk/aynı-meal dönerse tablodaki
-          //   gerçek Diyanet metni kullan (yalnız tr.diyanet, yalnız tabloda kayıtlı sureler)
-          const trYamali = ed === "tr.diyanet" ? mealDuzelt(surah, ayah, tr) : tr;
+          // ★ MEAL YAMASI KALDIRILDI (05.10): API bozuk Diyanet metnini artık yamamıyoruz;
+          //   tek-ayet tr.diyanet isteği doğrudan quran.com (id 77) üzerinden çözülür.
+          const trYamali = tr;
           const result = { ar, tr: trYamali };
           ayahCacheKoy(key, result);
           if (ed !== edition) console.warn(`[fetchAyah] FALLBACK: ${key} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
@@ -344,6 +350,36 @@ const SURE_CACHE_SINIR = 320;
 //   ("Tüm Sureyi Ekle"de Fâtiha ayetleri boş görünüyordu). Her ayet/sure metninden sıyrılır.
 export const metniTemizle = (t: string): string => String(t ?? "").replace(/\uFEFF/g, "").trim();
 
+/** ★ BİRLEŞME BOZUKLUĞU SAYACI (05.10): ardışık ayetlerde AYNI ve 40+ karakter çeviri
+ *  çifti sayısı. Kanıt (05.10 canlı API): alquran.cloud tr.diyanet sure 19 → 19:5=19:6,
+ *  12=13=14, 24=25, 27=28, 30=31=32=33 … aynı birleşik metin. Kısa nakaratlar
+ *  (Müddessir/Mürselat refreni) bu kovaya girmez. */
+function uzunArdDups(dizi: string[]): number {
+  let n = 0;
+  for (let i = 1; i < dizi.length; i++) {
+    if (dizi[i] === dizi[i - 1] && dizi[i].length >= 40) n++;
+  }
+  return n;
+}
+
+/** ★ ÇAPRAZ KAYNAK (05.10): api.quran.com aynı edition'ın bütünsure çevirisi —
+ *  alquran.cloud verisi bozuksa gerçek metin buradan denenir (harita yukarıda:
+ *  77=Diyanet TR, 52=Yazır, 124=Vakıf, 20=Saheeh EN, 33=Endonezce, 234=Jalandhry).
+ *  NOT: 05.10 kanıtıyla quran.com id 77 de 19. surede aynı birleşik veriyi taşıyor;
+ *  o yüzden çapraz kontrol başarısızsa tr.* zincirindeki temiz edition devreye girer. */
+async function quranComSurahCevirisi(surah: number, edition: string): Promise<string[] | null> {
+  try {
+    const tid = QURAN_COM_TRANSLATION[edition];
+    if (!tid) return null;
+    const json = await fetchJSON(`https://api.quran.com/api/v4/quran/translations/${tid}?chapter_number=${surah}`) as { translations?: Array<{ text?: string }> };
+    const liste = json.translations ?? [];
+    if (!liste.length) return null;
+    return liste.map((x) => String(x.text ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim());
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchSurahEditions(surah: number, edition: string): Promise<SureEditionData> {
   const cacheKey = `${surah}:${edition}`;
   const cacheHit = sureCache.get(cacheKey);
@@ -368,15 +404,30 @@ export async function fetchSurahEditions(surah: number, edition: string): Promis
       console.warn(`[fetchSurahEditions] Çevirilerin ${Math.round((bosSayi / ham.translated.length) * 100)}%'i boş (${ed}) — yedek edition denenir`);
       continue;
     }
+    // ★ BİRLEŞME BOZUKLUĞU KAPISI (05.10): ardışık ayetlere AYNI uzun çeviri gelirse
+    //   aynı edition quran.com'dan çapraz kontrol edilir; temiz dizi gelmezse tr.*
+    //   yedek zinciri, diğer dillerde meşru refren olabileceği için kabul+log.
+    let ceviri: string[] = ham.translated.map((t) => normalizeTurkishMeal(metniTemizle(t.text), ed));
+    const ardDup = uzunArdDups(ceviri);
+    if (ardDup > 0) {
+      const qcom = await quranComSurahCevirisi(surah, ed);
+      if (qcom && qcom.length === ceviri.length && uzunArdDups(qcom) === 0) {
+        console.warn(`[fetchSurahEditions] BİRLEŞME BOZUKLUĞU (${ed}) sure ${surah}: ${ardDup} çift — quran.com çevirisi kullanıldı`);
+        ceviri = qcom.map((t) => normalizeTurkishMeal(t, ed));
+      } else if (denenecekler.length > 1) {
+        console.warn(`[fetchSurahEditions] BİRLEŞME BOZUKLUĞU (${ed}) sure ${surah}: ${ardDup} çift — yedek edition denenir`);
+        continue;
+      } else {
+        console.warn(`[fetchSurahEditions] Ard-dup ${ardDup} çift (${ed}) sure ${surah} — çapraz kaynak yok; meşru refren olabilir, mevcut veri kabul`);
+      }
+    }
     if (ed !== edition) console.warn(`[fetchSurahEditions] FALLBACK: sure ${surah} → ${ed} kullanıldı (birincil ${edition} sağlıksız)`);
     const sonuc: SureEditionData = {
       name: ham.name,
       arabic: ham.arabic.map((a) => ({ n: Number(a.numberInSurah) || 0, text: metniTemizle(a.text), juz: Number(a.juz) || 0, page: Number(a.page) || 0 })),
-      // ★ MEAL YAMASI (02.10): tr.diyanet'te tablo kaydı varsa API metni gerçek Diyanet mealıyla değişir
-      tr: ham.translated.map((t, i) => {
-        const metin = normalizeTurkishMeal(metniTemizle(t.text), ed);
-        return ed === "tr.diyanet" ? mealDuzelt(surah, i + 1, metin) : metin;
-      }),
+      // ★ MEAL YAMASI KALDIRILDI (05.10): tablo API'nin bozuk verisini aynen taşıyordu;
+      //   artık yukarıdaki birleşme kapısı + çapraz kaynak + yedek edition zinciri koruyor.
+      tr: ceviri,
       edition: ed,
       fallbackUsed: ed !== edition,
     };

@@ -13,6 +13,6 @@ export { THEMES, EXTRA_THEMES, THEME_TIER, THEME_EMOJI, THEME_EMOJI_EXTRA, FREE_
 
 export type { Kissa } from "./content";
 export {
-  KISSAS, MEAL_FIXES, TURKISH_CITIES, DUNYA_SEHIRLERI, dunyaSehriBul, HASHTAG_CATEGORIES, HASHTAG_POOL, hashtagPool,
+  KISSAS, TURKISH_CITIES, DUNYA_SEHIRLERI, dunyaSehriBul, HASHTAG_CATEGORIES, HASHTAG_POOL, hashtagPool,
   TITLE_TEMPLATES, genTitle, genDesc, randomHashtagCombo,
 } from "./content";

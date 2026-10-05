@@ -79,7 +79,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   const [words, setWords] = useState<Word[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mealId, setMealId] = useState<string>("tr.diyanet");
+  // ★ VARSAYILAN tr.yazir (05.10): alquran.cloud tr.diyanet verisi bazı surelerde bozuk
+  //   (ardışık ayetlere aynı birleşik metin — kanıt: sure 19); Diyanet seçeneği kalmak
+  //   şartıyla varsayılan, bugün doğrulanmış temiz edition tr.yazir oldu.
+  const [mealId, setMealId] = useState<string>("tr.yazir");
   // ★ MEAL GÜNCELLENİYOR GÖSTERGESİ (02.10, kullanıcı isteği): yalnız meal (dil) değişince
   //   true olur — eski meal ekranda KALIR (bayat ama görülür) + select yanında küçük çip:
   //   "mealler güncelleniyor…". Uzun surelerde (Bakara ~1 MB) boş ekran sessizliği olmaz.
