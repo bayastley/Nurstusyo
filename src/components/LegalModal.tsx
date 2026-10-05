@@ -6,7 +6,7 @@
 import React from "react";
 import { X, Shield } from "lucide-react";
 // LegalModal GitHub'da ../i18n kullanıyor — getPaymentCopy artık TR-first
-import { getPaymentCopy, type Lang } from "../i18n";
+import { getPaymentCopy, translate, type Lang } from "../i18n";
 
 interface LegalModalProps {
   tosOpen: boolean;
@@ -102,31 +102,32 @@ export const LegalModal: React.FC<LegalModalProps> = ({
         </div>
 
         <div className="scrollbar-thin flex-1 space-y-3 overflow-y-auto pr-1 text-[11px] leading-relaxed text-white/80">
-          {legalTab === "tos" && <LegalPanel text={copy.legalBody.tos} />}
-          {legalTab === "kvkk" && <LegalPanel text={copy.legalBody.kvkk} />}
+          {legalTab === "tos" && <LegalPanel text={copy.legalBody.tos} lang={lang} />}
+          {legalTab === "kvkk" && <LegalPanel text={copy.legalBody.kvkk} lang={lang} />}
           {legalTab === "gizlilik" && (
-            <LegalPanel text={copy.legalBody.privacy} />
+            <LegalPanel text={copy.legalBody.privacy} lang={lang} />
           )}
-          {legalTab === "iade" && <LegalPanel text={copy.legalBody.refund} />}
+          {legalTab === "iade" && <LegalPanel text={copy.legalBody.refund} lang={lang} />}
         </div>
       </div>
     </div>
   );
 };
 
-const LegalPanel: React.FC<{ text: string }> = ({ text }) => (
+const LegalPanel: React.FC<{ text: string; lang: Lang }> = ({ text, lang }) => (
   <div className="rounded-xl border border-[color:var(--accent)]/30 bg-black/40 p-4">
     {/* whitespace-pre-line: \n\n satır kırılımlarını gösterir */}
     <p className="whitespace-pre-line leading-relaxed text-white/90">{text}</p>
 
     <div className="mt-4 rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-center">
-      <p className="text-[10px] font-bold text-white/70 tracking-wide">🔒 iyzico Güvenli Ödeme Altyapısı</p>
-      <p className="mt-1 text-[9px] text-white/40">Mastercard · Visa · American Express · Troy</p>
-      <p className="mt-1 text-[9px] text-white/30">PCI DSS Uyumlu · 256-bit SSL · Kart bilgisi saklanmaz</p>
+      {/* sozlesme* anahtarları 5 dilde dicts'te mevcut — satın alma ekranıyla aynı kaynak */}
+      <p className="text-[10px] font-bold text-white/70 tracking-wide">{translate(lang, "sozlesmeIyzico")}</p>
+      <p className="mt-1 text-[9px] text-white/40">{translate(lang, "sozlesmeKartlar")}</p>
+      <p className="mt-1 text-[9px] text-white/30">{translate(lang, "sozlesmePci")}</p>
     </div>
 
     <p className="mt-4 text-[10px] text-white/50">
-      Destek: <a href="mailto:destek@nurstudyo.com" className="underline decoration-white/20 underline-offset-2 hover:text-white">destek@nurstudyo.com</a>
+      {translate(lang, "sozlesmeDestek")} <a href="mailto:destek@nurstudyo.com" className="underline decoration-white/20 underline-offset-2 hover:text-white">destek@nurstudyo.com</a>
     </p>
   </div>
 );
