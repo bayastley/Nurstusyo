@@ -21,6 +21,11 @@
 //   5. module.paths / require.main     → yasak
 //   6. export default yoksa            → uyarı (Vercel fonksiyonu çalışmaz)
 //   7. dinamik await import("...")     → İZİNLİ (ESM'de meşru)
+//   8. uzantısız relative/sibling import → yasak ("./yardimcilar" ✗ —
+//      "./yardimcilar.js" ✓). Vercel ESM paketleyicisi uzantısız relative
+//      import'u çözerken sessiz çökme üretir (tarih: admin/action.ts,
+//      push/send.ts bu desenle yıkıldı). Yorumlar maskelendiği için
+//      tarihî "★ 27.09 FIX" açıklama satırları ihlal sayılmaz.
 //
 // YANLIŞ-POZİTİF KORUMASI: yorum satırları ve bloklar maskeleme dışıdır —
 // "★ 27.09 FIX: require() ESM'de patlıyor" gibi tarihî yorumlar ihlal sayılmaz.
@@ -59,6 +64,11 @@ const KURALLAR = [
     id: "module-diger",
     aciklama: "module.paths / require.main / module.id / module nesnesi yasak — ESM'de yok",
     test: /(?<![\w.$])(?:require\.main|module\.paths|module\.id|module)\s*(?:\.|=|===|!==|\)|,|$)/g,
+  },
+  {
+    id: "uzantisiz-relative-import",
+    aciklama: 'uzantısız relative/sibling import yasak — ".js" uzantısı yaz (örn: "./yardimcilar.js"); uzantısız hali Vercel ESM paketlemesinde sessiz çökme üretir',
+    test: /(?:from\s*|import\s*\(\s*)['"]\.\.?\/[^'"]*(?<!\.(?:js|mjs|cjs))['"]/g,
   },
 ];
 

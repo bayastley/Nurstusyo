@@ -12,7 +12,7 @@ declare const process: { env: Record<string, string | undefined> };
 //        Log yazımı başarısız olsa bile sessizce yutulur.
 //
 // KULLANIM (herhangi bir api/*.ts içinde):
-//   import { logServerError } from "../_shared/serverErrorLog";
+//   import { logServerError } from "../_shared/serverErrorLog.js"; // ★ .js ŞART — uzantısız relative import Vercel ESM'de çökertir
 //   } catch (error) {
 //     await logServerError(req, error, "payments/callback");
 //     return res.status(500).json({ ok: false, error: "..." });
