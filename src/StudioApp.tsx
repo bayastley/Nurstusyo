@@ -1713,8 +1713,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }}
       />
 
-      {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) — YALNIZ girişli kullanıcılara */}
-      <BugunHediye notify={notify} onHakDegisti={syncWallet} userEmail={user?.email || null} />
+      {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) — YALNIZ girişli kullanıcılara; içerik seçili dilde */}
+      <BugunHediye notify={notify} onHakDegisti={syncWallet} userEmail={user?.email || null} lang={lang} />
 
       {/* ★ MINI TUR — ilk girişte 5 duraklı gezdirme (madde 3, 02.10) */}
       <MiniTur lang={lang} />

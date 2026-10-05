@@ -453,20 +453,20 @@ export function ContactBolum({
           value={contactType}
           onChange={setContactType}
           items={[
-            { id: "oneri", label: "Geliştirme & Öneri", icon: Mail },
-            { id: "sikayet", label: "Sorun & Destek", icon: AlertTriangle },
+            { id: "oneri", label: t("fb2Oneri"), icon: Mail },
+            { id: "sikayet", label: t("fb2Sikayet"), icon: AlertTriangle },
           ]}
         />
       </div>
       {/* ★ YILDIZ PUANI — opsiyonel, admin paneldeki puan dağılımına düşer */}
       <div className="mb-3 flex items-center justify-center gap-1.5 rounded-xl bg-white/5 py-2">
-        <span className="text-[10px] text-white/50">Sitemizi puanla:</span>
+        <span className="text-[10px] text-white/50">{t("fb2Puanla")}</span>
         {[1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             onClick={() => setContactPuan(contactPuan === n ? null : n)}
             className={`text-lg transition ${contactPuan && n <= contactPuan ? "grayscale-0" : "opacity-30 grayscale hover:opacity-60"}`}
-            aria-label={`${n} yıldız`}
+            aria-label={t("fb2Yildiz").replace("{n}", String(n))}
           >⭐</button>
         ))}
       </div>
@@ -474,13 +474,13 @@ export function ContactBolum({
         value={contactMessage}
         onChange={(event) => setContactMessage(event.target.value)}
         rows={5}
-        placeholder="Mesajınızı, önerinizi veya karşılaştığınız sorunu detaylıca buraya yazınız..."
+        placeholder={t("fb2Placeholder")}
         className="glass-soft mb-3 w-full resize-none rounded-xl px-3.5 py-3 text-[11px] leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-[color:var(--accent)]"
       />
       <button
         onClick={async () => {
           if (!contactMessage.trim()) {
-            notify("Lütfen göndermek istediğiniz mesajı yazınız.");
+            notify(t("fb2Bos"));
             return;
           }
           // ★ VERİTABANI KAYDI — mesaj admin panelin Geri Bildirim sekmesine düşer.
@@ -493,10 +493,11 @@ export function ContactBolum({
             });
           } catch { /* DB yazımı başarısız olsa da mail akışı bozulmasın */ }
           // E-posta akışı aynen korunur — destekte kalıcı kayıt mailde de durur
-          const subject = encodeURIComponent(contactType === "oneri" ? "Nûr Stüdyo — Öneri / Talep Bildirimi" : "Nûr Stüdyo — Destek & Sorun Bildirimi");
+          // Mail gövdesi destek ekibine gider — TR kalır (bilinçli karar); UI seçili dilde
+          const subject = encodeURIComponent(contactType === "oneri" ? `Nûr Stüdyo — ${t("fb2Oneri")}` : `Nûr Stüdyo — ${t("fb2Sikayet")}`);
           const body = encodeURIComponent(`Nûr Stüdyo Destek Birimine:\n\n${contactMessage.trim()}\n\n---\nPuan: ${contactPuan ? contactPuan + " ⭐" : "verilmedi"}\nTarih: ${new Date().toLocaleString("tr-TR")}`);
           window.open(`mailto:destek@nurstudyo.com?subject=${subject}&body=${body}`, "_blank");
-          notify("✉️ Mesajınız iletildi — görüşünüz için teşekkürler 🌙");
+          notify(t("fb2Iletildi"));
           setContactMessage("");
           setContactPuan(null);
           setModal(null as never);
@@ -504,7 +505,7 @@ export function ContactBolum({
         className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-black shadow-lg transition hover:brightness-110 active:scale-95 cursor-pointer"
         style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
       >
-        <Send size={13} /> Destek Ekibine İlet
+        <Send size={13} /> {t("fb2Gonder")}
       </button>
     </Modal>
   );

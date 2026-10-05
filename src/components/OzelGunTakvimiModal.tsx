@@ -9,6 +9,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { CalendarDays, BellRing, Sparkles } from "lucide-react";
 import { Modal } from "./UIElements";
+import { OG_GUNLER_COKDIL, type OgGunMetin } from "../data/ogGunlerCokDil";
 
 interface OzelGunTakvimiModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
@@ -60,6 +61,14 @@ const cumaMi = (d: Date) => d.getDay() === 5;
 export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, onClose, notify , lang = "tr" }) => {
   // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
   const tt = (k: string): string => translate(lang, k);
+  // ★ GUN METINLERI (05.10): gun adı + tema önerisi seçili dilde (ogGunlerCokDil.ts),
+  //   kategori id'leri atmosfer motoru anahtarları — asıl kalır
+  const gunMetni = (ad: string): OgGunMetin => {
+    const liste = OG_GUNLER_COKDIL[lang] ?? OG_GUNLER_COKDIL.tr;
+    const trListe = OG_GUNLER_COKDIL.tr;
+    const idx = trListe.findIndex((g) => g.ad === ad);
+    return (idx >= 0 ? liste[idx] : trListe[idx]) ?? { ad, tema: ad };
+  };
 
   const [bildirimIstek, setBildirimIstek] = useState<"" | "ok" | "yok">("");
   // ★ CANLI TAKVİM (28.09): "bugün" sabit useMemo'da donuyordu — uygulama açık kaldıkça
@@ -108,7 +117,7 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
     //   örneğin 1 nisan" — her sıradaki gün artık GREGORYEN tarihini de taşıyor
     //   (örn. "1 Nisan 2027, Çarşamba"). Cuma için tarih bugünden hesaplanır.
     const tarihStr = (d: Date) =>
-      d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", weekday: "long" });
+      d.toLocaleDateString(lang === "tr" ? "tr-TR" : lang === "ar" ? "ar" : lang === "ur" ? "ur" : lang === "id" ? "id-ID" : "en-GB", { day: "numeric", month: "long", year: "numeric", weekday: "long" });
     const liste = [...bulunan.values()].map(({ gun, tarih }) => ({
       ...gun,
       gunFark: Math.round((tarih.getTime() - new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate()).getTime()) / 86_400_000),
@@ -129,7 +138,7 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
     const izin = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
     if (izin === "granted") {
       try {
-        new Notification("🌟 Mühim Gün Hatırlatıcısı açık", { body: "Cuma ve kandil gecelerinden tema önerisi alacaksın.", icon: "/logo.png" });
+        new Notification(tt("ogBildirimBaslik"), { body: tt("ogBildirimGovde"), icon: "/logo.png" });
       } catch { /* SW gerekli platformlarda sessiz */ }
       setBildirimIstek("ok");
       notify?.(tt("ogHatirlaticiAcildi"));
@@ -145,14 +154,14 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
       {siradaki[0] && (
         <div className="mb-3 flex items-center justify-between rounded-xl border border-amber-400/30 bg-gradient-to-r from-amber-500/[.12] to-emerald-500/[.06] px-4 py-3">
           <div>
-            <p className="text-[8.5px] font-black uppercase tracking-widest text-amber-300/70">Sıradaki hayırlı gün</p>
-            <p className="text-[13px] font-black text-white">{siradaki[0].emoji} {siradaki[0].ad}</p>
+            <p className="text-[8.5px] font-black uppercase tracking-widest text-amber-300/70">{tt("ogSiradakiHayirli")}</p>
+            <p className="text-[13px] font-black text-white">{siradaki[0].emoji} {gunMetni(siradaki[0].ad).ad}</p>
           </div>
           <div className="text-right">
             <p className="text-2xl font-black leading-none" style={{ color: "var(--accent-2)" }}>
-              {siradaki[0].gunFark === 0 ? "BUGÜN" : siradaki[0].gunFark}
+              {siradaki[0].gunFark === 0 ? tt("ogBugun") : siradaki[0].gunFark}
             </p>
-            <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">{siradaki[0].gunFark === 0 ? "hayırlı olsun" : "gün kaldı"}</p>
+            <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">{siradaki[0].gunFark === 0 ? tt("ogHayirliOlsun") : tt("ogGunKaldiKisa")}</p>
           </div>
         </div>
       )}
@@ -161,13 +170,13 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
       <div className={`mb-3 rounded-xl border p-3.5 ${bugununOzelGunu ? "border-amber-400/30 bg-amber-500/10" : "border-white/10 bg-white/[.03]"}`}>
         <p className="mb-1 flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">
           <CalendarDays size={11} style={{ color: "var(--accent)" }} />
-          Bugün {bugun.toLocaleDateString("tr-TR", { day: "numeric", month: "long", weekday: "long" })}
+          {tt("ogBugunTarih").replace("{t}", bugun.toLocaleDateString(lang === "tr" ? "tr-TR" : lang === "ar" ? "ar" : lang === "ur" ? "ur" : lang === "id" ? "id-ID" : "en-GB", { day: "numeric", month: "long", weekday: "long" }))}
           {hicri && <span className="text-white/30">· {HICRI_AY_ADLARI[hicri.ay - 1]} {hicri.gun}</span>}
         </p>
         {bugununOzelGunu ? (
           <>
-            <h4 className="text-[14px] font-black text-amber-200">{bugununOzelGunu.emoji} Bugün {bugununOzelGunu.ad}!</h4>
-            <p className="mt-1 text-[10px] leading-relaxed text-white/70">💡 Tema önerisi: {bugununOzelGunu.tema}</p>
+            <h4 className="text-[14px] font-black text-amber-200">{bugununOzelGunu.emoji} {tt("ogBugunOzel").replace("{ad}", gunMetni(bugununOzelGunu.ad).ad)}</h4>
+            <p className="mt-1 text-[10px] leading-relaxed text-white/70">{tt("ogTemaOnerisi").replace("{tema}", gunMetni(bugununOzelGunu.ad).tema)}</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {bugununOzelGunu.kategoriler.map((k) => (
                 <span key={k} className="rounded-full bg-white/8 px-2 py-0.5 text-[8.5px] font-bold text-white/60">🏷️ {k}</span>
@@ -175,7 +184,7 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
             </div>
           </>
         ) : (
-          <p className="text-[10.5px] text-white/55">Bugün mühim bir gün değil — sıradaki özel güne hazırlan, videosunu önceden kuyruğa koy.</p>
+          <p className="text-[10.5px] text-white/55">{tt("ogBugunMuhimDegil")}</p>
         )}
       </div>
 
@@ -184,12 +193,12 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
         {siradaki.map((g) => (
           <div key={g.ad} className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[.02] px-3 py-2">
             <div className="min-w-0">
-              <p className="text-[10.5px] font-bold text-white/85">{g.emoji} {g.ad}</p>
+              <p className="text-[10.5px] font-bold text-white/85">{g.emoji} {gunMetni(g.ad).ad}</p>
               {g.gTarih && <p className="text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>📅 {g.gTarih}</p>}
-              <p className="truncate text-[9px] text-white/45">{g.tema}</p>
+              <p className="truncate text-[9px] text-white/45">{gunMetni(g.ad).tema}</p>
             </div>
             <span className="ml-2 shrink-0 rounded-lg px-2 py-1 text-[9.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-              {g.gunFark === 0 ? "BUGÜN" : g.gunFark === 1 ? "yarın" : `${g.gunFark} gün`}
+              {g.gunFark === 0 ? tt("ogBugun") : g.gunFark === 1 ? tt("ogYarin") : tt("ogGunKisa").replace("{n}", String(g.gunFark))}
             </span>
           </div>
         ))}
@@ -198,7 +207,7 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
       {/* ── BİLDİRİM ──────────────────────────────────── */}
       {bildirimIstek === "ok" ? (
         <div className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 py-2.5 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-400/25">
-          <BellRing size={12} /> Hatırlatıcı açık — sıradaki mühim günde tema önerisi bildirimi gelecek
+          <BellRing size={12} /> {tt("ogHatirlaticiAcik")}
         </div>
       ) : (
         <button
@@ -207,11 +216,11 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
           className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-[.98]"
           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
         >
-          <BellRing size={13} /> Mühim gün hatırlatıcısını aç
+          <BellRing size={13} /> {tt("ogHatirlaticiAc")}
         </button>
       )}
       <p className="mt-2 text-center text-[8px] text-white/25">
-        <Sparkles size={9} className="mr-1 inline" />Hicri tarihler cihazından hesaplanır · Ramazan sayfasıyla birlikte çalışır
+        <Sparkles size={9} className="mr-1 inline" />{tt("ogAltNot")}
       </p>
     </Modal>
   );
