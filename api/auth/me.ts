@@ -175,6 +175,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const dbUser = users[0];
     const wallet = wallets[0] ?? { sub_jeton: 0, purchased_jeton: 0, purchased_kisa: 0, purchased_uzun: 0, purchased_tam: 0 };
 
+    // ★ KUL HAKKI KAPISI (05.10): abonelik süresi dolmuşsa artık PRO/ELİT değil.
+    //   Tek doğru kaynak nur_subscriptions.ends_at — süresi biten kullanıcı
+    //   isteğe FREE olarak döner (istenen kota kaybı: ödenmemiş gün yok).
+    let etkinTier: "free" | "pro" | "elit" = dbUser?.tier || user.tier || "free";
+    if (etkinTier !== "free") {
+      try {
+        const subs = await supabaseRows<{ ends_at: string }>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at`);
+        const endsAt = subs[0]?.ends_at ? Date.parse(subs[0].ends_at) : NaN;
+        if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
+          etkinTier = "free"; // kayıt yok veya süresi dolmuş
+        }
+      } catch { /* abonelik tablosu yoksa/eskiyse duyarlı davranma — mevcut tier kalır */ }
+    }
+
     // Ban sorgusu hata verirse fail-open: kullanıcı yalnızca açık bir ban kaydı
     // bulunduğunda engellenir.
     let ban: { reason: string } | null = null;
@@ -195,7 +209,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         picture: user.picture || "",
         verified: user.verified,
         isAdmin: Boolean(emailEnvOnayli && (user.isAdmin || dbUser?.is_admin)),
-        tier: dbUser?.tier || user.tier || "free",
+        tier: etkinTier,
       },
       wallet: {
         subJeton: wallet.sub_jeton,

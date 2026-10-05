@@ -180,6 +180,31 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
     const users = await userResponse.json() as Array<{ tier?: Tier; is_admin?: boolean }>;
     if (!users[0]) return null;
 
+    // ★ KUL HAKKI KAPISI (05.10): tier "pro"/"elit" görünüyor olsa bile abonelik
+    //   gerçekten aktif mi? Tek doğru kaynak nur_subscriptions.ends_at. Süresi
+    //   dolmuşsa tier FREE'ye düşer — süresi biten kullanıcı üretim hakkını
+    //   KAYBETMELİ, aksi halde ödemediği günlerin kotasını tüketmiş olur.
+    //   (Self-healing: DB'de tier düşürülmez, burada türevsel uygulanır.)
+    let tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
+    if (tier !== "free") {
+      try {
+        const subRes = await fetch(
+          `${sb.url}/rest/v1/nur_subscriptions?user_id=eq.${encodeURIComponent(userId)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`,
+          { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
+        );
+        if (subRes.ok) {
+          const subs = await subRes.json() as Array<{ ends_at?: string }>;
+          const endsAt = subs[0]?.ends_at ? Date.parse(subs[0].ends_at) : NaN;
+          if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
+            // Abonelik kaydı YOK veya süresi DOLMUŞ → free
+            tier = "free";
+          }
+        }
+        // subRes hatalıysa (5xx) tier olduğu gibi kalır — DB kesintisinde
+        // mevcut ödemli kullanıcıyı cezalandırmamak için fail-open.
+      } catch { /* sorgu patlarsa fail-open */ }
+    }
+
     // ★ BAN KONTROLÜ DÜZELTMESİ (04.10, "banlama çalışmıyor"): eski sorgu yalnız
     //   user_id ile arıyordu — nur_users'ta kaydı olmayan (veya user_id'si null
     //   yazılmış) ban satırları üretimde HİÇ etki etmiyordu. Artık user_id VEYA
@@ -196,7 +221,6 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
     //   aktif (7 gün içinde) deneme kaydı varsa kota hesabı PRO üzerinden yapılır.
     //   Böylece istemcideki localStorage denemesi bypass edilse bile sunucu
     //   gerçek deneme süresini DB'den bilir (tek otorite).
-    let tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
     if (tier === "free") {
       try {
         const trialRes = await fetch(

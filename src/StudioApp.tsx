@@ -49,7 +49,7 @@ import {
   THEME_TIER,
   THEME_EMOJI_EXTRA,
 } from "./data";
-import { LANGS, MEAL_EDITIONS, T, type Lang } from "./i18n";
+import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { HeaderTopBar } from "./components/HeaderTopBar";
@@ -260,6 +260,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   }, [premiumOpen]);
 
   // Tier senkronizasyonu — auth/me'den gelen tier React state'e yazilir
+  // ★ KUL HAKKI (05.10): auth/me artık abonelik bitişini de hesaba katıyor
+  //   (süresi dolmuşsa FREE döner) — buradaki senkron o düşüşü istemciye taşır.
+  //   Ek güvence: cüzdandan gelen bitiş tarihi geçmişse istemci de kendini FREE'ye çeker
+  //   (syncWallet 30 sn'de bir koşuyor; sunucu erişilemezse bile eski abone yeni gün kotası alamaz).
   useEffect(() => {
     const dbTier = (user as any)?.tier as Tier | undefined;
     if (dbTier && (dbTier === "pro" || dbTier === "elit" || dbTier === "free")) {
@@ -270,6 +274,23 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       }
     }
   }, [user]);
+
+  // ★ Abonelik bitiş watch-dog'u: bitiş tarihi geçtiyse tier'ı FREE'ye indir
+  useEffect(() => {
+    if (!subscriptionEndsAt) return;
+    const end = Date.parse(subscriptionEndsAt);
+    if (!Number.isFinite(end)) return;
+    const kontrol = () => {
+      if (Date.now() > end && getCurrentTier() !== "free") {
+        setTier("free");
+        console.log('[tier] Abonelik süresi doldu → FREE');
+        notify(translate(lang, "abonelikBittiFree"));
+      }
+    };
+    kontrol();
+    const iv = window.setInterval(kontrol, 60_000);
+    return () => window.clearInterval(iv);
+  }, [subscriptionEndsAt]);
 
   const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
   // ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla

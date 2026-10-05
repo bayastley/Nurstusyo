@@ -140,11 +140,10 @@ export const TIER_PRICE_TRY: Record<Tier, number> = {
   elit: 499,
 };
 
-// ★ Yıllık üyelik — 05.10 fiyat güncellemesi: KULLANICININ VERDİĞİ RAKAMLAR esastır.
-//   PRO yıllık 2.500₺ · ELİT yıllık 4.000₺ (annualPriceTRY aşağıdaki oranlarla bunları üretir:
-//   PRO 250×12×0,8333≈2.500 · ELİT 499×12×0,6689≈4.000). Katalogtaki amountMinor da aynı.
-//   NOT: ANNUAL_DISCOUNT oranları bu rakamlara göre yeniden hizalandı (PRO ~%17, ELİT ~%33).
-export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.1667, elit: 0.3320 };
+// ★ Yıllık üyelik — 05.10 (2. güncelleme): kullanıcı emri: PRO %10, ELİT %15, KÜSÜRATSIZ.
+//   annualPriceTRY(): PRO 250×12×0,90 = 2.700₺ · ELİT 499×12×0,85 = 5.089,8 → yuvarla 5.090₺
+//   Katalog (pricingData.ts SUB_*_1Y) ve create.ts PRODUCT_CATALOG aynı değerleri taşır.
+export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.10, elit: 0.15 };
 export function annualPriceTRY(tier: Tier): number {
   const base = TIER_PRICE_TRY[tier] * 12;
   return Math.round(base * (1 - ANNUAL_DISCOUNT[tier]));

@@ -352,7 +352,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         {t("planYillikKazanc")
                           .replace("{aylik}", (bolge === "TR" ? "₺" + TIER_AYLIK[isElit ? "elit" : "pro"].toLocaleString("tr-TR") : bolgeSembol + (regionalPriceMajor(isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M", bolge, 0) ?? 0).toLocaleString("tr-TR")))
                           .replace("{ortalama}", String(kazancAylikOrt))
-                          .replace("{yuzde}", String(isElit ? 20 : 10))}
+                          .replace("{yuzde}", String(isElit ? 15 : 10))}
                       </p>
                     )}
 

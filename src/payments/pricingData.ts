@@ -35,19 +35,20 @@ interface RegionPlan {
 export const REGIONAL_PLANS: Record<RegionCode, RegionPlan> = {
   TR: {
     region: "TR", currency: "TRY", symbol: "₺",
-    prices: { SUB_PRO_1M: 250, SUB_ELIT_1M: 499, SUB_PRO_1Y: 2500, SUB_ELIT_1Y: 4000 },
+    prices: { SUB_PRO_1M: 250, SUB_ELIT_1M: 499, SUB_PRO_1Y: 2700, SUB_ELIT_1Y: 5090 },
   },
   USD: {
     region: "USD", currency: "USD", symbol: "$",
-    prices: { SUB_PRO_1M: 9.99, SUB_ELIT_1M: 19.99, SUB_PRO_1Y: 99.99, SUB_ELIT_1Y: 159.99 },
+    // ★ KÜSÜRATSIZ (05.10): aylık 10/20 · yıllık = aylık×12×indirim (PRO %10 → 108, ELİT %15 → 204)
+    prices: { SUB_PRO_1M: 10, SUB_ELIT_1M: 20, SUB_PRO_1Y: 108, SUB_ELIT_1Y: 204 },
   },
   EUR: {
     region: "EUR", currency: "EUR", symbol: "€",
-    prices: { SUB_PRO_1M: 8.99, SUB_ELIT_1M: 17.99, SUB_PRO_1Y: 89.99, SUB_ELIT_1Y: 143.99 },
+    prices: { SUB_PRO_1M: 9, SUB_ELIT_1M: 18, SUB_PRO_1Y: 97, SUB_ELIT_1Y: 184 },
   },
   GBP: {
     region: "GBP", currency: "GBP", symbol: "£",
-    prices: { SUB_PRO_1M: 7.99, SUB_ELIT_1M: 15.99, SUB_PRO_1Y: 79.99, SUB_ELIT_1Y: 127.99 },
+    prices: { SUB_PRO_1M: 8, SUB_ELIT_1M: 16, SUB_PRO_1Y: 86, SUB_ELIT_1Y: 163 },
   },
 };
 
@@ -110,15 +111,15 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
   },
 
   // ─── Abonelikler (yıllık — indirimli) ───
-  // ★ HESAP (05.10 fiyat güncellemesi — kullanıcının verdiği RAKAMLAR esastır):
-  //          PRO  yıllık 2.500₺ (aylık 250₺'nin 12 ayı 3.000₺ olurdu → ~%17 avantaj, ayda ~208₺)
-  //          ELİT yıllık 4.000₺ (aylık 499₺'nin 12 ayı 5.988₺ olurdu → ~%33 avantaj, ayda ~333₺)
+  // ★ HESAP (05.10, 2. güncelleme — kullanıcı emri: yıllıkta PRO %10, ELİT %15, KÜSÜRATSIZ):
+  //          PRO  yıllık = 250×12=3000 → %10 → 2.700₺ (tam)
+  //          ELİT yıllık = 499×12=5988 → %15 → 5.089,8 → 5.090₺ (tam; %14,997≈%15)
   SUB_PRO_1Y: {
     code: "SUB_PRO_1Y",
     kind: "subscription",
-    title: "NÛR PRO — Yıllık Üyelik (%17 indirim)",
-    description: "12 aylık peşin üyelik. Aylık 250₺ yerine ortalama 208₺. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
-    amountMinor: 250000,
+    title: "NÛR PRO — Yıllık Üyelik (%10 indirim)",
+    description: "12 aylık peşin üyelik. Aylık 250₺ yerine ortalama 225₺. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
+    amountMinor: 270000,
     currency: "TRY",
     grantTier: "pro",
     grantDays: 365,
@@ -127,9 +128,9 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
   SUB_ELIT_1Y: {
     code: "SUB_ELIT_1Y",
     kind: "subscription",
-    title: "NÛR ELİT — Yıllık Üyelik (%33 indirim)",
-    description: "12 aylık peşin üyelik. Aylık 499₺ yerine ortalama 333₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 400000,
+    title: "NÛR ELİT — Yıllık Üyelik (%15 indirim)",
+    description: "12 aylık peşin üyelik. Aylık 499₺ yerine ortalama 424₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
+    amountMinor: 509000,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 365,
