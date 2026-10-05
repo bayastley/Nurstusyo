@@ -83,7 +83,7 @@ async function main() {
 
   const { chromium } = await import("playwright-core");
   const browser = await chromium.launch({ channel: "chrome", headless: true });
-  const kanit = { admin: admin.email, sekmeler: [], kaynak404: 0 };
+  const kanit = { admin: admin.email, sekmeler: [], saglik: null, kaynak404: 0 };
 
   try {
     const ctx = await browser.newContext({ viewport: { width: 1500, height: 950 } });
@@ -132,6 +132,38 @@ async function main() {
       hata("panel modalı açılmadı");
       await page.screenshot({ path: "scripts/_panel-acilis-hata.png" });
       process.exit(1);
+    }
+
+    // 2b) SAĞLIK ROZETİ (06.10): panel açılışında 7 salt-okunur action sessizce ping'lenir;
+    //     rozet "test" (🩺 …) → "🩺 N/7" durumu beklenir. 7/7 = tüm sekmelerin arka planı çalışıyor.
+    try {
+      await page.waitForFunction(
+        () => {
+          const r = document.querySelector('[data-testid="panel-saglik-rozet"]');
+          return !!r && /\d+\s*\/\s*\d+/.test(r.textContent || "");
+        },
+        { timeout: 25000 }
+      );
+      const rozetMetin = ((await page.textContent('[data-testid="panel-saglik-rozet"]')) || "").trim();
+      const m = rozetMetin.match(/(\d+)\s*\/\s*(\d+)/);
+      const okSayisi = m ? Number(m[1]) : 0;
+      const toplam = m ? Number(m[2]) : 0;
+      const hataliTablar = await page.evaluate(() =>
+        [...document.querySelectorAll("[data-testid^='panel-saglik-nokta-']")].map((el) =>
+          (el.getAttribute("data-testid") || "").replace("panel-saglik-nokta-", "")
+        )
+      );
+      kanit.saglik = { rozet: `${okSayisi}/${toplam}`, hataliTablar };
+      await page.screenshot({ path: "scripts/_panel-saglik.png" });
+      if (okSayisi === toplam && toplam === 7) {
+        basari(`sağlık rozeti: ${rozetMetin} — 7 salt-okunur action da çalışıyor → scripts/_panel-saglik.png`);
+      } else {
+        hata(`sağlık rozeti ${rozetMetin} — çalışmayan sekmeler: ${hataliTablar.join(", ") || "?"}`);
+      }
+    } catch {
+      kanit.saglik = { rozet: "yok", hataliTablar: [] };
+      await page.screenshot({ path: "scripts/_panel-saglik-hata.png" }).catch(() => {});
+      hata("sağlık rozeti DOM'da görünmedi (panel-saglik-rozet — ping'ler 25 sn'de bitmedi?)");
     }
 
     // 3) 7 sekme — GERÇEK tıklamalar

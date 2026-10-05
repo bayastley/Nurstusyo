@@ -17,6 +17,9 @@ import { AdminBanLogsTab, AdminFeedbackTab, AdminErrorsTab } from "./adminDashbo
 // ★ SRP (01.10): panel ÇERÇEVESİ adminDashboardKabuk.tsx'e taşındı — header + 7 sekmeli
 //   nav + hata alarmı + footer. Bu dosya yalnız STATE + İŞ MANTIĞI + sekme içerikleri.
 import { AdminPanelKabuk } from "./adminDashboardKabuk";
+// ★ 06.10 SAĞLIK ROZETİ: panel açılışında 7 salt-okunur action sessizce ping'lenir
+//   (usePanelSaglik.ts — YAZMA action'ları asla çağrılmaz); hatalı sekme rozette görünür.
+import { usePanelSaglik } from "./usePanelSaglik";
 // ★ SRP adım 10 (30.09): banLogs + feedback + errors sekmeleri adminDashboardBolumler.tsx'e taşındı
 
 interface AdminDashboardModalProps {
@@ -33,6 +36,8 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   notify,
 }) => {
   const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor">("users");
+  // ★ 06.10 SAĞLIK ROZETİ: mount'ta salt-okunur action ping'leri → kabukta 🩺 rozet + sekme noktaları
+  const panelSaglik = usePanelSaglik();
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedEmail, setSelectedEmail] = useState<string>(currentUserEmail);
@@ -696,6 +701,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         errorStats={errorStats}
       errorAlarm={errorAlarm}
       feedbackStats={feedbackStats}
+      saglik={panelSaglik}
     >
           {/* TAB 1: USERS & JETONS */}
           {activeTab === "users" && (

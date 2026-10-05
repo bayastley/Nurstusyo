@@ -8,8 +8,47 @@
 import React from "react";
 import { Shield, X, UserCheck, Lightbulb } from "lucide-react";
 import type { BanLog } from "../services/adminSyncService";
+// ★ 06.10 SAĞLIK ROZETİ: açılışta 7 salt-okunur action sessizce ping'lenir
+//   (usePanelSaglik.ts) — hangi sekme çalışmıyorsa rozet + sekme noktası gösterir.
+import type { PanelSaglik, SaglikTab } from "./usePanelSaglik";
 
 export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor";
+
+/** Sağlık tooltip'i için kısa sekme adları (panel TR hardcoded — i18n kullanmaz, 06.10) */
+const SEKME_ETIKETLERI: Record<SaglikTab, string> = {
+  users: "Kullanıcı",
+  broadcast: "Duyuru & Kilitlar",
+  banLogs: "Ban & Denetim",
+  errors: "Hata Logları",
+  haftaVideo: "Haftanın Videosu",
+  rapor: "Haftalık Rapor",
+  feedback: "Geri Bildirim",
+};
+
+/** Header'daki küçük 🩺 rozet: test→ gri nabız · ok→ yeşil 7/7 · hata→ kırmızı + hatalı sekme adları */
+const PanelSaglikRozeti: React.FC<{ saglik: PanelSaglik }> = ({ saglik }) => {
+  const title =
+    saglik.durum === "test"
+      ? "Sağlık kontrolü sürüyor — sekmeler sessizce ping'leniyor…"
+      : saglik.durum === "ok"
+        ? `Sağlık: tüm ${saglik.toplam} sekmenin arka planı çalışıyor ✔`
+        : `Çalışmayan sekmeler: ${saglik.hataliTablar.map((t) => SEKME_ETIKETLERI[t]).join(", ")}`;
+  const stil =
+    saglik.durum === "test"
+      ? "bg-white/10 border-white/25 text-white/50 animate-pulse"
+      : saglik.durum === "ok"
+        ? "bg-emerald-500/20 border-emerald-400/40 text-emerald-300"
+        : "bg-red-500/20 border-red-400/50 text-red-300 animate-pulse";
+  return (
+    <span
+      data-testid="panel-saglik-rozet"
+      title={title}
+      className={`rounded-full border px-2 py-0.5 text-[8px] font-black ${stil}`}
+    >
+      {saglik.durum === "test" ? "🩺 …" : `🩺 ${saglik.okSayisi}/${saglik.toplam}`}
+    </span>
+  );
+};
 
 export const AdminPanelKabuk: React.FC<{
   activeTab: AdminTab;
@@ -21,8 +60,19 @@ export const AdminPanelKabuk: React.FC<{
   errorStats: { total24h: number; unique24h: number; turDagilimi?: Record<string, number> } | null;
   errorAlarm: "ok" | "warn" | "alarm";
   feedbackStats: { toplam: number } | null;
+  /** ★ 06.10: sağlık rozeti — hook yoksa (undefined) rozet hiç render edilmez */
+  saglik?: PanelSaglik;
   children: React.ReactNode;
-}> = ({ activeTab, setActiveTab, onClose, banLogs, bannedCount, errorStats, errorAlarm, feedbackStats, children }) => {
+}> = ({ activeTab, setActiveTab, onClose, banLogs, bannedCount, errorStats, errorAlarm, feedbackStats, saglik, children }) => {
+  /** ★ 06.10: hatalı sekmenin köşesine kırmızı nokta — "hangi sekme çalışmıyor" tek bakışta */
+  const saglikNokta = (tab: SaglikTab) =>
+    saglik?.durum === "hata" && saglik.hataliTablar.includes(tab) ? (
+      <span
+        data-testid={`panel-saglik-nokta-${tab}`}
+        className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border border-black/70 bg-red-500"
+        title={`${SEKME_ETIKETLERI[tab]} sekmesi yanıt vermiyor`}
+      />
+    ) : null;
   return (
     <div
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/85 p-3 md:p-6 backdrop-blur-md modal-in"
@@ -52,6 +102,7 @@ export const AdminPanelKabuk: React.FC<{
                 <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 text-[8px] font-black text-emerald-300">
                   ŞİFRELİ KORUMALI
                 </span>
+                {saglik && <PanelSaglikRozeti saglik={saglik} />}
               </div>
               <p className="text-[10px] text-white/50 mt-0.5">
                 {/* ★ 27.09: e-posta yerine "Admin" — tanıtım videosunda gizlilik */}
@@ -72,21 +123,23 @@ export const AdminPanelKabuk: React.FC<{
         <div className="flex border-b border-white/10 bg-black/20 p-2 gap-2 shrink-0 overflow-x-auto scrollbar-thin">
           <button
             onClick={() => setActiveTab("users")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
               activeTab === "users" ? "text-black font-black" : "text-white/60 hover:text-white"
             }`}
             style={activeTab === "users" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
             <UserCheck size={14} /> Kullanıcı & ⚡Üretim hakkı
+            {saglikNokta("users")}
           </button>
           <button
             onClick={() => setActiveTab("broadcast")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
               activeTab === "broadcast" ? "text-black font-black" : "text-white/60 hover:text-white"
             }`}
             style={activeTab === "broadcast" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
             <Lightbulb size={14} /> Duyuru & Kilitlar
+            {saglikNokta("broadcast")}
           </button>
           <button
             onClick={() => setActiveTab("banLogs")}
@@ -97,6 +150,7 @@ export const AdminPanelKabuk: React.FC<{
           >
             <Lightbulb size={13} className={banLogs.length > 0 ? "animate-pulse text-amber-300" : ""} fill={banLogs.length > 0 ? "currentColor" : "none"} />
             <span>Ban & Siber Denetim ({bannedCount ?? banLogs.length})</span>
+            {saglikNokta("banLogs")}
           </button>
           <button
             onClick={() => setActiveTab("errors")}
@@ -109,26 +163,29 @@ export const AdminPanelKabuk: React.FC<{
             <span>Hata Logları{errorStats ? ` (${errorStats.total24h})` : ""}</span>
             {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500 animate-ping" />}
             {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500" />}
+            {saglikNokta("errors")}
           </button>
           <button
             onClick={() => setActiveTab("haftaVideo")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
               activeTab === "haftaVideo" ? "text-black font-black" : "text-fuchsia-300 hover:text-white"
             }`}
             style={activeTab === "haftaVideo" ? { background: "linear-gradient(135deg,#e879f9,#c026d3)" } : { background: "rgba(232,121,249,0.12)", border: "1px solid rgba(232,121,249,0.3)" }}
           >
             🎬
             <span>Haftanın Videosu</span>
+            {saglikNokta("haftaVideo")}
           </button>
           <button
             onClick={() => setActiveTab("rapor")}
-            className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
               activeTab === "rapor" ? "text-black font-black" : "text-teal-300 hover:text-white"
             }`}
             style={activeTab === "rapor" ? { background: "linear-gradient(135deg,#2dd4bf,#0d9488)" } : { background: "rgba(45,212,191,0.12)", border: "1px solid rgba(45,212,191,0.3)" }}
           >
             📊
             <span>Haftalık Rapor</span>
+            {saglikNokta("rapor")}
           </button>
           <button
             onClick={() => setActiveTab("feedback")}
@@ -139,6 +196,7 @@ export const AdminPanelKabuk: React.FC<{
           >
             💬
             <span>Geri Bildirim{feedbackStats ? ` (${feedbackStats.toplam})` : ""}</span>
+            {saglikNokta("feedback")}
           </button>
         </div>
 
