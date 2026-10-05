@@ -44,7 +44,7 @@ const DEFAULT_V2: Omit<Feature, "votes">[] = [
   { id: "ayet-kutuphanesi", iconId: "arsiv", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı — tamamı çalışıyor.", tag: "V2", active: true },
   { id: "whatsapp-kart", iconId: "whatsapp", title: "WhatsApp Ayet Kartı", desc: "9:16 dikey ayet kartı üret; durum ve hikaye boyutunda tek tuşla paylaş.", tag: "V2", active: true },
   { id: "devam-serisi", iconId: "seri", title: "Günlük Devam Serisi", desc: "Üst üste üretim günlerin seriyi büyütür — alev kaybolmasın!", tag: "V2", active: true },
-  { id: "bugun-hediye", iconId: "hediye", title: "Günlük Sürpriz Hediye", desc: "Her gün girişte üretim hakkı ya da jeton sürprizi — sadaka-i cariye motoru.", tag: "V2", active: true },
+  { id: "bugun-hediye", iconId: "hediye", title: "Günlük Sürpriz Hediye", desc: "Her gün girişte üretim hakkı ya da jeton sürprizi — her gün yenisi seni bekliyor.", tag: "V2", active: true },
   { id: "hafizlik-testi", iconId: "hafizlik_testi", title: "Hafızlık Testi", desc: "Ayeti tamamla testiyle hafızanı sına; seviye atladıkça sorular zorlaşır.", tag: "V2", active: true },
   { id: "referans", iconId: "referans", title: "Arkadaşını Davet Et", desc: "Davet ettiğin her arkadaşta ikinize de üretim hakkı; kademele Tohum'dan Orman'a.", tag: "V2", active: true },
   { id: "ucretsiz-deneme", iconId: "ucretsiz_deneme", title: "7 Gün Ücretsiz PRO Denemesi", desc: "Bütün güç keşfetme şansı — kredi kartı gerekmez, otomatik başlar.", tag: "V2", active: true },
