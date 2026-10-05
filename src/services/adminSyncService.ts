@@ -142,6 +142,14 @@ export function saveAnnouncement(announcement: Announcement): void {
   config.announcements = config.announcements.slice(0, 20);
   config.lastSyncMs = Date.now();
   saveSystemConfig(config);
+  // ★ 05.10 CANLI TEST BULGUSU: saveSystemConfig'in genel "nur_config_updated"
+  //   event'i AnnouncementBar'daki yerel-duyuru dinleyicisini de tetikliyordu;
+  //   dinleyici local (boş) duyuruyu okuyup SUNUCU duyurusunun üzerine yazıyordu
+  //   — her poll'da tekrarlandığı için baloncuk sıradan kullanıcıda asla
+  //   görünmüyordu (admin cihazında çalışıyordu çünkü panel duyuruyu local'e de
+  //   yazıyor). Yerel anlık baloncuk artık ÖZEL event ile duyurulur;
+  //   AnnouncementBar yalnız bu event'e tepki verir.
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("nur_duyuru_guncel"));
 }
 
 export function setFeatureLock(featureId: string, lock: FeatureLock): void {

@@ -76,12 +76,19 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
 
-  // ★ YEREL DUYURU DİNLEYİCİ (02.10): admin yayını saveAnnouncement → nur_config_updated
-  //   event'i fırlatır; bu dinleyici baloncuğu ANINDA (poll'suz) ekrana taşır.
+  // ★ YEREL DUYURU DİNLEYİCİ (02.10; 05.10 CANLI TEST DÜZELTMESİ): admin yayını
+  //   saveAnnouncement artık ÖZEL "nur_duyuru_guncel" event'i fırlatır. Eskiden
+  //   burada genel nur_config_updated dinleniyordu — ama her /api/config poll'u da
+  //   kilit/bakım yazımı için saveSystemConfig → nur_config_updated fırlattığından
+  //   bu dinleyici HER POLL'DA local duyuruyu sunucu duyurusunun ÜZERİNE yazıyordu:
+  //   sıradan kullanıcının cihazında local liste boş olduğu için duyuru baloncuğu
+  //   asla görünmüyordu (canlı test kanıtı: /api/config'te duyuru VAR, bar
+  //   "Duyuru yok" gösteriyordu). Genel event kilit/bakım için kalır; duyuru
+  //   yalnız özel eventle anında ekrana gelir.
   useEffect(() => {
     const onLocal = () => setAnnouncement(getActiveAnnouncement());
-    window.addEventListener("nur_config_updated", onLocal);
-    return () => window.removeEventListener("nur_config_updated", onLocal);
+    window.addEventListener("nur_duyuru_guncel", onLocal);
+    return () => window.removeEventListener("nur_duyuru_guncel", onLocal);
   }, []);
 
   useEffect(() => {
