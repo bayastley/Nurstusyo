@@ -140,10 +140,11 @@ export const TIER_PRICE_TRY: Record<Tier, number> = {
   elit: 499,
 };
 
-// ★ Yıllık üyelik — aylık fiyatın üstüne otomatik indirim uygulanır (05.10 fiyat güncellemesi).
-//   PRO: %10 indirim · ELİT: %20 indirim (bkz. src/payments/pricing.ts)
-//   annualPriceTRY(): PRO 250×12×0,90 = 2.700₺ · ELİT 499×12×0,80 = 4.790,4₺
-export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.10, elit: 0.20 };
+// ★ Yıllık üyelik — 05.10 fiyat güncellemesi: KULLANICININ VERDİĞİ RAKAMLAR esastır.
+//   PRO yıllık 2.500₺ · ELİT yıllık 4.000₺ (annualPriceTRY aşağıdaki oranlarla bunları üretir:
+//   PRO 250×12×0,8333≈2.500 · ELİT 499×12×0,6689≈4.000). Katalogtaki amountMinor da aynı.
+//   NOT: ANNUAL_DISCOUNT oranları bu rakamlara göre yeniden hizalandı (PRO ~%17, ELİT ~%33).
+export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.1667, elit: 0.3320 };
 export function annualPriceTRY(tier: Tier): number {
   const base = TIER_PRICE_TRY[tier] * 12;
   return Math.round(base * (1 - ANNUAL_DISCOUNT[tier]));
