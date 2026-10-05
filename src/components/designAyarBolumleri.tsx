@@ -8,6 +8,12 @@ import React from "react";
 import { ChevronDown } from "lucide-react";
 import { translate } from "../i18n"; // ★ TUR 6: title/etiket kalıntıları LS bazlı çeviri
 const ttDA = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
+// ★ 05.10: font etiketi — TR'de tam etiket, diğer dillerde parantez içi TR niteleyici kırpılır
+const fontKisa = (label: string): string => {
+  if ((localStorage.getItem("nur_lang") ?? "tr") === "tr") return label;
+  const m = label.match(/\s*\([^)]*\)$/);
+  return m ? label.slice(0, label.length - m[0].length) : label;
+};
 
 // ── İNCE AYAR SLIDER — −/+ butonlu, yüzdeli, sıfırlamalı (3 kullanım: yazı/meal/ışıltı) ──
 export function InceAyarSlider({
@@ -21,7 +27,7 @@ export function InceAyarSlider({
   etiketGenislik = "w-[46px]",
   onEtiket,
   title,
-  sifirlaTitle = "Varsayılan boyuta dön",
+  sifirlaTitle,
 }: {
   deger: number;
   setDeger: (v: number) => void;
@@ -60,7 +66,7 @@ export function InceAyarSlider({
       />
       {/* ★ KAYMA DÜZELTMESİ (28.09): min-w yerine sabit w — dar panelde %170 yazısı
           slider üstüne biniyordu; shrink-0 + sabit genişlik hizayı korur */}
-      <span className={`${etiketGenislik} shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums ${etiketSinif}`} title="İnce ayar çarpanı">
+      <span className={`${etiketGenislik} shrink-0 rounded-md bg-black/40 px-1 py-0.5 text-center text-[9px] font-black tabular-nums ${etiketSinif}`} title={ttDA("dafInceCarpan")}>
         %{Math.round(deger * 100)}
       </span>
       <button
@@ -74,7 +80,7 @@ export function InceAyarSlider({
         <button
           type="button"
           onClick={() => setDeger(1)}
-          title={sifirlaTitle}
+          title={sifirlaTitle ?? ttDA("dafVarsayilanBoyut")}
           className="ml-auto rounded-md bg-white/5 px-1.5 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/15 hover:text-white/80"
         >{ttDA("daSifirla")}</button>
       )}
@@ -98,7 +104,7 @@ export function FontGalerisi({
 }) {
   return (
     <details ref={galeriRef} className="mt-1">
-      <summary className="cursor-pointer text-[8px] font-bold text-white/40 hover:text-white/70"> görüntülü seç — 20 fontu kendi yazısıyla karşılaştır</summary>
+      <summary className="cursor-pointer text-[8px] font-bold text-white/40 hover:text-white/70">{ttDA("dafFontGalerisi")}</summary>
       <div className="mt-1 grid max-h-52 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-white/10 bg-black/30 p-1">
         {fonts.map((f) => {
           const seciliMi = f.id === secili;
@@ -107,14 +113,14 @@ export function FontGalerisi({
               key={f.id}
               type="button"
               onClick={() => onSec(f.id)}
-              title={f.label}
+              title={fontKisa(f.label)}
               className={`rounded-md border px-1.5 py-1 text-center transition ${seciliMi ? "border-amber-400/60 bg-amber-500/15" : "border-white/5 bg-white/[.03] hover:bg-white/[.08]"}`}
             >
               {/* ★ Tema uyumlu ALTIN yazı — beyaz değil */}
               <span className="block truncate text-base leading-snug text-amber-200/95" dir="rtl" lang="ar" style={{ fontFamily: f.css }}>
                 بِسْمِ ٱللَّهِ
               </span>
-              <span className="mt-0.5 block truncate text-[7px] font-bold text-white/50">{f.label}</span>
+              <span className="mt-0.5 block truncate text-[7px] font-bold text-white/50">{fontKisa(f.label)}</span>
             </button>
           );
         })}
@@ -144,7 +150,7 @@ export function MarkaImza({
   return (
     <div className="mt-2 space-y-1.5">
       <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider text-amber-300">
-        🛡️ Marka / Kanal İmzanız
+        🛡️ {ttDA("dafMarkaImza")}
         <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[6.5px] font-black text-amber-300">
           {isMasterSurum ? "ADMİN" : "ELİT"}
         </span>
@@ -154,7 +160,7 @@ export function MarkaImza({
           onClick={() => setBrandOn(!brandOn)}
           role="switch"
           aria-checked={brandOn}
-          title={brandOn ? "İmza videoda görünüyor — kapatmak için tıkla" : "İmza kapalı — açmak için tıkla"}
+          title={brandOn ? ttDA("dafImzaAcik") : ttDA("dafImzaKapali")}
           className={`relative ml-auto inline-flex h-4 w-8 shrink-0 items-center rounded-full transition ${brandOn ? "bg-amber-400" : "bg-white/15"}`}
         >
           <span className={`inline-block h-3 w-3 transform rounded-full bg-white shadow transition ${brandOn ? "translate-x-4" : "translate-x-0.5"}`} />
@@ -170,14 +176,14 @@ export function MarkaImza({
       />
 
       <span className="block text-[8px] font-bold uppercase tracking-wider text-white/45">
-        İmza Konumu
+        {ttDA("dafImzaKonumu")}
       </span>
       <div className="grid grid-cols-2 gap-1">
         {([
-          { id: "sol-ust", label: "↖ Sol Üst" },
-          { id: "sag-ust", label: "↗ Sağ Üst" },
-          { id: "sol-alt", label: "↙ Sol Alt" },
-          { id: "sag-alt", label: "↘ Sağ Alt" },
+          { id: "sol-ust", label: "↖" },
+          { id: "sag-ust", label: "↗" },
+          { id: "sol-alt", label: "↙" },
+          { id: "sag-alt", label: "↘" },
         ] as const).map((pos) => (
           <button
             key={pos.id}
@@ -190,12 +196,12 @@ export function MarkaImza({
             }`}
             style={brandPos === pos.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            {pos.label}
+            {pos.label} {pos.id === "sol-ust" ? ttDA("dafSolUst") : pos.id === "sag-ust" ? ttDA("dafSagUst") : pos.id === "sol-alt" ? ttDA("dafSolAlt") : ttDA("dafSagAlt")}
           </button>
         ))}
       </div>
       <span className="block text-[8px] leading-relaxed text-white/35">
-        Altın renkte görünür · <b className="text-white/50">Sol Üst</b> önerilir (meal yazısıyla çakışmaz) · boş bırakılırsa gizlenir
+        {ttDA("dafImzaIpucu1")} <b className="text-white/50">{ttDA("dafSolUst")}</b> {ttDA("dafImzaIpucu2")}
       </span>
     </div>
   );
@@ -209,16 +215,16 @@ export function MetinKonumPedi({
 }) {
   return (
     <div className="mt-2 flex items-center justify-between">
-      <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/45">Metin Konumu</span>
+      <span className="text-[8.5px] font-bold uppercase tracking-wider text-white/45">{ttDA("dafMetinKonumu")}</span>
       <div className="grid grid-cols-3 gap-0.5">
         <span />
-        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} aria-label="Yukarı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-180" /></button>
+        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.max(-30, o.y - 5) }))} aria-label={ttDA("dafYukari")} className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-180" /></button>
         <span />
-        <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-40, o.x - 5) }))} aria-label="Sola" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-90" /></button>
-        <button onClick={() => setTextOffset({ x: 0, y: 0 })} aria-label="Sıfırla" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-[8px] font-black text-[color:var(--accent)] hover:brightness-125">⟲</button>
-        <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(40, o.x + 5) }))} aria-label="Sağa" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="-rotate-90" /></button>
+        <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.max(-40, o.x - 5) }))} aria-label={ttDA("dafSola")} className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="rotate-90" /></button>
+        <button onClick={() => setTextOffset({ x: 0, y: 0 })} aria-label={ttDA("daSifirla")} className="glass-soft flex h-5 w-6 items-center justify-center rounded text-[8px] font-black text-[color:var(--accent)] hover:brightness-125">⟲</button>
+        <button onClick={() => setTextOffset((o) => ({ ...o, x: Math.min(40, o.x + 5) }))} aria-label={ttDA("dafSaga")} className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} className="-rotate-90" /></button>
         <span />
-        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} aria-label="Aşağı" className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} /></button>
+        <button onClick={() => setTextOffset((o) => ({ ...o, y: Math.min(30, o.y + 5) }))} aria-label={ttDA("dafAsagi")} className="glass-soft flex h-5 w-6 items-center justify-center rounded text-white/60 hover:text-white"><ChevronDown size={10} /></button>
         <span />
       </div>
     </div>

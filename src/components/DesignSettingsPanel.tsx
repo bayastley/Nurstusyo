@@ -8,7 +8,7 @@ import { LockBadge, LockedOverlay } from "./LockBadge";
 import { getVideoUrl, getPosterUrl, getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { RISK_META } from "../data";
 import { RECITERS } from "../reciters";
-import { T } from "../i18n";
+import { T, translate } from "../i18n";
 import { videoMaliyeti, reciterRequiredTier } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
 import type { Clip } from "../clips";
@@ -162,7 +162,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               </div>
             )}
             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-2 pb-1.5 pt-6 text-left text-[8px] text-white/80">
-              {background?.label ?? "Varsayılan"}
+              {background?.label ?? t("dafVarsayilan")}
             </span>
           </button>
           <div className="grid flex-1 gap-1.5">
@@ -185,7 +185,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               ) : (
                 <span className="relative flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[10px] font-bold glass-soft text-white/30 cursor-not-allowed">
                   <FolderUp size={11} /> ZIP / Image
-                  <LockBadge kind="v3" position="top-right" tooltipText="V3 Güncellemesi Yakında" />
+                  <LockBadge kind="v3" position="top-right" tooltipText={t("dafV3Yakinda")} />
                 </span>
               )}
             </div>
@@ -202,7 +202,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             return (
               <span key={risk} className="flex items-center gap-1" style={{ color: c }}>
                 <span className="h-2 w-2 rounded-full" style={{ background: c }} />
-                {risk === "low" ? "Düşük" : risk === "mid" ? "Orta" : "Yüksek"}
+                {risk === "low" ? t("dafRiskD") : risk === "mid" ? t("dafRiskO") : t("dafRiskY")}
               </span>
             );
           })}
@@ -240,11 +240,11 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[9.5px] font-bold text-white/90 leading-tight">
                           {item.name}
-                          {item.surahPattern && <span className="ml-1 rounded bg-white/10 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-white/50" title="Bu hocada sadece tam sure kaydı mevcut, ayet ayet tilavet yok">Tam Sure</span>}
+                          {item.surahPattern && <span className="ml-1 rounded bg-white/10 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-white/50" title={t("dafTamSureTitle")}>{t("dafTamSure")}</span>}
                         </span>
                         <span className="mt-0.5 flex items-center gap-1 truncate text-[7.5px] leading-tight">
                           <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: riskColor }} />
-                          <span className="font-bold shrink-0" style={{ color: riskColor }}>{risk.label} %{riskPercent}</span>
+                          <span className="font-bold shrink-0" style={{ color: riskColor }}>{item.risk === "low" ? t("dafRiskDusuk") : item.risk === "mid" ? t("dafRiskOrta") : t("dafRiskYuksek")} %{riskPercent}</span>
                           <span className="text-white/35 truncate">• {item.country}</span>
                         </span>
                       </span>
@@ -257,7 +257,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                       {reciterLocked && (dynamicLock === "v2" || dynamicLock === "v3") && <LockBadge kind={dynamicLock === "v2" ? "v2" : "v3"} position="top-right" />}
                       <span
                         role="button"
-                        title={reciterLocked ? "Üyelik gerekli" : "Ses örneğini çal"}
+                        title={reciterLocked ? t("dafUyelikGerekli") : t("dafSesOrnek")}
                         className={`rounded-full p-1 shrink-0 transition ${previewReciterId === item.id ? "text-black bg-[color:var(--accent)]" : "bg-white/10 text-white/70 opacity-70 group-hover:opacity-100 group-hover:bg-white/20"}`}
                         onClick={(event) => { event.stopPropagation(); if (reciterLocked) openPremium("uyelik"); else playReciterPreview(item.id); }}
                       >
@@ -282,7 +282,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             items={MODES.map((item) => ({
               ...item,
               label: item.id === "short" ? t("modeShort") : item.id === "long" ? t("modeLong") : t("modeFull"),
-              sub: `${item.sub} · ${videoMaliyeti(item.id, tier)} ⚡ Üretim hakkı`,
+              sub: `${item.id === "short" ? t("dafSubShort") : item.id === "long" ? t("dafSubLong") : t("dafSubFull")} · ${videoMaliyeti(item.id, tier)} ⚡ ${t("uretimHakki")}`,
             }))}
           />
         </div>
@@ -293,13 +293,13 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             onChange={setAspect}
             isLocked={(id) => id !== "9:16" && !tierAtLeast(accessTier, "pro")}
             onLocked={() => openPremium("uyelik")}
-            lockLabel={() => "Pro Üyelik Gerekir"}
+            lockLabel={() => t("dafProUyelik")}
             items={ASPECTS}
           />
           {/* ★ SHORTS TEK TUŞ (madde 9): 9:16 + Kısa modu — Reels/Shorts/TikTok için ideal preset */}
           {aspect === "9:16" && mode === "short" ? (
             <div className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500/10 py-1.5 text-[9px] font-black text-emerald-300 ring-1 ring-emerald-400/30">
-              📱 Shorts Modu aktif · "Instagram Reels / YouTube Shorts için ideal" rozeti açık
+              📱 {t("dafShortsAktif").replace("📱 ", "")}
             </div>
           ) : (
             <button
@@ -308,7 +308,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               className="mt-2 w-full rounded-lg py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-[.98]"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              📱 Shorts Modu — 9:16 + Kısa (Reels için ideal)
+              {t("dafShortsBtn")}
             </button>
           )}
           <div className="mt-2 flex gap-1">
@@ -321,7 +321,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   onClick={() => {
                     if (locked) { openPremium("uyelik"); return; }
                     if (!active && batchFormats.length >= 1 && !tierAtLeast(accessTier, "elit")) {
-                      if (!tryUnlockElitFeature("batch", "Toplu Üretim")) return;
+                      if (!tryUnlockElitFeature("batch", t("dafTopluUretim"))) return;
                     }
                     setBatchFormats((current) => active ? current.filter((entry) => entry !== item) : [...current, item]);
                   }}
@@ -338,7 +338,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             })}
           </div>
           <div className="mt-1.5 text-center text-[8px] text-white/30">
-            Üç formatı aynı anda indirme: <span className="font-black text-amber-300">ELİT</span> ya da {videoMaliyeti("short", tier)} ⚡ Üretim hakkı ile 24 saat açma
+            {t("dafUcFormat1")} <span className="font-black text-amber-300">ELİT</span> {t("dafUcFormat2").replace("{m}", String(videoMaliyeti("short", tier)))}
           </div>
         </div>
       </div>
@@ -358,10 +358,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <button
                 type="button"
                 onClick={tumunuSifirla}
-                title="Font, boyut, ışıltı ve konum ayarlarının tümünü varsayılana döndür"
+                title={t("dafTumunuSifirlaTitle")}
                 className="glass-soft flex items-center gap-1 rounded-lg px-2 py-1 text-[8px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
               >
-                ⟲ Tümünü Sıfırla
+                ⟲ {t("dafTumunuSifirla")}
               </button>
               {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>ELİT</span>}
             </div>
@@ -370,9 +370,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           <div className="relative">
           <div className="grid grid-cols-2 gap-1.5">
             <label className="block">
-              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Arapça Font</span>
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">{t("dafArapcaFont")}</span>
               <select value={arabicFont} onChange={(e) => setArabicFont(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
-                {ARABIC_FONTS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
+                {ARABIC_FONTS.map((f) => <option key={f.id} value={f.id}>{fontKisa(f.label)}</option>)}
               </select>
               {/* ★ CANLI ÖNİZLEME — seçili font, kendi yazı tarzıyla örnek ayet gösterir */}
               <span
@@ -380,7 +380,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 dir="rtl"
                 lang="ar"
                 style={{ fontFamily: ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif" }}
-                title={`${ARABIC_FONTS.find((f) => f.id === arabicFont)?.label ?? ""} — örnek yazım`}
+                title={`${fontKisa(ARABIC_FONTS.find((f) => f.id === arabicFont)?.label ?? "")} — ${t("dafOrnekYazim")}`}
               >
                 بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
               </span>
@@ -391,26 +391,26 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <FontGalerisi fonts={ARABIC_FONTS} secili={arabicFont} onSec={setArabicFont} galeriRef={galeriRef} />
             </label>
             <label className="block">
-              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Boyutu</span>
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">{t("dafYaziBoyutu")}</span>
               <select value={textSize} onChange={(e) => setTextSize(e.target.value as typeof textSize)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
-                <option value="kucuk">Küçük</option>
-                <option value="normal">Normal</option>
-                <option value="buyuk">Büyük (Önerilen)</option>
+                <option value="kucuk">{t("dafKucuk")}</option>
+                <option value="normal">{t("dafNormal")}</option>
+                <option value="buyuk">{t("dafBuyukOnerilen")}</option>
               </select>
-              <InceAyarSlider deger={textSizeMul} setDeger={setTextSizeMul} title="Sürükleyerek yazı boyutunu ayarla (50%–200%)" />
-              <InceAyarSlider deger={mealSizeMul} setDeger={setMealSizeMul} accent="#38bdf8" etiketSinif="text-sky-300/80" onEtiket="Meal" sifirlaTitle="Meal boyutunu sıfırla" />
+              <InceAyarSlider deger={textSizeMul} setDeger={setTextSizeMul} title={t("dafSliderYaziTitle")} />
+              <InceAyarSlider deger={mealSizeMul} setDeger={setMealSizeMul} accent="#38bdf8" etiketSinif="text-sky-300/80" onEtiket={t("dafMeal")} sifirlaTitle={t("dafMealSifirla")} />
             </label>
             <label className="block">
-              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Yazı Işıltısı</span>
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">{t("dafYaziIsiltisi")}</span>
               <select value={shimmerStyle} onChange={(e) => setShimmerStyle(e.target.value)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
-                {SHIMMER_STYLES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                {SHIMMER_STYLES.map((s) => <option key={s.id} value={s.id}>{s.id in ISI_KEY ? ttDsp(ISI_KEY[s.id]) : s.label}</option>)}
               </select>
-              <InceAyarSlider deger={shimmerIntensity} setDeger={setShimmerIntensity} adim={0.1} accent="#fde68a" etiketSinif="text-amber-200/80" etiketGenislik="min-w-[40px]" onEtiket="Güç" title="Parıltının gücü — okunan kelimenin ışığı ve yazı gölgesi bu kadar güçlü parlar" sifirlaTitle="Parıltı gücünü sıfırla" />
+              <InceAyarSlider deger={shimmerIntensity} setDeger={setShimmerIntensity} adim={0.1} accent="#fde68a" etiketSinif="text-amber-200/80" etiketGenislik="min-w-[40px]" onEtiket={t("dafGuc")} title={t("dafGucTitle")} sifirlaTitle={t("dafGucSifirla")} />
               {/* ★ CANLI ÖNİZLEME — slider'ı sürüklerken parıltının gücü anında değişir */}
               <span
                 className="mt-1 flex h-8 items-center justify-center overflow-hidden rounded-lg border border-white/10 bg-black/30 px-2"
                 style={{ direction: "rtl" }}
-                title="Parıltının videodaki gerçek gücü — sürükledikçe değişir"
+                title={t("dafOnizlemeTitle")}
               >
                 <span
                   className="whitespace-nowrap leading-none text-amber-100"
@@ -424,10 +424,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               </span>
             </label>
             <label className="block">
-              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">Kart Arka Planı</span>
+              <span className="mb-0.5 block text-[8.5px] font-bold uppercase tracking-wider text-white/45">{t("dafKartArka")}</span>
               <select value={cardBg} onChange={(e) => setCardBg(e.target.value as typeof cardBg)} className="glass-soft w-full rounded-lg px-1.5 py-1 text-[9.5px] outline-none">
-                <option value="seffaf">Şeffaf</option>
-                <option value="koyu">Koyu Kart</option>
+                <option value="seffaf">{t("dafSeffaf")}</option>
+                <option value="koyu">{t("dafKoyuKart")}</option>
               </select>
             </label>
           </div>
@@ -449,7 +449,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               <span className="flex h-5 w-5 items-center justify-center rounded-md" style={{ background: "rgba(255,255,255,.05)", color: "var(--accent)" }}>
                 <Wand2 size={11} />
               </span>
-              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">Sinematik Filtre</h2>
+              <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">{t("dafSinematik")}</h2>
             </div>
             {!tierAtLeast(accessTier, "pro") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>PRO</span>}
           </div>
@@ -467,7 +467,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   }`}
                   style={on ? { background: `linear-gradient(135deg, ${f.tint ?? "#3a2c10"}55, rgba(12,13,18,.6))` } : undefined}
                 >
-                  <span className="relative z-10 block truncate">{f.label}</span>
+                  <span className="relative z-10 block truncate">{f.id in FILT_KEY ? ttDsp(FILT_KEY[f.id]) : f.label}</span>
                   {on && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full animate-glow" style={{ background: "var(--accent)" }} />}
                 </button>
               );
@@ -484,6 +484,25 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
     </section>
   );
 };
+
+// ─── i18n (05.10): filtre/ışıltı etiketleri id→anahtar haritası + font etiketi kırpıcı ──
+// Kullanıcı ekran görüntüsü: AR modda Sinematik Filtre / Yazı Işıltısı etiketleri TR kalmıştı.
+const ttDsp = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
+const FILT_KEY: Record<string, string> = {
+  orijinal: "dafFiltOrijinal", nur: "dafFiltNur", huzur: "dafFiltHuzur", gece: "dafFiltGece",
+  zumrut: "dafFiltZumrut", altinsaat: "dafFiltAltinSaat", kabe: "dafFiltKabe", siyahbeyaz: "dafFiltSiyahBeyaz",
+};
+const ISI_KEY: Record<string, string> = {
+  altin: "dafIsiAltin", gumus: "dafIsiGumus", zumrut: "dafIsiZumrut", safir: "dafIsiSafir",
+  yakut: "dafIsiYakut", ametist: "dafIsiAmetist", gulkurusu: "dafIsiGul", duz: "dafIsiDuz",
+};
+/** Font etiketi: TR'de tam etiket ("El Messiri (Zarif Kufi)"); diğer dillerde parantez
+ *  içindeki TR niteleyici kırpılır — font adı özel isimdir, her dilde aynı yazılır. */
+function fontKisa(label: string): string {
+  if ((localStorage.getItem("nur_lang") ?? "tr") === "tr") return label;
+  const m = label.match(/\s*\([^)]*\)$/);
+  return m ? label.slice(0, label.length - m[0].length) : label;
+}
 
 // ─── ÖLÜ VİDEO YEDEĞİ (02.10) ──────────────────────────────
 // Video oynatılamadığında (R2 kapalı / CORS / offline) kırık oynatıcı yerine

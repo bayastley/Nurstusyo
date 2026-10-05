@@ -1060,7 +1060,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       backgroundRef.current?.cat !== "yuklenenler"
     ) setBackground(next[selectedRef.current[0].id]);
     const ezilen = korunanSlotlar.size;
-    notify(ezilen > 0 ? `✨ Akıllı AI sahne atandı · ${ezilen} kendi dosyan korundu` : "✨ Akıllı AI: Ayet kelimelerine göre sahne atandı!");
+    notify(ezilen > 0 ? t("dafAiSahneKorundu").replace("{n}", String(ezilen)) : t("dafAiSahne"));
   }, [combinedAllClips, notify, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
 
   const playReciterPreview = useCallback((id: string) => {
