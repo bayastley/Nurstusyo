@@ -107,7 +107,10 @@ export function useShareActions({ shareTitle, shareDescription, notify, t }: Sha
 
   const shareToX = useCallback(() => {
     const text = encodeURIComponent(`${shareTitle}\n\n${shareDescription}`);
-    window.open(`https://twitter.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
+    // ★ 05.10 E2E BULGUSU: twitter.com birçok Türkiye ISS'inde ISP seviyesinde
+    //   engelli (ERR_CONNECTION_RESET — e2e kanıtı scripts/paylasim-e2e.mjs);
+    //   aynı servisin güncel domain'i x.com engelli DEĞİL. x.com kullan.
+    window.open(`https://x.com/intent/tweet?text=${text}`, "_blank", "noopener,noreferrer");
   }, [shareTitle, shareDescription]);
 
   // ★ CİHAZIN UYGULAMA MENÜSÜ (02.10 — "kolaylık olsun"): Playlaş'a basınca artık
