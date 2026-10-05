@@ -9,7 +9,7 @@ import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, isSadikUye } from "../tier";
 import { TIER_LABEL } from "./premiumModalHelpers";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
@@ -339,6 +339,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 title={t("hbrUyelikTitle")}
               >
                 <Gem size={10} style={{ color: "var(--accent)" }} />{TIER_LABEL[tier || "free"] || "Free"}
+                {isSadikUye() && <span className="ml-0.5 rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">★</span>}
               </button>
             </div>
           ) : (
@@ -418,6 +419,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
               <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("premium")}
+              {user && isSadikUye() && <span title={t("sadikUyeEtiketTitle")} className="rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">★ SADIK ÜYE</span>}
             </button>
             <div className="relative notranslate" translate="no">
               {/* ★ 04.10: dil seçici — sade kodlar (TR/EN/AR/ID/UR) + notranslate.

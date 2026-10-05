@@ -180,18 +180,45 @@ export function getUsedToday(kind: VideoKind): number {
   return Math.max(0, Math.floor(readUsage().used[kind] || 0));
 }
 
-/** Bugün bu türden kaç hak kaldı (sadece abonelik kotası) */
+/** Bugün bu türden kaç hak kaldı (abonelik kotası + Sadık Üye bonusu) */
 export function getQuotaLeft(kind: VideoKind, tier: Tier = getCurrentTier()): number {
-  const total = DAILY_QUOTA[tier][kind];
+  const total = DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind);
   return Math.max(0, total - getUsedToday(kind));
 }
 
 /** "Kalan: 8/8 kısa" gibi gösterim metni — KALAN hak gösterir,
- *  kullandıkça azalır (ör. 8/8 → 7/8 → 6/8 ...). */
+ *  kullandıkça azalır (ör. 8/8 → 7/8 → 6/8 ...). Sadık Üye bonusu dahil. */
 export function quotaText(kind: VideoKind, tier: Tier = getCurrentTier()): string {
-  const total = DAILY_QUOTA[tier][kind];
+  const total = DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind);
   const left = Math.max(0, total - getUsedToday(kind));
   return `${left}/${total}`;
+}
+
+// ════════════════════════════════════════════════════════
+// ★ SADIK ÜYE KAMPANYASI (05.10 — SAHİBİN EMRİ)
+//   Sistemi ilk keşfeden ve inanan üreticilere: ilk 100 kayıta "Sadık Üye"
+//   etiketi + standart günlük kotaya EK ömür boyu her gün +1 üretim hakkı.
+//   Otorite sunucuda: /api/auth/me cevabındaki sadikUye bayrağı (created_at
+//   sıralamasıyla hesaplanır) local secureStore'a yazılır; kota motoru
+//   kisa türüne +1 ekler (uzun/tam değişmez). Bayrak yoksa (yeni kurulum,
+//   misafir, ağ hatası) davranış eski haliyle sürer — fail-open.
+//   Sunucu tarafı dayatma yok: bu bir HEDİYE, kısıt değil.
+// ════════════════════════════════════════════════════════
+const SADIK_UYE_KEY = "nur_sadik_uye_v1";
+
+export function setSadikUye(acik: boolean): void {
+  if (typeof window === "undefined") return;
+  secureSet(SADIK_UYE_KEY, Boolean(acik));
+}
+
+export function isSadikUye(): boolean {
+  if (typeof window === "undefined") return false;
+  return secureGet<boolean>(SADIK_UYE_KEY, false) === true;
+}
+
+/** Sadık üyeye ek günlük hak: yalnız kısa video +1 (uzun/tam değişmez) */
+export function sadikUyeBonusu(kind: VideoKind): number {
+  return kind === "kisa" && isSadikUye() ? 1 : 0;
 }
 
 // ════════════════════════════════════════════════════════
@@ -297,7 +324,7 @@ export function consumeVideo(kind: VideoKind, tier: Tier = getCurrentTier(), mod
 
 /** Bu üyelik bu video türünü hiç üretebiliyor mu (kota 0 ve paket 0 ise hayır) */
 export function canProduceKind(kind: VideoKind, tier: Tier = getCurrentTier()): boolean {
-  return DAILY_QUOTA[tier][kind] > 0 || getPackRights()[kind] > 0;
+  return DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind) > 0 || getPackRights()[kind] > 0;
 }
 
 /** Üst barda gösterilecek kısa özet — bakiye değil, kullanım göstergesi */

@@ -102,6 +102,25 @@ async function query<T>(path: string): Promise<T> {
   return await response.json() as T;
 }
 
+// ★ SADIK ÜYE SAYAÇ KAYNAĞI (05.10): ilk 100 kayıt olana "Sadık Üye" etiketi +
+//   ömür boyu günlük +1 üretim hakkı (bkz. src/tier.ts isSadikUye). Sayaç,
+//   kayıt sırasının otoriter kaydı olan nur_users.created_at üzerinden sayılır —
+//   ayrı bayrak tablosu YOK (başvuru yok, herkes otomatik; ilk 100 kayıt zaten
+//   kampanyanın kazanmış üyesidir). Count exact, body'siz istek; fetch yalnız
+//   header'lardan content-range okur → DB yükü tek indeks taraması.
+async function sadikUyeSayaci(): Promise<{ toplamKayitli: number; kontenjan: number }> {
+  try {
+    const { url, key } = supabaseConfig();
+    const r = await fetch(`${url}/rest/v1/nur_users?select=id`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact", Range: "0-0" },
+      cache: "no-store",
+    });
+    const cr = r.headers.get("content-range") || "";
+    const toplam = Number(cr.split("/")[1] || 0);
+    return { toplamKayitli: Number.isFinite(toplam) && toplam > 0 ? toplam : 0, kontenjan: 100 };
+  } catch { return { toplamKayitli: 0, kontenjan: 100 }; }
+}
+
 // ═════════════════════════════════════════════════════════
 // ★ LANSMAN HAZIRLIĞI (28.09) — config = en sıcak endpoint.
 //   Her açık sekme 60-90sn'de bir poll ediyor; lansmanda binlerce
@@ -127,13 +146,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!(await rateLimit(req, res, "config", 120, 60_000))) return;
   try {
     const now = encodeURIComponent(new Date().toISOString());
-    const [announcements, featureLocks, siteSettings, roadmapVotes, roadmapFeatures] = await Promise.all([
+    const [announcements, featureLocks, siteSettings, roadmapVotes, roadmapFeatures, sadikUye] = await Promise.all([
       query<any[]>(`nur_announcements?active=eq.true&starts_at=lte.${now}&ends_at=gte.${now}&order=updated_at.desc&limit=1&select=*`),
       query<any[]>("nur_feature_locks?active=eq.true&select=feature_id,lock_level,updated_at"),
       query<any[]>("nur_site_settings?key=eq.maintenance&select=value,updated_at").catch(() => [] as any[]),
       // ★ OYLAMA LİDERİ (01.10): oy sayımı + V2 etiketi DB'den — hata olursa boş liste (kilitler kalır)
       query<any[]>("nur_roadmap_votes?select=feature_id").catch(() => [] as any[]),
       query<any[]>("nur_roadmap_features?select=id,version,active").catch(() => [] as any[]),
+      sadikUyeSayaci(),
     ]);
     const maintenanceRow = Array.isArray(siteSettings) ? siteSettings[0] : null;
     const maintenanceValue = maintenanceRow?.value && typeof maintenanceRow.value === "object" ? { ...maintenanceRow.value, updated_at: maintenanceRow.updated_at } : null;
@@ -175,6 +195,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       announcement: announcements[0] ?? null,
       featureLocks: etkinKilitler,
       maintenance: maintenanceValue,
+      sadikUye,
     };
     cfgSnapshot = { at: Date.now(), body };
     res.setHeader("Cache-Control", "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
@@ -189,6 +210,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(cfgSnapshot.body as Record<string, unknown>);
     }
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null });
+    return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null, sadikUye: { toplamKayitli: 0, kontenjan: 100 } });
   }
 }

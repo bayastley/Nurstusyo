@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, denemeyiSunucuyaSenkronla, type Tier } from "../tier";
+import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, denemeyiSunucuyaSenkronla, setSadikUye, isSadikUye, type Tier } from "../tier";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { isAdminEmail } from "../tier";
 import { syncUserInDb } from "../components/adminHelpers";
@@ -134,7 +134,7 @@ export function useAuthSession({
         }
         const data = await response.json().catch(() => null) as {
           ok?: boolean;
-          user?: { id: string; email: string; name: string; verified: boolean; isAdmin?: boolean; tier?: Tier };
+          user?: { id: string; email: string; name: string; verified: boolean; isAdmin?: boolean; tier?: Tier; sadikUye?: boolean };
           wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
           banned?: boolean;
           banReason?: string;
@@ -165,6 +165,10 @@ export function useAuthSession({
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setTier(dbTier);
         setCurrentTier(dbTier);
+        // ★ SADIK ÜYE (05.10): sunucudaki üyelik sırasına göre ilk 100'e giren
+        //   kullanıcıya "Sadık Üye" etiketi + ömür boyu günlük +1 üretim hakkı.
+        //   me cevabı yoksa/bayrak yoksa önceki değer korunur (fail-open).
+        setSadikUye(Boolean(data.user.sadikUye) || isSadikUye());
         if (data.wallet) {
           setJetonCount(data.wallet.total);
           persistJetonSecure(data.wallet.total);

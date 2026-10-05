@@ -189,6 +189,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch { /* abonelik tablosu yoksa/eskiyse duyarlı davranma — mevcut tier kalır */ }
     }
 
+    // ★ SADIK ÜYE (05.10): ilk 100 kayıta "Sadık Üye" etiketi + ömür boyu günlük
+    //   +1 üretim hakkı. Sunucu otoriterdir: nur_users.created_at sıralamasıyla
+    //   kullanıcının sırası hesaplanır; ayrı bayrak tablosu/kolonu YOK (başvuru
+    //   mekanizması yok — kampanya tüm ilk 100 kayıta otomatik uygulanır).
+    let sadikUye = false;
+    try {
+      const { url: sUrl, key: sKey } = supabaseConfig();
+      const sResp = await fetch(`${sUrl}/rest/v1/nur_users?select=id&order=created_at.asc`, {
+        headers: { apikey: sKey, Authorization: `Bearer ${sKey}`, Prefer: "count=exact", Range: "0-99" },
+        cache: "no-store",
+      });
+      if (sResp.ok) {
+        const sadikListe = await sResp.json() as Array<{ id: string }>;
+        sadikUye = sadikListe.some((s) => s.id === user.id);
+      }
+    } catch { /* sayaç hatasında etiket düşmez — kota katmanı client'ta bağımsız */ }
+
     // Ban sorgusu hata verirse fail-open: kullanıcı yalnızca açık bir ban kaydı
     // bulunduğunda engellenir.
     let ban: { reason: string } | null = null;
@@ -210,6 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         verified: user.verified,
         isAdmin: Boolean(emailEnvOnayli && (user.isAdmin || dbUser?.is_admin)),
         tier: etkinTier,
+        sadikUye,
       },
       wallet: {
         subJeton: wallet.sub_jeton,

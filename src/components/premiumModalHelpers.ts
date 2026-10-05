@@ -2,8 +2,8 @@
 // PREMIUMMODAL HELPER — Üyelik & Video Üretim Paketleri
 // ════════════════════════════════════════════════════════
 
-import { getPackRights } from "../tier";
-import type { Tier } from "../tier";
+import { getPackRights, getQuotaLeft, getUsedToday } from "../tier";
+import type { Tier, VideoKind } from "../tier";
 
 // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): buradaki her sayı koddaki gerçek veriyle
 //   eşleşir — 45 kâri (src/reciters.ts; 37 free + 8 PRO), 1300+ benzersiz atmosfer
@@ -53,7 +53,15 @@ export const TIER_LABEL_TR: Record<string, Record<Tier, string>> = {
 export const emptyRights = { kisa: 0, uzun: 0, tam: 0 };
 
 export function quotaText(kind: string, tier: Tier): string {
-  return `0/${DAILY_QUOTA[tier][kind]}`;
+  // ★ 05.10 Sadık Üye: ücretsiz kısa kotası +1 gösterebilmek için gerçek motor okunur
+  //   (getQuotaLeft bonus dahil KALAN'ı verir; toplam = kalan + bugün kullanılan).
+  try {
+    const kalan = getQuotaLeft(kind as VideoKind, tier);
+    const bugunKullanilan = getUsedToday(kind as VideoKind);
+    return `${kalan}/${kalan + bugunKullanilan}`;
+  } catch {
+    return `0/${DAILY_QUOTA[tier][kind]}`;
+  }
 }
 
 export function readPackRights(): Record<string, number> {

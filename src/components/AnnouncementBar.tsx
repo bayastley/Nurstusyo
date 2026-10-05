@@ -6,7 +6,7 @@ import type { Announcement } from "../services/adminSyncService";
 import { getSystemConfig, saveSystemConfig } from "../services/adminSyncService";
 import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "../services/holidayCalendar";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
-import type { User } from "../types";
+import type { User, ModalName } from "../types";
 import { translate } from "../i18n";
 
 interface AnnouncementBarProps {
@@ -14,9 +14,11 @@ interface AnnouncementBarProps {
   user?: User | null;
   onRewardClaimed?: (newJeton: number) => void;
   onTamperAttempt?: (reason: string) => void;
+  /** ★ Sadık Üye çipi tıklayınca giriş modalı (StudioApp setModal'i geçer) */
+  setModalSafe?: (m: ModalName) => void;
 }
 
-export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, onRewardClaimed, onTamperAttempt }) => {
+export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, onRewardClaimed, onTamperAttempt, setModalSafe }) => {
   // ★ i18n (03.10): şerit + kalıcı takvim metinleri seçili dilde (05: prompt-2)
   const t = (key: string) => translate(localStorage.getItem("nur_lang"), key);
   const [holyDay, setHolyDay] = useState<HolyDayBannerState>(() => getHolyDayState());
@@ -24,6 +26,9 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
   //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
   const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
+  // ★ SADIK ÜYE SAYAÇ (05.10): /api/config'ten (poll'un beraberinde) gelir;
+  //   "Kalan Sadık Üye Kontenjanı: {kalan}/{toplam}" çipi kontenjan açıkken görünür.
+  const [sadikUye, setSadikUyeSayac] = useState<{ toplamKayitli: number; kontenjan: number } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -34,7 +39,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     const refresh = async () => {
       // ★ Lansman hazırlığı: config 45sn TTL CDN cache'te — poll DB'yi vurmaz (28.09)
       const response = await fetch("/api/config", { cache: "default" }).catch(() => null);
-      const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }>; maintenance?: { enabled?: boolean; startsAt?: string; endsAt?: string; message?: string; updated_at?: string } | null } | null : null;
+      const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }>; maintenance?: { enabled?: boolean; startsAt?: string; endsAt?: string; message?: string; updated_at?: string } | null; sadikUye?: { toplamKayitli?: number; kontenjan?: number } | null } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());
         const item = data?.announcement;
@@ -61,6 +66,9 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
           const cfg = getSystemConfig();
           for (const lock of data.featureLocks) cfg.featureLocks[lock.feature_id] = lock.lock_level;
           saveSystemConfig(cfg);
+        }
+        if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
+          setSadikUyeSayac({ toplamKayitli: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan) || 100 });
         }
       }
     };
@@ -161,6 +169,16 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               <Bell size={12} className="text-white/35" />
               {t("noAnnouncementYet")}
             </span>
+          )}
+          {sadikUye && sadikUye.toplamKayitli < sadikUye.kontenjan && (
+            <button
+              onClick={() => setModalSafe?.("login")}
+              title={t("sadikUyeKontenjanTitle")}
+              className="flex items-center gap-1.5 rounded-full border border-emerald-300/35 bg-emerald-400/10 px-3 py-1.5 font-black text-emerald-200 transition hover:bg-emerald-400/20"
+            >
+              <Sparkles size={12} className="text-emerald-300" />
+              <span data-testid="sadik-uye-sayac">{t("sadikUyeKontenjan").replace("{kalan}", String(sadikUye.kontenjan - sadikUye.toplamKayitli)).replace("{toplam}", String(sadikUye.kontenjan))}</span>
+            </button>
           )}
           {holyDay.type !== "none" && (
             <div className="flex items-center gap-2">

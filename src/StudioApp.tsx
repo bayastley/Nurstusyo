@@ -1257,6 +1257,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <AnnouncementBar
         notify={notify}
         user={user}
+        setModalSafe={setModal}
         onRewardClaimed={() => {
           syncWallet();
         }}
