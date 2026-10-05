@@ -100,11 +100,11 @@ function money(v: any, fallback: string) {
 // ─── SUNUCU TARAFI ÜRÜN KATALOGU ─── Fiyatları buradan yönet
 const PRODUCT_CATALOG: Record<string, { price: string; name: string; kind: string }> = {
   // Aylık abonelikler
-  SUB_PRO_1M:  { price: '149.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
-  SUB_ELIT_1M: { price: '250.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
+  SUB_PRO_1M:  { price: '250.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
+  SUB_ELIT_1M: { price: '499.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
   // Yıllık abonelikler
-  SUB_PRO_1Y:  { price: '1609.20', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
-  SUB_ELIT_1Y: { price: '2400.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
+  SUB_PRO_1Y:  { price: '2700.00', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
+  SUB_ELIT_1Y: { price: '4790.40', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
   // Kısa video paketleri
   PK_KISA_15:  { price: '35.00',  name: '15 Kısa Video',  kind: 'package' },
   PK_KISA_35:  { price: '69.00',  name: '35 Kısa Video',  kind: 'package' },
@@ -209,8 +209,38 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
-    const price = catalogItem.price;
-    const planName = catalogItem.name;
+    // ★ BÖLGESEL ÜCRETLENDİRME ANAHTARI (05.10):
+    //   NUR_MULTI_CURRENCY=true iken Vercel geo header'ına göre abonelikler
+    //   USD/EUR/GBP ücretlendirilir (iyzico destekler); anahtar yoksa/yok ülkeyse
+    //   HERKES TRY (mevcut davranış — hiçbir canlı ödeme bozulmaz).
+    //   Fiyatlar src/payments/pricingData.ts REGIONAL_PLANS ile TEK KAYNAK.
+    const CATALOG_TRY_MINOR: Record<string, number> = {
+      SUB_PRO_1M: 25000, SUB_ELIT_1M: 49900, SUB_PRO_1Y: 270000, SUB_ELIT_1Y: 479040,
+      PK_KISA_15: 3500, PK_KISA_35: 6900, PK_KISA_70: 11900,
+      PK_UZUN_8: 4500, PK_UZUN_20: 8900, PK_UZUN_40: 14900,
+      PK_TAM_2: 3900, PK_TAM_5: 8900, PK_TAM_10: 15900,
+    };
+    const geoCountry = String(req.headers['x-vercel-ip-country'] || '').toUpperCase();
+    const multiPara = process.env.NUR_MULTI_CURRENCY === 'true' && /^[A-Z]{2}$/.test(geoCountry);
+    let price = catalogItem.price;
+    let currency = 'TRY';
+    let planName = catalogItem.name;
+    if (multiPara) {
+      const EUR_ULKELER = new Set(['DE','FR','NL','BE','AT','IT','ES','PT','SE','DK','FI','IE','GR','PL','CZ','SK','HU','RO','BG','HR','SI','EE','LV','LT','LU','MT','CY']);
+      const bolge = geoCountry === 'TR' ? 'TR' : (geoCountry === 'GB' || geoCountry === 'UK') ? 'GBP' : EUR_ULKELER.has(geoCountry) ? 'EUR' : 'USD';
+      const bolgePlanlari: Record<string, Record<string, number>> = {
+        TR:  { SUB_PRO_1M: 250, SUB_ELIT_1M: 499, SUB_PRO_1Y: 2700, SUB_ELIT_1Y: 4790.4 },
+        USD: { SUB_PRO_1M: 9.99, SUB_ELIT_1M: 19.99, SUB_PRO_1Y: 107.99, SUB_ELIT_1Y: 191.99 },
+        EUR: { SUB_PRO_1M: 8.99, SUB_ELIT_1M: 17.99, SUB_PRO_1Y: 96.99, SUB_ELIT_1Y: 172.99 },
+        GBP: { SUB_PRO_1M: 7.99, SUB_ELIT_1M: 15.99, SUB_PRO_1Y: 86.99, SUB_ELIT_1Y: 153.99 },
+      };
+      const p = bolgePlanlari[bolge]?.[productCode];
+      if (p !== undefined) {
+        price = p.toFixed(2);
+        currency = bolge === 'TR' ? 'TRY' : bolge;
+        planName = `${catalogItem.name} (${bolge})`;
+      }
+    }
     const buyer = body.buyer || body.user || {};
     const origin = resolveOrigin(req);
     const callbackUrl = origin + '/api/payments/callback';
@@ -289,7 +319,7 @@ export default async function handler(req: any, res: any) {
       conversationId: conversationId,
       price: price,
       paidPrice: price,
-      currency: 'TRY',
+      currency: currency,
       basketId: basketId,
       paymentGroup: 'PRODUCT',
       callbackUrl: callbackUrl,
@@ -354,7 +384,7 @@ export default async function handler(req: any, res: any) {
             user_id: userId,
             product_code: productCode,
             amount_minor: Math.round(parseFloat(price) * 100),
-            currency: 'TRY',
+            currency: currency,
             provider: 'iyzico',
             status: 'pending',
             created_at: new Date().toISOString(),

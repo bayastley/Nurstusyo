@@ -136,12 +136,13 @@ export const TIER_LABEL: Record<Tier, string> = {
 
 export const TIER_PRICE_TRY: Record<Tier, number> = {
   free: 0,
-  pro: 149,
-  elit: 250,
+  pro: 250,
+  elit: 499,
 };
 
-// ★ Yıllık üyelik — aylık fiyatın üstüne otomatik indirim uygulanır.
+// ★ Yıllık üyelik — aylık fiyatın üstüne otomatik indirim uygulanır (05.10 fiyat güncellemesi).
 //   PRO: %10 indirim · ELİT: %20 indirim (bkz. src/payments/pricing.ts)
+//   annualPriceTRY(): PRO 250×12×0,90 = 2.700₺ · ELİT 499×12×0,80 = 4.790,4₺
 export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.10, elit: 0.20 };
 export function annualPriceTRY(tier: Tier): number {
   const base = TIER_PRICE_TRY[tier] * 12;

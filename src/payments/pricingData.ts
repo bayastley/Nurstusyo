@@ -6,56 +6,77 @@ import type { Currency, Product } from "./pricing";
 export type VideoKind = "kisa" | "uzun" | "tam";
 
 // ════════════════════════════════════════════════════════
-// ULUSLARARASI FİYATLANDIRMA
+// ULUSLARARASI FİYATLANDIRMA (05.10 yeniden yazım)
+//
+// ★ ESKİ SİSTEMİN BOZUKLUĞU: TRY tutarı ülkeye göre ÇARPıp farklı para
+//   birimiymiş gibi gösteriyordu (149₺ × 4 = "$596"!) — hem matematik
+//   hatalıydı hem hiçbir ekrana/sunucuya bağlı değildi.
+//
+// ★ YENİ SİSTEM — TEK KAYNAK: her bölgenin abonelik fiyatları MAJör
+//   birimle (TL/dolar/euro) REGIONAL_PLANS'ta yazılır; gösterim
+//   (PremiumModal) ve sunucu ücretlendirmesi (api/payments/create.ts)
+//   AYNI tabloyu okur. Yurt dışı fiyatları TR satın alma gücünün ~1,6
+//   katı — "biraz daha pahalı" (kullanıcı kararı 05.10).
+//
+//   ANAHTAR: NUR_MULTI_CURRENCY=true olana kadar sunucu HERKESİ TRY
+//   ücretlendirir ve arayüz de TRY gösterir (tutarlılık); anahtar açılınca
+//   bölgesel gösterim + bölgesel ücretlendirme birlikte devreye girer.
 // ════════════════════════════════════════════════════════
-export const REGION_MULTIPLIERS: Record<string, { mult: number; currency: Currency; symbol: string }> = {
-  TR: { mult: 1, currency: "TRY", symbol: "₺" },
-  // Avrupa + Kuzey Amerika + Avustralya — yüksek gelir
-  US: { mult: 4, currency: "USD", symbol: "$" },
-  GB: { mult: 4, currency: "GBP", symbol: "£" },
-  DE: { mult: 3.5, currency: "EUR", symbol: "€" },
-  FR: { mult: 3.5, currency: "EUR", symbol: "€" },
-  NL: { mult: 3.5, currency: "EUR", symbol: "€" },
-  BE: { mult: 3.5, currency: "EUR", symbol: "€" },
-  AT: { mult: 3.5, currency: "EUR", symbol: "€" },
-  IT: { mult: 3, currency: "EUR", symbol: "€" },
-  ES: { mult: 3, currency: "EUR", symbol: "€" },
-  PT: { mult: 3, currency: "EUR", symbol: "€" },
-  SE: { mult: 3.5, currency: "EUR", symbol: "€" },
-  NO: { mult: 4, currency: "EUR", symbol: "€" },
-  DK: { mult: 3.5, currency: "EUR", symbol: "€" },
-  FI: { mult: 3.5, currency: "EUR", symbol: "€" },
-  CH: { mult: 4, currency: "EUR", symbol: "€" },
-  AU: { mult: 3.5, currency: "USD", symbol: "$" },
-  CA: { mult: 3.5, currency: "USD", symbol: "$" },
-  JP: { mult: 3, currency: "USD", symbol: "$" },
-  KR: { mult: 3, currency: "USD", symbol: "$" },
-  // Orta Doğu + Kuzey Afrika — orta gelir
-  SA: { mult: 2.5, currency: "USD", symbol: "$" },
-  AE: { mult: 2.5, currency: "USD", symbol: "$" },
-  QA: { mult: 2.5, currency: "USD", symbol: "$" },
-  KW: { mult: 2.5, currency: "USD", symbol: "$" },
-  BH: { mult: 2.5, currency: "USD", symbol: "$" },
-  OM: { mult: 2, currency: "USD", symbol: "$" },
-  EG: { mult: 1.5, currency: "USD", symbol: "$" },
-  MA: { mult: 1.5, currency: "USD", symbol: "$" },
-  TN: { mult: 1.5, currency: "USD", symbol: "$" },
-  DZ: { mult: 1.5, currency: "USD", symbol: "$" },
-  JO: { mult: 2, currency: "USD", symbol: "$" },
-  LB: { mult: 2, currency: "USD", symbol: "$" },
-  IQ: { mult: 1.5, currency: "USD", symbol: "$" },
-  // Güney Asya — düşük-orta gelir
-  PK: { mult: 1.2, currency: "USD", symbol: "$" },
-  BD: { mult: 1.2, currency: "USD", symbol: "$" },
-  IN: { mult: 1.5, currency: "USD", symbol: "$" },
-  ID: { mult: 1.3, currency: "USD", symbol: "$" },
-  MY: { mult: 1.5, currency: "USD", symbol: "$" },
-  // Afrika — düşük gelir
-  NG: { mult: 1.2, currency: "USD", symbol: "$" },
-  GH: { mult: 1.2, currency: "USD", symbol: "$" },
-  KE: { mult: 1.2, currency: "USD", symbol: "$" },
-  ZA: { mult: 1.5, currency: "USD", symbol: "$" },
+export type RegionCode = "TR" | "USD" | "EUR" | "GBP";
+
+interface RegionPlan {
+  region: RegionCode;
+  currency: Currency;
+  symbol: string;
+  /** Aboneliklerin MAJör birim fiyatı (dolar/euro/TL — kuruş DEĞİL) */
+  prices: Record<string, number>;
+}
+
+export const REGIONAL_PLANS: Record<RegionCode, RegionPlan> = {
+  TR: {
+    region: "TR", currency: "TRY", symbol: "₺",
+    prices: { SUB_PRO_1M: 250, SUB_ELIT_1M: 499, SUB_PRO_1Y: 2700, SUB_ELIT_1Y: 4790.4 },
+  },
+  USD: {
+    region: "USD", currency: "USD", symbol: "$",
+    prices: { SUB_PRO_1M: 9.99, SUB_ELIT_1M: 19.99, SUB_PRO_1Y: 107.99, SUB_ELIT_1Y: 191.99 },
+  },
+  EUR: {
+    region: "EUR", currency: "EUR", symbol: "€",
+    prices: { SUB_PRO_1M: 8.99, SUB_ELIT_1M: 17.99, SUB_PRO_1Y: 96.99, SUB_ELIT_1Y: 172.99 },
+  },
+  GBP: {
+    region: "GBP", currency: "GBP", symbol: "£",
+    prices: { SUB_PRO_1M: 7.99, SUB_ELIT_1M: 15.99, SUB_PRO_1Y: 86.99, SUB_ELIT_1Y: 153.99 },
+  },
 };
+
+/** Ülke kodu → bölge. TR hariç Avrupa euro kuşağı; GB sterlin; gerisi dolar. */
+const EUR_ULKELER = new Set(["DE", "FR", "NL", "BE", "AT", "IT", "ES", "PT", "SE", "DK", "FI", "IE", "GR", "PL", "CZ", "SK", "HU", "RO", "BG", "HR", "SI", "EE", "LV", "LT", "LU", "MT", "CY"]);
+export function regionFromCountry(countryCode: string | null | undefined): RegionCode {
+  const c = String(countryCode || "").toUpperCase();
+  if (c === "TR") return "TR";
+  if (c === "GB" || c === "UK") return "GBP";
+  if (EUR_ULKELER.has(c)) return "EUR";
+  return "USD"; // tanımsız ülke → dolar bölgesi (TR dışı = "yurt dışı")
+}
+
+/**
+ * Ürünün bölgedeki MAJör birim fiyatı. Abonelikler tablodan; paketler
+ * TRY fiyatından formülle türetilir (yurt dışı ~%50 prim, ~45₺ kur kabulü:
+ * 35₺ paket ≈ $2). Tabloda/formülde yoksa null → çağıran TRY'ye döner.
+ */
+export function regionalPriceMajor(code: string, region: RegionCode, tryMajorFallback: number): number | null {
+  const plan = REGIONAL_PLANS[region];
+  if (!plan) return null;
+  const dogrudan = plan.prices[code];
+  if (typeof dogrudan === "number") return dogrudan;
+  if (region === "TR" || !(tryMajorFallback > 0)) return null;
+  const usd = Math.ceil((tryMajorFallback / 45) * 1.5);
+  if (plan.region === "USD") return usd;
+  if (plan.region === "EUR") return Math.ceil(usd * 0.92);
+  return Math.ceil(usd * 0.85); // GBP
+}
 
 let _cachedCountry: string | null = null;
 let _countryFetchTime = 0;
@@ -70,7 +91,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     kind: "subscription",
     title: "NÛR PRO — Aylık Üyelik",
     description: "Aylık üyelik. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
-    amountMinor: 14900,
+    amountMinor: 25000,
     currency: "TRY",
     grantTier: "pro",
     grantDays: 30,
@@ -81,7 +102,7 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     kind: "subscription",
     title: "NÛR ELİT — Aylık Üyelik",
     description: "Aylık üyelik. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 25000,
+    amountMinor: 49900,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 30,
@@ -89,14 +110,15 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
   },
 
   // ─── Abonelikler (yıllık — indirimli) ───
-  // ★ HESAP: PRO yıllık = 149×12=1788 TL taban, %10 indirim → 1609,20 TL
-  //          ELİT yıllık = 250×12=3000 TL taban, %20 indirim → 2400,00 TL
+  // ★ HESAP (05.10 fiyat güncellemesi):
+  //          PRO  aylık 250₺ → yıllık taban 250×12=3000 TL, %10 indirim → 2700,00 TL (ayda ~225₺)
+  //          ELİT aylık 499₺ → yıllık taban 499×12=5988 TL, %20 indirim → 4790,40 TL (ayda ~399₺)
   SUB_PRO_1Y: {
     code: "SUB_PRO_1Y",
     kind: "subscription",
     title: "NÛR PRO — Yıllık Üyelik (%10 indirim)",
-    description: "12 aylık peşin üyelik. Aylık 149₺ yerine ortalama 134₺. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
-    amountMinor: 160920,
+    description: "12 aylık peşin üyelik. Aylık 250₺ yerine ortalama 225₺. Her gün 8 kısa ve 3 uzun video üretim hizmeti.",
+    amountMinor: 270000,
     currency: "TRY",
     grantTier: "pro",
     grantDays: 365,
@@ -106,8 +128,8 @@ export const PRODUCTS: Readonly<Record<string, Product>> = Object.freeze({
     code: "SUB_ELIT_1Y",
     kind: "subscription",
     title: "NÛR ELİT — Yıllık Üyelik (%20 indirim)",
-    description: "12 aylık peşin üyelik. Aylık 250₺ yerine ortalama 200₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
-    amountMinor: 240000,
+    description: "12 aylık peşin üyelik. Aylık 499₺ yerine ortalama 399₺. Her gün 15 kısa, 5 uzun ve 1 tam sürüm video üretim hizmeti.",
+    amountMinor: 479040,
     currency: "TRY",
     grantTier: "elit",
     grantDays: 365,

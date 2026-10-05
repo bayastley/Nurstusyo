@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Crown, Gem, Check, X, Sparkles, Zap, Flame, Star } from "lucide-react";
 import {
   PRODUCTS,
@@ -7,6 +7,10 @@ import {
   ANNUAL_SUBSCRIPTION_CODES,
   PACKAGE_CODES,
   PACKAGE_GROUP_META,
+  bolgeGosterimiGetir,
+  getRegionPlan,
+  regionalPriceMajor,
+  type RegionCode,
   type VideoKind,
   type BillingPeriod,
 } from "../payments/pricing";
@@ -15,6 +19,8 @@ import { translate } from "../i18n";
 import type { Tier } from "../tier";
 import type { PremiumModalProps, PremiumTab } from "./premiumModalHelpers";
 import { DAILY_QUOTA, TIER_LABEL, emptyRights, readPackRights, PRO_FEATURES, ELIT_FEATURES } from "./premiumModalHelpers";
+import { TIER_PRICE_TRY } from "../tier";
+const TIER_AYLIK = TIER_PRICE_TRY;
 import { PremiumKotaGostergesi, PremiumAlinanPaketler, PremiumSozlesme } from "./premiumBolumler";
 
 
@@ -47,11 +53,26 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
 
   const [tab, setTab] = useState<"uyelik" | "paket">(normalized);
   const [period, setPeriod] = useState<BillingPeriod>("monthly");
+  // ★ BÖLGESEL GÖSTERİM (05.10): ülke bir kez algılanır; TR değilse abonelik
+  //   fiyatları bölge tablosundan (USD/EUR/GBP) gösterilir. Hata/eksikte TR.
+  const [bolge, setBolge] = useState<RegionCode>("TR");
+  const [bolgeSembol, setBolgeSembol] = useState<string>("₺");
   const [packKind, setPackKind] = useState<VideoKind>("kisa");
   const [accepted, setAccepted] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsHighlight, setTermsHighlight] = useState(false);
   const termsRef = useRef<HTMLDivElement>(null);
+
+  // ★ Bölge algılama — modal açıldığında bir kez çalışır (useEffect
+  //   koşullu return'den ÖNCE olmalı: hook sayısı render'lar arası sabit)
+  useEffect(() => {
+    if (!open) return;
+    let canli = true;
+    bolgeGosterimiGetir()
+      .then((b) => { if (canli) { setBolge(b.region); setBolgeSembol(b.symbol); } })
+      .catch(() => undefined);
+    return () => { canli = false; };
+  }, [open]);
   const activeTier: Tier = tier ?? currentTier ?? "free";
 
   // ★ Abonelik kalan gün sayısı
@@ -278,6 +299,12 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 const features = (isElit ? ELIT_FEATURES : PRO_FEATURES).map((_, i) => t(`plan${isElit ? "Elit" : "Pro"}Ozellik${i}`));
                 const current = tier === p.grantTier;
                 const periodLabel = period === "annual" ? t("fiyatYil") : t("fiyatAy");
+                // ★ BÖLGESEL FİYAT (05.10): TR → katalog minor; yurt dışı → bölge tablosu (majör).
+                const bolgeselMajör = regionalPriceMajor(code, bolge, p.amountMinor / 100);
+                const gosterim = bolgeselMajör !== null && bolge !== "TR"
+                  ? `${bolgeSembol}${bolgeselMajör.toLocaleString("tr-TR")}`
+                  : formatPrice(p);
+                const kazancAylikOrt = Math.round((bolgeselMajör ?? p.amountMinor / 100) / 12);
 
                 return (
                   <div
@@ -316,13 +343,16 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                         className="font-display text-[34px] font-black leading-none"
                         style={{ color: isElit ? "#f5dda6" : "#d7aa52" }}
                       >
-                        {formatPrice(p)}
+                        {gosterim}
                       </span>
                       <span className="mb-1 text-[10px] font-bold text-white/35">{periodLabel}</span>
                     </div>
                     {period === "annual" && (
                       <p className="mt-1 text-[9.5px] font-bold" style={{ color: isElit ? "#f5dda6" : "#34d399" }}>
-                        {t("planYillikKazanc").replace("{aylik}", formatPrice(PRODUCTS[isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M"])).replace("{ortalama}", String(Math.round(p.amountMinor / 100 / 12))).replace("{yuzde}", String(isElit ? 20 : 10))}
+                        {t("planYillikKazanc")
+                          .replace("{aylik}", (bolge === "TR" ? "₺" + TIER_AYLIK[isElit ? "elit" : "pro"].toLocaleString("tr-TR") : bolgeSembol + (regionalPriceMajor(isElit ? "SUB_ELIT_1M" : "SUB_PRO_1M", bolge, 0) ?? 0).toLocaleString("tr-TR")))
+                          .replace("{ortalama}", String(kazancAylikOrt))
+                          .replace("{yuzde}", String(isElit ? 20 : 10))}
                       </p>
                     )}
 

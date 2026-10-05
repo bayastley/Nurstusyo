@@ -4,18 +4,24 @@
 // ════════════════════════════════════════════════════════
 
 import {
-  REGION_MULTIPLIERS,
   PRODUCTS,
   SUBSCRIPTION_CODES,
   ANNUAL_SUBSCRIPTION_CODES,
   SUBSCRIPTION_CODES_BY_PERIOD,
   PACKAGE_CODES,
   PACKAGE_GROUP_META,
+  REGIONAL_PLANS,
+  regionFromCountry,
+  regionalPriceMajor,
+  type RegionCode,
 } from "./pricingData";
 
 // Re-export data for backward compatibility
 export {
-  REGION_MULTIPLIERS,
+  REGIONAL_PLANS,
+  regionFromCountry,
+  regionalPriceMajor,
+  type RegionCode,
   PRODUCTS,
   SUBSCRIPTION_CODES,
   ANNUAL_SUBSCRIPTION_CODES,
@@ -84,6 +90,15 @@ export interface CheckoutResponse {
 const COUNTRY_CACHE_MS = 60 * 60 * 1000;
 
 export async function detectCountry(): Promise<string> {
+  // ★ 05.10: önce Vercel'in geo header'ı (sunucu render'da ücretsiz, ipapi kotasız),
+  //   yoksa ipapi.co — o da olmazsa TR (varsayılan bölge).
+  try {
+    const res = await fetch("/api/config", { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      const data = await res.json().catch(() => null) as { country?: string } | null;
+      if (data?.country && /^[A-Za-z]{2}$/.test(data.country)) return data.country.toUpperCase();
+    }
+  } catch { /* ipapi'ye düş */ }
   try {
     const res = await fetch("https://ipapi.co/json/", { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return "TR";
@@ -95,7 +110,12 @@ export async function detectCountry(): Promise<string> {
 }
 
 export function getRegionPricing(countryCode: string) {
-  return REGION_MULTIPLIERS[countryCode] ?? REGION_MULTIPLIERS["DEFAULT"];
+  // ★ 05.10: REGION_MULTIPLIERS (çarpımlı bozuk tablo) kaldırıldı —
+  //   yerine bölge planları (REGIONAL_PLANS). Geriye uyum için aynı şekli
+  //   (mult/currency/symbol) döndürür ama mult artık kullanılmaz (hep 1).
+  const region = regionFromCountry(countryCode);
+  const plan = REGIONAL_PLANS[region];
+  return { mult: 1, currency: plan.currency, symbol: plan.symbol };
 }
 
 export function getProduct(code: string): Product | null {
@@ -104,19 +124,47 @@ export function getProduct(code: string): Product | null {
 }
 
 export function formatPrice(p: Product): string {
-  const sym = REGION_MULTIPLIERS["TR"]?.symbol ?? "₺";
+  const sym = "₺";
   return `${sym}${(p.amountMinor / 100).toLocaleString("tr-TR")}`;
 }
 
+/**
+ * ★ BÖLGESEL GÖSTERİM (05.10): ürünün ülkeye göre fiyatı.
+ *   Abonelikler bölge tablosundan; paketler TRY tabanından formülle.
+ *   Ürün bölge tablosunda yoksa TRY fiyatına döner (asla çarpma yok).
+ */
 export function getDisplayPrice(p: Product, countryCode: string): { price: number; currency: Currency; symbol: string; formatted: string } {
-  const region = getRegionPricing(countryCode);
-  const converted = Math.round(p.amountMinor * region.mult);
-  return {
-    price: converted,
-    currency: region.currency,
-    symbol: region.symbol,
-    formatted: `${region.symbol}${(converted / 100).toLocaleString("tr-TR")}`,
-  };
+  const region = regionFromCountry(countryCode);
+  const major = regionalPriceMajor(p.code, region, p.amountMinor / 100);
+  if (major === null) {
+    return { price: p.amountMinor, currency: p.currency, symbol: "₺", formatted: `₺${(p.amountMinor / 100).toLocaleString("tr-TR")}` };
+  }
+  const plan = REGIONAL_PLANS[region];
+  const minor = Math.round(major * 100);
+  return { price: minor, currency: plan.currency, symbol: plan.symbol, formatted: `${plan.symbol}${major.toLocaleString("tr-TR")}` };
+}
+
+/** Bölge planına doğrudan erişim (gösterim katmanı için) */
+export function getRegionPlan(countryCode: string | null | undefined): { region: RegionCode; currency: Currency; symbol: string } {
+  const region = regionFromCountry(countryCode);
+  const plan = REGIONAL_PLANS[region];
+  return { region, currency: plan.currency, symbol: plan.symbol };
+}
+
+/**
+ * ★ BÖLGESEL FİYAT HOOK'I (05.10): ülkeyi bir kez algılar (1 saat cache),
+ *   ürünler için bölgesel gösterim değerlerini üretir.
+ *   Herhangi bir hata/eksikte TR döner — arayüz asla boş fiyat göstermez.
+ */
+let _bolgeCache: { ulke: string; region: RegionCode; symbol: string; at: number } | null = null;
+export async function bolgeGosterimiGetir(): Promise<{ ulke: string; region: RegionCode; symbol: string }> {
+  if (_bolgeCache && Date.now() - _bolgeCache.at < 60 * 60 * 1000) {
+    return { ulke: _bolgeCache.ulke, region: _bolgeCache.region, symbol: _bolgeCache.symbol };
+  }
+  const ulke = await detectCountry().catch(() => "TR");
+  const bilgi = getRegionPlan(ulke);
+  _bolgeCache = { ulke, region: bilgi.region, symbol: bilgi.symbol, at: Date.now() };
+  return { ulke, region: bilgi.region, symbol: bilgi.symbol };
 }
 
 export function unitPrice(p: Product): string {

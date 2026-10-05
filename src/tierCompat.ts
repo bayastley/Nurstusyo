@@ -108,12 +108,13 @@ export const JETON = {
   PAKET_RAMAZAN_PRO: 10,
 };
 
-/** ESKİ AD — fiyat listesi yeni değerlere bağlandı (getter sebebi için JETON'daki nota bak) */
+/** ESKİ AD — fiyat listesi yeni değerlere bağlandı (getter sebebi için JETON'daki nota bak)
+ *  ★ 05.10: USD değerleri yeni TL fiyatlarına göre güncellendi — 250₺≈$6 · 499₺≈$12 */
 export const PRICING = {
-  get PRO() { return { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" as const }; },
-  get ELIT() { return { tl: TIER_PRICE_TRY.elit, usd: 6.0, period: "aylık" as const }; },
+  get PRO() { return { tl: TIER_PRICE_TRY.pro, usd: 6.0, period: "aylık" as const }; },
+  get ELIT() { return { tl: TIER_PRICE_TRY.elit, usd: 12.0, period: "aylık" as const }; },
   DENEME: { tl: 35, usd: 1.0, period: "tek seferlik" },
-  get UYE() { return { tl: TIER_PRICE_TRY.pro, usd: 4.2, period: "aylık" as const }; },
+  get UYE() { return { tl: TIER_PRICE_TRY.pro, usd: 6.0, period: "aylık" as const }; },
 };
 
 /** ESKİ AD — eski paket kartları kaldırıldı, yeni paketler pricing.ts içinde */
