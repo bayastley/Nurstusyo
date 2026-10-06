@@ -517,7 +517,6 @@ export const arDict: Dict = {
   planElitOzellik4: "حزم هاشتاغ بالذكاء الاصطناعي",
   planElitOzellik5: "أدوات مشاركة اجتماعية متقدمة",
   planElitOzellik6: "استوديو التصميم + توقيعك الخاص",
-  planElitOzellik7: "دعم ذو أولوية",
   pkKisaSub: "59 ثانية · ريلز وشورتس",
   pkUzunSub: "600 ثانية · سرد معمّق",
   pkTamSub: "حتى 90 دقيقة · سورة كاملة",

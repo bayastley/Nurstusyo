@@ -517,7 +517,6 @@ export const enDict: Dict = {
   planElitOzellik4: "AI hashtag packs",
   planElitOzellik5: "Advanced social sharing tools",
   planElitOzellik6: "Design studio + your own signature",
-  planElitOzellik7: "Priority support",
   pkKisaSub: "59 seconds · Reels & Shorts",
   pkUzunSub: "600 seconds · Deep narration",
   pkTamSub: "Up to 90 minutes · Full surah",

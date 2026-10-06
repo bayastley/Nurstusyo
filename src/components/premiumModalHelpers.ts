@@ -26,7 +26,8 @@ export const ELIT_FEATURES = [
   "AI hashtag paketleri",
   "Gelişmiş sosyal paylaşım araçları",
   "Tasarım stüdyosu + kendi imzan",
-  "Öncelikli destek",
+  // ★ 06.10 (kullanıcı kararı): "Öncelikli destek" kaldırıldı — destek herkese açıkken
+  //   öncelik vaadi adil değil; ELIT_FEATURES ile planElitOzellik* anahtarları birlikte azaltıldı.
 ];
 
 export const DAILY_QUOTA: Record<Tier, Record<string, number>> = {

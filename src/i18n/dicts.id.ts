@@ -514,7 +514,6 @@ export const idDict: Dict = {
   planElitOzellik4: "Paket hashtag AI",
   planElitOzellik5: "Alat berbagi sosial lanjutan",
   planElitOzellik6: "Studio desain + tanda tanganmu sendiri",
-  planElitOzellik7: "Dukungan prioritas",
   pkKisaSub: "59 detik · Reels & Shorts",
   pkUzunSub: "600 detik · Narasi mendalam",
   pkTamSub: "Hingga 90 menit · Surah penuh",

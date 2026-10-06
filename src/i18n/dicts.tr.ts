@@ -519,7 +519,6 @@ export const trDict: Dict = {
   planElitOzellik4: "AI hashtag paketleri",
   planElitOzellik5: "Gelişmiş sosyal paylaşım araçları",
   planElitOzellik6: "Tasarım stüdyosu + kendi imzan",
-  planElitOzellik7: "Öncelikli destek",
   pkKisaSub: "59 saniye · Reels & Shorts",
   pkUzunSub: "600 saniye · Derin anlatım",
   pkTamSub: "90 dakikaya kadar · Tam sure",

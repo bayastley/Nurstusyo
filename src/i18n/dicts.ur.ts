@@ -516,7 +516,6 @@ export const urDict: Dict = {
   planElitOzellik4: "AI ہیش ٹیگ پیکجز",
   planElitOzellik5: " جدید سوشل شیئرنگ ٹولز",
   planElitOzellik6: "ڈیزائن اسٹوڈیو + اپنا دستخط",
-  planElitOzellik7: "ترجیحی سپورٹ",
   pkKisaSub: "59 سیکنڈ · ریلز اور شارٹس",
   pkUzunSub: "600 سیکنڈ · گہری بیانیہ",
   pkTamSub: "90 منٹ تک · مکمل سورت",
