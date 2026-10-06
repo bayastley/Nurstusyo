@@ -71,6 +71,13 @@ async function main() {
           await page.waitForTimeout(300);
         }
         await page.waitForTimeout(3500);
+        // ★ PWA kurulum bannerını kapat (paylaş panelinin üstünü kapatır + modal ölçümünü kirletir)
+        await page.evaluate(() => {
+          const banner = document.querySelector('div.fixed.bottom-4.right-4');
+          const btn = banner?.querySelector('button[aria-label]');
+          if (btn) (btn as HTMLElement).click();
+        }).catch(() => {});
+        await page.waitForTimeout(400);
 
         // Paylaş panelini bul: maxLength=80 başlık girişi (SocialSharePanel'e özgü)
         const giris = page.locator('input[maxlength="80"]').first();
@@ -88,7 +95,7 @@ async function main() {
         await giris.scrollIntoViewIfNeeded().catch(() => {});
         try {
           const kopyala = page.getByRole("button", { name: /Kopyala|Copy|نسخ|Salin|کاپی/i }).first();
-          await kopyala.click({ timeout: 5000 });
+          await kopyala.click({ timeout: 5000, force: true }); // force: banner/overlay eylemebilirliği engelliyse bile gönder
           await page.waitForTimeout(1200);
           const sonraMetin = await page.evaluate(() => document.body.innerText);
           const eski = new Set(onceMetin.split(/\r?\n/).map((s) => s.trim()));
@@ -107,7 +114,8 @@ async function main() {
           //   stüdyo arka yüzündeki (kapsam dışı) TR verileri de bulgu sanıyordu.
           const modalMetin = await page.evaluate(() => {
             const modallar = [...document.querySelectorAll(".modal-in")];
-            return modallar.length ? modallar[modallar.length - 1].innerText : "";
+            // en BÜYÜK modal = PremiumModal (PWA bannerı da .modal-in ama küçük)
+            return modallar.length ? modallar.reduce((a, b) => (b.innerText.length > a.innerText.length ? b : a)).innerText : "";
           });
           topla("premium-modal", modalMetin.slice(0, 4000));
           await page.screenshot({ path: `scripts/_paylas-dil-${dil}.png` });

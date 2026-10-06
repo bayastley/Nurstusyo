@@ -22,6 +22,9 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Smartphone, X, Download, Share } from "lucide-react";
+// ★ 06.10 i18n: banner metinleri seçili dilde — paylaş akışı dil turunda TR kalmıştı (pwa* anahtarları)
+import { translate } from "../i18n";
+const tt = (key: string): string => translate(localStorage.getItem("nur_lang"), key);
 
 const KAPAT_KEY = "nur_pwa_banner_kapat";       // kurulum bannerı: kapatınca 30 gün
 const KURULUM_KEY = "nur_pwa_kuruldu";          // kurduysa bir daha yok
@@ -166,8 +169,8 @@ export const PwaKurulumBanneri: React.FC = () => {
         <div className="glass modal-in mb-2 flex items-center gap-2.5 rounded-2xl p-3 shadow-2xl" style={{ border: "1px solid rgba(52,211,153,.4)" }}>
           <span className="text-base" aria-hidden>✅</span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10.5px] font-black text-white">Güncellendi</p>
-            <p className="text-[8.5px] text-white/50">Site artık en yeni sürümde — keyifli kullanımlar</p>
+            <p className="text-[10.5px] font-black text-white">{tt("pwaGuncellendi")}</p>
+            <p className="text-[8.5px] text-white/50">{tt("pwaGuncellendiAlt")}</p>
           </div>
         </div>
       )}
@@ -176,12 +179,12 @@ export const PwaKurulumBanneri: React.FC = () => {
         <div className="glass modal-in mb-2 flex items-center gap-2.5 rounded-2xl p-3 shadow-2xl" style={{ border: "1px solid rgba(52,211,153,.4)" }}>
           <span className="text-base" aria-hidden>🆕</span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10.5px] font-black text-white">Yeni sürüm hazır</p>
-            <p className="text-[8.5px] text-white/50">Tek tıkla güncelle — yenileme saniyeler sürer</p>
+            <p className="text-[10.5px] font-black text-white">{tt("pwaYeniSurum")}</p>
+            <p className="text-[8.5px] text-white/50">{tt("pwaYeniSurumAlt")}</p>
           </div>
-          <button type="button" onClick={guncellemeBildiriminiKapat} className="shrink-0 rounded-full p-1 text-white/35 transition hover:text-white" aria-label="Bu bildirimi kalıcı kapat"><X size={11} /></button>
+          <button type="button" onClick={guncellemeBildiriminiKapat} className="shrink-0 rounded-full p-1 text-white/35 transition hover:text-white" aria-label={tt("pwaBildirimKapat")}><X size={11} /></button>
           <button type="button" onClick={guncelle} className="shrink-0 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110">
-            Yenile
+            {tt("pwaYenile")}
           </button>
         </div>
       )}
@@ -190,34 +193,34 @@ export const PwaKurulumBanneri: React.FC = () => {
         <div className="mb-1.5 flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Smartphone size={14} className="text-black" /></span>
           <div>
-            <p className="text-[11px] font-black text-white">Nûr Stüdyo'yu kur 📱</p>
-            <p className="text-[8.5px] text-white/45">Ana ekrandan tek tıkla aç — uygulama gibi çalışır</p>
+            <p className="text-[11px] font-black text-white">{tt("pwaKurBaslik")}</p>
+            <p className="text-[8.5px] text-white/45">{tt("pwaKurAlt")}</p>
           </div>
         </div>
 
         {ios ? (
           <div className="space-y-1 rounded-xl bg-white/[.04] px-3 py-2 text-[9px] leading-relaxed text-white/60">
-            <p><b className="text-white/85">1.</b> Safari'de alttaki <Share size={9} className="inline" /> paylaş simgesine dokun</p>
-            <p><b className="text-white/85">2.</b> <b className="text-white/85">"Ana Ekrana Ekle"</b> seçeneğini seç</p>
-            <p><b className="text-white/85">3.</b> Sağ üstten <b className="text-white/85">Ekle</b>'ye dokun — bitti!</p>
+            <p><b className="text-white/85">1.</b> {tt("pwaIos1a")} <Share size={9} className="inline" /> {tt("pwaIos1b")}</p>
+            <p><b className="text-white/85">2.</b> {tt("pwaIos2")}</p>
+            <p><b className="text-white/85">3.</b> {tt("pwaIos3")}</p>
           </div>
         ) : (
           <p className="rounded-xl bg-white/[.04] px-3 py-2 text-[9px] leading-relaxed text-white/60">
-            Tek tıkla kur, tarayıcı sekmesi olmadan doğrudan aç. Bildirimler ve çevrimdışı kullanım da aktifleşir.
+            {tt("pwaTekTik")}
           </p>
         )}
 
         {!ios && (
           manuelTalimat ? (
             <div className="mt-2 space-y-1 rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-[9px] leading-relaxed text-white/60">
-              <p><b className="text-white/85">Tarayıcın tek tık kurulumu şu an vermiyor.</b> Elle kurmak için:</p>
-              <p><b className="text-white/85">Chrome:</b> sağ üst <b className="text-white/85">⋮</b> menü → <b className="text-white/85">"Uygulamayı yükle"</b> / "Ana ekrana ekle"</p>
-              <p><b className="text-white/85">Samsung Internet:</b> ⋮ menü → <b className="text-white/85">"Sayfa ekle"</b> → Ana ekrana</p>
-              <p className="text-white/40">Not: Kurulum HTTPS yayında çalışır — localhost denemesinde bu talimat normaldir.</p>
+              <p><b className="text-white/85">{tt("pwaElBaslik")}</b></p>
+              <p>{tt("pwaElChrome")}</p>
+              <p>{tt("pwaElSamsung")}</p>
+              <p className="text-white/40">{tt("pwaElNot")}</p>
             </div>
           ) : (
             <button type="button" onClick={kur} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-              <Download size={12} /> Şimdi Kur
+              <Download size={12} /> {tt("pwaKurBtn")}
             </button>
           )
         )}
