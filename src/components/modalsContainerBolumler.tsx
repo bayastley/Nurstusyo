@@ -12,6 +12,7 @@ import {
 import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
 import { temaAdGorunum } from "../data/temalarCokDil";
+import { kutuphaneItem, kutuphaneSekme, kutuphaneDuygu, kutuphaneRozet } from "../data/kutuphaneCokDil";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
 import { sehirEtiketindenAd } from "./islamicToolsVeri"; // ★ dünya şehir etiketinden gerçek ad
@@ -237,9 +238,11 @@ export function LibraryBolum({
   libraryFiltered,
   useFromLibrary,
   t,
+  lang,
 }: {
   setModal: (m: never) => void;
   t: (k: string) => string;
+  lang?: string;
   libSearch: string;
   setLibSearch: (v: string) => void;
   // ★ 02.10 latent fix: TYPE_TABS/EMOTIONS id'leri "tumu"/"tum" sekmesini içerir —
@@ -255,16 +258,16 @@ export function LibraryBolum({
     <Modal title={t("v2AyetKutuphaneTitle")} sub={t("v2AyetKutuphaneSub")} onClose={() => setModal(null as never)} wide>
       <div className="relative mb-3">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-        <input value={libSearch} onChange={(e) => setLibSearch(e.target.value)} placeholder="Ayet, sure adı veya Türkçe meal ara..." className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
+        <input value={libSearch} onChange={(e) => setLibSearch(e.target.value)} placeholder={t("libAraYerTutucu")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
       </div>
       <div className="mb-2.5 flex flex-wrap gap-1.5">
         {TYPE_TABS.map((tab) => (
-          <button key={tab.id} onClick={() => setLibType(tab.id)} className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition-all ${libType === tab.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`} style={libType === tab.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>{tab.label}</button>
+          <button key={tab.id} onClick={() => setLibType(tab.id)} className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition-all ${libType === tab.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`} style={libType === tab.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>{kutuphaneSekme(lang, tab.id)}</button>
         ))}
       </div>
       <div className="mb-3 flex flex-wrap gap-1.5 border-b border-white/5 pb-3">
         {EMOTIONS.map((em) => (
-          <button key={em.id} onClick={() => setLibEmotion(em.id)} className={`rounded-full px-2.5 py-1 text-[9px] font-semibold transition ${libEmotion === em.id ? "text-black" : "glass-soft text-white/45 hover:text-white/75"}`} style={libEmotion === em.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>{em.label}</button>
+          <button key={em.id} onClick={() => setLibEmotion(em.id)} className={`rounded-full px-2.5 py-1 text-[9px] font-semibold transition ${libEmotion === em.id ? "text-black" : "glass-soft text-white/45 hover:text-white/75"}`} style={libEmotion === em.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>{kutuphaneDuygu(lang, em.id)}</button>
         ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -273,21 +276,21 @@ export function LibraryBolum({
           return (
             <div key={item.id} className="group relative flex flex-col rounded-2xl border border-white/10 bg-white/[.03] p-4 transition-all hover:border-[color:var(--accent)]/40 hover:bg-white/[.05]">
               <div className="mb-2 flex items-center gap-2">
-                <span className="rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider" style={{ background: `${badge.color}22`, color: badge.color, border: `1px solid ${badge.color}44` }}>{badge.label}</span>
-                <h4 className="text-[11px] font-bold text-white/90">{item.title}</h4>
+                <span className="rounded-full px-2 py-0.5 text-[8px] font-black tracking-wider" style={{ background: `${badge.color}22`, color: badge.color, border: `1px solid ${badge.color}44` }}>{kutuphaneRozet(lang, item.type)}</span>
+                <h4 className="text-[11px] font-bold text-white/90">{kutuphaneItem(lang, item).title}</h4>
               </div>
               <p className="mb-2 text-right font-arabic text-[20px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{item.ar}</p>
-              <p className="mb-3 text-[10px] leading-relaxed text-white/60">"{item.tr}"</p>
+              <p className="mb-3 text-[10px] leading-relaxed text-white/60">"{kutuphaneItem(lang, item).tr}"</p>
               <div className="mt-auto flex items-center justify-between border-t border-white/5 pt-2.5">
-                <span className="text-[9px] font-semibold" style={{ color: "var(--accent)" }}>{item.source}</span>
+                <span className="text-[9px] font-semibold" style={{ color: "var(--accent)" }}>{kutuphaneItem(lang, item).source}</span>
                 <button onClick={() => useFromLibrary(item)} className="glass-soft flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[9px] font-bold text-white/80 transition hover:text-white hover:brightness-150">
-                  <Plus size={10} /> Stüdyo'da Kullan
+                  <Plus size={10} /> {t("libStudKullan")}
                 </button>
               </div>
             </div>
           );
         })}
-        {libraryFiltered.length === 0 && <p className="col-span-2 py-8 text-center text-[11px] text-white/40">Bu filtreye uygun içerik bulunamadı.</p>}
+        {libraryFiltered.length === 0 && <p className="col-span-2 py-8 text-center text-[11px] text-white/40">{t("libBosSonuc")}</p>}
       </div>
     </Modal>
   );

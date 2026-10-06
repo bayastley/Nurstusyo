@@ -13,6 +13,7 @@ import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import { HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
 import { KISSA_LISTESI } from "../data/kissaData";
+import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
 import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURE_BİLGİLERİ } from "../data/sureData";
@@ -318,7 +319,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     }, 400); // debounce — her tuşta istek atılmaz
     return () => { canli = false; clearTimeout(t); };
   }, [sekme, q, filtreliHadisler.length]);
-  const filtreliKissalar = useMemo(() => KISSA_LISTESI.filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q]);
+  // ★ KISSA ÇOKDİL (06.10): önce dile çevir, sonra arama çevrilmiş ad/özet üzerinden koşsun
+  const filtreliKissalar = useMemo(() => kissaCevir(lang, KISSA_LISTESI).filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q, lang]);
   const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
   const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
@@ -461,6 +463,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               <div key={k.ad} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
                 <button
                   type="button"
+                  data-kissa="1"
                   aria-expanded={acik}
                   onClick={() => setAcikKissa(acik ? null : k.ad)}
                   className="flex w-full items-center gap-2 p-3 text-left"
@@ -488,7 +491,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             );
           })}
           {filtreliKissalar.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">{tt("ksKissaYok")}</p>}
-          <p className="pt-1 text-center text-[8px] text-white/25">{filtreliKissalar.length} kıssa · detay için karta dokun</p>
+          <p className="pt-1 text-center text-[8px] text-white/25">{tt("ksKissaSayaci").replace("{n}", String(filtreliKissalar.length))}</p>
         </div>
       )}
 

@@ -695,6 +695,12 @@ export const trDict: Dict = {
   ksGenislet: "Genişlet",
   ksKissaDuasi: "🤲 Bu kıssanın duası:",
   ksKissaYok: "Aradığın kıssa listede yok — başka bir ad dene.",
+  // ─── 06.10 Kütüphane + Kıssa Köşesi çevirileri ───
+  libAraYerTutucu: "Ayet, sure adı veya meal ara...",
+  libBosSonuc: "Bu filtreye uygun içerik bulunamadı.",
+  libStudKullan: "Stüdyo'da Kullan",
+  ksKissaSayaci: "{n} kıssa · detay için karta dokun",
+  libStudEklendi: "✨ \"{ad}\" stüdyoya eklendi",
   ks5Sart: "🕌 İslam'ın 5 Şartı — mezheplere göre fıkhi soru-cevap",
   ksGenelArsiv: "Genel soru-cevap arşivi",
   ksKesifKartNot: "Keşif kartları — tıkla: anlamını gör · 🔊 okunuş · ✨ atölyede çalış · ✓ bilinen işaretle · Kur'ân'ın sık kelimeleri 🔤",

@@ -593,7 +593,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* LIBRARY MODAL — SRP adım 8 */}
       {modal === "library" && (
-        <LibraryBolum setModal={setModal} t={t} libSearch={libSearch} setLibSearch={setLibSearch} libType={libType} setLibType={setLibType} libEmotion={libEmotion} setLibEmotion={setLibEmotion} libraryFiltered={libraryFiltered} useFromLibrary={useFromLibrary} />
+        <LibraryBolum setModal={setModal} t={t} lang={lang} libSearch={libSearch} setLibSearch={setLibSearch} libType={libType} setLibType={setLibType} libEmotion={libEmotion} setLibEmotion={setLibEmotion} libraryFiltered={libraryFiltered} useFromLibrary={useFromLibrary} />
       )}
 
       {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red.

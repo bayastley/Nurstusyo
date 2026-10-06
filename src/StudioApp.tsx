@@ -52,6 +52,7 @@ import {
 import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
+import { kutuphaneItem } from "./data/kutuphaneCokDil"; // ★ 06.10: kütüphane kartları seçili dilde (başlık/anlam/kaynak)
 import { HeaderTopBar } from "./components/HeaderTopBar";
 import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
 import { VideoPreviewSection } from "./components/VideoPreviewSection";
@@ -929,24 +930,28 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     }
   }, [smartAiEnabledRef, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah, isClipAccessibleRef]);
 
-  const useFromLibrary = useCallback((item: LibraryItem) => {
+  const useFromLibrary = useCallback((ham: LibraryItem) => {
+    // ★ 06.10 (5 dil): karta tıklanınca SEÇİLİ DİLDEKİ başlık/anlam stüdyoya taşınır
+    //   (Arapça asıl `ar` alanı hiçbir dile çevrilmez). `t` dep ile yeniden tanımlanır.
+    const item = kutuphaneItem(lang, ham);
     const s = item.s ?? 0, a = item.a ?? 0;
     const id = item.type === "ayet" && s > 0 ? `${s}:${a}` : `lib-${item.id}`;
     if (selectedRef.current.some((x) => x.id === id)) { notify(t("guestLimit")); setModal(null); return; }
     setSelected((current) => [...current, { id, s, a, sName: item.title, ar: item.ar || "", tr: item.tr || "" }]);
     setVerseIndex(selectedRef.current.length);
-    notify(`✨ "${item.title}" stüdyoya eklendi`);
+    notify(t("libStudEklendi").replace("{ad}", item.title));
     setModal(null);
-  }, [notify]);
+  }, [notify, t, lang]);
 
   const libraryFiltered = useMemo(() => {
     let pool = LIBRARY_ITEMS;
     if (libType !== "tumu") pool = pool.filter((i) => i.type === libType);
     if (libEmotion !== "tum") pool = pool.filter((i) => i.emotions.includes(libEmotion));
+    // ★ 06.10 (5 dil): arama seçili dilin çevrilmiş başlık/anlam/kaynağında da koşar
     const q = libSearch.trim().toLocaleLowerCase("tr");
-    if (q) pool = pool.filter((i) => (i.title + i.tr + i.source).toLocaleLowerCase("tr").includes(q));
+    if (q) pool = pool.filter((i) => { const c = kutuphaneItem(lang, i); return (c.title + c.tr + c.source).toLocaleLowerCase("tr").includes(q); });
     return pool;
-  }, [libType, libEmotion, libSearch]);
+  }, [libType, libEmotion, libSearch, lang]);
 
   const isClipAccessible = useCallback((clip: Clip): boolean => {
     // ★ Yüklediklerim: kullanıcının kendi dosyaları her zaman erişilebilir (kendi cihazı)
