@@ -8,6 +8,7 @@
 import React, { useState } from "react";
 import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
+import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — liste + günün ayeti başlığı dilli
 import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, ruhHaliAd, type RuhSayac } from "../data/ruhHalleri";
 import { translate, type Lang } from "../i18n";
 import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
@@ -145,7 +146,7 @@ export const AyetSecimBolumu: React.FC<{
             <span className="text-lg">⭐</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[10.5px] font-black" style={{ color: "var(--accent-2)" }}>{tt("akGununAyeti")}</span>
-              <span className="block truncate text-[9px] text-white/50">{gununAyetiObj.title} · {kaynakGorunum(gununAyetiObj)}</span>
+              <span className="block truncate text-[9px] text-white/50">{ayetBasligi(lang, gununAyetiObj.title)} · {kaynakGorunum(gununAyetiObj)}</span>
             </span>
             <span className="shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{tt("akKartaAl")}</span>
           </button>
@@ -205,7 +206,7 @@ export const AyetSecimBolumu: React.FC<{
                     <span className="rounded-full px-1.5 py-0.5 text-[7.5px] font-black tracking-wide" style={{ background: `${mc}22`, color: mc, border: `1px solid ${mc}44` }}>
                       {AYET_MOODS.find((m) => m.id === a.mood) ? moodEtiketi(a.mood) : ""}
                     </span>
-                    <span className="text-[10px] font-bold text-white/85">{a.title}</span>
+                    <span className="text-[10px] font-bold text-white/85">{ayetBasligi(lang, a.title)}</span>
                     <span className="ml-auto text-[8.5px] font-semibold text-white/40">{kaynakGorunum(a)}</span>
                     {active && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent)] text-black"><Check size={10} strokeWidth={3} /></span>}
                   </div>

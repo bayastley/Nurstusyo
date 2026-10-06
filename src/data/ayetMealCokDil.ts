@@ -20,6 +20,7 @@ import { fetchSurah } from "../studio/studioHelpers";
 import { MEAL_EDITIONS, translate, type Lang } from "../i18n";
 import { sureNoFromSource, SURE_ADLARI, type AyetKarti } from "./ayetKartlariData";
 import { SURE_ARAPCA } from "./sureArapca";
+import { ayetBasligi } from "./ayetBaslikCokDil"; // ★ BAŞLIK ÇOK DİL (06.10): 575 benzersiz başlık × 4 dil
 
 /** "Saff Suresi • 13. Ayet" → 13 (çözülemezse 0) */
 function ayetNoFrom(source: string): number {
@@ -102,8 +103,10 @@ export function kartKaynagi(lang: Lang | string | undefined | null, source: stri
   return `${ad} • ${translate(lang as Lang, "akAyetNo").replace("{n}", String(a))}`;
 }
 
-/** Tip kolaylığı — modal'daki tam kart için çevrilmiş görünüm */
+/** Tip kolaylığı — modal'daki tam kart için çevrilmiş görünüm.
+ *  ★ 06.10: başlık da seçili dile çevrilir (575 benzersiz başlık haritası);
+ *  çeviri yoksa TR başlık aynen kalır (fallback). */
 export function gorunenKart(kart: AyetKarti, lang: Lang | string | undefined | null): AyetKarti {
   if (!mealCevrimde(lang)) return kart;
-  return { ...kart, tr: gorunenMeal(kart, lang), source: kartKaynagi(lang, kart.source) };
+  return { ...kart, title: ayetBasligi(lang, kart.title), tr: gorunenMeal(kart, lang), source: kartKaynagi(lang, kart.source) };
 }

@@ -20,6 +20,7 @@ import { translate, type Lang } from "../i18n";
 import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKartBolumleri";
 // ★ 04.10 TUR 4: kart mealı/kaynağı site diline göre (kullanıcı talebi)
 import { gorunenMeal, gorunenKart, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
+import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — arama + bildirim başlığı dilli
 
 interface AyetKartlariModalProps {
   open: boolean;
@@ -89,18 +90,21 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
 
   const filteredAyets = useMemo(() => {
     const q = ayetSearch.trim().toLocaleLowerCase("tr");
+    // ★ 06.10 (başlık çok dil): arama çevrilmiş başlık + çevrilmiş meal üzerinden de koşar
     return AYET_KARTILARI.filter((a) => {
       if (sadeceGunun && a.id !== gununAyetiObj.id) return false;
       if (mood !== "tumu" && a.mood !== mood) return false;
       if (sureFiltre !== "tumu" && sureNoFromSource(a.source) !== sureFiltre) return false;
       if (!q) return true;
+      const gorunen = gorunenKart(a, lang);
       return (
+        gorunen.title.toLocaleLowerCase("tr").includes(q) ||
         a.title.toLocaleLowerCase("tr").includes(q) ||
         a.tr.toLocaleLowerCase("tr").includes(q) ||
         a.source.toLocaleLowerCase("tr").includes(q)
       );
     });
-  }, [ayetSearch, mood, sureFiltre, sadeceGunun, gununAyetiObj.id]);
+  }, [ayetSearch, mood, sureFiltre, sadeceGunun, gununAyetiObj.id, lang]);
 
   const filteredBgs = useMemo(() => {
     const q = bgSearch.trim().toLocaleLowerCase("tr");
@@ -298,11 +302,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     setMood(ruh.mood); setSadeceGunun(false);
     setAyar((a) => ({ ...a, ...ayarOneri, cubuk: { ...a.cubuk, acik: true, donme: cubukDonme, mealDonme: (cubukDonme + 150) % 360, kalinlik: a.cubuk.kalinlik || 6 } }));
     // ★ i18n (02.10): onay bildirimi çip adını SEÇİLİ DİLDE verir (ruhHaliAd);
-    //   ayet başlığı/arka plan etiketi içerik-özgü TR kalır (veri katmanı).
+    //   ★ 06.10: ayet başlığı da seçili dile çevrilir (ayetBasligi); arka plan
+    //   etiketi içerik-özgü TR kalır (bg etiket havuzu ayrı kapsam).
     const ruhAd = ruhHaliAd(ruh, lang);
+    const baslikCevrili = ayetBasligi(lang, ayetPick.title);
     notify?.(tam
-      ? `🧠 ${ruh.emoji} ${ruhAd} — ${ayetPick.title} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
-      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruhAd} — ${ayetPick.title} hazır!`);
+      ? `🧠 ${ruh.emoji} ${ruhAd} — ${baslikCevrili} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
+      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruhAd} — ${baslikCevrili} hazır!`);
   }, [ruhHaliMetin, notify, lang]);
 
   if (!open) return null;

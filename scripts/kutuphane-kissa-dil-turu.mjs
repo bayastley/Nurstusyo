@@ -129,7 +129,37 @@ function statikDenetim() {
   ];
   for (const [ad, ok] of wiring) if (!ok) bulgular.push({ tur: "wiring", dil: "-", satir: ad });
 
-  return { bulgular, gercekIdler, trAdet, trAdlar };
+  // e) ayetBaslikCokDil (06.10): 575 benzersiz başlık × 4 dil küme bütünlüğü + TR sızıntısı
+  const kartDosyalari = [
+    "src/data/ayetKartlariData.ts", "src/data/ayetKartlariEk.ts",
+    "src/data/ayetKartlariMega/parca1.ts", "src/data/ayetKartlariMega/parca2.ts", "src/data/ayetKartlariMega/parca3.ts",
+    "src/data/ayetKartlariMega2/parca1.ts", "src/data/ayetKartlariMega2/parca2.ts", "src/data/ayetKartlariMega2/parca3.ts",
+  ];
+  const havuzBasliklari = new Set();
+  for (const d of kartDosyalari) for (const m of oku(d).matchAll(/title: "((?:[^"\\]|\\.)*)"/g)) havuzBasliklari.add(m[1]);
+  const ab = oku("src/data/ayetBaslikCokDil.ts");
+  const trListeM = ab.match(/AYET_BASLIKLARI_TR: string\[\] = \[([\s\S]*?)\n\];/);
+  const trListe = trListeM ? [...trListeM[1].matchAll(/"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]) : [];
+  const trKume = new Set(trListe);
+  if (trListe.length !== trKume.size) bulgular.push({ tur: "ayet-baslik-tekrar", dil: "-", satir: `TR listede tekrar: ${trListe.length - trKume.size}` });
+  if (trListe.length !== havuzBasliklari.size) bulgular.push({ tur: "ayet-baslik-adet", dil: "-", satir: `TR liste ${trListe.length} — havuz benzersiz ${havuzBasliklari.size}` });
+  for (const t of trListe) if (!havuzBasliklari.has(t)) bulgular.push({ tur: "ayet-baslik-fazla", dil: "-", satir: t });
+  for (const t of havuzBasliklari) if (!trKume.has(t)) bulgular.push({ tur: "ayet-baslik-eksik", dil: "-", satir: t });
+  for (const dil of ["en", "ar", "id", "ur"]) {
+    const blok = objeBlogu(ab, dil, "const HARITA");
+    if (!blok) { bulgular.push({ tur: "ayet-baslik-blok", dil, satir: "HARITA bloğu yok" }); continue; }
+    const anahtarlar = [...blok.matchAll(/"((?:[^"\\]|\\.)*)": "/g)].map((m) => m[1]);
+    const eksik = [...trKume].filter((k) => !anahtarlar.includes(k));
+    const fazla = anahtarlar.filter((k) => !trKume.has(k));
+    for (const k of eksik.slice(0, 4)) bulgular.push({ tur: "ayet-baslik-eksik-ceviri", dil, satir: k + (eksik.length > 4 ? ` (+${eksik.length - 4} daha)` : "") });
+    for (const k of fazla.slice(0, 4)) bulgular.push({ tur: "ayet-baslik-yabanci", dil, satir: k });
+    for (const satir of blok.split(/\r?\n/)) {
+      const deger = satir.replace(/^\s*"[^"]*":\s*/, ""); // anahtar TR → yalnız değere bak
+      if (TR_KARAKTER.test(deger)) bulgular.push({ tur: "ayet-baslik-tr-sizinti", dil, satir: satir.trim().slice(0, 120) });
+    }
+  }
+
+  return { bulgular, gercekIdler, trAdet, trAdlar, havuzAdet: havuzBasliklari.size, trKumeAdet: trKume.size, ayetOrnek: trListe[1] || "" };
 }
 
 // ─── 2) UI TURU ────────────────────────────────────────────
@@ -137,7 +167,7 @@ async function main() {
   const statik = statikDenetim();
   const kut = oku("src/data/kutuphaneCokDil.ts");
   console.log("── STATİK DENETİM ──");
-  console.log(`  dualar.ts kart id: ${statik.gercekIdler.length} | kissaData TR kayıt: ${statik.trAdet}`);
+  console.log(`  dualar.ts kart id: ${statik.gercekIdler.length} | kissaData TR kayıt: ${statik.trAdet} | ayet başlığı: ${statik.trKumeAdet} (havuz ${statik.havuzAdet})`);
   for (const b of statik.bulgular) console.log(`   ✗ [${b.tur}] ${b.dil}: ${b.satir}`);
   if (statik.bulgular.length === 0) console.log("  ✓ 28 kart × 4 dil id-seti + 19 kıssa × 4 dil hizalama + sözlük + wiring temiz");
 
@@ -211,6 +241,23 @@ async function main() {
         if (!dilSonuc.kutuphane.yerTutucuOk) bulgular.push({ kaynak: "kutuphane-yerTutucu", satir: `"${libBilgi.yerTutucu}" ≠ "${libAra}"` });
         if (!dilSonuc.kutuphane.sekmeOk) bulgular.push({ kaynak: "kutuphane-sekme", satir: `"${tumuEtiket}" modal metninde yok` });
         if (!dilSonuc.kutuphane.duyguOk) bulgular.push({ kaynak: "kutuphane-duygu", satir: `"${duyguEtiket}" modal metninde yok` });
+        // ★ AYET KÜTÜPHANESİ (06.10): başlık çevirisi — kart listesinde TR başlık sızıntısı yok mu?
+        //   Bu modal Ayet Kütüphanesi'dir (AYET_KARTILARI). tr dışı dilde ilk TR başlığın
+        //   görünMEMESİ + örnek çevirinin görünmesi beklenir.
+        if (dil !== "tr" && statik.ayetOrnek) {
+          const libNorm = norm(libBilgi.metin);
+          const trSizinti = [...libBilgi.metin.split(/\r?\n/)].filter((s) => TR_KARAKTER.test(s.trim()) && s.trim().length > 3);
+          dilSonuc.kutuphane.ayetTrSizinti = trSizinti.length;
+          if (trSizinti.length) bulgular.push({ kaynak: "ayet-baslik-tr-sizinti", satir: trSizinti.slice(0, 3).join(" | ") });
+          const abKaynak = oku("src/data/ayetBaslikCokDil.ts");
+          const abBlok = objeBlogu(abKaynak, dil, "const HARITA") || "";
+          // (regex yok — indexOf: başlıkta kesme işareti vb. olsa da bozulmaz)
+          const abKey = `"${statik.ayetOrnek}": "`;
+          const kIdx = abBlok.indexOf(abKey);
+          const abOrnek = kIdx >= 0 ? abBlok.slice(kIdx + abKey.length, abBlok.indexOf(`"`, kIdx + abKey.length)) : "";
+          dilSonuc.kutuphane.ayetOrnekCeviri = abOrnek;
+          if (abOrnek && !libNorm.includes(norm(abOrnek))) bulgular.push({ kaynak: "ayet-baslik-ceviri-yok", satir: `"${abOrnek}" modal metninde yok` });
+        }
         if (dil !== "tr") bulgular.push(...trBulgular(libBilgi.metin, "kutuphane-modal"));
         await page.screenshot({ path: `scripts/_kut-dil-${dil}.png` });
         await page.keyboard.press("Escape");
