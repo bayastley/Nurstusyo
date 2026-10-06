@@ -75,7 +75,7 @@ async function main() {
         await page.evaluate(() => {
           const banner = document.querySelector('div.fixed.bottom-4.right-4');
           const btn = banner?.querySelector('button[aria-label]');
-          if (btn) (btn as HTMLElement).click();
+          if (btn) btn.click();
         }).catch(() => {});
         await page.waitForTimeout(400);
 
