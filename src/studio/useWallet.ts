@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
-  getCurrentTier, getJeton, setJeton as persistJetonSecure,
-  addPurchasedJeton, addDailySubJeton,
-  jetonTavani, JETON,
+  getJeton, setJeton as persistJetonSecure,
+  addPurchasedJeton, JETON,
 } from "../tier";
+import { maneviBayraklar } from "../services/holidayCalendar";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { serverDateISO, serverIsFriday, isDeviceClockTampered, syncServerTime } from "../serverTime";
 
@@ -116,21 +116,18 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
       if (localStorage.getItem("nur_daily_bonus_date") === today) return;
 
       if (isDeviceClockTampered()) {
-        notify("⚠️ Sistem saatiniz gerçek zamanla uyuşmuyor. Günlük bonus askıya alındı.");
+        notify("⚠️ Sistem saatiniz gerçek zamanla uyuşmuyor. Özel gün bonusu askıya alındı.");
         return;
       }
 
-      // Tier'ı localStorage'dan oku (useTier henüz çağrılmamış olabilir)
-      const tier = getCurrentTier();
-      const ramadan = localStorage.getItem("nur_ramadan_mode") === "1";
-      const kadirGecesi = localStorage.getItem("nur_kadir_gecesi_mode") === "1";
-      const base = tier === "free" ? (ramadan ? JETON.DAILY_FREE_RAMADAN : JETON.DAILY_FREE) : tier === "pro" ? (ramadan ? JETON.DAILY_PRO_RAMADAN : JETON.DAILY_PRO) : (ramadan ? JETON.DAILY_ELIT_RAMADAN : JETON.DAILY_ELIT);
-      const cap = jetonTavani(tier, ramadan);
-
-      addDailySubJeton(base, cap);
+      // ★ Haftalık kota Pazartesi 00:00 (kullanıcı yerel saati) otomatik yenilenir —
+      //   motor tier.ts'te (haftaPazartesiYerel). Burada yalnız ÖZEL GÜN bonusu var:
+      //   Cuma/Kadir jeton-yapısı dışı hediye — günlük kapı ile haftada/gerde bir kez.
+      //   Kandil/bayram/kadir bayrakları artık hicri takvimden OTOMATİK hesaplanır.
+      const bayraklar = maneviBayraklar();
 
       const friday = serverIsFriday() ? JETON.CUMA_BONUS : 0;
-      const kadirBonus = kadirGecesi ? JETON.KADIR_GECESI : 0;
+      const kadirBonus = bayraklar.kadir ? JETON.KADIR_GECESI : 0;
       if (friday > 0 || kadirBonus > 0) {
         addPurchasedJeton(friday + kadirBonus);
         if (friday) notify(`🕌 Cuma bonusu: +${friday} jeton (tavan dışı)`);

@@ -151,23 +151,50 @@ export function annualPriceTRY(tier: Tier): number {
 
 /** Bugün kaç adet üretildi — gün değişince otomatik sıfırlanır */
 interface DailyUsage {
-  date: string;
+  week: string;
   used: Quota;
 }
 
 const DAILY_USAGE_KEY = "nur_daily_usage_v3";
 const EMPTY_QUOTA: Quota = { kisa: 0, uzun: 0, tam: 0 };
 
+// ════════════════════════════════════════════════════════
+// ★ HAFTALIK DÖNEM (06.10 — sahibin emri): kota artık GÜNLÜK değil HAFTALIK.
+//   • Dönem: kullanıcının YEREL saatinde haftanın Pazartesi'si 00:00'da başlar
+//     ("konuma göre gece 00:00'da tanımlansın").
+//   • Hafta içinde kullanılmayan hak KAYBOLMAZ — bir sonraki Pazartesi'ye taşınır
+//     ("bir kere alsın, ortadan kaybolmasın").
+//   • Dönem toplamı = HAFTALIK_KAT_SAYI × eski günlük kota — günlük gelen
+//     kullanıcı da toplam hakkını korur, kimse kul hakkı yemez.
+//   • Eski günlük kayıtlar (date alanlı) ilk okumada yeni döneme otomatik geçer.
+// ════════════════════════════════════════════════════════
+export const HAFTALIK_KAT_SAYI = 7;
+
+/** Bu anın hafta anahtarı: YEREL saatte bu haftanın Pazartesi'si (YYYY-MM-DD) */
+export function haftaPazartesiYerel(now: Date = new Date()): string {
+  const gun = now.getDay(); // 0=Pazar ... 6=Cumartesi
+  const pztKaydir = gun === 0 ? -6 : 1 - gun;
+  const pzt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + pztKaydir);
+  const mm = String(pzt.getMonth() + 1).padStart(2, "0");
+  const dd = String(pzt.getDate()).padStart(2, "0");
+  return `${pzt.getFullYear()}-${mm}-${dd}`;
+}
+
+/** Dönem (hafta) toplamı: HAFTALIK_KAT_SAYI × günlük kota */
+function donemToplami(kind: VideoKind, tier: Tier): number {
+  return DAILY_QUOTA[tier][kind] * HAFTALIK_KAT_SAYI;
+}
+
 function readUsage(): DailyUsage {
-  if (typeof window === "undefined") return { date: "", used: { ...EMPTY_QUOTA } };
-  const today = serverDateISO();
-  const stored = secureGet<DailyUsage | null>(DAILY_USAGE_KEY, null);
-  if (!stored || stored.date !== today) {
-    const fresh: DailyUsage = { date: today, used: { ...EMPTY_QUOTA } };
+  if (typeof window === "undefined") return { week: "", used: { ...EMPTY_QUOTA } };
+  const hafta = haftaPazartesiYerel();
+  const stored = secureGet<{ date?: string; week?: string; used?: Partial<Quota> } | null>(DAILY_USAGE_KEY, null);
+  if (!stored || stored.week !== hafta) {
+    const fresh: DailyUsage = { week: hafta, used: { ...EMPTY_QUOTA } };
     secureSet(DAILY_USAGE_KEY, fresh);
     return fresh;
   }
-  return { date: stored.date, used: { ...EMPTY_QUOTA, ...stored.used } };
+  return { week: stored.week, used: { ...EMPTY_QUOTA, ...(stored.used || {}) } };
 }
 
 function writeUsage(usage: DailyUsage): void {
@@ -180,16 +207,17 @@ export function getUsedToday(kind: VideoKind): number {
   return Math.max(0, Math.floor(readUsage().used[kind] || 0));
 }
 
-/** Bugün bu türden kaç hak kaldı (abonelik kotası + Sadık Üye bonusu) */
+/** Bu dönemden (hafta) bu türden kaç hak kaldı (haftalık kota + Sadık Üye bonusu) */
 export function getQuotaLeft(kind: VideoKind, tier: Tier = getCurrentTier()): number {
-  const total = DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind);
+  const total = donemToplami(kind, tier) + sadikUyeBonusu(kind);
   return Math.max(0, total - getUsedToday(kind));
 }
 
-/** "Kalan: 8/8 kısa" gibi gösterim metni — KALAN hak gösterir,
- *  kullandıkça azalır (ör. 8/8 → 7/8 → 6/8 ...). Sadık Üye bonusu dahil. */
+/** "Kalan: 22/22 kısa" gibi gösterim metni — KALAN hak gösterir,
+ *  kullandıkça azalır (ör. 22/22 → 21/22 → 20/22 ...). Sadık Üye bonusu dahil.
+ *  Dönem HAFTALIK: Pazartesi yerel 00:00'da yenilenir, hafta içi taşınır. */
 export function quotaText(kind: VideoKind, tier: Tier = getCurrentTier()): string {
-  const total = DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind);
+  const total = donemToplami(kind, tier) + sadikUyeBonusu(kind);
   const left = Math.max(0, total - getUsedToday(kind));
   return `${left}/${total}`;
 }
@@ -322,9 +350,9 @@ export function consumeVideo(kind: VideoKind, tier: Tier = getCurrentTier(), mod
   };
 }
 
-/** Bu üyelik bu video türünü hiç üretebiliyor mu (kota 0 ve paket 0 ise hayır) */
+/** Bu üyelik bu video türünü hiç üretebiliyor mu (dönem kotası 0 ve paket 0 ise hayır) */
 export function canProduceKind(kind: VideoKind, tier: Tier = getCurrentTier()): boolean {
-  return DAILY_QUOTA[tier][kind] + sadikUyeBonusu(kind) > 0 || getPackRights()[kind] > 0;
+  return donemToplami(kind, tier) + sadikUyeBonusu(kind) > 0 || getPackRights()[kind] > 0;
 }
 
 /** Üst barda gösterilecek kısa özet — bakiye değil, kullanım göstergesi */

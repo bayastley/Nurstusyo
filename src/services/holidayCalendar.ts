@@ -58,15 +58,79 @@ export async function claimHolyDayReward(
   }
 }
 
+// ════════════════════════════════════════════════════════
+// ★ HİCRİ OTOMATİK ALGILAMA (06.10 — sahibin emri): kandil/bayram/kadir
+//   bayraklarını hiçbir kod set etmiyordu → hediye HİÇ tetiklenemiyordu.
+//   Artık Intl islamic-umalqura takviminden bugünün hicri tarihi hesaplanır:
+//     • Kadir Gecesi      : Ramazan 27
+//     • Ramazan Bayramı   : Şevval 1-3
+//     • Kurban Bayramı    : Zilhicce 10-13
+//     • Mevlid Kandili    : Rebiülevvel 12
+//     • Miraç Kandili     : Recep 27
+//     • Berat Kandili     : Şaban 15
+//     • Arefe             : Zilhicce 9
+//     • Regaib Kandili    : Recep ayının ilk Cuma'sı
+//   localStorage bayrağı hâlâ GEÇERSİZ KILAR (admin manuel zorlayabilir).
+// ════════════════════════════════════════════════════════
+
+export interface ManeviBayraklar {
+  kadir: boolean;
+  kandil: boolean;
+  bayram: boolean;
+  ramazan: boolean;
+}
+
+function hicriBugun(): { y: number; m: number; d: number } | null {
+  if (typeof Intl === "undefined") return null;
+  try {
+    const parcalar = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", { day: "numeric", month: "numeric", year: "numeric" }).formatToParts(new Date());
+    const oku = (tip: string) => Number(parcalar.find((p) => p.type === tip)?.value || NaN);
+    const y = oku("year"), m = oku("month"), d = oku("day");
+    return Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d) ? { y, m, d } : null;
+  } catch { return null; }
+}
+
+/** Bugünün manevi bayrakları: el-yazımı localStorage bayrağı VEYA hicri hesap */
+export function maneviBayraklar(): ManeviBayraklar {
+  const w = typeof window !== "undefined" ? window : undefined;
+  const elYazimi: ManeviBayraklar = {
+    kadir: Boolean(w && w.localStorage.getItem("nur_kadir_gecesi_mode") === "1"),
+    kandil: Boolean(w && w.localStorage.getItem("nur_kandil_mode") === "1"),
+    bayram: Boolean(w && w.localStorage.getItem("nur_bayram_mode") === "1"),
+    ramazan: Boolean(w && w.localStorage.getItem("nur_ramadan_mode") === "1"),
+  };
+  const h = hicriBugun();
+  if (!h) return elYazimi;
+  const { m, d } = h;
+  const hesap: ManeviBayraklar = {
+    ramazan: m === 9,
+    kadir: m === 9 && d === 27,
+    bayram: (m === 10 && d <= 3) || (m === 12 && d >= 10 && d <= 13),
+    kandil:
+      (m === 3 && d === 12) || // Mevlid
+      (m === 7 && d === 27) || // Miraç
+      (m === 8 && d === 15) || // Berat
+      (m === 12 && d === 9) || // Arefe
+      (m === 7 && serverDayOfWeek() === 5 && d <= 7), // Regaib (Recep'in ilk Cuma'sı)
+  };
+  return {
+    kadir: elYazimi.kadir || hesap.kadir,
+    kandil: elYazimi.kandil || hesap.kandil,
+    bayram: elYazimi.bayram || hesap.bayram,
+    ramazan: elYazimi.ramazan || hesap.ramazan,
+  };
+}
+
 /** Sunucu saatine göre anlık manevi takvim durumu */
 export function getHolyDayState(): HolyDayBannerState {
   const day = serverDayOfWeek();
   const todayIso = serverDateISO();
 
-  const isKadir = typeof window !== "undefined" && localStorage.getItem("nur_kadir_gecesi_mode") === "1";
-  const isKandil = typeof window !== "undefined" && localStorage.getItem("nur_kandil_mode") === "1";
-  const isBayram = typeof window !== "undefined" && localStorage.getItem("nur_bayram_mode") === "1";
-  const isRamazan = typeof window !== "undefined" && localStorage.getItem("nur_ramadan_mode") === "1";
+  const ozel = maneviBayraklar();
+  const isKadir = ozel.kadir;
+  const isKandil = ozel.kandil;
+  const isBayram = ozel.bayram;
+  const isRamazan = ozel.ramazan;
 
   // 1. KADİR GECESİ
   if (isKadir) {

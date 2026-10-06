@@ -4,14 +4,14 @@
 // NE YAPAR: src/tier.ts'teki GERÇEK kota motorunu esbuild ile bundle edip
 //   node'da çalıştırır (window/localStorage shim'i ile) ve 10 senaryoyu
 //   simüle eder:
-//     1. Bayraksız davranış değişmez (misafir/free 3 kısa, fail-open)
-//     2. Sadık üye free: kisa +1 (3→4), uzun/tam değişmez
-//     3. Sadık üye PRO/ELİT: kisa +1 (9/16), uzun/tam değişmez
-//     4. quotaText bonusu gösterir (4/4)
-//     5. Tüketim: 4 kullanım kota, 5.'si reddedilir (paket yok)
+//     1. Bayraksız davranış değişmez (misafir/free 21 kısa — HAFTALIK dönem 7×3, fail-open)
+//     2. Sadık üye free: kisa +1 (21→22), uzun/tam bonus ALMAZ
+//     3. Sadık üye PRO/ELİT: kisa +1 (57/106), uzun/tam bonus ALMAZ
+//     4. quotaText bonusu gösterir (22/22)
+//     5. Tüketim: 22 kullanım dönem kotası, 23.'sü reddedilir (paket yok)
 //     6. canProduceKind kota 0 + paket 0'da yanlış döner, bonusla doğru
 //     7. Bayrak kapanınca eski kotaya döner
-//     8. Günlük yenileme bonusla birlikte tam yenilenir
+//     8. Haftalık yenileme bonusla birlikte tam yenilenir
 //     9. secureStore kalıcılığı: setSadikUye → yeni okuma flag'i korur
 //    10. canProduceKind('uzun','free') bonusla da yanlış kalır (kapsam disiplini)
 //
@@ -66,34 +66,34 @@ console.log("══════════════════════�
 
 // 1) Bayraksız: davranış değişmez
 esit("1a. bayraksız isSadikUye", isSadikUye(), false);
-esit("1b. bayraksız free kisa kalan", getQuotaLeft("kisa", "free"), 3);
+esit("1b. bayraksız free kisa kalan (haftalık 7×3)", getQuotaLeft("kisa", "free"), 21);
 esit("1c. bayraksız free uzun kalan", getQuotaLeft("uzun", "free"), 0);
 
 // 2) Sadık üye free: +1 yalnız kisa
 setSadikUye(true);
 esit("2a. bayrak açık", isSadikUye(), true);
-esit("2b. sadık free kisa", getQuotaLeft("kisa", "free"), 4);
+esit("2b. sadık free kisa", getQuotaLeft("kisa", "free"), 22);
 esit("2c. sadık free uzun (değişmez)", getQuotaLeft("uzun", "free"), 0);
 esit("2d. sadık free tam (değişmez)", getQuotaLeft("tam", "free"), 0);
 
 // 3) Üst katmanlar da +1 kısa alır
-esit("3a. sadık pro kisa", getQuotaLeft("kisa", "pro"), 8 + 1);
-esit("3b. sadık pro uzun (değişmez)", getQuotaLeft("uzun", "pro"), 3);
-esit("3c. sadık elit kisa", getQuotaLeft("kisa", "elit"), 15 + 1);
-esit("3d. sadık elit tam (değişmez)", getQuotaLeft("tam", "elit"), 1);
+esit("3a. sadık pro kisa", getQuotaLeft("kisa", "pro"), 8 * 7 + 1);
+esit("3b. sadık pro uzun (bonus yok, dönem çarpanı var)", getQuotaLeft("uzun", "pro"), 3 * 7);
+esit("3c. sadık elit kisa", getQuotaLeft("kisa", "elit"), 15 * 7 + 1);
+esit("3d. sadık elit tam (bonus yok, dönem çarpanı var)", getQuotaLeft("tam", "elit"), 1 * 7);
 
 // 4) quotaText bonusu gösterir
-esit("4. quotaText kisa free", quotaText("kisa", "free"), "4/4");
+esit("4. quotaText kisa free", quotaText("kisa", "free"), "22/22");
 
-// 5) Tüketim zinciri: 4 kullanım kota, 5.'si yok
-for (let i = 1; i <= 4; i++) {
+// 5) Tüketim zinciri: 22 kullanım dönem kotası, 23.'sü yok
+for (let i = 1; i <= 22; i++) {
   const r = consumeVideo("kisa", "free");
   if (!r.ok) hata(`5-${i}. kullanım reddedildi: ${r.message}`);
-  else basari(`5-${i}. kullanım ok (kalan ${r.quotaLeft})`);
+  else if (i % 5 === 0 || i === 22) basari(`5-${i}. kullanım ok (kalan ${r.quotaLeft})`);
 }
-const besinci = consumeVideo("kisa", "free");
-esit("5-5. 5. kullanım reddi", besinci.ok, false);
-esit("5-5. kaynak", besinci.source, "yok");
+const yirmiUcuncu = consumeVideo("kisa", "free");
+esit("5-23. 23. kullanım reddi", yirmiUcuncu.ok, false);
+esit("5-23. kaynak", yirmiUcuncu.source, "yok");
 
 // 6) canProduceKind: bayraksız free kisa 3>0 zaten true; paket 0 + kota 0 senaryosu:
 //    uzun/free bayraksızda false, bonusla da false (sadık +1 yalnız kisa) — kapsam disiplini
@@ -107,12 +107,12 @@ esit("6c. kisa/free sadık canProduceKind", canProduceKind("kisa", "free"), true
 //    aynı gün içinde kalan=0 motorun DOĞRU davranışı; senaryoyu izole etmek için gün sıfırlanır)
 globalThis.localStorage.clear();
 setSadikUye(false);
-esit("7. bayrak kapandıktan sonra free kisa (yeni gün)", getQuotaLeft("kisa", "free"), 3);
+esit("7. bayrak kapandıktan sonra free kisa (yeni hafta)", getQuotaLeft("kisa", "free"), 21);
 
-// 8) Günlük yenileme: bayrak açıkken yeni gün → kalan tam 4
+// 8) Haftalık yenileme: bayrak açıkken yeni hafta → kalan tam 22
 setSadikUye(true);
-for (let i = 0; i < 4; i++) consumeVideo("kisa", "free");
-esit("8a. gün sonu kalan", getQuotaLeft("kisa", "free"), 0);
+for (let i = 0; i < 22; i++) consumeVideo("kisa", "free");
+esit("8a. hafta sonu kalan", getQuotaLeft("kisa", "free"), 0);
 // tarih zorlaması: readUsage günü değiştir (dahili secureStore anahtarına müdahale yerine
 // motorun gün değişimini doğrulamak için kullanılan günü el ile ilerlet)
 try {
@@ -133,11 +133,11 @@ esit("9. yeniden yazma/okuma", isSadikUye(), true);
 // 10) quotaText bayrak kapalıyken eski değere döner (yeni gün izolasyonu)
 globalThis.localStorage.clear();
 setSadikUye(false);
-esit("10. quotaText bayraksız", quotaText("kisa", "free"), "3/3");
+esit("10. quotaText bayraksız", quotaText("kisa", "free"), "21/21");
 
 console.log("\n── ÖZET ──");
 if (hatalar === 0) {
-  console.log("▶ SONUÇ: PASS ✅ — 10 senaryo: +1 yalnız kisa, tüm tierlar, tüketim, kapsam disiplini");
+  console.log("▶ SONUÇ: PASS ✅ — 10 senaryo: haftalık dönem (7×), +1 yalnız kisa, tüm tierlar, tüketim, kapsam disiplini");
   process.exit(0);
 }
 console.log(`▶ SONUÇ: FAIL ❌ — ${hatalar} bulgu`);
