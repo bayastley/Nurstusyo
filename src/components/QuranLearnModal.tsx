@@ -23,39 +23,15 @@ import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): e
 
 type Mode = "learn" | "listen" | null;
 
-// ★ 02.10 latent fix: yerel Reciter arayüzü silindi — quranLearnVeri'den type import'u
-//   kullanılıyordu ama aynı adla yerel kopya çakışıyordu (TS2440).
-interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
 //    (gapless tam sure) çalabilir — [klasör, sunucuNo]. Hepsi tek tek test edildi (200 OK).
 
 interface Word { i: number; ar: string; tr: string; translit: string; audio: string; }
 
-// ★ KELİME ANLAMLARI: tam Kur'an sözlüğü (15.321 kök, TÜM 77.429 kelime %100 kapsama)
-//   kaynak: quran.com API Türkçe WbW (Diyanet) + eski 571 sözlük — public/wbw-tr-full.json
-//   2) yoksa API Türkçe meal 3) o da yoksa Arapça kök gösterilir ('—' asla görünmez)
-const WBW_TR: Record<string, string> = {};
-// ★ SÖZLÜK YÜKLEME DURUMU: quran.com API'si çökse bile sözlük bir kez yüklensin —
-//   eski kodda sözlük SADECE API başarılı olunca çekiliyordu, API takılınca kelimeler '—' oluyordu.
-let WBW_LOADED = false;
-let WBW_NORM_IDX: Record<string, string> = {};
-let WBW_LOADING: Promise<void> | null = null;
-async function ensureWbwLoaded(): Promise<void> {
-  if (WBW_LOADED) return;
-  if (!WBW_LOADING) {
-    WBW_LOADING = fetch("/wbw-tr-full.json")
-      .then(r => r.json())
-      .then(j => {
-        const t = j.translations ?? j;
-        Object.assign(WBW_TR, t);
-        WBW_NORM_IDX = j.normIndex ?? {};
-        WBW_LOADED = Object.keys(WBW_TR).length > 0;
-      })
-      .catch(() => { WBW_LOADING = null; /* başarısızsa tekrar denenebilir */ });
-  }
-  await WBW_LOADING;
-}
+// ★ KELİME ANLAMLARI: tam sözlük modülü SRP adım 12'de quranLearnSozluk.ts'e taşındı
+//   (mantık birebir; import ile kullanılır)
+import { WBW_TR, wbwNormIdx, ensureWbwLoaded } from "./quranLearnSozluk";
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; lang?: Lang; }
 
@@ -623,7 +599,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
         const ws = (d.verse?.words ?? []).filter((w: any) => w.char_type_name === "word");
         // Türkçe sözlüğü (bir kez) yükle — API kelime meali (id 77) + yerel sözlük birleşir
         let wbw: Record<string, string> = WBW_TR;
-        let normIdx: Record<string, string> = WBW_NORM_IDX;
+        let normIdx: Record<string, string> = wbwNormIdx();
         const norm = (s: string) => s
           .replace(/[\u0670\u06E1\u064B-\u065F\u0640\u06D6-\u06ED\u0653-\u0655]/g, "")
           .replace(/\u0671/g, "\u0627").replace(/\u0649/g, "\u064A").replace(/\u0629/g, "\u0647")
@@ -711,7 +687,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
       const wbwKeys = Object.keys(WBW_TR).map(k => ({ k, n: norm(k), na: stripAl(k) }));
       setWords(parts.map((ar, i) => {
         const n = norm(ar), na = stripAl(ar);
-        const exact = WBW_NORM_IDX[n] ?? wbwKeys.find(x => x.n === n || x.na === na);
+        const exact = wbwNormIdx()[n] ?? wbwKeys.find(x => x.n === n || x.na === na);
         let tr = typeof exact === "string" ? exact : (exact as any)?.k ? WBW_TR[(exact as any).k] : undefined;
         if (!tr) {
           const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
