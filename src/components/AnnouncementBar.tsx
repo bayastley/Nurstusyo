@@ -37,8 +37,13 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   useEffect(() => {
     let alive = true;
     const refresh = async () => {
-      // ★ Lansman hazırlığı: config 45sn TTL CDN cache'te — poll DB'yi vurmaz (28.09)
-      const response = await fetch("/api/config", { cache: "default" }).catch(() => null);
+      // ★ Lansman hazırlığı: config 45sn TTL CDN cache'te — poll DB'yi vurmaz (28.09).
+      // ★ 06.10 CANLI BULGU FIX: cache-bust çipi — bare /api/config edge anahtarı bayat
+      //   kalabiliyordu (SWR=300): bakım/duyuru değişikliği kullanıcıya ~5+ dk gecikiyordu
+      //   (8 dkMeasurements kanıt). 15'lik döner çip = 15 farklı anahtar; aynı çip 90sn
+      //   poll'arda tekrar kurulur → cache HIT korunur + maks gecikme ~22 sn'e düşer.
+      const cb = Math.floor(Date.now() / 15_000) % 15;
+      const response = await fetch(`/api/config?cb=${cb}`, { cache: "default" }).catch(() => null);
       const data = response ? await response.json().catch(() => null) as { announcement?: any; featureLocks?: Array<{ feature_id: string; lock_level: any }>; maintenance?: { enabled?: boolean; startsAt?: string; endsAt?: string; message?: string; updated_at?: string } | null; sadikUye?: { toplamKayitli?: number; kontenjan?: number } | null } | null : null;
       if (alive) {
         setHolyDay(getHolyDayState());

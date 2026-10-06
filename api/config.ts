@@ -132,12 +132,12 @@ async function sadikUyeSayaci(): Promise<{ toplamKayitli: number; kontenjan: num
 //      farklı instance'ları bile tek talebe indirger.
 // ═════════════════════════════════════════════════════════
 const CONFIG_TTL_MS = 45_000;
-let cfgSnapshot: { at: number; body: unknown } | null = null;
+let cfgSnapshot: { at: number; body: { maintenance?: { enabled?: boolean } } & Record<string, unknown> } | null = null;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ★ Snapshot taze ise DB'siz dön — lansman yükünde DB nefes alır
   if (req.method === "GET" && cfgSnapshot && Date.now() - cfgSnapshot.at < CONFIG_TTL_MS) {
-    res.setHeader("Cache-Control", "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
+    res.setHeader("Cache-Control", cfgSnapshot.body?.maintenance?.enabled ? "public, max-age=10, s-maxage=30" : "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
     return res.status(200).json(cfgSnapshot.body as Record<string, unknown>);
   }
   if (req.method !== "GET") { res.setHeader("Cache-Control", "no-store"); return res.status(405).json({ ok: false, error: "Method Not Allowed" }); }
@@ -198,7 +198,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sadikUye,
     };
     cfgSnapshot = { at: Date.now(), body };
-    res.setHeader("Cache-Control", "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
+    res.setHeader("Cache-Control", cfgSnapshot.body?.maintenance?.enabled ? "public, max-age=10, s-maxage=30" : "public, max-age=15, s-maxage=45, stale-while-revalidate=300");
     return res.status(200).json(body);
   } catch (error) {
     await logServerError(req, error, "api/config");
