@@ -136,6 +136,18 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         <>
                           <LogIn size={14} style={{ color: "var(--accent)" }} />
                           <span className="flex-1 truncate" title={t("hbrHesapDegistir")}>{user.name}</span>
+                          {/* ★ SADIK ÜYE İSİM ETİKETİ (06.10, sahibin emri): ismin yanında
+                              parantezli gösterişli rozet — ilk 100 kayıt kampanyası.
+                              Glow + degrade; notranslate (Google Translate bozmasın). */}
+                          {isSadikUye() && (
+                            <span
+                              title={t("sadikUyeEtiketTitle")}
+                              className="notranslate ml-0.5 shrink-0 animate-pulse rounded bg-gradient-to-r from-emerald-500/30 to-teal-400/30 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-emerald-300"
+                              style={{ boxShadow: "0 0 10px rgba(52,211,153,.45), inset 0 0 0 1px rgba(52,211,153,.5)" }}
+                            >
+                              (★sadık)
+                            </span>
+                          )}
                           <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title={t("hbrCikisTitle")}>{t("hbrCikis")}</button>
                         </>
                       ) : (
