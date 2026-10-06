@@ -130,7 +130,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { surahName, s, a, meal, lang = "tr" } = req.body || {};
+    const { surahName, s, a, meal, lang: hamLang = "tr" } = req.body || {};
+    // ★ 06.10: lang artık GERÇEKÇE kullanılıyor — çıktı dili kuralı prompta eklenir.
+    //   (Önceden destructure edilip hiç kullanılmıyordu; AI başlık her dilde TR geliyordu.)
+    const lang = ["tr", "en", "ar", "id", "ur"].includes(hamLang) ? hamLang : "tr";
+    const DIL_ADI: Record<string, string> = {
+      tr: "Türkçe",
+      en: "English",
+      ar: "Modern Standart Arapça (العربية الفصحى)",
+      id: "Bahasa Indonesia",
+      ur: "Urduca (اردو)",
+    };
+    const ciktiDili = DIL_ADI[lang] || DIL_ADI.tr;
 
     if (!meal || typeof meal !== "string" || meal.trim().length < 3) {
       res.status(400).json({ error: "Ayet meali / meali eksik" });
@@ -154,6 +165,8 @@ DİNİ GÜVENLİK KURALLARI (EN KRİTİK):
 - Çıktı: "🤍 Zor zamanlarda sabretmeyi fısıldayan o ayet — Bakara 2:153"
 - Girdi: "Bakara 255", Meal: "Allah, kendisinden başka ilah olmayandır..."
 - Çıktı: "🛡️ Ayetü'l-Kürsî: Korunmak için okunan o büyük ayet — Bakara 2:255"
+
+7. ÇIKTI DİLİ (ZORUNLU): Başlığı YALNIZCA ${ciktiDili} dilinde yaz. "Sure:" alanında verilen sure adı Türkçe yazılmış olabilir; ürettiğin dilde bilinen sure adını kullan (örn. Bakara → Al-Baqarah / Al-Baqarah / البقرة). " — {S} {N}:{A}" sonek formatını ve Batı rakamlarını aynen koru.
 
 Şimdi aşağıdaki ayet için en uygun, duygusal ve %100 sahih başlığı üret.`;
 

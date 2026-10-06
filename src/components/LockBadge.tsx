@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Lock, Gem, Sparkles, Crown } from "lucide-react";
+// ★ 06.10 i18n: rozet etiketleri + tooltip'ler seçili dilde (paylaş akışı dil turunda
+//   "ELİT"/"Elit Üyelik Gerekir" TR kalmıştı — dict anahtarları lock*).
+import { translate } from "../i18n";
 
 export type LockKind = "pro" | "elit" | "v2" | "v3" | "maintenance";
 
@@ -16,19 +19,26 @@ interface LockBadgeProps {
 }
 
 const KIND_META: Record<LockKind, {
-  label: string;
-  tooltip: string;
   icon: React.ElementType;
   gradient: string;
   glow: string;
   clickable: boolean;
 }> = {
-  pro:  { label: "PRO",  tooltip: "Pro Üyelik Gerekir",     icon: Gem,      gradient: "linear-gradient(135deg,#f5dda6 0%,#d7aa52 100%)", glow: "rgba(215,170,82,.55)",  clickable: true },
-  elit: { label: "ELİT", tooltip: "Elit Üyelik Gerekir",    icon: Crown,    gradient: "linear-gradient(135deg,#e8d48a 0%,#8b6914 50%,#d7aa52 100%)", glow: "rgba(232,212,138,.7)", clickable: true },
-  v2:   { label: "V2",   tooltip: "V2 Güncellemesi Yakında", icon: Sparkles, gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
-  v3:          { label: "V3",      tooltip: "V3 Güncellemesi Yakında", icon: Lock,     gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
-  maintenance: { label: "🔒 BAKIMDA", tooltip: "Bakımda",  icon: Lock,     gradient: "linear-gradient(135deg,#ffe58a 0%,#f5b400 100%)", glow: "rgba(255,196,44,.65)", clickable: false },
+  pro:  { icon: Gem,      gradient: "linear-gradient(135deg,#f5dda6 0%,#d7aa52 100%)", glow: "rgba(215,170,82,.55)",  clickable: true },
+  elit: { icon: Crown,    gradient: "linear-gradient(135deg,#e8d48a 0%,#8b6914 50%,#d7aa52 100%)", glow: "rgba(232,212,138,.7)", clickable: true },
+  v2:   { icon: Sparkles, gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
+  v3:   { icon: Lock,     gradient: "linear-gradient(135deg,#9ca3af 0%,#4b5563 100%)", glow: "rgba(156,163,175,.4)", clickable: false },
+  maintenance: { icon: Lock, gradient: "linear-gradient(135deg,#ffe58a 0%,#f5b400 100%)", glow: "rgba(255,196,44,.65)", clickable: false },
 };
+
+const LOCK_LABEL_KEY: Record<LockKind, string> = {
+  pro: "lockProLabel", elit: "lockElitLabel", v2: "lockV2Label", v3: "lockV3Label", maintenance: "lockMaintenanceLabel",
+};
+const LOCK_TOOLTIP_KEY: Record<LockKind, string> = {
+  pro: "lockProTooltip", elit: "lockElitTooltip", v2: "lockV2Tooltip", v3: "lockV3Tooltip", maintenance: "lockMaintenanceTooltip",
+};
+/** Seçili dilde çeviri — nur_lang localStorage (AnnouncementBar deseni) */
+const lockT = (key: string): string => translate(localStorage.getItem("nur_lang"), key);
 
 const POSITION_CLASS: Record<NonNullable<LockBadgeProps["position"]>, string> = {
   "top-right":    "top-1.5 right-1.5",
@@ -51,7 +61,9 @@ export const LockBadge: React.FC<LockBadgeProps> = ({
   const [hover, setHover] = useState(false);
   const meta = KIND_META[kind];
   const Icon = meta.icon;
-  const tooltip = tooltipText ?? meta.tooltip;
+  const label = lockT(LOCK_LABEL_KEY[kind]);
+  const tooltip = tooltipText ?? lockT(LOCK_TOOLTIP_KEY[kind]);
+  const yakinda = lockT("lockYakinda");
   const dim = size === "sm" ? "h-4 min-w-[20px] px-1" : "h-5 min-w-[26px] px-1.5";
   const iconSize = size === "sm" ? 8 : 10;
   const textSize = size === "sm" ? "text-[7px]" : "text-[8.5px]";
@@ -85,7 +97,7 @@ export const LockBadge: React.FC<LockBadgeProps> = ({
         />
         <span className="relative flex items-center gap-0.5">
           <Icon size={iconSize} strokeWidth={3} />
-          {meta.label}
+          {label}
         </span>
       </span>
 
@@ -103,7 +115,7 @@ export const LockBadge: React.FC<LockBadgeProps> = ({
           }}
         >
           {tooltip}
-          {!meta.clickable && <span className="ml-1 opacity-70">· yakında</span>}
+          {!meta.clickable && <span className="ml-1 opacity-70">· {yakinda}</span>}
         </span>
       )}
     </span>
@@ -120,6 +132,8 @@ export const LockedOverlay: React.FC<{ kind: LockKind; onUpgrade?: () => void; r
   rounded = "rounded-xl",
 }) => {
   const meta = KIND_META[kind];
+  const label = lockT(LOCK_LABEL_KEY[kind]);
+  const tooltip = lockT(LOCK_TOOLTIP_KEY[kind]);
   return (
     <button
       type="button"
@@ -136,7 +150,7 @@ export const LockedOverlay: React.FC<{ kind: LockKind; onUpgrade?: () => void; r
         style={{ background: meta.gradient }}
       >
         <meta.icon size={10} strokeWidth={3} />
-        {kind === "maintenance" ? meta.label : meta.tooltip}
+        {kind === "maintenance" ? label : tooltip}
       </span>
     </button>
   );

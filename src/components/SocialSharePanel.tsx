@@ -166,6 +166,9 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                       s: cur.s,
                       a: cur.a,
                       meal: cur.tr,
+                      // ★ 06.10: dil bilgisi gönderilir — sunucu başlığı SEÇİLİ DİLDE
+                      //   üretir (önceden prompt hep TR'ydi: AI başlık her dilde TR geliyordu)
+                      lang: dil,
                     }),
                   });
                   const data = await res.json();
