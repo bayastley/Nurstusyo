@@ -6,19 +6,16 @@
 import { readFileSync } from "node:fs";
 
 function entries(f) {
+  // ★ 07.10: sözlükler .ts'den .json'a taşındı — JSON.parse ile anahtar seti okunur
   const src = readFileSync(new URL(`../src/i18n/${f}`, import.meta.url), "utf8");
-  const map = new Map();
-  const re = /^\s{2}([A-Za-z_][A-Za-z0-9_]*)\s*:\s*"((?:[^"\\]|\\.)*)"\s*,/gm;
-  let x;
-  while ((x = re.exec(src))) map.set(x[1], x[2]);
-  return map;
+  return new Map(Object.entries(JSON.parse(src)));
 }
 
-const tr = entries("dicts.tr.ts");
-const en = entries("dicts.en.ts");
-const id = entries("dicts.id.ts");
-const ur = entries("dicts.ur.ts");
-const ar = entries("dicts.ar.ts");
+const tr = entries("dicts.tr.json");
+const en = entries("dicts.en.json");
+const id = entries("dicts.id.json");
+const ur = entries("dicts.ur.json");
+const ar = entries("dicts.ar.json");
 
 const fmt = (v) => v.replace(/\\'/g, "'").slice(0, 90);
 
