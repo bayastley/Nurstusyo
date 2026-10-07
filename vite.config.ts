@@ -110,7 +110,13 @@ export default defineConfig(({ mode }) => {
               // Tüm yorumları kaldır (lisans dahil değil)
               comments: false,
               ecma: 2020,
-              ascii_only: true,       // Türkçe karakterler \u escape'e çevrilir → daha zor okunur
+              // ★ 07.10 PARÇALAMA TURU: ascii_only KAPALI — ölçüm kanıtı:
+              //   açılı build'de 110.329 unicode kaçış (~646KB şişkinlik; Türkçe/Ar/Ur
+              //   karakterler 6 bayta genişliyordu). UTF-8 ham çıktıda aynı metin ~%30
+              //   küçük + gzip sıkıştırması UTF-8'de daha verimli (gzip ölçümü aşağıda).
+              //   Obfuscation kaybı ihmal edilebilir: mangle+toplevel zaten adları
+              //   çorba ediyor; string UTF-8 ham kalmakla yalnızca okunabilirlik kazanır.
+              ascii_only: false,
             },
           }
         : undefined,
