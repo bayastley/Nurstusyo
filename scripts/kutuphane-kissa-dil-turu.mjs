@@ -146,7 +146,9 @@ function statikDenetim() {
   for (const t of trListe) if (!havuzBasliklari.has(t)) bulgular.push({ tur: "ayet-baslik-fazla", dil: "-", satir: t });
   for (const t of havuzBasliklari) if (!trKume.has(t)) bulgular.push({ tur: "ayet-baslik-eksik", dil: "-", satir: t });
   for (const dil of ["en", "ar", "id", "ur"]) {
-    const blok = objeBlogu(ab, dil, "const HARITA");
+    // ★ 07.10 SRP bölme sonrası: harita dil-başına dosyada (AYET_BASLIK_HARITA_<DIL>)
+    const haritaDosya = `src/data/ayetBaslikHarita${dil.charAt(0).toUpperCase() + dil.slice(1)}.ts`;
+    const blok = objeBlogu(oku(haritaDosya), dil, `AYET_BASLIK_HARITA_${dil.toUpperCase()}`);
     if (!blok) { bulgular.push({ tur: "ayet-baslik-blok", dil, satir: "HARITA bloğu yok" }); continue; }
     const anahtarlar = [...blok.matchAll(/"((?:[^"\\]|\\.)*)": "/g)].map((m) => m[1]);
     const eksik = [...trKume].filter((k) => !anahtarlar.includes(k));
@@ -249,8 +251,8 @@ async function main() {
           const trSizinti = [...libBilgi.metin.split(/\r?\n/)].filter((s) => TR_KARAKTER.test(s.trim()) && s.trim().length > 3);
           dilSonuc.kutuphane.ayetTrSizinti = trSizinti.length;
           if (trSizinti.length) bulgular.push({ kaynak: "ayet-baslik-tr-sizinti", satir: trSizinti.slice(0, 3).join(" | ") });
-          const abKaynak = oku("src/data/ayetBaslikCokDil.ts");
-          const abBlok = objeBlogu(abKaynak, dil, "const HARITA") || "";
+          const abKaynak = oku(`src/data/ayetBaslikHarita${dil.charAt(0).toUpperCase() + dil.slice(1)}.ts`);
+          const abBlok = objeBlogu(abKaynak, dil, `AYET_BASLIK_HARITA_${dil.toUpperCase()}`) || "";
           // (regex yok — indexOf: başlıkta kesme işareti vb. olsa da bozulmaz)
           const abKey = `"${statik.ayetOrnek}": "`;
           const kIdx = abBlok.indexOf(abKey);

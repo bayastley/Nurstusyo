@@ -3,7 +3,10 @@ import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
+// ★ 07.10: vite-plugin-singlefile KALDIRILDI — 4.1MB tek dosya açılışta tamamen
+//   parse ediliyordu; eski cihazlar kasıyordu. Artık çoklu-chunk: React.lazy ile
+//   ağır modallar İLK AÇILIŞTA yüklenmez, açınca kendi chunk'ı gelir (SW hash'li
+//   asset'leri zaten cache-first yönetiyor — uyum için yazılmıştı).
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -53,7 +56,7 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    plugins: [react(), tailwindcss(), viteSingleFile()],
+    plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),

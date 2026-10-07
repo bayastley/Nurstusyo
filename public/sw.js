@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v5";
+const CACHE = "nurstudyo-v6"; // ★ 07.10: çoklu-chunk build geçişi (SRP/lazy)
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.

@@ -5,26 +5,31 @@ import {
 import { LegalModal } from "./LegalModal";
 import { Modal, Segmented } from "./UIElements";
 import { LockBadge } from "./LockBadge";
-import { AdminDashboardModal } from "./AdminDashboardModal";
-import { PremiumModal } from "./PremiumModal";
-import { ZipExplorer } from "./ZipExplorer";
 import ErrorBoundary from "./ErrorBoundary";
-import { AtmosferSeciciModal } from "./AtmosferSeciciModal";
-import QuranLearnModal from "./QuranLearnModal";
-import { AyetKartlariModal } from "./AyetKartlariModal";
-import { SiteHakkindaModal } from "./SiteHakkindaModal";
-import { RamazanModal } from "./RamazanModal";
-import { AyetPaketleriModal } from "./AyetPaketleriModal";
-import { OzelGunTakvimiModal } from "./OzelGunTakvimiModal";
-import { KesfetModal } from "./KesfetModal";
-import { HafizlikTestiModal } from "./HafizlikTestiModal";
-import { AyetNotlariModal } from "./AyetNotlariModal";
-import { KelimeAtolyesiModal } from "./KelimeAtolyesiModal";
+// ★ 07.10 ESKİ CİHAZ PERFORMANSI — LAZY MODALLAR:
+//   Ağır modallar artık React.lazy ile KENDİ chunk'larında. Açılışta indirilmez/
+//   parse edilmezler; kullanıcı modalı ilk açtığında chunk gelir. "acilanlar"
+//   kapısı bir kez açılınca modal mount kalır — bileşen state'i korunur,
+//   bugünkü davranışın aynısı (bağlam kopmaz).
+const AdminDashboardModal = React.lazy(() => import("./AdminDashboardModal").then((m) => ({ default: m.AdminDashboardModal })));
+const PremiumModal = React.lazy(() => import("./PremiumModal").then((m) => ({ default: m.PremiumModal })));
+const ZipExplorer = React.lazy(() => import("./ZipExplorer").then((m) => ({ default: m.ZipExplorer })));
+const AtmosferSeciciModal = React.lazy(() => import("./AtmosferSeciciModal").then((m) => ({ default: m.AtmosferSeciciModal })));
+const QuranLearnModal = React.lazy(() => import("./QuranLearnModal"));
+const AyetKartlariModal = React.lazy(() => import("./AyetKartlariModal").then((m) => ({ default: m.AyetKartlariModal })));
+const SiteHakkindaModal = React.lazy(() => import("./SiteHakkindaModal").then((m) => ({ default: m.SiteHakkindaModal })));
+const RamazanModal = React.lazy(() => import("./RamazanModal").then((m) => ({ default: m.RamazanModal })));
+const AyetPaketleriModal = React.lazy(() => import("./AyetPaketleriModal").then((m) => ({ default: m.AyetPaketleriModal })));
+const OzelGunTakvimiModal = React.lazy(() => import("./OzelGunTakvimiModal").then((m) => ({ default: m.OzelGunTakvimiModal })));
+const KesfetModal = React.lazy(() => import("./KesfetModal").then((m) => ({ default: m.KesfetModal })));
+const HafizlikTestiModal = React.lazy(() => import("./HafizlikTestiModal").then((m) => ({ default: m.HafizlikTestiModal })));
+const AyetNotlariModal = React.lazy(() => import("./AyetNotlariModal").then((m) => ({ default: m.AyetNotlariModal })));
+const KelimeAtolyesiModal = React.lazy(() => import("./KelimeAtolyesiModal").then((m) => ({ default: m.KelimeAtolyesiModal })));
+const ArkaPlanUreticiModal = React.lazy(() => import("./ArkaPlanUreticiModal").then((m) => ({ default: m.ArkaPlanUreticiModal })));
+const DavetModal = React.lazy(() => import("./DavetModal").then((m) => ({ default: m.DavetModal })));
+const HaftaninVideosuModal = React.lazy(() => import("./HaftaninVideosuModal").then((m) => ({ default: m.HaftaninVideosuModal })));
+const KendiSesModal = React.lazy(() => import("./KendiSesModal").then((m) => ({ default: m.KendiSesModal })));
 import { bilinenKelimeIsaretle } from "./kesfetTemel"; // ★ 03.10: atölye aktarımı kelime kartını "bilinen" işaretler
-import { ArkaPlanUreticiModal } from "./ArkaPlanUreticiModal";
-import { DavetModal } from "./DavetModal";
-import { HaftaninVideosuModal } from "./HaftaninVideosuModal";
-import { KendiSesModal } from "./KendiSesModal";
 import type { CatId, Clip } from "../clips";
 import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, type Emotion } from "../dualar";
 import { KISSAS } from "../data";
@@ -220,6 +225,15 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   //   LANSmanda bu .env değişkeni KALDIRILACAK → kilitler otomatik geri gelir.
   //   Yayın build'inde env yoksa kural eskisi gibi çalışır; canlıyı etkilemez.
   const INCELEME_MODU = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_INCELEME_MODU === "1";
+
+  // ★ LAZY KAPISI (07.10): açılan modal adlarını kaydet — bir kez açılan modalın
+  //   chunk'ı yüklensin ve mount KALSIN (open=false'la devam; state kaybolmaz).
+  const [acilanlar, setAcilanlar] = useState<string[]>([]);
+  useEffect(() => {
+    if (!modal) return;
+    setAcilanlar((onceki) => (onceki.includes(modal) ? onceki : [...onceki, modal]));
+  }, [modal]);
+  const acildiMi = (...adlar: string[]) => adlar.some((a) => acilanlar.includes(a));
   type V2ModalId = "ayetKartlari" | "kesfet" | "hafizlikTesti" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi";
   const V2_KILITLI: Record<V2ModalId, string> = {
     ayetKartlari: "Ayet & Dua Kütüphanesi",
@@ -367,6 +381,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* PREMIUM MODAL */}
       {premiumOpen && (
+        <React.Suspense fallback={null}>
         <PremiumModal
           lang={lang}
           initialTab={premiumTab}
@@ -438,6 +453,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
             notify(`${amount} ⚡ Üretim hakkı hesabına eklendi`);
           }}
         />
+        </React.Suspense>
       )}
 
       {/* ADMIN DASHBOARD MODAL
@@ -445,7 +461,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           kök ErrorBoundary (App.tsx) yerine bu sınır patlar, yalnız panel kapanır. */}
       {modal === "adminDashboard" && serverAdminVerified && (
         <ErrorBoundary label="Admin Paneli">
-          <AdminDashboardModal
+          <React.Suspense fallback={null}>
+            <AdminDashboardModal
             onClose={() => setModal(null)}
             currentUserEmail={phone.includes("@") ? phone : ""}
             onUpdateUser={(email, newTier, newJeton) => {
@@ -458,12 +475,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               }
             }}
             notify={notify}
-          />
+            />
+          </React.Suspense>
         </ErrorBoundary>
       )}
 
       {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ELİT özelliği */}
       {modal === "kendiSes" && (
+        <React.Suspense fallback={null}>
         <KendiSesModal
           open
           onClose={() => setModal(null)}
@@ -487,6 +506,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           openPremium={openPremium}
           notify={notify}
         />
+        </React.Suspense>
       )}
 
       {/* ADMIN AUTH MODAL — SRP adım 8 */}
@@ -495,6 +515,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       )}
 
       {/* ★ ATMOSFER SEÇİCİ — 30.09 SRP parçalama adım 1: AtmosferSeciciModal.tsx'e taşındı (JSX birebir korunur) */}
+      {acildiMi("atmos") && (
+      <React.Suspense fallback={null}>
       <AtmosferSeciciModal
         open={modal === "atmos"}
         onKapat={() => { setModal(null); setPickingFor(null); }}
@@ -523,37 +545,81 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         setLockTip={setLockTip}
         t={t}
       />
+      </React.Suspense>
+      )}
 
       {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride */}
+      {acildiMi("quranLearn", "quranListen") && (
+      <React.Suspense fallback={null}>
       <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} lang={lang} />
+      </React.Suspense>
+      )}
       {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
+      {acildiMi("ayetKartlari") && (
+      <React.Suspense fallback={null}>
       <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} lang={lang} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
+      </React.Suspense>
+      )}
 
       {/* ★ BU SİTEDE NE VAR — kaynaklar, telif bildirimi, iletişim (yol haritası madde 4) */}
+      {acildiMi("siteHakkinda") && (
+      <React.Suspense fallback={null}>
       <SiteHakkindaModal open={modal === "siteHakkinda"} onClose={() => setModal(null)} onIletisim={() => setModal("contact")} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ RAMAZAN & KANDİL MERKEZİ — hicri takvimle otomatik Ramazan modu (madde 6) */}
+      {acildiMi("ramazan") && (
+      <React.Suspense fallback={null}>
       <RamazanModal open={modal === "ramazan"} onClose={() => setModal(null)} prayerTimings={prayerTimings} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ HAZIR AYET PAKETLERİ — tek tuşla stüdyoya paket ekle (madde 8) */}
+      {acildiMi("ayetPaketleri") && (
+      <React.Suspense fallback={null}>
       <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ ÖZEL GÜN TAKVİMİ — Cuma/kandiller + tema önerisi + hatırlatıcı (madde 10) */}
+      {acildiMi("ozelGunTakvimi") && (
+      <React.Suspense fallback={null}>
       <OzelGunTakvimiModal open={v2Acik("ozelGunTakvimi")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ HAFTANIN VİDEOSU — admin onaylı topluluk vitrini (madde 17) */}
+      {acildiMi("haftaninVideosu") && (
+      <React.Suspense fallback={null}>
       <HaftaninVideosuModal open={modal === "haftaninVideosu"} onClose={() => setModal(null)} notify={notify} />
+      </React.Suspense>
+      )}
 
       {/* ★ KEŞFET — hadis bankası, kıssa, soru-cevap, kelime kartları, sure bilgileri, namaz rehberi, bebek duası, dua rehberi (maddeler 18-22-28-35-61) */}
+      {acildiMi("kesfet") && (
+      <React.Suspense fallback={null}>
       <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} lang={lang} atolyeAc={(kelime, ar) => { setAtolyeBaslangic({ kelime, ar }); setModal("kelimeAtolyesi"); }} />
+      </React.Suspense>
+      )}
 
       {/* ★ HAFIZLIK TESTİ — devamını getir, 4 seçenekli ayet tamamlama (madde 44) */}
+      {acildiMi("hafizlikTesti") && (
+      <React.Suspense fallback={null}>
       <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ AYET NOTLARI — şifreli kişisel notlar, sunucuya gitmez (madde 57) */}
+      {acildiMi("ayetNotlari") && (
+      <React.Suspense fallback={null}>
       <AyetNotlariModal open={v2Acik("ayetNotlari")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
 
       {/* ★ KELİME ATÖLYESİ — kelime yaz → ayet + atmosfer önerisi → tek tık stüdyoya (İş 3) */}
+      {acildiMi("kelimeAtolyesi") && (
+      <React.Suspense fallback={null}>
       <KelimeAtolyesiModal
         open={modal === "kelimeAtolyesi"}
         onClose={() => setModal(null)}
@@ -566,8 +632,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         kelimeBaslangic={atolyeBaslangic?.kelime}
         onOgrenildi={() => { if (atolyeBaslangic) bilinenKelimeIsaretle(atolyeBaslangic.ar); }}
       />
+      </React.Suspense>
+      )}
 
       {/* ★ ARKA PLAN ÜRETİCİ LİTE — mood yaz → sahne planı + sinematik filtre (İş 4) */}
+      {acildiMi("arkaPlanUretici") && (
+      <React.Suspense fallback={null}>
       <ArkaPlanUreticiModal
         open={modal === "arkaPlanUretici"}
         onClose={() => setModal(null)}
@@ -579,8 +649,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         accessTier={accessTier}
         isMasterSurum={isMasterSürüm}
       />
+      </React.Suspense>
+      )}
 
       {/* ★ DAVET / REFERANS — kod + link + karşılıklı +3 kısa video (İş 5) */}
+      {acildiMi("davet") && (
+      <React.Suspense fallback={null}>
       <DavetModal
         open={modal === "davet"}
         onClose={() => setModal(null)}
@@ -590,6 +664,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         bekleyenDavetKodu={bekleyenDavetKodu}
         onOdulAlindi={syncWallet}
       />
+      </React.Suspense>
+      )}
 
       {/* LIBRARY MODAL — SRP adım 8 */}
       {modal === "library" && (
@@ -600,7 +676,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır */}
       {modal === "zip" && isMasterSürüm && (
         <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
-          <div className="h-[65vh] min-h-[420px]"><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} onMedyaDegisti={onMedyaSenkron} /></div>
+          <div className="h-[65vh] min-h-[420px]"><React.Suspense fallback={null}><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} onMedyaDegisti={onMedyaSenkron} /></React.Suspense></div>
         </Modal>
       )}
 
