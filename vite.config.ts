@@ -70,10 +70,15 @@ export default defineConfig(({ mode }) => {
         ? {
             // Kod sıkıştırma seçenekleri
             compress: {
-              drop_console: true,     // console.log/warn/info/debug hepsi silinir
+              // ★ 07.10: drop_console KAPALI — console.warn secureStore hata
+              //   yollarında canlıda kalmalı (sessiz yutma bakım krizini gizledi);
+              //   log/info/debug pure_funcs ile yine silinir.
+              drop_console: false,
               drop_debugger: true,    // debugger; ifadeleri silinir
               pure_funcs: [
-                "console.log", "console.info", "console.debug", "console.warn",
+                "console.log", "console.info", "console.debug",
+                // console.warn BİLLİNÇLİ tutuldu: secureStore hata yolları canlıda
+                // görünsün (sessiz yutma 07.10 bakım krizinin kök nedeniydi)
               ],
               passes: 3,              // 3 kez optimize et — daha küçük çıktı
               ecma: 2020,
