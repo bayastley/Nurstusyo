@@ -65,7 +65,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   // ★📸 KENDİ FOTOĞRAFIN (foto+hat sanatı kartı): kullanıcı fotoğrafı yükler,
   //   kart arka planına hat sanatı ayeti işlenir. Fotoğraf YALNIZCA tarayıcıda
   //   kalır — hiçbir sunucuya gönderilmez (KVKK dostu).
-  const kendiFotoBg = useMemo<BgItem>(() => ({ id: "kendi-foto", label: "Kendi Fotoğrafın", cat: "kendi", src: "" }), []);
+  const kendiFotoBg = useMemo<BgItem>(() => ({ id: "kendi-foto", label: translate(lang, "akKendiFotografin"), cat: "kendi", src: "" }), [lang]);
   const [kendiFoto, setKendiFoto] = useState<HTMLImageElement | null>(null);
   const [kendiFotoAd, setKendiFotoAd] = useState("");
 
@@ -306,9 +306,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     //   etiketi içerik-özgü TR kalır (bg etiket havuzu ayrı kapsam).
     const ruhAd = ruhHaliAd(ruh, lang);
     const baslikCevrili = ayetBasligi(lang, ayetPick.title);
-    notify?.(tam
-      ? `🧠 ${ruh.emoji} ${ruhAd} — ${baslikCevrili} · ${bgPick?.label ?? "gradyan arka plan"} hazır!`
-      : `🧠 Tam eşleşme yok, en yakın: ${ruh.emoji} ${ruhAd} — ${baslikCevrili} hazır!`);
+    // ★ 07.10: cümle kalıbı da 5 dile çevrildi (akAiOnay / akAiOnayYakin) — TR kalıntı kalmadı.
+    const arkaEtiket = bgPick?.label ?? tt("akAiGradyanOnay");
+    notify?.((tam ? tt("akAiOnay") : tt("akAiOnayYakin"))
+      .replace("{emoji}", ruh.emoji)
+      .replace("{ruh}", ruhAd)
+      .replace("{baslik}", baslikCevrili)
+      .replace("{arka}", arkaEtiket));
   }, [ruhHaliMetin, notify, lang]);
 
   if (!open) return null;

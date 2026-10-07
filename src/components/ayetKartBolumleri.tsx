@@ -268,9 +268,9 @@ export const KartOnizlemeBolumu: React.FC<{
               style={{ aspectRatio: size === "45" ? "4 / 5" : size === "916" ? "9 / 16" : "1 / 1" }}
             />
             <div className="mt-2 flex items-center justify-between px-0.5">
-              <span className="flex min-w-0 items-center gap-1 text-[8.5px] font-semibold text-white/45" title={bg ? `${bg.label} · ${catLabel(bg.cat)}` : "Gradyan arka plan"}>
+              <span className="flex min-w-0 items-center gap-1 text-[8.5px] font-semibold text-white/45" title={bg ? `${bg.label} · ${catLabel(bg.cat)}` : tt("akGradyanArkaPlan")}>
                 <ImageIcon size={10} style={{ color: "var(--accent)" }} />
-                <span className="truncate">{bg ? catLabel(bg.cat) : "Gradyan"}</span>
+                <span className="truncate">{bg ? catLabel(bg.cat) : tt("akGradyan")}</span>
               </span>
               <span className="shrink-0 text-[8.5px] font-bold tabular-nums text-white/40">{dim}</span>
             </div>
@@ -477,14 +477,14 @@ export const KartOnizlemeBolumu: React.FC<{
             {/* 📸 KENDİ FOTOĞRAFIN — foto+hat sanatı kartı (sunucuya gönderilmez) */}
             <div className="mt-3 rounded-xl border border-dashed border-[color:var(--accent)]/40 bg-[color:var(--accent)]/[.05] p-3">
               <p className="flex items-center gap-1.5 text-[9.5px] font-black" style={{ color: "var(--accent-2)" }}>
-                📸 Kendi Fotoğrafınla Hat Kartı
+                {tt("akFotoHatBaslik")}
               </p>
               <p className="mt-0.5 text-[8.5px] leading-relaxed text-white/45">
-                Fotoğrafını yükle — seçtiğin ayet altın hat yazısıyla üzerine işlenir. Fotoğraf cihazından çıkmaz.
+                {tt("akFotoHatAciklama")}
               </p>
               {kendiFoto ? (
                 <div className="mt-2 flex items-center gap-2">
-                  <img src={kendiFoto.src} alt="Yüklenen fotoğraf" className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/20" />
+                  <img src={kendiFoto.src} alt={tt("akYuklenenFotograf")} className="h-10 w-10 rounded-lg object-cover ring-1 ring-white/20" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[9px] font-bold text-white/80">{kendiFotoAd || tt("akFotografYuklendi")}</p>
                     <p className="text-[8px] text-emerald-300">{tt("akFotografSecildi")}</p>
@@ -494,12 +494,12 @@ export const KartOnizlemeBolumu: React.FC<{
                     onClick={() => { setKendiFoto(null); setKendiFotoAd(""); if (bgId === "kendi-foto") setBgId(""); }}
                     className="shrink-0 rounded-lg bg-white/10 px-2 py-1 text-[8.5px] font-bold text-white/60 hover:bg-white/20"
                   >
-                    Kaldır
+                    {tt("akFotoKaldirBtn")}
                   </button>
                 </div>
               ) : (
                 <label className="mt-2 flex cursor-pointer items-center justify-center gap-1.5 rounded-lg py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                  <Upload size={12} /> Fotoğraf Yükle
+                  <Upload size={12} /> {tt("akFotoYukleBtn")}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => { fotoYukle(e.target.files?.[0]); e.currentTarget.value = ""; }} />
                 </label>
               )}
@@ -513,7 +513,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 className={`rounded-lg py-1.5 text-[9px] font-bold transition ${size === "45" ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                 style={size === "45" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
               >
-                4:5 · Gönderi
+                {tt("akBoyutGonderi")}
               </button>
               <button
                 type="button"
@@ -521,7 +521,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 className={`rounded-lg py-1.5 text-[9px] font-bold transition ${size === "11" ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                 style={size === "11" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
               >
-                1:1 · Kare
+                {tt("akBoyutKare")}
               </button>
               <button
                 type="button"
@@ -529,7 +529,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 className={`rounded-lg py-1.5 text-[9px] font-bold transition ${size === "916" ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
                 style={size === "916" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
               >
-                9:16 · Durum 📱
+                {tt("akBoyutDurum")}
               </button>
             </div>
 
