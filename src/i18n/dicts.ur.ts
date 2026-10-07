@@ -306,7 +306,7 @@ export const urDict: Dict = {
   hbrKayitGiris: "رجسٹر / لاگ ان",
   hbrUyelikTitle: "رکنیت کی حالت",
   hbrDenemeBittiTitle: "آپ کا ٹرائل ختم — مفت رجسٹر کریں",
-  hbrDenemeTitle: "مہمان ٹرائل حقوق — رجسٹر کریں اور +20 کریڈٹ حاصل کریں",
+  hbrDenemeTitle: "مہمان ٹرائل حقوق — رجسٹر کریں اور +5 ویڈیو کریڈٹ حاصل کریں",
   hbrUyeOl: "🎁 رجسٹر کریں",
   hbrDenemeKalan: "{n} ٹرائل باقی",
   vpSolaKaydir: "متن بائیں منتقل کریں",

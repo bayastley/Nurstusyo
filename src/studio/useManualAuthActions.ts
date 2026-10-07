@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { checkRateLimit } from "../rateLimiter";
-import { JETON, getJeton, setCurrentTier, setJeton as persistJetonSecure, startTrial, type Tier } from "../tier";
+import { JETON, getJeton, grantPack, setCurrentTier, setJeton as persistJetonSecure, startTrial, type Tier } from "../tier";
 import { syncUserInDb } from "../components/adminHelpers";
 import { adminSonEmailOku } from "./useAuth";
 import { uid } from "./studioHelpers";
@@ -74,6 +74,9 @@ export function useManualAuthActions({
       notify("🛡️ Kurucu Admin girişi başarılı! Tüm kilitler açıldı.");
     } else {
       syncUserInDb(email, newUser.name, userTier, userJeton);
+      // ★ DENEME OTOMASYONU (07.10): giriş formuyla girenlerde de 7 gün PRO denemesi
+      //   garantilenir. startTrial() idempotenttir (var olan başlangıcı bozmaz).
+      startTrial();
       notify("Giriş başarılı! Hoş geldiniz.");
     }
     setModal(null);
@@ -106,11 +109,16 @@ export function useManualAuthActions({
     } else {
       let nextJeton = getJeton();
       if (!localStorage.getItem("nur_register_bonus_granted")) {
-        nextJeton += JETON.KAYIT_BONUSU_FREE;
+        // ★ SAHTE BONUS FIX (07.10): eski kod persistJetonSecure() yazıyordu ama setJeton
+        //   bilinçli no-op (bakiye kavramı kaldırıldı) — 2 sn sonra wallet sync gerçek paketi
+        //   geri yazınca bonus buharlaşıyordu. Artık bonus GERÇEK paket hakkı olarak
+        //   grantPack ile verilir; syncWallet MAX-birleştirmesi sayesinde ezilmez.
+        grantPack("kisa", JETON.KAYIT_BONUSU_FREE);
+        nextJeton = getJeton();
         persistJetonSecure(nextJeton);
         localStorage.setItem("nur_register_bonus_granted", "1");
         setJetonCount(nextJeton);
-        notify(`🎉 Kayıt başarılı! Hoş geldiniz — +${JETON.KAYIT_BONUSU_FREE} jeton hediye edildi.`);
+        notify(`🎉 Kayıt başarılı! Hoş geldiniz — +${JETON.KAYIT_BONUSU_FREE} üretim hakkı hediye edildi.`);
       } else {
         notify("Kayıt başarılı! Hoş geldiniz.");
       }

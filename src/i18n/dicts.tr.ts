@@ -309,7 +309,7 @@ export const trDict: Dict = {
   hbrKayitGiris: "Kayıt Ol / Giriş Yap",
   hbrUyelikTitle: "Üyelik durumu",
   hbrDenemeBittiTitle: "Deneme hakkın bitti — ücretsiz üye ol",
-  hbrDenemeTitle: "Misafir deneme hakların — üye ol, +20 jeton kazan",
+  hbrDenemeTitle: "Misafir deneme hakların — üye ol, +5 üretim hakkı kazan",
   hbrUyeOl: "🎁 Üye Ol",
   hbrDenemeKalan: "{n} deneme",
   vpSolaKaydir: "Yazıları sola kaydır",

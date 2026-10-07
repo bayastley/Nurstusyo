@@ -307,7 +307,7 @@ export const enDict: Dict = {
   hbrKayitGiris: "Register / Sign in",
   hbrUyelikTitle: "Membership status",
   hbrDenemeBittiTitle: "Your trial is over — sign up for free",
-  hbrDenemeTitle: "Guest trial rights — sign up and earn +20 credits",
+  hbrDenemeTitle: "Guest trial rights — sign up and earn +5 video credits",
   hbrUyeOl: "🎁 Sign Up",
   hbrDenemeKalan: "{n} trials left",
   vpSolaKaydir: "Shift text left",

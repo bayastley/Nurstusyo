@@ -307,7 +307,7 @@ export const arDict: Dict = {
   hbrKayitGiris: "تسجيل / دخول",
   hbrUyelikTitle: "حالة العضوية",
   hbrDenemeBittiTitle: "انتهت فترتك التجريبية — سجّل مجانًا",
-  hbrDenemeTitle: "حقوق التجربة للزوار — سجّل واكسب +20 رصيدًا",
+  hbrDenemeTitle: "حقوق التجربة للزوار — سجّل واكسب +5 أرصدة فيديو",
   hbrUyeOl: "🎁 سجّل الآن",
   hbrDenemeKalan: "{n} تجارب متبقية",
   vpSolaKaydir: "إزاحة النص يسارًا",

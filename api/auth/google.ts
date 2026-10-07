@@ -188,11 +188,31 @@ async function syncGoogleUser(user: { id: string; email: string; name: string; p
     body: JSON.stringify({ user_id: user.id }),
   });
 
-  if (isNew) {
-    await supabaseRequest<Array<{ ok: boolean; balance: number; error: string | null }>>("rpc/nur_claim_reward", {
+  if (isNew && !user.isAdmin) {
+    // ★ KAYIT BONUSU FIX (07.10, "hediye gelmedi"): eski kod ölü rpc/nur_claim_reward
+    //   yolunu çağırıyordu; bonus sub_jeton kolonuna yazılıyordu ama /api/payments/wallet
+    //   YALNIZ purchased_kisa/uzun/tam döner — yani bonus cihaza ASLA ulaşmıyor, bildirim
+    //   sahteydi. Artık bonus doğrudan purchased_kisa'ya yazılır: wallet paket hakkı
+    //   olarak döner, istemci 30 sn'lik sync'te gerçekten alır.
+    await supabaseRequest("nur_wallets?on_conflict=user_id", {
       method: "POST",
-      body: JSON.stringify({ p_user_id: user.id, p_reward_key: "google_register_bonus_v1", p_amount: REGISTER_BONUS }),
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify({ user_id: user.id, purchased_kisa: REGISTER_BONUS, updated_at: new Date().toISOString() }),
     });
+    // ★ DENEME OTOMASYONU FIX (07.10, "hakkım yok"): 02.10'dan beri 7 gün PRO denemesi
+    //   Google kayıtlı kullanıcıda HİÇ başlamıyordu — startTrial() yalnız /kayit formunda
+    //   çağrılıyordu, Google yolu hiç çağırmıyordu (nur_trials canlıda 0 kayıttı).
+    //   Sunucu denemesini burada başlatır; istemci trialStarted ile eşitler.
+    //   loadServerAccess (render/authorize) nur_trials'taki aktif kaydı PRO sayar —
+    //   yani deneme artık üretim kapısında da gerçekten geçerli.
+    try {
+      const simdi = new Date().toISOString();
+      await supabaseRequest("nur_trials?on_conflict=user_id", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ user_id: user.id, started_at: simdi, updated_at: simdi }),
+      });
+    } catch { /* deneme yazımı başarısız olsa da giriş akışı bozulmaz */ }
   }
 
   const wallets = await supabaseRequest<Array<{ sub_jeton: number; purchased_jeton: number }>>(`nur_wallets?user_id=eq.${encodeURIComponent(user.id)}&select=sub_jeton,purchased_jeton`);
@@ -285,6 +305,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       user,
       isNewUser: synced.isNew,
       registerBonus: synced.isNew ? REGISTER_BONUS : 0,
+      // ★ 07.10: yeni Google kaydında sunucu 7 gün PRO denemesi başlattı —
+      //   istemci yerel önbelleğini buna eşitler (useAuthSession).
+      trialStarted: synced.isNew && !user.isAdmin,
       // StudioApp ilk kayıt bonusunu ekranda bir kez ekliyor. Yeni kullanıcıda
       // burada sıfır dönerek aynı 20 jetonun iki kez gösterilmesini önlüyoruz.
       wallet: synced.isNew ? { subJeton: 0, purchasedJeton: 0, total: 0 } : {

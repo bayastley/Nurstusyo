@@ -1240,7 +1240,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     const used = getGuestUsed();
     const left = Math.max(0, GUEST_FREE_VIDEOS - used);
     if (left <= 0) {
-      notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +20 jeton kazan");
+      notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +5 üretim hakkı kazan");
       return;
     }
     setModal(null);

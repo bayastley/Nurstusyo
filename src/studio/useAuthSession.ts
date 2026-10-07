@@ -60,6 +60,7 @@ export function useAuthSession({
           error?: string;
           user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier; isAdmin?: boolean };
           wallet?: { subJeton: number; purchasedJeton: number; total: number } | null;
+          trialStarted?: boolean;
         } | null;
         if (cancelled) return;
         if (!response.ok || !data?.ok || !data.user?.email) {
@@ -109,6 +110,19 @@ export function useAuthSession({
           notify("Google ile giriş başarılı · hoş geldiniz");
         }
         syncUserInDb(email, newUser.name, dbTier, nextJeton);
+        // ★ DENEME SENKRONU (07.10): her Google girişinde sunucudaki gerçek deneme durumu
+        //   yerel önbelleğe yazılır — 7 günden uzun süre girmeyen kullanıcının arayüzü
+        //   bir sonraki yüklemede beklemeden PRO denemesine döner (idempotent, uzatma yapmaz).
+        void denemeyiSunucuyaSenkronla();
+        // ★ DENEME OTOMASYONU (07.10): sunucu yeni Google kaydında 7 gün PRO denemesi
+        //   başlattıysa (nur_trials) yerel önbelleği eşitler — aksi halde UI free kalır.
+        //   denemeyiSunucuyaSenkronla() sunucudaki gerçek başlangıcı çeker (uzatma imkânsız).
+        if (data.trialStarted) {
+          try {
+            localStorage.setItem("nur_trial_start", String(Date.now()));
+          } catch { /* storage kapalıysa sunucu otoritesi yeterli */ }
+          void denemeyiSunucuyaSenkronla();
+        }
       } catch {
         if (!cancelled) notify("Google girişi sırasında bağlantı hatası oluştu");
       }

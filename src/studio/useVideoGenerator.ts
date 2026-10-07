@@ -133,7 +133,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         return;
       }
       if (!misafirGate.allowed) {
-        notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +20 jeton kazan");
+        notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +5 üretim hakkı kazan");
         setLoginTab("register");
         setModal("login");
         return;

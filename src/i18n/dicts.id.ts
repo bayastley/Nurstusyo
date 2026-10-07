@@ -304,7 +304,7 @@ export const idDict: Dict = {
   hbrKayitGiris: "Daftar / Masuk",
   hbrUyelikTitle: "Status keanggotaan",
   hbrDenemeBittiTitle: "Uji coba-mu habis — daftar gratis",
-  hbrDenemeTitle: "Hak uji coba tamu — daftar dan dapatkan +20 kredit",
+  hbrDenemeTitle: "Hak uji coba tamu — daftar dan dapatkan +5 kredit video",
   hbrUyeOl: "🎁 Daftar",
   hbrDenemeKalan: "{n} percobaan",
   vpSolaKaydir: "Geser teks ke kiri",
