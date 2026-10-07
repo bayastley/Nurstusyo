@@ -82,8 +82,11 @@ export default defineConfig(({ mode }) => {
               hoist_vars: false,
               module: true,
               toplevel: true,
-              unsafe_arrows: true,
-              unsafe_methods: true,
+              // ★ 07.10 FIX: unsafe_* crypto-js'i bozuyordu — seal() prod'da sessizce
+              //   patlıyor, secureSet hiç yazmıyordu (bakım ekranı kullanıcılara
+              //   ulaşmıyordu; canlı teşhis kanıtı: 0 SET / yüzlerce GET).
+              unsafe_arrows: false,
+              unsafe_methods: false,
             },
             // İsim karıştırma (mangle) — R2 URL builder, tier logic, secureStore
             // içindeki değişken adları tarayıcıda tanınmaz hale gelir.

@@ -121,6 +121,8 @@ export function secureGet<T>(key: string, fallback: T): T {
   if (result === null) {
     // Veri bozulmuş veya okunamıyor — temizle, fallback dön
     // ★ ASLA reportTamper ÇAĞIRMA — bu normal durum
+    // ★ 07.10: nedeni görünür kıl — sessiz silme bakım akışını karanlıkta bıraktı
+    console.warn("[secureStore] okunamadı, temizlendi:", key);
     try { localStorage.removeItem(key); } catch { /* ignore */ }
     return fallback;
   }
@@ -130,7 +132,12 @@ export function secureGet<T>(key: string, fallback: T): T {
 /** Güvenli yaz — AES + HMAC + fingerprint zarfıyla saklar. */
 export function secureSet<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(key, seal(value)); } catch { /* quota */ }
+  try { localStorage.setItem(key, seal(value)); } catch (error) {
+    // ★ 07.10: sessiz yutma yerine görünür uyarı — kota/şifreleme hataları
+    //   görünmez olunca bakım ekranı gibi kritik akışlar karanlıkta kalıyordu
+    //   (canlı teşhis: sync-config yazımı setItem'e hiç ulaşmadan patlıyordu).
+    console.warn("[secureStore] yazılamadı:", key, error);
+  }
 }
 
 /** Anahtarı sil. */
