@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, type Tier } from "../tier";
+import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, denemeyiSunucuyaSenkronla, type Tier } from "../tier";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { syncUserInDb } from "../components/adminHelpers";
 import type { User, LoginTab } from "../types";
@@ -111,6 +111,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           error?: string;
           user?: { id: string; email: string; name: string; verified: boolean; tier?: Tier; isAdmin?: boolean };
           wallet?: { subJeton: number; purchasedJeton: number; kisa?: number; uzun?: number; tam?: number; total: number } | null;
+          trialStarted?: boolean;
         } | null;
         if (cancelled) return;
         if (!response.ok || !data?.ok || !data.user?.email) {
@@ -154,6 +155,17 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
 
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setCurrentTier(dbTier);
+        // ★ DENEME SENKRONU (07.10): her Google girişinde sunucudaki gerçek deneme
+        //   durumu yerel önbelleğe yazılır — Google kayıtlı kullanıcıda 7 gün PRO
+        //   denemesi artık sunucuda otomatik başlatıldığı için arayüz onu okur.
+        //   Idempotenttir: sunucu otoritesinden eski başlangıç ezilir, uzatma imkânsız.
+        //   (Bu dosya AKTİF Google akışıdır; studio/useAuthSession.ts ölü kopyadır.)
+        if (data.trialStarted) {
+          try {
+            localStorage.setItem("nur_trial_start", String(Date.now()));
+          } catch { /* storage kapalıysa sunucu otoritesi yeterli */ }
+        }
+        void denemeyiSunucuyaSenkronla();
         notify("Google ile giriş başarılı · hoş geldiniz");
       } catch {
         if (!cancelled) notify("Google girişi sırasında bağlantı hatası oluştu");
@@ -232,6 +244,13 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           setAdminGodMode(false);
           localStorage.removeItem("nur_admin_session");
         }
+
+        // ★ DENEME SENKRONU (07.10): oturum geri yüklendiğinde de sunucudaki gerçek
+        //   deneme durumu yerel önbelleğe yazılır — uzun süre girmeyen üye siteyi
+        //   açınca arayüzü otomatik PRO denemesine döner (kullanıcı emri: misafirde çalışmaz,
+        //   oturum kontrolü 401 dönerse bu bloğa hiç gelinmez).
+        //   NOT: bu tick tarayıcıda bir kez çalışır (girişsiz kullanıcıda sunucu zaten döndü).
+        try { void denemeyiSunucuyaSenkronla(); } catch { /* arka plan görevi */ }
       } catch { /* offline/dev durumda sessiz geç */ }
     })();
     return () => { cancelled = true; };
