@@ -64,10 +64,27 @@ export const PwaKurulumBanneri: React.FC = () => {
       if (!data || typeof data.v !== "string") return;
       const surum = data.v;
       if (data.type === "BEKLEYEN_SURUM") {
-        // Katman 1: gerçek beklemedeki sürüm — kapatılmışsa bir daha gösterme
-        try { if (localStorage.getItem(BILDIRIM_KEY) === surum) return; } catch { /* yut */ }
-        bekleyenSurumRef.current = surum;
-        if (live) setGuncellemeVar(true);
+        // ★ 07.10 FIX (kullanıcı: "bu niye çıkıyor — kilit değişiminde gelecekti"):
+        //   iki SAHTE pozitif kaynağı vardı:
+        //   a) skipWaiting+claim geçişi: yeni worker sayfayı kendine çeker, eski
+        //      worker'a giden GET_VERSION "0 kontrollü istemci" yanıtlar → sahte
+        //      BEKLEYEN_SURUM (banner kilit değişimi olmadan da basılıyordu).
+        //   b) installing→activating milisaniyelik penceresi: reg.waiting o an dolu
+        //      görünür ama worker birkaç ms sonra zaten kendiliğinden aktifleşir.
+        //   Çözüm: kayıtta GERÇEKTEN bekleyen worker VAR mı + 700 ms sonra hâlâ
+        //   "installed" durumda mı — ikisi de doğruysa bandı bas. (Kilit/duyuru
+        //   değişimleri bu banner'ı HİÇ ilgilendirmez — onlar config poll ile
+        //   sessiz uygulanır; istenirse admin duyurusu ayrı mekanizma.)
+        const reg = bekleyenSwRef.current;
+        if (!reg || !reg.waiting) return; // (a) kayıtta beklemedeki yok → sahte
+        window.setTimeout(() => {
+          if (!live) return;
+          const bekleyen = reg.waiting;
+          if (!bekleyen || bekleyen.state !== "installed") return; // (b) geçiş anı → sahte
+          try { if (localStorage.getItem(BILDIRIM_KEY) === surum) return; } catch { /* yut */ }
+          bekleyenSurumRef.current = surum;
+          if (live) setGuncellemeVar(true);
+        }, 700);
       } else if (data.type === "AKTIF_SURUM") {
         // Katman 2: aktif sürüm son görülenden farklıysa 1 kez "✓ Güncellendi" (6 sn)
         let onceki: string | null = null;
