@@ -132,10 +132,11 @@ export default async function handler(req: any, res: any) {
   if (!url || !key) return res.status(503).json({ ok: false, error: "Kota servisi kullanılamıyor" });
 
   // ★ Atomic RPC — paralel isteklerde çift harcama imkânsız.
+  // ★ HAFTALIK KOTA (07.10): istemcinin haftalık dönemiyle uyum — 7× çarpan.
   const response = await fetch(`${url}/rest/v1/rpc/nur_consume_video`, {
     method: "POST",
     headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ p_user_id: user.id, p_video_kind: kind, p_daily_quota: kind === "kisa" ? 3 : 0 }),
+    body: JSON.stringify({ p_user_id: user.id, p_video_kind: kind, p_daily_quota: kind === "kisa" ? 3 * 7 : 0 }),
   });
   let rows: Array<{ ok: boolean; quota_left: number; pack_left: number; error?: string }> = [];
   try {

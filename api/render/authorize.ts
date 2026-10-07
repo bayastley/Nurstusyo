@@ -53,6 +53,18 @@ const DAILY_QUOTA: Record<Tier, Record<VideoKind, number>> = {
   elit: { kisa: 15, uzun: 5, tam: 1 },
 };
 
+// ★ HAFTALIK KOTA (07.10 — sahibin emri): istemci (tier.ts, HAFTALIK_KAT_SAYI=7)
+//   haftalık toplam gösteriyor; sunucu artık aynı dönem sayar — RPC'ye KOTA × 7
+//   gönderilir ve nur_daily_usage'taki hafta (Pazartesi NVIC) satırları toplanır.
+//   NOT: parametre adı p_daily_quota RPC'de kalır (imza değişmez, deploy sıfır risk);
+//   değer HAFTALIK TOPLAMDIR. admin/action.ts'taki kota sıfırlama davranışı korunur.
+const HAFTALIK_KAT = 7;
+const QUOTA_HAFTALIK: Record<Tier, Record<VideoKind, number>> = {
+  free: { kisa: DAILY_QUOTA.free.kisa * HAFTALIK_KAT, uzun: 0, tam: 0 },
+  pro: { kisa: DAILY_QUOTA.pro.kisa * HAFTALIK_KAT, uzun: DAILY_QUOTA.pro.uzun * HAFTALIK_KAT, tam: 0 },
+  elit: { kisa: DAILY_QUOTA.elit.kisa * HAFTALIK_KAT, uzun: DAILY_QUOTA.elit.uzun * HAFTALIK_KAT, tam: DAILY_QUOTA.elit.tam * HAFTALIK_KAT },
+};
+
 const ALLOWED_FORMATS = new Set(["9:16", "1:1", "16:9", "4:5"]);
 
 // ─── Inline session doğrulama ────────────────────────────
@@ -301,7 +313,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const kind = MODE_TO_KIND[mode];
   const tier: Tier = access.isAdmin ? "elit" : access.tier;
-  const quota = DAILY_QUOTA[tier][kind];
+  const quota = QUOTA_HAFTALIK[tier][kind];
 
   // Admin üretimleri sınırsızdır; kota/hak tablolarına dokunulmaz.
   if (access.isAdmin) {
@@ -326,7 +338,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(status).json({
           ok: false,
           error: spent.error === "NO_RIGHTS_LEFT"
-            ? "Bugünkü üretim hakkınız doldu. Paket alarak devam edebilirsiniz."
+            ? "Bu haftalık üretim hakkınız doldu. Paket alarak devam edebilirsiniz."
             : "Üretim izni alınamadı",
           kind,
         });
