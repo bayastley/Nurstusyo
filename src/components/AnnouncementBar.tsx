@@ -27,7 +27,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
   const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
   // ★ SADIK ÜYE SAYAÇ (05.10): /api/config'ten (poll'un beraberinde) gelir;
-  //   "Kalan Sadık Üye Kontenjanı: {kalan}/{toplam}" çipi kontenjan açıkken görünür.
+  //   "Sadık Üye: {katilan}/{toplam} üretici kaydoldu" çipi kontenjan açıkken görünür.
   const [sadikUye, setSadikUyeSayac] = useState<{ toplamKayitli: number; kontenjan: number } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
@@ -182,7 +182,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               className="flex items-center gap-1.5 rounded-full border border-emerald-300/35 bg-emerald-400/10 px-3 py-1.5 font-black text-emerald-200 transition hover:bg-emerald-400/20"
             >
               <Sparkles size={12} className="text-emerald-300" />
-              <span data-testid="sadik-uye-sayac">{t("sadikUyeKontenjan").replace("{kalan}", String(sadikUye.kontenjan - sadikUye.toplamKayitli)).replace("{toplam}", String(sadikUye.kontenjan))}</span>
+              <span data-testid="sadik-uye-sayac">{t("sadikUyeKontenjan").replace("{katilan}", String(sadikUye.toplamKayitli)).replace("{toplam}", String(sadikUye.kontenjan))}</span>
             </button>
           )}
           {holyDay.type !== "none" && (

@@ -439,7 +439,7 @@ export const idDict: Dict = {
   periyotAylik: "Bulanan",
   periyotYillik: "Tahunan · Diskon 10-15%",
   abonelikBittiFree: "Langgananmu telah berakhir — kamu sekarang di paket Gratis. Kunjungi Premium untuk memperbarui.",
-  sadikUyeKontenjan: "Sisa kuota Anggota Setia: {kalan}/{toplam} — bonus +1 hak produksi seumur hidup untuk 100 kreator pertama!",
+  sadikUyeKontenjan: "Anggota Setia: {katilan}/{toplam} kreator mendaftar — bonus +1 hak produksi seumur hidup untuk 100 kreator pertama!",
   sadikUyeKontenjanTitle: "100 kreator pertama yang mendaftar mendapat lencana 'Anggota Setia' dan bonus +1 hak produksi harian seumur hidup. Amankan posismu!",
   sadikUyeEtiketTitle: "Anggota Setia: salah satu dari 100 kreator pertama — bonus +1 hak produksi harian seumur hidup",
   fiyatYil: "/ tahun",

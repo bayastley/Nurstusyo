@@ -442,7 +442,7 @@ export const enDict: Dict = {
   periyotAylik: "Monthly",
   periyotYillik: "Annual · 10-15% Off",
   abonelikBittiFree: "Your subscription has ended — you are now on the Free plan. Visit Premium to renew.",
-  sadikUyeKontenjan: "Loyalty Member slots left: {kalan}/{toplam} — lifetime +1 daily generation for the first 100 creators!",
+  sadikUyeKontenjan: "Loyalty Members: {katilan}/{toplam} creators joined — lifetime +1 daily generation for the first 100 creators!",
   sadikUyeKontenjanTitle: "The first 100 creators to sign up get the 'Loyalty Member' badge and lifetime +1 extra daily generation. Claim your spot!",
   sadikUyeEtiketTitle: "Loyalty Member: one of the first 100 creators — lifetime +1 extra daily generation",
   fiyatYil: "/ year",
