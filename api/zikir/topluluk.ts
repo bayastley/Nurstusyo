@@ -82,6 +82,57 @@ async function db<T>(path: string, init?: RequestInit): Promise<T> {
   return (text ? JSON.parse(text) : null) as T;
 }
 
+// ═══════════════════════════════════════════════════════════
+// ★ LANSMAN ÖLÇEK KORUMASI (07.10 — dağıtım-öncesi denetim bulgusu):
+//   GET her açık sekmede 45 sn'de bir geliyor ve "no-store" ile CDN'i
+//   bypass ediyordu → 500+ açık sekme = dakikada ~700 Supabase sorgusu.
+//   İki katman (api/config.ts deseni):
+//   1) IN-MEMORY snapshot (30 sn): aynı instance'a gelen tekrarlar DB'ye
+//      hiç gitmez; TEK UÇUŞ (single-flight) ile eşzamanlı miss'ler tek
+//      rebuild'ı paylaşır. DB geçici hata verirse sağlıksız yanıt
+//      önbelleklenmez (sayacı 0 gösterip "sıfırlanmış" izlenimi vermez).
+//   2) CDN cache: GET yanıtı s-maxage=30 + stale-while-revalidate=60 —
+//      Vercel edge farklı instance'ları tek talebe indirger.
+//   POST no-store kalır; başarılı POST bu instance'ın snapshot toplamını
+//   tazeler. CDN katmanı en fazla ~30 sn bayat toplam gösterebilir —
+//   topluluk sayacı için kabul edilebilir (istemci zaten iyimser artırıyor).
+// ═══════════════════════════════════════════════════════════
+const ZIKIR_SNAPSHOT_TTL_MS = 30_000;
+type ZikirGetBody = { ok: boolean; toplam: number; aktif: boolean; gunluk: Array<{ gun: string; adet: number }> | null };
+let zikirSnapshot: { at: number; body: ZikirGetBody } | null = null;
+let zikirRebuildUcusta: Promise<ZikirGetBody> | null = null;
+
+function snapshotToplamTazele(toplam: number): void {
+  if (zikirSnapshot) zikirSnapshot = { ...zikirSnapshot, body: { ...zikirSnapshot.body, toplam } };
+}
+
+/** GET gövdesi: toplam + günlük seri. saglikli=false → snapshot'a YAZILMAZ. */
+async function zikirGetGovdesi(): Promise<{ body: ZikirGetBody; saglikli: boolean }> {
+  let saglikli = true;
+  let toplam = 0;
+  try {
+    const rows = await db<any[]>("nur_zikir_topluluk?select=toplam&limit=1");
+    toplam = Array.isArray(rows) && rows[0] ? Number(rows[0].toplam) || 0 : 0;
+  } catch {
+    // ★ Geçici DB hatası: toplamı 0 cache'lemek sayacı "sıfırlandı" gösterir —
+    //   saglikli işaretle, UI yerel sayaca düşsün (aktif:false dokümanlı davranış).
+    saglikli = false;
+  }
+  // ★ GÜNLÜK SERİ (29.09): vitrin grafiği için GERÇEK kova verisi (nur_zikir_gunluk).
+  //   Tablo henüz kurulmadıysa (42P01) veya sorgu patlarsa gunluk:null — UI grafiği
+  //   gizler, asla uydurma sıfırlar çizmez (sayı dürüstlüğü kuralı).
+  let gunluk: Array<{ gun: string; adet: number }> | null = null;
+  try {
+    const gRows = await db<any[]>("nur_zikir_gunluk?select=gun,adet&order=gun.desc&limit=60");
+    if (Array.isArray(gRows)) {
+      gunluk = gRows.map((r) => ({ gun: String(r.gun).slice(0, 10), adet: Number(r.adet) || 0 }));
+    }
+  } catch { gunluk = null; }
+  return { body: { ok: true, toplam, aktif: saglikli, gunluk }, saglikli };
+}
+
+const GET_CACHE = "public, max-age=10, s-maxage=30, stale-while-revalidate=60";
+
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "no-store");
   const cfg = supabaseConfig();
@@ -91,19 +142,23 @@ export default async function handler(req: any, res: any) {
   }
   try {
     if (req.method === "GET") {
-      const rows = await db<any[]>("nur_zikir_topluluk?select=toplam&limit=1").catch(() => [] as any[]);
-      const toplam = Array.isArray(rows) && rows[0] ? Number(rows[0].toplam) || 0 : 0;
-      // ★ GÜNLÜK SERİ (29.09): vitrin grafiği için GERÇEK kova verisi (nur_zikir_gunluk).
-      //   Tablo henüz kurulmadıysa (42P01) veya sorgu patlarsa gunluk:null — UI grafiği
-      //   gizler, asla uydurma sıfırlar çizmez (sayı dürüstlüğü kuralı).
-      let gunluk: Array<{ gun: string; adet: number }> | null = null;
-      try {
-        const gRows = await db<any[]>("nur_zikir_gunluk?select=gun,adet&order=gun.desc&limit=60");
-        if (Array.isArray(gRows)) {
-          gunluk = gRows.map((r) => ({ gun: String(r.gun).slice(0, 10), adet: Number(r.adet) || 0 }));
-        }
-      } catch { gunluk = null; }
-      return res.status(200).json({ ok: true, toplam, aktif: true, gunluk });
+      // ★ Snapshot taze ise DB'siz dön — lansman yükünde Supabase nefes alır
+      if (zikirSnapshot && Date.now() - zikirSnapshot.at < ZIKIR_SNAPSHOT_TTL_MS) {
+        res.setHeader("Cache-Control", GET_CACHE);
+        return res.status(200).json(zikirSnapshot.body);
+      }
+      // ★ TEK UÇUŞ: eşzamanlı miss'ler tek rebuild'ı paylaşır (500 sekme = 1 sorgu)
+      if (!zikirRebuildUcusta) {
+        zikirRebuildUcusta = zikirGetGovdesi()
+          .then((r) => {
+            if (r.saglikli) zikirSnapshot = { at: Date.now(), body: r.body };
+            return r.body;
+          })
+          .finally(() => { zikirRebuildUcusta = null; });
+      }
+      const body = await zikirRebuildUcusta;
+      res.setHeader("Cache-Control", GET_CACHE);
+      return res.status(200).json(body);
     }
     if (req.method === "POST") {
       if (!(await rateLimit(req, res, "zikir:ekle", 60, 60_000))) return;
@@ -119,6 +174,7 @@ export default async function handler(req: any, res: any) {
         if (rpc !== null) {
           const row = Array.isArray(rpc) ? rpc[0] : rpc;
           const toplam = row && typeof row === "object" ? Number((row as any).toplam) || 0 : 0;
+          snapshotToplamTazele(toplam); // ★ bu instance'ın snapshot'ı bayat kalmasın
           return res.status(200).json({ ok: true, toplam, aktif: true });
         }
       } catch { /* RPC yok → fallback */ }
@@ -137,12 +193,19 @@ export default async function handler(req: any, res: any) {
           body: JSON.stringify({ id: "genel", toplam: adet, updated_at: new Date().toISOString() }),
         });
       }
+      snapshotToplamTazele(mevcut + adet); // ★ fallback yolu da snapshot'ı tazeler
       return res.status(200).json({ ok: true, toplam: mevcut + adet, aktif: true });
     }
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   } catch (e) {
     await logServerError(req, e, "api/zikir/topluluk");
     console.error("[zikir/topluluk]", e);
+    // ★ DB erişilemezse son sağlıklı snapshot ile cevapla — sayaç kaynağından
+    //   dolayı topluluk zikirmatiği kapanmasın (panel sigortası felsefesi).
+    if (req.method === "GET" && zikirSnapshot) {
+      res.setHeader("Cache-Control", "public, max-age=10, s-maxage=15");
+      return res.status(200).json(zikirSnapshot.body);
+    }
     return res.status(200).json({ ok: true, toplam: 0, aktif: false }); // hata olsa da site bozulmaz
   }
 }
