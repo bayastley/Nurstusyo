@@ -453,9 +453,17 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
             {/* ★ HEDİYE KODU ÜST BARDAN KALDIRILDI (02.10, kullanıcı emri) —
                 sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
-            {/* ★ AYET KÜTÜPHANESİ + KUR'AN + KÂBE CANLI üst bardan KALDIRILDI (08.10, kullanıcı emri):
-                üçü de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın.
-                Kâbe Canlı sol menüdeki Radio öğesiyle açılır (nur_kabe_ac event'i korunur). */}
+            {/* ★ AYET KÜTÜPHANESİ + KUR'AN üst bardan KALDIRILDI (08.10, kullanıcı emri):
+                ikisi de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın. */}
+            {/* ★ KÂBE CANLI — GERİ GELDİ (08.10, kullanıcı emri: "kabe canlıyı geri koy ana ekrana yerine"):
+                üst barda tek tık, kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
+            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
+              🕋 {t("menuKabeCanli")}
+              <span className="relative flex h-2 w-2">
+                <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
+                <span className="relative h-2 w-2 rounded-full bg-red-500" />
+              </span>
+            </button>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
