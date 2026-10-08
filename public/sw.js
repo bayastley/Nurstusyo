@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v6"; // ★ 07.10: çoklu-chunk build geçişi (SRP/lazy)
+const CACHE = "nurstudyo-v7"; // ★ 08.10: JS istekleri network-first (eski chunk MIME hatası fix)
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
@@ -135,9 +135,23 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Statik varlıklar (hash'li dosya adları): cache-first
-  // Not: index.html referansı değişince hash değişir, bu yüzden güvenli.
-  if (/\.(png|jpg|jpeg|svg|ico|woff2?|css|js|json|webmanifest)$/.test(url.pathname)) {
+  // Statik varlıklar: JS network-first (★ 08.10 MIME hatası fix — eski HTML eski
+  //   chunk'ı referans edince cache'te olmayan dosyaya HTML cache'leniyordu ve
+  //   lazy modallar 'Failed to fetch dynamically imported module' ile patlıyordu.
+  //   JS network-first: deploy sonrası ilk istek hep taze gelir; çevrimdışında cache).
+  //   Diğer varlıklar (png/css/woff) cache-first kalır — hash'li adları immutable.
+  if (/\.js$/.test(url.pathname)) {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        if (res.ok && res.headers.get("content-type")?.includes("javascript")) {
+          const kopya = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, kopya));
+        }
+        return res;
+      }).catch(() => caches.match(event.request).then((hit) => hit || new Response("", { status: 504 })))
+    );
+  }
+  else if (/\.(png|jpg|jpeg|svg|ico|woff2?|css|json|webmanifest)$/.test(url.pathname)) {
     event.respondWith(
       caches.match(event.request).then((hit) => {
         if (hit) return hit;
