@@ -6,13 +6,13 @@ import { getPackRights, getQuotaLeft, getUsedToday } from "../tier";
 import type { Tier, VideoKind } from "../tier";
 
 // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): buradaki her sayı koddaki gerçek veriyle
-//   eşleşir — 45 kâri (src/reciters.ts; 10 free + 25 pro + 10 elit, src/tier.ts), 1300+ benzersiz atmosfer
+//   eşleşir — 45 kâri (src/reciters.ts; 10 free + 15 pro + 20 elit, src/tier.ts), 1300+ benzersiz atmosfer
 //   klibi (src/clips/*), 106 tema (9 free + 51 pro + 46 elit, data/themesData.ts
 //   THEME_TIER). Filigran yalnız ELİT'te kaldırılır (studio/useCanvasDraw.ts) —
 //   PRO'ya "filigransız" VAAT EDİLEMEZ. Değişirse KAYNAĞI da güncelle.
 export const PRO_FEATURES = [
   "Günde 8 kısa + 3 uzun video (600 sn)",
-  "35 kâri sesi (10 ücretsiz + 25 PRO)",
+  "25 kâri sesi (10 ücretsiz + 15 PRO)",
   "60 tema erişimi (51 PRO + 9 ücretsiz)",
   "Sinematik filtreler",
   "AI başlık ve açıklama varyasyonları",

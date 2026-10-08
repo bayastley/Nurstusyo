@@ -506,7 +506,7 @@ export const enDict: Dict = {
   tierPro: "NÛR PRO",
   tierElit: "NÛR ELITE",
   planProOzellik0: "8 short + 3 long videos per day (600 s)",
-  planProOzellik1: "35 reciter voices (10 free + 25 PRO)",
+  planProOzellik1: "25 reciter voices (10 free + 15 PRO)",
   planProOzellik2: "60 themes (51 PRO + 9 free)",
   planProOzellik3: "Cinematic filters",
   planProOzellik4: "AI title and description variations",

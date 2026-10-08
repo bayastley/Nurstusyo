@@ -508,7 +508,7 @@ export const trDict: Dict = {
   tierPro: "NÛR PRO",
   tierElit: "NÛR ELİT",
   planProOzellik0: "Günde 8 kısa + 3 uzun video (600 sn)",
-  planProOzellik1: "35 kâri sesi (10 ücretsiz + 25 PRO)",
+  planProOzellik1: "25 kâri sesi (10 ücretsiz + 15 PRO)",
   planProOzellik2: "60 tema erişimi (51 PRO + 9 ücretsiz)",
   planProOzellik3: "Sinematik filtreler",
   planProOzellik4: "AI başlık ve açıklama varyasyonları",

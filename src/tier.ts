@@ -404,8 +404,9 @@ export function featureLockLabel(key: FeatureKey): string {
 // ★ DÜRÜST KÂRİ LİSTELERİ (08.10, kullanıcı emri) — reciters.ts'deki 45 gerçek id ile birebir
 //   FREE  : 10 kâri — foto4'tekiler KESİN free (Juhany, Shuraim, Maher, Sudais) + telifi
 //           en yüksek ünlüler (Husary, Abdulbasit, Minşavi, Afasi) herkese açık
-//   PRO   : 25 kâri — orta kademe
-//   ELİT  : yalnız 10 kâri elit'e kilitli (Dosari + Sehl Yasin KESİN ELİT) — elit hepsini görür
+//   PRO   : 25 kâri GÖRÜR (10 free + 15 pro) — yani PRO listesinde 15 kâri var
+//   ELİT  : HEPSİNİ GÖRÜR (45) — yani ELİT listesinde 20 kâri var
+//   (senin emrin: free 10, pro +15 = 25 toplam, elit hepsi)
 export const FREE_RECITER_IDS = [
   'sudais', 'shuraim', 'maher', 'juhany',
   'alafasy', 'husary', 'abdulbasit', 'minshawi',
@@ -413,21 +414,22 @@ export const FREE_RECITER_IDS = [
 ] as const;
 
 export const PRO_RECITER_IDS = [
-  'sudais_fast', 'husary_mujawwad', 'husary_teacher', 'hudhaify',
-  'qasim', 'budair', 'ayyoub', 'matroud',
+  'sudais_fast', 'hudhaify', 'qasim', 'matroud',
   'akhdar', 'basfar', 'qatami', 'ajamy', 'tablawi',
-  'banna', 'jibreel', 'shatri', 'qahtani', 'sowaid',
-  'parhizgar', 'ali_jaber', 'ghamdi_saad', 'hani_rifai',
-  'fares_abbad', 'abdulkareem', 'bukhatir',
+  'banna', 'jibreel', 'shatri', 'qahtani',
+  'ghamdi_saad', 'hani_rifai',
 ] as const;
 
-// ★ ELİT — yalnız ELİT üyelerin görebildiği özel kâriler
+// ★ ELİT — yalnız ELİT üyelerin görebildiği özel kâriler (20 adet; elit geri kalan 45'in HEPSİNİ görür)
 export const ELIT_RECITER_IDS = [
   'muhaisny',        // (reciters.ts'de de requiredTier: "elit" işaretli)
   'dosari',          // ★ Yaser el-Dosari — kullanıcı emri: KESİN ELİT
   'sahl_yassin',     // ★ Sehl Yasin — kullanıcı emri: KESİN ELİT
   'mustafa_ismail', 'ahmed_neana', 'aziz_alili',
   'karim_mansoori', 'tunaiji', 'akram_alaqimy', 'yaser_salamah',
+  'husary_mujawwad', 'husary_teacher', 'budair', 'ayyoub',
+  'sowaid', 'parhizgar', 'ali_jaber', 'fares_abbad',
+  'abdulkareem', 'bukhatir',
 ] as const;
 
 
