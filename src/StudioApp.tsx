@@ -222,6 +222,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard, adminSonEmail, setAdminSonEmail } = useAuth({ isMasterSürüm, isDevMaster, notify });
   const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify, user);
   const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
+  // ★ TIER ÇİPİ DÜZELTMESİ (08.10): useAuth setCurrentTier ile secureStore'a yazıyordu ama
+  //   React state'ini güncellemiyordu — üst bar çipi eski "Ücretsiz"te takılı kalıyordu.
+  //   Hook sırası gereği setter parametreyle geçilemediği için event köprüsü kurulur.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const t = (e as CustomEvent<Tier>).detail;
+      if (t === "pro" || t === "elit" || t === "free") setTier(t);
+    };
+    window.addEventListener("nur_tier_state", handler);
+    return () => window.removeEventListener("nur_tier_state", handler);
+  }, [setTier]);
   const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
   usePaymentFlow({ setUser, setTier, syncWallet });
 
@@ -266,14 +277,23 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   Ek güvence: cüzdandan gelen bitiş tarihi geçmişse istemci de kendini FREE'ye çeker
   //   (syncWallet 30 sn'de bir koşuyor; sunucu erişilemezse bile eski abone yeni gün kotası alamaz).
   useEffect(() => {
+    if (!user) return;
     const dbTier = (user as any)?.tier as Tier | undefined;
-    if (dbTier && (dbTier === "pro" || dbTier === "elit" || dbTier === "free")) {
-      const cur = getCurrentTier();
-      if (dbTier !== cur) {
-        setTier(dbTier);
-        console.log('[tier] Senkronize:', dbTier, 'onceki:', cur);
-      }
+    // ★ ADMIN DUYARLILIK (08.10): admin god mode'da accessTier=zaten "elit" —
+    //   secureStore'daki admin tier'ı "Ücretsiz" dbTier ile EZİLMEsin
+    //   (kullanıcı bildirimi: admin hesabında çip Ücretsiz'de takılıydı).
+    if (user.isAdmin) {
+      const adminTier: Tier = dbTier === "pro" || dbTier === "elit" ? dbTier : "elit";
+      setTier(adminTier);
+      return;
     }
+    // ★ DENEME DUYARLILIK (08.10): auth/me abonelik yoksa "free" döner ama 7 günlük
+    //   PRO denemesi aktifken etkin tier "pro"dur (getCurrentTier hesaplar) — çip
+    //   "Ücretsiz"de takılıyordu, deneme hakkı görünmez oluyordu. React state'i
+    //   her zaman ETKİN tier'a (db + deneme) çek.
+    const hedef = getCurrentTier();
+    if (hedef !== dbTier) console.log('[tier] Etkin senkron:', hedef, '(db:', dbTier, ')');
+    setTier(hedef);
   }, [user]);
 
   // ★ Abonelik bitiş watch-dog'u: bitiş tarihi geçtiyse tier'ı FREE'ye indir

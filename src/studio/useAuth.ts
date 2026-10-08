@@ -19,6 +19,16 @@ interface UseAuthOptions {
   notify: (msg: string) => void;
 }
 
+/** ★ TIER ÇİPİ DÜZELTMESİ (08.10, kullanıcı bildirimi: "PRO aldim ücretsiz görünüyor"):
+ *  useAuth setCurrentTier ile secureStore'a yazıyordu ama React state'ini güncellemiyordu —
+ *  üst bar çipi eski "Ücretsiz"te takılı kalıyordu. Hook sırası gereği useAuth, useTier'dan
+ *  ÖNCE kurulduğu için setter parametreyle geçilemez; event köprüsü kullanılır:
+ *  StudioApp bu event'i dinler, setTier'ı çağırır. */
+export function tierStateGuncelle(t: Tier): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("nur_tier_state", { detail: t }));
+}
+
 interface UseAuthReturn {
   user: User | null;
   setUser: (u: User | null) => void;
@@ -149,12 +159,14 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           setAdminSonEmail(email);
           const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
           setCurrentTier(adminTier);
+          tierStateGuncelle(adminTier); // ★ React state köprüsü — üst bar çipi doğru üyeliği göstersin
           notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
           return;
         }
 
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setCurrentTier(dbTier);
+        tierStateGuncelle(dbTier); // ★ Çip senkronu
         // ★ DENEME SENKRONU (07.10): her Google girişinde sunucudaki gerçek deneme
         //   durumu yerel önbelleğe yazılır — Google kayıtlı kullanıcıda 7 gün PRO
         //   denemesi artık sunucuda otomatik başlatıldığı için arayüz onu okur.
@@ -236,8 +248,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
 
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setCurrentTier(dbTier);
-
-        // ★ Admin modu: SADECE isAdmin=true ise aç, değilse KAPAT (başka hesapla girişte eski admin session kalmasın)
+        tierStateGuncelle(dbTier); // ★ Çip senkronu — oturum geri yüklemesinde de üst bar doğru görünsün
         if (data.user.isAdmin) {
           setAdminGodMode(true);
         } else {

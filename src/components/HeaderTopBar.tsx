@@ -453,23 +453,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             </div>
             {/* ★ HEDİYE KODU ÜST BARDAN KALDIRILDI (02.10, kullanıcı emri) —
                 sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
-            {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartı fotoğraf olarak indir (i18n: menuAyetKartlari) */}
-            <button onClick={() => setModal("ayetKartlari")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
-              <ImageIcon size={11} style={{ color: "var(--accent)" }} />{t("menuAyetKartlari")}
-            </button>
-            {/* ★ KUR'AN — tek pill, learn/listen sekmeleri modal içinde */}
-            <button data-minitur="kuran-sayfalar" onClick={() => setModal("quranLearn")} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold transition hover:scale-105 md:flex" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.2)" }}>
-              <BookOpen size={11} style={{ color: "var(--accent)" }} />{t("hbrKuran")}
-            </button>
-            {/* ★ KÂBE CANLI — ALTIN MADEN ÖNE ÇIKARMA (02.10, kullanıcı emri): üst barda tek tık,
-                kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
-              🕋 {t("menuKabeCanli")}
-              <span className="relative flex h-2 w-2">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
-                <span className="relative h-2 w-2 rounded-full bg-red-500" />
-              </span>
-            </button>
+            {/* ★ AYET KÜTÜPHANESİ + KUR'AN + KÂBE CANLI üst bardan KALDIRILDI (08.10, kullanıcı emri):
+                üçü de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın.
+                Kâbe Canlı sol menüdeki Radio öğesiyle açılır (nur_kabe_ac event'i korunur). */}
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />

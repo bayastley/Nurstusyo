@@ -174,7 +174,21 @@ async function syncGoogleUser(user: { id: string; email: string; name: string; p
   const existing = await supabaseRequest<any[]>(`nur_users?id=eq.${encodeURIComponent(user.id)}&select=id,tier`);
   const isNew = existing.length === 0;
   const existingTier = existing[0]?.tier;
-  const tier = user.isAdmin ? "elit" : userTier(existingTier, false);
+  let tier = user.isAdmin ? "elit" : userTier(existingTier, false);
+
+  // ★ ABONELİK TIER'I OTORİTER (08.10, "PRO aldım ELİT oldum" — me.ts ile aynı kapı):
+  //   db'de eski 'elit' kalıntısı varsa (admin panel testi / demo grant) giriş cevabı
+  //   ELİT açıyordu. Aktif abonelik VARSA ödenen tier neyse o geçerli; süresi dolmuşsa
+  //   FREE. Abonelik satırı yoksa db tier kalır (admin ataması / ömür boyu).
+  if (tier !== "free" && !user.isAdmin) {
+    try {
+      const subs = await supabaseRequest<Array<{ ends_at: string; tier: "free" | "pro" | "elit" }>>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`);
+      const sub = subs?.[0];
+      const endsAt = sub?.ends_at ? Date.parse(sub.ends_at) : NaN;
+      if (!Number.isFinite(endsAt) || endsAt <= Date.now()) tier = "free";
+      else if (sub.tier === "pro" || sub.tier === "elit") tier = sub.tier;
+    } catch { /* abonelik tablosu okunamadıysa db tier ile devam */ }
+  }
 
   await supabaseRequest("nur_users?on_conflict=id", {
     method: "POST",

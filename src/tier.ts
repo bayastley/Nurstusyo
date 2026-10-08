@@ -401,28 +401,33 @@ export function featureLockLabel(key: FeatureKey): string {
   return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
 }
 
-// ★ DÜRÜST KÂRİ LİSTELERİ — her kâri benzersiz ses dosyası kullanır
-//   Tier'lar reciters.ts'deki tier alanına göre belirlenir
+// ★ DÜRÜST KÂRİ LİSTELERİ (08.10, kullanıcı emri) — reciters.ts'deki 45 gerçek id ile birebir
+//   FREE  : 10 kâri — foto4'tekiler KESİN free (Juhany, Shuraim, Maher, Sudais) + telifi
+//           en yüksek ünlüler (Husary, Abdulbasit, Minşavi, Afasi) herkese açık
+//   PRO   : 25 kâri — orta kademe
+//   ELİT  : yalnız 10 kâri elit'e kilitli (Dosari + Sehl Yasin KESİN ELİT) — elit hepsini görür
 export const FREE_RECITER_IDS = [
-  // ★ Yüksek telif riski — ünlü kâriler, Content ID yakalar
-  'sudais', 'husary', 'alafasy', 'basit_mujawwad',
-  'minshawi_mujawwad', 'muhaisny', 'husary_mujawwad',
-  'basit_192', 'shuraim', 'maher',
+  'sudais', 'shuraim', 'maher', 'juhany',
+  'alafasy', 'husary', 'abdulbasit', 'minshawi',
+  'abdulbasit_mujawwad', 'minshawi_mujawwad',
 ] as const;
 
 export const PRO_RECITER_IDS = [
-  // ★ Orta telif riski — yarı ünlü kâriler
-  'matroud', 'hudhaify', 'jibreel', 'ghamadi', 'basfar_192',
-  'bukhatir', 'dussary', 'katami', 'rifai', 'ajamy',
-  'ali_jaber', 'shatri', 'sudais_fast', 'husary_fast',
+  'sudais_fast', 'husary_mujawwad', 'husary_teacher', 'hudhaify',
+  'qasim', 'budair', 'ayyoub', 'matroud',
+  'akhdar', 'basfar', 'qatami', 'ajamy', 'tablawi',
+  'banna', 'jibreel', 'shatri', 'qahtani', 'sowaid',
+  'parhizgar', 'ali_jaber', 'ghamdi_saad', 'hani_rifai',
+  'fares_abbad', 'abdulkareem', 'bukhatir',
 ] as const;
 
-// ★ ELİT — düşük telif riski, premium konumlandırma
+// ★ ELİT — yalnız ELİT üyelerin görebildiği özel kâriler
 export const ELIT_RECITER_IDS = [
-  // ★ Düşük telif riski — nadir/kalitesiz kayıtlar, Content ID bulamaz
-  'basfar_64', 'husary_muallim', 'minshawi_16', 'akhdar_32',
-  'sudais_64', 'alafasy_64', 'hudhaify_64', 'jibreel_64',
-  'basit_64', 'rifai_64', 'ghamadi_40', 'shatri_64', 'shuraim_64',
+  'muhaisny',        // (reciters.ts'de de requiredTier: "elit" işaretli)
+  'dosari',          // ★ Yaser el-Dosari — kullanıcı emri: KESİN ELİT
+  'sahl_yassin',     // ★ Sehl Yasin — kullanıcı emri: KESİN ELİT
+  'mustafa_ismail', 'ahmed_neana', 'aziz_alili',
+  'karim_mansoori', 'tunaiji', 'akram_alaqimy', 'yaser_salamah',
 ] as const;
 
 

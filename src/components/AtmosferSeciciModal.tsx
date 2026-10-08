@@ -20,9 +20,8 @@ import {
 } from "../clips";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
-import { getAdminCatAccess, ADMIN_V2_COUNT, ADMIN_V2_TOTAL } from "../adminCategoryAccess";
+import { getAdminCatAccess } from "../adminCategoryAccess";
 import { getFeatureLock } from "../services/adminSyncService";
-import { COMING_SOON_ATMOSPHERES } from "./modalHelpers";
 import { T } from "../i18n";
 import type { Tier } from "../types";
 
@@ -298,35 +297,10 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
             </div>
           )}
 
-          {/* ★ MERAK UYANDIRAN TEASER — onaylı V2 vitrini (10 gerçek R2 kategorisi)
-              + kalan V3 takvimi. V2 kilitli kategoriler R2'de HAZIR ve test edildi
-              (1438/1438 dosya OK) — V2 günü adminCategoryAccess'te "v2"→"elit"
-              yapıldığında gerçek klasörler açılır; teaser kartlarıyla birlikte
-              "devasa güncelleme" görüntüsü verir.
-              ★ DÜRÜSTLÜK (30.09): teaser yalnız "Tümü" görünümünde — bir kategoriye
-              girilmişken boş grid'le birlikte göstermek yanıltıcıydı. */}
-          {!isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && atmosCategory === "all" && (
-            <div className="mt-5 border-t border-white/10 pt-4">
-              <p className="mb-2.5 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-white/40">
-                <Lock size={11} /> Yakında: V2 ile 10 Yeni Kategori Açılıyor ({ADMIN_V2_COUNT} kategori · {ADMIN_V2_TOTAL}+ içerik hazır)
-              </p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                {COMING_SOON_ATMOSPHERES.map((item) => (
-                  <div
-                    key={item.id}
-                    className="glass-soft relative flex h-16 cursor-not-allowed flex-col items-center justify-center gap-1 overflow-hidden rounded-xl"
-                    style={item.img ? { backgroundImage: `linear-gradient(rgba(13,11,22,.55),rgba(13,11,22,.75)), url('${item.img}')`, backgroundSize: "cover", backgroundPosition: "center" } : { opacity: 0.5, filter: "saturate(0.5)" }}
-                  >
-                    <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                      {item.lock}
-                    </span>
-                    <span className={`text-[15px] ${item.img ? "drop-shadow" : ""}`}>{item.emoji}</span>
-                    <span className={`px-1 text-center text-[7.5px] font-bold leading-tight ${item.img ? "text-white/90" : "text-white/60"}`}>{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          {/* ★ V2 TEASER KALDIRILDI (08.10, kullanıcı emri): kategorilerin altındaki gri
+              "Yakında: V2" kart vitrini boşa yer kaplıyordu — tamamen söküldü.
+              V2 günü adminCategoryAccess'te "v2"→"elit" yapılınca klasörler zaten
+              üstteki ızgarada gerçek içerikle görünür. */}
         </Modal>
   );
 };

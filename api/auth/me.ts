@@ -178,13 +178,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ★ KUL HAKKI KAPISI (05.10): abonelik süresi dolmuşsa artık PRO/ELİT değil.
     //   Tek doğru kaynak nur_subscriptions.ends_at — süresi biten kullanıcı
     //   isteğe FREE olarak döner (istenen kota kaybı: ödenmemiş gün yok).
+    //
+    // ★ ABONELİK TIER'I OTORİTER (08.10, kullanıcı bildirimi: "PRO aldım ELİT oldum"):
+    //   db'de eski 'elit' kalıntısı kalmış hesap (admin panel testi / demo grant) PRO
+    //   satın alınınca abonelik aktifleşiyor ve kapı db'deki elit'i onaylıyordu.
+    //   Artık aktif abonelik VARSA aboneliğin kendi tier'ı geçerli — PRO ödeyen PRO görür.
+    //   Abonelik satırı YOKSA db tier aynen kalır (admin ataması / ömür boyu).
     let etkinTier: "free" | "pro" | "elit" = dbUser?.tier || user.tier || "free";
     if (etkinTier !== "free") {
       try {
-        const subs = await supabaseRows<{ ends_at: string }>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at`);
-        const endsAt = subs[0]?.ends_at ? Date.parse(subs[0].ends_at) : NaN;
+        const subs = await supabaseRows<{ ends_at: string; tier: "free" | "pro" | "elit" }>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`);
+        const sub = subs[0];
+        const endsAt = sub?.ends_at ? Date.parse(sub.ends_at) : NaN;
         if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
           etkinTier = "free"; // kayıt yok veya süresi dolmuş
+        } else if (sub?.tier === "pro" || sub?.tier === "elit") {
+          etkinTier = sub.tier; // ödenen tier neyse o — db kalıntısı ezilir
         }
       } catch { /* abonelik tablosu yoksa/eskiyse duyarlı davranma — mevcut tier kalır */ }
     }
