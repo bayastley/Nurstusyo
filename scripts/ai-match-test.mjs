@@ -75,27 +75,10 @@ const ADMIN_AI = M.ADMIN_AI_KEYWORDS;
 const ADMIN_CLIPS = M.ADMIN_MOTION_CLIPS || [];
 const CLIP_AI = C.CLIP_AI_KEYWORDS;
 
-// ── 2) StudioApp.tsx'ten fonksiyonun birebir kaynağını çıkar ──
-const appSrc = fs.readFileSync(src("StudioApp.tsx"), "utf8");
-const startMark = 'const detectCategoryFromAyah = useCallback((ar: string, tr: string, surahName = ""): CatId => {';
-const startIdx = appSrc.indexOf(startMark);
-if (startIdx < 0) {
-  console.error("❌ detectCategoryFromAyah StudioApp.tsx'te bulunamadı — imza değiştiyse startMark'ı güncelle");
-  process.exit(1);
-}
-// useCallback( ... ) dengeli parantez kapanışı
-let depth = 0;
-let end = -1;
-for (let i = appSrc.indexOf("(", startIdx + "const detectCategoryFromAyah = ".length); i < appSrc.length; i++) {
-  if (appSrc[i] === "(") depth++;
-  else if (appSrc[i] === ")") { depth--; if (depth === 0) { end = i; break; } }
-}
-const fnSrc = appSrc.slice(startIdx + "const detectCategoryFromAyah = ".length, end + 1);
-const { code } = await esbuild.transform(fnSrc, { loader: "ts" });
-const detect = new Function(
-  "useCallback", "KEYWORD_CATEGORY_FALLBACK", "SURAH_CATEGORY_HINT", "ADMIN_AI_KEYWORDS", "CLIP_AI_KEYWORDS", "ADMIN_MOTION_CLIPS",
-  `return (${code.replace(/;\s*$/, "")});`
-)((f) => f, FALLBACK, SURAH_HINT, ADMIN_AI, CLIP_AI, ADMIN_CLIPS);
+// ── 2) detectCategoryFromAyah — SRP 02.10: motor studio/ayetKategori.ts'e taşındı;
+//    test artık gerçek motoru doğrudan derleyip çalıştırır (birebir aynı davranış).
+const ayetKategori = await derle("studio/ayetKategori.ts");
+const detect = ayetKategori.ayetKategorisiBul;
 
 // ── 3) AYET KORPUSU — gerçek Diyanet-yakını mealler ──
 // Türler:

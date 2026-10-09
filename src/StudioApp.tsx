@@ -53,6 +53,7 @@ import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { kutuphaneItem } from "./data/kutuphaneCokDil"; // ★ 06.10: kütüphane kartları seçili dilde (başlık/anlam/kaynak)
+import { useDilSenkron } from "./studio/useDilSenkron"; // ★ SRP adım 11 (09.10 2. tur): dil senkron efektleri (meal + paylaşım + RTL)
 import { HeaderTopBar } from "./components/HeaderTopBar";
 import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
 import { VideoPreviewSection } from "./components/VideoPreviewSection";
@@ -672,59 +673,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem(themeKey, theme.id); }, [theme, themeKey]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
-  // ★ MEAL-DİLİ SENKRONU (01.10) — dil değişince seçili ayetlerin mealleri yeni
-  //   edition'dan (MEAL_EDITIONS[lang]) yeniden çekilir (stüdyo tarafı). İlk
-  //   mount'ta koşmaz (prevLangRef) — mealler eklenirken o anki dilden gelmişti.
-  //   `selected` bilinçli dep dışı: tetik anındaki snapshot selectedRef'ten alınır;
-  //   dil değişimi SONRASI eklenenler addAyah'dan zaten yeni dilde gelir.
-  //   notify stabil (useCallback []); uyumsuzluk dep her değişiminde erken çıkış.
-  const prevLangRef = useRef(lang);
-  useEffect(() => {
-    const onceki = prevLangRef.current;
-    prevLangRef.current = lang;
-    if (onceki === lang) return;
-    const sureler = [...new Set(selectedRef.current.map((x) => x.s))];
-    if (!sureler.length) return;
-    const edition = MEAL_EDITIONS[lang];
-    let iptal = false;
-    void (async () => {
-      const sonuclar = await Promise.all(sureler.map(async (sn) => {
-        try { return [sn, await fetchSurah(sn, edition)] as const; } catch { return [sn, null] as const; }
-      }));
-      if (iptal) return;
-      setSelected((current) => current.map((x) => {
-        const satir = sonuclar.find(([sn, rows]) => sn === x.s && rows && rows[x.a - 1]);
-        if (!satir || !satir[1]) return x;
-        return { ...x, tr: satir[1][x.a - 1].tr };
-      }));
-      const basarili = sonuclar.filter(([, rows]) => rows).length;
-      if (basarili === sonuclar.length) notify(t("mlSenkronTamam").replace("{edition}", edition));
-      else notify(t("mlSenkronKismi").replace("{basarili}", String(basarili)).replace("{toplam}", String(sonuclar.length)));
-    })();
-    return () => { iptal = true; };
-  }, [lang, notify]);
-  // ★ PAYLAŞIM METNİ DİL SENKRONU (04.10): dil değişince başlık/açıklama/hashtag
-  //   havuzları da YENİ DİLDE yeniden üretilir — aksi halde panel eski dilde TR metin
-  //   göstermeye devam ediyordu ("başlıkları da çevir" — kullanıcı talebi).
-  //   İlk mount'ta koşmaz: useState initializer zaten seçili dille üretti.
-  //   Seçili ayet varsa o ayetin bilgisiyle üretilir; yoksa varsayılan Bakara 2:255.
-  const prevPaylasLangRef = useRef(lang);
-  useEffect(() => {
-    const onceki = prevPaylasLangRef.current;
-    prevPaylasLangRef.current = lang;
-    if (onceki === lang) return;
-    const cur = selectedRef.current[verseIndexRef.current] ?? selectedRef.current[0];
-    setShareTitle(genTitle(cur?.sName, cur?.s ?? 2, cur?.a ?? 255, lang, cur?.tr ?? ""));
-    setShareDescription(genDesc(cur?.sName ?? "Bakara", cur?.s ?? 2, cur?.a ?? 255, reciter.name, lang));
-    setVisibleTags(pickRandomTags(14));
-  }, [lang, notify, reciter.name, pickRandomTags]);
-  // ★ RTL DİLİ (01.10): ar/ur seçiliyse ana grid de sağdan sola akar — CSS logical
-  //   mirror'ı flex/grid üzerinden çalışır; body'ye nur-rtl sınıfı düzeltmeler için.
-  const rtlMi = lang === "ar" || lang === "ur";
-  useEffect(() => {
-    document.body.classList.toggle("nur-rtl", rtlMi);
-    return () => document.body.classList.remove("nur-rtl");
-  }, [rtlMi]);
+  // ★ DİL SENKRON EFEKTLERİ — useDilSenkron hook'unda (SRP adım 11, 09.10 2. tur):
+  //   meal-dil senkronu + paylaşım metni dili + RTL mirror — birebir aynı davranış.
+  useDilSenkron({
+    lang, notify, t,
+    selectedRef, setSelected,
+    reciterName: reciter.name,
+    setShareTitle, setShareDescription, setVisibleTags,
+    verseIndexRef, pickRandomTags,
+  });
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
   useEffect(() => { const interval = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(interval); }, []);
   useEffect(() => {

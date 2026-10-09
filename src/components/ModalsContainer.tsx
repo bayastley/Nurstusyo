@@ -40,7 +40,7 @@ import { getFeatureLock, v2TestAcikMi } from "../services/adminSyncService";
 import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
-import { GoogleIcon, randomPkceVerifier, pkceChallenge } from "./modalHelpers";
+import { GoogleIcon, handleGoogleAuth } from "./modalHelpers"; // ★ (09.10, 2. tur): Google OAuth köprüsü modalHelpers'a taşındı
 import { adminCatVisible } from "../adminCategoryAccess";
 import { V2_KILITLI, V2_MODAL_IDLERI, acilanModalEkle, acildiMiFn, v2KilitliMi, v2AcikMi, type V2ModalId } from "./modalsContainerV2";
 import { demoOdemeUygula } from "./modalsContainerOdeme";
@@ -294,49 +294,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modal]);
 
-  // ★ GOOGLE İLE GİRİŞ/KAYIT — Gmail hesabına bağlanarak kayıt olur.
-  //   Google Cloud Console'dan alınan Client ID .env'e eklenir:
-  //   VITE_GOOGLE_CLIENT_ID=xxxxx.apps.googleusercontent.com
-  const handleGoogleAuth = React.useCallback(async (loginHint?: string) => {
-    const clientId = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID?.trim();
-
-    if (!clientId) {
-      notify("⚙️ Google girişi için Client ID tanımlanmalı (.env → VITE_GOOGLE_CLIENT_ID)");
-      return;
-    }
-
-    if (!crypto?.subtle) {
-      notify("⚠️ Tarayıcınız güvenli Google girişi için gerekli PKCE desteğini sağlamıyor");
-      return;
-    }
-
-    // OAuth 2.0 Authorization Code + PKCE — token frontend'de doğrulanmaz, backend'e gider
-    const redirectUri = `${window.location.origin}/`;
-    const scope = encodeURIComponent("openid email profile");
-    const state = Math.random().toString(36).slice(2, 18);
-    const verifier = randomPkceVerifier();
-    const challenge = await pkceChallenge(verifier);
-    try {
-      sessionStorage.setItem("nur_google_state", state);
-      sessionStorage.setItem("nur_google_pkce_verifier", verifier);
-    } catch { /* ignore */ }
-
-    const authUrl =
-      "https://accounts.google.com/o/oauth2/v2/auth" +
-      `?client_id=${encodeURIComponent(clientId)}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      `&response_type=code` +
-      `&scope=${scope}` +
-      `&state=${state}` +
-      `&code_challenge=${encodeURIComponent(challenge)}` +
-      `&code_challenge_method=S256` +
-      `&prompt=select_account` +
-      // ★ "ADMIN OLARAK GERİ DÖN" (30.09): Google hesap seçiciye son admin
-      //   e-postası ÖNERİ olarak verilir — zorunlu değil, kullanıcı başka
-      //   hesap seçebilirdi; güvenlik yine sunucu zincirinde doğrulanır.
-      (loginHint ? `&login_hint=${encodeURIComponent(loginHint)}` : "");
-
-    window.location.href = authUrl;
+  // ★ GOOGLE KÖPRÜSÜ — modalHelpers.ts'e taşındı (09.10, 2. tur); bileşen sadece
+  //   callback sarmalayıcı ile çağırır. Aynı davranış: Client ID doğrulama + PKCE + yönlendirme.
+  const handleGoogleAuthLocal = React.useCallback((loginHint?: string) => {
+    void handleGoogleAuth(notify, loginHint);
   }, [notify]);
 
   // ★ ADMIN OLARAK GERİ DÖN (30.09): çıkıştan sonra tek tıkla admin hesabına dönüş.
@@ -350,7 +311,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         <LoginModalBolum
           setModal={setModal}
           setLoginTab={setLoginTab}
-          handleGoogleAuth={(hint) => void handleGoogleAuth(hint)}
+          handleGoogleAuth={handleGoogleAuthLocal}
           adminSonEmail={adminSonEmail ?? null}
           handleGuestContinue={handleGuestContinue}
           guestTrialLeft={guestTrialLeft}

@@ -26,6 +26,51 @@ export function randomPkceVerifier(): string {
   return base64Url(bytes.buffer);
 }
 
+// ★ GOOGLE OAUTH KÖPRÜSÜ (09.10 — ModalsContainer'dan taşındı):
+//   Gmail hesabına bağlanarak kayıt olur. Token frontend'de doğrulanmaz,
+//   backend'e gider. Client ID .env'den okunur (VITE_GOOGLE_CLIENT_ID).
+export async function handleGoogleAuth(notify: (msg: string) => void, loginHint?: string): Promise<void> {
+  const clientId = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID?.trim();
+
+  if (!clientId) {
+    notify("⚙️ Google girişi için Client ID tanımlanmalı (.env → VITE_GOOGLE_CLIENT_ID)");
+    return;
+  }
+
+  if (!crypto?.subtle) {
+    notify("⚠️ Tarayıcınız güvenli Google girişi için gerekli PKCE desteğini sağlamıyor");
+    return;
+  }
+
+  // OAuth 2.0 Authorization Code + PKCE — token frontend'de doğrulanmaz, backend'e gider
+  const redirectUri = `${window.location.origin}/`;
+  const scope = encodeURIComponent("openid email profile");
+  const state = Math.random().toString(36).slice(2, 18);
+  const verifier = randomPkceVerifier();
+  const challenge = await pkceChallenge(verifier);
+  try {
+    sessionStorage.setItem("nur_google_state", state);
+    sessionStorage.setItem("nur_google_pkce_verifier", verifier);
+  } catch { /* ignore */ }
+
+  const authUrl =
+    "https://accounts.google.com/o/oauth2/v2/auth" +
+    `?client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${scope}` +
+    `&state=${state}` +
+    `&code_challenge=${encodeURIComponent(challenge)}` +
+    `&code_challenge_method=S256` +
+    `&prompt=select_account` +
+    // ★ "ADMIN OLARAK GERİ DÖN" (30.09): Google hesap seçiciye son admin
+    //   e-postası ÖNERİ olarak verilir — zorunlu değil, kullanıcı başka
+    //   hesap seçebilirdi; güvenlik yine sunucu zincirinde doğrulanır.
+    (loginHint ? `&login_hint=${encodeURIComponent(loginHint)}` : "");
+
+  window.location.href = authUrl;
+}
+
 export async function pkceChallenge(verifier: string): Promise<string> {
   const data = new TextEncoder().encode(verifier);
   const digest = await crypto.subtle.digest("SHA-256", data);
