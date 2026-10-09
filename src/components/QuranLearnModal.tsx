@@ -9,6 +9,7 @@ import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volum
 import { getSurahHadith } from "../data/surahHadith";
 import { fetchSurahEditions, fetchAyah, quranUrl } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
 import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, isEnglishMeal, type Reciter, type SurahInfo } from "./quranLearnVeri";
+import { useQuranSes } from "../hooks/useQuranSes"; // ★ SRP 3. TUR (10.10): dinle modu ses motoru hook'a göçetti
 import { translate, type Lang } from "../i18n"; // ★ TUR 7: UI başlıkları çok dilli
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): everyayah → islamic.network
 // ★ SRP adım 11 (30.09): RECITERS/MEALS/SURAHS_DATA verisi + TafsirBox + saf yardımcılar quranLearnVeri.tsx'e taşındı
@@ -165,10 +166,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   }, [query, mealId, mode, open]);
 
   // ── Dinle state ──
-  // ★ FIX (29.09, kullanıcı kararı): başlangıç sureği Yâsîn (36) değil FÂTİHA (1) —
-  //   "Kur'an fatihadan başlar, ne alaka" — dinleme akışı Kur'an sırasına uyar.
-  //   ★ KALDIĞIN YERDEN DEVAM (29.09): kayıtlı konum varsa onunla başlar (aşağıdaki
-  //   effect modal açılınca uygular); kayıt yoksa Kur'an'ın başı Fâtiha'dan.
+  // ★ SRP 3. TUR (10.10): sure/hoca/kenar modlar bileşende; ses motoru useQuranSes hook'u.
   const [listenSurah, setListenSurah] = useState(() => {
     try {
       const k = JSON.parse(localStorage.getItem("nur_son_konum") || "") as { s?: number };
@@ -181,24 +179,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   const [listenAyahIdx, setListenAyahIdx] = useState(0);
   const [nextSurahAuto, setNextSurahAuto] = useState(true);
   const [wholeQuran, setWholeQuran] = useState(false);
-  // ★ ÇOKLU HOCA KARIŞIK DİNLEME (madde 65): komple Kur'an modunda sure başına
-  //    farklı hoca seçeneği — "hatim karışık hocalarla". Kapalıysa tek hoca (normal akış).
   const [karisikHoca, setKarisikHoca] = useState(false);
-  // Ayet-bazlı (everyayah) kâri havuzu — karışık modda her sure bunlardan birine atanır
-  const KARISIK_HOCA_POOL = ["Alafasy_128kbps", "MaherAlMuaiqly128kbps", "Abdul_Basit_Murattal_192kbps", "Husary_128kbps", "Minshawy_Murattal_128kbps", "Yasser_Ad-Dussary_128kbps"];
-  // Deterministik atama: sure no → havuzdaki kâri (her dinlemede aynı hocalar aynı sureyi okur)
-  const karisikReciterFor = useCallback((sN: number) => {
-    if (!karisikHoca) return listenReciter;
-    return KARISIK_HOCA_POOL[(sN * 7) % KARISIK_HOCA_POOL.length];
-  }, [karisikHoca, listenReciter]);
-  // ★ TAM SURE MODU: seçilen kârinin mp3quran.net'teki TEK DOSYALIK gapless tam sure kaydı
-  //    (ayet ayet indirmeden sureyi baştan sona kesintisiz dinleme — mp3quran.net telifsiz paylaşım)
   const [fullSurahMode, setFullSurahMode] = useState(false);
   const [wholeIdx, setWholeIdx] = useState({ s: 1, a: 1 });
   const [loopAyah, setLoopAyah] = useState(false);
-  const [loopAyahListen, setLoopAyahListen] = useState(false);
   const [repeatWord, setRepeatWord] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // ★ SRP 3. TUR: hook AUDIO REF'ten SONRA çağrılır (audioRef bileşende init edilir).
   // ★ 02.10 latent fix: SRP ayırmasında (01.10) kaybolan ref — uyku zamanlayıcısı
   //   Kâbe canlı yayın videosunu duraklatamıyordu. KabeCanliModal onVideoEl ile
   //   video elemanını buraya bağlar.
@@ -613,335 +600,29 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ayahNo, autoRead, flowPlaying, open, mode]);
 
-  // ── Dinle modu ──
-  // ★ DİNLE EKRANI AYETİ: o an okunan ayetin Arapça metni + Türkçe meali
-  //   (her ayet değişiminde ekranda da değişir, kelimeler okundukça altın yanar)
-  const [listenAyahData, setListenAyahData] = useState<{ ar: string; tr: string; n: number } | null>(null);
-  // ★ TAM SURE senkronunda güncel ayet indeksi (closure taşımaması için ref)
-  const listenAyahIdxRef = useRef(0);
-  useEffect(() => { listenAyahIdxRef.current = listenAyahIdx; }, [listenAyahIdx]);
-  const [listenWordProgress, setListenWordProgress] = useState<number>(-1);
-  // ★ BESMELE GÖSTERGESİ: besmele mp3'ü çalarken ekranda "Yasin 1. Ayet" değil,
-  //   BİSMILLÂH metni + "Besmele" etiketi görünür (ses-ekran uyumsuzluğu bitti)
-  const [besmelePlaying, setBesmelePlaying] = useState(false);
-  // ★ BESMELE REFİ: 'ended' olayı İKİ dinleyiciyi birden tetikliyor (a.onended +
-  //   addEventListener). Besmele bitince ikisi AYNI ANDA devreye girip farklı ayetler
-  //   kuruyordu → '1-2 okumuyor', '3. ayetten başladı', 'çifte besmele'. Genel dinleyici
-  //   besmele çalarken KENDİNİ SUSTURUR (ref senkron okunur — state gecikmesi yaşanmaz).
-  const besmeleRef = useRef(false);
-  useEffect(() => { besmeleRef.current = besmelePlaying; }, [besmelePlaying]);
-  // ★ TEK BESMELE KURALI (28.09, kullanıcı raporu): "besmele → 1. ayet → TEKRAR besmele
-  //   → sure tekrar başlıyor" (her surede). Sebep: Pause düğmesi stopListening atıyor,
-  //   Play'e tekrar basınca startListening(0) besmele adımını YENIDEN oynatıyordu;
-  //   aynı şekilde 1. ayette ⏮ de besmeleyi tekrar çalıyordu. Artık besmele bir sure
-  //   için dinleme oturumunda EN FAZLA BİR KEZ çalar; sure/hoca değişince sıfırlanır
-  //   (yeni surede bir kez okunur — doğru adab), modal kapanınca da temizlenir.
-  const besmeleCalindiRef = useRef(0);
-  // ★ KALDIĞIN YERDEN DEVAM — AYET SEVİYESİ (29.09, kullanıcı isteği):
-  //   sure konumu zaten listenSurah başlangıcında okunuyor; AYET konumu ise modal
-  //   dinleme modunda AÇILDIĞI İLK ANDA nur_son_konum'dan uygulanır. besmeleCalindiRef
-  //   o sure için İŞARETLİ kurulur → kullanıcı Play'e basınca kaldığı ayetten
-  //   BESMELESİZ devam eder (besmele yalnız sure başında olur — adabın gereği).
-  //   "⟲ Başından" düğmesi bu hakkı bilinçli sıfırlar, besmeleyle başlar.
-  const sonKonumUygulandiRef = useRef(false);
-  useEffect(() => {
-    if (!open || mode !== "listen" || sonKonumUygulandiRef.current) return;
-    sonKonumUygulandiRef.current = true;
-    try {
-      const k = JSON.parse(localStorage.getItem("nur_son_konum") || "") as { s?: number; a?: number };
-      const s = Number(k?.s), a = Number(k?.a);
-      if (s >= 1 && s <= 114 && a >= 2) {
-        setListenSurah(s);
-        const toplam = SURAHS_DATA.find(x => x.n === s)?.ayahs ?? 7;
-        setListenAyahIdx(Math.min(a - 1, toplam - 1));
-        if (s !== 1 && s !== 9) besmeleCalindiRef.current = s; // kaldığı ayetten besmelesiz devam
-      }
-    } catch { /* kayıt yok/bozuk — Fâtiha 1:1 varsayılan */ }
-  }, [open, mode]);
-  // Modal kapanınca bir sonraki açılış için sıfırla (konum zaten canlı yazılıyor)
-  useEffect(() => { if (!open) sonKonumUygulandiRef.current = false; }, [open]);
-  const BESMELE_AR = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
-  const BESMELE_TR = "Rahmân ve Rahîm olan Allah'ın adıyla.";
-  const listenAyahDataRef = useRef(listenAyahData);
-  useEffect(() => { listenAyahDataRef.current = listenAyahData; }, [listenAyahData]);
-  // ★ SURE ÖNBELLEĞİ: surenin ayetleri BİR KEZ çekilir, her ayet geçişinde cache'den
-  //   anında okunur. Eski kod HER ayet geçişinde surenin tamamını yeniden indiriyordu —
-  //   API yavaşlayınca/hata dönünce meal 1. ayette takılıyordu, ses ilerliyordu.
-  const listenSurahCacheRef = useRef<{ s: number; ar: string[]; tr: string[] } | null>(null);
-  // ★ EN GÜNCEL KONUM REFİ: gecikmeli yanıt eski ayete yazmasın (stale yazma koruması)
-  const listenPosRef = useRef({ s: 0, a: 1 });
-  useEffect(() => {
-    listenPosRef.current = { s: wholeQuran ? wholeIdx.s : listenSurah, a: wholeQuran ? wholeIdx.a : listenAyahIdx + 1 };
-  }, [wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx]);
-  useEffect(() => {
-    if (mode !== "listen") { setListenAyahData(null); return; }
-    // ★ BESMELE KORUMASI: besmele çalarken fetch efekti ekrandaki besmele metnini
-    //   1. ayetle DEĞİŞTİRMESİN — ses besmele derken ekranda besmele kalsın.
-    //   Besmele bitince state false olur → efekt yeniden koşar → 1. ayet gelir.
-    if (besmelePlaying) return;
-    const sNow = wholeQuran ? wholeIdx.s : listenSurah;
-    const aNow = wholeQuran ? wholeIdx.a : listenAyahIdx + 1;
-    // Önbellek isabeti → istek YOK, meal anında güncellenir
-    const c = listenSurahCacheRef.current;
-    if (c && c.s === sNow && c.ar[aNow - 1]) {
-      setListenAyahData({ ar: c.ar[aNow - 1], tr: c.tr[aNow - 1], n: aNow });
-      setListenWordProgress(-1);
-      return;
-    }
-    let live = true;
-    // ★ KAYMA KORUMASI (28.09): tr.diyanet şüpheliyse tr.yazir → tr.vakfi fallback
-    fetchSurahEditions(sNow, "tr.diyanet")
-      .then((d) => {
-        if (!live) return;
-        const ars: string[] = d.arabic.map((x) => x.text);
-        const trs: string[] = d.tr;
-        listenSurahCacheRef.current = { s: sNow, ar: ars, tr: trs };
-        // Yanıt gecikirse ayet değişmiş olabilir → ref'ten GÜNCEL konumu yaz
-        const pos = listenPosRef.current;
-        if (pos.s !== sNow || !ars[pos.a - 1]) return;
-        setListenAyahData({ ar: ars[pos.a - 1], tr: trs[pos.a - 1], n: pos.a });
-        setListenWordProgress(-1);
-      })
-      .catch(() => { /* önbellek sonraki denemede devreye girer */ });
-    return () => { live = false; };
-  }, [mode, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, listenAyahIdx, besmelePlaying]);
-  const listenSurahInfo = SURAHS_DATA.find(s => s.n === listenSurah) ?? SURAHS_DATA[35];
-  // Hoca arama kutusu — "mahir", "husari" yaz, liste anında filtrelenir
-  const [reciterSearch, setReciterSearch] = useState("");
-  const filteredReciters = useMemo(() => {
-    const q = reciterSearch.trim().toLocaleLowerCase("tr");
-    let liste = RECITERS;
-    if (q) liste = RECITERS.filter(r => r.name.toLocaleLowerCase("tr").includes(q));
-    // ★ SEÇİLİ KARİ EN ÜSTTE — kullanıcı kendi seçimini kaybetmesin
-    return [...liste].sort((a, b) => (a.id === listenReciter ? -1 : b.id === listenReciter ? 1 : 0));
-  }, [reciterSearch, listenReciter]);
-  // ★ Ayet mp3 yolu — everyayah (30 kari, hepsi ayet bazlı, tek tek test edildi)
-  //   ★ Karışık hoca modunda sure numarasına göre atanmış kâri kullanılır (madde 65)
-  const ayahUrl = useCallback((sN: number, aN: number) =>
-    `https://everyayah.com/data/${karisikReciterFor(sN)}/${String(sN).padStart(3, "0")}${String(aN).padStart(3, "0")}.mp3`, [karisikReciterFor]);
-  // ★ TAM SURE dosya yolu — kâri destekliyorsa mp3quran.net'ten tek dosya (gapless)
-  const fullSurahUrl = useCallback((sN: number) => {
-    const rc = RECITERS.find(r => r.id === listenReciter);
-    if (!rc?.full) return null;
-    const [folder, srv] = rc.full;
-    return `https://server${srv}.mp3quran.net/${folder}/${String(sN).padStart(3, "0")}.mp3`;
-  }, [listenReciter]);
+  // ── Dinle modu ses motoru — SRP 3. TUR: useQuranSes hook'u ──
+  // ★ startListening/playAt/besmele/kaldığı-yerden-devam/sure önbellegi/tam-sure
+  //   senkron/'ended' genel dinleyici/stop·pause·resume·seek, hepsi hook'ta.
+  //   bileşende kalan: liste mod bayrakları, audioRef init'i, radyo/kâbe UI'sı.
+  const [paused, setPaused] = useState(false); // learn modu kullanıyor; hook listen paused'i aynı state'e bağlar
+  const ses = useQuranSes({
+    open, mode, kabeLive, audioRef, stopAudio,
+    fullSurahMode, wholeQuran, wholeIdx, setWholeIdx,
+    nextSurahAuto, setIsPlaying, listenReciter, karisikHoca, speed,
+    paused, setPaused,
+    listenSurahOverride: { listenSurah, setListenSurah },
+    listenAyahIdxOverride: { listenAyahIdx, setListenAyahIdx },
+  });
+  const {
+    listenAyahData, listenWordProgress, besmelePlaying, besmeleCalindiRef,
+    listenSurahInfo, loopAyahListen, setLoopAyahListen,
+    reciterSearch, setReciterSearch, filteredReciters,
+    startListening, stopListening, pauseAyah, resumeAyah, seekAyah,
+  } = ses;
 
-  // ★ SIRADAKİ AYETİ ÖNCE İNDİR: çalarken arka planda ısıtıyoruz —
-  //    ayet değişince sessiz bekleme olmaz, anında devam eder
-  const preloadedRef = useRef<string>("");
-  const preloadNextAyah = useCallback((sN: number, ayahIdx: number) => {
-    const total = SURAHS_DATA.find(s => s.n === sN)?.ayahs ?? 0;
-    if (ayahIdx + 2 > total) return;
-    const url = ayahUrl(sN, ayahIdx + 2);
-    if (preloadedRef.current === url) return;
-    preloadedRef.current = url;
-    const p = new Audio();
-    p.preload = "auto";
-    p.src = url;
-  }, [ayahUrl]);
-
-  // ★ TAM SURE SES-EKRAN SENKRONU (30.09): tek dosyada okunan ayeti süre oranından
-  //   hesaplar — startListening ve playAt AYNI handler'ı kullanır. (Yalnızca ref/setState
-  //   dokunduğu için stale closure riski yok.)
-  const tamSureSenkronBagla = (a: HTMLAudioElement, sN: number) => {
-    a.ontimeupdate = () => {
-      if (!a.duration || Number.isNaN(a.duration) || a.duration <= 0) return;
-      const ratio = a.currentTime / a.duration;
-      const totalAyah = SURAHS_DATA.find(s => s.n === sN)?.ayahs ?? 0;
-      if (totalAyah <= 0) return;
-      const cache = listenSurahCacheRef.current;
-      let yeniIdx: number;
-      if (cache && cache.s === sN && cache.ar.length === totalAyah) {
-        yeniIdx = Math.min(totalAyah - 1, weightedWordIndex(ratio, cache.ar.join(" "), totalAyah));
-      } else {
-        yeniIdx = Math.min(totalAyah - 1, Math.floor(ratio * totalAyah));
-      }
-      if (yeniIdx !== listenAyahIdxRef.current) {
-        setListenAyahIdx(yeniIdx);
-        setListenWordProgress(-1);
-      } else if (cache && cache.s === sN && cache.ar[yeniIdx]) {
-        const ayRatio = (ratio * totalAyah) - yeniIdx;
-        setListenWordProgress(weightedWordIndex(ayRatio, cache.ar[yeniIdx], 999));
-      }
-    };
-  };
-
-  const playAt = useCallback((sN: number, ayahIdx: number) => {
-    const a = audioRef.current; if (!a) return;
-    setListenAyahIdx(ayahIdx);
-    // ★ TAM SURE MODU: tek dosya çalıyor — ayet verisini fetch etmeye gerek yok,
-    //   ekran 'kesintisiz tam sure' göstergesinde kalır
-    // ★ KRİTİK DÜZELTME (30.09, canlı testte yakalandı): fsUrl burada MODSIZ tercih
-    //   ediliyordu — "Tek Sure"/"Sıradaki Sure" modlarında bile 2 saatlik Bakara
-    //   dosyası çalıyordu, karaoke ontimeupdate hiç kurulmuyor, ekran 1. ayette
-    //   kilitliydi. Artık tam-sure dosyası YALNIZ fullSurahMode açıksa çalar.
-    const fsUrl = fullSurahMode ? fullSurahUrl(sN) : null;
-    if (fsUrl) {
-      a.src = fsUrl;
-      a.playbackRate = speed;
-      a.loop = false;
-      a.preload = "auto";
-      a.load();
-      tamSureSenkronBagla(a, sN);
-      a.onended = null;
-      a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      return;
-    }
-    a.src = ayahUrl(sN, ayahIdx + 1);
-    a.playbackRate = speed;
-    a.loop = false;
-    a.preload = "auto";
-    a.load(); // ★ eski buffer temizle
-    // ★ DİNLEDE KELİME TAKİBİ: ses konumu → kelime sayısı, okundukça yanar
-    a.ontimeupdate = () => {
-      const ay = listenAyahDataRef.current;
-      if (!a.duration || Number.isNaN(a.duration) || !ay) return;
-      const parts = ay.ar.split(/\s+/).filter(Boolean);
-      if (parts.length === 0) return;
-      setListenWordProgress(weightedWordIndex(a.currentTime / a.duration, ay.ar, parts.length));
-    };
-    a.onended = null; // ★ ESKİ onended TEMİZLE — besmele handler'ı yeni ayeti ezmesin
-    a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, ayahIdx); }).catch(() => setIsPlaying(false));
-  }, [ayahUrl, fullSurahUrl, fullSurahMode, speed, preloadNextAyah]);
-
-  const startListening = useCallback((fromIdx = 0) => {
-    stopAudio();
-    const sN = wholeQuran ? listenSurah : listenSurah;
-    // ★ TAM SURE MODU: kâri tam-sure destekliyorsa sureyi TEK DOSYADAN (gapless) çal
-    const rc = RECITERS.find(r => r.id === listenReciter);
-    if (fullSurahMode && rc?.full) {
-      const [folder, srv] = rc.full;
-      const a = audioRef.current; if (!a) return;
-      setListenAyahIdx(0);
-      a.src = `https://server${srv}.mp3quran.net/${folder}/${String(sN).padStart(3, "0")}.mp3`;
-      a.playbackRate = speed;
-      a.loop = false;
-      a.preload = "auto";
-      a.load();
-      // ★ TAM SURE SES-EKRAN SENKRONU (30.09): ortak handler'a taşındı —
-      //   süre oranı → tartılı ayet indeksi + ayet içi kelime vurgusu.
-      tamSureSenkronBagla(a, sN);
-      a.onended = () => {
-        // Tam sure bitince: sıradaki sure / komple kuran ayarına göre devam
-        if (!wholeQuran && !nextSurahAuto) { setIsPlaying(false); return; }
-        const next = SURAHS_DATA.find(s => s.n === sN + 1);
-        if (next) {
-          setListenSurah(next.n);
-          setListenAyahIdx(0);
-          a.src = `https://server${srv}.mp3quran.net/${folder}/${String(next.n).padStart(3, "0")}.mp3`;
-          a.load();
-          a.play().catch(() => setIsPlaying(false));
-        } else setIsPlaying(false);
-      };
-      a.play().then(() => setIsPlaying(true)).catch(() => {
-        setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
-      });
-      return;
-    }
-    // ★ KOMPLE KUR'AN seçiliyse SEÇİLİ SUREDEN başlar (Fatiha'ya dönmez);
-    //   sureler arası geçiş 'ended' dinleyicisinde zaten var
-    if (wholeQuran) { setWholeIdx({ s: sN, a: fromIdx + 1 }); }
-    const a = audioRef.current; if (!a) return;
-    // ★ SURE DEĞİŞİMİ DÜZELTMESİ: setListenAyahIdx(fromIdx) TEK BAŞINA YETERSİZ —
-    //   React state güncellemesi ESRİK (asenkron). a.src = ayahUrl(sN, fromIdx+1)
-    //   yeni sureyi KURAR ama eski closure'daki onended/ontimeupdate hâlâ eski sureye
-    //   bakabiliyordu → "Fatiha seçtim, Enfâl seçtim, hâlâ Fatiha okuyor".
-    //   ÇÖZÜM: src'yi YENİ sureyle kur + onended'i TEMİZ kur (aşağıdaki ended dinleyici
-   //   effect'i zaten listenSurah'a bağlı yeniden bağlanıyor).
-    setListenAyahIdx(fromIdx);
-    setListenWordProgress(-1);
-    // ★ BESMELE: Fatiha ve Tevbe hariç her sure besmeleyle başlar (sünnet);
-    //   sadece ilk ayet başlarken çalar, sonraki ayetlerde çalmaz.
-    //   ★ BESMELE DOSYASI: 001001.mp3 = Fâtiha 1. ayet = Bismillâhirrahmânirrahîm.
-    //   ⚠️ HATA DÜZELTİLDİ: eskiden 100001.mp3 kullanılıyordu — everyayah adlandırması
-    //   3 haneli sure + 3 haneli ayet olduğundan 100001 = Âdiyât 100:1 'Vel âdiyâti dabhâ'
-    //   çalıyordu (ekran Yasin gösterirken 'vel âdiyat' sesi gelmesinin sebebi buydu)
-    //   ★ ÇİFTE BESMELE DÜZELTİLDİ: Fâtiha'nın 1. ayeti ZATEN besmeledir (001001.mp3 =
-    //   Bismillâh). Ayrı besmele dosyası çalmak → Fatiha'da besmele iki kez duyulur.
-    //   Bu yüzden Fatiha'da ayrı besmele adımı ATLANIR (isBesmeleSurah kapsıyor).
-    const isBesmeleSurah = sN === 1 || sN === 9; // Fâtiha'nın kendisi besmele, Tevbe'de besmele yok
-    const besmeleUrl = `https://everyayah.com/data/${listenReciter}/001001.mp3`;
-    // ★ TEK BESMELE: bu sure için besmele çalındıysa bir daha ASLA (pause→play, ⏮
-    //   veya tekrar çal düğmeleri besmelenin tekrarını tetikleyemez)
-    if (fromIdx === 0 && !isBesmeleSurah && besmeleCalindiRef.current !== sN) {
-      besmeleCalindiRef.current = sN;
-      // Önce besmele, bittikten sonra 1. ayet — EKRANDA DA BESMELE gösterilir
-      setListenAyahData({ ar: BESMELE_AR, tr: BESMELE_TR, n: 0 });
-      setListenWordProgress(-1);
-      setBesmelePlaying(true);
-      a.src = besmeleUrl;
-      a.onended = () => {
-        a.onended = null;
-        setBesmelePlaying(false);
-        a.src = ayahUrl(sN, 1);
-        a.load();
-        a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, 0); }).catch(() => setIsPlaying(false));
-      };
-      a.playbackRate = speed;
-      a.loop = false;
-      a.preload = "auto";
-      a.load();
-      a.play().then(() => setIsPlaying(true)).catch(() => {
-        setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
-      });
-      return;
-    }
-    a.src = ayahUrl(sN, fromIdx + 1);
-    a.playbackRate = speed;
-    a.loop = false;
-    a.preload = "auto";
-    a.load(); // ★ eski buffer temizle
-    a.onended = null; // ★ ESKİ onended TEMİZLE — sure değişince eski handler yeni sureyi ezmesin
-    a.play().then(() => { setIsPlaying(true); preloadNextAyah(sN, fromIdx); }).catch(() => {
-      setTimeout(() => { a.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false)); }, 250);
-    });
-  }, [wholeQuran, nextSurahAuto, fullSurahMode, listenSurah, listenReciter, ayahUrl, speed, stopAudio, preloadNextAyah]);
-
-  useEffect(() => {
-    // ★ SADECE DİNLE MODUNDA: bu dinleyici ÖĞREN modunda da çalışıp sesi
-    //   Dinle sekmesinin suresine kaçırıyordu (Fatiha ekranda, Yasin çalıyordu)
-    if (mode !== "listen") return;
-    const a = audioRef.current; if (!a) return;
-    const onEnded = () => {
-      // ★ BESMELE KORUMASI: besmele'nin kendi handler'ı (a.onended) sıradaki ayeti kurar —
-      //   bu genel dinleyici o anda ÇALIŞMAZ. (Çift tetikleme → ayet atlama/çifte besmele bug'ı)
-      if (besmeleRef.current) return;
-      if (loopAyahListen) { a.currentTime = 0; a.play().catch(() => undefined); return; }
-      const sNow = wholeQuran ? wholeIdx.s : listenSurah;
-      const total = SURAHS_DATA.find(s => s.n === sNow)?.ayahs ?? listenSurahInfo.ayahs;
-      if (listenAyahIdx + 1 < total) { playAt(sNow, listenAyahIdx + 1); return; }
-      // Sure bitti → KOMPLE KUR'AN ya da SIRADAKİ SURE açıksa bir sonraki sureye geç
-      // ★ ÇİFTE BESMELE DÜZELTİLDİ (28.09): eskiden burada besmele ELLE çalınıp onended'de
-      //   playAt(next.n, 0) çağrılıyordu — playAt da fromIdx===0'da besmele çaldığı için
-      //   sure geçişinde besmele İKİ KEZ duyuluyordu. Artık doğrudan playAt çağrılır;
-      //   besmele (Fâtiha/Tevbe hariç) playAt'ın içinde BİR KEZ çalar, ekran da besmele gösterir.
-      const next = SURAHS_DATA.find(s => s.n === sNow + 1);
-      if ((wholeQuran || nextSurahAuto) && next) {
-        if (wholeQuran) setWholeIdx({ s: next.n, a: 1 });
-        setListenSurah(next.n);
-        playAt(next.n, 0);
-        return;
-      }
-      setIsPlaying(false);
-    };
-    a.addEventListener("ended", onEnded);
-    return () => a.removeEventListener("ended", onEnded);
-  }, [mode, loopAyahListen, wholeQuran, nextSurahAuto, wholeIdx, listenSurah, listenAyahIdx, playAt, listenSurahInfo.ayahs, listenReciter]);
-
-  const stopListening = () => { stopAudio(); setIsPlaying(false); setPaused(false); setBesmelePlaying(false); };
-
-  // Öğren modundaki oynatmayı durdurur (ortadaki büyük durdur düğmesi)
   const stopAyahPlayback = () => { stopAudio(); setIsPlaying(false); setFlowPlaying(false); setPaused(false); };
 
-  // ★ DONDUR / DEVAM + İLERİ-GERİ SARMA + ÖNCEKİ/SONRAKİ AYET
-  const [paused, setPaused] = useState(false);
-  const pauseAyah = () => { const a = audioRef.current; if (!a) return; a.pause(); setPaused(true); };
-  const resumeAyah = () => { const a = audioRef.current; if (!a) return; a.play().then(() => setPaused(false)).catch(() => undefined); };
-  const seekAyah = (delta: number) => {
-    const a = audioRef.current; if (!a || !a.duration || Number.isNaN(a.duration)) return;
-    a.currentTime = Math.max(0, Math.min(a.duration - 0.15, a.currentTime + delta));
-  };
+  // ★ ÖĞREN MODU kontrolleri (dondur/sar/önceki-sonraki) — learn moduna özgü
   const prevAyahLearn = () => {
     if (ayahNo <= 1) return;
     stopAudio(); setPaused(false); setFlowPlaying(true); setAyahNo(ayahNo - 1); setActiveWord(null);
@@ -1100,6 +781,39 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
           latinAcik={latinAcik} setLatinAcik={setLatinAcik}
           mushafModu={mushafModu} setMushafModu={setMushafModu}
           translit={translit} centerListRef={centerListRef}
+        />
+      )}
+      {/* ══════════ DİNLE MODU — SRP 3. TUR (10.10): useQuranSes hook'u + quranLearnEkranlar JSX */}
+      {mode === "listen" && (
+        <DinleModu
+          ttQL={ttQL}
+          listenSurah={listenSurah} setListenSurah={setListenSurah}
+          listenSurahInfo={listenSurahInfo}
+          listenAyahIdx={listenAyahIdx} setListenAyahIdx={setListenAyahIdx}
+          isPlaying={isPlaying}
+          listenAyahData={listenAyahData}
+          besmelePlaying={besmelePlaying}
+          fullSurahMode={fullSurahMode} setFullSurahMode={setFullSurahMode}
+          wholeQuran={wholeQuran} setWholeQuran={setWholeQuran}
+          nextSurahAuto={nextSurahAuto}
+          karisikHoca={karisikHoca} setKarisikHoca={setKarisikHoca}
+          setKabeLive={setKabeLive}
+          stopListening={stopListening}
+          startListening={startListening}
+          ekransizMod={ekransizMod} setEkransizMod={setEkransizMod}
+          uykuTimer={uykuTimer} uykuKalan={uykuKalan}
+          uykuMenu={uykuMenu} setUykuMenu={setUykuMenu}
+          kurUykuZamanlayici={kurUykuZamanlayici}
+          reciterSearch={reciterSearch} setReciterSearch={setReciterSearch}
+          filteredReciters={filteredReciters}
+          reciter={listenReciter}
+          setListenReciter={setListenReciter}
+          besmeleCalindiRef={besmeleCalindiRef}
+          listenWordProgress={listenWordProgress}
+          listenScrollRef={listenScrollRef}
+          speed={speed} setSpeed={setSpeed}
+          audioRef={audioRef}
+          loopAyahListen={loopAyahListen} setLoopAyahListen={setLoopAyahListen}
         />
       )}
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}

@@ -390,7 +390,7 @@ export interface DinleProps {
   uykuMenu: boolean; setUykuMenu: React.Dispatch<React.SetStateAction<boolean>>;
   kurUykuZamanlayici: (dakika: number | null) => void;
   reciterSearch: string; setReciterSearch: React.Dispatch<React.SetStateAction<string>>;
-  filteredReciters: Array<{ id: string; name: string; full?: string[] }>;
+  filteredReciters: Array<{ id: string; name: string; full?: [string, number] }>;
   reciter: string;
   setListenReciter: React.Dispatch<React.SetStateAction<string>>;
   besmeleCalindiRef: React.MutableRefObject<number>;
