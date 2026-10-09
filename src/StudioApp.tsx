@@ -91,6 +91,7 @@ import { useSearchResults } from "./studio/useSearchResults";
 import { useMedyaYukleme } from "./studio/useMedyaYukleme";
 import { useOutputKalici } from "./studio/useOutputKalici";
 import { useVideoGenerator } from "./studio/useVideoGenerator";
+import { useAyetSecim } from "./studio/useAyetSecim"; // ★ SRP (09.10): ayet seçim motoru hook'a taşındı
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
 import { ensureImageYukle, ensureVideoYukle } from "./studio/medyaOnYukleme";
@@ -829,97 +830,16 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   (saf fonksiyonlar; davranış birebir aynı). Eski isimler uç noktalar bozulmasın
   //   diye modül düzeyi sabitlere takma ad olarak kalır.
   const detectCategoryFromAyah = ayetKategorisiBul;
-  const detectAdminCategoryFromAyah = adminAyetKategorisiBul;
-
-  const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
-    // ★ TAM TARAMA (29.09): a=0 guard — "Ayet Ekle" butonu ayet seçilmeden basılınca
-    // Number("")=0 geliyordu → "Fâtiha 1:0" placeholder → 001000.mp3 404 → render crash.
-    if (!Number.isInteger(s) || s < 1 || !Number.isInteger(a) || a < 1) { notify("⚠️ Önce sure ve ayet seç"); return; }
-    const id = `${s}:${a}`;
-    if (selectedRef.current.some((item) => item.id === id)) return;
-    const meta = SURAHS[s - 1];
-    // ★ Hemen seçili işaretle (optimistic update) — API beklemeden
-    const placeholder = { id, s, a, sName: meta?.name ?? "", ar: "", tr: knownTranslation ?? t("loadingVerse") };
-    setSelected((current) => [...current, placeholder]);
-    setVerseIndex(selectedRef.current.length);
-    try {
-      let ar = "", tr = knownTranslation ? normalizeTurkishMeal(knownTranslation, MEAL_EDITIONS[lang]) : "";
-      if (knownTranslation) { const json: any = await fetchJSON(quranUrl(`v1/ayah/${s}:${a}/quran-uthmani`)); ar = json?.data?.text ?? ""; }
-      else { const loaded = await fetchAyah(s, a, MEAL_EDITIONS[lang]); ar = loaded.ar; tr = loaded.tr; }
-      // ★ Placeholder'ı gerçek veriyle değiştir (boşsa bile güncelle — API çalışmıyorsa boş kalmasın)
-      setSelected((current) => current.map((x) => x.id === id ? { ...x, ar: ar || x.ar, tr: tr || x.tr } : x));
-
-      if (smartAiEnabled) {
-        // ★ Akıllı AI, kullanıcının sekmesini (şablon/hareketli) takip eder
-        const wantKind = clipKindRef.current;
-        const detectedCat = detectCategoryFromAyah(ar, tr, meta.name);
-        let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
-        // ★ Kategorinin o türde klibi yoksa (örn. kod kategorilerinde şablon yok),
-        //   ayet kelimeleriyle ŞABLONU/HAREKEtlisi olan admin kategorilerine ikinci tarama:
-        //   böylece "Gökten su" ayetine rastgele savaş atları düşmez, bulut/tema kategorisi bulur.
-        if (poolCat.length === 0) {
-          const adminCat = detectAdminCategoryFromAyah(ar, tr, meta.name);
-          if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === wantKind);
-        }
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
-        if (poolCat.length) {
-          const chosen = poolCat[Math.floor(Math.random() * poolCat.length)];
-          // ★ KULLANICI MEDYASI KUTSAL (30.09): ana arka plan kullanıcının kendi dosyasıysa
-          //   YENİ ayetler de o dosyayla başlar — AI kullanıcının kendi seçimine sahne dayatamaz.
-          //   AI tematik sahneler yalnız kendi dosyası YOKKEN devreye girer.
-          if (backgroundRef.current?.cat === "yuklenenler") {
-            setAyahBackgrounds((current) => ({ ...current, [id]: backgroundRef.current }));
-          } else {
-            setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
-            if (verseIndexRef.current === selectedRef.current.length) { setBackground(chosen); }
-          }
-        }
-      }
-
-      // ★ AI kapalıyken fallback: seçili sekme türünden mushaf klibi (şablondaysa şablon)
-      // ★ KULLANICI SEÇİMİ KUTSAL (30.09): kullanıcı kendi dosyasını ana arka plan yaptıysa
-      //   yeni ayet de ONUNLA başlar — otomatik atmosfer ezmesin. Kendi dosyası yoksa
-      //   yüklü klipler → mushaf sırasıyla fallback.
-      if (!ayahBackgroundsRef.current[id]) {
-        const anaArkaPlan = backgroundRef.current;
-        if (anaArkaPlan?.cat === "yuklenenler") {
-          setAyahBackgrounds((current) => ({ ...current, [id]: anaArkaPlan }));
-        } else {
-          const kullaniciKlipleri = combinedAllClips.filter((clip) => clip.cat === "yuklenenler" && clip.kind === clipKindRef.current);
-          const quranClips = kullaniciKlipleri.length
-            ? kullaniciKlipleri
-            : combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === clipKindRef.current);
-          if (quranClips.length) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
-        }
-      }
-      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciter.name, lang)); notify(t("ssAyetEklendi").replace("{name}", meta.name).replace("{s}", String(s)).replace("{a}", String(a)));
-    } catch (e) {
-      console.error("[addAyah] fetch hatası:", e);
-      // ★ HATA: Placeholder'ı listeden çıkar
-      setSelected((current) => current.filter((x) => x.id !== id));
-      notify(t("renderAuthError"));
-    }
-  }, [lang, notify, reciter.name, smartAiEnabled, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
-
-  const toggleAyah = useCallback((s: number, a: number, knownTranslation?: string) => {
-    const id = `${s}:${a}`;
-    if (selectedRef.current.some((item) => item.id === id)) {
-      setSelected((current) => current.filter((item) => item.id !== id));
-      setVerseIndex((current) => Math.max(0, Math.min(current, Math.max(0, selectedRef.current.length - 2))));
-      setAyahBackgrounds((current) => { const next = { ...current }; delete next[id]; return next; });
-      return;
-    }
-    void addAyah(s, a, knownTranslation);
-  }, [addAyah]);
-
-  const addWholeSurah = useCallback(async () => {
-    const number = Number(surah);
-    if (!number || number < 1) { notify("Önce bir sure seç"); return; }
-    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(`${meta.name} Suresi tamamı eklendi (${rows.length} ayet)`); }
-    catch { notify(t("renderServerError")); }
-  }, [surah, lang, notify]);
-
+  const detectAdminCategoryFromAyah = adminAyetKategorisiBul; // ★ (useAyetSecim dışındaki reassign/applySmart için tekrar tanımlık)
+  // ★ AYET SEÇİM MOTORU — studio/useAyetSecim.ts'e taşındı (SRP parçalama, 09.10):
+  //   addAyah (akıllı AI + optimistic update + kullanıcı medyası kuralı) +
+  //   toggleAyah + addWholeSurah hook içinde; dışa açık imza aynı.
+  const { addAyah, toggleAyah, addWholeSurah } = useAyetSecim({
+    notify, t, lang, selectedRef, setSelected, setVerseIndex,
+    backgroundRef, ayahBackgroundsRef, verseIndexRef, clipKindRef,
+    combinedAllClips, reciterName: reciter.name, smartAiEnabled,
+    setBackground, setAyahBackgrounds, setShareTitle, setShareDescription,
+  });
   // ★ SEKME DEĞİŞİMİ (Şablon V2 ↔ Hareketli) — zaten atanmış ayet arka planlarını
   //   yeni türe (img/vid) yeniden atar. Eski davranışta sadece ana arka plan
   //   randomClip ile değişiyordu; ayet kayıtları eski türemiş gibi kalıyor, üretim

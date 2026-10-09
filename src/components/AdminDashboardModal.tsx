@@ -20,6 +20,7 @@ import { AdminPanelKabuk } from "./adminDashboardKabuk";
 // ★ 06.10 SAĞLIK ROZETİ: panel açılışında 7 salt-okunur action sessizce ping'lenir
 //   (usePanelSaglik.ts — YAZMA action'ları asla çağrılmaz); hatalı sekme rozette görünür.
 import { usePanelSaglik } from "./usePanelSaglik";
+import { assertAdminAction, serverManage, hataAlarmiOku, videoHaklariniOku } from "./adminDashboardRpc";
 // ★ SRP adım 10 (30.09): banLogs + feedback + errors sekmeleri adminDashboardBolumler.tsx'e taşındı
 
 interface AdminDashboardModalProps {
@@ -67,18 +68,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   //   eşikler: 10+ → sarı (dikkat), 30+ → kırmızı (acil)
   const [errorAlarm, setErrorAlarm] = useState<"ok" | "warn" | "alarm">("ok");
   const refreshErrorAlarm = async () => {
-    try {
-      const response = await fetch("/api/admin/action", {
-        method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list_errors" }),
-      });
-      const data = await response.json().catch(() => null) as any;
-      if (data?.ok && data.stats) {
-        const total = Number(data.stats.total24h) || 0;
-        setErrorStats(data.stats);
-        setErrorAlarm(total >= 30 ? "alarm" : total >= 10 ? "warn" : "ok");
-      }
-    } catch { /* sessiz — alarm kontrolü siteyi bozmaz */ }
+    // ★ RPC KATMANI adminDashboardRpc.ts'e taşındı (09.10 parçalama)
+    const stats = await hataAlarmiOku();
+    if (stats) {
+      const total = Number(stats.total24h) || 0;
+      setErrorStats(stats);
+      setErrorAlarm(total >= 30 ? "alarm" : total >= 10 ? "warn" : "ok");
+    }
   };
   // Panel açıkken 90 saniyede bir hata sayısı kontrolü
   useEffect(() => {
@@ -156,7 +152,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       return;
     }
     const finalReason = sanitizeText(reason).trim().slice(0, 300) || "Yasal ihlal / Sistem güvenlik uyarısı";
-    const banState = await serverManage("ban_user", { email, reason: finalReason });
+    const banState = await serverManageLocal("ban_user", { email, reason: finalReason });
     // Ban her zaman yerel olarak kaydedilir (sunucu hata verse bile)
     banUserInDb(email, finalReason, currentUserEmail, false);
     setSysConfig(getSystemConfig());
@@ -217,7 +213,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
       return;
     }
-    const unbanState = await serverManage("unban_user", { email });
+    const unbanState = await serverManageLocal("unban_user", { email });
     // Ban her zaman yerel olarak kaldırılır
     unbanUserInDb(email);
     setSysConfig(getSystemConfig());
@@ -289,51 +285,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  const assertAdminAction = async (action: string, target?: string, reason?: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/admin/action", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, target, reason }),
-      });
-      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
-      if (!response.ok || !data?.ok) {
-        notify(data?.error || "Admin yetkisi doğrulanamadı");
-        return false;
-      }
-      return true;
-    } catch {
-      notify("Admin yetkisi için sunucuya ulaşılamadı");
-      return false;
-    }
-  };
+  // ★ RPC KATMANI — adminDashboardRpc.ts'e taşındı (09.10 parçalama)
+  const assertAdminActionLocal = (action: string, target?: string, reason?: string) =>
+    assertAdminAction(action, notify, target, reason);
 
   // ★ Gerçek işlemi server üzerinden Supabase'e yazar.
   //   /api/admin/action tüm yönetimsel işlemleri (tier, jeton, ban, lock) işler.
   //   503 = Supabase henüz bağlı değil → local fallback devam eder.
-  const serverManage = async (action: string, payload: Record<string, unknown>): Promise<"done" | "fallback" | "error"> => {
-    try {
-      const response = await fetch("/api/admin/action", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, target: payload.email || payload.featureId || "", ...payload }),
-      });
-      if (response.status === 503) return "fallback";
-      const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
-      if (!response.ok || !data?.ok) {
-        notify(data?.error || "Yönetim işlemi tamamlanamadı");
-        return "error";
-      }
-      return "done";
-    } catch {
-      return "fallback";
-    }
-  };
+  const serverManageLocal = (action: string, payload: Record<string, unknown>) =>
+    serverManage(action, payload, notify);
 
   const handleTierChange = async (email: string, newTier: Tier) => {
-    const tierState = await serverManage("change_tier", { email, tier: newTier });
+    const tierState = await serverManageLocal("change_tier", { email, tier: newTier });
     if (tierState === "error") return;
     // Sunucu başarılıysa localStorage'ı güncelle
     const updatedUsers = users.map((u) => {
@@ -355,7 +318,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   const handleJetonChange = async (email: string, delta: number) => {
     const targetUserNow = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     const newTotal = Math.max(0, (targetUserNow?.jeton ?? 0) + delta);
-    const jetonState = await serverManage("change_jeton", { email, total: newTotal });
+    const jetonState = await serverManageLocal("change_jeton", { email, total: newTotal });
     if (jetonState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
@@ -375,7 +338,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleDirectJetonSet = async (email: string, exactAmount: number) => {
     const safeAmount = Math.max(0, Math.floor(exactAmount));
-    const setState = await serverManage("change_jeton", { email, total: safeAmount });
+    const setState = await serverManageLocal("change_jeton", { email, total: safeAmount });
     if (setState === "error") return;
     const updatedUsers = users.map((u) => {
       if (u.email.toLowerCase() === email.toLowerCase()) {
@@ -438,7 +401,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   // ★ HAKLARI SIFIRLA — satın alınan tüm hakları, jetonu ve aboneliği sıfırla
   const handleResetRights = async (email: string) => {
-    const resetState = await serverManage("reset_rights", { email });
+    const resetState = await serverManageLocal("reset_rights", { email });
     if (resetState === "error") return;
     // localStorage güncelle
     const updatedUsers = users.map((u) => {
@@ -460,7 +423,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // ★ TEK HAK SIFIRLA — kısa/uzun/tam ayrı ayrı; suçun boyutuna göre kısmi ceza
   const handleResetSingleRight = async (email: string, kind: "kisa" | "uzun" | "tam", cancelSubscription: boolean) => {
     const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm";
-    const state = await serverManage("reset_single_right", { email, kind, cancelSubscription });
+    const state = await serverManageLocal("reset_single_right", { email, kind, cancelSubscription });
     if (state === "error") return;
     notify(cancelSubscription
       ? `🗑️ ${email} — ${ad} hakları sıfırlandı + üyelik iptal edildi`
@@ -626,7 +589,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleSetTierViaEmail = async (email: string, newTier: Tier) => {
     const target = email.trim().toLowerCase();
-    const tierState = await serverManage("change_tier", { email: target, tier: newTier });
+    const tierState = await serverManageLocal("change_tier", { email: target, tier: newTier });
     if (tierState === "error") return;
     const updated = setUserTier(target, newTier);
     if (!updated) {

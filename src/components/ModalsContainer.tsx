@@ -42,6 +42,8 @@ import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
 import { GoogleIcon, randomPkceVerifier, pkceChallenge } from "./modalHelpers";
 import { adminCatVisible } from "../adminCategoryAccess";
+import { V2_KILITLI, V2_MODAL_IDLERI, acilanModalEkle, acildiMiFn, v2KilitliMi, v2AcikMi, type V2ModalId } from "./modalsContainerV2";
+import { demoOdemeUygula } from "./modalsContainerOdeme";
 import { LoginModalBolum, FullUnlockConfirmBolum, AdminAuthBolum, LibraryBolum, StoriesBolum, ThemesBolum, PrayerBolum, ContactBolum } from "./modalsContainerBolumler";
 // ★ SRP adım 8 (30.09): 8 self-contained modal modalsContainerBolumler.tsx'e taşındı
 
@@ -226,30 +228,20 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   //   Yayın build'inde env yoksa kural eskisi gibi çalışır; canlıyı etkilemez.
   const INCELEME_MODU = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_INCELEME_MODU === "1";
 
-  // ★ LAZY KAPISI (07.10): açılan modal adlarını kaydet — bir kez açılan modalın
-  //   chunk'ı yüklensin ve mount KALSIN (open=false'la devam; state kaybolmaz).
+  // ★ LAZY KAPISI (07.10) + V2 KİLİTİ — yardımcılar modalsContainerV2.ts'te (09.10 parçalama)
   const [acilanlar, setAcilanlar] = useState<string[]>([]);
   useEffect(() => {
     if (!modal) return;
-    setAcilanlar((onceki) => (onceki.includes(modal) ? onceki : [...onceki, modal]));
+    setAcilanlar((onceki) => acilanModalEkle(onceki, modal));
   }, [modal]);
-  const acildiMi = (...adlar: string[]) => adlar.some((a) => acilanlar.includes(a));
-  type V2ModalId = "ayetKartlari" | "kesfet" | "hafizlikTesti" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi";
-  const V2_KILITLI: Record<V2ModalId, string> = {
-    ayetKartlari: "Ayet & Dua Kütüphanesi",
-    kesfet: "Keşfet Merkezi",
-    hafizlikTesti: "Hafızlık Testi",
-    ayetNotlari: "Ayet Notlarım",
-    ayetPaketleri: "Hazır Ayet Paketleri",
-    ozelGunTakvimi: "Özel Gün Takvimi",
-  };
+  const acildiMi = (...adlar: string[]) => acildiMiFn(acilanlar, ...adlar);
   // ★ V2 TEST KİLİDİ (01.10): kod sabiti değil — sunucu ayarı (nur_feature_locks
   //   tablosunda "v2_test_acik" satırı; admin panel → Kilit Yönetimi'nden aç/kapa,
   //   deploy'suz). Açıkken oylamadaki 6 V2 modalı herkese açık; kapalıyken kilitler
   //   devreder: getFeatureLock "free" (admin kilidi veya /api/config'in gömdüğü
   //   OYLAMA LİDERİ otomatik-free) olan modül açık, diğerleri yol haritasına düşer.
   const v2Kapali = (m: V2ModalId): boolean =>
-    !v2TestAcikMi() && !INCELEME_MODU && !isMasterSürüm && getFeatureLock(m, "v2") !== "free";
+    v2KilitliMi(m, { v2TestAcik: v2TestAcikMi(), incelemeModu: INCELEME_MODU, isMasterSurum: isMasterSürüm, lockDegeri: getFeatureLock(m, "v2") });
   const v2Gate = (m: V2ModalId): boolean => {
     if (!v2Kapali(m)) return true;
     setModal(null);
@@ -258,7 +250,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     return false;
   };
   // Kilitli modallar hiç mount edilmez (içerik sızmasın)
-  const v2Acik = (m: V2ModalId) => (v2Kapali(m) ? false : modal === m);
+  const v2Acik = (m: V2ModalId) => v2AcikMi(m, modal, v2Kapali(m));
 
   // ★ MERKEZİ ESC KAPANIŞI (01.10): taban Modal backdrop-tıklama + X ile kapanıyordu;
   //   Esc hiçbir modalda dinlenmiyordu. Standart UX üçlüsünü tamamlar (X + dış-tıklama
@@ -293,7 +285,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   //   kilitli modal bir an bile ekrana gelmez: kapanır + uyarı + yol haritası açılır.
   React.useEffect(() => {
     if (!modal) return;
-    for (const m of Object.keys(V2_KILITLI) as V2ModalId[]) {
+    for (const m of V2_MODAL_IDLERI) {
       if (modal === m && v2Kapali(m)) {
         v2Gate(m);
         return;
@@ -398,34 +390,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 notify(`❌ Ödeme hatası: ${result.error || "Bilinmeyen hata — lütfen tekrar deneyin"}`);
                 return;
               }
-              // Demo modunda — ödemeyi atla, ürünü doğrudan tanımla
+              // ★ DEMO KÖPRÜSÜ — modalsContainerOdeme.ts'e taşındı (09.10 parçalama);
+              //   demo isteklerinde ödemeyi atla, ürünü doğrudan tanımla.
               if (result.demo) {
-                const product = result as any;
-                if (product.product?.grantTier === "pro") {
-                  setTier("pro"); setCurrentTier("pro");
-                  const bonus = 250;
-                  const cur = Number(secureGet<number>("nur_jeton", 0));
-                  const next = cur + bonus;
-                  secureSet("nur_jeton", next);
-                  setJetonCount(next);
-                  notify(`✅ [DEMO] NÛR PRO üyeliğin aktif edildi +${bonus} ⚡`);
-                } else if (product.product?.grantTier === "elit") {
-                  setTier("elit"); setCurrentTier("elit");
-                  const bonus = 500;
-                  const cur = Number(secureGet<number>("nur_jeton", 0));
-                  const next = cur + bonus;
-                  secureSet("nur_jeton", next);
-                  setJetonCount(next);
-                  notify(`👑 [DEMO] NÛR ELİT üyeliğin aktif edildi +${bonus} ⚡`);
-                } else if (product.product?.videoCount) {
-                  const amount = product.product.videoCount;
-                  const cur = Number(secureGet<number>("nur_jeton", 0));
-                  const next = cur + amount;
-                  secureSet("nur_jeton", next);
-                  setJetonCount(next);
-                  notify(`🎬 [DEMO] ${amount} video hakkı eklendi`);
-                }
-                setPremiumOpen(false);
+                demoOdemeUygula(result, { setTier, setCurrentTier, setJetonCount, setPremiumOpen, notify });
                 return;
               }
               // Gerçek ödeme — iyzico checkout form (aynı sekmede)

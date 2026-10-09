@@ -17,7 +17,7 @@ interface AyahLibraryPanelProps {
   setAyah: (a: string) => void;
   selected: SelectedAyah[];
   toggleAyah: (s: number, a: number, tr?: string) => void;
-  addWholeSurah: () => void;
+  addWholeSurah: (surahNum?: number | string) => void;
   t: (key: keyof (typeof T)["tr"]) => string;
   /** ★ Seçili ayetler paneli (orta bölümden buraya taşındı) */
   verseIndex: number;
@@ -184,7 +184,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             <Plus size={11} />{t("addAyah")}
           </button>
           <button
-            onClick={addWholeSurah}
+            onClick={() => addWholeSurah(Number(surah))}
             className="glass-soft flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-semibold text-white/65"
           >
             <BookOpen size={11} />{t("wholeSurah")}
