@@ -1142,7 +1142,7 @@ export const idDict: Dict = {
   bhKapat: "Bagus, Tutup ✨",
   bhYarin: "Hadiah baru menantimu besok 🌙",
   bhVideoAciklama: "Versi Lengkap terbuka selama 24 jam — kamu bisa langsung mulai membuat! 🎬",
-  bhIcerikAciklama: "Hadiah kredit video datang setiap 10 hari 🎬 · besok: kejutan konten 🌙",
+  bhIcerikAciklama: "Ini hadiah spiritual — tidak menambah kredit produksi 🤍 · setiap Jumat +2 kredit video pendek dimuat ke akunmu 🎬 · Versi Lengkap terbuka setiap 10 hari",
 
   // ─── 05.10 TUR 12: sisa panel desain studio ───
   dafVarsayilan: "Bawaan",

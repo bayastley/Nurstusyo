@@ -1152,7 +1152,10 @@ export const trDict: Dict = {
   bhKapat: "Harika, Kapat ✨",
   bhYarin: "Yarın yeni bir hediyen olacak 🌙",
   bhVideoAciklama: "Tam Sürüm 24 saat boyunca açık — hemen üretebilirsin! 🎬",
-  bhIcerikAciklama: "10 günde bir video hakkı hediyesi gelir 🎬 · yarın: içerik sürprizi 🌙",
+  bhIcerikAciklama: "Bu hediye manevi bir hediye — üretim hakkı eklemez 🤍 · her Cuma +2 kısa video hediyesi hesabına ayrıca yüklenir 🎬 · 10 günde bir Tam Sürüm 24 saat açılır",
+
+  // ─── CUMA HEDİYE ÇUBUĞU (09.10) ───
+  cumaHediyeAciklama: "🕌 Cuma hediyen: +2 Kısa Video üretim hakkı — hesabına otomatik yüklenir, her hafta Cuma yenilenir!",
 
   // ─── 05.10 TUR 12: stüdyo tasarım paneli kalıntıları (kullanıcı ekran görüntüsü: AR modda TR yüzeyler) ───
   dafVarsayilan: "Varsayılan",

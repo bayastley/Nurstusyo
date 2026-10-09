@@ -90,6 +90,18 @@ async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs:
 
 type Kind = "kisa" | "uzun" | "tam";
 
+// ★ MANEVİ GÜN HEDİYE TABLOSU (09.10 — sahibin emri: "ne hediyesi alacak onu da yaz"):
+//   Sunucu kopyası — src/tier.ts HEDIYE ile birebir aynı; değişirse İKİSİ DE değişmeli.
+//   Önceki sürümde miktar sabit 1'e sabitlenmişti → Cuma 2 kısa video vaadi yerine
+//   1 veriliyordu. Artık event türüne göre gerçek miktar sunucuda hesaplanır.
+const MANEVI_HEDIYE_TABLOSU: Record<string, { kind: Kind; amount: number }> = {
+  cuma:    { kind: "kisa", amount: 2 }, // 🕌 Cuma: +2 kısa video (her Cuma yenilenir)
+  kandil:  { kind: "kisa", amount: 3 }, // 🌙 Kandil: +3 kısa video
+  ramazan: { kind: "kisa", amount: 5 }, // 🌙 Ramazan: +5 kısa video
+  bayram:  { kind: "uzun", amount: 2 }, // 🎉 Bayram: +2 uzun video
+  kadir:   { kind: "uzun", amount: 3 }, // ✨ Kadir Gecesi: +3 uzun video
+};
+
 // ★ ROZET ÖDÜLÜ TABLOSU (sunucu kopyası — 29.09): miktar İSTEMCİDEN ASLA alınmaz.
 //   Frontend src/hafizlikIstatistik.ts ROZET_ODUL_ON_ESIK ile birebir aynı; rozet
 //   serisi tamamlandıkça tur bazlı ödül buradan hesaplanır. Değişirse İKİSİ DE değişmeli.
@@ -156,15 +168,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true, kind: "kisa", amount: rozetMiktar, remaining: row2.remaining, tur: turNo });
   }
 
-  // ─── Manevi gün hediyesi kanalı (cuma/kandil/…) — tarih bazlı, miktar sabit 1 ───
+  // ─── Manevi gün hediyesi kanalı (cuma/kandil/…) — tarih bazlı ───
   if (!/^(cuma|kandil|kadir|bayram|ramazan)-\d{4}-\d{2}-\d{2}$/.test(eventKey) ||
       !["kisa", "uzun", "tam"].includes(String(kind))) {
     return res.status(400).json({ ok: false, error: "Geçersiz hediye" });
   }
-  const amount = 1; // ★ sabit: miktar İSTEMCİDEN GEÇMEZ (önceki sürümde body'den alınıyordu)
   const match = eventKey.match(/^([a-z]+)-(\d{4}-\d{2}-\d{2})$/);
   const eventType = match?.[1] || "";
   const dateText = match?.[2] || "";
+  // ★ MANEVI_HEDIYE_TABLOSU (09.10): miktar sunucudan — istemci amount'u yok sayılır
+  const amount = MANEVI_HEDIYE_TABLOSU[eventType]?.amount ?? 1;
+  const serverKind = MANEVI_HEDIYE_TABLOSU[eventType]?.kind;
+  if (serverKind && serverKind !== kind) {
+    return res.status(400).json({ ok: false, error: "Geçersiz hediye türü" });
+  }
   const eventDate = new Date(`${dateText}T12:00:00Z`);
   if (!Number.isFinite(eventDate.getTime())) return res.status(400).json({ ok: false, error: "Geçersiz tarih" });
   // ★ GÜVENLİK (Açık 1): Tüm olay türleri için tarih PENCERESİ sunucuda zorlanır.

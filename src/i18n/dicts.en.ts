@@ -1137,7 +1137,7 @@ export const enDict: Dict = {
   bhKapat: "Great, Close ✨",
   bhYarin: "A new gift awaits you tomorrow 🌙",
   bhVideoAciklama: "Full Version stays open for 24 hours — you can start creating right away! 🎬",
-  bhIcerikAciklama: "A video-credit gift arrives every 10 days 🎬 · tomorrow: a content surprise 🌙",
+  bhIcerikAciklama: "This is a spiritual gift — it does not add production credit 🤍 · every Friday +2 short video credits are loaded to your account 🎬 · Full Version opens every 10 days",
 
   // ─── 05.10 TUR 12: studio design panel leftovers ───
   dafVarsayilan: "Default",

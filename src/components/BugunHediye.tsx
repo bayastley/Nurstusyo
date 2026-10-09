@@ -194,6 +194,14 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti, 
             <p className="mt-2 text-[9px] text-white/40">
               {alindi.tur === "video" ? ttH("bhVideoAciklama") : ttH("bhIcerikAciklama")}
             </p>
+            {/* ★ CUMA HEDİYE BİLGİSİ (09.10 — sahibin emri: "ne hediyesi alacak onu da yaz"):
+                üst bar Cuma hediyesi ayrı mekanizma (AnnouncementBar) — kullanıcıya
+                Cuma +2 kısa video hediyesinin buradan bağımsız geldiğini net söyle */}
+            {(() => { try { return new Date().getDay() === 5; } catch { return false; } })() && (
+              <p className="mt-1.5 rounded-lg bg-amber-400/10 px-3 py-1.5 text-[9px] font-bold text-amber-200">
+                {ttH("cumaHediyeAciklama")}
+              </p>
+            )}
 
             <button
               type="button"
