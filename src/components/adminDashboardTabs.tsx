@@ -7,6 +7,29 @@
 //   Haftanın Videosu + Haftalık Rapor sekmeleri BÜTÜN admin panelini düşürüyordu.
 // ════════════════════════════════════════════════════════
 import React, { useState } from "react";
+// ★ OY LİDERLERİ İSİM EŞLEŞTİRME (09.10): API ham feature_id döner ("kelime-video" gibi)
+//   — roadmapVeri'deki V2/V3 tanımlarından başlıkla eşleyip adminin okuyabileceği isim gösteriyoruz.
+import { DEFAULT_V2, DEFAULT_V3 } from "./roadmapVeri";
+
+const OZELLIK_ISIMLERI: Record<string, string> = {};
+for (const f of [...DEFAULT_V2, ...DEFAULT_V3]) OZELLIK_ISIMLERI[f.id] = f.title;
+
+function ozellikAdi(fid: string): string {
+  if (OZELLIK_ISIMLERI[fid]) return OZELLIK_ISIMLERI[fid];
+  // legacy/admin özel ID'leri — bilinen takma adlar
+  const takma: Record<string, string> = {
+    "kelime-video": "Kelime Atölyesi",
+    "ai-arkaplan": "AI Arka Plan Üretici",
+    "ayet-kutuphanesi": "Ayet & Dua Kütüphanesi",
+    "whatsapp-kart": "WhatsApp Ayet Kartı",
+    "devam-serisi": "Günlük Devam Serisi",
+    "bugun-hediye": "Günlük Sürpriz Hediye",
+    "hafizlik-testi": "Hafızlık Testi",
+    "referans": "Arkadaşını Davet Et",
+    "ucretsiz-deneme": "7 Gün Ücretsiz PRO Denemesi",
+  };
+  return takma[fid] || fid;
+}
 
 // ════════════════════════════════════════════════════════
 // ★ HAFTANIN VİDEOSU — admin onay/ret/sil tab'ı (madde 17)
@@ -215,7 +238,7 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
                 {rapor.topluluk.oyLiderler.map((l: any, i: number) => (
                   <li key={l.ozellik} className="flex items-center gap-2 text-[10px] text-white/75">
                     <span>{["🥇", "🥈", "🥉", "4.", "5."][i] ?? "·"}</span>
-                    <span className="flex-1 truncate font-bold">{l.ozellik}</span>
+                    <span className="flex-1 truncate font-bold" title={l.ozellik}>{ozellikAdi(l.ozellik)}</span>
                     <span className="font-black tabular-nums text-fuchsia-200">{l.adet} oy</span>
                   </li>
                 ))}
