@@ -46,7 +46,7 @@ const CATEGORY_TIER: Record<CatId, Tier> = {
   cennet: "elit", col: "elit", ates: "elit",
   cehennem: "elit", hurma: "elit", ari: "elit", karinca: "elit",
 };
-const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
+const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "http://localhost:5199", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
 
 interface SessionUser {
   id: string;

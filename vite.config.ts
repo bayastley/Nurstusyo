@@ -2,7 +2,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+// ★ /api dev köprüsü: local vite dev'de fetch("/api/video/sign"), fetch("/api/auth/me")
+//   gibi istekler gerçek Vercel serverless handler'larını çalıştırıp 200 dönmek.
+import { devApiBridge } from "./scripts/dev-api-bridge";
 // ★ 07.10: vite-plugin-singlefile KALDIRILDI — 4.1MB tek dosya açılışta tamamen
 //   parse ediliyordu; eski cihazlar kasıyordu. Artık çoklu-chunk: React.lazy ile
 //   ağır modallar İLK AÇILIŞTA yüklenmez, açınca kendi chunk'ı gelir (SW hash'li
@@ -56,7 +59,14 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss(),
+      // ★ /api dev köprüsü (PDF-2): yalnız DEV'de etkili; prod build'e paketlenmez.
+      //   vite dev → node http middleware → ssrLoadModule ile api/**/handler → VercelRequest
+      //   adaptasyonunu yapıp JSON 200 döner.
+      devApiBridge() as unknown as Plugin,
+    ],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),

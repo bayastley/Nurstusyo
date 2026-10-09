@@ -162,7 +162,7 @@ function clientIp(req: VercelRequest): string {
 function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
   const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"]);
+  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
   if (!origin && !referer) return true;
   if (origin && allowed.has(origin)) return true;
   if (referer) {
