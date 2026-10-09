@@ -94,7 +94,7 @@ import { useVideoGenerator } from "./studio/useVideoGenerator";
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
 import { ensureImageYukle, ensureVideoYukle } from "./studio/medyaOnYukleme";
-import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal } from "./components/studioAppBolumler";
+import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal, TelifRiskOnayBalonu, RISK_ONAY_ESIGI } from "./components/studioAppBolumler";
 // ★ SRP adım 12 (30.09): medya ön yükleme fabrikası studio/medyaOnYukleme.ts'e taşındı
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
@@ -164,6 +164,30 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setGenConfirmOpen(false);
     genConfirmResolveRef.current?.(ok);
     genConfirmResolveRef.current = null;
+  }, []);
+
+  // ★ TELİF RİSK ONAYI (09.10): Pro/Elit üye, telif riski %30 ÜZERİ bir kâriyle
+  //   üretim basınca ayrı bir bilgilendirilmiş-onay penceresi alır. Kabul ederse
+  //   o kâri cihazda kalıcı işaretlenir — bir daha sorulmaz. Free tier'da high-risk
+  //   kâri zaten kilitli olduğundan bu kapı yalnız ücretli kullanıcıya açılır.
+  const [riskOnayData, setRiskOnayData] = useState<{ reciterName: string; riskPercent: number } | null>(null);
+  const riskOnayResolveRef = useRef<((ok: boolean) => void) | null>(null);
+  const showRiskOnay = useCallback((reciterName: string, riskPercent: number): Promise<boolean> => {
+    // ★ Kalıcı-onay kontrolü: bu kâri için kullanıcı daha ÖNCE "Riski Kabul
+    //   Ediyorum" dedi ise pencere hiç açılmaz (cihaz bazlı localStorage; KVKK
+    //   silme hakkına uyumlu — kullanıcı cihaz verisini temizlerse yeniden sorulur).
+    try {
+      if (localStorage.getItem(`nur_telif_risk_onay_${reciterName}`) === "1") return Promise.resolve(true);
+    } catch { /* depolama kapalıysa her seferinde sor */ }
+    return new Promise((resolve) => {
+      setRiskOnayData({ reciterName, riskPercent });
+      riskOnayResolveRef.current = resolve;
+    });
+  }, []);
+  const handleRiskOnay = useCallback((ok: boolean) => {
+    setRiskOnayData(null);
+    riskOnayResolveRef.current?.(ok);
+    riskOnayResolveRef.current = null;
   }, []);
 
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
@@ -1153,7 +1177,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     generating, setGenerating, setProgress, stopGenerationRef,
     user, isMasterSürüm, setLoginTab, setModal, notify,
     selected, canvasRef, reciter, kendiSesAktif, batchFormats, aspect, mode, accessTier, jetonCount,
-    silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm,
+    silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm, showRiskOnay, riskOnayEsigi: RISK_ONAY_ESIGI,
     videoCache, imageCache, ayahBackgroundsRef, backgroundRef,
     verseIndexRef, aspectRef, setVerseIndex, setOutputs, setActiveOutputId,
     ensureImage, ensureVideo, renderQuality, t,
@@ -1610,6 +1634,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         <UretimOnayBalonu genConfirmData={genConfirmData} handleGenConfirm={handleGenConfirm} />
       ) : null}
 
+      {/* ★ TELİF RİSK ONAYI — high-risk kâri bilgilendirilmiş onayı (09.10) */}
+      {riskOnayData ? (
+        <TelifRiskOnayBalonu
+          reciterName={riskOnayData.reciterName}
+          riskPercent={riskOnayData.riskPercent}
+          onConfirm={handleRiskOnay}
+        />
+      ) : null}
+
       {/* ⛔ SÜRESİZ BAN ENGEL EKRANI — SRP adım 12 */}
       {localBanned && !isMasterSürüm && !isAdminEmail(user?.email || "") && (
         <BanEngelEkrani localBanReason={localBanReason} />
@@ -1750,6 +1783,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       {/* TELİF UYARISI — SADECE ilk Video Üret basışında bir kere (girişte çıkmaz) */}
       <TelifDisclaimer
+        lang={lang}
         tetik={telifTetik}
         onAccept={() => {
           // Uyarı kabul edildi → uyarıdan ÖNCE basılan üretim otomatik devam etsin

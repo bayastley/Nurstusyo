@@ -5,10 +5,80 @@
 // ════════════════════════════════════════════════════════
 
 import React from "react";
-import { X, AlertTriangle, Ban, Zap } from "lucide-react";
+import { X, AlertTriangle, Ban, Zap, ShieldAlert } from "lucide-react";
 import type { DebugGuideMessage } from "../debugGuide";
 
 interface GenConfirmData { mode: string; formatCount: number; cost: number; remaining: number }
+
+// ── ★ TELİF RİSK ONAYI — high-risk kâri bilgilendirilmiş onayı (09.10) ──
+// Pro/Elit üye, telif riski %30 ÜZERİ bir kâriyle üretim yapmadan ÖNCE
+// ayrı bir bilgilendirilmiş-onay penceresi görür. Kabul ederse bu kâri
+// cihazda kalıcı kaydedilir — bir daha sorulmaz (KVKK/AB „bilgilendirilmiş
+// rıza" akışı; kullanıcının kendisi sorumluluğu üstlenir).
+export const RISK_ONAY_ESIGI = 30;
+
+export function TelifRiskOnayBalonu({
+  reciterName,
+  riskPercent,
+  onConfirm,
+}: {
+  reciterName: string;
+  riskPercent: number;
+  onConfirm: (ok: boolean) => void;
+}) {
+  const YEREL_KEY = `nur_telif_risk_onay_${reciterName}`;
+  const prevState = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    // İşaretlenmiş kâri için onayı kalıcı kayıt et — bir daha sorulmasın
+    prevState.current = null;
+    try { prevState.current = localStorage.getItem(YEREL_KEY); } catch { prevState.current = null; }
+    if (prevState.current === "1") onConfirm(true);
+  }, [reciterName]);
+
+  return (
+    <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => onConfirm(false)}>
+      <div className="glass modal-in max-w-sm w-[90%] rounded-3xl border border-amber-500/30 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400">
+            <ShieldAlert size={22} />
+          </div>
+          <div>
+            <h3 className="font-display text-base font-black text-white">Yüksek Telif Riski</h3>
+            <p className="text-[10px] text-white/50">Bilgilendirilmiş onay gerekiyor</p>
+          </div>
+        </div>
+
+        <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4 text-[11px]">
+          <p className="text-white/70">
+            <span className="font-black text-white">{reciterName}</span> kârisinin telif risk oranı{" "}
+            <span className="font-black text-amber-400">%{riskPercent}</span> — eşik %{RISK_ONAY_ESIGI}.{" "}
+            Bu kâriyle üretim yaparsanız:
+          </p>
+          <ul className="list-none space-y-1 text-white/60">
+            <li>• YouTube/Instagram vb. platformlarda Content ID telif uyarısı alabilirsiniz</li>
+            <li>• Video kaldırılabilir veya kanalınız tehlikeye girebilir</li>
+            <li>• Tüm yayın sorumluluğu size aittir (Nûr Stüdyo hukuki sorumluluk kabul etmez)</li>
+          </ul>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => onConfirm(false)}
+            className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
+          >
+            Vazgeç
+          </button>
+          <button
+            onClick={() => { try { localStorage.setItem(YEREL_KEY, "1"); } catch { /* yoksay */ } onConfirm(true); }}
+            className="flex-1 rounded-xl bg-amber-500/30 border border-amber-500/40 px-4 py-2.5 text-[11px] font-black text-amber-300 transition hover:bg-amber-500/40"
+          >
+            Riski Kabul Ediyorum
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ── ★ ÜRETİM ONAY BALONU — free/pro maliyet uyarısı ──
 export function UretimOnayBalonu({

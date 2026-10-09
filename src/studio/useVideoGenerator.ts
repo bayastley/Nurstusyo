@@ -41,6 +41,10 @@ interface UseVideoGeneratorParams {
   setTelifTetik: (updater: (value: number) => number) => void;
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet onayı
   showGenerateConfirm: (cost: number, remaining: number, formatCount: number, mode: string) => Promise<boolean>;
+  // ★ TELİF RİSK ONAYI (09.10): riski %30 üzeri kâriyle üretimde bilgilendirilmiş onay.
+  //   Pro/Elit ücretli kullanıcılar için açılır; kabul edilirse kâri cihazda işaretlenir.
+  showRiskOnay: (reciterName: string, riskPercent: number) => Promise<boolean>;
+  riskOnayEsigi: number;
   videoCache: MutableRefObject<Map<string, HTMLVideoElement>>;
   imageCache: MutableRefObject<Map<string, HTMLImageElement>>;
   ayahBackgroundsRef: MutableRefObject<Record<string, Clip>>;
@@ -94,11 +98,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     aspect,
     mode,
     accessTier,
-    jetonCount,
-    silenceAllAudio,
-    telifDevamRef,
-    setTelifTetik,
-    showGenerateConfirm,
+    jetonCount,    silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm, showRiskOnay, riskOnayEsigi,
     videoCache,
     imageCache,
     ayahBackgroundsRef,
@@ -166,11 +166,22 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
       return;
     }
+    // ★ TELİF RİSK ONAYI (09.10): telif riski %30 ÜZERİ kâriyle üretim —
+    //   ücretli kullanıcı (pro/elit; admin ve god-mode hariç) ayrı bir
+    //   bilgilendirilmiş-onay penceresi alır. Kabul ederse bu üretim
+    //   oturumunda o kâri için tekrar sorulmaz (oturum-içi işaret).
+    //   Vazgeçerse üretim iptal olur ve jeton/hak düşmez (authorize'a hiç gelmedik).
+    const riskYuzde = Number(reciter.telifRiski) || 0;
+    const riskOnayAdminMi = user?.isAdmin === true;
+    if (!isMasterSürüm && !riskOnayAdminMi && (accessTier === "pro" || accessTier === "elit") && riskYuzde > riskOnayEsigi) {
+      const onaylandi = await showRiskOnay(reciter.name, riskYuzde);
+      if (!onaylandi) { notify("Üretim iptal edildi · jeton düşmedi"); return; }
+    }
     const formatCount = Math.max(batchFormats.length, 1);
     const costPerVideo = videoMaliyeti(mode, accessTier);
     const isGuest = !user && !isMasterSürüm;
     // God Mode ve misafir deneme videolarında jeton harcanmaz
-    const isAdmin = user?.isAdmin === true;
+    const isAdmin = riskOnayAdminMi;
     const totalCost = isMasterSürüm || isGuest || isAdmin ? 0 : costPerVideo * formatCount;
     if (!isMasterSürüm && !isGuest) {
       try {
@@ -203,6 +214,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     }
     let jetonCharged = false;
     let userStopped = false;
+    // ★ HAK İADESİ (09.10): /api/render/authorize üretimden ÖNCE hak düşer;
+    //   teknik hatada hakkı geri vermek için üretim modu ve format sayısı
+    //   burada sabitlenir.Misafir/god-mode tarafında düşüm zaten yok.
+    const authorizeKind = mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam";
+    const authorizeFormats = (batchFormats.length ? batchFormats : [aspect]).length;
     silenceAllAudio();
 
     // ★ BELLEK OPTİMİZASYONU: Eski/Düşük RAM'li cihazlar için preloaded video ve resimleri temizle
@@ -499,6 +515,24 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     } catch (error) {
       console.error(error);
       reportRenderError(error);
+      // ★ HAK İADESİ (09.10): teknik hatada düşen üretim hakkını GERİ VER.
+      //   userStopped (kullanıcı kendi durdurursa) iade kapsamı dışıdır —
+      //   o durumda jeton/hak düşümünü sunucu erken yapmadı, kayıp yok.
+      if (!userStopped && !isMasterSürüm && !isGuest && !isAdmin && authorizeFormats > 0) {
+        try {
+          const refundResponse = await fetch("/api/payments/wallet-refund", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ kind: authorizeKind, amount: authorizeFormats }),
+          });
+          const refundData = await refundResponse.json().catch(() => null) as { ok?: boolean } | null;
+          if (refundResponse.ok && refundData?.ok) {
+            notify("↩️ Teknik hata nedeniyle üretim hakkınız iade edildi");
+          } else {
+            notify("⚠️ Teknik hata sonrası hak iadesi tamamlanamadı — destek ile iletişime geçin");
+          }
+        } catch { /* iade servisine ulaşılamadı — kullanıcıya sessiz kal, yukarıda mesaj var */ }
+      }
       // ★ TAM TARAMA (29.09): "Ses dosyaları alınamadı" artık anlaşılır Türkçe mesaj veriyor
       if (!userStopped) notify(error instanceof Error && error.message.includes("Ses dosyaları alınamadı")
         ? "⚠️ Hoca sesleri indirilemedi — internet bağlantını kontrol edip tekrar dene"
