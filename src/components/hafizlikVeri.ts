@@ -1,6 +1,10 @@
 // ════════════════════════════════════════════════════════
 // HAFIZLIKVERI.TS — Hafızlık testi sure havuzları + seviyeler
 // HafizlikTestiModal.tsx'den ayrıldı (SRP adım 2, 30.09)
+// ★ SENKRON (09.10): i18n turlarında (72c0265) modal adKey/aciklamaKey/n
+//   alanlarına geçti (5 dilli etiketler) ama veri dosyası eski imzada kaldı →
+//   yetim parça (bağlantı raporu ⚠). Şimdi imzalar modal'la birebir aynı:
+//   TR ad/açıklama YOK — yalnız i18n anahtarları taşınır.
 // ════════════════════════════════════════════════════════
 
 // Meşhur sureler — test havuzu (yeterli ayet sayısı + tanınırlık)
@@ -17,19 +21,19 @@ export const ORTA_SURELER = [12, 13, 14, 17, 18, 19, 20, 21, 22, 24, 25, 27, 28,
 // ★ ZOR — uzun ayetli sureler (devam kısmı garantili): 52 sure
 export const ZOR_SURELER = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15, 16, 23, 26, 30, 32, 33, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 48, 50, 51, 52, 53, 54, 56, 58, 59, 60, 61, 63, 64, 65, 66, 68, 69, 70, 72, 73, 74, 75, 77, 88, 104];
 export const SEVIYELER = [
-  { id: "kolay", ad: "Kolay", emoji: "🌱", sureler: KOLAY_SURELER, aciklama: "Kısa meşhur sureler — Yâsîn, İhlâs, Felak tarzı" },
-  { id: "orta", ad: "Orta", emoji: "🌿", sureler: ORTA_SURELER, aciklama: "Orta sureler — Kehf, Yâsîn, MÜlk, Rahmân" },
-  { id: "zor", ad: "Zor", emoji: "🏔️", sureler: ZOR_SURELER, aciklama: "Uzun ayetli sureler — Bakara, Âl-i İmrân, Nisâ" },
+  { id: "kolay", adKey: "hafizlikSeviyeKolay", emoji: "🌱", sureler: KOLAY_SURELER, aciklamaKey: "hafizlikKolayAciklama" },
+  { id: "orta", adKey: "hafizlikSeviyeOrta", emoji: "🌿", sureler: ORTA_SURELER, aciklamaKey: "hafizlikOrtaAciklama" },
+  { id: "zor", adKey: "hafizlikSeviyeZor", emoji: "🏔️", sureler: ZOR_SURELER, aciklamaKey: "hafizlikZorAciklama" },
 ] as const;
 export type SeviyeId = typeof SEVIYELER[number]["id"];
 // ★ TUR BOYUTU SEÇİLEBİLİR (28.09, kullanıcı kararı): "5 soru ne demek, daha çok olsun,
 //   yüzlerce gerekirse insanlar vakit harcasın" → 5/15/30/Sınırsız mod. Havuz canlı
 //   API'den geldiği için sınırsız modda sorular bitmez.
 export const TUR_BOYUTLARI = [
-  { id: 5, label: "5 soru", emoji: "⚡" },
-  { id: 15, label: "15 soru", emoji: "🔥" },
-  { id: 30, label: "30 soru", emoji: "🏆" },
-  { id: 0, label: "Sınırsız", emoji: "♾️" },
+  { id: 5, n: 5, emoji: "⚡" },
+  { id: 15, n: 15, emoji: "🔥" },
+  { id: 30, n: 30, emoji: "🏆" },
+  { id: 0, n: 0, emoji: "♾️" },
 ] as const;
 export const TUR_BOYUTU = 5; // varsayılan — kullanıcı seçer
 
