@@ -302,6 +302,81 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rmCache = null;
         return res.status(200).json({ ok: true });
       }
+      // ★ 10.10 (Öncelik-1 GİZLE/BAKIM PLANI): Tüm listeyi sıfırla
+      //   (oylama V2 + uzun vadeli V3) — eski maddeler SİLİNİR, oylar silinir.
+      if (action === "resetAllFeatures") {
+        await db("nur_roadmap_votes", { method: "DELETE" });
+        await db("nur_roadmap_features", { method: "DELETE" });
+        rmCache = null;
+        return res.status(200).json({ ok: true });
+      }
+      // ★ 10.10: Admin-gizli 6 maddeyi V2 oylama listesine EKLER.
+      //   Kullanıcılar göremez (getFeatureLock "hidden" → ... admin?) — sadece admin.
+      //   Admin istediğini "free"/"pro"/"elit"e çekince "yeni güncelleme" gibi
+      //   kullanıcı ekranlarına düşer (duyuru adminSyncService üzerinden).
+      if (action === "addAdminFeatures") {
+        const admin = session;
+        const ADMIN_FEATURES = [
+          { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı — tam paket.", icon: "arsiv", tier: "elit" },
+          { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı tek tıkla gelir.", icon: "kelime_video", tier: "pro" },
+          { id: "adm-ayet-notlari", title: "Ayet Notları", desc: "Seçtiğin ayetlere kendi notunu ekle — şifreli arşiv.", icon: "notlar", tier: "pro" },
+          { id: "adm-ayet-paketleri", title: "Ready Ayet Paketleri", desc: "Kandil, cuma, sabır ve daha fazlası — tek tıkla paketlenmiş ayet setleri.", icon: "paket", tier: "free" },
+          { id: "adm-kendi-ses", title: "Kendi Sesinle Üretim", desc: "Kendi anlatım tarzını videolarına taşı — sesini seçtiğin ayetlerle buluştur.", icon: "kendi_ses", tier: "elit" },
+          { id: "adm-zip-resim-ses", title: "ZIP Resim/Ses Yükleme", desc: "Kendi resim ve ses dosyalarını zip olarak yükle, videoda kullan.", icon: "toplu", tier: "elit" },
+        ] as const;
+        for (const f of ADMIN_FEATURES) {
+          await db("nur_roadmap_features?on_conflict=id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({ id: f.id, version: "V2", title: f.title, description: f.desc, icon: f.icon, active: true, hidden_feature: true, target_tier: f.tier }),
+          });
+          // ★ feature-locks'a hedef tier yazılır —(hidden= Admin-gizli hâl) true = sadece admin
+          await db("nur_feature_locks?on_conflict=feature_id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({ feature_id: f.id, lock_level: "hidden", active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+          });
+        }
+        rmCache = null;
+        return res.status(200).json({ ok: true, added: ADMIN_FEATURES.length });
+      }
+      // ★ 10.10: Admin-gizli özelliği aç → hedef tier'a aktifleştir ("yeni gelmiş gibi")
+      if (action === "revealFeature") {
+        const admin = session;
+        const id = sanitize(body.id, 60);
+        const tier = sanitize(body.tier, 10) as "free" | "pro" | "elit" | "";
+        if (!id || !tier) return res.status(400).json({ ok: false, error: "Geçersiz özellik/seviye" });
+        await db("nur_feature_locks?on_conflict=feature_id", {
+          method: "POST",
+          headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ feature_id: id, lock_level: tier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+        });
+        await db(`nur_roadmap_features?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ active: true, hidden_feature: false, target_tier: tier }),
+        });
+        rmCache = null;
+        return res.status(200).json({ ok: true, id, tier });
+      }
+      // ★ 10.10: Açmkış özelliği tekrar gizle (geri alma) — nominee-izli.
+      if (action === "hideFeature") {
+        const admin = session;
+        const id = sanitize(body.id, 60);
+        if (!id) return res.status(400).json({ ok: false, error: "Geçersiz özellik" });
+        await db("nur_feature_locks?on_conflict=feature_id", {
+          method: "POST",
+          headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ feature_id: id, lock_level: "hidden", active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+        });
+        await db(`nur_roadmap_features?id=eq.${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ hidden_feature: true }),
+        });
+        rmCache = null;
+        return res.status(200).json({ ok: true, id });
+      }
       return res.status(400).json({ ok: false, error: "Geçersiz işlem" });
     }
 

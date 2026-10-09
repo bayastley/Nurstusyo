@@ -12,7 +12,7 @@ import type { BanLog } from "../services/adminSyncService";
 //   (usePanelSaglik.ts) — hangi sekme çalışmıyorsa rozet + sekme noktası gösterir.
 import type { PanelSaglik, SaglikTab } from "./usePanelSaglik";
 
-export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor";
+export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures";
 
 /** Sağlık tooltip'i için kısa sekme adları (panel TR hardcoded — i18n kullanmaz, 06.10) */
 const SEKME_ETIKETLERI: Record<SaglikTab, string> = {
@@ -175,6 +175,16 @@ export const AdminPanelKabuk: React.FC<{
             🎬
             <span>Haftanın Videosu</span>
             {saglikNokta("haftaVideo")}
+          </button>
+          <button
+            onClick={() => setActiveTab("gizliFeatures")}
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "gizliFeatures" ? "text-black font-black" : "text-fuchsia-300 hover:text-white"
+            }`}
+            style={activeTab === "gizliFeatures" ? { background: "linear-gradient(135deg,#f5dda6,#d7aa52)" } : { background: "rgba(232,121,249,0.12)", border: "1px solid rgba(232,121,249,0.3)" }}
+          >
+            🎭
+            <span>Gizli Özellikler</span>
           </button>
           <button
             onClick={() => setActiveTab("rapor")}

@@ -10,6 +10,8 @@ import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 import { sanitizeText } from "../security/sanitize";
 import { AdminUsersTab } from "./AdminUsersTab";
 import { AdminModulesSyncTab } from "./AdminModulesSyncTab";
+// ★ 10.10 (Öncelik-1 GİZLE/BAKIM PLANI): admin-gizli özellikler sekmesi
+import { AdminGizliFeaturesTab } from "./AdminGizliFeatures";
 import { AdminHaftaVideoTab, AdminHaftalikRaporTab } from "./adminDashboardTabs";
 import { AdminBanLogsTab, AdminFeedbackTab, AdminErrorsTab } from "./adminDashboardBolumler";
 // ★ SRP (01.10): panel ÇERÇEVESİ adminDashboardKabuk.tsx'e taşındı — header + 7 sekmeli
@@ -36,7 +38,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures">("users");
   // ★ 06.10 SAĞLIK ROZETİ: mount'ta salt-okunur action ping'leri → kabukta 🩺 rozet + sekme noktaları
   const panelSaglik = usePanelSaglik();
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
@@ -433,6 +435,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             handlePushGist={handlePushGist}
           />
           {activeTab === "broadcast" && <AdminBroadcastPanel notify={notify} />}
+
+          {/* ★ TAB: GİZLİ ÖZELLİKLER — 6 madde + atmosfer kategorileri (10.10) */}
+          {activeTab === "gizliFeatures" && <AdminGizliFeaturesTab notify={notify} />}
 
           {/* TAB 4: BAN & SİBER DENETİM LOGLARI — SRP adım 10: adminDashboardBolumler */}
           {activeTab === "banLogs" && (

@@ -229,6 +229,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       <span className="ml-auto rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-bold text-emerald-300">{t("menuYeni")}</span>
                     </button>
 
+                    {/* ★ 10.10 (GERİ EKLEME, kullanıcı emri): Kur'an Öğren + Dinle butonu
+                        sol-üst üç-nokta menüye eklendi (08.10 TRIM'de kaldirilmişti). */}
+                    <button onClick={() => { setModal?.("quranLearn"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <span className="text-base">📖</span>
+                      <span>{`Kur'an Öğreniyorum · Dinliyorum`}</span>
+                      <span className="ml-auto rounded-full bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 text-[7px] font-bold text-amber-300">GERİ GELDİ</span>
+                    </button>
+
                     {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09)
                         ★ 08.10 TRIM (kullanıcı emri): Hafızlık Testi, Kur'an, Kâbe Canlı, Haftanın
                         Videosu, Ramazan/Kandil, Keşfet (Hadis&Kıssa&Rehber) kaldırıldı. Kalanlar:

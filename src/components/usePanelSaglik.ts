@@ -14,8 +14,8 @@
 import { useEffect, useState } from "react";
 import type { AdminTab } from "./adminDashboardKabuk";
 
-/** Rozetin izlediği sekmeler: kabuktaki GERÇEK 7 butonlu sekme (modules/sync butonsuz — kapsam dışı). */
-export type SaglikTab = Exclude<AdminTab, "modules" | "sync">;
+/** Rozetin izlediği sekmeler: kabuktaki GERÇEK 7 butonlu sekme (modules/sync/gizliFeatures butonsuz — kapsam dışı). */
+export type SaglikTab = Exclude<AdminTab, "modules" | "sync" | "gizliFeatures">;
 
 export type PanelSaglik = {
   /** "test": ping'ler sürüyor · "ok": hepsi sağlıklı · "hata": en az bir sekme çalışmıyor */
