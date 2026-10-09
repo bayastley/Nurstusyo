@@ -41,8 +41,9 @@
 --
 -- Bilinen RLS KAPALI / AÇILMAMIŞ olanlar (bu blok açar):
 --   nur_zikir_topluluk, nur_zikir_gunluk, nur_referans_kodlari,
---   nur_referans_kullanim, nur_haftanin_videolari
---   (roadmap-guncelleme-2509.sql tabloları RLS'siz bırakmıştı)
+--   nur_referans_kullanim, nur_haftanin_videolari, nur_refund_log
+--   (roadmap-guncelleme-2509.sql tabloları RLS'siz bırakmıştı;
+--    nur_refund_log video-refund-0910.sql'in yeni tablosu)
 --
 -- Repoda DDL'i olmayan canlı tablolar (nur_order_tokens, nur_server_errors,
 -- nur_bans vb.) BÖLÜM 1b'deki joker blokla yakalanır.
@@ -58,7 +59,7 @@ declare
     'nur_marketing_consent','nur_email_campaigns','nur_push_subscriptions',
     'nur_zikir_topluluk','nur_zikir_gunluk','nur_zikir_arsiv','nur_referans_kodlari','nur_referans_kullanim',
     'nur_haftanin_videolari','nur_roadmap_features','nur_roadmap_votes','nur_site_settings',
-    'nur_trials','nur_daily_usage','nur_video_rights'
+    'nur_trials','nur_daily_usage','nur_video_rights','nur_refund_log'
   ];
 begin
   foreach t in array hedefler loop
