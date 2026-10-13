@@ -50,8 +50,8 @@ export function TelifRiskOnayBalonu({
 
         <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4 text-[11px]">
           <p className="text-white/70">
-            <span className="font-black text-white">{reciterName}</span> kârisinin telif risk oranı{" "}
-            <span className="font-black text-amber-400">%{riskPercent}</span> — eşik %{RISK_ONAY_ESIGI}.{" "}
+            <span className="font-black text-white">{reciterName}</span> kârisinin telif riski{" "}
+            <span className="font-black text-amber-400">YÜKSEK</span>.{" "}
             Bu kâriyle üretim yaparsanız:
           </p>
           <ul className="list-none space-y-1 text-white/60">

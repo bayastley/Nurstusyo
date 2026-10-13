@@ -6,7 +6,6 @@ import {
 import { SectionTitle, Segmented } from "./UIElements";
 import { LockBadge, LockedOverlay } from "./LockBadge";
 import { getVideoUrl, getPosterUrl, getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
-import { RISK_META } from "../data";
 import { RECITERS } from "../reciters";
 import { T, translate } from "../i18n";
 import { videoMaliyeti, reciterRequiredTier } from "../tier";
@@ -196,16 +195,11 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
       {/* Reciter Selection */}
       <div className="glass rounded-2xl p-4">
         <SectionTitle icon={Zap} title={t("hocaTilavet")} />
-        <div className="mb-3 flex items-center justify-center gap-3 text-[8px] font-bold uppercase tracking-wider">
-          {(["low", "mid", "high"] as const).map((risk) => {
-            const c = risk === "low" ? "#34d399" : risk === "mid" ? "#fbbf24" : "#f87171";
-            return (
-              <span key={risk} className="flex items-center gap-1" style={{ color: c }}>
-                <span className="h-2 w-2 rounded-full" style={{ background: c }} />
-                {risk === "low" ? t("dafRiskD") : risk === "mid" ? t("dafRiskO") : t("dafRiskY")}
-              </span>
-            );
-          })}
+        {/* ★ Renk ölçeği: yalnızca noktalar — yazı/yüzde yok (tahmin olduğu not panelin sonunda) */}
+        <div className="mb-3 flex items-center justify-center gap-3">
+          {["#34d399", "#fbbf24", "#f87171"].map((c) => (
+            <span key={c} className="h-2 w-2 rounded-full" style={{ background: c }} />
+          ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
           {(["Haram", "Telif"] as const).map((group) => (
@@ -215,7 +209,6 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               </p>
               <div className="space-y-0.5">
                 {sortedReciters.filter((item) => item.makam === group).map((item) => {
-                  const risk = RISK_META[item.risk];
                   const active = item.id === reciterId;
                   const dynamicLock = getFeatureLock(item.id, "free");
                   const requiredTier = dynamicLock === "pro" || dynamicLock === "elit" ? dynamicLock : reciterRequiredTier(item);
@@ -223,7 +216,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                   // ★ ADMIN: kilitı GÖRÜR ama kullanabilir (görsel gösterge, engel değil)
                   const reciterLocked = !isMasterSürüm && (maintenanceLocked || !tierAtLeast(accessTier, requiredTier));
                   const reciterMaintenance = maintenanceLocked;
-                  const riskPercent = item.telifRiski ?? risk.percent;
+                  // ★ Sadece renk: sayı/etiket YOK —ülke yazısı risk renginde
                   const riskColor = item.risk === "low" ? "#34d399" : item.risk === "mid" ? "#fbbf24" : "#f87171";
                   return (
                     <button
@@ -235,17 +228,14 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                     >
                       <span className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-black shadow-inner" style={{ background: `linear-gradient(135deg,${item.color},#fff)` }}>
                         {item.initial}
-                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-[#0c0d12]" style={{ background: riskColor }} />
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[9.5px] font-bold text-white/90 leading-tight">
                           {item.name}
                           {item.surahPattern && <span className="ml-1 rounded bg-white/10 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-white/50" title={t("dafTamSureTitle")}>{t("dafTamSure")}</span>}
                         </span>
-                        <span className="mt-0.5 flex items-center gap-1 truncate text-[7.5px] leading-tight">
-                          <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: riskColor }} />
-                          <span className="font-bold shrink-0" style={{ color: riskColor }}>{item.risk === "low" ? t("dafRiskDusuk") : item.risk === "mid" ? t("dafRiskOrta") : t("dafRiskYuksek")} %{riskPercent}</span>
-                          <span className="text-white/35 truncate">• {item.country}</span>
+                        <span className="mt-0.5 truncate text-[7.5px] font-bold leading-tight" style={{ color: riskColor }}>
+                          {item.country}
                         </span>
                       </span>
                       {/* ★ V2/V3/PRO/ELİT rozetleri: kâri kilitleri artık klasör kartlarıyla aynı rozet sistemini kullanıyor.
@@ -270,6 +260,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             </div>
           ))}
         </div>
+        {/* ★ Tahmin notu (i18n: renkler tahmine dayalıdır) */}
+        <p className="mt-3 text-center text-[8px] leading-relaxed text-white/40">{t("dafTahminNotu")}</p>
       </div>
 
       {/* Duration & Format */}
