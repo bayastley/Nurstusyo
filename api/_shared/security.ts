@@ -23,7 +23,13 @@ export function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): b
   const allowed = allowedOrigins();
 
   // Same-origin server-to-server/webhook tarzı isteklerde Origin olmayabilir.
-  if (!origin && !referer) return true;
+  // ★ Sertleştirme (13.10): boş Origin+Referer artık SADECE NUR_ALLOW_NO_ORIGIN=1
+  //   iken geçer (webhook'suz uçlar için kapatın). Varsayılan: RED.
+  if (!origin && !referer) {
+    if (process.env.NUR_ALLOW_NO_ORIGIN === "1") return true;
+    res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+    return false;
+  }
 
   if (origin && allowed.has(origin)) return true;
 

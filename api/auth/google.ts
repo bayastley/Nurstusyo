@@ -258,6 +258,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { code, codeVerifier, redirectUri, idToken } = req.body || {};
     let finalIdToken = typeof idToken === "string" ? idToken : "";
 
+    // ★ Replay koruması (13.10 — [9] bulgusu): doğrudan id_token yolu şimdilik
+    //   KAPALI (frontend zaten hiç göndermiyor — src/ içinde 0 eşleşme).
+    //   PKCE code-flow tek akış. Nailolursa nonce dâhil id_token akışını aç.
+    if (finalIdToken && process.env.NUR_ALLOW_GOOGLE_ID_TOKEN !== "1") {
+      return res.status(400).json({ ok: false, error: "Google girişi için yetkilendirme kodu gerekli" });
+    }
+
     if (!finalIdToken) {
       if (!isSafeCode(code)) return res.status(400).json({ ok: false, error: "Google code geçersiz" });
       if (!isSafeVerifier(codeVerifier)) return res.status(400).json({ ok: false, error: "Google PKCE verifier geçersiz" });

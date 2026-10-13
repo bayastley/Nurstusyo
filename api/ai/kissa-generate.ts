@@ -355,6 +355,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const user = requireAuth(req, res);
   if (!user) return;
 
+  // ★ Ban kontrolü (13.10 — [8] bulgusu): banlı kullanıcı AI kotalarını tüketemesin.
+  //   video/sign ile aynı kural: nur_ban_logs'ta unbanned=false satırı varsa reddet.
+  try {
+    const sbUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
+    const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    if (sbUrl && sbKey) {
+      const banQuery = `or=(user_id.eq.${encodeURIComponent(user.id)},user_email.eq.${encodeURIComponent(user.email)})&unbanned=eq.false&select=id&limit=1`;
+      const banRes = await fetch(`${sbUrl}/rest/v1/nur_ban_logs?${banQuery}`, { headers: { apikey: sbKey, Authorization: `Bearer ${sbKey}` }, cache: "no-store" });
+      if (banRes.ok) {
+        const bans = (await banRes.json()) as Array<{ id: string }>;
+        if (bans.length > 0) { res.status(403).json({ ok: false, error: "Hesabınız askıya alınmış" }); return; }
+      }
+    }
+  } catch { /* ban sorgusu çalışamazsa akış durmaz — auth/RLS zaten siper ediyor */ }
+
   // Rate limit
   const clientIp =
     (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || user.id;

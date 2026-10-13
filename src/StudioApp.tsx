@@ -710,9 +710,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         lang: navigator.language || "",
       });
       if (typeof navigator.sendBeacon === "function") {
-        navigator.sendBeacon("/api/track", new Blob([payload], { type: "application/json" }));
+        navigator.sendBeacon("/api/analytics/track", new Blob([payload], { type: "application/json" }));
       } else {
-        fetch("/api/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => undefined);
+        fetch("/api/analytics/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => undefined);
       }
     } catch { /* analitik asla uygulamayı bozmaz */ }
   }, []);

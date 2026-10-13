@@ -42,6 +42,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  // ★ CSRF katmanı (13.10): admin işlem uçlarında Origin zorunlu — _shared
+  //   paketlenmediği için inline. Tarayıcı tabanlı sahte POST (cross-site form/fetch)
+  //   Origin/proxy_listen varyantında bile bu kontrolle düşer.
+  {
+    const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+    const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+    const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"]);
+    let sameOrigin = false;
+    if (origin && allowed.has(origin)) sameOrigin = true;
+    else if (referer) { try { sameOrigin = allowed.has(new URL(referer).origin); } catch { sameOrigin = false; } }
+    if (!sameOrigin) return res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  }
   const admin = await adminFromCookie(req);
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
   

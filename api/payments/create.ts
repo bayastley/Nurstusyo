@@ -191,6 +191,16 @@ export default async function handler(req: any, res: any) {
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
+  // ★ CSRF katmanı (13.10): ödeme başlatma ucunda Origin zorunlu — _shared
+  //   paketlenmediği için inline. Cross-site sahte POST'u sipariş açılmadan düşürür.
+  {
+    const origin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
+    const referer = typeof req.headers.referer === 'string' ? req.headers.referer : '';
+    const allowed = new Set(['https://nurstudyo.com', 'https://www.nurstudyo.com', 'http://localhost:5173', 'http://localhost:5174']);
+    let sameOrigin = origin && allowed.has(origin);
+    if (!sameOrigin && referer) { try { sameOrigin = allowed.has(new URL(referer).origin); } catch { sameOrigin = false; } }
+    if (!sameOrigin) { res.status(403).json({ ok: false, error: 'İzin verilmeyen istek kaynağı' }); return; }
+  }
 
   if (!(await allowRequest(req, res))) return;
 

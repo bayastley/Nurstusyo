@@ -1,0 +1,6 @@
+Contact: mailto:info@nurstudyo.com
+Expires: 2027-10-13T00:00:00.000Z
+Preferred-Languages: tr, en
+CSRF: SameSite=Lax cookies + Origin validation on mutating endpoints
+Encryption: https
+Canonical: https://www.nurstudyo.com/.well-known/security.txt
