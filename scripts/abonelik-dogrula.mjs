@@ -54,12 +54,13 @@ etkin("pro", Date.now() - 1000) === "free" && etkin("elit", Date.now() + 8640000
 // 6) Paket hakları abonelik bitişinden bağımsız (ödendi → kalıcı)
 ok("6) Satın alınan paket hakları (PK_*) abonelik bitişinden ETKİLENMEZ — ayrı tablo (nur_video_rights)");
 
-// 7) Yeni yıllık fiyatlar: küsüratsız + formüle uygun (PRO %10, ELİT %15)
+// 7) Yeni yıllık fiyatlar: küsüratsız + formüle uygun (PRO %10, ELİT %15) — ★ 16.10: PRO 149₺, ELİT 249₺
 const yuzde = (base, disc) => Math.round(base * (1 - disc));
-yuzde(3000, 0.10) === 2700 && yuzde(5988, 0.15) === 5090
-  ? ok("7) Yıllık TRY: PRO 2.700₺ (%10) · ELİT 5.090₺ (%15) — küsüratsız")
+const onluk = (base, disc) => Math.round((base * (1 - disc)) / 10) * 10;
+onluk(1788, 0.10) === 1610 && onluk(2988, 0.15) === 2540
+  ? ok("7) Yıllık TRY: PRO 1.610₺ (%10, 10'luk yuvarla) · ELİT 2.540₺ (%15, 10'luk yuvarla) — küsüratsız")
   : bad("7) TRY fiyatlar");
-const bolge = { USD: [10, 20, 108, 204], EUR: [9, 18, 97, 184], GBP: [8, 16, 86, 163] };
+const bolge = { USD: [6, 10, 65, 102], EUR: [6, 9, 59, 92], GBP: [5, 8, 52, 82] };
 Object.values(bolge).every((arr) => arr.every((n) => Number.isInteger(n)))
   ? ok("   Bölgesel fiyatlar (USD/EUR/GBP) tümü tam sayı — küsürat yok")
   : bad("   bölgesel küsürat");

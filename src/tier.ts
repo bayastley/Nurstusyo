@@ -136,17 +136,20 @@ export const TIER_LABEL: Record<Tier, string> = {
 
 export const TIER_PRICE_TRY: Record<Tier, number> = {
   free: 0,
-  pro: 250,
-  elit: 499,
+  pro: 149,
+  elit: 249,
 };
 
-// ★ Yıllık üyelik — 05.10 (2. güncelleme): kullanıcı emri: PRO %10, ELİT %15, KÜSÜRATSIZ.
-//   annualPriceTRY(): PRO 250×12×0,90 = 2.700₺ · ELİT 499×12×0,85 = 5.089,8 → yuvarla 5.090₺
+// ★ Yıllık üyelik — 16.10 (3. güncelleme — kullanıcı emri: PRO 149₺, ELİT 249₺):
+//   annualPriceTRY(): PRO 149×12×0,90 = 1.609,2 → 10'luk yuvarla 1.610₺ · ELİT 249×12×0,85 = 2.539,8 → 2.540₺
 //   Katalog (pricingData.ts SUB_*_1Y) ve create.ts PRODUCT_CATALOG aynı değerleri taşır.
 export const ANNUAL_DISCOUNT: Record<Tier, number> = { free: 0, pro: 0.10, elit: 0.15 };
 export function annualPriceTRY(tier: Tier): number {
   const base = TIER_PRICE_TRY[tier] * 12;
-  return Math.round(base * (1 - ANNUAL_DISCOUNT[tier]));
+  // ★ 10'LUK YUVARLAMA (16.10): klasik Math.round PRO'da 1.609 → katalog 1.610 ile 1₺
+  //   uyumsuzluk veriyordu (UI gösteren ≠ iyzico çeken). 10'luk yuvarlama her iki
+  //   yan için de düşük-yuvarlama zarafeti sağlar: 1609,2→1610 · 2539,8→2540.
+  return Math.round((base * (1 - ANNUAL_DISCOUNT[tier])) / 10) * 10;
 }
 
 /** Bugün kaç adet üretildi — gün değişince otomatik sıfırlanır */

@@ -99,12 +99,12 @@ function money(v: any, fallback: string) {
 
 // ─── SUNUCU TARAFI ÜRÜN KATALOGU ─── Fiyatları buradan yönet
 const PRODUCT_CATALOG: Record<string, { price: string; name: string; kind: string }> = {
-  // Aylık abonelikler
-  SUB_PRO_1M:  { price: '250.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
-  SUB_ELIT_1M: { price: '499.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
-  // Yıllık abonelikler
-  SUB_PRO_1Y:  { price: '2700.00', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
-  SUB_ELIT_1Y: { price: '5090.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
+  // Aylık abonelikler — ★ 16.10: PRO 149₺, ELİT 249₺ (kullanıcı emri)
+  SUB_PRO_1M:  { price: '149.00', name: 'NÛR PRO Aylık',  kind: 'subscription' },
+  SUB_ELIT_1M: { price: '249.00', name: 'NÛR ELİT Aylık', kind: 'subscription' },
+  // Yıllık abonelikler — PRO %10 → 1.610₺ · ELİT %15 → 2.540₺ (pricingData.ts ile aynı)
+  SUB_PRO_1Y:  { price: '1610.00', name: 'NÛR PRO Yıllık',  kind: 'subscription' },
+  SUB_ELIT_1Y: { price: '2540.00', name: 'NÛR ELİT Yıllık', kind: 'subscription' },
   // Kısa video paketleri
   PK_KISA_15:  { price: '35.00',  name: '15 Kısa Video',  kind: 'package' },
   PK_KISA_35:  { price: '69.00',  name: '35 Kısa Video',  kind: 'package' },
