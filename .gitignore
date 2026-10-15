@@ -55,3 +55,7 @@ scripts/plan.json
 scripts/indir-cikti.log
 scripts/topla-gecici/
 instagram-auto-poster/queue-state.json
+
+# ★ 16.10 E2E test kanıtları — ekran görüntüleri / kanıt JSON'ları commite girmez
+scripts/_*.png
+scripts/_*.json
