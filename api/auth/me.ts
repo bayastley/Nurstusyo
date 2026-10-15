@@ -157,6 +157,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   if (!(await allowRequest(req, res))) return;
 
+  // ★ 14.10 DEV ZARİF DÜŞÜŞ: local'da SUPABASE_URL/SERVICE_ROLE env setli DEĞİL
+  //   (yalnız Vercel prod'da var). Eskiden bu eksiklikte her sayfa yüklenişinde
+  //   500 döndüğü için dev konsolu sürekli "Internal Server Error" gürültüsüyle
+  //   çalıyordu: gerçek kod hatasındaki 500'leri de gölgeliyordu. Şimdi env yoksa
+  //   DEV'de (supabase ve oturum ortamı yokluğu yalnız lokalde geçerli) 200 +
+  //   {ok:false, devSqlite:true} döner — istemci (useAuth) bunu oturum-yok olarak
+  //   zaten işler. Prod'da env hep setli → bu dal hiç çalışmaz, davranış değişmez.
+  const __supabasetamam = Boolean((process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "") && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!__supabasetamam) {
+    return res.status(200).json({ ok: false, devNoSupabase: true, error: "Supabase sunucu ayarları eksik (dev)" });
+  }
+
   try {
     const user = getSessionUser(req);
     if (!user) return res.status(401).json({ ok: false, error: "Oturum bulunamadı" });

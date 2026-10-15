@@ -9,8 +9,12 @@ import { translate, type Lang } from "../i18n";
 import { BookOpen, Radio, ShieldCheck, Mail, ExternalLink, HeartHandshake, Video, Sparkles, Clapperboard, PlayCircle } from "lucide-react";
 import { Modal } from "./UIElements";
 
-// ★ TANITIM VİDEOSU — "Bu Sitede Ne Var?" modalında oynatılır.
-//   Boş string = bölüm hiç görünmez. Link geldiğinde buraya yapıştır (27.09).
+// ★ TANITIM VİDEOSU — "Bu Sitede Ne Var?" (İÇİNDEKİLER) modalında oynatılır.
+//   ★ 16.10 (kullanıcı emri): üstte TANITIM bölümü — R2 CDN'den MP4 oynatır.
+//   R2 dosya adı değiğince sadece TANITIM_VIDEO_R2'yi güncelle. YouTube hâlâ opsiyonel:
+//   TANITIM_VIDEO_YOUTUBE doluysa R2'nin altına ikinci küçük izle-kutucuğu düşer.
+//   Boş string = bölüm hiç görünmez.
+const TANITIM_VIDEO_R2 = "https://cdn.nurstudyo.com/tanitim/nurstudyo-tanitim.mp4";
 const TANITIM_VIDEO_YOUTUBE = "";
 
 interface SiteHakkindaModalProps {
@@ -55,6 +59,33 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
 
   return (
     <Modal title={tt("v2SiteHakkindaTitle")} sub={tt("v2SiteHakkindaSub")} onClose={onClose} wide>
+      {/* ── TANITIM VİDEOSU (16.10, R2 MP4) ─────── */}
+      {TANITIM_VIDEO_R2.trim() ? (
+        <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+          <div className="px-3 pt-2.5 pb-1 flex items-center gap-2">
+            <Sparkles size={13} className="text-amber-300" />
+            <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
+              TANITIM
+            </span>
+            <span className="text-[8.5px] text-white/35">Siteyi 2 dakikada tanı — girince aç, izleyin</span>
+          </div>
+          <video
+            src={TANITIM_VIDEO_R2.trim()}
+            controls
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            poster=""
+            className="w-full bg-black"
+            style={{ maxHeight: 400, aspectRatio: "16/9" }}
+          />
+          <div className="px-3 py-2 text-[9.5px] font-bold text-white/50 flex items-center gap-1.5">
+            <Clapperboard size={11} className="text-red-400" /> R2 CDN — {TANITIM_VIDEO_R2.trim()}
+          </div>
+        </div>
+      ) : null}
       {/* ── TANITIM VİDEOSU ────────────────────────────── */}
       {videoEmbed && (
         <div className="mb-4 overflow-hidden rounded-xl border border-white/10 bg-black/40">

@@ -20,6 +20,10 @@ id_rsa
 id_rsa.pub
 id_ed25519
 
+# ★ 14.10 GÜVENLİK (Açık 5): txt yedeklerinde plaintext API anahtarı var
+#   (AIzaSy… Google anahtarı). `git add -A` ile geçmişe düşmesin.
+scripts/txt-yedek-hadis/
+
 # Editör ve OS
 .vscode/*
 !.vscode/extensions.json

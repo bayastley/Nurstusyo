@@ -146,6 +146,17 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: false,
+      // ★ SESLENDİRME TTS PROXYSİ (14.10): lokal prototip sunucusu
+      //   (python ai-mockup/meal-sunucu.py, port 8877) dev'de /nur-tts ön ekiyle
+      //   erişilir. Canlıda bu proxy YOK → SeslendirmeModal kibarca
+      //   "geliştirme özelliği" notu gösterir, canlıyı hiç etkilemez.
+      proxy: {
+        "/nur-tts": {
+          target: "http://127.0.0.1:8877",
+          changeOrigin: true,
+          rewrite: (p) => p.replace(/^\/nur-tts/, ""),
+        },
+      },
     },
 
     // ─── Prod'da bazı dev bayraklarını sil ──────────────────────

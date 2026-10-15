@@ -4,16 +4,15 @@
 
 export type { Lang, LangOption, Dict } from "./base";
 export { LANGS, MEAL_EDITIONS } from "./base";
-
 import type { Lang, Dict } from "./base";
 import {
-  trDict, enDict, arDict, idDict, urDict,
+  trDict, enDict, arDict, idDict, urDict, dilSozluguCuralla,
 } from "./dicts";
 
 /**
- * ★ ESKİ SORUN: de/ru/fr/es/id/ur/fa = {} boştu
- * t(key) çağrılınca undefined → ekranda Türkçe hardcoded kalıyordu
- * Şimdi her dil DOLU.
+ * ★ ESKİ SORUN: de/ru/fr/es/id/ur = {} boştu — 16.10 LAZY fix: dilSozluguCuralla()
+ *   mount'tan önce main.tsx'en çağrılır, Object.assign placeholder'ları doldurur.
+ *   Lexer/translate referans TARE HANESIZ — aynı obje döndüğü için günceller.
  */
 export const T: Record<Lang, Dict> = {
   tr: trDict,
@@ -22,6 +21,11 @@ export const T: Record<Lang, Dict> = {
   id: idDict,
   ur: urDict,
 };
+
+/** Dil sözlüğünü (varsa) yükler — main.tsx mount öncesi çağırır */
+export function dilSaukle(lang: string | null | undefined): Promise<void> {
+  return dilSozluguCuralla(lang ?? "tr");
+}
 
 /**
  * Güvenli çeviri yardımcısı — StudioApp'te kullan:

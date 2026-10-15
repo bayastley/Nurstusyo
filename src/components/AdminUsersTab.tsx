@@ -428,7 +428,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                     className={`flex-1 rounded-lg py-1.5 text-[9px] font-black transition ${rightsKind === k ? "text-black" : "bg-white/5 text-white/60 hover:bg-white/10 hover:text-white"}`}
                     style={rightsKind === k ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
                   >
-                    {k === "kisa" ? "🎬 Kısa (59 sn)" : k === "uzun" ? "🎞️ Orta (600 sn)" : "📽️ Uzun (90 dk)"}
+                    {k === "kisa" ? "🎬 Kısa (59 sn)" : k === "uzun" ? "🎞️ Orta (600 sn)" : "📽️ Uzun (120 dk)"}
                   </button>
                 ))}
               </div>
@@ -474,7 +474,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 🔄 SEÇİLİ TÜRÜ SIFIRLA
               </button>
               <p className="text-[8.5px] leading-relaxed text-white/35">
-                Orta = 600 sn'ye kadar video · Uzun = 90 dk'ya kadar tam sürüm. Haklar anında geçerli olur — kullanıcı üretimde bu türden harcar.
+                Orta = 600 sn'ye kadar video · Uzun = 120 dk'ya kadar tam sürüm. Haklar anında geçerli olur — kullanıcı üretimde bu türden harcar.
               </p>
             </div>
           </div>

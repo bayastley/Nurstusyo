@@ -42,8 +42,13 @@ interface MealSayfaVeri {
 export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   // ★ LAZY BAŞLANGIÇ (02.10): LS mount anında SENKRON okunur — StrictMode çift-effect
   //   veya "open=true ile mount" durumunda boş başlangıç değeri kaydı EZEMEZ (idempotent).
+  // ★ 16.10 DEVAM ÇİPİ TAZELEME (kullanıcı bildirimi: "o hep aynı kalmış, 362'de sabit"):
+  //   kayitliSayfa yalnız open-change'te set ediliyordu — kullanıcı sayfadan sayfaya
+  //   ilerleyip X ile çıktığında çip ESKİ sayfayı göstermeye devam ediyordu.
+  //   Doğru davranış: her sayfa değişimi kayıtla birlikte çipi de tazeler — son
+  //   görülen sayfa her zaman "devam" noktasıdır.
   const [sayfa, setSayfa] = useState(() => sonSayfaYukle());
-  const [kayitliSayfa, setKayitliSayfa] = useState(() => sonSayfaYukle()); // açılıştaki kayıt — "devam" çipi için
+  const [kayitliSayfa, setKayitliSayfa] = useState(() => sonSayfaYukle()); // son görülen — "devam" çipi
   const [zoom, setZoom] = useState(1);
   const [tamEkran, setTamEkran] = useState(false);
   const [yukleniyor, setYukleniyor] = useState(true);
@@ -90,10 +95,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     try { setOkDonme(window.matchMedia("(hover: none)").matches); } catch { setOkDonme(false); }
   }, [open]);
 
-  // Sayfa değişince: kaydı güncelle + kaynağı sıfırla + sonraki ve önceki sayfayı önden yükle
+  // Sayfa değişince: kaydı güncelle (★ 16.10: DEVAM çipini de) + kaynağı sıfırla + önden yükleme
   useEffect(() => {
     if (!open) return;
     sonSayfaKaydet(sayfa);
+    setKayitliSayfa(sayfa); // ← çip artık her sayfa geçişinde ışıldar, X ile çıktığında en son sayfa kalır
     setSayfaGiris(String(sayfa));
     setKaynakIdx(0);
     setYukleniyor(true);
@@ -321,7 +327,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           onDoubleClick={() => setZoom((z) => (z >= 1.9 ? 1 : 2))}
           onMouseEnter={() => setOkGorunur(true)}
           onMouseLeave={() => setOkGorunur(false)}
-          className="absolute inset-0 overflow-auto bg-[#0a0912] p-3 scrollbar-thin"
+          className="absolute inset-0 overflow-auto bg-[#b8912a] p-3 scrollbar-thin"
           title="Çift tıkla büyüt/küçült · Ctrl+tekerlek zoom · kenarlara tıkla: sayfa çevir"
         >
           <div className="flex min-h-full min-w-full items-center justify-center">

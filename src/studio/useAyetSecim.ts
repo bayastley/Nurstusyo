@@ -9,6 +9,7 @@ import { SURAHS } from "../data";
 import { fetchJSON, fetchAyah, fetchSurah, quranUrl, normalizeTurkishMeal } from "./studioHelpers";
 import { MEAL_EDITIONS } from "../i18n";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./ayetKategori";
+import { akilliKlipSec } from "./atmosferBag"; // ★ 16.10: Akıllı AI seçimi artık tekrar-düşman DÖNEN TORBA
 import { genDesc, genTitle } from "../data/titleTemplates";
 import type { Clip } from "../clips";
 import type { SelectedAyah } from "../types";
@@ -75,13 +76,17 @@ export function useAyetSecim(params: UseAyetSecimParams) {
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
         if (poolCat.length) {
-          const chosen = poolCat[Math.floor(Math.random() * poolCat.length)];
-          // ★ KULLANICI MEDYASI KUTSAL (30.09)
-          if (backgroundRef.current?.cat === "yuklenenler") {
-            setAyahBackgrounds((current) => ({ ...current, [id]: backgroundRef.current }));
-          } else {
-            setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
-            if (verseIndexRef.current === selectedRef.current.length) { setBackground(chosen); }
+          // ★ 16.10 DÖNEN TORBA: Math.random yerine — aynı klasörün tam turu bitmedikçe
+          //   aynı klip tekrar seçilmez (localStorage'da kalıcı torba).
+          const chosen = akilliKlipSec(poolCat);
+          if (chosen) {
+            // ★ KULLANICI MEDYASI KUTSAL (30.09)
+            if (backgroundRef.current?.cat === "yuklenenler") {
+              setAyahBackgrounds((current) => ({ ...current, [id]: backgroundRef.current }));
+            } else {
+              setAyahBackgrounds((current) => ({ ...current, [id]: chosen }));
+              if (verseIndexRef.current === selectedRef.current.length) { setBackground(chosen); }
+            }
           }
         }
       }
@@ -95,7 +100,9 @@ export function useAyetSecim(params: UseAyetSecimParams) {
           const quranClips = kullaniciKlipleri.length
             ? kullaniciKlipleri
             : combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === clipKindRef.current);
-          if (quranClips.length) setAyahBackgrounds((current) => ({ ...current, [id]: quranClips[Math.floor(Math.random() * quranClips.length)] }));
+          // ★ 16.10: bu yedek torba da tekrar-etsin-durmasın — dönen torbadan çek
+          const secilen = akilliKlipSec(quranClips);
+          if (secilen) setAyahBackgrounds((current) => ({ ...current, [id]: secilen }));
         }
       }
       setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciterName, lang)); notify(t("ssAyetEklendi").replace("{name}", meta.name).replace("{s}", String(s)).replace("{a}", String(a)));

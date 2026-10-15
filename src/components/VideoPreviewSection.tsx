@@ -519,7 +519,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
         </button>
         {/* ★ CANLI RAM GÖSTERGESİ: üretim sırasında tarayıcı belleği MB bazlı izlenir.
-            90 dk hatim gibi uzun üretimlerde bellek şişerse kullanıcı önceden görür. */}
+            120 dk hatim gibi uzun üretimlerde bellek şişerse kullanıcı önceden görür. */}
         {generating && ramMb !== null && (
           <div className="flex items-center justify-between rounded-xl border px-3 py-1.5 text-[9px] font-bold" style={{
             borderColor: ramMb > 3000 ? "#ef4444" : ramMb > 1500 ? "#f59e0b" : "rgba(255,255,255,.12)",

@@ -1,0 +1,169 @@
+{
+  "hedef": "https://www.nurstudyo.com",
+  "viewport": {
+    "width": 375,
+    "height": 812
+  },
+  "diller": {
+    "tr": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "notlar": {
+        "olcum": {
+          "vw": 375,
+          "docSW": 375,
+          "bodySW": 375,
+          "sayfaTasma": false,
+          "dir": "ltr",
+          "panel": {
+            "left": 0,
+            "right": 375,
+            "width": 375,
+            "tasma": false
+          },
+          "hedefler": [],
+          "sayfaSahipleri": [],
+          "banner": {
+            "rect": {
+              "left": 51,
+              "right": 351,
+              "top": 643.8,
+              "bottom": 796,
+              "width": 300
+            },
+            "viewportTasma": false,
+            "panelIleCakisiyor": true
+          }
+        }
+      }
+    },
+    "en": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "notlar": {
+        "olcum": {
+          "vw": 375,
+          "docSW": 375,
+          "bodySW": 375,
+          "sayfaTasma": false,
+          "dir": "ltr",
+          "panel": {
+            "left": 0,
+            "right": 375,
+            "width": 375,
+            "tasma": false
+          },
+          "hedefler": [],
+          "sayfaSahipleri": [],
+          "banner": {
+            "rect": {
+              "left": 51,
+              "right": 351,
+              "top": 633.8,
+              "bottom": 796,
+              "width": 300
+            },
+            "viewportTasma": false,
+            "panelIleCakisiyor": true
+          }
+        }
+      }
+    },
+    "ar": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "notlar": {
+        "olcum": {
+          "vw": 375,
+          "docSW": 375,
+          "bodySW": 375,
+          "sayfaTasma": false,
+          "dir": "rtl",
+          "panel": {
+            "left": 0,
+            "right": 375,
+            "width": 375,
+            "tasma": false
+          },
+          "hedefler": [],
+          "sayfaSahipleri": [],
+          "banner": {
+            "rect": {
+              "left": 51,
+              "right": 351,
+              "top": 643.8,
+              "bottom": 796,
+              "width": 300
+            },
+            "viewportTasma": false,
+            "panelIleCakisiyor": true
+          }
+        }
+      }
+    },
+    "id": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "notlar": {
+        "olcum": {
+          "vw": 375,
+          "docSW": 375,
+          "bodySW": 375,
+          "sayfaTasma": false,
+          "dir": "ltr",
+          "panel": {
+            "left": 0,
+            "right": 375,
+            "width": 375,
+            "tasma": false
+          },
+          "hedefler": [],
+          "sayfaSahipleri": [],
+          "banner": {
+            "rect": {
+              "left": 51,
+              "right": 351,
+              "top": 633.8,
+              "bottom": 796,
+              "width": 300
+            },
+            "viewportTasma": false,
+            "panelIleCakisiyor": true
+          }
+        }
+      }
+    },
+    "ur": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "notlar": {
+        "olcum": {
+          "vw": 375,
+          "docSW": 375,
+          "bodySW": 375,
+          "sayfaTasma": false,
+          "dir": "rtl",
+          "panel": {
+            "left": 0,
+            "right": 375,
+            "width": 375,
+            "tasma": false
+          },
+          "hedefler": [],
+          "sayfaSahipleri": [],
+          "banner": {
+            "rect": {
+              "left": 51,
+              "right": 351,
+              "top": 643.8,
+              "bottom": 796,
+              "width": 300
+            },
+            "viewportTasma": false,
+            "panelIleCakisiyor": true
+          }
+        }
+      }
+    }
+  }
+}

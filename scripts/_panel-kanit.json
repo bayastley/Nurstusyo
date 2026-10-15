@@ -1,0 +1,61 @@
+{
+  "admin": "bayastley@gmail.com",
+  "sekmeler": [
+    {
+      "sekme": "users",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-users.png"
+    },
+    {
+      "sekme": "broadcast",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-broadcast.png"
+    },
+    {
+      "sekme": "banLogs",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-banLogs.png"
+    },
+    {
+      "sekme": "errors",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-errors.png"
+    },
+    {
+      "sekme": "haftaVideo",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-haftaVideo.png"
+    },
+    {
+      "sekme": "rapor",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-rapor.png"
+    },
+    {
+      "sekme": "feedback",
+      "ok": true,
+      "jsHata": 0,
+      "ag5xx": 0,
+      "goruntu": "scripts/_panel-sekme-feedback.png"
+    }
+  ],
+  "saglik": {
+    "rozet": "7/7",
+    "hataliTablar": []
+  },
+  "kaynak404": 8,
+  "jsHatalari": [],
+  "ag5xx": []
+}

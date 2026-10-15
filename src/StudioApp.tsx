@@ -9,6 +9,7 @@ import {
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./studio/ayetKategori"; // ★ SRP adım 13 (02.10): ayet→kategori motoru
+import { akilliKlipSec } from "./studio/atmosferBag"; // ★ 16.10: Akıllı AI seçimi tekrar-düşman DÖNEN TORBA (Math.random tekrarı çözüldü)
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
 import { checkGuestGate, bumpGuestUsed, GUEST_FREE_VIDEOS } from "./studio/useGuestTrial";
 import { useAnalytics } from "./studio/useAnalytics";
@@ -55,11 +56,15 @@ import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from 
 import { kutuphaneItem } from "./data/kutuphaneCokDil"; // ★ 06.10: kütüphane kartları seçili dilde (başlık/anlam/kaynak)
 import { useDilSenkron } from "./studio/useDilSenkron"; // ★ SRP adım 11 (09.10 2. tur): dil senkron efektleri (meal + paylaşım + RTL)
 import { HeaderTopBar } from "./components/HeaderTopBar";
-import { AyahLibraryPanel } from "./components/AyahLibraryPanel";
-import { VideoPreviewSection } from "./components/VideoPreviewSection";
-import { DesignSettingsPanel } from "./components/DesignSettingsPanel";
-import { SocialSharePanel } from "./components/SocialSharePanel";
-import { ModalsContainer } from "./components/ModalsContainer";
+import { StudioHeroSectionLazySuspense, PanelSuspense } from "./studio/panelSuspense";
+// ★ 16.10 CHUNK BÖLÜMÜ — ağır paneller React.lazy ile KENDİ chunk'larında;
+//   ana giriş (hero + header + canvas çekirdeği) küçük kalır. İlk boyama hızlanır,
+//   kullanıcı kaydırırken/açarken panel chunk'ları paralel gelir.
+const AyahLibraryPanel = React.lazy(() => import("./components/AyahLibraryPanel").then((m) => ({ default: m.AyahLibraryPanel })));
+const VideoPreviewSection = React.lazy(() => import("./components/VideoPreviewSection").then((m) => ({ default: m.VideoPreviewSection })));
+const DesignSettingsPanel = React.lazy(() => import("./components/DesignSettingsPanel").then((m) => ({ default: m.DesignSettingsPanel })));
+const SocialSharePanel = React.lazy(() => import("./components/SocialSharePanel").then((m) => ({ default: m.SocialSharePanel })));
+const ModalsContainer = React.lazy(() => import("./components/ModalsContainer").then((m) => ({ default: m.ModalsContainer })));
 import { MaintenanceScreen } from "./components/MaintenanceScreen";
 import { AnnouncementBar } from "./components/AnnouncementBar";
 import { CookieConsent, CookieAyarDugmesi } from "./components/CookieConsent";
@@ -743,7 +748,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       acc += dur + 0.03;
       fitCount += 1;
     }
-    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (90 dk)";
+    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (120 dk)";
     const key = `${mode}-${selected.length}-${fitCount}-${Math.round(total)}`;
     const nowMs = Date.now();
     if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;
@@ -816,8 +821,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     });
     if (!duzenlecekler.length) { notify("📁 Yüklediklerin korundu — sekme değişimi onlara dokunmadı"); return; }
     if (smartAiEnabledRef.current) {
-      // Akıllı AI açıksa: her ayete yeni türde tematik sahne
-      const usedIds = new Set<string>();
+      // Akıllı AI açıksa: her ayete yeni türde tematik sahne (★ 16.10 torba tekrarsız dağıtıyor)
       duzenlecekler.forEach((item) => {
         const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
         let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === kind);
@@ -828,11 +832,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === kind);
         if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === kind);
         if (!poolCat.length) return;
-        const fresh = poolCat.filter((c) => !usedIds.has(c.id));
-        const list = fresh.length ? fresh : poolCat;
-        const chosen = list[Math.floor(Math.random() * list.length)];
-        usedIds.add(chosen.id);
-        next[item.id] = chosen;
+        // ★ 16.10 DÖNEN TORBA: Math.random yerine — aynı klasör tam tur bitmedikçe aynı klip dönmez
+        const chosen = akilliKlipSec(poolCat);
+        if (chosen) next[item.id] = chosen;
       });
     } else {
       // Akıllı AI kapalıysa: yeni türden mushaf/nötr klip dağıt
@@ -979,7 +981,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       const korunan = ayahBackgroundsRef.current[id];
       if (korunan) next[id] = korunan;
     });
-    const usedIds = new Set<string>();
     selectedRef.current.forEach((item) => {
       if (korunanSlotlar.has(item.id)) return;
       const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
@@ -992,11 +993,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
       if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
       if (poolCat.length === 0) return;
-      const fresh = poolCat.filter((c) => !usedIds.has(c.id));
-      const list = fresh.length ? fresh : poolCat;
-      const chosen = list[Math.floor(Math.random() * list.length)];
-      usedIds.add(chosen.id);
-      next[item.id] = chosen;
+      // ★ 16.10 DÖNEN TORBA: Math.random yerine — aynı klasör tam tur bitmedikçe aynı klip dönmez
+      const chosen = akilliKlipSec(poolCat);
+      if (chosen) next[item.id] = chosen;
     });
     setAyahBackgrounds(next);
     // ★ Ana arka plan da kutsal: kullanıcının kendi dosyasıysa AI onu değiştiremez —
@@ -1237,6 +1236,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* MAIN 3 GRID */}
       <main className="mx-auto grid max-w-[1500px] gap-4 px-2 sm:px-4 py-6 grid-cols-1 lg:grid-cols-[300px_280px_1fr]">
         {/* LEFT: AYAH LIBRARY PANEL */}
+        <PanelSuspense minHeight={640}>
         <AyahLibraryPanel
           query={query}
           setQuery={setQuery}
@@ -1258,6 +1258,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           setModal={setModal}
           t={t}
         />
+        </PanelSuspense>
 
         {/* MIDDLE: VIDEO PREVIEW SECTION */}
         <div className="min-w-0 space-y-2.5">
@@ -1270,6 +1271,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           erisilebilirKlipBul={(cat) => combinedAllClips.find((clip) => clip.cat === cat && clip.kind === clipKind && isClipAccessible(clip)) ?? null}
           clipKind={clipKind}
         />
+        <PanelSuspense minHeight={360}>
         <VideoPreviewSection
           canvasRef={canvasRef}
           previewWidth={previewWidth}
@@ -1345,9 +1347,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             setModal("kendiSes");
           }}
         />
+        </PanelSuspense>
         </div>
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}
+        <PanelSuspense minHeight={560}>
         <DesignSettingsPanel
           setPickingFor={setPickingFor}
           setModal={setModal}
@@ -1405,9 +1409,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           progress={progress}
           t={t}
         />
+        </PanelSuspense>
       </main>
 
       {/* BOTTOM: SOCIAL SHARE PANEL */}
+      <PanelSuspense minHeight={180}>
       <SocialSharePanel
         shareTitle={shareTitle}
         setShareTitle={setShareTitle}
@@ -1440,6 +1446,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         shareToInstagram={shareToInstagram}
         pickDesc={genDesc}
       />
+      </PanelSuspense>
 
       {/* 🎬 TAM SAYFA VİDEO RENDER ENGELLEME VE BİLGİLENDİRME EKRANI */}
       {generating && (
@@ -1531,6 +1538,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         <HataKilavuzModal debugGuideModal={debugGuideModal} setDebugGuideModal={setDebugGuideModal} />
       )}
 
+      <PanelSuspense minHeight={0}>
       <ModalsContainer
         modal={modal}
         setModal={setModal}
@@ -1652,6 +1660,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         kendiSesSeciliAyetler={selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName }))}
         kendiSesAyahBackgrounds={ayahBackgrounds}
       />
+      </PanelSuspense>
 
       {/* COOKIE CONSENT — KVKK m.10 + Çerez Rehberi uyumlu (opt-in, eşit butonlar, envanter) */}
       <CookieConsent />

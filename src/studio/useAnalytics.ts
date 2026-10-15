@@ -1,12 +1,18 @@
 import { useEffect } from "react";
+import { getCookieConsent } from "../components/CookieConsent";
 
 // ════════════════════════════════════════════════════════
 // ANALYTICS HOOK — ücretsiz, kendi verimiz.
 // Site tanıtıma çıktığında "kaç kişi geldi, nereden geldi,
 // hangi cihazdan" sorularının cevabını Supabase'e (mevcut
 // nur_page_views tablosuna) yazar. Hiçbir üçüncü taraf
-// pazarlama SDK'sı kullanılmaz — KVKK açısından da temizdir
-// (kişi tanımlanamaz, sadece anonim sayaç).
+// pazarlama SDK'sı kullanılmaz.
+//
+// ★ KVKK ÇEREZ-ONAY KAPISI (16.10): CookieConsent banner'ında
+//   "Analitik" kategorisi açık rıza gerektiriyor; hook daha önce
+//   rızaya bakmaksızın direkt POST atıyordu — banner'ın "analitik
+//   yok" açıklamasıyla çelişiyordu. Artık kullanıcı çerez
+//   tercihlerinde Analitik'i açık seçmemişse istek HİÇ gönderilmez.
 // ════════════════════════════════════════════════════════
 
 const SESSION_FLAG_KEY = "nur_analytics_session_sent";
@@ -21,6 +27,9 @@ export function useAnalytics() {
     } catch {
       // sessionStorage kapalıysa yine de bir kereliğine gönder
     }
+
+    // ★ ÇEREZ RIZASI: analitik kategorisi açık değilse sayaç gönderilmez (KVKK opt-in).
+    if (getCookieConsent()?.analytics !== true) return;
 
     const payload = {
       path: window.location.pathname || "/",

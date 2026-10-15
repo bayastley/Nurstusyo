@@ -405,7 +405,13 @@ export function useQuranSes({
     stopAudio();
     setPaused(false);
     setBesmelePlaying(false);
-  }, [stopAudio]);
+    // ★ 16.10 ÇALMIYOR FIX (kullanıcı bildirimi: "çalmıyor ki kanka"): hoca/sure modu
+    //   değişince pause düğmesi stopListening'i çağırıyor ama isPlaying TRUE kalyordu —
+    //   UI hep pause ikonunda dondu, ▶ (startListening) bir daha asla tetiklenmedi;
+    //   "ÇALIYOR·n. AYET" bandı boş seste yürüdü. stopListening = oyun bitti → isPlaying
+    //   false'ya çekilir, altın düğme ▶'e döner, yeni seçimle play gerçekten çalışır.
+    setIsPlaying(false);
+  }, [stopAudio, setIsPlaying]);
 
   const pauseAyah = useCallback(() => {
     const a = audioRef.current; if (!a) return;

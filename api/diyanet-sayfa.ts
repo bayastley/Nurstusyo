@@ -67,30 +67,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     return;
   }
 
-  // 2) Diyanet'ten çek (id = sayfa - 1, Diyanet mushafı 0-tabanlı görsel indeksi kullanır:
-  //    "1. Sayfa | Fâtiha" → data/pages/2X/000.png, pagedata?id=0)
+  // 2) Yedek kaynak: alquran.cloud /page/{n}/tr.diyanet (ayet-ayet Diyanet mealı) —
+  //    ★ 16.10: Diyanet'in kendi pagedata URL'i HTML döndürüyor (JSON değil) -
+  //    curl kanıtı: sayfa 362 id → <!DOCTYPE html>. Bu yüzden BİRİNCİL source
+  //    alquran.cloud'un Diyanet edition oldu; aynı meal metnini ayet bazında döner.
+  //    Farklılx olarak: pagedata hamdatından gelen sureAdi/sureInfo alanları burada
+  //    surah.name'le sancak doluyor; cuz, juz alanından geliyor.
+  const ALQURAN_PAGEDATA = (n: number) =>
+    `https://api.alquran.cloud/v1/page/${n}/tr.diyanet`;
+  interface AlquranAyat { numberInSurah?: number; text?: string; surah?: { number?: number; name?: string; englishNameTranslation?: string }; juz?: number }
+  interface AlquranPage { number?: number; ayahs?: AlquranAyat[] }
   try {
-    const cevap = await fetch(DIYANET_PAGEDATA(sayfa - 1), {
+    const cevap = await fetch(ALQURAN_PAGEDATA(sayfa), {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; nurstudyo-mushaf-meal/1.0)" },
       cache: "no-store",
     });
-    if (!cevap.ok) throw new Error("diyanet " + cevap.status);
-    const ham = (await cevap.json()) as PagedataHam;
-    const ayatlar = (ham.MealAyats || []).map((a) => ({
-      sureId: a.SureId ?? 0,
-      ayetId: a.AyetId ?? 0,
-      numara: a.AyetNumber || String(a.AyetId ?? ""),
-      meal: (a.AyetText || "").trim(),
-      sureAdi: a.Sure?.SureNameTurkish || "",
+    if (!cevap.ok) throw new Error("alquran " + cevap.status);
+    const ham = (await cevap.json()) as { data?: AlquranPage };
+    const ayatlar = (ham.data?.ayahs || []).map((a) => ({
+      sureId: a.surah?.number ?? 0,
+      ayetId: a.numberInSurah ?? 0,
+      numara: String(a.numberInSurah ?? ""),
+      meal: (a.text || "").trim(),
+      sureAdi: a.surah?.englishNameTranslation || a.surah?.name || "",
       // MealInfo HTML içerir (<b>/<i>) — beyaz liste dışı etiketleri temizle (XSS hijyeni)
-      sureInfo: (a.Sure?.MealInfo || "").replace(/<(?!\/?\s?(?:b|i|em|strong)>)[^>]*>/gi, ""),
+      sureInfo: "",
     })).filter((a) => a.meal.length > 0);
     const body = {
       ok: true as const,
       sayfa,
-      cuz: ham.CuzNo ?? 1,
-      mealSure: ham.MealSureLabel || "",
-      quranSure: ham.QuranSureLabel || "",
+      cuz: ham.data?.ayahs?.[0]?.juz ?? 1,
+      mealSure: (ayatlar[0]?.sureAdi ?? ""),
+      quranSure: (ayatlar[0]?.sureAdi ?? ""),
       kaynak: "Diyanet İşleri Başkanlığı Kur'an-ı Kerim Meali",
       ayatlar,
     };

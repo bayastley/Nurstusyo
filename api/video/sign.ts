@@ -251,7 +251,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const access = await loadServerAccess(sessionUser.id, sessionUser.email);
-    if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+    if (!access) {
+      // ★ 14.10 DEV ZARİF DÜŞÜŞ: local'da Supabase env'SİZ → loadServerAccess null.
+      //   Prod: bu dal gerçek DB kesintisidir, 503 DOĞRU. Dev: kullanıcıya net mesaj
+      //   ver ama konsolu 503 gürültüsüyle doldurma — 200 + ok:false.
+      const __sbEnv = Boolean((process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "") && process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (!__sbEnv) return res.status(200).json({ ok: false, devNoSupabase: true, error: "Supabase sunucu ayarları eksik (dev) — video kütüphanesi dev'de kapalı" });
+      return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+    }
     if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
     const { clipId, pexelsId, cat, clipFile } = req.body || {};
     if (!isSafeCategory(cat)) return res.status(400).json({ ok: false, error: "Geçersiz veya izinli olmayan kategori" });

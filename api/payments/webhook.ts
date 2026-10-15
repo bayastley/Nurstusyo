@@ -57,7 +57,60 @@ function verifyIyzicoSignature(payload: { iyziEventType?: string; paymentId?: st
   }
 }
 
-// ─── Inline rate limit ───────────────────────────────────
+// ★ 14.10 BINDING DOĞRULAMASI (Açık 1 düzeltmesi):
+//   Saldırı senaryosu: tek geçerli imza (eventType+paymentId) ele geçirilse,
+//   conversationId değiştirilerek başka bir sipariş "paid" yapılabilir.
+//   Koruma: (1) paymentId bu siparişe kayıtlıysa başka siparişe yönlendirilemez;
+//   (2) iyzico API'den token'la detay sorgusu — gövdedeki paidPrice SAHTE
+//   olabilir, gerçek tutar iyzico'dan sorulur ve uyuşmazsa RED.
+async function dogrulaSiparisBinding(orderId: string, body: Record<string, any>): Promise<{ ok: boolean; sebep: string }> {
+  const paymentId = String(body.paymentId || "");
+  const paidPrice = Number(body.paidPrice ?? NaN);
+  if (!paymentId || !Number.isFinite(paidPrice)) return { ok: false, sebep: "paymentId/paidPrice eksik" };
+  if (!(paidPrice > 0)) return { ok: false, sebep: "tutar geçersiz" };
+
+  const orders = (await sbRequest(`nur_orders?id=eq.${encodeURIComponent(orderId)}&select=id,payment_id,status`)) as any[] | null;
+  const order = Array.isArray(orders) ? orders[0] : null;
+  if (!order) return { ok: false, sebep: "siparis yok" };
+
+  // (1) paymentId bu siparişe kayıtlı mı? (callback.ts claimPendingOrder yazıyor)
+  const kayitli = String(order.payment_id || "");
+  if (kayitli && kayitli !== paymentId) return { ok: false, sebep: "paymentId farklı siparişe ait" };
+
+  // (2) iyzico API'den gerçek tutar/paymentId — gövdeye güvenden tek çıkış
+  const token = String(body.token || "");
+  if (!token) return { ok: false, sebep: "token yok — gerçek ödeme doğrulanamaz" };
+  const sorgu = await iyzicoCek(token);
+  if (!sorgu) return { ok: false, sebep: "iyzico sorgusu başarısız" };
+  if (sorgu.paymentId !== paymentId) return { ok: false, sebep: "paymentId iyzico ile uyuşmuyor" };
+  if (Number(sorgu.paidPrice) !== paidPrice) return { ok: false, sebep: "paidPrice iyzico ile uyuşmuyor" };
+
+  return { ok: true, sebep: "ok" };
+}
+
+// callback.ts'teki buildAuth ile aynı imza mantığı — webhook'ta token'la detay sorgusu
+async function iyzicoCek(token: string): Promise<{ paymentId: string; paidPrice: number } | null> {
+  const URI = "/payment/iyzipos/checkoutform/auth/ecom/detail";
+  const apiKey = process.env.IYZICO_API_KEY || "";
+  const secretKey = process.env.IYZICO_SECRET_KEY || "";
+  const bodyString = JSON.stringify({ locale: "tr", token });
+  const randomKey = String(Date.now()) + crypto.randomBytes(8).toString("hex");
+  const sig = crypto.createHmac("sha256", secretKey).update(randomKey + URI + bodyString).digest("hex");
+  const authString = "apiKey:" + apiKey + "&randomKey:" + randomKey + "&signature:" + sig;
+  const base = String(process.env.IYZICO_SANDBOX) === "true" ? "https://sandbox-api.iyzipay.com" : "https://api.iyzipay.com";
+  try {
+    const r = await fetch(base + URI, {
+      method: "POST",
+      headers: { Authorization: "IYZWSv2 " + Buffer.from(authString).toString("base64"), "x-iyzi-rnd": randomKey, "Content-Type": "application/json", Accept: "application/json" },
+      body: bodyString,
+    });
+    const d: any = await r.json();
+    if (d.status !== "success" || d.paymentStatus !== "SUCCESS") return null;
+    return { paymentId: String(d.paymentId || ""), paidPrice: Number(d.paidPrice) };
+  } catch { return null; }
+}
+
+// ─── Inline rate limit ───────────────────────────────
 // ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
 //   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
 const __RL_MAP = new Map<string, number[]>();
@@ -256,6 +309,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const orderId = String(body.conversationId || "");
 
     if (orderId.startsWith("NUR-")) {
+      // ★ 14.10 BINDING (Açık 1): imza yalnızca eventType+paymentId kapsıyor —
+      //   conversationId/tutar İMZÂ DIŞI. Siparişe-karşı doğrulama ZORUNLU:
+      //   paymentId bu siparişe mi ait + tutar iyzico'dan mı? (dogrulaSiparisBinding)
+      //   Uyuşmazsa RED — manipüle edilmiş gövde işlenmez.
+      const binding = await dogrulaSiparisBinding(orderId, body);
+      if (!binding.ok) {
+        console.warn("[webhook] Binding doğrulaması başarısız — RED:", binding.sebep);
+        res.status(400).end("FAIL");
+        return;
+      }
+
       const orders = (await sbRequest(`nur_orders?id=eq.${encodeURIComponent(orderId)}&select=*`)) as any[] | null;
       const order = Array.isArray(orders) ? orders[0] : null;
       if (!order) {

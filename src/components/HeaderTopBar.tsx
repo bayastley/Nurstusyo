@@ -251,7 +251,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: Gift, label: t("menuDavet"), target: "davet" as ModalName },
                       { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName },
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                      { icon: Info, label: t("menuSiteHakkinda"), target: "siteHakkinda" as ModalName },
                     ].map((item) => (
                       <button key={item.target} onClick={() => { setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
@@ -460,14 +459,31 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
             {/* ★ AYET KÜTÜPHANESİ + KUR'AN üst bardan KALDIRILDI (08.10, kullanıcı emri):
                 ikisi de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın. */}
-            {/* ★ KÂBE CANLI — GERİ GELDİ (08.10, kullanıcı emri: "kabe canlıyı geri koy ana ekrana yerine"):
-                üst barda tek tık, kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
+            {/* ★ KÂBE CANLI — GERİ GELDİ (08.10, kullanıcı emri): üst barda tek tık,
+                kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
             <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
               🕋 {t("menuKabeCanli")}
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
                 <span className="relative h-2 w-2 rounded-full bg-red-500" />
               </span>
+            </button>
+            {/* ★ 16.10 İÇİNDEKİLER — sol menüdeki aynı "siteHakkinda" modalını açan üst-bar butonu.
+                Kâbe Canlı ile Seslendirme arasına yerleştirildi (kullanıcı emri).
+                Modal içeriğine TANITIM bölümü eklendi (R2'den video, SiteHakkindaModal'da). */}
+            <button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
+              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+              title={t("v2SiteHakkindaTitle")}>
+              📑 İÇİNDEKİLER
+            </button>
+            {/* ★ SESLENDİRME (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlenmiş modül:
+                üst barda tek tık → Sesli Meal ekranı. Kırmızı X + dış-tık + Esc ile kapanır. */}
+            <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
+              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+              title="Sesli Meal / Kıssa Seslendirme">
+              🔊 Seslendirme
             </button>
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">

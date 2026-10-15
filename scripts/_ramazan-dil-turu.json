@@ -1,0 +1,70 @@
+{
+  "hedef": "https://www.nurstudyo.com",
+  "statik": {
+    "bulguSayisi": 0,
+    "bulgular": [],
+    "kullanilanAnahtar": 35
+  },
+  "diller": {
+    "tr": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "baslik": "🌙 Ramazan & Kandil Merkezi",
+      "bolumler": {
+        "oruc": true,
+        "amel": true,
+        "takvim": true,
+        "gunSayaci": true
+      },
+      "notlar": []
+    },
+    "en": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "baslik": "🌙 Ramadan & Holy Nights Hub",
+      "bolumler": {
+        "oruc": true,
+        "amel": true,
+        "takvim": true,
+        "gunSayaci": true
+      },
+      "notlar": []
+    },
+    "ar": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "baslik": "🌙 مركز رمضان والليالي المباركة",
+      "bolumler": {
+        "oruc": true,
+        "amel": true,
+        "takvim": true,
+        "gunSayaci": true
+      },
+      "notlar": []
+    },
+    "id": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "baslik": "🌙 Pusat Ramadan & Malam Mustajab",
+      "bolumler": {
+        "oruc": true,
+        "amel": true,
+        "takvim": true,
+        "gunSayaci": true
+      },
+      "notlar": []
+    },
+    "ur": {
+      "bulguSayisi": 0,
+      "bulgular": [],
+      "baslik": "🌙 رمضان اور مبارک راتوں کا مرکز",
+      "bolumler": {
+        "oruc": true,
+        "amel": true,
+        "takvim": true,
+        "gunSayaci": true
+      },
+      "notlar": []
+    }
+  }
+}

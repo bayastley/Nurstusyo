@@ -45,6 +45,7 @@ import { adminCatVisible } from "../adminCategoryAccess";
 import { V2_KILITLI, V2_MODAL_IDLERI, acilanModalEkle, acildiMiFn, v2KilitliMi, v2AcikMi, type V2ModalId } from "./modalsContainerV2";
 import { demoOdemeUygula } from "./modalsContainerOdeme";
 import { LoginModalBolum, FullUnlockConfirmBolum, AdminAuthBolum, LibraryBolum, StoriesBolum, ThemesBolum, PrayerBolum, ContactBolum } from "./modalsContainerBolumler";
+import { SeslendirmeModal } from "./SeslendirmeModal"; // ★ 14.10: Seslendirme (mockup→proje; lokal TTS sunucusu ile)
 // ★ SRP adım 8 (30.09): 8 self-contained modal modalsContainerBolumler.tsx'e taşındı
 
 const PRAYERS: Array<[string, string]> = [
@@ -628,6 +629,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {modal === "contact" && (
         <ContactBolum setModal={setModal} contactType={contactType} setContactType={setContactType} contactMessage={contactMessage} setContactMessage={setContactMessage} notify={notify} t={t} />
       )}
+
+      {/* ★ SESLENDİRME MODALI (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlendi.
+          Kuyruk + atmosfer + prefetch + nefesli geçiş + kırmızı X. Ses: lokal prototip
+          sunucusu (vite proxy /nur-tts → 8877) — canlıda kapalı, kibar kapanış notu verir. */}
+      <SeslendirmeModal open={modal === "seslendirme"} onClose={() => setModal(null)} notify={notify ?? undefined} />
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}
       <LegalModal

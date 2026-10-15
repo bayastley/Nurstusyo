@@ -1,0 +1,575 @@
+1	Kalpler Huzur Bulur
+2	Ayete'l-Kürsî
+3	Göklerin ve Yerin Nuru
+4	O Beraberinizdedir
+5	Şah Damarından Yakın
+6	Ben Çok Yakınım
+7	Allah'ın Dostlarına
+8	Selam Sözü
+9	Kadir Gecesi
+10	Güçlükle Beraber
+11	Sabır ve Namazla
+12	Allah Sabredenlerle
+13	Başına Gelenlere Sabret
+14	Sabredip Affeden
+15	Gücünün Yettiği Kadar
+16	Adem'in Duası
+17	Şükrederseniz Artırırım
+18	Beni Anın
+19	Hangi Nimeti Yalanlarsınız
+20	Kevser
+21	Basmala
+22	Hamd Âlemlerin Rabbine
+23	Allah Yeter
+24	Hasbünallâh
+25	Yazılan Bizedir
+26	Karar Verince
+27	Başarı Allah'tandır
+28	Üzülme, Allah Bizimle
+29	Rabbenâ Duası
+30	Ümit Kesilmez
+31	Dua Edin
+32	Yûnus'un Nidası
+33	Rahmet Yakındır
+34	Darda Kalanın Duası
+35	Nûrumuzu Tamamla
+36	Kalbimizi Sabit Kıl
+37	Mağara Ashabının Duası
+38	Göz Aydınlığı
+39	Rabbim, İlmimi Artır
+40	Bağışlanma Dileyin
+41	Zikri Biz Kullandık
+42	Sevgi ve Rahmet
+43	Anne Babaya Merhamet
+44	Şifa Veren O'dur
+45	Salât-u Selâm
+46	En Değerli Kim
+47	Affedin, Hoş Görün
+48	Şereflendirdik
+49	Sağlam Söz
+50	Allah Rızası İçin
+51	Üstün Gelen Sizsiniz
+52	Yakın Zafer
+53	Yardım ve Fetih
+54	Yolümüzü Açarız
+55	Emeğin Karşılığı
+56	Hayırda Yardımlaşın
+57	Âlemlere Rahmet
+58	Adalet Emri
+59	Yaratılış Gayesi
+60	Oku!
+61	İhlâs Suresi
+62	Sizin Dininiz, Benim Dinim
+63	Hayırlı Olabilir
+64	Din Tamamlandı
+65	Hakla Gir, Hakla Çık
+66	İnsan Hüsrandadır
+67	Nâs Suresi
+68	Felak Suresi
+69	Mescitler Allah'ındır
+70	Mülkün Sahibi
+71	İç Huzur
+72	Ben Zikredince
+73	Göz Sevindirici
+74	Nur Üstüne Nur
+75	Göğsümü Aç
+76	İhtiyaç Giderilir
+77	Kifayet
+78	Çıkış Yolu
+79	Yalnız Değilsin
+80	Gevşeme
+81	Göklerin Sultanı
+82	Her Yerde O
+83	Şahdamarından Yakın
+84	Duan Cevapsız Kalmaz
+85	Namazım & Hayatım
+86	Giriş de Çıkış da Temiz
+87	Zorlukla Beraber
+88	Huzura Erdin
+89	Güzel Yaşam
+90	Kendi Nefsini
+91	Sabır & Namaz
+92	Kararlılık
+93	Sabret
+94	Bana Duâ Edin
+95	İlim Artır
+96	Test Ediliriz
+97	Sabredin
+98	Umudu Kesme
+99	Umayın
+100	Umutsuzluğa Düşme
+101	Sabredenler
+102	Misilleme Değil Sabır
+103	Büyük İş
+104	Gözcü
+105	Vakit
+106	İmtihan
+107	Zorluk İçinde
+108	Zikrullah Çığlığı
+109	Kabul Oldu
+110	Darda Olan
+111	Verirsinizse Artırırım
+112	Az Şükür
+113	Lokman'ın Öğüdü
+114	Nimet Göster
+115	Emek
+116	Zerre Ağırlığınca
+117	Hanginizin Daha Güzel
+118	Süslenmiş
+119	Sayamassın
+120	Duyan & Gören
+121	Rahmet Sözü
+122	Tevekkül Et
+123	Yeter
+124	Bize Allah Yeter
+125	Tek Yardımcı
+126	Tevekkül Kıl
+127	Plan Yapsalar da
+128	Doğu & Batı
+129	Karar Allah'tan
+130	Tevekkülüm
+131	Mutlak Galip
+132	Güvenen Kazanır
+133	Bilmediğiniz
+134	Nefsiniz Hoş
+135	Giderebilecek
+136	Kapısı Açık
+137	Herkese Geniş
+138	İlk Söz Rahmet
+139	Yusuf'un Affı
+140	Habersin
+141	Günahından Dönen
+142	Tövbe Nasûh
+143	İyiliğe Dönüşür
+144	Seviyorsanız İzleyin
+145	Taşıyabildiğimiz
+146	Neden Gönderildi
+147	Ebeveyne Merhamet
+148	Baki Kalan
+149	Selam Deyin
+150	Düşman Dost Olur
+151	Öfke Yutanlar
+152	Affedip Geçen
+153	Affedici Olsun
+154	Eşler Arası Sevgi
+155	Birlik
+156	Halklar & Kabileler
+157	Kardeşler
+158	Tek Nefisten
+159	Ebeveyne İyilik
+160	İyilik Edin
+161	Komşuya İyilik
+162	Adil Olun
+163	Dünyayı & Ahireti
+164	İki Dünya Duası
+165	Onları Tercih
+166	Kolaylık Geliyor
+167	Yardım Geldiğinde
+168	Açık Zafer
+169	O Yardım Eder
+170	Düşman Karşısında
+171	Verilmiş Söz
+172	Galip Gelecek
+173	Hidayet
+174	Kalp Sakinliği
+175	Hangi Nimeti İnkar
+176	Mülk O'nun
+177	İhlâs
+178	Rabbimize Emanet
+179	Mülk Veren
+180	Atmadın, Attı
+181	Tarafı Allah Olanlar
+182	Desteklenen
+183	Sekizinci Olan
+184	Bismillâh
+185	Yalnız Sana Kulluk
+186	Sırat-ı Müstakîm
+187	Kitapta Şüphe Yok
+188	Sabır & Namazla
+189	Sabredenlerle
+190	Elbette İmtihan
+191	Ben Yakınım
+192	İki Dünya
+193	Hayır Bildiğin
+194	Âyete'l-Kürsî
+195	Gücün Kadar
+196	Rabbimiz Bizi Koru
+197	Müttakî Olun
+198	Allah'ın İpine Sarılın
+199	Öfkeyi Yutanlar
+200	Üstünsünüzdür
+201	Allah Bize Yeter
+202	Düşünenlerin
+203	Çok Hayır Takdir
+204	Adaletle
+205	Bağışlayıcı
+206	İyilikte Yardımlaşın
+207	Allah'a Güvenin
+208	Bir Canı Diriltmek
+209	Galip Gelenler
+210	Tövbe Kapısı
+211	Büyük Kurtuluş
+212	Gücü Yeter Olan
+213	Rahmet Yazıldı
+214	Hiçbir Şey O'nun Bilgisi Dışında
+215	Gerçek Veda
+216	Tamamlanmış Söz
+217	Hayatım O'nun İçin
+218	Âdem'in Duası
+219	Yaratma ve Emir
+220	Islah Ediciler
+221	Rahmet Her Şeyi Kuşatır
+222	Af Yolu Tut
+223	Attıysa Allah Attı
+224	Allah Hayırlısıdır
+225	Sabır ve İttifak
+226	Allah Bizimle
+227	Mağaradaki İkili
+228	Yazılan Bize Erişir
+229	Sadıklara Cennet
+230	İbadet Edenler
+231	Allah'ın Velileri
+232	Giderecek Yok
+233	Tevekkülüm O'na
+234	İyilik Günahları Giderir
+235	Kalbin Sabit Olması
+236	Umut Kesmeyin
+237	Bugün Kınama Yok
+238	Hile Fayda Vermez
+239	Kendini Değiştir
+240	Kalplerin Huzuru
+241	Şükredene Artış
+242	Güvenme Sebebi
+243	Temiz Söz
+244	Biz Koruruz
+245	Bağışlayanım
+246	Saymak İmkânsız
+247	Kulak & Göz
+248	Güzel Hayat
+249	Sabır Daha Hayırlı
+250	Anne-Babaya İyilik
+251	Merhamet Kanadı
+252	Hak ile Giriş
+253	Hak Geldi
+254	Yeryüzü Süsü
+255	Mağaradakilerin Duası
+256	Kalıcı Olan
+257	Kim Rabbine Dönerse
+258	O, Rabbin
+259	İlmimi Artır
+260	Sabreden Hamdeden
+261	Darsız Hayat
+262	Balıkçının Duası
+263	Kurtuluş
+264	Kurtuluşa Ermişler
+265	Bağışla Bizi
+266	Affedip Hoş Görsün
+267	Nur Ayeti
+268	Yerde Güç Ver
+269	Rahmanın Kulları
+270	Şifa Veren
+271	Azîz ve Rahîm
+272	Rabbimin Lütfu
+273	Darda Kalana
+274	Rabbi Giderir
+275	İki Dünya Dengesi
+276	İmtihansız mı
+277	Yolunu Açarız
+278	Allah'ın Vaadi Hak
+279	Lokmân'ın Şükür Sözü
+280	Sabret, Bu Azim İşlerdendir
+281	Yüzünü İnsanlardan Çevirme
+282	Altı Günde Yaratılış
+283	Gaybi Bilir
+284	Azîz ve Rahîm'in Vahyi
+285	Ol Deyince
+286	Rabbin Yüceliği
+287	Öğüt Almak İçin
+288	Ümit Kesmeyin
+289	Bütün Günahlar
+290	Yardım Edici
+291	Sabredenlere
+292	Sabır & Af
+293	Sabreden Güçlüdür
+294	Dostluk Ahirette
+295	Her İşin Hikmeti
+296	Huzura Erdi
+297	Cennete Gir
+298	Sabır Kardeşliği
+299	Temizlenen
+300	Kolaylıkla Beraber
+301	Çifte Kolaylık
+302	Bitince Yönel
+303	En Güzel Şekilde
+304	Yaratan Rabbin
+305	Bilmediğini Öğretir
+306	Bin Aydan Hayırlı
+307	İnsan Rabbine
+308	Zaman Kasidesi
+309	Dedikoducu
+310	Fil Sahibini
+311	Bu Beytin Rabbine
+312	Namazına Gaflet
+313	Kevser Verildi
+314	Sizin Dininiz
+315	Yardım ve Zafer
+316	Fetilenler Girdiğinde
+317	Hamd ile Tesbih
+318	O Bir'dir
+319	Felak'a Sığınılır
+320	Nâs'a Sığınılır
+321	Hangisi Güzel İş
+322	Rabbin Adını Tespih Et
+323	İnsan Sabırsız
+324	Namazı Sürdürenler
+325	Bağışlanma İsteyin
+326	Nûh'un Son Duası
+327	Doğu ve Batı'nın Rabb
+328	Okumayı Kolaylaştırır
+329	Yalnız Sizin Yüzünüz İçin
+330	Yalanlayanların Vay Hali
+331	Büyük Haber
+332	Büyük Haberi
+333	Rabbinin Huzurundan Korkan
+334	Cennet Yurdu
+335	Zengin Önemsiz
+336	İnsanın Nankörlüğü
+337	Âlemlere Öğüt
+338	Emek ve Karşılık
+339	İman Edip Salih Amel
+340	İnkârcılara Vakit Ver
+341	Yüce Rabbin
+342	Kolaylaştırırız
+343	Sen Yalnız Öğütçüsün
+344	Emekleriniz Farklıdır
+345	Sonra Hayırlısı
+346	Rabbin Verir
+347	Rahmân
+348	Öncüler
+349	Yaklaştırılanlar
+350	Neredeysen O Yanında
+351	Dünya Süsü
+352	Galip Gelmeye Yazıldı
+353	Kardeşine Tercih
+354	Kur'an Dağ Etseler
+355	Es-Selâm
+356	Adaletli Davranın
+357	Allah'a Yardımcılar
+358	Cuma Ezanı
+359	Namaz Bitince
+360	Mal & Çocuk Aldatır
+361	Vermeden Önce
+362	Samimi Tövbe
+363	En Değerli
+364	Söylenti Yerine
+365	Aralarını Düzelt
+366	Fâsık Haberi
+367	İnsan ve Cinlerin Yaratılış Amacı
+368	Sabret, Rabbini Bekle
+369	Parmakları Toplar
+370	Mühürlenmiş Keyif
+371	Vekil Olarak O Yeter
+372	Gaybe İman
+373	Büyük Olan Sabır
+374	Her Ümmetin
+375	Nankörlük Etme
+376	Helal & Temiz
+377	Birr (İyilik) Nedir
+378	Kendini Koru
+379	Selâma Girin
+380	Hayırda Yardımlaşma
+381	İmanlı Eş
+382	Evlerinizi
+383	Allah İçin
+384	Ma'ruf ile
+385	Orta Namazı
+386	Malını Harcayan
+387	Hikmet Verir
+388	İman & Salih Amel
+389	Yazın Alışverişi
+390	Yükümüzü Taşı
+391	Meryem'e Seçilmiş
+392	Plan Kurduklar
+393	Sevdiğinizden Verin
+394	Beyt'in Hakkı
+395	Şükür Çıtanız
+396	İnsanlar İçin Çıkarıldınız
+397	Katlanıp Artan
+398	Allah Size Yeterse
+399	Şehitler Diridir
+400	Her Can Ölümü Tatar
+401	Rabbimize İman Edin
+402	Kendi Üzerine Yazdı
+403	Yaprak Düşmez
+404	Gözler Onu Algılamaz
+405	On Kat Mükâfat
+406	Gök & Yer Bereketi
+407	Mûsâ'nın Sözü
+408	Yeryüzü Miras Verildi
+409	En Güzel İsimler O'nun
+410	Kıyamet Bilgisi
+411	Kalbi Saygıyla
+412	Allah Mucizeler
+413	Dinlerini Derinlemesine
+414	Kalplerin Şifası
+415	Allah Boşa Çıkarır
+416	İrade
+417	Rızık Veren
+418	Benzerini Getirin
+419	Ben Rabbime Güvendim
+420	Güzel Sabır
+421	Şikâyetim Allah'a
+422	Yûsuf'un Duası
+423	Benim Yolum
+424	İman Edenlerin Sona Ermezi
+425	Nimetleri Sayılamaz
+426	Her Nimet O'nun
+427	Balın Şifası
+428	İlimle Davet
+429	Allah İyilerle
+430	Yedi Kat Gök
+431	İnsanoğluna Değer
+432	Kur'an Şifa & Rahmet
+433	Herkes Kendi Yolunda
+434	Sabret Beraber Ol
+435	Maşallah
+436	Dünya Örneği
+437	İlim Kıyısı
+438	En Güzel Karşılık
+439	Rabbinin Rahmeti
+440	Allah Benim de Rabbim
+441	Sevgilere Yakınlık
+442	Adalet Terazisi
+443	Ateş, Serin Ol
+444	Dualara İcabet
+445	Sığındım O'na
+446	Boşuna mı Yaratıldınız
+447	Serpinti Çöl Suyu
+448	Tesbih Edenler
+449	Gölgenin Uzunluğu
+450	Hayy'e Tevekkül
+451	Fayda Vermeyen Gün
+452	Selim Kalp
+453	Sen Dilediğine Yol Veremezsin
+454	Her Şey Yok Olur
+455	Yeryüzünde Gezin
+456	Örümcek Yuvası
+457	Gerçek Hayat
+458	Allah Katında Artan
+459	Yeryüzünde Bozulma
+460	Ölü Toprağı
+461	Denizler Mürekkep Olsa
+462	Bilinmeyen Beş Şey
+463	Ruhundan Üfledi
+464	Uyku ile Kalkanlar
+465	Salavat
+466	Sözün Doğrusunu
+467	Verenin Karşılığı
+468	Ona Ulaşan
+469	Önlerinde & Arkalarında
+470	Her Şeyi Yazdık
+471	Ölü Yer
+472	Güneşe Yol
+473	Subhânellezi
+474	İsmâil'in İtaati
+475	İkisi de Teslim
+476	Rabbinin Yüceliği
+477	Eyvâh Zikri
+478	Bilenler
+479	En Güzel Söz
+480	Yer Kavradı
+481	Diri O'dur
+482	Gece & Gündüz
+483	Görünecek Deliller
+484	Melekler Tesbih Eder
+485	Benzeri Yok
+486	İşlediğiniz Nedeniyle
+487	İstişare Edenler
+488	Ne Yücedir O
+489	Oyun Olsun Diye
+490	Emrinize Verildi
+491	Nefsinin Hevasını
+492	Anne-Babaya Şükür
+493	Sen Sabret
+494	Kur'an'ı Düşünmüyorlar
+495	Allah'ın Yardımı
+496	Kalplerin Sakinliği
+497	Mercan Fideliği
+498	Herkes Fanidir
+499	Celâl ve İkram
+500	Bereketli Olan
+501	Kur'an Değerli
+502	Gırtlak Yakınında
+503	Kalpler Yumuşasın
+504	Çifte Rahmet
+505	Dereceler Yükselir
+506	Önceden Gönderdiğini Düşünsün
+507	O'dur, O'ndan Başkası Yok
+508	Esma-ül Hüsna
+509	Ailemizi Koru
+510	Yaratan Bilmese
+511	Su Çıkmazsa
+512	Büyük Bir Ahlak
+513	Bakışlarıyla Seni Yıkacak
+514	Ceza Günü İnanan
+515	Rabbine Kulluk
+516	Öğüt İsteyenler
+517	Tartısı Ağır Gelen
+518	Çokluk İştahı
+519	Elbette Göreceksin
+520	Dini Yalanlayan
+521	Elleri Kuruyun
+522	Göğsünü Açmadık mı
+523	Rabbine Dön
+524	Sapmıştın Yol Verdi
+525	Veren & Korkan
+526	Melekler & Ruh
+527	Yer Titrediğinde
+528	Dini Halis Kılan
+529	Sinsi Vesvese
+530	Hiçbir Dengi Yok
+531	Sabrı Tavsiye
+532	Dilediğinden Alır
+533	Ölüyü Dirilten
+534	Tohumu Yaran
+535	Hakkını Verin
+536	İman Edenlerin Kalbi
+537	Sabırlıysanız
+538	Sabrınız Dolayısıyla
+539	Takvalılar Bahçede
+540	Bakı Kalan
+541	Bakî Kalan
+542	Allah Yapışmayan Yardım
+543	Rükû & Secde
+544	Ticaret Almaz
+545	İyilik Getiren
+546	İman & Salih Amel Edenlere
+547	Laf Gezdirici
+548	Erkek & Kadın
+549	Çok Anın O'nu
+550	Bilen Korkar
+551	Hatırlatma
+552	Dil Arabî
+553	Muttakiler Emin Yerde
+554	Öğüt & Düşünme
+555	Allah Bize Bağışladı
+556	Kolaylaştırdık Kur'an'ı
+557	Rahbâniyet
+558	Sevdiğiyle İman
+559	Yapmadığınızı Neden
+560	Mal & Çocuk Fitne
+561	Dünya Geçici
+562	Yeni Nimet
+563	Rabbin Bilir
+564	Gündüz Akşamı
+565	Muttakiler Gölgede
+566	Muttakiler İçin
+567	Cehennem Görünür
+568	Dileyen Doğru Yolu Bulur
+569	Ey İnsan
+570	Ailesine Döner
+571	Fayda Verirse Öğüt Ver
+572	Allah Azap Eder
+573	Karanlığa Götüren
+574	Bilmez mi O
+575	Rabbin İçin Namaz Kıl

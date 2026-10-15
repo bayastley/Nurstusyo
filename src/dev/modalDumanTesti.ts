@@ -90,6 +90,7 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
   davet: "Arkadaşını Davet",
   haftaninVideosu: "Haftanın Videosu",
   kendiSes: "Kendi Sesin",
+  seslendirme: "Seslendirme (lokal TTS)",
 };
 
 /** Dev'de (oturumsuz + master değil) hiç mount edilmeyenler — açılış denenmez.

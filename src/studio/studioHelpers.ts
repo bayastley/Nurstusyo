@@ -262,11 +262,18 @@ export async function fetchAyah(surah: number, ayah: number, edition = "tr.yazir
  *  translation id haritası (curl ile doğrulandı): 77=Diyanet TR, 52=Elmalılı, 124=Shahin,
  *  20=Saheeh EN, 33=Endonezce, 234=Jalandhry UR. Arapça metin text_uthmani'den gelir.
  *  Birincil sağlayıcı ölürse tüm ayet çekimleri (günün ayeti, hafızlık, mealler) buraya düşer. */
-const QURAN_COM_TRANSLATION: Record<string, number | null> = {
+// ★ DIŞA AÇIK (16.10): QuranLearnModal kelime-kelime paneli seçili mealin quran.com
+//   translation id'sini buradan okur — haritada olmayan edition sahipsiz kalmasın.
+export const QURAN_COM_TRANSLATION: Record<string, number | null> = {
   "tr.diyanet": 77,
   "tr.yazir": 52,
   "tr.vakfi": 124,
   "en.sahih": 20,
+  "en.pickthall": 19,
+  "de.aburida": 208,
+  "de.bubenheim": 27,
+  "fr.hamidullah": 31,
+  "es.cortes": 83,
   "id.indonesian": 33,
   "ur.jalandhry": 234,
 };

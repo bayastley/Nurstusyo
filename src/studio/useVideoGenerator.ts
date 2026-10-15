@@ -314,27 +314,36 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           }
         } catch { /* ignore */ }
       } else if (!kendiKullandi) {
-        for (let index = 0; index < selected.length; index += 1) {
-          const item = selected[index]; setProgress(4 + Math.round((index / selected.length) * 22));
-          try {
-            // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network —
-            //    birincil kaynak kapalıyken üretim ölmesin, ilk sağlıklı kaynak kullanılır.
-            let buffer: AudioBuffer | null = null;
-            for (const sesKaynagi of sesKaynakZinciri(reciter.path, item.s, item.a)) {
-              try {
-                const response = await fetch(sesKaynagi);
-                if (!response.ok) continue;
-                buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
-                break;
-              } catch { /* sıradaki ses kaynağı */ }
-            }
-            if (!buffer) continue;
-            if (cursor > 0 && cursor + buffer.duration > cap) break;
-            audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
-            ayetSüreleri.push({ start: cursor, dur: buffer.duration });
-            cursor += buffer.duration + .03;
-          } catch { }
+        // ★ PARALEL SES İNDİRME (16.10, kullanıcı bildirimi: "uzun videolar çok yavaş"):
+        //   Ayet sesleri sırayala indiriliyordu — 100+ ayetlik tam sürümde her dosya
+        //   ~0.5-1sn bekleyip zincire bağlanınca toplam 1-2 dakika iskelemekti.
+        //   Artık TÜM ayetler aynı anda fetch edilir (browser HTTP/2 paralellik ve
+        //   önceden yüklü preload'la hızlanır); tarayıcı bağlantı havuzu zaten
+        //   6(parallel)/domain sınırână düşürür — bablandırma yok.
+        //   Yerleşim SIRASI kWh kıcsaları korunur — ayet sırası forward Order kaydolur.
+        setProgress(6);
+        const sesSonucları = await Promise.all(selected.map(async (item) => {
+          // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network —
+          //    birincil kaynak kapalıyken üretim ölmesin, ilk sağlıklı kaynak kullanılır.
+          for (const sesKaynagi of sesKaynakZinciri(reciter.path, item.s, item.a)) {
+            try {
+              const response = await fetch(sesKaynagi);
+              if (!response.ok) continue;
+              const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+              return { item, buffer };
+            } catch { /* sıradaki ses kaynağı */ }
+          }
+          return null;
+        }));
+        for (const sonuc of sesSonucları) {
+          if (!sonuc) continue;
+          const { item, buffer } = sonuc;
+          if (cursor > 0 && cursor + buffer.duration > cap) break;
+          audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
+          ayetSüreleri.push({ start: cursor, dur: buffer.duration });
+          cursor += buffer.duration + .03;
         }
+        setProgress(26);
       }
       if (!kendiKullandi && !surahOnlyReciter && usedItems.length < selected.length) {
         const dropped = selected.length - usedItems.length;

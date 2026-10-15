@@ -7,7 +7,7 @@ import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
 import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
-import { fetchSurahEditions, fetchAyah, quranUrl } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) — tr.diyanet → tr.yazir → tr.vakfi zinciri
+import { fetchSurahEditions, fetchAyah, quranUrl, QURAN_COM_TRANSLATION } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) + ÇOK DİLLİ WBW rid haritası (16.10)
 import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, isEnglishMeal, type Reciter, type SurahInfo } from "./quranLearnVeri";
 import { useQuranSes } from "../hooks/useQuranSes"; // ★ SRP 3. TUR (10.10): dinle modu ses motoru hook'a göçetti
 import { translate, type Lang } from "../i18n"; // ★ TUR 7: UI başlıkları çok dilli
@@ -355,13 +355,22 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
     const timer = setTimeout(() => ctrl.abort(), 6000);
     setWordLoading(true); setWords([]); setActiveWord(null);
     const sozlukHazir = ensureWbwLoaded(); // yerel dosya — hızlı ve bağımsız
-    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani%2Ctranslation&translations=77&language=tr`, { signal: ctrl.signal })
+    // ★ ÇOK DİLLİ WBW (16.10, kullanıcı bildirimi: "5 dil entegre ettin ama çevrilmiyor"):
+    //   kelime-kelime paneli SABİT translations=77 (Türkçe) çekiyordu — meal Deutsch
+    //   seçiliyken anlamlar hâlâ Türkçe duruyordu. Artık seçili mealin unix quran.com
+    //   rid'i QURAN_COM_TRANSLATION haritasından okunur; haritada yoksa yedek Türkçe 77.
+    //   language=rippling param da mealin dil koduna göre ayarlanır.
+    const wbwRid = QURAN_COM_TRANSLATION[mealId] ?? 77;
+    const wbwLang = mealId.includes(".") ? mealId.split(".")[0] : "tr";
+    fetch(`https://api.quran.com/api/v4/verses/by_key/${surahNo}:${ayahNo}?words=true&word_fields=text_uthmani%2Ctranslation&translations=${wbwRid}&language=${wbwLang}`, { signal: ctrl.signal })
       .then(r => r.json())
       .then(async (d: any) => {
         if (!live) return;
         await sozlukHazir; // sözlük API'den bağımsız hazır olsun
         const ws = (d.verse?.words ?? []).filter((w: any) => w.char_type_name === "word");
-        // Türkçe sözlüğü (bir kez) yükle — API kelime meali (id 77) + yerel sözlük birleşir
+        // Türkçe sözlüğü (bir kez) yükle — API kelime meali (seçili dil rid) + yerel sözlük birleşir
+        //   ★ Dil yedeği: yerel sözlük yalnız Türkçe; diğer dillerde önce API keser, boşsa sözlük TR dolup İngilizce isEnglishMeal elçisi kepten çıkar —
+        //   API sonucu boş gelen kelime için TR sözlük anlamı yine gösterilir (çevirisi bizde var).
         let wbw: Record<string, string> = WBW_TR;
         let normIdx: Record<string, string> = wbwNormIdx();
         const norm = (s: string) => s
@@ -380,10 +389,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
             const part = wbwKeys.find(x => x.na.length > 2 && (na.startsWith(x.na) || x.na === na.slice(0, x.na.length)));
             tr = part ? wbw[part.k] : undefined;
           }
-          // ★ Sıra: tam sözlük (15k kök) → API Türkçe meal → kök araması → en son çare İngilizce.
-          //   Sözlük %100 kapsadığı için '—' pratikte hiç görünmez.
-          const apiTr = typeof w.translation?.text === "string" ? w.translation.text : "";
-          const finalTr = tr ?? (apiTr && !isEnglishMeal(apiTr) ? apiTr : undefined);
+          // ★ ÖNCELİK SIRASI (16.10 dilli WBW): SEÇİLİ DİL API mealı ÖNCE → sonra Türkçe
+          //   sözlük → sonra kök araması → en son çare Arapça. Eskiden sözlük (TR) önce
+          //   gelince Deutsch seçiliyken anlamlar Türkçe kalıyordu — kullanıcı bildirimi.
+          //   API boş dönerse (haritada olmayan dil) yedek TR sözlük yine dolmuştur.
+          const apiTr = typeof w.translation?.text === "string" ? w.translation.text.trim() : "";
+          const dilUygun = apiTr && !isEnglishMeal(apiTr); // TR olmayan api metni İngilizce fallback elçisinden korunur
+          const finalTr = dilUygun && mealId !== "tr.yazir" && mealId !== "tr.diyanet" && mealId !== "tr.vakfi" && !mealId.startsWith("tr.")
+            ? apiTr // seçili dil TR değilse API anlamları en üst öncelik
+            : (tr ?? (dilUygun ? apiTr : undefined));
           return {
             i,
             ar: bare,
@@ -397,7 +411,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
       .catch(() => { if (live) setWordLoading(false); })
       .finally(() => clearTimeout(timer));
     return () => { live = false; clearTimeout(timer); ctrl.abort(); };
-  }, [open, mode, surahNo, ayahNo]);
+  }, [open, mode, surahNo, ayahNo, mealId]); // ★ mealId dahil: meal değişince kelime paneli YENİ dilde anlamlarla yeniden çekilir (16.10)
 
   // Global ayet sırası (audio için)
   const globalAyahNo = useMemo(() => {
@@ -435,6 +449,13 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   // ★ TAKİP METNİ REFİ: tartılı dağıtım ayetin Arapça metnine bakar (taze)
   const ayahPosRefText = useRef(ayah?.ar ?? "");
   useEffect(() => { ayahPosRefText.current = ayah?.ar ?? ""; }, [ayah?.ar]);
+
+  // ★ 16.10 İKİ SURE SENKRONİ (kullanıcı bildirimi: "dinle modunda sure değiştirdim,
+  //    ▶ eski sureyi okudu"): Öğren modunun surahNo'su ile Dinle modunun listenSurah'ı
+  //    AYRI state'lerdi — öğrende 55. Rahmân seçtiğinde dinlede hâlâ 1. Fâtiha
+  //    kalıyordu. Artık surahNo her değiştiğinde listenSurah'a da yazılıyor —
+  //    her ekran aynı sureye bakar, ▶ diledi seçimi okur.
+  useEffect(() => { setListenSurah(surahNo); }, [surahNo]);
 
   // ★ YEDEK: quran.com engellenirse ayet metnini kelimelere böl — kelime tıklama
   //    ve altın vurgu her koşulda çalışır; anlamlar yerel sözlükten dolar (API gerekmez).
@@ -678,10 +699,15 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
       {/* ÜST BAR */}        <div className="flex h-14 shrink-0 items-center justify-between border-b border-[#D7AA41]/20 bg-[#0d1a2c] px-4">
         <div className="flex items-center gap-2">
           <div className="flex overflow-hidden rounded-xl border border-white/10">
-            <button onClick={() => { setMode("learn"); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "learn" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
+            {/* ★ 16.10 SURE SENKRON FIX (kullanıcı bildirimi: sure değiştirdim, oynat eski sureyi okuyor):
+                Öğren ve Dinle ayrı sure state'leri kullanıyordu (surahNo ↔ listenSurah);
+                mod geçişinde senkronize edilmediği için DİNLE'de ▶ hep İLK sureyi okuyordu.
+                Artık her geçişte aktif sure két mod arasında taşınır + ayetLER konum resetlenmez —
+                kullanıcı dilediği sureyle devam eder. */}
+            <button onClick={() => { setMode("learn"); setSurahNo(listenSurah); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "learn" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
               <BookOpen size={13} /> {ttQL("qoOgren")}
             </button>
-            <button onClick={() => { setMode("listen"); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "listen" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
+            <button onClick={() => { setMode("listen"); setListenSurah(surahNo); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "listen" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
               <Headphones size={13} /> {ttQL("qoDinle")}
             </button>
           </div>

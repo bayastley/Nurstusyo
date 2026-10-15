@@ -68,9 +68,11 @@ export function OgrenModu(p: OgrenProps) {
   const surah = p.surah;
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
-          {/* Arama + seçim barı */}
+          {/* ★ 16.10 ORANTLAMA (kullanıcı ekran görüntüsü, 2. foto): arama çubuğu aşırı
+              geniş büyüyor, diğerleri duvar kagidi kısmı sıkışırdı. Artık arama %35,
+              sure %20, ayet %15, meal %18, hoca %12 — tümü esnek, min genişlikli. */}
           <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[#D7AA41]/20 bg-[#0d1a2c] px-4 py-2">
-            <div className="relative min-w-48 flex-1">
+            <div className="relative" style={{ flex: "1 1 240px", minWidth: 240, maxWidth: 340 }}>
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#655f4c]" />
               <input
                 value={p.query}
@@ -103,13 +105,13 @@ export function OgrenModu(p: OgrenProps) {
                 </div>
               )}
             </div>
-            <select value={p.surahNo} onChange={(e) => p.setSurahNo(Number(e.target.value))} className="h-8 max-w-44 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50">
+            <select value={p.surahNo} onChange={(e) => p.setSurahNo(Number(e.target.value))} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50" style={{ flex: "1 1 150px", minWidth: 150, maxWidth: 210 }}>
               {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name}</option>)}
             </select>
-            <select value={p.ayahNo} onChange={(e) => { p.setAyahNo(Number(e.target.value)); p.setActiveWord(null); }} className="h-8 max-w-36 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50">
+            <select value={p.ayahNo} onChange={(e) => { p.setAyahNo(Number(e.target.value)); p.setActiveWord(null); }} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50" style={{ flex: "0 1 110px", minWidth: 100, maxWidth: 150 }}>
               {Array.from({ length: surah.ayahs }, (_, i) => <option key={i + 1} value={i + 1}>Ayet {i + 1}</option>)}
             </select>
-            <select value={p.mealId} onChange={(e) => p.setMealId(e.target.value)} className="h-8 max-w-48 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50">
+            <select value={p.mealId} onChange={(e) => p.setMealId(e.target.value)} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50" style={{ flex: "1 1 170px", minWidth: 160, maxWidth: 230 }}>
               {MEALS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
             </select>
             {/* ★ MEAL GÜNCELLENİYOR çipi — meal/dil değişiminde eski metin ekranda kalırken göster */}
@@ -118,7 +120,7 @@ export function OgrenModu(p: OgrenProps) {
                 <Loader2 size={10} className="animate-spin" /> mealler güncelleniyor…
               </span>
             )}
-            <select value={p.reciter} onChange={(e) => p.setReciter(e.target.value)} className="h-8 max-w-56 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold text-gold-light outline-none focus:border-gold/50">
+            <select value={p.reciter} onChange={(e) => p.setReciter(e.target.value)} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold text-gold-light outline-none focus:border-gold/50" style={{ flex: "1 1 185px", minWidth: 175, maxWidth: 250 }}>
               {RECITERS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
           </div>

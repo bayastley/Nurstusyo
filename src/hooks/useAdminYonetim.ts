@@ -129,7 +129,7 @@ export function useAdminYonetim({
   const handleSetVideoRights = useCallback(async (email: string, kind: "kisa" | "uzun" | "tam", amount: number, mode: "set" | "gift") => {
     const target = email.trim().toLowerCase();
     const safeAmount = Math.max(0, Math.floor(amount));
-    if (mode === "set" && safeAmount === 0 && !window.confirm(`${target} kullanıcısının ${kind === "kisa" ? "KISA" : kind === "uzun" ? "ORTA (600 sn)" : "UZUN (90 dk)"} hakları 0'a çekilecek. Emin misiniz?`)) return;
+    if (mode === "set" && safeAmount === 0 && !window.confirm(`${target} kullanıcısının ${kind === "kisa" ? "KISA" : kind === "uzun" ? "ORTA (600 sn)" : "UZUN (120 dk)"} hakları 0'a çekilecek. Emin misiniz?`)) return;
     try {
       const response = await fetch("/api/admin/action", {
         method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
@@ -137,7 +137,7 @@ export function useAdminYonetim({
       });
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; remaining?: number } | null;
       if (!response.ok || !data?.ok) { notify(`❌ Hak verilmedi: ${data?.error || "bilinmeyen hata"}`); return; }
-      const ad = kind === "kisa" ? "Kısa (59 sn)" : kind === "uzun" ? "Orta (600 sn)" : "Uzun (90 dk)";
+      const ad = kind === "kisa" ? "Kısa (59 sn)" : kind === "uzun" ? "Orta (600 sn)" : "Uzun (120 dk)";
       notify(mode === "gift"
         ? `⚡ ${target} · ${ad} +${safeAmount} hak eklendi · kalan: ${data.remaining}`
         : `⚡ ${target} · ${ad} ${safeAmount} hak olarak tanımlandı · kalan: ${data.remaining}`);

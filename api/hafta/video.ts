@@ -156,7 +156,11 @@ const sanitize = (s: unknown, max: number) => (typeof s === "string" ? s.trim().
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   const cfg = supabaseConfig();
-  if (!cfg) return res.status(503).json({ ok: false, error: "Veritabanı yapılandırması eksik" });
+  if (!cfg) {
+    // ★ 14.10 DEV ZARİF DÜŞÜŞ: local'da env'siz → boş vitrin 200 (liste UI'ı
+    //   zaten boş listeyi zarif yönetir). Prod: env hep setli → 503 dalı hiç çalışmaz.
+    return res.status(200).json({ ok: true, devNoSupabase: true, vitrin: [], benim: [], kontenjan: { kaldi: 0 } });
+  }
 
   try {
     // ─── GET: onaylı vitrin + (oturumluysa) benim önerilerim ───

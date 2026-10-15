@@ -23,13 +23,13 @@ export type VideoKind = "kisa" | "uzun" | "tam";
 export const VIDEO_KIND_LABEL: Record<VideoKind, string> = {
   kisa: "Kısa Video (59 sn)",
   uzun: "Uzun Video (600 sn)",
-  tam: "Tam Sürüm (90 dk)",
+  tam: "Tam Sürüm (120 dk)",
 };
 
 export const VIDEO_KIND_SECONDS: Record<VideoKind, number> = {
   kisa: 59,
   uzun: 600,
-  tam: 90 * 60,
+  tam: 120 * 60,
 };
 
 export const CURRENT_TIER_KEY = "nur_tier";

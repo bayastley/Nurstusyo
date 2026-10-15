@@ -1,0 +1,145 @@
+════════════════════════════════════════════════════════════════════
+                NÛR STÜDYO — PROJE TANITIM DOSYASI
+════════════════════════════════════════════════════════════════════
+Canlı adres   : https://www.nurstudyo.com
+Depo          : github.com/bayastley/Nurstusyo
+Teknoloji     : React 19 + TypeScript + Vite 7 · Vercel (44 serverless uç)
+                Supabase (PostgreSQL + PostgREST) · Upstash Redis · PWA
+Tarih         : 07 Ekim 2026 itibarıyla canlı ve doğrulanmış durumda
+Toplam commit : 969
+
+────────────────────────────────────────────────────────────────────
+1) GENEL SAYILAR (dosyalardan gerçek sayım — tahmin değil)
+────────────────────────────────────────────────────────────────────
+Kaynak kod (src)    : 272 dosya  · 57.413 satır  (71 .tsx + 201 .ts)
+API uçları (api/)   :   44 dosya · 10.152 satır (serverless fonksiyon)
+Veritabanı SQL      :   26 dosya ·  1.960 satır (28 tablo)
+Araç/scriptler      :   25 dosya ·  8.572 satır (denetim + canlı test)
+────────────────────────────────────────────────────────────────────
+TOPLAM              :  ~367 dosya · 78.097 SATIR KOD
+i18n sözlük         : 1.114 anahtar × 5 dil = 5.570 çeviri girişi (parite 0)
+Ayet başlık çevirisi: 575 benzersiz başlık × 4 dil = 2.300 çeviri
+Ayet kart havuzu    : 611 kart (8 havuz dosyası)
+
+────────────────────────────────────────────────────────────────────
+2) İÇİNDEKİLER — MODÜLLER
+────────────────────────────────────────────────────────────────────
+STÜDYO (üretim)
+  • Kısa / uzun / tam video üretimi (free-pro-elit hak kademeleri)
+  • Ayet seçici + atmosfer/arka plan seçici + tema sistemi
+  • Kelime Atölyesi entegrasyonu, PNG kart motoru, kendi imzası (ELİT)
+  • Kendi Sesini Yükle (ELİT) · Medya yükleme (admin, IndexedDB)
+  • Sadık Üye +1 haftalık ekstra üretim hakkı (otomatik motor)
+
+KUR'AN
+  • Kur'an Öğren: meal, kelime kelime çeviri (575 başlık sözlüğü), WBW
+  • Kur'an Dinle: çoklu hafız, uyku zamanlayıcı, akıllı radyo bölgesi
+  • ÇEVRİMDIŞI TİLAVET: dinlenen ayetler cihazda birikir (120 ayet / ~45MB)
+
+KÜTÜPHANE & İÇERİK (5 dilde)
+  • Ayet Kütüphanesi: 611 kart, 575 başlık × 4 dil çeviri
+  • Kütüphane: 28 kart × 5 dil · Kıssa Köşesi: 19 kıssa × 5 dil
+  • Ayet Paketleri (tek tuş stüdyoya) · Ayet Notları (şifreli, cihazda)
+  • Hadis Bankası (114 hadis) · Sure bilgileri · Namaz rehberi (şehir vakitleri)
+  • Bebek duası · Dua rehberi · Kelime kartları
+
+MANEVİ YAŞAM
+  • Zikir: topluluk sayacı (atomik RPC), kişi arşivi, günlük grafik
+  • Ramazan & Kandil Merkezi: hicri takvimle OTOMATİK (Kadir, bayramlar,
+    Mevlid, Miraç, Berat, Arefe, Regaib) + Cuma bonusu + özel gün hakları
+  • Özel Gün Takvimi · Namaz vakitleri (konum bazlı)
+
+TOPLULUK & BÜYÜME
+  • Yol Haritası oylaması + OY LİDERİ otomatik kilidi free'e düşürme
+  • Haftanın Videosu (admin onaylı vitrin) · Davet/referans (+3 karşılıklı)
+  • Duyuru sistemi (canlı yayın, zorunlu oku, güncelleme bandı)
+  • E-posta kampanya altyapısı · Push bildirim altyapısı (Öğüt Vakti)
+
+ÜYELİK & ÖDEME
+  • Free / PRO / ELİT / tam-kilit katmanları + 7 günlük sunucu-taraflı deneme
+  • iyzico + PayTR checkout · cüzdan (video hakları) · callback/verify/webhook
+  • Sadık Üye kampanyası: ilk 100 kayıt → (★sadık) rozeti + ömür boyu +1
+
+ADMIN PANELİ (gizli, imzalı oturum)
+  • Duyuru yayın/kaldır · Bakım modu · Kilit yönetimi (free/pro/elit/v2/v3)
+  • Ban / ban kaldırma · Hak verme / sıfırlama · Kullanıcı tier-jeton düzenleme
+  • Denetim izi (audit log) · Geri bildirim + admin yanıtı · Hata logları
+  • İstatistikler · Sadık üye sayacı · Kampanya · Zip medya gezgini
+
+────────────────────────────────────────────────────────────────────
+3) GÜVENLİK KATMANLARI (hepsi canlıda test edilmiş)
+────────────────────────────────────────────────────────────────────
+ 1. İstemci veri bütünlüğü: AES + HMAC-SHA256 imza + cihaz parmak izi
+    bağlamalı şifreli depo (secureStore) — elle bozma tespiti
+ 2. Sunucu otoritesi: tier/haklar DB'de; üretim sunucu imzasız OLMAZ
+    (render/authorize/video-sign zinciri — ödemeden üretim alınamaz)
+ 3. Admin kimliği: imzalı çerez + DB admin listesi; çerevsiz/sahte/olmayan
+    admin → 403 (canlı test: 14/14 PASS)
+ 4. Hız limiti: Upstash Redis ORTAK sayaç (tüm instance'lar tek sayaç —
+    canlı kanıt: 58. istekte 429) + instance-içi yedek
+ 5. RLS: tablolar service-role dışına kapalı (anon/authenticated revoke)
+ 6. Ban sistemi: video imza engeli + otomatik ban kayıtları (canlı test edildi)
+ 7. Güvenlik başlıkları: CSP allowlist, HSTS, COOP/CORP, permissions-policy
+ 8. Atomik RPC: zikir/beğeni sayıları yarış koşulsuz, girdi doğrulamalı (1-500)
+ 9. Deneme sistemi sunucuda (nur_trials) — localStorage sil, sonsuz dene
+    açığı kapandı (canlı kanıtlı)
+10. Ödeme doğrulama: callback/verify/webhook sunucu-taraflı, PKCE'li Google OAuth
+11. Kod gizleme: terser mangle + ascii-only (crypto-js güvenliği için unsafe
+    optimizasyonlar bilinçli kapalı — 07.10 kritik fix)
+12. Merkezi hata logları (nur_error_logs) + otomatik canlı tarama (GO/GAK)
+13. Bakım ekranı sunucu-yayın (cache-bust ile saniye mertebesinde yayılım)
+14. Sadık üye hakları motorda tanımlı: 10 senaryo PASS (kul hakkı garantisi)
+
+────────────────────────────────────────────────────────────────────
+4) PERFORMANS (eski cihaz odaklı — 07.10)
+────────────────────────────────────────────────────────────────────
+  • Tek-dosya 4.1MB bundle → 26 parçalı chunk (index.html 4.1MB → 8KB)
+  • 18 ağır modal lazy yükleme: açılışta inmez, açılınca kendi parçası gelir
+  • Açılışta indirilen JS: 1.08MB → 579KB (%46 azalma; parse ~2× hızlandı)
+  • Service Worker: kabuk network-first (deploy anında ulaşır), hash'li
+    asset'ler cache-first, çevrimdışı tilavet cache'i korunur
+  • 16 lansman performans indeksi + BRIN (69 indeks canlıda doğrulandı)
+  • Config uçunda edge cache + 15'lik döner cache-bust çipi (DB nefes alır)
+
+────────────────────────────────────────────────────────────────────
+5) DİLLER
+────────────────────────────────────────────────────────────────────
+  Türkçe (ana) · English · العربية · Indonesia · اردو
+  — 1.114 UI anahtar × 5 dil (parite 0 denetimli)
+  — 575 ayet başlığı × 4 dil · 28 kütüphane kartı × 4 dil · 19 kıssa × 4 dil
+  — dil-başına ayrı sözlük dosyası + RTL desteği (ar/ur)
+
+────────────────────────────────────────────────────────────────────
+6) VERİTABANI (28 tablo — PostgreSQL/Supabase)
+────────────────────────────────────────────────────────────────────
+  nur_users · nur_subscriptions · nur_orders · nur_wallets · nur_video_rights
+  nur_trials · nur_daily_usage · nur_page_views · nur_error_logs
+  nur_feature_locks · nur_site_settings · nur_announcements
+  nur_announcement_reads · nur_feedback · nur_ban_logs · nur_admin_audit_logs
+  nur_reward_claims · nur_marketing_consent · nur_email_campaigns
+  nur_push_subscriptions · nur_referans_kodlari · nur_referans_kullanim
+  nur_roadmap_features · nur_roadmap_votes · nur_zikir_topluluk
+  nur_zikir_arsiv · nur_zikir_gunluk · nur_haftanin_videolari
+
+────────────────────────────────────────────────────────────────────
+7) KALİTE ZİNCİRİ (her değişiklikte koşulur)
+────────────────────────────────────────────────────────────────────
+  tsc (0 hata şart) → i18n parite (5 dil fark=0) → duman testi (modallar)
+  → build (0 hata) → TEMİZ CLONE build → commit+push → Vercel status
+  → canlı doğrulama (playwright) → canli-tarama (14 API + hata logları) → GO
+
+────────────────────────────────────────────────────────────────────
+8) LANSMAN DURUMU (07.10)
+────────────────────────────────────────────────────────────────────
+  ✅ Kod tarafı: hazır (tüm zincir PASS, canlı GO)
+  ✅ Sunucu-taraflı deneme, bakım yayılımı, ortak hız limiti, admin güvenlik
+  ✅ SQL kurulumları: denetim scripti → 19 dosya tablo-kanıtlı, EKSİK YOK
+     (28 tablo canlıda; 16 indeks + RPC fix canlı ayrıca kanıtlı;
+      tek dosya bilinçli bekletiliyor: lansman-sonrası sertleştirme)
+  ⏳ Sende kalan tek panel adımı: Supabase Free → Pro yükseltmesi
+     (7 gün inaktivlik pause + limit kilidi riskini sıfırlar)
+
+════════════════════════════════════════════════════════════════════
+  "Kim bir hayra vesile olursa, ona onun sevabından pay vardır."
+  Bu dosya otomatik ölçümlerle 07.10.2026'da oluşturuldu.
+════════════════════════════════════════════════════════════════════

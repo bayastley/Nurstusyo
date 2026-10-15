@@ -293,7 +293,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
 
   const access = await loadServerAccess(user.id, user.email);
-  if (!access) return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+  if (!access) {
+    // ★ 14.10 DEV ZARİF DÜŞÜŞ: local'da env'siz → dev-notice (üretim başlatılmaz,
+    //   kota HİÇ düşürülmez; uur dahil prod'daki gibi oturum+origin kuralları aşılmaz).
+    const __sbEnv = Boolean((process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "") && process.env.SUPABASE_SERVICE_ROLE_KEY);
+    if (!__sbEnv) return res.status(200).json({ ok: false, devNoSupabase: true, error: "Supabase sunucu ayarları eksik (dev) — üretim dev'de simüle edilmez" });
+    return res.status(503).json({ ok: false, error: "Yetki servisi kullanılamıyor" });
+  }
   if (access.banned) return res.status(403).json({ ok: false, error: "Bu hesap kullanıma kapatılmış" });
 
   const { mode, formats } = req.body || {};

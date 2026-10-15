@@ -1,0 +1,19 @@
+# Nûr Stüdyo
+
+> İslamî video üretici ve Kur'an medya laboratuvarı — ayet videoları, Kur'an dinleme/öğrenme, hatim takibi, Kâbe canlı yayın.
+
+Nûr Stüdyo, ayetleri dakikalar içinde sinematik Kur'an videolarına dönüştüren; ücretsiz Kur'an dinleme, kelime-kelime öğrenme, mushaf sayfa görüntüleme (604 sayfa, hatim takibi), 7/24 Kâbe canlı yayın ve Kur'an radyosu barındıran Türkçe web uygulamasıdır.
+
+## Ana özellikler
+- İslamî video üretici: ayet + meal + hoca sesi + atmosfer şablonları → 9:16/16:9/1:1/4:5 video
+- Kur'an Dinliyorum: 28 kâri, tam sure (gapless), komple Kur'an akışı, uyku zamanlayıcı
+- Kur'an Öğreniyorum: kelime-kelime çözüm, Türkçe + EN/AR/ID/UR mealler
+- Kur'an Sayfaları: 604 mushaf sayfası, zoom, hatim takibi, Diyanet meali
+- Kâbe Canlı: Mescid-i Haram 7/24 canlı yayın
+- Kur'an Radyosu: 7/24 tilavet radyo kanalları
+- İletişim & telif: https://nurstudyo.com (Site Hakkında → İletişim & Telif Bildirimi)
+
+## Kaynaklar
+- Kur'an metni: api.alquran.cloud / api.quran.com (Diyanet, Yazır, Vakıf mealleri)
+- Ses: everyayah.com, mp3quran.net (telifsiz paylaşıım izinli kaynaklar)
+- Mushaf görselleri: kuran.diyanet.gov.tr
