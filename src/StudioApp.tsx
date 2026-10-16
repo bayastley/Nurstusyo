@@ -12,6 +12,7 @@ import { ayetKategorisiBul, adminAyetKategorisiBul } from "./studio/ayetKategori
 import { akilliKlipSec } from "./studio/atmosferBag"; // ★ 16.10: Akıllı AI seçimi tekrar-düşman DÖNEN TORBA (Math.random tekrarı çözüldü)
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
 import { checkGuestGate, bumpGuestUsed, GUEST_FREE_VIDEOS } from "./studio/useGuestTrial";
+import { devamiBagla, bekleyenDevamiYurut } from "./studio/telifUyariAkisi";
 import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
@@ -145,17 +146,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ Cookie Consent — yeni KVKK component'i tarafından yönetiliyor
 
-  // ★ Telif uyarısı tetiği — handleGenerate ilk üretimde bir kez artırır;
-  //   tetik 2'ye ulaştığında (uyarı kabul edildi → otomatik devam) üretim yeniden çağrılır
-  const [telifTetik, setTelifTetik] = useState(0);
-  const telifDevamRef = useRef(false);
-  const telifIlkTetikRef = useRef(true);
-  React.useEffect(() => {
-    if (telifTetik === 0) return;
-    if (telifIlkTetikRef.current) { telifIlkTetikRef.current = false; return; } // ilk artış = uyarıyı göster, üretimi başlatma
-    handleGenerate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [telifTetik]);
+  // ★ TELİF UYARI DEVAMI (SRP tur 4, 16.10): eski telifTetik/effect çifti
+  //   modül-düzeyi telifUyariAkisi ile değiştirildi — TelifDisclaimer
+  //   "Anladım" basılınca bekleyenDevamiYurut() son handleGenerate'i tekrar çağırır.
 
   // ★ SRP PARÇALAMA TUR 3 (16.10): üretim-onay + telif-risk-onay pencereleri
   //   useOnayPencereleri hook'unda — birebir aynı davranış.
@@ -843,11 +836,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     generating, setGenerating, setProgress, stopGenerationRef,
     user, isMasterSürüm, setLoginTab, setModal, notify,
     selected, canvasRef, reciter, kendiSesAktif, batchFormats, aspect, mode, accessTier, jetonCount,
-    silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm, showRiskOnay, riskOnayEsigi: RISK_ONAY_ESIGI,
+    silenceAllAudio, showGenerateConfirm, showRiskOnay, riskOnayEsigi: RISK_ONAY_ESIGI,
     videoCache, imageCache, ayahBackgroundsRef, backgroundRef,
     verseIndexRef, aspectRef, setVerseIndex, setOutputs, setActiveOutputId,
     ensureImage, ensureVideo, renderQuality, t,
   });
+
+  // ★ TELİF UYARI ZİNCİRİ — kabul edilince son handleGenerate tekrar koşar (SRP tur 4)
+  useEffect(() => devamiBagla(() => { handleGenerate(); }), [handleGenerate]);
 
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
   const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify, t });
@@ -1457,17 +1453,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* 🍪 Çerez ayarları — geri alma hakkı her sayfadan erişilebilir */}
       <CookieAyarDugmesi />
 
-      {/* TELİF UYARISI — SADECE ilk Video Üret basışında bir kere (girişte çıkmaz) */}
+      {/* TELİF UYARISI — SADECE ilk Video Üret basışında bir kere (girişte çıkmaz).
+          ★ SRP tur 4: otomatik-devam telifUyariAkisi ile — tetik state'i kalktı */}
       <TelifDisclaimer
         lang={lang}
-        tetik={telifTetik}
-        onAccept={() => {
-          // Uyarı kabul edildi → uyarıdan ÖNCE basılan üretim otomatik devam etsin
-          if (telifDevamRef.current) {
-            telifDevamRef.current = false;
-            setTelifTetik((v) => v + 1); // 2. tetik → useEffect handleGenerate'i çağırır
-          }
-        }}
+        onAccept={bekleyenDevamiYurut}
       />
 
       {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) — YALNIZ girişli kullanıcılara; içerik seçili dilde */}

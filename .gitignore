@@ -54,6 +54,7 @@ scripts/inceleme.json
 scripts/plan.json
 scripts/indir-cikti.log
 scripts/topla-gecici/
+scripts/_arsiv-1610/
 # ★ 16.10 GEÇİCİ ENKAZ: scripts/_* — tek seferlik tarayıcı/hack betikleri (SRP temizliği).
 #   Diskte topla-gecici/ altında durur, git'e girmez.
 scripts/_*

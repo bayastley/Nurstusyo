@@ -4,8 +4,10 @@ import { telifUyarisiGerekli, telifUyarisiKabulEt } from "../telifUyari";
 import { translate, type Lang } from "../i18n";
 
 interface TelifDisclaimerProps {
-  /** StudioApp üretim akışı "uyarı göster" işareti koyduğunda açılır (Video Üret anı) */
-  tetik: number;
+  /** (OPSİYONEL, SRP tur 4) Eski erişim: StudioApp üretim akışı "uyarı göster"
+   *  işareti koyduğunda açılır. Yeni akışta açılış üretim motoru (useVideoGenerator)
+   *  tetikler; bu prop yalnız geriye uyumluluk için korunur. */
+  tetik?: number;
   /** ★ 5 DİL (09.10): seçili dilin sözlüğünden metin üretir — hardcoded TR kalktı */
   lang?: Lang | string | null;
   onAccept?: () => void;
@@ -23,9 +25,9 @@ export function TelifDisclaimer({ tetik, lang, onAccept }: TelifDisclaimerProps)
   const [visible, setVisible] = useState(false);
   const t = (key: string) => translate(lang, key);
 
-  // Üretim akışından gelen tetik: uyarı daha önce kabul edilmemişse göster
+  // Üretim akışından gelen tetik (opsiyonel — SRP tur 4): uyarı kabul edilmemişse göster
   useEffect(() => {
-    if (tetik > 0 && telifUyarisiGerekli()) {
+    if ((tetik ?? 0) > 0 && telifUyarisiGerekli()) {
       setVisible(true);
     }
   }, [tetik]);

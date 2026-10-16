@@ -12,6 +12,7 @@ import type { KendiSesAktif } from "./useKendiSes";
 import { storeVideo } from "./videoStore";
 import { checkGuestGate, bumpGuestUsed } from "./useGuestTrial";
 import { telifUyarisiGerekli } from "../telifUyari";
+import { devamBeklet } from "./telifUyariAkisi";
 import { uretimIstYaz } from "../components/islamicToolsVucut";
 import type { Aspect, LoginTab, Mode, ModalName, Output, SelectedAyah, User } from "../types";
 
@@ -36,9 +37,9 @@ interface UseVideoGeneratorParams {
   accessTier: Tier;
   jetonCount: number;
   silenceAllAudio: () => void;
-  // ★ Telif uyarısı akışı: ilk üretim basışında bir kere uyarı → kabulde otomatik devam
-  telifDevamRef: MutableRefObject<boolean>;
-  setTelifTetik: (updater: (value: number) => number) => void;
+  // ★ Telif uyarısı akışı — modül-düzeyi telifUyariAkisi (SRP tur 4):
+  //   telifKabulOnDevamRef artık kullanılmıyor — TelifDisclaimer
+  //   "Anladım" akışındaki otomatik-devam, bekleyen-devam bayrağı ile taşınır.
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet onayı
   showGenerateConfirm: (cost: number, remaining: number, formatCount: number, mode: string) => Promise<boolean>;
   // ★ TELİF RİSK ONAYI (09.10): riski %30 üzeri kâriyle üretimde bilgilendirilmiş onay.
@@ -98,7 +99,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     aspect,
     mode,
     accessTier,
-    jetonCount,    silenceAllAudio, telifDevamRef, setTelifTetik, showGenerateConfirm, showRiskOnay, riskOnayEsigi,
+    jetonCount,    silenceAllAudio, showGenerateConfirm, showRiskOnay, riskOnayEsigi,
     videoCache,
     imageCache,
     ayahBackgroundsRef,
@@ -113,6 +114,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     renderQuality,
     t,
   } = params;
+
+  // ★ TELİF UYARISI ZİNCİRİ (16.10 SRP tur 4): uyarı gösterilince modül-düzeyi
+  //   devam bayrağı konur (devamBeklet). TelifDisclaimer "Anladım" basılınca
+  //   bekleyenDevamiYurut() aboneye (ilgili handleGenerate instance) haber verir.
+  //   StudioApp'teki kırılgan telifTetik/effect çifti kaldırıldı.
 
   return useCallback(async () => {
     if (generating) { stopGenerationRef.current(); return; }
@@ -151,8 +157,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     //   üretim otomatik kaldığı yerden DEVAM eder (ikinci tıklama gerekmez).
     //   Girişte/refresh'te ASLA çıkmaz — sadece üretim akışı tetikler.
     if (telifUyarisiGerekli()) {
-      telifDevamRef.current = true;
-      setTelifTetik((v) => v + 1);
+      devamBeklet();
       return;
     }
     // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
@@ -548,5 +553,5 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         : "Video üretimi sırasında teknik bir takılma oluştu");
     }
     finally { aspectRef.current = aspect; setGenerating(false); window.setTimeout(() => setProgress(0), 500); }
-  }, [aspect, batchFormats, generating, jetonCount, mode, notify, reciter, kendiSesAktif, selected, silenceAllAudio, t, accessTier, isMasterSürüm, user, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate, showGenerateConfirm, setOutputs, setActiveOutputId, setVerseIndex, setGenerating, setProgress, setLoginTab, setModal, setTelifTetik]);
+  }, [aspect, batchFormats, generating, jetonCount, mode, notify, reciter, kendiSesAktif, selected, silenceAllAudio, t, accessTier, isMasterSürüm, user, ensureImage, ensureVideo, renderQuality.renderFps, renderQuality.bitrateScale, renderQuality.audioBitrate, showGenerateConfirm, setOutputs, setActiveOutputId, setVerseIndex, setGenerating, setProgress, setLoginTab, setModal]);
 }

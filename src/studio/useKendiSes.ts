@@ -131,6 +131,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         await kayitlariTazele();
         const url = urlTasi(dosya);
         setAktif({ id, sure, kaynak: gonderi.kaynak, segments, blob: dosya, url, nefes: 0 });
+        void yazildi;
         const ekstra = Math.abs(tarama.segments.length - (konum === "tum" ? ayetSayisi : 1));
         // ★ DÜRÜST BİLDİRİM (01.10): eşit-böl fallback'i ayet geçişlerini GERÇEK algılamaz —
         //   kullanıcıyı uyarmadan "senkron hazır" demek yalandı. Eşit bölünmüşse ayarla önerilir.
