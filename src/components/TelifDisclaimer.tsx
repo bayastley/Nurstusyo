@@ -4,9 +4,13 @@ import { telifUyarisiGerekli, telifUyarisiKabulEt } from "../telifUyari";
 import { translate, type Lang } from "../i18n";
 
 interface TelifDisclaimerProps {
-  /** (OPSİYONEL, SRP tur 4) Eski erişim: StudioApp üretim akışı "uyarı göster"
-   *  işareti koyduğunda açılır. Yeni akışta açılış üretim motoru (useVideoGenerator)
-   *  tetikler; bu prop yalnız geriye uyumluluk için korunur. */
+  /** ★ SRP tur 4: açılış üretim motoru (useVideoGenerator → telifUyariAkisi)
+   *  üzerinden gelir — StudioApp state'i acik=true yapar. */
+  acik?: boolean;
+  /** StudioApp modalı kapatır (React state); bileşen içi visible eskisi gibi kaldı */
+  onKapat?: () => void;
+  /** (OPSİYONEL, geriye uyumluluk) Eski tetik-erzun akışı: StudioApp üretim
+   *  akışı "uyarı göster" işareti koyduğunda da açılır. */
   tetik?: number;
   /** ★ 5 DİL (09.10): seçili dilin sözlüğünden metin üretir — hardcoded TR kalktı */
   lang?: Lang | string | null;
@@ -21,7 +25,7 @@ interface TelifDisclaimerProps {
  * ★ SORUMLULUK MADDESİ: "yayın sorumluluğu üreticidedir" cümlesi eklendi —
  *   legalBodyTos ile aynı hukuki duruş (platform sorumluluk kabul etmez).
  */
-export function TelifDisclaimer({ tetik, lang, onAccept }: TelifDisclaimerProps) {
+export function TelifDisclaimer({ tetik, acik, onKapat, lang, onAccept }: TelifDisclaimerProps) {
   const [visible, setVisible] = useState(false);
   const t = (key: string) => translate(lang, key);
 
@@ -32,13 +36,19 @@ export function TelifDisclaimer({ tetik, lang, onAccept }: TelifDisclaimerProps)
     }
   }, [tetik]);
 
+  // ★ SRP tur 4: modül-düzeyi akış — üretim motoru uyariAc() dedi, StudioApp acik=true yaptı
+  useEffect(() => {
+    if (acik === true) setVisible(true);
+  }, [acik]);
+
   const kapat = () => {
     telifUyarisiKabulEt();
     setVisible(false);
+    onKapat?.();
     onAccept?.();
   };
 
-  if (!visible) return null;
+  if (!visible && acik !== true) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

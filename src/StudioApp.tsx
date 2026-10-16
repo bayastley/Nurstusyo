@@ -12,7 +12,8 @@ import { ayetKategorisiBul, adminAyetKategorisiBul } from "./studio/ayetKategori
 import { akilliKlipSec } from "./studio/atmosferBag"; // ★ 16.10: Akıllı AI seçimi tekrar-düşman DÖNEN TORBA (Math.random tekrarı çözüldü)
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
 import { checkGuestGate, bumpGuestUsed, GUEST_FREE_VIDEOS } from "./studio/useGuestTrial";
-import { devamiBagla, bekleyenDevamiYurut } from "./studio/telifUyariAkisi";
+import { devamiBagla, bekleyenDevamiYurut, uyariAcilisiBagla } from "./studio/telifUyariAkisi";
+
 import { useAnalytics } from "./studio/useAnalytics";
 void _ARABIC_FONTS; void _SHIMMER_STYLES; void _CINE_FILTERS;
 import {
@@ -147,8 +148,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ Cookie Consent — yeni KVKK component'i tarafından yönetiliyor
 
   // ★ TELİF UYARI DEVAMI (SRP tur 4, 16.10): eski telifTetik/effect çifti
-  //   modül-düzeyi telifUyariAkisi ile değiştirildi — TelifDisclaimer
-  //   "Anladım" basılınca bekleyenDevamiYurut() son handleGenerate'i tekrar çağırır.
+  //   modül-düzeyi telifUyariAkisi ile değiştirildi. Üretim motoru uyarı gerektiğinde
+  //   uyariAc() abonesini çağırır; TelifDisclaimer "Anladım" basılınca bekleyenDevamiYurut()
+  //   son handleGenerate'i tekrar çağırır.
+  const [telifUyariAcik, setTelifUyariAcik] = useState(false);
+  useEffect(() => uyariAcilisiBagla(() => setTelifUyariAcik(true)), []);
 
   // ★ SRP PARÇALAMA TUR 3 (16.10): üretim-onay + telif-risk-onay pencereleri
   //   useOnayPencereleri hook'unda — birebir aynı davranış.
@@ -1457,6 +1461,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           ★ SRP tur 4: otomatik-devam telifUyariAkisi ile — tetik state'i kalktı */}
       <TelifDisclaimer
         lang={lang}
+        acik={telifUyariAcik}
+        onKapat={() => setTelifUyariAcik(false)}
         onAccept={bekleyenDevamiYurut}
       />
 

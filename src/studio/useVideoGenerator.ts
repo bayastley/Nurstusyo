@@ -12,7 +12,7 @@ import type { KendiSesAktif } from "./useKendiSes";
 import { storeVideo } from "./videoStore";
 import { checkGuestGate, bumpGuestUsed } from "./useGuestTrial";
 import { telifUyarisiGerekli } from "../telifUyari";
-import { devamBeklet } from "./telifUyariAkisi";
+import { devamBeklet, uyariAc } from "./telifUyariAkisi";
 import { uretimIstYaz } from "../components/islamicToolsVucut";
 import type { Aspect, LoginTab, Mode, ModalName, Output, SelectedAyah, User } from "../types";
 
@@ -157,7 +157,8 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     //   üretim otomatik kaldığı yerden DEVAM eder (ikinci tıklama gerekmez).
     //   Girişte/refresh'te ASLA çıkmaz — sadece üretim akışı tetikler.
     if (telifUyarisiGerekli()) {
-      devamBeklet();
+      devamBeklet(); // "Anladım" basılınca otomatik-devam bayrağı
+      uyariAc();     // abone (StudioApp) uyarıyı AÇAR
       return;
     }
     // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
