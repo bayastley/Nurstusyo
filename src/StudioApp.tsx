@@ -97,6 +97,9 @@ import { useSearchResults } from "./studio/useSearchResults";
 import { useMedyaYukleme } from "./studio/useMedyaYukleme";
 import { useOutputKalici } from "./studio/useOutputKalici";
 import { useVideoGenerator } from "./studio/useVideoGenerator";
+import { useVideoTasarimAyarlar } from "./studio/useVideoTasarimAyarlar";
+import { useOnayPencereleri } from "./studio/useOnayPencereleri";
+import { useReciterPreview } from "./studio/useReciterPreview";
 import { useAyetSecim } from "./studio/useAyetSecim"; // ★ SRP (09.10): ayet seçim motoru hook'a taşındı
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
@@ -154,48 +157,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [telifTetik]);
 
-  // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
-  const [genConfirmOpen, setGenConfirmOpen] = useState(false);
-  const [genConfirmData, setGenConfirmData] = useState<{ cost: number; remaining: number; formatCount: number; mode: string } | null>(null);
-  const genConfirmResolveRef = useRef<((ok: boolean) => void) | null>(null);
-
-  const showGenerateConfirm = useCallback((cost: number, remaining: number, formatCount: number, mode: string): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setGenConfirmData({ cost, remaining, formatCount, mode });
-      setGenConfirmOpen(true);
-      genConfirmResolveRef.current = resolve;
-    });
-  }, []);
-
-  const handleGenConfirm = useCallback((ok: boolean) => {
-    setGenConfirmOpen(false);
-    genConfirmResolveRef.current?.(ok);
-    genConfirmResolveRef.current = null;
-  }, []);
-
-  // ★ TELİF RİSK ONAYI (09.10): Pro/Elit üye, telif riski %30 ÜZERİ bir kâriyle
-  //   üretim basınca ayrı bir bilgilendirilmiş-onay penceresi alır. Kabul ederse
-  //   o kâri cihazda kalıcı işaretlenir — bir daha sorulmaz. Free tier'da high-risk
-  //   kâri zaten kilitli olduğundan bu kapı yalnız ücretli kullanıcıya açılır.
-  const [riskOnayData, setRiskOnayData] = useState<{ reciterName: string; riskPercent: number } | null>(null);
-  const riskOnayResolveRef = useRef<((ok: boolean) => void) | null>(null);
-  const showRiskOnay = useCallback((reciterName: string, riskPercent: number): Promise<boolean> => {
-    // ★ Kalıcı-onay kontrolü: bu kâri için kullanıcı daha ÖNCE "Riski Kabul
-    //   Ediyorum" dedi ise pencere hiç açılmaz (cihaz bazlı localStorage; KVKK
-    //   silme hakkına uyumlu — kullanıcı cihaz verisini temizlerse yeniden sorulur).
-    try {
-      if (localStorage.getItem(`nur_telif_risk_onay_${reciterName}`) === "1") return Promise.resolve(true);
-    } catch { /* depolama kapalıysa her seferinde sor */ }
-    return new Promise((resolve) => {
-      setRiskOnayData({ reciterName, riskPercent });
-      riskOnayResolveRef.current = resolve;
-    });
-  }, []);
-  const handleRiskOnay = useCallback((ok: boolean) => {
-    setRiskOnayData(null);
-    riskOnayResolveRef.current?.(ok);
-    riskOnayResolveRef.current = null;
-  }, []);
+  // ★ SRP PARÇALAMA TUR 3 (16.10): üretim-onay + telif-risk-onay pencereleri
+  //   useOnayPencereleri hook'unda — birebir aynı davranış.
+  const { genConfirmOpen, genConfirmData, showGenerateConfirm, handleGenConfirm, riskOnayData, showRiskOnay, handleRiskOnay } = useOnayPencereleri();
 
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
   const [lang, setLang] = useState<Lang>(() => {
@@ -374,157 +338,21 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     };
   }, []);
 
-  const ARABIC_FONTS = _ARABIC_FONTS;
-  const [arabicFont, setArabicFontState] = useState<string>(() => {
-    try { return localStorage.getItem("nur_arabic_font") || "amiri"; } catch { return "amiri"; }
-  });
-  // ★ TEMBEL FONT YÜKLEME: Google Fonts linki açılışta yalnızca temel fontları
-  //   yükler (Amiri, Inter, Cinzel). Seçilen diğer font, seçildiği anda tek
-  //   istekle yüklenir — açılış hızı korunur. Seçim localStorage'da kalıcı.
-  const yukluFontlar = new Set<string>(["amiri"]);
-  // ★ Font yükleme hatası takibi: internet yoksa / Google Fonts erişilemezse
-  //   kullanıcıyı bilgilendir — sessizce fallback fontta kalmaz.
-  const fontHataBildirildi = useRef(new Set<string>());
-  useEffect(() => {
-    const font = ARABIC_FONTS.find((f) => f.id === arabicFont);
-    if (!font || yukluFontlar.has(arabicFont)) return;
-    const aile = font.css.split(",")[0].replace(/'/g, "").trim();
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(aile).replace(/%20/g, "+") + ":wght@400;700&display=swap";
-    let yuklendi = false;
-    // ★ ÇEVRİMDIŞI KONTROL: navigator.onLine=false ise istek hiç atılmaz —
-    //   hemen bilgilendir, gereksiz ağ beklemesi olmasın
-    if (typeof navigator !== "undefined" && navigator.onLine === false) {
-      if (!fontHataBildirildi.current.has(arabicFont)) {
-        fontHataBildirildi.current.add(arabicFont);
-        notify(`📶 İnternet bağlantısı yok — "${font.label}" fontu yüklenemedi, Amiri kullanılacak`);
-      }
-      return;
-    }
-    // ★ ZAMAN AŞIMLI YÜKLEME: 8 saniyede font gelmezse (ofline proxy, DNS hatası,
-    //   Google engeli) kullanıcıyı bilgilendir — Amiri zaten fallback CSS'te var
-    const zamanAsimi = window.setTimeout(() => {
-      if (yuklendi) return;
-      if (!fontHataBildirildi.current.has(arabicFont)) {
-        fontHataBildirildi.current.add(arabicFont);
-        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak (internet bağlantını kontrol et)`);
-      }
-    }, 8000);
-    document.head.appendChild(link);
-    yukluFontlar.add(arabicFont);
-    // ★ FOUT ÖNLEME: font gerçekten yüklendiğinde önizlemeyi tazele —
-    //   canvas fallback fontla çizilip öylece kalmaz (yanıp sönme/yanlış font olmaz)
-    Promise.all([
-      document.fonts.load("400 20px " + aile),
-      document.fonts.load("700 20px " + aile),
-    ]).then(() => {
-      yuklendi = true;
-      window.clearTimeout(zamanAsimi);
-      window.dispatchEvent(new Event("nur_font_loaded"));
-    }).catch(() => {
-      yuklendi = true; // catch'te de zaman aşımını durdur — çift bildirim olmasın
-      window.clearTimeout(zamanAsimi);
-      if (!fontHataBildirildi.current.has(arabicFont)) {
-        fontHataBildirildi.current.add(arabicFont);
-        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak`);
-      }
-    });
-    return () => window.clearTimeout(zamanAsimi);
-  }, [arabicFont, notify]);
-  const setArabicFont = (f: string) => {
-    setArabicFontState(f);
-    try { localStorage.setItem("nur_arabic_font", f); } catch { /* ignore */ }
-  };
-  const [textSize, setTextSize] = useState<"kucuk" | "normal" | "buyuk">("buyuk");
-
-  const SHIMMER_STYLES = _SHIMMER_STYLES;
-  const [shimmerStyle, setShimmerStyle] = useState("altin");
-  const shimmerCfg = SHIMMER_STYLES.find((s) => s.id === shimmerStyle) ?? SHIMMER_STYLES[0];
-  const [cardBg, setCardBg] = useState<"seffaf" | "koyu">("seffaf");
-  // ★ ADMİNE ÖZEL: Videoda sol altta görünecek marka / kanal imzası
-  const [brandSignature, setBrandSignature] = useState<string>(() => {
-    try { return localStorage.getItem("nur_brand_signature") ?? "@nurstudyo"; } catch { return "@nurstudyo"; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_brand_signature", brandSignature); } catch { /* ignore */ }
-  }, [brandSignature]);
-  // ★ İmza konumu — varsayılan SOL ÜST (altta meal yazısıyla çakışmasın)
-  const [brandPos, setBrandPos] = useState<"sol-ust" | "sag-ust" | "sol-alt" | "sag-alt">(() => {
-    try { return (localStorage.getItem("nur_brand_pos") as any) ?? "sol-ust"; } catch { return "sol-ust"; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_brand_pos", brandPos); } catch { /* ignore */ }
-  }, [brandPos]);
-  // ★ WATERMARK AÇ/KAPA — imza metninden bağımsız ayrı anahtar; kalıcı.
-  //   Kullanıcı imzayı yazıp istediğinde kapatabilir (kanal logosu yokken vs.)
-  const [brandOn, setBrandOn] = useState<boolean>(() => {
-    try { return localStorage.getItem("nur_brand_on") !== "0"; } catch { return true; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_brand_on", brandOn ? "1" : "0"); } catch { /* ignore */ }
-  }, [brandOn]);
+  // ★ SRP PARÇALAMA TUR 3 (16.10): video tasarım ayarları useVideoTasarimAyarlar hook'unda —
+  //   font/boyut/ışıltı/marka/bant/mesaj/cinematic/göster-gizle — birebir aynı davranış.
+  const {
+    ARABIC_FONTS, arabicFont, setArabicFont, arabicFontCss, arabicFontW,
+    textSize, setTextSize, textSizeMul, textSizeFine, setTextSizeMul,
+    mealSizeFine, setMealSizeMul,
+    SHIMMER_STYLES, shimmerStyle, setShimmerStyle, shimmerCfg,
+    shimmerIntensity, setShimmerIntensity,
+    cardBg, setCardBg,
+    brandSignature, setBrandSignature, brandPos, setBrandPos, brandOn, setBrandOn,
+    cubukAyar, setCubukAyar, mesajAyar, setMesajAyar,
+    CINE_FILTERS, cinematic, setCinematic, cineFilter,
+    showArapca, setShowArapca, showSubMeal, setShowSubMeal,
+  } = useVideoTasarimAyarlar(notify);
   const [textOffset, setTextOffset] = useState({ x: 0, y: 0 });
-  const arabicFontCss = ARABIC_FONTS.find((f) => f.id === arabicFont)?.css ?? "Amiri, serif";
-  const arabicFontW = arabicFontWeight(arabicFont);
-  // ★ Yazı boyutu: hazır ayar × ince ayar (kullanıcı +/- ile 0.5x–2.0x arası)
-  const [textSizeFine, setTextSizeFine] = useState<number>(() => {
-    const raw = localStorage.getItem("nur_text_size_fine");
-    const n = raw ? parseFloat(raw) : NaN;
-    return Number.isFinite(n) ? Math.min(2, Math.max(0.5, n)) : 1;
-  });
-  const setTextSizeMul = (m: number) => {
-    const clamped = Math.round(Math.min(2, Math.max(0.5, m)) * 100) / 100;
-    setTextSizeFine(clamped);
-    try { localStorage.setItem("nur_text_size_fine", String(clamped)); } catch { /* ignore */ }
-  };
-  // ★ MEAL İÇİN BAĞIMSIZ ince ayar — Arapça boyutundan ayrı tutulur
-  const [mealSizeFine, setMealSizeFine] = useState<number>(() => {
-    const raw = localStorage.getItem("nur_meal_size_fine");
-    const n = raw ? parseFloat(raw) : NaN;
-    return Number.isFinite(n) ? Math.min(2, Math.max(0.5, n)) : 1;
-  });
-  const setMealSizeMul = (m: number) => {
-    const clamped = Math.round(Math.min(2, Math.max(0.5, m)) * 100) / 100;
-    setMealSizeFine(clamped);
-    try { localStorage.setItem("nur_meal_size_fine", String(clamped)); } catch { /* ignore */ }
-  };
-  // ★ IŞILTI YOĞUNLUĞU — parıltı gücü ince ayarı (0.5x–2.0x), kalıcı
-  const [shimmerIntensity, setShimmerIntensityState] = useState<number>(() => {
-    const raw = localStorage.getItem("nur_shimmer_intensity");
-    const n = raw ? parseFloat(raw) : NaN;
-    return Number.isFinite(n) ? Math.min(2, Math.max(0.5, n)) : 1;
-  });
-  const setShimmerIntensity = (v: number) => {
-    const clamped = Math.round(Math.min(2, Math.max(0.5, v)) * 100) / 100;
-    setShimmerIntensityState(clamped);
-    try { localStorage.setItem("nur_shimmer_intensity", String(clamped)); } catch { /* ignore */ }
-  };
-  // ★ RENK ÇUBUĞU (01.10) — çerçeve iç kenarında dikey gökkuşağı şeridi; Arapça/meal
-  //   çizim renginden bağımsız süsleme katmanı. ayetKartMotoru ile aynı çekirdek.
-  const [cubukAyar, setCubukAyar] = useState<CubukAyar>(() => {
-    try { return { ...VARSAYILAN_CUBUK, ...(JSON.parse(localStorage.getItem("nur_renk_cubugu") || "null") || {}) }; } catch { return VARSAYILAN_CUBUK; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_renk_cubugu", JSON.stringify(cubukAyar)); } catch { /* ignore */ }
-  }, [cubukAyar]);
-  // ★ ÖZEL YAZI (01.10) — kullanıcının kendi mesajı, videonun İÇİNE çizilir
-  //   (önizleme = çıktı). Ayrı konum: mesajOfset, ayet konumundan bağımsız.
-  const [mesajAyar, setMesajAyar] = useState<MesajAyar>(() => {
-    try { return { ...VARSAYILAN_MESAJ, ...(JSON.parse(localStorage.getItem("nur_mesaj_ayar") || "null") || {}) }; } catch { return VARSAYILAN_MESAJ; }
-  });
-  useEffect(() => {
-    try { localStorage.setItem("nur_mesaj_ayar", JSON.stringify(mesajAyar)); } catch { /* ignore */ }
-  }, [mesajAyar]);
-
-  // ★ FONTA GÖRE OTOMATİK BOYUT: her fontun ideal çarpanı görsel dengeyi
-  //   korur (naskh irice, kufi küçüktür). Kullanıcının ince ayarı ekstra çarpılır —
-  //   yani elle ayar yaptığı zaman o değer her fontta GEÇERLİ kalır.
-  const textSizeMul = (textSize === "buyuk" ? 1.15 : textSize === "kucuk" ? 0.85 : 1) * textSizeFine * arabicIdealScale(arabicFont);
-
-  const CINE_FILTERS = _CINE_FILTERS;
-  const [cinematic, setCinematic] = useState("orijinal");
-  const cineFilter = CINE_FILTERS.find((f) => f.id === cinematic) ?? CINE_FILTERS[0];
 
   const [libType, setLibType] = useState<LibraryType | "tumu">("tumu");
   const [libEmotion, setLibEmotion] = useState<Emotion | "tum">("tum");
@@ -536,9 +364,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ AÇILIŞTA GERİ YÜKLEME: IndexedDB'deki videolar outputs'a geri gelir.
   useEffect(() => restoreStoredOutputs(), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [activeOutputId, setActiveOutputId] = useState<string | null>(null);
-
-  const [showArapca, setShowArapca] = useState(true);
-  const [showSubMeal, setShowSubMeal] = useState(true);
 
   // ★ 03.10 (5 dil): paylaşım başlığı/açıklaması/hashtag başlangıcı seçili dilde üretilir
   const [shareTitle, setShareTitle] = useState(() => genTitle(undefined, 2, 255, lang));
@@ -1009,44 +834,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     notify(ezilen > 0 ? t("dafAiSahneKorundu").replace("{n}", String(ezilen)) : t("dafAiSahne"));
   }, [combinedAllClips, notify, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
 
-  const playReciterPreview = useCallback((id: string) => {
-    silenceAllAudio();
-    const prev = reciterPreviewRef.current;
-    if (prev) { sesZinciriSoKup(prev); prev.pause(); prev.oncanplaythrough = null; prev.onloadeddata = null; prev.onended = null; prev.onerror = null; try { prev.src = ""; } catch { /* ignore */ } reciterPreviewRef.current = null; }
-    if (previewReciterId === id) { setPreviewReciterId(null); return; }
-    const target = RECITERS.find((item) => item.id === id);
-    const sample = selectedRef.current[0] ?? { s: 1, a: 1 };
-    if (!target) return;
-    const startPreview = (kaynaklar: string[]) => {
-      const prevInStart = reciterPreviewRef.current;
-      if (prevInStart) {
-        sesZinciriSoKup(prevInStart);
-        prevInStart.pause();
-        prevInStart.onended = null;
-        prevInStart.onerror = null;
-        try { prevInStart.src = ""; } catch { /* ignore */ }
-      }
-      const audio = new Audio(); audio.preload = "auto"; audio.volume = 0.88;
-      try { (audio as HTMLMediaElement & { referrerPolicy?: string }).referrerPolicy = "no-referrer"; } catch { /* ignore */ }
-      reciterPreviewRef.current = audio; setPreviewReciterId(id);
-      const cleanup = () => { if (reciterPreviewRef.current !== audio) return; setPreviewReciterId(null); reciterPreviewRef.current = null; };
-      audio.onended = cleanup;
-      // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network yedeği;
-      //   hepsi patlarsa eski dürüst uyarı (yanlış hocaya düşmez)
-      sesZinciriBagla(audio, kaynaklar, () => {
-        if (reciterPreviewRef.current !== audio) return;
-        cleanup();
-        notify(`⚠️ ${target?.name ?? "Kâri"} · ses kaydı şu an yüklenemedi. Lütfen başka bir kâri deneyin.`);
-      });
-      audio.play().catch(() => { const onReady = () => { audio.removeEventListener("loadeddata", onReady); if (reciterPreviewRef.current === audio) { audio.play().catch(cleanup); } }; audio.addEventListener("loadeddata", onReady); });
-      previewTimerRef.current = window.setTimeout(() => { if (reciterPreviewRef.current === audio) { audio.pause(); cleanup(); } }, 10_000);
-    };
-    startPreview(
-      target.surahPattern
-        ? [target.surahPattern.replace("{S}", String(sample.s).padStart(3, "0"))]
-        : sesKaynakZinciri(target.path, sample.s, sample.a)
-    );
-  }, [previewReciterId, notify, silenceAllAudio]);
+  // ★ KÂRİ ÖNİZLEME — useReciterPreview hook'unda (SRP parçalama tur 3, 16.10):
+  //   satır-içi kopya silindi; hook aynı imzayla çalışıyor. Birebir aynı davranış.
+  const { playReciterPreview } = useReciterPreview({ previewReciterId, selectedRef, reciterPreviewRef, previewTimerRef, setPreviewReciterId, notify, silenceAllAudio });
 
   // ★ VİDEO ÜRETİM MOTORU — useVideoGenerator hook'unda (parçalama, 01.10)
   const handleGenerate = useVideoGenerator({

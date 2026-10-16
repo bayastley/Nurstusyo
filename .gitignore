@@ -54,6 +54,9 @@ scripts/inceleme.json
 scripts/plan.json
 scripts/indir-cikti.log
 scripts/topla-gecici/
+# ★ 16.10 GEÇİCİ ENKAZ: scripts/_* — tek seferlik tarayıcı/hack betikleri (SRP temizliği).
+#   Diskte topla-gecici/ altında durur, git'e girmez.
+scripts/_*
 instagram-auto-poster/queue-state.json
 
 # ★ 16.10 E2E test kanıtları — ekran görüntüleri / kanıt JSON'ları commite girmez
