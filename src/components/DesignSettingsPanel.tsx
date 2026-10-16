@@ -115,12 +115,15 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
     setBackgroundVideoUrl(background?.kind === "vid" ? getVideoUrlSync(background) : "");
     setBackgroundPosterUrl(background?.kind === "vid" ? getPosterUrlSync(background) : undefined);
     if (background?.kind !== "vid") return () => { alive = false; };
-    void Promise.all([getVideoUrl(background), getPosterUrl(background)]).then(([videoUrl, posterUrl]) => {
-      if (alive) {
-        setBackgroundVideoUrl(videoUrl);
-        setBackgroundPosterUrl(posterUrl);
-      }
-    }).catch(() => undefined);
+    // ★ BAĞIMSIZ SET (16.10): eski Promise.all([video, poster]) video reject olunca
+    //   POSTER'İ de yutuyordu — seçilen atmosferin küçük önizleme kartı eski/bayat
+    //   posterle kalıyor, kullanıcı "seçim önizlemeye eklenmiyor" görüyordu.
+    //   Artık ikisi ayrı ayrı çözülür: video fail etse bile poster kendi yolunda gelir.
+    void Promise.allSettled([getVideoUrl(background), getPosterUrl(background)]).then(([videoRes, posterRes]) => {
+      if (!alive) return;
+      if (videoRes.status === "fulfilled" && videoRes.value) setBackgroundVideoUrl(videoRes.value);
+      if (posterRes.status === "fulfilled" && posterRes.value) setBackgroundPosterUrl(posterRes.value);
+    });
     return () => { alive = false; };
   }, [background]);
   void configVersion;
