@@ -24,6 +24,9 @@ id_ed25519
 #   (AIzaSy… Google anahtarı). `git add -A` ile geçmişe düşmesin.
 scripts/txt-yedek-hadis/
 
+# ★ 16.10 KRİTİK CONFIG YEDEKLERİ — git'e girmez, diskte kalır
+yedekler/
+
 # Editör ve OS
 .vscode/*
 !.vscode/extensions.json
