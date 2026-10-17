@@ -242,10 +242,17 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         Videosu, Ramazan/Kandil, Keşfet (Hadis&Kıssa&Rehber) kaldırıldı. Kalanlar:
                         Ayet Kütüphanesi, Ayet Notları, Kelime Atölyesi, Arka Plan Üretici, Davet,
                         Ayet Paketleri, Tema Galerisi, Site Hakkında. */}
+                    {/* ★ 16.10 GERİ EKLEME (kullanıcı emri): TRIM'de kaldırılan 4 modül menüye geri geldi
+                        — Hafızlık Testi, Keşfet Merkezi, Haftanın Videosu, Özel Gün Takvimi.
+                        Modal bileşenleri hep duruyordu; yalnız menü girişleri çıkarılmıştı. */}
                     <div className="my-1 border-t border-white/5" />
                     {[
                       { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
                       { icon: NotebookPen, label: t("menuAyetNotlari"), target: "ayetNotlari" as ModalName },
+                      { icon: Brain, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName },
+                      { icon: Compass, label: t("menuKesfet"), target: "kesfet" as ModalName },
+                      { icon: Film, label: t("menuHaftaninVideosu"), target: "haftaninVideosu" as ModalName },
+                      { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName },
                       { icon: Type, label: t("menuKelimeAtolyesi"), target: "kelimeAtolyesi" as ModalName },
                       { icon: Wand2, label: t("menuArkaPlanUretici"), target: "arkaPlanUretici" as ModalName },
                       { icon: Gift, label: t("menuDavet"), target: "davet" as ModalName },
