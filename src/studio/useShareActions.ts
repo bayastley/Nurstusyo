@@ -118,8 +118,34 @@ export function useShareActions({ shareTitle, shareDescription, notify, t }: Sha
   //   uygulama kısayolları çıkıyor: mobilde WhatsApp/Instagram/X, masaüstünde
   //   YouTube/TikTok/WhatsApp Web + panoya kopyala. Tek satır çağrıyla VideoPreviewSection
   //   çip şeridi bunları render eder.
+  //
+  // ★ 18.10 DÜZELTME (kullanıcı emri: "indirdiğimiz videoları tıkladığımız yerde ilgili
+  //   uygulamada paylaşmalı — bu yazı paylaşıyor"): çip tıklandığında artık ÖCE dosyayla
+  //   NAVİGATÖR PAYLAŞ AVCISı denenir — canShare({files}) destekliyorsa VİDEO DOSYASIYLA
+  //   hedef uygulama seçilir (WhatsApp → video direkt sohbete eklenir). Desteklemeyen
+  //   cihazda eski akış: video cihaza indirilir + metin panoya + uygulama açılır.
   const paylasCihazi = useCallback((output?: Output) => {
     const mobil = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    const uygulamaIkimiz = async (u: { ad: string; islem: () => void }) => {
+      // 1. YOL — dosyayla native paylaş: kullanıcı paylaştan sonra uygulamayı kendisi seçer,
+      //    dosya WhatsApp/Instagram/Signal'e DOĞRUDAN eklenir ("yazı paylaşıyor" sorununu bitirir).
+      if (output && navigator.canShare) {
+        try {
+          const blob = await (await fetch(output.url)).blob();
+          const file = new File([blob], `nur-studyo-${Date.now()}.${output.ext}`, { type: output.mime || blob.type || "video/mp4" });
+          if (navigator.canShare?.({ files: [file] })) {
+            await navigator.share({ files: [file], title: shareTitle, text: t("shPromoVideo") });
+            return; // kullanici paylaş dialogundan cikti — ekstra pencere açma
+          }
+        } catch (e) {
+          if ((e as { name?: string })?.name === "AbortError") return; // kullanıcı kapattı
+          // dosya paylaşımı başarısız → 2. yola düş (aşağıda)
+        }
+      }
+      // 2. YOL — eski akış: video cihaza iner + metin panoya + platform penceresi açılır
+      u.islem();
+      if (output) void downloadVideo(output).catch(() => undefined);
+    };
     const uygulamar: Array<{ ad: string; emoji: string; islem: () => void }> = [
       { ad: "WhatsApp", emoji: "💬", islem: shareToWhatsApp },
       ...(mobil ? [{ ad: "Instagram", emoji: "📸", islem: shareToInstagram }] : []),
@@ -128,8 +154,8 @@ export function useShareActions({ shareTitle, shareDescription, notify, t }: Sha
       ...(mobil ? [] : [{ ad: "WhatsApp Web", emoji: "🖥️", islem: shareToWhatsApp }]),
       { ad: "X", emoji: "𝕏", islem: shareToX },
     ];
-    return uygulamar.map((u) => ({ ...u, calistir: () => { u.islem(); if (output) void downloadVideo(output).catch(() => undefined); } }));
-  }, [downloadVideo, shareToInstagram, shareToTikTok, shareToWhatsApp, shareToX, shareToYouTube]);
+    return uygulamar.map((u) => ({ ...u, calistir: () => { void uygulamaIkimiz(u); } }));
+  }, [downloadVideo, shareToInstagram, shareToTikTok, shareToWhatsApp, shareToX, shareToYouTube, shareTitle, t]);
 
   return {
     copied,
