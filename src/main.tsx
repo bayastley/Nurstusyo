@@ -4,9 +4,12 @@ import "./index.css";
 import App from "./App";
 import { initErrorReport } from "./utils/errorReport";
 import { dilSaukle } from "./i18n";
+import { chunkKurtarmayiKur } from "./chunkKurtarma"; // ★ 18.10 deploy-chunk kurtarması
 
 // Global hata izleme — Sentry'siz, kendi altyapımızda
 initErrorReport();
+// ★ 18.10: lazy chunk yüklenemezse (deploy sonrası eski HTML) tek reload ile kurtar
+chunkKurtarmayiKur();
 
 // ★ 16.10 MOBİL HIZ: 5 dilli i18n sözlükleri (~380KB) ana chunk'tan çıkartıldı.
 //   Yalnız TR eager'dır; kullanıcı dil localStorage'da tr değilse mount'tan ÖNCE

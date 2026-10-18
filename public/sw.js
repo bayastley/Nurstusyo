@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v7"; // ★ 08.10: JS istekleri network-first (eski chunk MIME hatası fix)
+const CACHE = "nurstudyo-v8"; // ★ 18.10: deploy-kurtarma — HTML cache-first, JS fallback cache-first (detay aşağıda)
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
@@ -124,30 +124,37 @@ self.addEventListener("fetch", (event) => {
 
   // ★ Ana sayfa: NETWORK-FIRST — yeni deploy anında kullanıcıya ulaşsın.
   //   (Eskiden cache-first idi; güncellemeler önbellekte takılı kalıyordu.)
-  if (url.pathname === "/") {
+  //   ★ 18.10: HTML yanıtı cache'e YALNIZ ok (ve true content-type) iken yazılır —
+  //   ölü sunucunun HTML hata sayfası (502/503) asla önbelleğe girmesin.
+  if (url.pathname === "/" || url.pathname === "/index.html") {
     event.respondWith(
       fetch(event.request).then((res) => {
-        const kopya = res.clone();
-        caches.open(CACHE).then((cache) => cache.put("/", kopya));
+        if (res.ok && (res.headers.get("content-type") || "").includes("html")) {
+          const kopya = res.clone();
+          caches.open(CACHE).then((cache) => cache.put("/", kopya));
+        }
         return res;
-      }).catch(() => caches.match("/") || fetch(event.request))
+      }).catch(() => caches.match("/").then((hit) => hit || fetch(event.request)))
     );
     return;
   }
 
-  // Statik varlıklar: JS network-first (★ 08.10 MIME hatası fix — eski HTML eski
-  //   chunk'ı referans edince cache'te olmayan dosyaya HTML cache'leniyordu ve
-  //   lazy modallar 'Failed to fetch dynamically imported module' ile patlıyordu.
-  //   JS network-first: deploy sonrası ilk istek hep taze gelir; çevrimdışında cache).
-  //   Diğer varlıklar (png/css/woff) cache-first kalır — hash'li adları immutable.
+  // Statik varlıklar: JS NETWORK-FIRST ★ 18.10 TUTARLILIK FIX — eski v7 mantığı mixed
+  //   davranıyordu (HTML fresh ama JS cache'ten eski → eski HTML'in chunk'ı yok →
+  //   'Failed to fetch dynamically imported module' + MIME hatası). Artık ikisi de
+  //   network-first; HTML yanıtı (ölü chunk fallback) cache'e ASLA yazılmaz.
   if (/\.js$/.test(url.pathname)) {
     event.respondWith(
       fetch(event.request).then((res) => {
-        if (res.ok && res.headers.get("content-type")?.includes("javascript")) {
+        const tip = res.headers.get("content-type") || "";
+        if (res.ok && tip.includes("javascript")) {
           const kopya = res.clone();
           caches.open(CACHE).then((cache) => cache.put(event.request, kopya));
+          return res;
         }
-        return res;
+        // ★ 18.10 deploy-fix: artık olmayan chunk → HTML 404 fallback. Cache'teki
+        //   ESÜRÜM chunk varsa onu dön; yoksa orijinal yanıtı bırak (kurtarma reload alır).
+        return caches.match(event.request).then((hit) => hit ?? res);
       }).catch(() => caches.match(event.request).then((hit) => hit || new Response("", { status: 504 })))
     );
   }

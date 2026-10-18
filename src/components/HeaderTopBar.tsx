@@ -251,20 +251,22 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </button>
 
                     {/* ★ 10.10 (GERİ EKLEME, kullanıcı emri): Kur'an Öğren + Dinle butonu
-                        sol-üst üç-nokta menüye eklendi (08.10 TRIM'de kaldirilmişti). */}
+                        sol-üst üç-nokta menüde.
+                        ★ 18.10 (kullanıcı emri): "GERİ GELDİ" rozeti KALDIRILDI. */}
                     <button onClick={() => { setModal?.("quranLearn"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <span className="text-base">📖</span>
                       <span>{`Kur'an Öğreniyorum · Dinliyorum`}</span>
-                      <span className="ml-auto rounded-full bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 text-[7px] font-bold text-amber-300">GERİ GELDİ</span>
                     </button>
 
-                    {/* ★ 17.10 (kullanıcı emri): HAFIZLIK TESTİ menüden OYLAMA KİLİDİNDEN ÇIKARILDI —
-                        herkese ÜCRETSİZ; Kur'an Öğreniyorum altında ayrı giriş. ModalsContainer
-                        V2 kilidi listesinden de çıkarıldı (artık kilit yok). */}
-                    <button onClick={() => { setModal?.("hafizlikTesti"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                      <Brain size={14} style={{ color: "var(--accent)" }} />
-                      <span className="flex-1 truncate">{t("menuHafizlikTesti")}</span>
-                      <span className="ml-auto shrink-0 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-black text-emerald-300">ÜCRETSİZ</span>
+                    {/* ★ 18.10 HAFIZLIK menü girişi buradaydı — QuranLearnModal 3. sekmesine
+                        göçürüldü (aynı dosyada alttaki Kur'an girişinin yorumu). */}
+
+                    {/* ★ 18.10 (kullanıcı bildirimi): PWA KURULUM BANNERI bulanamıyordu —
+                        menüye kalıcı giriş eklendi; tıklayınca banner İSTİDİĞİ AN acılır */}
+                    <button onClick={() => { window.dispatchEvent(new Event("nur_pwa_banner_ac")); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <span className="text-base">📲</span>
+                      <span className="flex-1 truncate">Ana Ekrana Ekle · Uygulama Olarak</span>
+                      <span className="ml-auto shrink-0 rounded-full bg-sky-500/20 border border-sky-400/30 px-1.5 py-0.5 text-[7px] font-black text-sky-300">PWA</span>
                     </button>
 
                     {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09)
@@ -513,7 +515,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
             {/* ★ AYET KÜTÜPHANESİ + KUR'AN üst bardan KALDIRILDI (08.10, kullanıcı emri):
                 ikisi de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın. */}
-            {/* ★ KÂBE CANLI — GERİ GELDİ (08.10, kullanıcı emri): üst barda tek tık,
+            {/* ★ 18.10 SIRA DEĞİŞİMİ (kullanıcı emri): KÂBE CANLI ile İÇİNDEKİLER artık YAN YANA —
+                Kâbe Canlı → İçindekiler → Seslendirme. (Önceki: İçindekiler Kâbe'yle arada
+                değil ayrıydı; şimdi Kâbe + İçindekiler komşu.) */}
+            {/* ★ KÂBE CANLI (08.10, kullanıcı emri): üst barda tek tık,
                 kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
             <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
               🕋 {t("menuKabeCanli")}
@@ -522,8 +527,16 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <span className="relative h-2 w-2 rounded-full bg-red-500" />
               </span>
             </button>
+            {/* ★ 18.10 (kullanıcı emri): Hafızlık Testi ana sayfa üst barda — Kâbe Canlı ile İçindekiler arası.
+                Kur'an ekranını açıp içinde gömülü test sekmesine atlar; rozet yok (ÜCRETSİZ istenmedi). */}
+            <button data-minitur="hafizlik-testi" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_hafizlik_testi_ac")); }}
+              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+              title="Devamını getir: ayetin yarısını gösterir, sen tamamını seç">
+              🧠 Hafızlık Testi
+            </button>
             {/* ★ 16.10 İÇİNDEKİLER — sol menüdeki aynı "siteHakkinda" modalını açan üst-bar butonu.
-                Kâbe Canlı ile Seslendirme arasına yerleştirildi (kullanıcı emri).
+                ★ 18.10 (kullanıcı emri): Hafızlık Testi butonu Kâbe-İçindekiler arasına kondu.
                 Modal içeriğine TANITIM bölümü eklendi (R2'den video, SiteHakkindaModal'da). */}
             <button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
               className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"

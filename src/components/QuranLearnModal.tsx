@@ -5,10 +5,11 @@ import { QuranSayfalar } from "./QuranSayfalar"; // ★ 02.10: Kur'an Sayfaları
 import { sevapEkle, arapcaHarfSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
 import { getFeatureLock } from "../services/adminSyncService";
 import Hls from "hls.js";
-import { BookOpen, Headphones, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
+import { BookOpen, Headphones, Brain, Play, Pause, RotateCcw, Search, X, Loader2, Volume2, Repeat } from "lucide-react";
 import { getSurahHadith } from "../data/surahHadith";
 import { fetchSurahEditions, fetchAyah, quranUrl, QURAN_COM_TRANSLATION } from "../studio/studioHelpers"; // ★ kayma korumalı çekim (28.09) + ÇOK DİLLİ WBW rid haritası (16.10)
 import { RECITERS, MEALS, SURAHS_DATA, TafsirBox, weightedWordIndex, isEnglishMeal, type Reciter, type SurahInfo } from "./quranLearnVeri";
+import { isAdminEmail } from "../tier"; // ★ 18.10 admin-gizli uzun vadeli kilitler
 import { useQuranSes } from "../hooks/useQuranSes"; // ★ SRP 3. TUR (10.10): dinle modu ses motoru hook'a göçetti
 import { translate, type Lang } from "../i18n"; // ★ TUR 7: UI başlıkları çok dilli
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): everyayah → islamic.network
@@ -22,7 +23,7 @@ import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): e
 // Ses: everyayah.com (ayet bazlı, 30 kari) + audio.qurancdn.com (kelime)
 // ══════════════════════════════════════════════════════════════
 
-type Mode = "learn" | "listen" | null;
+type Mode = "learn" | "listen" | "test" | null;
 
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
@@ -36,17 +37,48 @@ import { WBW_TR, wbwNormIdx, ensureWbwLoaded } from "./quranLearnSozluk";
 import { useQuranRadyo } from "../hooks/useQuranRadyo"; // ★ SRP (09.10): radyo motoru hook'a taşındı
 // ★ SRP adım 10 (09.10 2. tur): öğren/dinle ekran JSX blokları quranLearnEkranlar.tsx'e taşındı
 import { OgrenModu, DinleModu } from "./quranLearnEkranlar";
+// ★ 18.10 (kullanıcı emri): Hafızlık Testi 3. sekme — menü girişi kaldırıldı, bu modalın içine göçürüldü
+import { HafizlikTestiModal } from "./HafizlikTestiModal";
 
-interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; lang?: Lang; }
+interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; lang?: Lang; user?: { email?: string } | null; tier?: string; tierAtLeast?: (a: any, b: any) => boolean; isMasterSurum?: boolean; }
 
-const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) => {
+const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, user = null, tier = "free", tierAtLeast, isMasterSurum = false }) => {
   // ★ 04.10 TUR 7: UI başlıkları seçili dilde (kullanıcı ekran görüntüsü);
   //   lang verilmezse localStorage'dan okunur (AnnouncementBar deseni)
   const ttQL = (k: string): string => translate(lang ?? localStorage.getItem("nur_lang"), k);
   const [mode, setMode] = useState<Mode>("learn");
+  // ★ 18.10 HAFIZLIK 3. SEKME: "Kur'an'a Dön" basılınca hangi sekmeye (öğren/dinle) döneceğini hatırlar
+  const [sonQuranMod, setSonQuranMod] = useState<Exclude<Mode, null | "test">>("learn");
 
   // Header'dan hangi sekmeyle açıldıysa o modda başla
   useEffect(() => { if (open && initialMode) setMode(initialMode); }, [open, initialMode]);
+
+  // ★ 18.10 UZUN VADELİ GİZLİ KİLİTLER (kurucu isteği): KAINO ekranındaki 6 özellik
+  //   (Kâbe Canlı, Kur'an Sayfalar, Ekransız Meal, Karşılaştırmalı Okuma, Latin Okunuş,
+  //   Uyku Tilaveti) yol haritasında admin-gizli maddelerdir (adm-*). DB'de feature_locks
+  //   satırı YOKSA ya da hidden/v2/off ise özellik ADMIN/MASter HARİCİNDE HİÇ KİMSENE
+  //   görünmez (buton bile yok — "yok gibi"). Admin panelden revealFeature free→herkese,
+  //   pro→pro+ üyelere açar; kilit satırı gelince buton kendiliğinden belirir.
+  //   İNCELEME MODU: yerel geliştirme için VITE_INCELEME_MODU=1 kilileri açar.
+  const incelemeQK = (import.meta as unknown as { env?: Record<string, string | undefined> }).env?.VITE_INCELEME_MODU === "1";
+  const adminQK = (isMasterSurum || incelemeQK || isAdminEmail(user?.email || ""));
+  const qkAcik = useCallback((id: string): boolean => {
+    const lock = getFeatureLock(id, "v2"); // satır yoksa KAPALI (fail-closed)
+    if (lock === "free") return true;
+    if (adminQK) return true;
+    if (lock === "pro") return tier === "pro" || tier === "elit" || Boolean(tierAtLeast?.(tier, "pro"));
+    if (lock === "elit") return tier === "elit" || Boolean(tierAtLeast?.(tier, "elit"));
+    return false; // hidden / v2 / v3 / off / maintenance → yok gibi
+  }, [adminQK, tier, tierAtLeast]);
+  const QK_kabe = qkAcik("adm-kabe-canli");
+  const QK_sayfalar = qkAcik("adm-kuran-sayfalar");
+  // OgrenModu/DinleModu'na toplu geçirdigimiz ekran kilitleri (butonlar gizli kalır)
+  const QK_ekran = {
+    karsilastirma: qkAcik("adm-karsilastirmali-okuma"),
+    latin: qkAcik("adm-latin-okunus"),
+    ekransiz: qkAcik("adm-ekransiz-dinleme"),
+    uyku: qkAcik("adm-uyku-tilavet"),
+  };
 
   // ★ KALDIĞIN YERDEN DEVAM — AYET SEVİYESİ: effect gövdesi besmeleCalindiRef
   //   tanımından SONRAYA taşındı (TDZ: eski konumda ref'ten önceydi, build patlardı).
@@ -112,6 +144,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   useEffect(() => {
     if (!open && uykuTimerRef.current) { window.clearInterval(uykuTimerRef.current); uykuTimerRef.current = null; }
   }, [open]);
+  // ★ 18.10: header köprüsünün stale closure okumaması için mode takibi (yalnız sonQuranMod kaydında okunur)
+  const modeRef = useRef<Mode>("learn");
+  useEffect(() => { modeRef.current = mode; }, [mode]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı (gövde KabeCanliModal'da — SRP 01.10)
   const [sayfalarAcik, setSayfalarAcik] = useState(false); // ★ Kur'an Sayfaları (mushaf) — gövde QuranSayfalar.tsx
   // ★ HEADER KÖPRÜSÜ (02.10): üst bardaki 🕋 Kâbe pill'i ve menü öğesi bu modalın state'ine
@@ -121,12 +156,19 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   useEffect(() => {
     const kabeAc = () => setKabeLive(true);
     const sayfaAc = () => setSayfalarAcik(true);
+    // ★ 18.10 (kullanıcı emri): üst bardaki 🧠 Hafızlık Testi butonu bu modalı açar ve
+    //   içinden TEST ekranına atlar. setMode'ı handler içinde çağırmak stale closure
+    //   doğurmaz (setState referansı sabittir); sonQuranMod kaydı için modeRef okunur.
+    const testAc = () => { if (modeRef.current === "learn" || modeRef.current === "listen") setSonQuranMod(modeRef.current); setMode("test"); };
     window.addEventListener("nur_kabe_ac", kabeAc);
     window.addEventListener("nur_kuran_sayfalar_ac", sayfaAc);
+    window.addEventListener("nur_hafizlik_testi_ac", testAc);
     return () => {
       window.removeEventListener("nur_kabe_ac", kabeAc);
       window.removeEventListener("nur_kuran_sayfalar_ac", sayfaAc);
+      window.removeEventListener("nur_hafizlik_testi_ac", testAc);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // ★ KÂBE CANLI kaynakları ve 📻 RADYO kanalları → src/data/liveStreams.ts'e taşındı (saf veri)
   const [mushafModu, setMushafModu] = useState(false);
@@ -627,7 +669,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
   //   bileşende kalan: liste mod bayrakları, audioRef init'i, radyo/kâbe UI'sı.
   const [paused, setPaused] = useState(false); // learn modu kullanıyor; hook listen paused'i aynı state'e bağlar
   const ses = useQuranSes({
-    open, mode, kabeLive, audioRef, stopAudio,
+    open, mode: mode === "test" ? null : mode, kabeLive, audioRef, stopAudio,
     fullSurahMode, wholeQuran, wholeIdx, setWholeIdx,
     nextSurahAuto, setIsPlaying, listenReciter, karisikHoca, speed,
     paused, setPaused,
@@ -712,6 +754,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
             </button>
           </div>
           {/* ★ KÂBE CANLI: üst barda — her iki modda da görünür, canlı yayın noktasıyla */}
+          {/* ★ KÂBE CANLI: üst barda — ★ 18.10 admin-gizli kilidi (QK_kabe): kapalıyken buton YOK */}
+          {QK_kabe && (
           <button onClick={() => setKabeLive(true)} className="group relative flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-gradient-to-b from-emerald-800/60 to-emerald-950/60 px-3 py-1.5 text-[11px] font-black text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,.25)] transition hover:border-emerald-400/70 hover:brightness-125 active:scale-95" title="Mescid-i Haram'dan 7/24 kesintisiz canlı yayın">
             <span className="text-base leading-none">🕋</span> KÂBE CANLI
             <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
@@ -719,10 +763,18 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full border-2 border-[#161622] bg-red-500" />
             </span>
           </button>
-          {/* ★ KUR'AN SAYFALARI (02.10, kullanıcı emri): mushaf görünümü — zoom, tam ekran, hatim takibi */}
+          )}
+          {/* ★ KUR'AN SAYFALARI (02.10, kullanıcı emri): mushaf görünümü — ★ 18.10 admin-gizli kilidi (QK_sayfalar) */}
+          {QK_sayfalar && (
           <button onClick={() => setSayfalarAcik(true)} className="flex items-center gap-1.5 rounded-xl border border-[#D7AA41]/40 bg-gradient-to-b from-[#3a2f14] to-[#241c0b] px-3 py-1.5 text-[11px] font-black text-[#f5dda6] transition hover:border-[#D7AA41]/70 hover:brightness-125 active:scale-95" title="Mushaf sayfaları — büyüt/küçült, tam ekran, kaldığın yerden devam + hatim takibi">
             📖 SAYFALAR
             <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-0.5 text-[7.5px] font-black text-emerald-300">YENİ</span>
+          </button>
+          )}
+          {/* ★ 18.10 (kullanıcı emri): HAFIZLIK TESTİ İÇİNDEKİLER barında — SAYFALAR ile RADYO arası;
+              menüdeki ayrı 'ÜCRETSİZ' girişi kaldırıldı, tek giriş burası (sekmelerden çıkıyor) */}
+          <button onClick={() => { if (mode === "learn" || mode === "listen") setSonQuranMod(mode); stopAudio(); setMode("test"); }} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${mode === "test" ? "border-gold/50 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#f5dda6] hover:brightness-125"}`} title="Devamını getir: ayetin yarısını gösterir, sen tamamını seç">
+            🧠 {ttQL("menuHafizlikTesti")}
           </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
           <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
@@ -780,6 +832,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
       {mode === "learn" && (
         <OgrenModu
           ttQL={ttQL}
+          kilitAcik={QK_ekran}
           query={query} setQuery={setQuery}
           searchOpen={searchOpen} setSearchOpen={setSearchOpen}
           filteredSurahs={filteredSurahs}
@@ -813,6 +866,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
       {mode === "listen" && (
         <DinleModu
           ttQL={ttQL}
+          kilitAcik={QK_ekran}
           listenSurah={listenSurah} setListenSurah={setListenSurah}
           listenSurahInfo={listenSurahInfo}
           listenAyahIdx={listenAyahIdx} setListenAyahIdx={setListenAyahIdx}
@@ -841,6 +895,12 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang }) 
           audioRef={audioRef}
           loopAyahListen={loopAyahListen} setLoopAyahListen={setLoopAyahListen}
         />
+      )}
+      {/* ══════════ 3. SEKME: HAFIZLIK TESTİ (gömülü) — 18.10, kullanıcı emri ══════════
+          HafizlikTestiModal kendi çerçevesi yerine gömülü açılır (embedded); "Kur'an'a Dön"
+          son QURAN sekmesine (öğren/dinle) geri götürür. */}
+      {mode === "test" && (
+        <HafizlikTestiModal embedded open onClose={() => setMode(sonQuranMod)} lang={lang} />
       )}
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
       <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} onVideoEl={(el) => { kabeVideoRef.current = el; }} />

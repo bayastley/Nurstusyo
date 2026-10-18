@@ -34,10 +34,11 @@ const TIER_ETIKET: Record<GizliOzellik["lock_level"], string> = {
   v3: "🎬 V3 uzun vadeli — admin açabilir",
 };
 
-// ★ 17.10 YENİ DON — 22 gizli madde (kullanıcının verdiği sıra + 18.10 eklentisi, DEĞİŞMEZ):
-//   1·Ayet & Dua Kütüphanesi (18.10 eklendi) 2·Ayet Notlarım 3·Keşfet Hadis/Kıssa/Rehber
-//   4·Haftanın Videosu 5·Kelime Atölyesi 6·AI Arka Plan Üretici 7·Hazır Ayet Paketleri
-//   8–22·Atmosfer kategorilerinden 15 tanesi · +V3'lü ZIP/KendiSes
+// ★ 17.10 YENİ DON — 22 + 18.10'da 6 Kur'an-ekrani maddesi = 28 gizli madde (kullanıcının
+//   verdiği sıra, DEĞİŞMEZ): 1·Ayet & Dua Kütüphanesi 2·Ayet Notlarım 3·Keşfet Hadis/
+//   Kıssa/Rehber 4·Haftanın Videosu 5·Kelime Atölyesi 6·AI Arka Plan 7·Paketler
+//   8–14·Kur'an ekranı (Kâbe, Sayfalar, Ekransız, Karşılaştırma, Latin, Uyku)
+//   15–29·Atmosfer kategorileri · +V3'lü ZIP/KendiSes
 const GIZLI_MADDELER: Array<Omit<GizliOzellik, "lock_level">> = [
   // ★ 18.10 (kullanıcı emri): Ayet & Dua Kütüphanesi GİZLİ MADDELER listesine EKLENDİ —
   //   panelde görünür, tek tıkla free/pro/elit'e açılabilir. KODDA ayrıca ADMIN_HARD_KILITLI
@@ -50,6 +51,16 @@ const GIZLI_MADDELER: Array<Omit<GizliOzellik, "lock_level">> = [
   { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı.", icon: "✍️" },
   { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Metnin ruhuna uygun arka plan sahnesi üretir.", icon: "✨" },
   { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır — tek tıkla paketlenmiş ayet setleri.", icon: "📦" },
+  // ★ 18.10 UZUN VADELİ GÜN (Kur'an ekranı): kodda ÇALIŞAN özellikler — admin-gizli;
+  //   revealFeature ile free/pro/elit'e açılınca butonları kullanıcıda belirir.
+  { id: "adm-kabe-canli", title: "Kâbe Canlı Yayın", desc: "Mescid-i Haram'dan 7/24 canlı yayın (Kur'an modal üst barında).", icon: "🕋" },
+  { id: "adm-kuran-sayfalar", title: "Kur'an Sayfaları · Mushaf", desc: "604 sayfa mushaf görüşü + hatim takibi (Kur'an modal üst barında).", icon: "📖" },
+  { id: "adm-ekransiz-dinleme", title: "Ekransız Meal Dinleme", desc: "Ekran karartılır, ses sürer; kilit ekranı kontrolleri (MediaSession).", icon: "🌙" },
+  { id: "adm-karsilastirmali-okuma", title: "Karşılaştırmalı Okuma", desc: "İkinci meal yan yana (öğren ekranı düğmesi).", icon: "🔀" },
+  { id: "adm-latin-okunus", title: "Latin Okunuş", desc: "Ayet altında latin okunuş (öğren ekranı 'Aa Latin' düğmesi).", icon: "🔤" },
+  { id: "adm-uyku-tilavet", title: "Uyku Tilaveti · Zamanlayıcı", desc: "Süre dolunca ses durur (dinle ekranı 'Uyku' düğmesi).", icon: "⏰" },
+  // ★ 18.10 V3: Sesli Meal (Seslendirme) — admin-gizli; kod tarafı admin-godmode haricinde kapalı
+  { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "V3 kilitli · ayet metnini TTS'le okut, 5 dil + 15 atmosfer.", icon: "🔊" },
   // ★ 17.10 (2. tur): ZIP ve Kendi Sesinle Üret V3'e kilitlendi (+ 15 atmosfer)
   { id: "adm-atmos-aurora_borealis_sky", title: "Atmosfer: Kuzey Işıkları", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
   { id: "adm-atmos-black_hole_space", title: "Atmosfer: Kara Delik ve Uzay", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },

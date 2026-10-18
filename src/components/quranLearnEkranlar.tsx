@@ -21,6 +21,8 @@ interface ListenAyahData { ar: string; tr: string; n: number; }
 // ── ÖĞREN MODU EKRANI ────────────────────────────────────────
 export interface OgrenProps {
   ttQL: (k: string) => string;
+  /** ★ 18.10 admin-gizli ekran kilitleri — Kapalı olan butonlar hiç render edilmez (yok gibi) */
+  kilitAcik?: { karsilastirma?: boolean; latin?: boolean; ekransiz?: boolean; uyku?: boolean };
   query: string; setQuery: React.Dispatch<React.SetStateAction<string>>;
   searchOpen: boolean; setSearchOpen: React.Dispatch<React.SetStateAction<boolean>>;
   filteredSurahs: Array<{ n: number; name: string; ayahs: number; type: string; en: string }>;
@@ -157,9 +159,12 @@ export function OgrenModu(p: OgrenProps) {
                   <div className="rounded-2xl border border-white/10 bg-[#1E293B] p-4">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] font-bold uppercase tracking-widest text-[#6e6853]">{p.ttQL("qoMeal")}</span>
+                      {/* ★ 18.10 admin-gizli: karşılaştırmalı okuma kilidi kapalıysa buton yok */}
+                      {p.kilitAcik?.karsilastirma !== false && (
                       <button onClick={() => p.setKarsilastirmaAcik(!p.karsilastirmaAcik)} className={`rounded-lg px-2 py-1 text-[8.5px] font-black transition ${p.karsilastirmaAcik ? "bg-[#D7AA41] text-[#151020]" : "bg-white/5 text-[#8f8870] hover:text-[#f5dda6]"}`} title={p.ttQL("qoKarsilastirTitle")}>
                         {p.ttQL("qoKarsilastir")}
                       </button>
+                      )}
                     </div>
                     {p.karsilastirmaAcik ? (
                       <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -266,9 +271,12 @@ export function OgrenModu(p: OgrenProps) {
                         ))}
                       </div>
                       {/* ★ LATİN OKUNUŞ düğmesi (madde 43) — Arapça bilmeyenler için */}
+                      {/* ★ 18.10 admin-gizli: latin okunuş kilidi kapalıysa buton yok */}
+                      {p.kilitAcik?.latin !== false && (
                       <button onClick={() => p.setLatinAcik(!p.latinAcik)} className={`ml-1 rounded-lg px-2 py-1.5 text-[9px] font-black transition ${p.latinAcik ? "bg-[#D7AA41] text-[#151020]" : "bg-[#1E293B] text-[#cfc6a4] ring-1 ring-white/10 hover:bg-[#243449]"}`} title={p.ttQL("qoLatinTitle")}>
                         {p.ttQL("qoLatin")}
                       </button>
+                      )}
                       {/* ★ MUSHAF GÖRÜNÜMÜ (madde 29) — satırlı liste ↔ gerçek mushaf sayfası akışı */}
                       <button onClick={() => p.setMushafModu(!p.mushafModu)} className={`ml-1 rounded-lg px-2 py-1.5 text-[9px] font-black transition ${p.mushafModu ? "bg-[#D7AA41] text-[#151020]" : "bg-[#1E293B] text-[#cfc6a4] ring-1 ring-white/10 hover:bg-[#243449]"}`} title={p.ttQL("qoMushafTitle")}>
                         {p.ttQL("qoMushaf")}
@@ -373,6 +381,8 @@ export function OgrenModu(p: OgrenProps) {
 // ── DİNLE MODU EKRANI ────────────────────────────────────────
 export interface DinleProps {
   ttQL: (k: string) => string;
+  /** ★ 18.10 admin-gizli ekran kilitleri — Kapalı olan butonlar hiç render edilmez (yok gibi) */
+  kilitAcik?: { karsilastirma?: boolean; latin?: boolean; ekransiz?: boolean; uyku?: boolean };
   listenSurah: number; setListenSurah: React.Dispatch<React.SetStateAction<number>>;
   listenSurahInfo: { n: number; name: string; ayahs: number };
   listenAyahIdx: number; setListenAyahIdx: React.Dispatch<React.SetStateAction<number>>;
@@ -431,10 +441,16 @@ export function DinleModu(p: DinleProps) {
               <button onClick={() => { p.setFullSurahMode(v => !v); p.setWholeQuran(false); p.stopListening(); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${p.fullSurahMode ? "border-gold/40 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title={p.ttQL("qoTamSureTitle")}>{p.ttQL("qoTamSure")}</button>
               {/* ★ KÂBE CANLI: Mescid-i Haram 7/24 canlı yayın (YouTube embed) */}
               <button onClick={() => p.setKabeLive(true)} className="rounded-xl border border-emerald-900/30 bg-emerald-950/40 px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:brightness-125" title={p.ttQL("qoKabeTitle")}>{p.ttQL("qoKabeCanli")}</button>
-              {/* ★ EKRANSIZ MEAL DİNLEME: ekran kararır, sadece ses; kilit ekranı kontrolleri aktif */}
+              {/* ★ EKRANSIZ MEAL DİNLEME: ekran kararır, sadece ses; kilit ekranı kontrolleri aktif —
+                  ★ 18.10 admin-gizli: kilit kapalıysa buton yok */}
+              {p.kilitAcik?.ekransiz !== false && (
               <button onClick={() => { p.setEkransizMod(v => !v); }} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${p.ekransizMod ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title={p.ttQL("qoEkransizTitle")}>{p.ttQL("qoEkransiz")}</button>
-              {/* ★ UYKU TİLAVETİ: seçilen süre sonunda ses kendiliğinden durur */}
+              )}
+              {/* ★ UYKU TİLAVETİ: seçilen süre sonunda ses kendiliğinden durur —
+                  ★ 18.10 admin-gizli: kilit kapalıysa buton yok */}
+              {p.kilitAcik?.uyku !== false && (
               <button onClick={() => p.setUykuMenu(v => !v)} className={`rounded-xl border px-3 py-1.5 text-[10px] font-black transition ${p.uykuTimer ? "border-indigo-400/40 bg-indigo-500/15 text-indigo-300" : "border-white/10 bg-white/[.04] text-[#8f8870]"}`} title={p.ttQL("qoUykuTitle")}>{p.ttQL("qoUyku")}{p.uykuKalan !== null ? ` · ${Math.floor(p.uykuKalan / 60)}:${String(p.uykuKalan % 60).padStart(2, "0")}` : ""}</button>
+              )}
               {p.uykuMenu && (
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-2">
                   <span className="text-[9px] font-bold text-white/50">{p.ttQL("qoSureDolunca")}</span>

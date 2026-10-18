@@ -68,7 +68,9 @@ const KURALLAR = [
   {
     id: "uzantisiz-relative-import",
     aciklama: 'uzantısız relative/sibling import yasak — ".js" uzantısı yaz (örn: "./yardimcilar.js"); uzantısız hali Vercel ESM paketlemesinde sessiz çökme üretir',
-    test: /(?:from\s*|import\s*\(\s*)['"]\.\.?\/[^'"]*(?<!\.(?:js|mjs|cjs))['"]/g,
+    test: /(?:from\s*|import\s*\(\s*)['"]\.\.?\/[^'"]*(?<!\.(?:js|mjs|cjs|json))['"]/g,
+    // ★ 18.10: .json uzantısı İZİNLİ — resolveJsonModule ile gömülü veri kütüphaneleri
+    //   (api/nur-tts/ayet-kutuphane.json) Vercel ESM paketleyicisi de çözer; ihlal değil.
   },
 ];
 

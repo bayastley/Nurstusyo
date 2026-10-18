@@ -357,6 +357,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı tek tıkla gelir.", icon: "kelime_video", tier: "pro" },
           { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Yazdığın metnin ruhuna uygun arka plan sahnesi üretir, stüdyoya aktarırsın.", icon: "ai_arkaplan", tier: "pro" },
           { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır ve daha fazlası — tek tıkla paketlenmiş ayet setleri.", icon: "paket", tier: "free" },
+          // ★ 18.10 UZUN VADELİ GÜN (Kur'an ekranı): hepsi KODDA ZATEN ÇALIŞAN özellikler —
+          //   admin-gizli başlar; admin tek tıkla free/pro/elit'e açar → "yeni geldi" gibi düşer.
+          { id: "adm-kabe-canli", title: "Kâbe Canlı Yayın", desc: "Mescid-i Haram'dan 7/24 canlı yayın — Kur'an modalının üstünde canlı noktayla.", icon: "video", tier: "free" },
+          { id: "adm-kuran-sayfalar", title: "Kur'an Sayfaları · Mushaf", desc: "604 mushaf sayfası, zoom, tam ekran, kaldığın yerden devam + hatim takibi.", icon: "sayfa", tier: "free" },
+          { id: "adm-ekransiz-dinleme", title: "Ekransız Meal Dinleme", desc: "Ekran karartılır, ses sürer — kilit ekranından oynat/duraklat (MediaSession).", icon: "toplu", tier: "pro" },
+          { id: "adm-karsilastirmali-okuma", title: "Karşılaştırmalı Okuma", desc: "İkinci meal yan yana — iki meali aynı anda karşılaştırarak oku.", icon: "kitaplar", tier: "pro" },
+          { id: "adm-latin-okunus", title: "Latin Okunuş", desc: "Ayetin altında latin harfleriyle okunuş — Arapça bilmiyorsa köprü.", icon: "abc", tier: "free" },
+          { id: "adm-uyku-tilavet", title: "Uyku Tilaveti · Zamanlayıcı", desc: "Zaman dolunca ses kendiliğinden durur — yatarken Kur'an dinleme.", icon: "moon", tier: "free" },
+          // ★ 18.10 V3 (kullanıcı emri): Sesli Meal (Seslendirme) V3 admin-gizli —
+          //   admin tek tıkla free/pro/elit'e açar; kod tarafı admin-godmode haricinde
+          //   modalı hiç mount etmez (ModalsContainer render kapısı).
+          { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "V3 · Ayetім metnini TTS'le okut — 5 dil, 15 atmosfer, sıralı okuma.", icon: "seslendirme", tier: "v3" },
           ...ATMOSFERLER.map(([klasor, ad]) => ({
             id: `adm-atmos-${klasor}`,
             title: `Atmosfer: ${ad}`,

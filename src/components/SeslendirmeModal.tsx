@@ -62,7 +62,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
           //   Bakara Suresi). TR'de source regex fallback.
           const ad = a.sureAdi || (a.source || "").match(/^([^·]+) Suresi/)?.[1] || (a.source || "").split(" • ")[0] || "Diger";
           (harita[ad] ||= { ad, kartlar: [] }).kartlar.push(idx);
-        });
+        });            
         setSurler(Object.values(harita));
         setSunucuVar(true);
         // dilin ses listesini de çek
@@ -186,45 +186,50 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     return out;
   };
 
-  /** ➕ bölüm ekle — her basışta bölüm sayısı +1, kuyruk yeniden dağılır. */
+  /** ➕ bölüm ekle — her basışta bölüm sayısı +1, kuyruk yeniden dağılır.
+   *  ★ 18.10 KANCA DAĞITIM: planKes artık düz dilimle değil mBol'un KANCA planınden okur —
+   *  hedef sayıya en yakın kanca kesimi (AMA/soru/üç-nokta) seçilir, partlar merak
+   *  uyandırıcı yerden kopar (kullanıcı: "en dikkat çekici kısımda böl"). */
   const bolumEkle = () => {
     if (!metin.trim()) { yaz("Önce metin yaz", "hata"); return; }
     const n = bolumSayi + 1;
-    const kes = planKes(n);
+    const kancaPlan = mBol(metin.trim()); // kancalı plan (part sayısı motorun kararı)
+    const kes = kancaPlan.length === n
+      ? kancaPlan            // motor tam istenen sayıya böldü
+      : kancaPlan.length > n
+        ? kancaBirlestir(kancaPlan, n)   // çok part → komşuları birleştir, kancaları koru
+        : planKes(n);        // az part → eski genişletici (metin motoru)
     if (!kes.length) return;
     const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
     setKuyruk(yeniKuyruk);
     setBolumSayi(n);
     setKuyrukSec(n - 1);
-    yaz(`🧩 ${n}·bölüm hazır — kartlara tıkla: dinle / arka plan ayarla`);
+    yaz(`🧩 ${n}·bölüm hazır — kanca noktalarında kesildi, kartlara tıkla: dinle / arka plan ayarla`);
   };
 
-  /** Bölüm karta tıklandığında — sadece o bölümü ayrı oku (aynen çalışma). */
+  /** ★ 18.10 kanca planı hedef sayıya inince: en kısa komşu çiftlerini birleştir
+   *  (düz planKes'inin aynısı ama kanca-kesim metinlerine dokunmadan). */
+  const kancaBirlestir = (planParcalar: { m: string; kat: string }[], hedefN: number) => {
+    const out = [...planParcalar];
+    while (out.length > hedefN) {
+      let minI = 0, minTop = Infinity;
+      for (let i = 0; i < out.length - 1; i++) {
+        const t = out[i].m.split(/\s+/).length + out[i + 1].m.split(/\s+/).length;
+        if (t < minTop) { minTop = t; minI = i; }
+      }
+      const a = out[minI], b = out[minI + 1];
+      out.splice(minI, 2, { m: `${a.m} ${b.m}`.trim(), kat: mSkorla(`${a.m} ${b.m}`) });
+    }
+    return out;
+  };
+
+  /** ★ 18.10 (kullanıcı emri): bölüm/ayet karta tıklandığında O KARTTAN İTİBAREN SIRAYLA
+   *  devam eder — "hangi ayetleri seçtiysem devam etsin sırayla". Tek parça okuma yerine
+   *  seslendir(i) zinciri kullanılır (aynı motor, buffer'lı geçişler); karta tıkla = başlangıç.
+   *  SESLENDİR ana butonu ise tüm kuyruğu en baştan sıralı okumaya devam eder. */
   const bolumDinle = async (i: number) => {
-    if (!kuyruk[i] || runningRef.current) return;
-    const ogeler = kuyruk[i];
-    runningRef.current = true; seqRef.current++;
-    yaz(`▶ bölüm ${i + 1} okunuyor…`, "okuyor");
-    try {
-      const url = await (async () => {
-        const r = await fetch(okutUrl(ogeler.metin));
-        if (!r.ok) throw new Error("TTS " + r.status);
-        const u = (await r.json()).url as string;
-        return ttsUrl(u.replace(/^\//, ""));
-      })();
-      const a = new Audio(url);
-      audioRef.current = a;
-      await new Promise<void>((res) => {
-        const my = seqRef.current; let bitti = false;
-        const bit = () => { if (!bitti) { bitti = true; if (my === seqRef.current) res(); } };
-        a.onended = bit; a.onerror = bit;
-        setTimeout(bit, 120000);
-        a.play().catch(bit);
-      });
-      yaz(`▶ bölüm ${i + 1} bitti ✓`, "bitti");
-    } catch (e: unknown) {
-      yaz("Hata: " + (e instanceof Error ? e.message : String(e)), "hata");
-    } finally { runningRef.current = false; audioRef.current = null; }
+    if (runningRef.current || !kuyruk[i]) return;
+    await seslendir(i);
   };
   const ogCikar = (i: number) => {
     const yeni = kuyruk.filter((_, j) => j !== i);
@@ -255,24 +260,32 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   }, [plan, sunucuVar, yaz]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── SESLENDİR ──
-  const seslendir = async () => {
+  const seslendir = async (baslangicIdx = 0) => {
     if (runningRef.current || !sunucuVar) return;
     runningRef.current = true; seqRef.current++;
     const sesAdi = DILLER.find((d) => d.kod === dil);
     yaz(`${sesAdi?.bayrak || ""} ${sesAdi?.ad || "Ahmet"} okuyor…`, "okuyor");
     try {
-      const liste = kuyruk.length
+      // ★ 18.10 SIRALI DEVAM (kullanıcı: "hangi ayetleri seçtiysem devam etsin sırayla"):
+      //   kuyruk doluysa TÜMÜ okunur — ama başlangıç noktası artık SEÇİLİ kart idx'i:
+      //   karta tıklayıp SESLENDİR basınca seçili ayetten başlar, sırayla sonuna kadar gider.
+      //   baslangicIdx = 0 (varsayılan) → hep en baştan (eski davranış).
+      //   ★ typeof guard: onClick doğrudan bağlanırsa event nesnesi gelir — sayı değilse 0 say.
+      const tamListe = kuyruk.length
         ? kuyruk.map((it) => ({ m: it.metin, kat: it.kat }))
         : mod === "ayet" && mevcutAyet
           ? [{ m: mevcutAyet.tr, kat: mSkorla(`${mevcutAyet.title} ${mevcutAyet.tr} ${mevcutAyet.source}`) }]
           : plan.map((p) => ({ m: p.m, kat: p.kat }));
+      const listedenBasla = typeof baslangicIdx === "number" && Number.isFinite(baslangicIdx) ? baslangicIdx : 0;
+      const liste = listedenBasla > 0 && listedenBasla < tamListe.length ? tamListe.slice(listedenBasla) : tamListe;
       if (!liste.length) { yaz("Önce ayet veya metin ekle", "hata"); return; }
 
       const urlAl = async (m2: string) => {
         const r = await fetch(okutUrl(m2));
         if (!r.ok) throw new Error("TTS " + r.status);
-        const u = (await r.json()).url as string; // "/mp3/…"
-        return ttsUrl(u.replace(/^\//, ""));
+        const u = (await r.json()).url as string; // "data:audio/mpeg;…" (canlı) | "/mp3/…" (dev)
+        // ★ 18.10: canlı data-URL direkt; dev disk yolu ttsUrl ile ön eklenir
+        return u.startsWith("data:") ? u : ttsUrl(u.replace(/^\//, ""));
       };
       // ★ 16.10 GECİKME DÜZELTME (kullanıcı: "ses çok yavaş başlıyor, 6 sn bekliyor"):
       //   eski akış: urlAl → Audio(canplay wait 6-20sn) — TTS üretimi + mp3 indirilmesi
@@ -284,7 +297,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       for (let i = 0; i < liste.length; i++) {
         if (!runningRef.current) break;
         const p = liste[i];
-        if (kuyruk.length) setKuyrukSec(i);
+        if (kuyruk.length) setKuyrukSec(listedenBasla + i); // ★ 18.10: toplam kuyrukta doğru kart işaretlenir
         yaz(`Parça ${i + 1}/${liste.length} · ${ATM[p.kat]?.[0] || p.kat} · Ahmet okuyor…`, "okuyor");
         const { audio: a } = await siradaki;
         audioRef.current = a;
@@ -305,7 +318,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       if (runningRef.current) yaz(`Tamamlandı ✓ (${liste.length} parça)`, "bitti");
     } catch (e: unknown) {
       if (runningRef.current) yaz("Hata: " + (e instanceof Error ? e.message : String(e)), "hata");
-    } finally { runningRef.current = false; }
+    } finally { runningRef.current = false; audioRef.current = null; }
   };
   const durdur = () => {
     seqRef.current++; runningRef.current = false;

@@ -23,6 +23,7 @@
     "fix-webm-duration": "^1.0.6",
     "hls.js": "^1.7.3",
     "lucide-react": "^1.27.0",
+    "msedge-tts": "^2.1.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "tailwind-merge": "3.4.0",

@@ -258,7 +258,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   //   PORTALINA, 2) üye ama o seviyede değilse PREMIUM sayfasına yönlendirilir.
   // ★ ÜYE GATE listesindeki modüller için merkezî geçit burada, tüm tetikleyicileri
   //   (menü / stüdyo butonu / yol haritası) tek yerden yakalar. admin-godmode + master geçer.
-  const UYE_GATE: Record<string, Tier> = { seslendirme: "pro", zip: "elit", kendiSes: "elit" };
+  const UYE_GATE: Record<string, Tier> = { zip: "elit", kendiSes: "elit" };
+  // ★ 18.10: "seslendirme" UYE_GATE'ten ÇIKARILDI — V3 admin kilidi yukarıda render kapısı
+  //   olarak maruz kaldı (admin haricinde modal hiç mount edilmez).
   // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (!modal) return;
@@ -504,10 +506,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       </React.Suspense>
       )}
 
-      {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride */}
+      {/* QURAN LEARN / LISTEN — TEK MODAL: "Kur'an" pill'i açar, learn/listen sekmeleri içeride.
+          ★ 18.10: user/tier/isMaster geçildi — admin-gizli uzun vadeli kilitler (adm-kabe-canlı,
+          adm-kuran-sayfalar, adm-ekransiz-dinleme…) bu modalın butonlarını yönetir. */}
       {acildiMi("quranLearn", "quranListen") && (
       <React.Suspense fallback={null}>
-      <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} lang={lang} />
+      <QuranLearnModal open={modal === "quranLearn" || modal === "quranListen"} onClose={() => setModal(null)} initialMode={modal === "quranListen" ? "listen" : "learn"} lang={lang} user={user} tier={tier} tierAtLeast={tierAtLeast} isMasterSurum={isMasterSürüm} />
       </React.Suspense>
       )}
       {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
@@ -660,8 +664,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
 
       {/* ★ SESLENDİRME MODALI (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlendi.
           Kuyruk + atmosfer + prefetch + nefesli geçiş + kırmızı X. Ses: lokal prototip
-          sunucusu (vite proxy /nur-tts → 8877) — canlıda kapalı, kibar kapanış notu verir. */}
+          sunucusu (vite proxy /nur-tts → 8877) — canlıda kapalı, kibar kapanış notu verir.
+          ★ 18.10 V3 ADMİN KİLİDİ (kullanıcı emri): admin haricinde HERKESE kapalı —
+          modal bir an bile mount edilmez (içerik sızmasın); admin-gizli adm- maddesi
+          AdminGizliFeatures panelinden free/pro/elit'e açılabilir (o zaman UYE_GATE
+          tier'ı devreye girer). Kod tarafı fail-closed: isMasterSurum da admin değilse kapı kapalı. */}
+      {(isMasterSürüm || isAdminEmail(user?.email || "")) && (
       <SeslendirmeModal open={modal === "seslendirme"} onClose={() => setModal(null)} notify={notify ?? undefined} />
+      )}
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}
       <LegalModal

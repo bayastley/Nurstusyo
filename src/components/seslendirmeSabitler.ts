@@ -1,12 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
 // SESLENDİRME SABİTLERİ & TİPLERİ — SeslendirmeModal.tsx'ten çıkarıldı (14.10)
-// ★ Vite dev proxy: /nur-tts/… → http://127.0.0.1:8877/…
-//   Canlıda proxy yok → fetch hata verir → modal kibarca geliştirme notu der.
+// ★ ÇİFT MOD (18.10): /nur-tts/… artık İKİ kaynakla karşılanır —
+//     1) DEV:   Vite proxy → http://127.0.0.1:8877 (python meal-sunucu.py)
+//     2) CANLI: /api/nur-tts/* serverless (msedge-tts + Upstash mp3 cache)
+//   ttsUrl() otomatik seçer: import.meta.env.DEV ? '/nur-tts/…' : '/api/nur-tts/…'
 // ═══════════════════════════════════════════════════════════════
 
-/** Vite dev proxy: /nur-tts/… → http://127.0.0.1:8877/…  (vite.config.ts'e eklendi)
- *  Canlıda proxy yok → fetch hata verir → modal kibarca geliştirme notu der. */
-export const ttsUrl = (yol: string) => `/nur-tts/${yol}`;
+/** DEV → Vite proxy; PROD → /api/nur-tts serverless (aynı sözleşme).
+ *  ★'nyol'/sesler/okut; rewrite yalnız /api/nur-tts/(.*)'i yakalar —
+ *  yolun ilkinin ayrılması index.ts'te yapılır, tarayıcı farkı endeksützçeszdır. */
+export const ttsUrl = (yol: string): string => {
+  const canli = !(import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV;
+  return `${canli ? "/api/nur-tts" : "/nur-tts"}/${yol}`;
+};
 
 // ★ 5 DİL (14.10): meallar + TTS sesi seçilen dilde (sunucu /ayetler?dil= + /okut?dil=)
 export const DILLER = [

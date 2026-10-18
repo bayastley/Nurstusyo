@@ -30,6 +30,10 @@ interface HafizlikTestiModalProps {
   open: boolean;
   onClose: () => void;
   notify?: (msg: string) => void;
+  /** ★ 18.10 EMBEDDED (kullanıcı emri): QuranLearnModal'ın 3. sekmesi olarak gömülü açılır.
+   *  Modal çerçevesi (UIElements Modal) atlanır, yalnız test içeriği render edilir —
+   *  QuranLearnModal zaten kendi tam ekran kabuğunu çizer. */
+  embedded?: boolean;
 }
 
 interface Soru {
@@ -98,7 +102,7 @@ const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }>; tt: (k: 
   );
 }
 
-export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, onClose, notify, lang = "tr" }) => {
+export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, onClose, notify, lang = "tr", embedded = false }) => {
   // ★ FULL I18N (01.10): prop lang → sözlük; eksik anahtar TR fallback
   const tt = (k: string): string => translate(lang, k);
 
@@ -331,8 +335,36 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   // Ses ref'i yok — güvenlik için boş; geri tuşu sadece state temizler.
   const hocaAudioPauseGuvenli = () => { /* future-proof: ses durdurma gerekirse */ };
 
+  // ★ 18.10 GÖMÜLÜ MOD (QuranLearnModal 3. sekmesi): Modal çerçevesi yerine ince kabuk —
+  //   tam ekran kabuk QuranLearnModal'a ait; başlık + "Kur'an'a Dön" yalnız gömülü modda gösterilir.
+  const Cerceve: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    if (!embedded) {
+      return (
+        <Modal title={tt("v2HafizlikTitle")} sub={tt("v2HafizlikSub")} onClose={onClose}>
+          {children}
+        </Modal>
+      );
+    }
+    return (
+      <div className="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 sm:px-4">
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2">
+          <div className="min-w-0">
+            <p className="text-[12px] font-black" style={{ color: "var(--accent-2)" }}>{tt("v2HafizlikTitle")}</p>
+            <p className="text-[8.5px] text-white/45">{tt("v2HafizlikSub")}</p>
+          </div>
+          <button type="button" onClick={() => { hocaAudioPauseGuvenli(); onClose(); }}
+            className="shrink-0 rounded-lg bg-white/5 px-2.5 py-1.5 text-[9.5px] font-black text-white/60 transition hover:bg-white/10 hover:text-white"
+            title="Kur'an Öğren/Dinle ekranına dön">
+            ❮ Kur'an'a Dön
+          </button>
+        </div>
+        {children}
+      </div>
+    );
+  };
+
   return (
-    <Modal title={tt("v2HafizlikTitle")} sub={tt("v2HafizlikSub")} onClose={onClose}>
+    <Cerceve>
       {/* ★ ZORLUK SEÇİMİ — seviye seçilmeden soru başlamaz */}
       {!seviyeSecili ? (
         <div className="space-y-2">
@@ -584,6 +616,6 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
         )}
       </>
       )}
-    </Modal>
+    </Cerceve>
   );
 };

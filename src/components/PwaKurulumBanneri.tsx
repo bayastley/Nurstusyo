@@ -134,19 +134,34 @@ export const PwaKurulumBanneri: React.FC = () => {
     setGuncellemeVar(false);
   };
 
+  // ★ 18.10 MENÜ KÖPRÜSÜ: kullanıcı "ana ekran ekleme olayını bulamıyorum" dedi — üç-nokta
+  //   menüdeki "📲 Ana Ekrana Ekle" öğesi bu olayı basar, banner İSTİDİĞİ AN bir daha
+  //   gösterilir (manuelTalimat sıfırlanır, kurulum anlatımı taze açılır). Kuruluysa
+  //   sessiz geçilir — kurulu cihazda anlatım gereksiz.
   useEffect(() => {
+    const ac = () => {
+      try { if (localStorage.getItem(KURULUM_KEY) === "1") return; } catch { /* yut */ }
+      setManuelTalimat(false);
+      setGorunur(true);
+    };
+    window.addEventListener("nur_pwa_banner_ac", ac);
+    return () => window.removeEventListener("nur_pwa_banner_ac", ac);
+  }, []);
+
+  useEffect(() => {
+    // ★ 18.10 KALICI BANT (kullanıcı isteği): banner HER ZAMAN dursun — kurulum
+    //   tamamlanmadıysa kapatılsa bile 2.5 sn sonra geri gelir; 30 gün susturma
+    //   (KAPAT_KEY) akıştan çıkarıldı. KURULUM_KEY = 1 (kurulu/standalone)
+    //   olunca yalnız kurulum WATCHER'ları dinlenir, banner çıkmaz.
     try {
       if (localStorage.getItem(KURULUM_KEY) === "1") return;
-      const kapanis = localStorage.getItem(KAPAT_KEY);
-      if (kapanis && Date.now() - Number(kapanis) < 30 * 86_400_000) return;
     } catch { /* yut */ }
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
     if (standalone) { try { localStorage.setItem(KURULUM_KEY, "1"); } catch {} return; }
     const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent) && !(window as any).MSStream;
     setIos(isIos);
-    const timer = window.setTimeout(() => setGorunur(true), 2500); // açılıştan 2.5 sn sonra
+    const timer = window.setTimeout(() => setGorunur(true), 2500);
     const onBip = (e: Event) => { e.preventDefault(); setBipEvent(e as BIPEvent); setGorunur(true); };
-    // Kullanıcı kurduysa (her tarayıcıda) banner'ı kalıcı kapat
     const onInstalled = () => { try { localStorage.setItem(KURULUM_KEY, "1"); } catch {} setGorunur(false); };
     window.addEventListener("beforeinstallprompt", onBip);
     window.addEventListener("appinstalled", onInstalled);
@@ -154,8 +169,10 @@ export const PwaKurulumBanneri: React.FC = () => {
   }, []);
 
   const kapat = () => {
-    setGorunur(false);
-    try { localStorage.setItem(KAPAT_KEY, String(Date.now())); } catch {}
+    // ★ 18.10: X artık banner'ı GİZLEMEZ — küçültür (kabarcığa); 30 gün susturma kaldırıldı,
+    //   kullanıcı "o her zaman orda dursun" dedi. Yalnız kurulum tamamlandıysa tamamen yok olur.
+    try { if (localStorage.getItem(KURULUM_KEY) === "1") return; } catch { /* yut */ }
+    setGorunur(true);
   };
 
   const kur = async () => {
