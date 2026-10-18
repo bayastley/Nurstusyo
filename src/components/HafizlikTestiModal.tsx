@@ -548,9 +548,9 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
 
       {soru && !yukleniyor && (
         <>
-          <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] p-4">
-            <p className="mb-2 text-[9px] font-black uppercase tracking-wider text-white/40">{soru.sn} · {tt("hafizlikAyetN").replace("{a}", String(soru.a))}</p>
-            <p className="text-right font-arabic text-[17px] leading-relaxed" dir="rtl" style={{ color: "var(--accent-2)" }}>{soru.bas} …</p>
+          <div className="mb-3 rounded-xl border border-white/10 bg-white/[.03] px-3 py-2.5">
+            <p className="mb-2 text-[8px] font-black uppercase tracking-wider text-white/40">{soru.sn} · {tt("hafizlikAyetN").replace("{a}", String(soru.a))}</p>
+            <p className="text-right font-arabic text-[13px] leading-relaxed" dir="rtl" style={{ color: "var(--accent-2)" }}>{soru.bas} …</p>
             <p className="mt-1.5 text-center text-[9px] text-white/35">{tt("hafizlikDevamSoru")}</p>
           </div>
 
@@ -561,7 +561,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               const goster = secim !== null;
               return (
                 <button key={i} type="button" onClick={() => cevapla(i)} disabled={goster}
-                  className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 text-right font-arabic text-[13px] leading-relaxed transition ${
+                  className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-right font-arabic text-[10px] leading-relaxed transition ${
                     goster && dogruSecenek ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-200"
                     : goster && secildi && !dogruSecenek ? "border-red-400/50 bg-red-500/15 text-red-200"
                     : goster ? "border-white/5 bg-white/[.02] text-white/35"

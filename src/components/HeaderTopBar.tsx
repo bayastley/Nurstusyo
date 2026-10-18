@@ -51,6 +51,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
   const [toolsOpen, setToolsOpen] = React.useState(false);
+  // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
+  //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
+  React.useEffect(() => {
+    const ac = () => setToolsOpen(true);
+    window.addEventListener("nur_araclar_ac", ac);
+    return () => window.removeEventListener("nur_araclar_ac", ac);
+  }, []);
   const updatesTimer = React.useRef<number>(0);
 
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
@@ -527,13 +534,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <span className="relative h-2 w-2 rounded-full bg-red-500" />
               </span>
             </button>
-            {/* ★ 18.10 (kullanıcı emri): Hafızlık Testi ana sayfa üst barda — Kâbe Canlı ile İçindekiler arası.
-                Kur'an ekranını açıp içinde gömülü test sekmesine atlar; rozet yok (ÜCRETSİZ istenmedi). */}
-            <button data-minitur="hafizlik-testi" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_hafizlik_testi_ac")); }}
+            {/* ★ 18.10 (kullanıcı emri): "Kur'an" bölümü ana ekran üst barda — Hafızlık Testi'nin
+                yerine. Tek tık Kur'an ekranını açar (İçindeki öğrenme/test modülleri orada).
+                Hafızlık Testi silinmedi — Kur'an ekranına gömülü, oradan da erişilir. */}
+            <button data-minitur="kuran-bolumu" onClick={() => setModal("quranLearn")}
               className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-              title="Devamını getir: ayetin yarısını gösterir, sen tamamını seç">
-              🧠 Hafızlık Testi
+              title="Kur'an Sayfaları · Dinle · Hafızlık Testi · Ögünme — hepsi tek yerde">
+              📖 Kur'an
             </button>
             {/* ★ 16.10 İÇİNDEKİLER — sol menüdeki aynı "siteHakkinda" modalını açan üst-bar butonu.
                 ★ 18.10 (kullanıcı emri): Hafızlık Testi butonu Kâbe-İçindekiler arasına kondu.

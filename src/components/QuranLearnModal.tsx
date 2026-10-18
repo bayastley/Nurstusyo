@@ -780,6 +780,14 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
             📻 {radioOn ? (radioPaused ? ttQL("qrRadyoDurdu") : ttQL("qrRadyoAcik")) : ttQL("qrRadyo")}
           </button>
+          {/* ★ 18.10 NÛR ARAÇLARI (kullanıcı emri): Sevap Köşesi kaldırıldı — yerine
+              'NUR ARAÇLARI' butonu. Tıklama Araçlar panelini (IslamicToolsPanel) açar:
+              hatim takibi, sevap sayacı, zikirmatik orada duruyor */}
+          <button onClick={() => window.dispatchEvent(new Event("nur_araclar_ac"))}
+            className="flex items-center gap-1.5 rounded-xl border border-emerald-900/30 bg-emerald-950/30 px-3 py-1.5 text-[11px] font-black text-emerald-300 transition hover:brightness-125 active:scale-95"
+            title="Nûr Araçları — hatim takibi, sevap sayacı, zikirmatik">
+            🧭 {ttQL("nurAraclari")}
+          </button>
           {/* ★ KAPAT: en sağda — modalı kapatır (radyo açıkken bile) */}
           <button onClick={onClose} aria-label={ttQL("qrKapat")} className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttQL("qrEkranKapatTitle")}>
           KAPAT <X size={13} />

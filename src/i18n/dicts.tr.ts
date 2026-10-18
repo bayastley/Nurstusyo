@@ -282,6 +282,9 @@ export const trDict: Dict = {
   menuYeni: "YENİ",
   menuKesfet: "Keşfet · Hadis & Kıssa & Rehber",
   menuHafizlikTesti: "Hafızlık Testi",
+  // ★ 18.10: Kur'an Dinliyorum ekranındaki 🧭 Nûr Araçları butonu (Sevap Köşesi adı değişti)
+  sevapKosesi: "Nûr Araçları",
+  nurAraclari: "Nûr Araçları",
   menuAyetNotlari: "Ayet Notlarım",
   menuKelimeAtolyesi: "Kelime Atölyesi · ✍️",
   menuArkaPlanUretici: "Arka Plan Üretici · ✨",

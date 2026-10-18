@@ -21,6 +21,16 @@ export const V2_KILITLI: Record<V2ModalId, string> = {
   arkaPlanUretici: "Arka Plan Üretici",
 };
 
+// ★ 18.10 KUR'AN ÖĞRENME İÇERİKLERİ HEPSİ ÜCRETSİZ (kullanıcı emri):
+//   "kuran okuma dinleme gibi ögrenme içerikleri hep ücretsiz olacak —
+//    güncellemelerden sil ve bütün kullanıcılara aktif et".
+//   Kur'an modalındaki ekran kilitleri (adm-kabe-canlı, adm-kuran-sayfalar,
+//   adm-ekransiz-dinleme, adm-karşılaştırmalı-okuma, adm-latin-okunus,
+//   adm-uyku-tilavet) QuranLearnModal qkAcik() ile çözülür — V2_KILITLI bu
+//   kapsamda DEĞİL ve hafizlikTesti bu listede ZATEN YOK. Learn mealli içerik
+//   öğrudan free; admin tek tıkla revealFeature ile açabilir (getFeatureLock
+//   "v2") — kod tarafı "v2 Kapalı" iken bunlara asla engel olmaz.
+
 export const V2_MODAL_IDLERI = Object.keys(V2_KILITLI) as V2ModalId[];
 
 /** ★ LAZY KAPISI (07.10): açılan modal adlarını kaydet — bir kez açılan modalın

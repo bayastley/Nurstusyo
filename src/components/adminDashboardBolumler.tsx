@@ -586,6 +586,8 @@ export function AdminErrorsTab({
               {/* Liste */}
               <div className="space-y-2">
                 {sayfadaki.length > 0 ? sayfadaki.map((log) => {
+                  // ★ 18.10: sunucu loglarında IP (nur_error_logs.ip) — admin "bu IP'nin kullanıcısı kim/bu hata kime geldi" diye baksın
+                  const logIp = String((log as any).ip || "");
                   const cihaz = String(log.user_agent || "");
                   const cihazKisa = cihaz.includes("Mobile") ? "📱 Mobil" : cihaz.includes("Tablet") ? "📟 Tablet" : "💻 Masaüstü";
                   const tarayici = cihaz.includes("Edg/") ? "Edge" : cihaz.includes("Chrome/") ? "Chrome" : cihaz.includes("Firefox/") ? "Firefox" : cihaz.includes("Safari/") ? "Safari" : "Diğer";
@@ -607,9 +609,12 @@ export function AdminErrorsTab({
                             className="rounded px-1 py-0.5 text-[8px] font-black text-white/30 transition hover:bg-red-500/20 hover:text-red-300">✕</button>
                         </span>
                       </div>
-                      {/* ★ KİM YAŞADI — kullanıcı e-postası (misafirde ghost) */}
-                      <div className={`flex items-center gap-1 text-[9.5px] font-bold ${log.user_email ? "text-sky-300" : "text-white/35"}`}>
+                      {/* ★ KİM YAŞADI — kullanıcı e-postası (misafirde ghost) + IP (varsa) */}
+                      <div className={`flex items-center gap-2 text-[9.5px] font-bold ${log.user_email ? "text-sky-300" : "text-white/35"}`}>
                         {log.user_email ? <><UserCheck size={11} /> {log.user_email}</> : "👻 Misafir kullanıcı (giriş yapmamış)"}
+                        {logIp && (
+                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8.5px] font-monospace text-amber-200/80" title="İstek geldiği IP (Vercel x-forwarded-for)">🌐 {logIp}</span>
+                        )}
                       </div>
                       {log.stack && (
                         <details className="text-white/40">

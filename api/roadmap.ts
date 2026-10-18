@@ -368,7 +368,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // ★ 18.10 V3 (kullanıcı emri): Sesli Meal (Seslendirme) V3 admin-gizli —
           //   admin tek tıkla free/pro/elit'e açar; kod tarafı admin-godmode haricinde
           //   modalı hiç mount etmez (ModalsContainer render kapısı).
-          { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "V3 · Ayetім metnini TTS'le okut — 5 dil, 15 atmosfer, sıralı okuma.", icon: "seslendirme", tier: "v3" },
+          { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "V3 · Ayetim metnini TTS'le okut — 5 dil, 15 atmosfer, sıralı okuma.", icon: "seslendirme", tier: "v3" },
+          // ★ 18.10 UZUN VADELI PLAN (kullanıcı emri — SAŞMA OLMAYAN gerçek özellikler):
+          //   "yapılabilir ama henüz yapılmamış" — ilgi çeksin, merak uyandırsın.
+          { id: "adm-tajvid-egitimi", title: "Tajvid Eğitimi", desc: "Harflerin makharij'i, sifatları ve Kur'an okuma kuralları adım adım — ders + alıştırma + sınav. Öğrenme içeriği ÜCRETSİZ.", icon: "abc", tier: "free" },
+          { id: "adm-telaffuz-egitimi", title: "Telaffuz Eğitimi", desc: "Kâriden örnek ayet dinle/karşılaştır; harf-harf telaffuz kalibrasyon testi. ÜCRETSİZ.", icon: "seslendirme", tier: "free" },
+          { id: "adm-haftanin-videosu-v2", title: "Haftanın Videosu V2", desc: "Oylamalı vitrin + topluluk yorumu + haftanın teması; otomatik sosyal medya kartı üretimi.", icon: "hafta_video", tier: "free" },
+          { id: "adm-hatim-takip-v2", title: "Hatim Takip V2 · Grup", desc: "Aynı hatimi ailenle/arkadaşlarla birlikte yap; grup sayacı + hatim meydanı.", icon: "toplu", tier: "free" },
+          { id: "adm-gece-rehberi", title: "Gece İbadet Rehberi", desc: "Teheccüd/tesbih seansları, uyku öncesi tilavet planlayıcı; hafif gece teması.", icon: "moon", tier: "free" },
           ...ATMOSFERLER.map(([klasor, ad]) => ({
             id: `adm-atmos-${klasor}`,
             title: `Atmosfer: ${ad}`,

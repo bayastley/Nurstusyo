@@ -38,6 +38,10 @@ interface BIPEvent extends Event {
 
 export const PwaKurulumBanneri: React.FC = () => {
   const [gorunur, setGorunur] = useState(false);
+  // ★ 18.10 (kullanıcı: "çerezler gibi köşede buton olsun"): X'e basınca banner
+  //   YOK OLMAYIP küçülür — köşede yalnız yuvarlak bir 📲 kabarcık/kısayol kalır;
+  //   tıklayınca tam banner geri açılır. Kurulum tamamlanmadan kaybolmaz.
+  const [kucuk, setKucuk] = useState(false);
   const [bipEvent, setBipEvent] = useState<BIPEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [manuelTalimat, setManuelTalimat] = useState(false);
@@ -142,6 +146,7 @@ export const PwaKurulumBanneri: React.FC = () => {
     const ac = () => {
       try { if (localStorage.getItem(KURULUM_KEY) === "1") return; } catch { /* yut */ }
       setManuelTalimat(false);
+      setKucuk(false);
       setGorunur(true);
     };
     window.addEventListener("nur_pwa_banner_ac", ac);
@@ -162,17 +167,19 @@ export const PwaKurulumBanneri: React.FC = () => {
     setIos(isIos);
     const timer = window.setTimeout(() => setGorunur(true), 2500);
     const onBip = (e: Event) => { e.preventDefault(); setBipEvent(e as BIPEvent); setGorunur(true); };
-    const onInstalled = () => { try { localStorage.setItem(KURULUM_KEY, "1"); } catch {} setGorunur(false); };
+    const onInstalled = () => { try { localStorage.setItem(KURULUM_KEY, "1"); } catch {} setGorunur(false); setKucuk(false); };
     window.addEventListener("beforeinstallprompt", onBip);
     window.addEventListener("appinstalled", onInstalled);
     return () => { window.clearTimeout(timer); window.removeEventListener("beforeinstallprompt", onBip); window.removeEventListener("appinstalled", onInstalled); };
   }, []);
 
   const kapat = () => {
-    // ★ 18.10: X artık banner'ı GİZLEMEZ — küçültür (kabarcığa); 30 gün susturma kaldırıldı,
-    //   kullanıcı "o her zaman orda dursun" dedi. Yalnız kurulum tamamlandıysa tamamen yok olur.
+    // ★ 18.10: X banner'ı tamamen gizlemez — KÜÇÜLTÜR: köşede yalnız yuvarlak
+    //   📲 kısayol kabarcığı kalır (çerez bandı gibi). Tıklayınca tam banner geri
+    //   gelir. Yalnız kurulum tamamlandıysa (KURULUM_KEY/standalone) tamamen yok olur.
     try { if (localStorage.getItem(KURULUM_KEY) === "1") return; } catch { /* yut */ }
-    setGorunur(true);
+    setGorunur(false);
+    setKucuk(true);
   };
 
   const kur = async () => {
@@ -182,11 +189,11 @@ export const PwaKurulumBanneri: React.FC = () => {
         const choice = await bipEvent.userChoice;
         if (choice.outcome === "accepted") {
           try { localStorage.setItem(KURULUM_KEY, "1"); } catch {}
-          setGorunur(false);
+          setGorunur(false); setKucuk(false);
           return;
         }
         // kullanıcı reddettse banner'ı kapat ama tekrar çıkabilir
-        setGorunur(false);
+        setGorunur(false); setKucuk(true);
         return;
       } catch { /* event tükenmiş olabilir → manuel talimata düş */ }
     }
@@ -194,7 +201,25 @@ export const PwaKurulumBanneri: React.FC = () => {
     setManuelTalimat(true);
   };
 
-  if (!gorunur && !guncellemeVar && !guncellendi) return null;
+  if (!gorunur && !kucuk && !guncellemeVar && !guncellendi) return null;
+
+  // ★ 18.10 KABARCIK: banner küçültülmüşse köşede yalnız bu yuvarlak kısayol kalır
+  if (!gorunur && kucuk && !guncellemeVar && !guncellendi) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[88]">
+        <button
+          type="button"
+          onClick={() => { setKucuk(false); setGorunur(true); }}
+          title={tt("pwaKurBaslik")}
+          aria-label={tt("pwaKurBaslik")}
+          className="modal-in flex h-11 w-11 items-center justify-center rounded-full shadow-2xl transition hover:brightness-110 active:scale-95"
+          style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))", border: "1px solid rgba(215,170,82,.5)" }}
+        >
+          <Smartphone size={18} className="text-black" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-[88] mx-2 max-w-[300px]">

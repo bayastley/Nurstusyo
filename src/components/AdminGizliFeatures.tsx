@@ -61,6 +61,12 @@ const GIZLI_MADDELER: Array<Omit<GizliOzellik, "lock_level">> = [
   { id: "adm-uyku-tilavet", title: "Uyku Tilaveti · Zamanlayıcı", desc: "Süre dolunca ses durur (dinle ekranı 'Uyku' düğmesi).", icon: "⏰" },
   // ★ 18.10 V3: Sesli Meal (Seslendirme) — admin-gizli; kod tarafı admin-godmode haricinde kapalı
   { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "V3 kilitli · ayet metnini TTS'le okut, 5 dil + 15 atmosfer.", icon: "🔊" },
+  // ★ 18.10 UZUN VADELI PLAN (kullanıcı emri — gerçek, henüz yapılmamış özellikler; ilgi çeksin):
+  { id: "adm-tajvid-egitimi", title: "Tajvid Eğitimi", desc: "Harflerin makharij'i + kurallar ders/ad/sınav — ÜCRETSİZ öğrenme içeriği.", icon: "🔤" },
+  { id: "adm-telaffuz-egitimi", title: "Telaffuz Eğitimi", desc: "Kâri örnek ayet dinle/karlaştır + telaffuz kalibrasyon testi. ÜCRETSİZ.", icon: "🎙️" },
+  { id: "adm-haftanin-videosu-v2", title: "Haftanın Videosu V2", desc: "Oylamalı vitrin + topluluk yorumu + otomatik sosyal kart.", icon: "🎬" },
+  { id: "adm-hatim-takip-v2", title: "Hatim Takip V2 · Grup", desc: "Aynı hatimi ailenle/arkadaşlarla birlikte yap; grup sayacı.", icon: "🕋" },
+  { id: "adm-gece-rehberi", title: "Gece İbadet Rehberi", desc: "Teheccüd/tesbih seansları + uyku tilaveti planlayıcı.", icon: "🌙" },
   // ★ 17.10 (2. tur): ZIP ve Kendi Sesinle Üret V3'e kilitlendi (+ 15 atmosfer)
   { id: "adm-atmos-aurora_borealis_sky", title: "Atmosfer: Kuzey Işıkları", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
   { id: "adm-atmos-black_hole_space", title: "Atmosfer: Kara Delik ve Uzay", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },

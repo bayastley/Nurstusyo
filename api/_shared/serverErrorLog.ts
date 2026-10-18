@@ -55,6 +55,10 @@ export async function logServerError(
     const path = String(req.url || endpoint).slice(0, 200);
     const kind = detectKind(message, stack, path);
     const userAgent = String(req.headers["user-agent"] || "server").slice(0, 300);
+    // ★ 18.10 (sahip: IP'yi de görmek istiyorum): x-forwarded-for → Vercel'de
+    //   gerçek istemci IP'si. Varsa nur_error_logs.ip'ye yazılır — admin panelde
+    //   sadece IP doluysa "🌐" rozetinde görünür, boşsa sessizce pas geçilir.
+    const ip = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim().slice(0, 60) || "";
 
     // Aynı hata 5 dk içinde tekrar gelirse yut (memory-based dedupe)
     const fingerprint = crypto.createHash("sha256").update(`${message}|${path}`).digest("hex").slice(0, 16);
@@ -79,6 +83,7 @@ export async function logServerError(
         fingerprint,
         kind,
         user_email: "", // sunucu hatasında kullanıcı kimliği bilinmiyor
+        ...(ip ? { ip } : {}), // ★ IP sütunu varsa yaz; yoksa sütun olmadan POST — eski tabloyu kırmaz
       }),
     });
   } catch {

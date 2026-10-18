@@ -25,6 +25,10 @@ create index if not exists idx_nur_error_logs_fingerprint
 alter table public.nur_error_logs enable row level security;
 revoke all on public.nur_error_logs from anon, authenticated;
 
+-- ★ 18.10: hata kaydına IP ekle (mevcut tabloyu bozmaz — tek satır ALTER)
+--   NOT: bu bilgi yalnız service role'e açık, RLS kapalı.
+alter table public.nur_error_logs add column if not exists ip text;
+
 -- 30 günden eski hata kayıtlarını temizle (ücretsiz plan kotası için)
 create or replace function public.nur_prune_error_logs()
 returns void
