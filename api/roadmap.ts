@@ -200,10 +200,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const mine = await db<any[]>(`nur_roadmap_votes?user_id=eq.${encodeURIComponent(session.id)}&select=feature_id`).catch(() => [] as any[]);
         myVote = mine[0]?.feature_id ?? null;
       }
+      // ★ 17.10 GİZLE PLANININ SUNUCU AYAĞI: admin-gizli maddelerin (adm-*)
+      //   açıklaması admin harici cevapta YOK SAYILIR — oylamada isim + oy
+      //   kalır, detay devtools'tan bile okunamaz. Cache'ten gelen satırlar
+      //   MUTASYON DEĞİL kopyayla maskelemir (instance ortak cache korunur).
+      const adminEmailsRead = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
+      const adminSess = Boolean(session && adminEmailsRead.length && adminEmailsRead.includes(session.email.toLowerCase()));
+      const maskeAdminMaddeleri = (f: any) =>
+        String(f.id || "").startsWith("adm-") ? (adminSess ? f : { ...f, description: "", desc: "" }) : f;
       return res.status(200).json({
         ok: true,
-        v2: features.filter((f) => f.version === "V2" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
-        v3: features.filter((f) => f.version === "V3" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })),
+        v2: features.filter((f) => f.version === "V2" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })).map(maskeAdminMaddeleri),
+        v3: features.filter((f) => f.version === "V3" && f.active).map((f) => ({ ...f, desc: f.description, votes: counts[f.id] || 0 })).map(maskeAdminMaddeleri),
         myVote,
         totalVotes,
       });
@@ -310,20 +318,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rmCache = null;
         return res.status(200).json({ ok: true });
       }
-      // ★ 10.10: Admin-gizli 6 maddeyi V2 oylama listesine EKLER.
+      // ★ 10.10: Admin-gizli maddeyi V2 oylama listesine EKLER.
       //   Kullanıcılar göremez (getFeatureLock "hidden" → ... admin?) — sadece admin.
       //   Admin istediğini "free"/"pro"/"elit"e çekince "yeni güncelleme" gibi
       //   kullanıcı ekranlarına düşer (duyuru adminSyncService üzerinden).
+      // ★ 17.10 YENİ DON (kullanıcı kararı 2. tur): 22 madde — hidden gizli + 2 V.
+      //   Önceki 21-madde listesi güncellendi; sıra kullanıcının verdiği sırada:
+      //   1·Ayet & Dua Kütüphanesi (18.10 eklendi) 2·Ayet Notlarım 3·Keşfet Hadis/Kıssa/Rehber 3·Haftanın Videosu
+      //   4·Kelime Atölyesi 5·AI Arka Plan Üretici 6·Hazır Ayet Paketleri
+      //   7–21·Atmosfer (15 adet) 22·ZIP Resim/Ses Yükleme (V3) 23·Kendi Sesinle Üret (V3).
       if (action === "addAdminFeatures") {
         const admin = session;
-        const ADMIN_FEATURES = [
-          { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı — tam paket.", icon: "arsiv", tier: "elit" },
+        const ATMOSFERLER: Array<[string, string]> = [
+          ["aurora_borealis_sky", "Kuzey Işıkları"],
+          ["black_hole_space", "Kara Delik ve Uzay"],
+          ["hellfire_volcano_lava", "Cehennem Ateşi ve Lav"],
+          ["paradise_garden_palace", "Cennet Bahçesi ve Saray"],
+          ["stormy_sea_boat", "Fırtınalı Deniz ve Gemi"],
+          ["lunar_phases_orbit", "Ayın Evreleri ve Yörüngesi"],
+          ["meteor_shower_stars", "Meteor Yağmuru"],
+          ["gushing_spring_river", "Çağlayan Pınar ve Nehir"],
+          ["date_palm_branches", "Hurma Dalları"],
+          ["olive_grove_trees", "Zeytinlik Ağaçları"],
+          ["honeybee_hive_comb", "Bal Arısı ve Petek"],
+          ["pearl_coral_diving", "İnci ve Mercan Dalışı"],
+          ["justice_scales_balance", "Adalet Terazisi"],
+          ["deep_canyon_passages", "Derin Kanyon Geçitleri"],
+          ["wolf_howling_night", "Gece Uluyan Kurt"],
+        ];
+        const ADMIN_FEATURES: Array<{ id: string; title: string; desc: string; icon: string; tier: string }> = [
+          // ★ 18.10 (kullanıcı emri): Ayet Kütüphanesi gizli maddelere geri eklendi —
+          //   kilit HELİVALIDE ADMIN_HARD_KILITLI'da (kod tarafı); bu satır panelin
+          //   kilit yönetiminde görünür olması içindir.
+          { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı.", icon: "arsiv", tier: "free" },
+          { id: "adm-ayet-notlari", title: "Ayet Notlarım", desc: "Seçili ayetlere kendi notunu ekle; manevi arşiv cihazında şifreli durur.", icon: "notlar", tier: "pro" },
+          { id: "adm-kesfet-rehber", title: "Keşfet: Hadis · Kıssa · Rehber", desc: "Hadis bankası, peygamber kıssaları ve dua rehberi tek Keşfet ekranında.", icon: "soru", tier: "free" },
+          { id: "adm-haftanin-videosu", title: "Haftanın Videosu", desc: "En beğenilen üretimler her hafta vitrinde; topluluğa ilham versin.", icon: "hafta_video", tier: "free" },
           { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı tek tıkla gelir.", icon: "kelime_video", tier: "pro" },
-          { id: "adm-ayet-notlari", title: "Ayet Notları", desc: "Seçtiğin ayetlere kendi notunu ekle — şifreli arşiv.", icon: "notlar", tier: "pro" },
-          { id: "adm-ayet-paketleri", title: "Ready Ayet Paketleri", desc: "Kandil, cuma, sabır ve daha fazlası — tek tıkla paketlenmiş ayet setleri.", icon: "paket", tier: "free" },
-          { id: "adm-kendi-ses", title: "Kendi Sesinle Üretim", desc: "Kendi anlatım tarzını videolarına taşı — sesini seçtiğin ayetlerle buluştur.", icon: "kendi_ses", tier: "elit" },
-          { id: "adm-zip-resim-ses", title: "ZIP Resim/Ses Yükleme", desc: "Kendi resim ve ses dosyalarını zip olarak yükle, videoda kullan.", icon: "toplu", tier: "elit" },
-        ] as const;
+          { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Yazdığın metnin ruhuna uygun arka plan sahnesi üretir, stüdyoya aktarırsın.", icon: "ai_arkaplan", tier: "pro" },
+          { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır ve daha fazlası — tek tıkla paketlenmiş ayet setleri.", icon: "paket", tier: "free" },
+          ...ATMOSFERLER.map(([klasor, ad]) => ({
+            id: `adm-atmos-${klasor}`,
+            title: `Atmosfer: ${ad}`,
+            desc: `Atmosfer arka plan kategorisi: ${ad} — üretim ekranında arka plan olarak çıkar.`,
+            icon: "ai_arkaplan",
+            tier: "elit",
+          })),
+          // ★ 17.10 (2. tur): V3'e kilitlenen 2 modül de oylama listesinde, sıra onlarınki
+          { id: "adm-zip-resim-ses", title: "ZIP Resim / Ses Yükleme", desc: "Kendi resim ve ses dosyalarını zip olarak yükle, videoda kullan.", icon: "toplu", tier: "v3" },
+          { id: "adm-kendi-ses", title: "Kendi Sesinle Üretim", desc: "Kendi anlatım tarzını videolarına taşı — sesini seçtiğin ayetlerle buluştur.", icon: "kendi_ses", tier: "v3" },
+        ];
         for (const f of ADMIN_FEATURES) {
           await db("nur_roadmap_features?on_conflict=id", {
             method: "POST",
@@ -341,10 +385,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json({ ok: true, added: ADMIN_FEATURES.length });
       }
       // ★ 10.10: Admin-gizli özelliği aç → hedef tier'a aktifleştir ("yeni gelmiş gibi")
+      // ★ 17.10: tier tipine "v3" eklendi — ZIP/KendiSes maddeleri admin V3'e kilitler.
       if (action === "revealFeature") {
         const admin = session;
         const id = sanitize(body.id, 60);
-        const tier = sanitize(body.tier, 10) as "free" | "pro" | "elit" | "";
+        const tier = sanitize(body.tier, 10) as "free" | "pro" | "elit" | "v3" | "";
         if (!id || !tier) return res.status(400).json({ ok: false, error: "Geçersiz özellik/seviye" });
         await db("nur_feature_locks?on_conflict=feature_id", {
           method: "POST",

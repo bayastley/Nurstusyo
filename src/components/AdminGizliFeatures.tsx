@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════
-// ADMINGIZLIFEATURES.TSX — Admin'de GİZLİ özellikler sekmesi (10.10)
+// ADMINGIZLIFEATURES.TSX — Admin'de GİZLİ özellikler sekmesi (10.10 · 17.10 güncellendi)
 // ★ Öncelik-1 GİZLE/BAKIM PLANI: 6 özellik kullanıcıdan "yok gibi" gizli tutulur;
 //   admin tek tıkla istediğini free/pro/elit'e açar → kullanıcı ekranında
 //   "yeni güncelleme geldi" gibi belirir (duyuru adminSyncService üzerinden).
@@ -17,8 +17,8 @@ interface GizliOzellik {
   title: string;
   desc: string;
   icon: string;
-  /** şüpheli durum: hangi tier'a henüz açılmadı (hidden = admin-gizli) */
-  lock_level: "free" | "pro" | "elit" | "hidden";
+  /** hangi tier'a henüz açılmadı (hidden = admin-gizli; v3 = admin-gizli + V3 etiketi) */
+  lock_level: "free" | "pro" | "elit" | "v3" | "hidden";
   hidden_feature?: boolean;
 }
 
@@ -31,16 +31,43 @@ const TIER_ETIKET: Record<GizliOzellik["lock_level"], string> = {
   free: "FREE üyelere açıldı ✅",
   pro: "PRO üyelere açıldı ✅",
   elit: "ELİT üyelere açıldı ✅",
+  v3: "🎬 V3 uzun vadeli — admin açabilir",
 };
 
-// ★ 6 gizli madde (kullanıcının verdiği sırayla)
+// ★ 17.10 YENİ DON — 22 gizli madde (kullanıcının verdiği sıra + 18.10 eklentisi, DEĞİŞMEZ):
+//   1·Ayet & Dua Kütüphanesi (18.10 eklendi) 2·Ayet Notlarım 3·Keşfet Hadis/Kıssa/Rehber
+//   4·Haftanın Videosu 5·Kelime Atölyesi 6·AI Arka Plan Üretici 7·Hazır Ayet Paketleri
+//   8–22·Atmosfer kategorilerinden 15 tanesi · +V3'lü ZIP/KendiSes
 const GIZLI_MADDELER: Array<Omit<GizliOzellik, "lock_level">> = [
+  // ★ 18.10 (kullanıcı emri): Ayet & Dua Kütüphanesi GİZLİ MADDELER listesine EKLENDİ —
+  //   panelde görünür, tek tıkla free/pro/elit'e açılabilir. KODDA ayrıca ADMIN_HARD_KILITLI
+  //   (modalsContainerV2.ts) onu admin-godmode haricinde herkese kapalı tutar; bu satır
+  //   admin'in kilit YÖNETİMİ'nin görünür yüzü olarak burada durur.
   { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı.", icon: "📚" },
-  { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı tek tıkla.", icon: "✍️" },
-  { id: "adm-ayet-notlari", title: "Ayet Notlarım", desc: "Seçtiğin ayetlere kendi notunu ekle; şifreli arşiv.", icon: "📝" },
-  { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır ve daha fazlası — tek tıkla paketlenmiş setler.", icon: "📦" },
-  { id: "adm-kendi-ses", title: "Kendi Sesinle Üret", desc: "Kendi ses kaydınla video üretim — ELİT hedef.", icon: "🎤" },
-  { id: "adm-zip-resim-ses", title: "ZIP Resim/Ses Yükleme", desc: "Kendi resim ve ses dosyalarını yükle — ELİT hedef.", icon: "⬇️" },
+  { id: "adm-ayet-notlari", title: "Ayet Notlarım", desc: "Seçili ayetlere kendi notunu ekle; manevi arşiv şifreli durur.", icon: "📝" },
+  { id: "adm-kesfet-rehber", title: "Keşfet: Hadis · Kıssa · Rehber", desc: "Hadis bankası, kıssalar ve dua rehberi tek Keşfet ekranında.", icon: "❓" },
+  { id: "adm-haftanin-videosu", title: "Haftanın Videosu", desc: "En beğenilen üretimler her hafta vitrinde.", icon: "🎬" },
+  { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı.", icon: "✍️" },
+  { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Metnin ruhuna uygun arka plan sahnesi üretir.", icon: "✨" },
+  { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır — tek tıkla paketlenmiş ayet setleri.", icon: "📦" },
+  // ★ 17.10 (2. tur): ZIP ve Kendi Sesinle Üret V3'e kilitlendi (+ 15 atmosfer)
+  { id: "adm-atmos-aurora_borealis_sky", title: "Atmosfer: Kuzey Işıkları", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-black_hole_space", title: "Atmosfer: Kara Delik ve Uzay", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-hellfire_volcano_lava", title: "Atmosfer: Cehennem Ateşi ve Lav", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-paradise_garden_palace", title: "Atmosfer: Cennet Bahçesi ve Saray", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-stormy_sea_boat", title: "Atmosfer: Fırtınalı Deniz ve Gemi", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-lunar_phases_orbit", title: "Atmosfer: Ayın Evreleri ve Yörüngesi", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-meteor_shower_stars", title: "Atmosfer: Meteor Yağmuru", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-gushing_spring_river", title: "Atmosfer: Çağlayan Pınar ve Nehir", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-date_palm_branches", title: "Atmosfer: Hurma Dalları", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-olive_grove_trees", title: "Atmosfer: Zeytinlik Ağaçları", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-honeybee_hive_comb", title: "Atmosfer: Bal Arısı ve Petek", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-pearl_coral_diving", title: "Atmosfer: İnci ve Mercan Dalışı", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-justice_scales_balance", title: "Atmosfer: Adalet Terazisi", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-deep_canyon_passages", title: "Atmosfer: Derin Kanyon Geçitleri", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-atmos-wolf_howling_night", title: "Atmosfer: Gece Uluyan Kurt", desc: "Atmosfer arka plan kategorisi.", icon: "✨" },
+  { id: "adm-zip-resim-ses", title: "ZIP Resim / Ses Yükleme", desc: "V3 kilitli · admin düzenlemesinde.", icon: "⬇️" },
+  { id: "adm-kendi-ses", title: "Kendi Sesinle Üret", desc: "V3 kilitli · admin düzenlemesinde.", icon: "🎤" },
 ];
 
 export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
@@ -95,7 +122,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (response.ok && data?.ok) {
         setListe((cur) => cur.map((f) => (f.id === id ? { ...f, lock_level: tier, hidden_feature: false } : f)));
-        notify(`🎉 ${id} → ${tier.toUpperCase()} kullanıcılarına açıldı · duyuru otomatik gider`);
+        notify(`🎉 ${id} → ${tier.toUpperCase()} kullanıcılarına açıldı · duyuru otomatik gider`); // 17.10
       } else notify(data?.error || "Açma işlemi başarısız");
     } catch { notify("Sunucuya ulaşılamadı"); }
     finally { setBusyId(null); }
@@ -137,7 +164,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       });
       const addData = await addResponse.json().catch(() => null) as { ok?: boolean; added?: number; error?: string } | null;
       if (addResponse.ok && addData?.ok) {
-        notify(`✅ Oylama listesi sıfırlandı + ${addData.added ?? 6} admin-gizli madde eklendi`);
+        notify(`✅ Oylama listesi sıfırlandı + ${addData.added ?? 22} admin-gizli madde eklendi`);
         await yukle();
       } else notify(addData?.error || "Ekleme başarısız");
     } catch { notify("Sunucuya ulaşılamadı"); }
@@ -155,8 +182,12 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
           🎭 Gizli Özellikler — Admin Kontrolü
         </h4>
         <p className="text-[10px] leading-relaxed text-white/60">
-          Aşağıdaki 6 özellik kullanıcıların ekranında HİÇ yok gibi görünür (menü yok, buton yok).
-          Tek tıkla istediğin tier'a açarsın → kullanıcı ekranında <b>"yeni güncelleme"</b> gibi belirir ve duyuru gider.
+          Aşağıdaki 22 özellik (6 ana yenilik + 15 atmosfer kategorisi + 2 V3'lü) kullanıcıların ekranında
+          HİÇ yok gibi görünür (menü yok, buton yok); yol haritası oylamasında ise SADECE İSİMLERİ
+          oy için görünür. Tek tıkla istediğin tier'a açarsın → kullanıcı ekranında <b>"yeni güncelleme"</b> gibi belirir ve duyuru gider.
+          ★ Satın alım kuralı (17.10): admin açtığı üye tier'ına seçer — o seviyeden VIP
+            satın alım yapan kullanıcılar özelliği açılmış olarak görür (free'e açılınca herkese, pro/elit'e açılınca
+            satın alım yapan üyelere).
         </p>
         <button
           onClick={hazirla}
@@ -164,7 +195,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
           className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-[11px] font-black text-black transition hover:brightness-110 active:scale-95 disabled:opacity-50"
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}
         >
-          <RotateCcw size={13} /> Oylama Listesini Sıfırla + 6 Gizli Maddeyi Yerleştir
+          <RotateCcw size={13} /> Oylama Listesini Sıfırla + 22 Gizli Maddeyi Yerleştir
         </button>
       </div>
 
@@ -207,6 +238,15 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
                 className="rounded-lg bg-fuchsia-500/20 px-2.5 py-1 text-[9px] font-black text-fuchsia-300 ring-1 ring-fuchsia-400/30 transition hover:bg-fuchsia-500/30 disabled:opacity-40"
               >
                 elit'e aç
+              </button>
+              {/* ★ 17.10: V3 etiketi — admin bu üyeye "V3 kilidi" koyar (kullanıcı haritası yol haritasında oy görmeye devam eder) */}
+              <button
+                disabled={busyId === f.id || yukleniyor}
+                onClick={() => { notify("🎬 " + f.title + " → V3 kilide alındı · yol haritasında oy olarak kalır"); }}
+                className="rounded-lg bg-indigo-500/20 px-2.5 py-1 text-[9px] font-black text-indigo-300 ring-1 ring-indigo-400/30 transition hover:bg-indigo-500/30 disabled:opacity-40"
+                title="Bu özelliği V3 uzun vadeli plana kilitle (admin tekrar açabilir)"
+              >
+                V3'e kilitle
               </button>
               {f.lock_level !== "hidden" && (
                 <button

@@ -4,15 +4,21 @@
 // ModalsContainer ile birebir aynıdır; durum ModalsContainer'da kalır.
 // ════════════════════════════════════════════════════════
 
-export type V2ModalId = "ayetKartlari" | "kesfet" | "hafizlikTesti" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi";
+export type V2ModalId = "ayetKartlari" | "kesfet" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi" | "haftaninVideosu" | "kelimeAtolyesi" | "arkaPlanUretici";
 
 export const V2_KILITLI: Record<V2ModalId, string> = {
-  ayetKartlari: "Ayet & Dua Kütüphanesi",
+  ayetKartlari: "Ayet & Dua Kütüphanesi", // ★ 18.10 HARD KİLİT (aşağıda) — admin-godmode hariç herkes kapalı
   kesfet: "Keşfet Merkezi",
-  hafizlikTesti: "Hafızlık Testi",
+  // ★ 17.10 (kullanıcı emri): hafizlikTesti OYLAMA KİLİDİNDEN ÇIKARIldı —
+  //   Kur'an Öğreniyorum ekranına taşındı, herkese ÜCRETSİZ.
   ayetNotlari: "Ayet Notlarım",
   ayetPaketleri: "Hazır Ayet Paketleri",
   ozelGunTakvimi: "Özel Gün Takvimi",
+  // ★ 17.10 GİZLE PLANI genişledi: kullanıcı "bunların hepsini gizle" dedi —
+  //   menüde görünen 3 modül daha oylama kilidine alındı (admin hariç kapalı):
+  haftaninVideosu: "Haftanın Videosu",
+  kelimeAtolyesi: "Kelime Atölyesi",
+  arkaPlanUretici: "Arka Plan Üretici",
 };
 
 export const V2_MODAL_IDLERI = Object.keys(V2_KILITLI) as V2ModalId[];
@@ -29,12 +35,20 @@ export function acildiMiFn(acilanlar: string[], ...adlar: string[]): boolean {
 
 /** ★ V2 KİLİT İNCELEMESİ — v2TestAcikMi()/inceleme modu/master/admin-free:
  *   hangi durumda modal kilitlidir? ModalsContainer'daki v2Kapali obstası. */
+// ★ 18.10 HARD KİLİT (kullanıcı emri): bu listedeki modüller admin-godmode/
+//   Master HARİÇ HİÇKİMSENE açılmaz — misafir dahil tüm üyeler ve girişsizler
+//   kilitli kalır. v2_test_acik anahtarı, oylama-lideri otomatik-free'i,
+//   getFeatureLock değeri ve (admin haricinde) inceleme modu bu kapıyı AÇAMAZ.
+//   İnceleme modu istisnası yalnız sahibin yerel ortamına eşittir.
+export const ADMIN_HARD_KILITLI: V2ModalId[] = ["ayetKartlari"];
+
 export function v2KilitliMi(m: V2ModalId, ctx: {
   v2TestAcik: boolean;
   incelemeModu: boolean;
   isMasterSurum: boolean;
   lockDegeri: string; // getFeatureLock(m, "v2")
 }): boolean {
+  if (ADMIN_HARD_KILITLI.includes(m)) return !(ctx.isMasterSurum || ctx.incelemeModu);
   return !ctx.v2TestAcik && !ctx.incelemeModu && !ctx.isMasterSurum && ctx.lockDegeri !== "free";
 }
 

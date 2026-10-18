@@ -94,11 +94,17 @@ async function adminAction(body: unknown): Promise<boolean> {
 //   yayınlanır → bütün kullanıcılara yeşil baloncuk + "Güncellemeyi Al" butonu gider.
 export const GIZLI_OZELLIK_KALEMLERI: Array<{ roadmapId: string; modul: string; ad: string }> = [
   { roadmapId: "ayet-kutuphanesi", modul: "ayetKartlari", ad: "Ayet & Dua Kütüphanesi" },
-  { roadmapId: "hafizlik-testi", modul: "hafizlikTesti", ad: "Hafızlık Testi" },
   { roadmapId: "ayet-notlari", modul: "ayetNotlari", ad: "Ayet Notlarım" },
   { roadmapId: "ayet-paketleri", modul: "ayetPaketleri", ad: "Hazır Ayet Paketleri" },
   { roadmapId: "ozel-gun-takvimi", modul: "ozelGunTakvimi", ad: "Özel Gün Takvimi" },
   { roadmapId: "kesfet-merkezi", modul: "kesfet", ad: "Keşfet Merkezi" },
+  // ★ 18.10 (kullanıcı emri): haftaninVideosu + kelimeAtolyesi + arkaPlanUretici admin
+  //   YAYIN listesine eklendi — modalsContainerV2.ts'te V2_KILITLI şifreli V2 kilidi bunların
+  //   admin panelini zaten destekliyordu; buradaki satır admin'in tek tıkla YAYIN akışına
+  //   dahil olmasını sağlar (kilit gerekli yerde: modalsContainerV2.ts v2KilitliMi).
+  { roadmapId: "haftanin-videosu", modul: "haftaninVideosu", ad: "Haftanın Videosu" },
+  { roadmapId: "kelime-atolyesi", modul: "kelimeAtolyesi", ad: "Kelime Atölyesi" },
+  { roadmapId: "ai-arkaplan", modul: "arkaPlanUretici", ad: "AI Arka Plan Üretici" },
 ];
 
 function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`; }
@@ -131,6 +137,12 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   // ★ GİZLİ ÖZELLİK YAYINI (02.10): kalem + seviye + yayın durumu
   const [yayinKalem, setYayinKalem] = useState<string>(GIZLI_OZELLIK_KALEMLERI[0].roadmapId);
   const [yayinSeviye, setYayinSeviye] = useState<Exclude<FeatureLock, "off" | "maintenance" | "v2" | "v3">>("free");
+
+  // ★ 18.10 ÜYE GATE AKIŞI (kullanıcı emri): admin bir gizli modülü "pro"/"elit"e açtığında
+  //   HERKES görebilir (menüdeyse girişi, menüdeyse yok) — ama KULLANMAK için tıklayan
+  //   üye olmayan/uygun tier'da olmayan kullanıcıya modal doldurulur ve giriş portalı
+  //   / premium sayfası açılır; modülün içi bir an bile ekrana gelmez.
+
   const [yayiniyor, setYayiniyor] = useState(false);
   const [yayinSonuc, setYayinSonuc] = useState("");
 

@@ -35,7 +35,7 @@ import { EMOTIONS, TYPE_TABS, TYPE_BADGE, type LibraryItem, type LibraryType, ty
 import { KISSAS } from "../data";
 import { secureGet, secureSet } from "../secureStore";
 import { T, type Lang } from "../i18n";
-import { JETON } from "../tier";
+import { JETON, isAdminEmail } from "../tier"; // ★ 17.10: kendiSes/zip V3 kilidi admin tespiti
 import { getFeatureLock, v2TestAcikMi } from "../services/adminSyncService";
 import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
@@ -253,6 +253,32 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   // Kilitli modallar hiç mount edilmez (içerik sızmasın)
   const v2Acik = (m: V2ModalId) => v2AcikMi(m, modal, v2Kapali(m));
 
+  // ★ 18.10 ÜYE GATE (kullanıcı emri): admin bir gizli modülü pro/elit'e YAYINLADIĞINDA
+  //   HERkes butonu görür ve tıklayabilir — ama tıklayan 1) giriş yapmamışsa LOGIN
+  //   PORTALINA, 2) üye ama o seviyede değilse PREMIUM sayfasına yönlendirilir.
+  // ★ ÜYE GATE listesindeki modüller için merkezî geçit burada, tüm tetikleyicileri
+  //   (menü / stüdyo butonu / yol haritası) tek yerden yakalar. admin-godmode + master geçer.
+  const UYE_GATE: Record<string, Tier> = { seslendirme: "pro", zip: "elit", kendiSes: "elit" };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => {
+    if (!modal) return;
+    const gereken = UYE_GATE[modal];
+    if (!gereken) return;
+    if (isMasterSürüm || isAdminEmail(user?.email || "")) return; // admin/masten her şey açık
+    if (!user?.email) {
+      setModal(null);
+      notify("🔐 Bu özellik üyelere özel — önce giriş yap / üye ol!");
+      setLoginTab("register");
+      setModal("login");
+      return;
+    }
+    if (!tierAtLeast(tier, gereken)) {
+      setModal(null);
+      notify(`👑 ${gereken === "pro" ? "PRO" : "ELİT"} üyelik gerekli — premium sayfası açıldı`);
+      openPremium("uyelik");
+    }
+  }, [modal]);
+
   // ★ MERKEZİ ESC KAPANIŞI (01.10): taban Modal backdrop-tıklama + X ile kapanıyordu;
   //   Esc hiçbir modalda dinlenmiyordu. Standart UX üçlüsünü tamamlar (X + dış-tıklama
   //   + Esc) — tek yerde, tüm modallara birden. atmos'ta pickingFor da temizlenir
@@ -410,8 +436,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </ErrorBoundary>
       )}
 
-      {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ELİT özelliği */}
-      {modal === "kendiSes" && (
+      {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ★ 17.10 V3 KİLİDİ: ELİT'ten V3 uzun vadeye çekildi (kullanıcı emri); admin + master hariç kapalı */}
+      {modal === "kendiSes" && (isMasterSürüm || isAdminEmail(user?.email || "")) && (
         <React.Suspense fallback={null}>
         <KendiSesModal
           open
@@ -533,10 +559,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       </React.Suspense>
       )}
 
-      {/* ★ HAFIZLIK TESTİ — devamını getir, 4 seçenekli ayet tamamlama (madde 44) */}
+      {/* ★ HAFIZLIK TESTİ — ★ 17.10: V2 oylama kilidinden çıkarıldı (kullanıcı emri),
+          herkese ÜCRETSİZ; aç-gizli kontrolü v2Acik/v2Kapali zincirinden bağımsız. */}
       {acildiMi("hafizlikTesti") && (
       <React.Suspense fallback={null}>
-      <HafizlikTestiModal open={v2Acik("hafizlikTesti")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      <HafizlikTestiModal open={modal === "hafizlikTesti"} onClose={() => setModal(null)} notify={notify} lang={lang} />
       </React.Suspense>
       )}
 
@@ -603,9 +630,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       )}
 
       {/* MEDYA YÜKLEME MODALI (28.09): ZIP gezgini kaldırıldı — video/resim/ses kabul, diğerleri red.
-          ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır */}
-      {modal === "zip" && isMasterSürüm && (
-        <Modal title="Medya Yükleme" sub="Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
+          ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır
+          ★ 17.10 V3 KİLİDİ: kullanıcı emri — ZIP/Image modülü V3 kilitli, admin + master hariç kapalı */}
+      {modal === "zip" && (isMasterSürüm || isAdminEmail(user?.email || "")) && (
+        <Modal title="Medya Yükleme" sub="V3 · Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
           <div className="h-[65vh] min-h-[420px]"><React.Suspense fallback={null}><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} onMedyaDegisti={onMedyaSenkron} /></React.Suspense></div>
         </Modal>
       )}

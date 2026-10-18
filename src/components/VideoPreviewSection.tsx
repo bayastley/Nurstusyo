@@ -242,6 +242,10 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           çubuğu 30° adımlarla döndürür, kalınlık slider'ı şeridi inceltir/kalınlaştırır.
           Kartlıkla (Ayet Kütüphanesi) AYNI çekirdek: mesajKatmani.ts. */}
       <div className="mx-auto max-w-[228px] space-y-1.5">
+        {/* ★ 17.10 PRO KİLİDİ (kullanıcı emri): Renk Çubuğu + Özel Yazı PRO üyelere açılır.
+            free-tier kullanıcıda buton kapalı + PRO rozeti; tıklayınca premium'a gider.
+            admin/master bu kapıyı geçer. */}
+        {isMasterSürüm || tierAtLeast(tier, "pro") ? (
         <button
           type="button"
           onClick={() => setCubukAyar((c) => ({ ...c, acik: !c.acik }))}
@@ -249,6 +253,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         >
           <Palette size={11} style={{ color: "var(--accent)" }} /> {t("vpRenkCubugu")} {cubukAyar.acik ? t("vpAcikKucuk") : t("vpKapaliKucuk")}
         </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { notify("🎨 Renk Çubuğu PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
+            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/30 transition hover:text-white/60"
+          >
+            <Palette size={11} className="opacity-50" /> {t("vpRenkCubugu")}
+            <LockBadge kind="pro" position="top-right" onUpgrade={() => openPremium("uyelik")} />
+          </button>
+        )}
         {cubukAyar.acik && (
           <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
             {/* ★ İKİ DİKEY ÇUBUK — Arapça ve meal renkleri AYRI seçilir.
@@ -295,7 +309,9 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           </div>
         )}
 
-        {/* ★ ÖZEL YAZI — videonun içine çizilen mesaj; ayrı konum + hizalama + ofset */}
+        {/* ★ ÖZEL YAZI — videonun içine çizilen mesaj; ayrı konum + hizalama + ofset.
+            ★ 17.10 PRO KİLİDİ (kullanıcı emri): Renk Çubuğu ile birlikte PRO üyelere açılır. */}
+        {isMasterSürüm || tierAtLeast(tier, "pro") ? (
         <button
           type="button"
           onClick={() => setMesajAyar((m) => ({ ...m, acik: !m.acik }))}
@@ -303,6 +319,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         >
           <PenLine size={11} style={{ color: "var(--accent)" }} /> {t("vpOzelYazi")} {mesajAyar.acik && mesajAyar.metin.trim() ? t("vpAktif") : ""}
         </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => { notify("✏️ Özel Yazı PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
+            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/30 transition hover:text-white/60"
+          >
+            <PenLine size={11} className="opacity-50" /> {t("vpOzelYazi")}
+            <LockBadge kind="pro" position="top-right" onUpgrade={() => openPremium("uyelik")} />
+          </button>
+        )}
         {mesajAyar.acik && (
           <div className="space-y-1.5 rounded-lg border border-white/10 bg-black/25 p-2">
             <textarea
@@ -398,15 +424,15 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: t("vpSablon"), icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
         {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{t("vpSablonHazir").replace("{n}", ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR"))}</p>}
-        {/* ★ KENDİ SESİNLE ÜRET (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
-            milisanielik senkron. ELİT olmayan tıklarsa premium'a yönlendirilir (StudioApp'te). */}
+        {/* ★ KENDİ SESİNLE ÜRET (30.09) — ★ 17.10 V3 KİLİDİ: ELİT'ten V3 uzun vadeli plana çekildi;
+            buton tıklayınca yol haritasına (oy) yönlendirilir (StudioApp onKendiSesAc). */}
         <button
           onClick={onKendiSesAc}
           className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[9.5px] font-black transition ${kendiSesAktifMi ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-500/25" : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-500/20"}`}
           title={kendiSesAktifMi ? t("vpKendiSesAktifTitle") : t("vpKendiSesTitle")}
         >
           {kendiSesAktifMi ? t("vpKendiSesAktif") : t("vpKendiSesUret")}
-          {!kendiSesAktifMi && <span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>}
+          {!kendiSesAktifMi && <span className="rounded bg-indigo-400/20 px-1 py-px text-[7px] font-black tracking-wide text-indigo-200">V3</span>}
         </button>
       </div>
 

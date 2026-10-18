@@ -1127,14 +1127,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           t={t}
           kendiSesAktifMi={Boolean(kendiSesAktif)}
           onKendiSesAc={() => {
-            // ★ ELİT KAPISI: elit değilse modal açılmaz, premium satın almaya yönlendirilir
-            if (!isMasterSürüm && !tierAtLeast(accessTier, "elit")) {
-              notify("👑 Kendi sesinle üretim ELİT üyelere özel — premium sayfası açıldı");
-              openPremium("uyelik");
+            // ★ 17.10 V3 KİLİDİ (kullanıcı emri): elit'ten V3 uzun vadeli plana çekildi —
+            //   admin/master hariç kimse açamaz; kalanlar yol haritasında oy görebilir.
+            // ★ 18.10 DÜZELTME (admin dalı erken return): admin artık yol haritasına düşmez —
+            //   direkt modal açılır; non-admin ise V3 yol haritasına atılır, modal HİÇ açılmaz.
+            const adminMi = isAdminEmail(user?.email || "");
+            if (isMasterSürüm || adminMi) {
+              if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
+              setModal("kendiSes");
               return;
             }
-            if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
-            setModal("kendiSes");
+            notify("🎬 Kendi sesinle üretim V3 yol haritasında — Güncellemeler ekranından oy ver!");
+            setRoadmapOpen?.(true);
           }}
         />
         </PanelSuspense>

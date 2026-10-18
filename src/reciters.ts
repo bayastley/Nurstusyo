@@ -12,6 +12,12 @@ export interface Reciter {
   surahPattern?: string;
   requiredTier?: "free" | "pro" | "elit";
   full?: [string, number]; // mp3quran.net tam sure: [klasor, sunucuNo] — tek tek test edildi
+  /** ★ 17.10 SES LİSANS DÜRÜSTLÜĞÜ: yalnızca kayıt bazında YAZILI kanıt varsa doldurulur.
+   *  Aşağıdaki arşivlerde böyle kanıt YOK — hiçbir girişte dolu değil, dolması için
+   *  hak sahibinden alınmış yazılı izin/CC belgesi şarttır. */
+  lisans?: string;
+  /** Lisans belgesinin kanıt adresi (lisans doluysa zordur) */
+  lisansKaynak?: string;
 }
 
 const low = "#10b981";
@@ -82,6 +88,38 @@ export const RECITERS: Reciter[] = [
   // karim_mansoori_mujawwad — EveryAyah'ta ses dosyasi yok (404), kaldirildi
   // yassin_jazaery_warsh — EveryAyah'ta ses dosyasi yok (404), kaldirildi
 ];
+
+// ════════════════════════════════════════════════════════
+// ★ SES LİSANS DÜRÜSTLÜK KATMANI (17.10 saha araştırması)
+//   everyayah.com / mp3quran.net / cdn.islamic.network arşivleri
+//   AÇIK bir Creative-Commons lisansı BEYAN ETMİYOR; bu listedeki
+//   hiçbir kayıt "telifsiz garanti" DEĞİLDİR. YouTube Content ID,
+//   CC lisanslı seste bile hak sahibinin referans dosyası varsa
+//   claim atabilir (support.google.com/youtube/answer/2797370).
+//   → Bu yüzden üretim açıklamalarına SES_ATIF_ETIKETI zorunlu
+//     kaynak beyanı olarak gömülür (genDesc, data/titleTemplates).
+//   → Kanıtlı açık-lisans dosyalar mevcut akış kaynaklarında YOK;
+//     yalnız Wikimedia Commons'ta dosya-bazlı kanıt var (aşağıdaki
+//     rehber). O dosyaları akış kaynağı yapmak ayrı bir entegrasyon
+//     işidir (dosya listesi indirilip eşleme tablosu kurulmalı).
+// ════════════════════════════════════════════════════════
+
+/** Üretim çıktılarına gömülen dürüst kaynak beyanı — pespaye değil, savunma metni */
+export const SES_ATIF_ETIKETI =
+  "Ses: açık Kur'an recitasyon arşivleri (everyayah / mp3quran.net) · " +
+  "Telif lisansı kayıt bazında doğrulanmamıştır — ticari yayından önce hak sahibinden teyit ediniz.";
+
+/** Dosya bazında kanıtlı açık-lisans Kur'an kayıtları — akış kaynağına dönüşme rehberi.
+ *  Bunlar bugün BU sistemde çalınmıyor; kişisel başvuru noktası olarak tutulur. */
+export const CC_KANITLI_DOSYA_KAYNAKLARI = [
+  { reciter: "Abdurrahman es-Sudays", sure: 2, lisans: "CC BY 4.0", url: "https://commons.wikimedia.org/wiki/File:AbdurRahman_Al_Sudais_002.256.wav" },
+  { reciter: "Muhammed Siddik el-Minsavi", not: "Koleksiyonda kamu-malı gerekçeli 115 dosya", lisans: "Kamu malı beyanı", url: "https://commons.wikimedia.org/wiki/Category:Audio_files_of_Qur%27an" },
+] as const;
+
+/** Kâri lisansı doğrulanmış mı? (bugün hiçbiri değil — UI rozetinde kullanılır) */
+export function lisansDogrulanmis(reciter: Reciter): boolean {
+  return Boolean(reciter.lisans && reciter.lisansKaynak);
+}
 
 export function reciterAudioUrl(path: string, surah: number, ayah: number): string {
   return `https://everyayah.com/data/${path}/${String(surah).padStart(3, "0")}${String(ayah).padStart(3, "0")}.mp3`;

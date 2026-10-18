@@ -162,9 +162,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // karşılık geliyorsa cevapta lock_level:"free" olarak DAĞITILIR (DB'ye yazılmaz —
     // türevsel). Admin'in o kaleme koyduğu açık kilit (free dışı) önceliklidir.
     // Eşleşme tablosu: roadmap feature_id ↔ ModalsContainer V2 kapı modülü.
+    // ★ 18.10 HARD KİLİT DÜZELTMESİ: ayet-kutuphanesi eşlemeden ÇIKARILDI —
+    //    oylama lideri artık Ayet Kütüphanesi'ni otomatik-free YAPAMAZ.
+    //    hafizlik-testi zaten çıkarılmıştı; kodda kaldığı için silindi (yetim eşleme).
     const V2_KAPI_ESLESME: Record<string, string> = {
-      "ayet-kutuphanesi": "ayetKartlari",
-      "hafizlik-testi": "hafizlikTesti",
       "ayet-notlari": "ayetNotlari",
       "ayet-paketleri": "ayetPaketleri",
       "ozel-gun-takvimi": "ozelGunTakvimi",

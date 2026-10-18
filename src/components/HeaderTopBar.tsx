@@ -70,6 +70,27 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     if (!menuOpen) setUpdatesOpen(false);
   }, [menuOpen]);
 
+  // ★ 17.10 KAPANIŞ TAMAMLAMA (kullanıcı isteği): panel açıkken başka yere
+  //   tıklayınca kapansın — sırf backdrop değil, sayfanın HER yerinde.
+  //   Kural: mousedown hedefi panel DEĞİLSE panel kapanır; panel içindeki
+  //   tıklamalar (alt menüler, admin, davet) etkilenmez.
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const kapatac = (e: MouseEvent) => {
+      const hedef = e.target as HTMLElement | null;
+      if (!hedef) return;
+      // Panelin kendisi ve data-sidebar-panel işaretli türevi
+      if (hedef.closest('[data-sidebar-panel="true"]')) return;
+      // Panel açma menü düğmesi (data-minitur="menu") — kapatıp hemen açmasın
+      if (hedef.closest('[data-minitur="menu"]')) return;
+      // Duman testi kancası — test modunu ENGELLEME
+      if (hedef.hasAttribute?.("data-minitur")) return;
+      setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", kapatac);
+    return () => document.removeEventListener("mousedown", kapatac);
+  }, [menuOpen]);
+
   const openUpdates = () => {
     window.clearTimeout(updatesTimer.current);
     setUpdatesOpen(true);
@@ -237,6 +258,15 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       <span className="ml-auto rounded-full bg-amber-500/20 border border-amber-400/30 px-1.5 py-0.5 text-[7px] font-bold text-amber-300">GERİ GELDİ</span>
                     </button>
 
+                    {/* ★ 17.10 (kullanıcı emri): HAFIZLIK TESTİ menüden OYLAMA KİLİDİNDEN ÇIKARILDI —
+                        herkese ÜCRETSİZ; Kur'an Öğreniyorum altında ayrı giriş. ModalsContainer
+                        V2 kilidi listesinden de çıkarıldı (artık kilit yok). */}
+                    <button onClick={() => { setModal?.("hafizlikTesti"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
+                      <Brain size={14} style={{ color: "var(--accent)" }} />
+                      <span className="flex-1 truncate">{t("menuHafizlikTesti")}</span>
+                      <span className="ml-auto shrink-0 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-1.5 py-0.5 text-[7px] font-black text-emerald-300">ÜCRETSİZ</span>
+                    </button>
+
                     {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09)
                         ★ 08.10 TRIM (kullanıcı emri): Hafızlık Testi, Kur'an, Kâbe Canlı, Haftanın
                         Videosu, Ramazan/Kandil, Keşfet (Hadis&Kıssa&Rehber) kaldırıldı. Kalanlar:
@@ -246,22 +276,39 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         — Hafızlık Testi, Keşfet Merkezi, Haftanın Videosu, Özel Gün Takvimi.
                         Modal bileşenleri hep duruyordu; yalnız menü girişleri çıkarılmıştı. */}
                     <div className="my-1 border-t border-white/5" />
+                    {/* ★ 17.10 V2 KİLİT ÇİPLERİ (kullanıcı emri): oylamaya konan modüller
+                        menüde görünsün ama yanında 🔒 V2 rozeti taşı — kullanıcı neden
+                        kilitli olduğunu anlar; tıklayınca ModalsContainer v2Gate yol
+                        haritasına atar. Admin/master rozet görmez (开关 açık). */}
+                    {
+                      /* ★ 18.10 (kullanıcı emri): Ayet & Dua Kütüphanesi menüye GERİ EKLENDİ —
+                          kodda ADMIN_HARD_KILITLI (modalsContainerV2.ts) onu
+                          admin-godmode/Master haricinde HERKESE (misafir dahil) kapalı tutar;
+                          ModalsContainer'daki merkezî v2 geçidi kilitliyken modalı bir an
+                          bile açmaz, yol haritasına atar. */
+                    }
                     {[
                       { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
-                      { icon: NotebookPen, label: t("menuAyetNotlari"), target: "ayetNotlari" as ModalName },
-                      { icon: Brain, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName },
-                      { icon: Compass, label: t("menuKesfet"), target: "kesfet" as ModalName },
-                      { icon: Film, label: t("menuHaftaninVideosu"), target: "haftaninVideosu" as ModalName },
-                      { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName },
-                      { icon: Type, label: t("menuKelimeAtolyesi"), target: "kelimeAtolyesi" as ModalName },
-                      { icon: Wand2, label: t("menuArkaPlanUretici"), target: "arkaPlanUretici" as ModalName },
-                      { icon: Gift, label: t("menuDavet"), target: "davet" as ModalName },
                       { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName },
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
                     ].map((item) => (
                       <button key={item.target} onClick={() => { setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                         <item.icon size={14} style={{ color: "var(--accent)" }} />
-                        {item.label}
+                        <span className="flex-1 truncate">{item.label}</span>
+                        {/* ★ 17.10 V2 KİLİT ÇİPÜ: oylamaya konan modüllerde 🔒 rozet —
+                            admin/master'da gizli; tıklanınca v2Gate yol haritasına atar. */}
+                        {(() => {
+                          // ★ 17.10: hafizlikTesti çıkarıldı — artık free, Kur'an Öğreniyorum altında
+                          const v2Idler = ["ayetKartlari", "ayetNotlari", "kesfet", "haftaninVideosu", "ozelGunTakvimi", "kelimeAtolyesi", "arkaPlanUretici", "ayetPaketleri"];
+                          const adminMisini = user != null && isAdminEmail(user.email || "");
+                          const v2Kilitli = typeof item.target === "string" && (v2Idler as string[]).includes(item.target) && !(adminMisini || isMasterSürüm);
+                          if (!v2Kilitli) return null;
+                          return (
+                            <span className="ml-auto shrink-0 rounded-full bg-amber-500/15 border border-amber-400/25 px-1.5 py-0.5 text-[7px] font-black tracking-wide text-amber-300" title="Oylamada — Yol Haritası'ndan oy ver">
+                              🔒 V2
+                            </span>
+                          );
+                        })()}
                       </button>
                     ))}
 

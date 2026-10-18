@@ -18,6 +18,7 @@ import {
   PROMO_LINES_EN,
 } from "./titleData";
 import { SURE_ARAPCA } from "./sureArapca";
+import { SES_ATIF_ETIKETI } from "../reciters"; // ★ 17.10: üretim açıklamalarına dürüst ses-kaynak beyanı
 
 // Re-export data for backward compatibility (content.ts re-exports from here)
 export { TITLE_TEMPLATES } from "./titleData";
@@ -296,5 +297,8 @@ export function genDesc(
     ? getQuoteForSurah(surahName, s, a)
     : L.quote;
 
-  return `${L.studio}\n\n${intro}\n\n${L.reciter}: ${reciterName}\n\n${quote}\n\n${emotion}\n\n${ayahMood}\n\n━━━━━━━━━━━━━━━━━━\n\n${hadith}\n\n━━━━━━━━━━━━━━━━━━\n\n${cta}\n\n━━━━━━━━━━━━━━━━━━\n\n${promo}`;
+  // ★ 17.10 TELİF SAVUNMA KATMANI: her açıklamanın sonuna sabit ses-kaynak
+  //   beyanı eklenir — kullanıcı bu metni YouTube/Instagram'a kopyalarken
+  //   kaynak ve "lisans doğrulanmamış" durumu otomatik yayına gider.
+  return `${L.studio}\n\n${intro}\n\n${L.reciter}: ${reciterName}\n\n${quote}\n\n${emotion}\n\n${ayahMood}\n\n━━━━━━━━━━━━━━━━━━\n\n${hadith}\n\n━━━━━━━━━━━━━━━━━━\n\n${cta}\n\n━━━━━━━━━━━━━━━━━━\n\n${promo}\n\n━━━━━━━━━━━━━━━━━━\n\n${SES_ATIF_ETIKETI}`;
 }

@@ -258,6 +258,35 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
     const emoji = getIcon(f.iconId);
     const lider = rank === 0 && f.votes > 0;
 
+    // ★ 17.10 GİZLE PLANI: admin maddeleri (adm-*) kullanıcıya SADECE İSİM + oy
+    //   butonu çipü olarak gösterilir — açıklama/detay admin harici RENDER EDİLMEZ.
+    //   Böylece "oylamada isimlerini yaz" sağlanırken madde içeriği kapalı kalır.
+    if (f.id.startsWith("adm-") && !isAdmin) {
+      return (
+        <div key={f.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] py-2.5 transition hover:border-white/20">
+          <div className="flex min-w-0 flex-1 items-center gap-2 pl-3.5">
+            <span className="text-sm opacity-70">{emoji}</span>
+            <span className="truncate text-[12px] font-bold text-white/80">{f.title}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 pr-3.5">
+            {f.votes > 0 && (
+              <span className={`rounded-full px-2 py-0.5 text-[9px] font-black tabular-nums ${myVote === f.id ? "bg-amber-500/25 text-amber-200" : "bg-white/10 text-white/45"}`}>
+                {f.votes} oy
+              </span>
+            )}
+            <button
+              onClick={() => handleVote(f.id)}
+              disabled={isDeadlinePassed}
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[9.5px] font-black transition ${myVote === f.id ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-300/50" : "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30 hover:bg-emerald-500/25"}`}
+            >
+              <ThumbsUp size={10} />
+              {myVote === f.id ? "✓" : "Oy Ver"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div key={f.id} className={`relative flex items-start gap-3 rounded-xl border p-3.5 transition group ${lider ? "border-amber-300/50 bg-gradient-to-r from-amber-400/[0.16] to-emerald-400/[0.08] shadow-[0_0_26px_rgba(245,190,70,.14)]" : version === "V2" ? "border-amber-400/20 bg-gradient-to-r from-amber-400/[0.12] to-emerald-400/[0.06] shadow-[0_0_22px_rgba(245,190,70,.06)] hover:border-amber-300/45" : "border-indigo-300/15 bg-gradient-to-r from-slate-800/55 via-indigo-950/45 to-blue-950/45 hover:border-indigo-300/30"}`}>
         {/* ★ MADALYA — en çok oy alan 3 yenilik */}

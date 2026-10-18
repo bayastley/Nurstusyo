@@ -6,7 +6,7 @@ import {
 import { SectionTitle, Segmented } from "./UIElements";
 import { LockBadge, LockedOverlay } from "./LockBadge";
 import { getVideoUrl, getPosterUrl, getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
-import { RECITERS } from "../reciters";
+import { RECITERS, lisansDogrulanmis } from "../reciters"; // ★ 17.10: CC-lisans rozeti
 import { T, translate } from "../i18n";
 import { videoMaliyeti, reciterRequiredTier } from "../tier";
 import { getFeatureLock } from "../services/adminSyncService";
@@ -236,6 +236,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                         <span className="block truncate text-[9.5px] font-bold text-white/90 leading-tight">
                           {item.name}
                           {item.surahPattern && <span className="ml-1 rounded bg-white/10 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-white/50" title={t("dafTamSureTitle")}>{t("dafTamSure")}</span>}
+                          {/* ★ 17.10: kayıt bazında YAZILI lisans kanıtı varsa yeşil CC rozeti (şu an hiçbir arşiv girişinde kanıt yok — lisans doldurulunca görünür) */}
+                          {lisansDogrulanmis(item) && (
+                            <span className="ml-1 rounded bg-emerald-500/20 px-1 py-0.5 text-[6.5px] font-black uppercase tracking-wide text-emerald-400" title={`${item.lisans ?? ""} · ${item.lisansKaynak ?? ""}`}>CC ✓</span>
+                          )}
                         </span>
                         <span className="mt-0.5 truncate text-[7.5px] font-bold leading-tight" style={{ color: riskColor }}>
                           {item.country}
