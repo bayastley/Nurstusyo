@@ -553,13 +553,20 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               📑 İÇİNDEKİLER
             </button>
             {/* ★ SESLENDİRME (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlenmiş modül:
-                üst barda tek tık → Sesli Meal ekranı. Kırmızı X + dış-tık + Esc ile kapanır. */}
-            <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
-              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
-              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-              title="Sesli Meal / Kıssa Seslendirme">
-              🔊 Seslendirme
-            </button>
+                üst barda tek tık → Sesli Meal ekranı. Kırmızı X + dış-tık + Esc ile kapanır.
+                ★ 20.10 GİZLE (YARIN-planı Ö1 deseni, kullanıcı emri): ADMIN hariç herkesten
+                BUTON TAMAMEN KALDIRILDI — kilitli görünmez, "yok". Canlı TTS API (nur-tts)
+                500 fix'i (lazy-load bb328a3) deploy olup doğrulanana kadar halka açık
+                bozuk buton göstermek istemiyoruz; admin kendi hesabında test etmeye devam eder.
+                API sağlamlaştırınca tek satırla herkese açılır (koşulu kaldır). */}
+            {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
+              <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
+                className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+                style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+                title="Sesli Meal / Kıssa Seslendirme (admin test)">
+                🔊 Seslendirme
+              </button>
+            )}
             <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
