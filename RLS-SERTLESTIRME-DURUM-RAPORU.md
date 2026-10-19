@@ -1,5 +1,19 @@
 # RLS SERTLEŞTİRME — DURUM RAPORU (18.10.2026)
 
+## ✅ SONUÇ (19.10.2026): TAMAMLANDI
+
+Tüm doğrulama kontrolleri geçti:
+
+| Kontrol | Beklenen | Sonuç |
+|---|---|---|
+| 4.1 RLS'siz tablo | 0 satır | ✅ "Success. No rows returned" |
+| 4.2 yetkiler | yalnız SELECT | ✅ 10 satır — 5 tablo × 2 rol, hepsi SELECT |
+| 4.3 fonksiyon execute | 0 satır | ✅ "Success. No rows returned" |
+| 4.4 smoke (roadmap) | sayı | ✅ aktif_roadmap_kalemi = 57 |
+
+Aşağıdaki bölümler, bu sonuca ulaşan doğrulamaların orijinal kaydıdır.
+
+
 ## Ekran görüntüsünden okunan doğrulama
 
 Senin Supabase SQL Editor'ünde koşturulan doğrulama sorgularından (ekran görüntüsü):
@@ -7,8 +21,8 @@ Senin Supabase SQL Editor'ünde koşturulan doğrulama sorgularından (ekran gö
 1. **4.4 smoke sorgusu PASS** — `aktif_roadmap_kalemi = 57` → yol haritası 57 aktif
    madde DB'de, uygulama bunları okuyor (api/config 200 ile de teyitli).
 
-2. **4.1 (RLS'siz kalan nur_ tablosu)** — sonuç bölgesi ekranda kesik görünüyor.
-   Kesin teyit için aynı editor'de yalnız şunu koş:
+2. ~~**4.1 (RLS'siz kalan nur_ tablosu)** — geçmişte kesik görünmüştü~~ → **19.10'da
+   yeni sekmede koşturuldu, "Success. No rows returned" döndü → GEÇTİ.**
 
 ```sql
 select tablename as rls_siz_kalan
@@ -34,11 +48,11 @@ where schemaname = 'public' and tablename like 'nur%' and rowsecurity = false;
 
 → RLS sertleştirmesi canlıda uygulama akışını KIRMADI.
 
-## Karar kriteri
+## Karar kriteri (eski metnin aynısı)
 
-4.1 = 0 satır + 4.2 = yalnız SELECT + 4.3 = 0 satır döndüğünde
-[rls-sertlestirme-lansman-sonrasi.sql](supabase/rls-sertlestirme-lansman-sonrasi.sql)
-dosyası tamamlanmış sayılır.
+> [!TIP]
+> 4.1 + 4.2 + 4.3 hepsi geçti — rls-sertlestirme-lansman-sonrasi.sql dosyası
+> TAMAMLANMIŞ sayılır.
 
 ## Geri alma (acil durum)
 

@@ -29,6 +29,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   // ★ SADIK ÜYE SAYAÇ (05.10): /api/config'ten (poll'un beraberinde) gelir;
   //   "Sadık Üye: {katilan}/{toplam} üretici kaydoldu" çipi kontenjan açıkken görünür.
   const [sadikUye, setSadikUyeSayac] = useState<{ toplamKayitli: number; kontenjan: number } | null>(null);
+  // ★ KİLİT GÜNCELLEMESİ (19.10): /api/config poll'u v2/v3 kilitlerini veya admin
+  //   gizli-reveal'ları (nur_feature_locks) değişik olarak yakalarsa "Güncellemeyi
+  //   Al" bildirimi basılır — kullanıcı yenilemeyle yeni modülleri görsün.
+  //   İlk poll sessiz baseline kurar; sessionStorage kullanılır (reload sonrası
+  //   temiz, bildirim bir daha tekrarlanmaz).
+  const [kilitGuncellemesi, setKilitGuncellemesi] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [readId, setReadId] = useState(() => localStorage.getItem("nur_read_announcement") || "");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -71,6 +77,13 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
           const cfg = getSystemConfig();
           for (const lock of data.featureLocks) cfg.featureLocks[lock.feature_id] = lock.lock_level;
           saveSystemConfig(cfg);
+          // ★ KİLİT PARMAK İZİ: kilit seti önceki poll'dan farklıysa bildirim.
+          const fp = data.featureLocks.map((l: { feature_id: string; lock_level: unknown }) => `${l.feature_id}=${String(l.lock_level)}`).sort().join("|");
+          try {
+            const oncekiFp = sessionStorage.getItem("nur_locks_fp");
+            if (oncekiFp !== null && oncekiFp !== fp) setKilitGuncellemesi(true);
+            sessionStorage.setItem("nur_locks_fp", fp);
+          } catch { /* yut */ }
         }
         if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
           setSadikUyeSayac({ toplamKayitli: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan) || 100 });
@@ -139,6 +152,16 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
 
   const unread = Boolean(announcement && readId !== announcement.id);
 
+  // ★ SERT TAZELE (02.10 mantığı tek yerde): ?t= zaman damgasıyla Vercel'den
+  //   taze bundle'ı garantiler; sessionStorage temizliği bildirimin reload
+  //   sonrası tekrar basılmasını engeller.
+  const hardTazele = () => {
+    try { sessionStorage.removeItem("nur_locks_fp"); } catch { /* ignore */ }
+    const url = new URL(window.location.href);
+    url.searchParams.set("t", Date.now().toString(36));
+    window.location.replace(url.toString());
+  };
+
   return (
     <>
       <div className={`relative z-50 border-b px-3 py-2 text-[11px] ${announcement ? "border-emerald-400/35 bg-emerald-950/35 text-emerald-100" : "border-white/10 bg-[#111014] text-white/45"}`}>
@@ -158,11 +181,21 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
                 //   location.reload() önbelleği kullanabilir; hard reload
                 //   (?t= zaman damgası) Vercel'den TAZE bundle'ı garantiler.
                 try { localStorage.setItem("nur_read_announcement", announcement.id); } catch { /* ignore */ }
-                const url = new URL(window.location.href);
-                url.searchParams.set("t", Date.now().toString(36));
-                window.location.replace(url.toString());
+                hardTazele();
               }}
               className="flex items-center gap-1.5 rounded-full bg-emerald-400 px-3.5 py-1.5 font-black text-emerald-950 shadow-[0_0_16px_rgba(52,211,153,.55)] transition hover:bg-emerald-300 hover:shadow-[0_0_22px_rgba(52,211,153,.75)] active:scale-95"
+              title={t("annGetUpdateTitle")}
+            >
+              <RefreshCw size={12} />
+              {t("annGetUpdateBtn")}
+            </button>
+          )}
+          {/* ★ KİLİT GÜNCELLEMESİ (19.10): duyuru yokken de v2/v3 kilidi ya da admin
+              gizli-reveal değiştiyse "Güncellemeyi Al" çıkar — tık = hard reload. */}
+          {kilitGuncellemesi && !unread && (
+            <button
+              onClick={hardTazele}
+              className="flex items-center gap-1.5 rounded-full bg-amber-400 px-3.5 py-1.5 font-black text-amber-950 shadow-[0_0_16px_rgba(251,191,36,.55)] transition hover:bg-amber-300 hover:shadow-[0_0_22px_rgba(251,191,36,.75)] active:scale-95"
               title={t("annGetUpdateTitle")}
             >
               <RefreshCw size={12} />

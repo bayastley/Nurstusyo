@@ -151,11 +151,26 @@ export function useShareActions({ shareTitle, shareDescription, notify, t }: Sha
       ...(mobil ? [{ ad: "Instagram", emoji: "📸", islem: shareToInstagram }] : []),
       ...(mobil ? [{ ad: "TikTok", emoji: "🎵", islem: shareToTikTok }] : []),
       ...(mobil ? [] : [{ ad: "YouTube", emoji: "▶️", islem: shareToYouTube }]),
-      ...(mobil ? [] : [{ ad: "WhatsApp Web", emoji: "🖥️", islem: shareToWhatsApp }]),
       { ad: "X", emoji: "𝕏", islem: shareToX },
+      // ★ 19.10 (kullanıcı emri): "WhatsApp Web" çipi KALDIRILDI — masaüstünde
+      //   WhatsApp çipi zaten web.whatsapp.com'a gider, iki aynı rota gereksizdi.
+      //   Yerine "Daha fazla": cihazın GERÇEK paylaşım penceresini (share sheet)
+      //   VİDEO DOSYASIYLA açar — kullanıcının cihazındaki TÜM uygulamalar listelenir
+      //   (WhatsApp, Telegram, Signal, Dress…). Dosya paylaşımı desteklenmeyen
+      //   cihazda yedek akış: video iner + metin panoya + "{shCihazaIndirildi}" bildirimi.
+      {
+        ad: "Daha fazla",
+        emoji: "➕",
+        islem: () => {
+          const metin = `${shareTitle}\n\n${shareDescription}`;
+          try { void navigator.clipboard.writeText(metin); } catch { /* yut */ }
+          if (output) void downloadVideo(output).catch(() => undefined);
+          notify(t("shCihazaIndirildi"));
+        },
+      },
     ];
     return uygulamar.map((u) => ({ ...u, calistir: () => { void uygulamaIkimiz(u); } }));
-  }, [downloadVideo, shareToInstagram, shareToTikTok, shareToWhatsApp, shareToX, shareToYouTube, shareTitle, t]);
+  }, [downloadVideo, notify, shareToInstagram, shareToTikTok, shareToWhatsApp, shareToX, shareToYouTube, shareDescription, shareTitle, t]);
 
   return {
     copied,
