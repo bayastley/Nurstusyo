@@ -31,11 +31,17 @@ export interface AsistanRule {
 const GUVENLIK_ANAHTARLARI = [
   "epostam", "e-postam", "mailim", "emailim", "e mail",
   "admin", "yonetici", "moderator",
-  "bankaldır", "ban kaldır", "bankaldi", "ban kaldı",
   "telefonu", "telefon numara", "kisinin", "baskasinin", "başkasının", "kullanıcıya ait", "kullaniciya ait",
   "sifresi", "sifreleri", "sifrem",
   "jetonum", "bakiyem", "kotam", "aboneligim", "uyeligim ne",
   "ban yedim mi", "banlimi", "banlı mı", "askidami", "askıya alındım",
+  // ★ 20.10 GENİŞLETME: kod/altyapı/gizli-bilgi sızdırma avcıları — kural motoruna düşmez
+  "kaynak kodu", "kaynak kod", " kodu", " kodunu", "repo", "githubin", "git reposu", "commit listesi",
+  "api anahtar", "apı key", "apikey", "secret", "gizli anahtar", "env dosya", "env deger", "ornek env",
+  "veritabani sifre", "supabase sifre", "service role key", "hmac sifre", "oturum sifre",
+  "log kayitlar", "hatayi goster", "hic hatayi da", "console hata", "sunucu logu", "veritabani sorgusu",
+  "kisininSure kimligi", "kullanicilarin listesi", "tum kullanicilar", "uye listesi", "eposta listesi",
+  "kullanici listesi", "tum uyeler", "uyeler kimler", "uyeleri listele", "uye kayitlari",  "eposta listele", "kota kismim", "askida miyim", "banlandim mi", "sunucu loglarını", "log kayitlari", "console hatayı", "console hatasi", "veritabani girisi", "supabase gizli", "redis sifre", "iyzico bilgileri", "oturum anahtar", "oturum anahtarı", "oturum anahtarları", "oturum anaharları", "anahar", "anahtar listesi", "oturum sifresi",
 ];
 
 /** Karşılaştırma metni: lowercase + TR harf fold + noktalama silme */
@@ -64,32 +70,42 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "selam",
-    anahtar: ["selam", "selamlar", "merhaba", "gunaydin", "iyi aksamlar", "iyi geceler", "aleykum"],
-    cevap: "Ve aleykümselam! 🌙 Ben Nûr Asistan — SSS ve site kullanımına yardımcıyım. Aşağıdaki hazır sorulardan birini seçebilir ya da sorunuzu yazabilirsiniz.",
+    anahtar: ["selam", "selamlar", "merhaba", "gunaydin", "gunaydinlar", "hey", "naber", "nasilsin", "iyi aksamlar", "iyi geceler", "iyi gunler", "aleykum", "hos geldin", "hos bulduk", "sen kimsin", "kimsin", "napiyorsun"],
+    cevap: "Merhaba! 🌙 Ben Nûr Asistan — Nûr Stüdyo'nun canlı asistanıyım. Video üretimi, üyelik, jetonlar, paylaşım, ayet kartları… her konuda anlatırım. Sor beni, ne yapabileceğimi göreceksin! Aşağıdaki hazır sorulardan da birine tıklayabilirsin. 🎧",
+  },
+  {
+    id: "tesekkur",
+    anahtar: ["tesekkur", "tesekkurler", "sagol", "sag ol", "eyvallah", "cok iyisin", "mukemmel", "harika", "super is", "maalesef yok", "zaten yaptim"],
+    cevap: "Ne demek, o benim görevim! 🌙 Her zaman buradayım — başka sorman olursa çekinmeden yaz. Kolay gelsin! ✨",
+  },
+  {
+    id: "veda",
+    anahtar: ["gorusuruz", "hosca kal", "gule gule", "bye", "kapaniyorum", "cikiyorum", "larda görüşmek"],
+    cevap: "Güle güle! 🌙 Yolun açık olsun — faydalı bir video ürettiysen paylaşmanda sesleri duymamak mümkün değil. Yeniden gelince burada olacağım. 👋",
   },
   {
     id: "video-nasil",
-    anahtar: ["video nasil", "video uret", "nasil uret", "nasil yaparim", "video yap", "uretim"],
+    anahtar: ["video nasil", "video uret", "nasil uret", "nasil yaparim", "video yap", "uretim", "ayet video", "sure video", "kuran videosu", "ayetli", "reel nasil", "shorts nasil", "kari sec", "hoca sec", "atmosfer sec", "sesini sec", "sure sec"],
     cevap: "Video üretim akışı: 1) Sol panelde Kütüphane & Ayet Arama ile ayet(ler)i seçin. 2) Atmosfer Tasarımı'ndan arka plan seçin (Rastgele Al da olur). 3) Hoca/Tilavet'ten ses kartını seçin. 4) Süre Modu (Kısa/Uzun/Tam Sure) + Ekran Formatı (9:16 / 1:1 / 16:9 / 4:5) seçin. 5) 'Videoyu Üret' butonuna basın. Üretim tarayıcınızda gerçekleşir — sekme açık kalsın.",
   },
   {
     id: "jeton",
-    anahtar: ["jeton", "kontenjan", "token", "sur hakki", "sure hakki"],
+    anahtar: ["jeton", "kontenjan", "token", "sur hakki", "sure hakki", "jeton kazan", "jeton nereden", "jeton az", "jeton eksik", "jetonum yok", "ucresiz video", "baska vera"],
     cevap: "Jetonlar video üretiminde harcanır; üret butonunda kaç jeton gideceği önceden yazar. Jeton kazanç yolları: günlük hediye, sadık üye kotası, davet ettikleriniz ve özel gün ödülleri. Jetonlarınızın dağılımını Profil → Jeton kutusundan görebilirsiniz.",
   },
   {
     id: "uyelik",
-    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit", "fiyat", "parali"],
+    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit", "fiyat", "fiyatlari", "parali", "ücret", "abone ol", "abonelik", "pro ol", "yükselt", "uyelik nasil", "satın al", "ode"],
     cevap: "Üyelik seviyeleri: Free (temel), Pro ve Elit. Üst seviyeler daha yüksek üretim hakkı, filigransız video, renk çubuğu ve premium atmosfer kategorileri açar. Fiyatlar ve avantajlar, aşağıdaki '💎 Üyelik Planlarını Gör' butonuyla açılan satın alma panelinde listelenir.",
   },
   {
     id: "calismiyor",
-    anahtar: ["calismiyor", "ise yaramiyor", "hata", "beyaz ekran", "bos ekran", "yuklenmıyor", "yuklenmiyor"],
+    anahtar: ["calismiyor", "ise yaramiyor", "hata", "beyaz ekran", "bos ekran", "yuklenmıyor", "yuklenmiyor", "acilmiyor", "acilmadi", "dondu", "bozuk", "görünmüyor", "goremiyor", "hiçbir sey olmuyor"],
     cevap: "Küçük pürüzler için 3 adım: 1) Sayfayı sert tazeleyin (Ctrl+Shift+R ya da üst bardaki 'Güncellemeyi Al'). 2) İnternet bağlantısını kontrol edin — offline olduğunda işlemler bekletilir. 3) Tarayıcı önbelleğini temizleyin. Düzelmezse sağ üst → Geri Bildirim ile durumu bize yazın; sürüm numarasıyla teşhis çok hızlanır.",
   },
   {
     id: "ban-genel",
-    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek"],
+    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek", "yasaklandim", "banlandim", "yasakli", "kisitlama", "engellendim", "bloklandi", "erisim kapatıldı"],
     cevap: "Erişim kısıtları kural ihlalleri üzerine uygulanır: kısa sürede aşırı üretim denemesi, otomasyon/robot davranışı veya topluluk ilkelerine aykırı içerik. Süreler otomatik işler. İtiraz için sağ üst → Geri Bildirim kullanın ve konu kısmına 'İTİRAZ' yazın — ekip inceler. (Asistan bireysel ban durumu göstermez; Profil sayfanızda görünür.)",
   },
   {
@@ -99,50 +115,59 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "paylas-indir",
-    anahtar: ["paylas", "whatsapp", "instagram", "indir", "indiremiyorum", "indirilemiyor", "videoyu gonder"],
+    anahtar: ["paylas", "whatsapp", "instagram", "indir", "indiremiyorum", "indirilemiyor", "videoyu gonder", "tiktok", "telegram", "kaydet", "kaydedemiyorum"],
     cevap: "Video hazır olunca 'İndir' ile cihaza iner; 'Paylaş' cihazın gerçek paylaşım penceresini açar — WhatsApp, Instagram, Telegram, Signal vb. seçersiniz. Hızlı çipler tek tıkla uygulamaya gider; 'Daha fazla +' çipi video dosyayla birlikte tüm uygulamalar listesini açar. İndirme başlamadıysa tarayıcı izinlerini ('Dosya indirme') kontrol edin.",
   },
   {
     id: "giris-sifre",
-    anahtar: ["sifremi unuttum", "giris yapam", "giremiyorum", "oturum kapatıldı", "oturum kapandi"],
+    anahtar: ["sifremi unuttum", "giris yapam", "giremiyorum", "oturum kapatıldı", "oturum kapandi", "giris", "oturum", "hesap acamadi", "kayit olamiyor", "sifre degistir", "sifre"],
     cevap: "Giriş sorunları: 1) Profil butonundan tekrar giriş yapın (e-posta + şifre). 2) Şifre sıfırlama e-postası gelmediyse spam klasörüne bakın, 2-3 dakika bekleyin. 3) Kısa sürede çok deneme yapıldıysa sistem geçici bekletir — birkaç dakika sonra tekrar deneyin. Sürerse Geri Bildirim ile yazın.",
   },
   {
     id: "tasarim",
-    anahtar: ["tasarim", "tema", "renk", "atmosfer", "arka plan", "font", "yazi boyutu", "kilid"],
+    anahtar: ["tasarim", "tema", "renk", "atmosfer", "arka plan", "font", "yazi boyutu", "kilid", "filtre", "renk cubugu"],
     cevap: "Atmosfer Tasarımı panelinden arka plan klibini seçin ya da 'Rastgele Al'a basın. Tema renkleri ve yazı boyutları Ayarlar → Tasarım'dan değişir. Önizlemecide gördüğünüz katmanlar üretimde birebir aynen çıkar.",
   },
   {
     id: "yavaslik",
-    anahtar: ["yavas", "donuyor", "kasiyor", "takiliyor", "uyari veriyor"],
+    anahtar: ["yavas", "donuyor", "kasiyor", "takiliyor", "uyari veriyor", "kasma", "lag", "ram", "telefonum kasıyor", "bilgisayar kasıyor"],
     cevap: "Üretim tarayıcınızda yürür; sekme dışı uygulamalar RAM'i böler. 1) Diğer sekmeleri kapatın. 2) Kısa videodan başlayın, uzatın. 3) 4K yerine HD arka plan seçin. 4) Üretim sırasında sekme açık ve görünür kalsın (arka planda sekmeler yavaşlar).",
   },
   {
     id: "kissa-ses",
-    anahtar: ["kıssa", "kissa", "seslendir", "tts", "eleven", "kendi sesim"],
+    anahtar: ["kıssa", "kissa", "seslendir", "tts", "eleven", "kendi sesim", "hikaye", "kissa oku", "yapay ses", "okut", "kendi sesimle", "narration"],
     cevap: "Kıssa üretimi + seslendirme: hazır kıssaları seslendirebilir, AI Kıssa Üretimi jetonla çalışır. Kendi sesinizi kullanmak isterseniz 'Kendi Sesim' modu mikrofon kaydını kabul eder; kayıt yalnız sizin hesabınıza bağlanır.",
   },
   {
     id: "dil",
-    anahtar: ["dil", "ingilizce", "arapca", "indonezya", "urdu", "turkce"],
+    anahtar: ["dil", "ingilizce", "arapca", "indonezya", "urdu", "turkce", "dil degistirme", "diller", "arabic", "english", "bahasa"],
     cevap: "Site 5 dilli: Türkçe, English, العربية, Indonesia, اردو. Profil → Dil seçeneğinden anında değişir; seçim cihazınızda hatırlanır, kayıt gerekmez.",
   },
   {
     id: "silinen",
-    anahtar: ["silindi", "geri getir", "kayboldu", "kayip", "kopyasi"],
+    anahtar: ["silindi", "geri getir", "kayboldu", "kayip", "kopyasi", "galeri", "eski videolarım", "geri gelmez mi"],
     cevap: "Silinen bir çıktı geri getirilemez — üretim sizin cihazınızda yapılır, sunucumuzda üretimlerin kopyası tutulmaz (gizlilik ilkesi). Önemli videoları 'İndir' ile cihaza kaydetmeniz önerilir.",
   },
   {
     id: "hatirlatma",
-    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur"],
+    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur", "kur", "ana ekrana ekle", "bildirim gelmiyor", "hatirlatici"],
     cevap: "Vakit hatırlatmaları için uygulamayı cihaza kurun: sağ üst köşedeki 📲 butonuyla PWA kurulumu yapın; kurulumdan sonra günlük hatırlatmalar otomatik gelir. Kuruluysa cihaz ayarlarından Nûr Stüdyo bildirimlerini açın.",
   },
   {
     id: "iletisim",
-    anahtar: ["iletisim", "destek", "geri bildirim", "geribildirim", "sikayet", "oneri"],
+    anahtar: ["iletisim", "destek", "geri bildirim", "geribildirim", "sikayet", "oneri", "mail", "mailin", "mail adresin", "numara", "telefonla arapplicant"],
     cevap: "Destek hattı: 📧 destek@nurstudyo.com ya da sağ üst → 'Geri Bildirim' kutusu. Mesajınıza sürüm numarası ekleyin (About penceresinde yazar) — teşhis hızlanır. Ban itirazlarında konu kısmına 'İTİRAZ' yazın.",
   },
-  // ══ 19.10 GENİŞLETME: köşe-vaka soruları ══
+  {
+    id: "uyesayisi",
+    anahtar: ["kac uye", "uye sayisi", "kac kullanici", "istatistik", "trafik", "bu ay kaç kişi", "zaman artışı"],
+    cevap: "Üyelik ve trafik sayıları halka açık olarak paylaşılmıyor — sayıya bağlı duyuru barlarımızı ve Sadık Üye oranını topbarda görebilirsin. Sayıları kamuoyuna bir gün duyuracağız, o an haber on kanalında gelir. 📊",
+  },
+  {
+    id: "reklam",
+    anahtar: ["reklam", "reklamsiz", "popup", "spam", "reklami kaldir", "reklam var mi"],
+    cevap: "Reklam yok — Nûr Stüdyo'da popup/redirect türü reklam YOKTUR; hiçbir şeye zorlanmazsın. Kazanç yalnız isteyen üyelerin Pro/Elit tercihinden gelir. Dikkatini dağıtacak hiçbir şey yok, huzurla üret. ✅",
+  },
   {
     id: "hak-bitti",
     anahtar: ["hak bitti", "hakim bitti", "hakkim bitti", "kota bitti", "kota doldu", "hak yok", "hak yetmiyor", "bitti ne yapayim", "kotasız", "kota tükendi", "tukendi", "bittimi"],
@@ -181,7 +206,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   {
     id: "gizlilik",
     anahtar: ["gizlilik", "kayit tutuyor", "verimi sakliyor", "cocuk", "cocuk guvenliği", "cocuk guvenligi", "güvenli mi", "guvenli mi"],
-    cevap: "Gizlilik: üretimler cihazınızda yapılır, sunucuda video kopyası tutulmaz; e-posta dışında (giriş için) kişisel bilgi istenmez, hubsubscription yok. Tam metin: alt bardaki '📜 Yasal/Gizlilik' bağlantılarındadır. İçerik Kur'an-meal temellidir — topluluk ilkelerine aykırı paylaşımlar engellenir.",
+    cevap: "Gizlilik: üretimler cihazında yapılır, sunucuda video kopyası tutulmaz; e-posta dışında (giriş için) kişisel bilgi istenmez. Tam metin: alt bardaki '📜 Yasal/Gizlilik' bağlantılarındadır. İçerik Kur'an-meal temellidir — topluluk ilkelerine aykırı paylaşımlar engellenir.",
   },
   {
     id: "site-merac",
@@ -258,7 +283,7 @@ export function asistanCevap(soru: string): AsistanSonuc {
 
   return {
     kural: "bilinmiyor",
-    cevap: "Bunu bilmiyorum 😅 Aşağıdaki sık sorulanlardan birini seçebilir ya da sağ üst → Geri Bildirim ile bize yazabilirsiniz. Kişisel/üye verisi (jeton, ban durumu, e-posta) bu asistanda paylaşılmaz.",
+    cevap: "Hmm bunu tam bilemedim 🤔 Ama şunu deneyebilirsin: yukarıdaki ⬆️ sık sorulanlardan birine tıkla ya da kendi cümlemle bana video üretimi, üyelik, jetonlar, paylaşım, seslendirme, Kur'an bölümü, iade, dil, gizlilik… gibi konularda soru yaz — bunların hepsinfo anında cevapları hazırdır. Aklında başka bir şey varsa sağ üst → Geri Bildirim ile ekibimize yaz, biz buradan cevap veririz. 🌙",
     guvenlikKapisi: false,
   };
 }
