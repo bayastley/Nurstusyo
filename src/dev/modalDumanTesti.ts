@@ -94,8 +94,11 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
 };
 
 /** Dev'de (oturumsuz + master değil) hiç mount edilmeyenler — açılış denenmez.
- *  history/guide: ModalName'de duran ölü üyeler — ModalsContainer'da render yok (01.10). */
-const DEV_ATLANIR: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["adminDashboard", "zip", "stories", "history", "guide"]);
+ *  history/guide: ModalName'de duran ölü üyeler — ModalsContainer'da render yok (01.10).
+ *  ★ 20.10: seslendirme eklendi — V3 admin kilidi (ModalsContainer.tsx ~672) admin
+ *  haricinde modal hiç mount etmez; dev dumanı oturumsuz koştuğu için açılış DENEMEZ.
+ *  API sağlamlaşınca admin hesaplı turda back olacak (DEV_ATLANIR'dan çıkar). */
+const DEV_ATLANIR: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["adminDashboard", "zip", "stories", "history", "guide", "seslendirme"]);
 
 /** Tam-ekran modal: backdrop-tıklamayla kapanmaz (bilinçli tasarım) */
 const DIS_TIKLAMA_YOK: ReadonlySet<ModalAdi> = new Set<ModalAdi>(["quranLearn", "quranListen"]);
