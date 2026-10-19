@@ -79,6 +79,7 @@ import { MiniTur } from "./components/MiniTur"; // ★ madde 3: ilk girişte 5 d
 import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4: dürüst aylık harf sayacı
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
+import { AsistanBaloncugu } from "./components/AsistanBaloncugu"; // ★ 19.10 ücretsiz SSS asistanı
 import { RoadmapModal } from "./components/RoadmapModal";
 import { useShareActions } from "./studio/useShareActions";
 import { VARSAYILAN_CUBUK, VARSAYILAN_MESAJ, type CubukAyar, type MesajAyar } from "./studio/mesajKatmani";
@@ -1478,6 +1479,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       {/* ★ PWA KURULUM SİHİRBAZI — Ana Ekrana Ekle öğreticisi (madde 23) */}
       <PwaKurulumBanneri />
+
+      {/* ★ NÛR ASİSTAN — sağ alt köşe balon, ücretsiz SSS asistanı (19.10) */}
+      <AsistanBaloncugu openPremiumUyelik={() => openPremium("uyelik")} openPremiumCuzdan={() => openPremium("jeton")} />
 
       {/* V2-V3 YOL HARİTASI */}
       <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} adminEmail={user?.email} />
