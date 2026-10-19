@@ -18,9 +18,28 @@
 // listesi/okut ayrı; admin gerekmez (V3 admin kilidi istemcide var).
 // ═══════════════════════════════════════════════════════════════
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+// ★ 19.10 CANLI FIX: msedge-tts import'u top-level'dan LAZY'a taşındı.
+//   Top-level import, Vercel serverless bundle'ında modül yükleme anında
+//   crash ediyordu → /ayetler '/sesler' DAHİL tüm yollar attacker yok
+//   FUNCTION_INVOCATION_FAILED (500) veriyordu: kullanıcı 5 dil çipi
+//   görüp "çeviri yok" şikayeti bırakıyordu. Dynamic import ile
+//   /ayetler + /sesler bu bağımlılıktan kopar; /okut yalnız ses üretirken
+//   yüklemeyi dener, patlarsa değilse %100 yolu yaşıyor.
+
 
 declare const process: { env: Record<string, string | undefined> };
+
+/** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
+ *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
+ *   tüm yollar (diller dahil) 500 FUNCTION_INVOCATION_FAILED veriyordu. */
+let __MsEdgeMod: { MsEdgeTTS: new () => import("msedge-tts").MsEdgeTTS; OUTPUT_FORMAT: typeof import("msedge-tts").OUTPUT_FORMAT } | null = null;
+async function msEdgeLazy(): Promise<typeof __MsEdgeMod> {
+  if (__MsEdgeMod) return __MsEdgeMod;
+  try {
+    __MsEdgeMod = (await import("msedge-tts")) as unknown as typeof __MsEdgeMod;
+    return __MsEdgeMod;
+  } catch { return null; }
+}
 
 // ── DİLLER (meal-sunucu.py ile birebir; edition + önerilen ses) ──
 const DIL_SESLER: Record<string, Array<[string, string]>> = {
@@ -155,8 +174,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ url: cached }); // client'in beklediği: data:audio/mpeg;base64,…
     }
     try {
-      const tts = new MsEdgeTTS();
-      await tts.setMetadata(sesId, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const mod = await msEdgeLazy();
+      if (!mod) return res.status(503).json({ ok: false, error: "ses motoru yüklenemedi" });
+      const tts = new mod.MsEdgeTTS();
+      await tts.setMetadata(sesId, mod.OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
       const { audioStream } = tts.toStream(metin);
       const chunklar: Buffer[] = [];
       await new Promise<void>((cöz, reddet) => {
