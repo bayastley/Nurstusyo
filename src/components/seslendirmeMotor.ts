@@ -123,7 +123,11 @@ function kancaPuani(cumle: string): number {
  *  Kesim noktaları her zaman cümle sonlarıdır — kelime asla ortadan bölünmez.
  *  Balans: part en az 2 cümle + 55 kelime; MAX 95 kelimede zorunlu kesim. */
 function mBolKanca(metin: string): { m: string; kat: string }[] | null {
-  const AZ_CUMLE = 2, HEDEF = 55, MAX = 95;
+  // ★ 20.10 YENİ KURAL (kullanıcı: "her 3 cümlede part ayrılsın, noktalama işaretleri
+  //  olursa da her 3. noktadan sonra diger parta"): HEDEF kelime araması YERINE
+  //  cümle-SAYACI kuralı — her part TAM 3 CÜMLE (nokta/soru/ünlem/…) sonunda kesilir.
+  //  HEDEF/MAX yine kelime sağlığı (aşırı uzun cümlede MAX koruma) çalışır.
+  const AZ_CUMLE = 3, HEDEF = 55, MAX = 95;
   const cumleler = metin.replace(/\s+/g, " ").match(/[^.!?…]+[.!?…]+["»')\]]*\s*|[^.!?…]+$/g) || [];
   if (cumleler.length < AZ_CUMLE + 1) return null;
   const kSay = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
@@ -147,13 +151,11 @@ function mBolKanca(metin: string): { m: string; kat: string }[] | null {
       out.push({ m: cumleler.slice(partBasIdx, i + 1).join(" ").trim(), kat: mSkorla(cumleler.slice(partBasIdx, i + 1).join(" ")) });
       break;
     }
-    // ★ kesim koşulu: part 2+ cümle OLMAZSA ve 55 kelimeye ulaşMADIYSA ASLA kesme —
-    //   erken (kısa) part yok. MAX aşılmadıysa kanca puanı beklenir; aşıldıysa
-    //   bu cümle sonunda zorunlu kesim (kelime yine TAM kalır, cümle sonudur).
-    // ★ 20.10 YARIKAYA 지점 (kullanıcı: "partlar çok.UZUN olmasın"): HEDEF'e since
-    //   ulaşıp BİR cümle daha eklenirse (HEDEF+15) kanca beklemeden kes — kısa
-    //   cümleli metinlerde (her cümle 9-10 kelime) 108 kelimeye kadar şişmeyi önler.
-    const kesOlgun = partCumle >= AZ_CUMLE && partKelime >= HEDEF;
+    // ★ kesim koşulu 20.10 v2 — HER 3. CÜMLE sonunda kes:
+    //   partCumle >= AZ_CUMLE (3) → kes (kanca puanına bakmayı beklemeden;
+    //   kanca varsa zaten baskın, yoksa da 3 cümle hazır demektir). Kelime
+    //   MAX/HEDEF koruma devam eder.
+    const kesOlgun = partCumle >= AZ_CUMLE;
     const aday = adaylar.find((a) => a.idx === i);
     const kancali = aday ? aday.puan >= 4 : false;
     const tasmaZorla = kesOlgun && partKelime >= HEDEF + 15;

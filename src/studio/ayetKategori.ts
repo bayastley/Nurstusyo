@@ -48,21 +48,28 @@ export function ayetKategorisiBul(ar: string, tr: string, surahName = ""): CatId
     if (match) return category as CatId;
   }
 
-  // ★ ÇEŞİTLİLİK MOTORU — eşleşme yoksa artık HER ZAMAN "musaf" (Kur'an) dönmüyor.
-  //   Ayet metninden üretilen stabil hash ile estetik kategoriler arasında dağıtılır.
-  //   Böylece her ayet farklı bir atmosfer alır, aynı Kur'an görseli tekrar etmez.
-  //   Not: sure ipucu (SURAH_CATEGORY_HINT) kelime eşleşmesi başarısız olursa
-  //   hash havuzundan ÖNCE denenir — artık ayet içeriğini EZMEZ.
+  // ★ ÇEŞİTLİLİK MOTORU v2 (kullanıcı 20.10: "akıllı AI her şeye deniz/sahil atmasın"):
+  //   eşleşme yoksa stabil hash ile estetik kategorilere dağıtılır AMA
+  //   havuzdan 'deniz' ve 'gol' (en sık karışan) %25'e düşürüldü — y重磅
+  //   içerik-anlamsız 'deniz' patlaması. Musaf (Kur'an mushaf görsel)
+  //   en güvenli geri-dönünş olarak havuza 2x ağırlık verildi: temayı
+  //   tahmin edemediğimizde en az-yanlış seçenek o (mushaf sayfa kart).
   const surahKey = surahName.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (SURAH_CATEGORY_HINT[surahKey]) return SURAH_CATEGORY_HINT[surahKey];
+  // hash → ağırlıklı havuz: musaf 2×, deniz/gol 1× (değişmez: sabit dağıtım için ağırlık)
   const AESTHETIC_POOL: CatId[] = [
-    "namaz", "yildizlar", "deniz", "daglar", "gunbatimi",
-    "gece", "selale", "orman", "cicekler", "musaf",
+    "musaf", "namaz", "yildizlar", "daglar", "gunbatimi",
+    "musaf", "gece", "selale", "orman", "cicekler",
+    "deniz", "bulut", "kar", "desen", "cami",
   ];
   let h = 2166136261;
   const src = `${surahName}|${tr}`;
   for (let i = 0; i < src.length; i += 1) { h ^= src.charCodeAt(i); h = Math.imul(h, 16777619); }
-  return AESTHETIC_POOL[(h >>> 0) % AESTHETIC_POOL.length];
+  const secim = AESTHETIC_POOL[(h >>> 0) % AESTHETIC_POOL.length];
+  // ★ 'gol' (durgun göl) cidden metinde 'göl/sakin/durgun' yoksa ASLA dönmерки —
+  //   hash katmanında atlanır; 'deniz' de eşleşmeyen metinlere seyrek düşsün.
+  if (secim === "gol") return "musaf";
+  return secim;
 }
 
 // ★ Admin kategori ikinci tarama: kod kategorisinde seçili türde klip yoksa
