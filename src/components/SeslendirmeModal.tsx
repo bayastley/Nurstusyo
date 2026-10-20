@@ -293,12 +293,41 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       runningRef.current = false; audioRef.current = null;
     }
   };
+  /** ★ 20.10 KARDEŞ DAĞITIMI (kullanıcı sorusu: "X'e basınca yazı diger bölümlere
+   *  dagirıtır, yok çok kullanılmayan yazı kayboluyor — bize X kuyruğu böyle davranır"): 
+   *  X'e basılan partın cümleleri KOMŞU parta eklenir (sondan birine).
+   *  Kural: silinme yerine birlestirme — dengeden diye en SHORT komşu seçilir. */
   const ogCikar = (i: number) => {
-    const yeni = kuyruk.filter((_, j) => j !== i);
+    const cikan = kuyruk[i];
+    if (!cikan) return;
+    if (kuyruk.length <= 1) {
+      // tek part kalırsa: kuyruk boşalt — canlı önizleme metni geri görünsün
+      setKuyruk([]); setKuyrukSec(0); setBolumSayi(0);
+      yaz("Kuyruk boş — canlı önizlemeye dönüldü");
+      return;
+    }
+    // en kısa komşu (önce sol, yoksa sağ) — içeriğe katılıyor, kaybolMAz
+    const solVar = i > 0;
+    const sagVar = i < kuyruk.length - 1;
+    const hedef = solVar
+      ? (sagVar && kuyruk[i + 1].metin.split(/\s+/).length < kuyruk[i - 1].metin.split(/\s+/).length ? i + 1 : i - 1)
+      : i + 1;
+    const yeni = kuyruk
+      .filter((_, j) => j !== i)
+      .map((o, j) => {
+        const hedefIdx = vezirIndex(hedef, i); // silinen part atlandıktan sonra hedefin yeni yeri
+        return j === hedefIdx ? { ...o, metin: (hedef < i ? o.metin + " " + cikan.metin : cikan.metin + " " + o.metin).trim() } : o;
+      });
     setKuyruk(yeni);
-    if (!yeni.length) { setKuyrukSec(0); yaz("Kuyruk boş — canlı önizlemeye dönüldü"); }
-    else setKuyrukSec(Math.min(kuyrukSec, yeni.length - 1));
+    setBolumSayi((bs) => Math.max(0, bs - 1));
+    setKuyrukSec(Math.min(i, yeni.length - 1));
+    const kelimeSay = cikan.metin.split(/\s+/).length;
+    // yaz bilodus: hedefin ekranda görünen numarası (1-tabanlı, silme sonrası)
+    const hedefEkrani = (hedef > i ? hedef : hedef) + 1;
+    yaz(`🧹 Bölüm ${i + 1} kaldırıldı — ${kelimeSay} kelime, komşu Bölüm ${hedefEkrani}'e dağıtıldı ✓`);
   };
+  /** silinme sonrası hedefin yeni index'i — silinen i'den BÜYÜKSE 1 azalt */
+  const vezirIndex = (hedef: number, silinen: number): number => (hedef > silinen ? hedef - 1 : hedef);
   const atmosAta = (kat: string) => {
     const i = kuyrukSec;
     setKuyruk(kuyruk.map((o, j) => (j === i ? { ...o, kat } : o)));
