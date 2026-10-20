@@ -76,6 +76,13 @@ const MOBIL_YEDEK: Record<string, string> = {
   "hafizlik-testi": "menu",
 };
 
+// ★ 20.10 (kullanıcı emri: "sol paneli açsın, ilgili seçeneği göstersin"):
+//   menünün İÇİNDE yaşayan duraklar — menü kapalıyken DOM'da yoklar, eski tur
+//   bunları sessizce ATLARDı (kullanıcı adımlara hiç ulaşmazdı). Bu adımlara
+//   gelince MiniTur "nur_minitur_menu_ac" event basar; HeaderTopBar menüyü AÇAR;
+//   tur sonra madalyonu menü içi item'a koyar. Kapanması da otomatik: etkisiz.
+const MENU_ICI_DURAKLAR = new Set(["araclar", "hafizlik-testi"]);
+
 // Durak balon metinleri — i18n
 const DURAK_METIN: Record<Lang, Array<{ baslik: string; metin: string }>> = {
   tr: [
@@ -148,8 +155,23 @@ export const MiniTur: React.FC<{ lang: Lang }> = ({ lang }) => {
   // Adım değişince hedefe kay + balonu konumla
   useEffect(() => {
     if (adim <= 0 || adim > DURAKLAR.length) { setKutu(null); return; }
-    const hedef = hedefBul(DURAKLAR[adim - 1]);
-    if (!hedef) { setAdim((a) => a + 1); return; } // durak yoksa atla
+    const durakTag = DURAKLAR[adim - 1];
+    // ★ 20.10: menü içi durakta menü KAPALIYSA paneli aç ve bu effect'in tekrar
+    //   koşmasını bekle (menü açık olunca item DOM'a girer, hedef bulunur).
+    let acildi = false;
+    if (MENU_ICI_DURAKLAR.has(durakTag)) {
+      try { window.dispatchEvent(new Event("nur_minitur_menu_ac")); acildi = true; } catch { /* yut */ }
+    }
+    const hedef = hedefBul(durakTag);
+    if (!hedef) {
+      // menü açma event'i yollandıysa DOM'un yetişmesini bekle (çifte atlamayı önle)
+      if (acildi) {
+        const bekla = window.setTimeout(() => setAdim((a) => a), 60);
+        return () => window.clearTimeout(bekla);
+      }
+      setAdim((a) => a + 1);
+      return;
+    } // durak yoksa atla
     hedef.scrollIntoView({ behavior: "smooth", block: "center" });
     const konumla = () => {
       const r = hedef.getBoundingClientRect();

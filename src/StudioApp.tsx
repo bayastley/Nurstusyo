@@ -378,6 +378,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // prayerCity, prayerSearch, prayerTimings → usePrayerTime hook'unda
   const [now, setNow] = useState(new Date());
   const [menuOpen, setMenuOpen] = useState(false);
+  // ★ 20.10 MINI TUR menü açma köprüsü (kullanıcı emri: "sol paneli açsın, ilgili
+  //   seçeneği göstersin"): MiniTur menü-ici durağa gelince event basar (araclar,
+  //   hafizlik-testi), burada sol panel açılır — tur item'ı madalyonla gösterir.
+  useEffect(() => {
+    const minorMenuAc = () => setMenuOpen(true);
+    window.addEventListener("nur_minitur_menu_ac", minorMenuAc);
+    return () => window.removeEventListener("nur_minitur_menu_ac", minorMenuAc);
+  }, []);
   const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [modal, setModal] = useState<ModalName>(null);
