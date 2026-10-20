@@ -14,7 +14,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useEffect, useRef, useState } from "react";
-import { asistanCevap, ASISTAN_HAZIR_SORULAR, type AsistanSonuc } from "../asistan/asistanCevap";
+import { asistanCevap, asistanRastgeleCipler, type AsistanSonuc } from "../asistan/asistanCevap";
 
 /** ★ 19.10: PremiumModal + mailto açılış köprüsü — StudioApp bu prop'ları doldurur */
 interface AsistanBaloncuguProps {
@@ -39,9 +39,16 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
   const [rozet, setRozet] = useState(false);
   const [giris, setGiris] = useState("");
   const [mesajlar, setMesajlar] = useState<Mesaj[]>([
-    { kim: "ai", metin: "Merhaba! 🌙 Ben Nûr Asistan — sık sorulan sorulara cevap veririm. Aşağıdan bir soru seçin ya da sorunuzu yazın." },
+    // ★ 20.10 (kullanıcı emri: "sadece sık sorular diye durmasın, güzel cevaplar
+    //   versin, Nur Stüdyo asistanıyım size nasıl yardımcı olurum desin"):
+    //   samimi, kendini-tanıtan karşılama — SSS kalıbı yok.
+    { kim: "ai", metin: "Merhaba! 🌙 Ben Nûr Stüdyo Asistanıyım — size nasıl yardımcı olurum? Video üretimi, üyelik, jetonlar, paylaşım, Kur'an bölümü… aklınıza takılan ne varsa sorun, anında cevap hazır! ✨" },
   ]);
   const listeRef = useRef<HTMLDivElement>(null);
+
+  // ★ 20.10: rastgele çipler — HER AÇILIŞTA ve sayfa yenilemesinde değişir
+  const [cipler, setCipler] = useState<string[]>(() => asistanRastgeleCipler(3));
+  const cipleriYenile = () => setCipler(asistanRastgeleCipler(3));
 
   // İlk ziyaret rozetini göster; açıldığında sustur
   useEffect(() => {
@@ -149,9 +156,11 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
                 )}
               </div>
             ))}
-            {/* Hazır sorular — ilk mesajdan sonra her zaman görünür */}
-            <div className="mt-1 flex flex-wrap gap-1.5 self-start">
-              {ASISTAN_HAZIR_SORULAR.map((s) => (
+            {/* ★ 20.10 Rastgele soru çipleri — her açılışta 3 farklı konudan,
+                sayfa yenilemesinde değişir; 🎲 ile anında yenilenir (kullanıcı:
+                "sürekli de değişsin, sayfa yenilendikçe soru değişsin") */}
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 self-start">
+              {cipler.map((s) => (
                 <button
                   key={s}
                   type="button"
@@ -161,6 +170,15 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
                   {s}
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={cipleriYenile}
+                className="rounded-full border border-emerald-400/25 px-2 py-1 text-[9.5px] font-bold text-emerald-300/80 transition hover:bg-emerald-400/10 hover:text-emerald-200"
+                title="Başka soru çipleri getir"
+                aria-label="Başka soru çipleri getir"
+              >
+                🎲
+              </button>
             </div>
           </div>
 

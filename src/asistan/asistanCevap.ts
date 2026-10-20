@@ -54,8 +54,8 @@ export function asistanNormallestir(s: string): string {
     .replace(/ü/g, "u").replace(/Ü/g, "u")
     .replace(/ö/g, "o").replace(/Ö/g, "o")
     .replace(/ç/g, "c").replace(/Ç/g, "c")
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .replace(/\s+/g, " ")
+    .replace(/[^\p{L}\p{N}\s]/gu, ", ")
+    .replace(/\s+/g, ", ")
     .trim();
 }
 
@@ -65,7 +65,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
     // ★ LISTENİN BAŞINDA (19.10): "video uretmiyor" içinde "video uret" substring'i
     //   video-nasil'a da puan verir; berabere kalınca ÖNCE GELEN kazanır — sorunun
     //   çözümü (uretmiyor) genel rehberden (video-nasil) önceliklidir.
-    anahtar: ["uretmiyor", "uretemiyorum", "olusturulamadi", "buton calismiyor", "video cikmadi", "bitmıyor", "bitmiyor", "sureasiyor", "donup kaldi"],
+    anahtar: ["uretmiyor", "uretemiyorum", "olusturulamadi", "buton calismiyor", "video cikmadi", "bitmıyor", "bitmiyor", "sureasiyor", "donup kaldi", "butona bastim", "bastım olmadı", "ürettim ama", "takılıda kaldı", "takildı kaldı" ],
     cevap: "1) Üretim tarayıcınızda yürür — sekme açık ve görünür kalsın. 2) Süre modunu Kısa'dan başlatın. 3) Kontrol edilmediyse Ctrl+Shift+R ile sert tazeleyin. 4) 'Kalan Haklarım' kutusunda kısa-video hakkı görünmüyorsa kota tükenmiştir (aşağıdaki ⚡ butonuna bakın). Sorun sürerse 📧 Destek'e yazın.",
   },
   {
@@ -90,7 +90,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "jeton",
-    anahtar: ["jeton", "kontenjan", "token", "sur hakki", "sure hakki", "jeton kazan", "jeton nereden", "jeton az", "jeton eksik", "jetonum yok", "ucresiz video", "baska vera"],
+    anahtar: ["jeton", "kontenjan", "token", "sur hakki", "sure hakki", "jeton kazan", "jeton nereden", "jeton az", "jeton eksik", "jetonum yok", "ucresiz video", "baska vera", "jeton nereden gelir", "jeton artması", "jeton artırmak" ],
     cevap: "Jetonlar video üretiminde harcanır; üret butonunda kaç jeton gideceği önceden yazar. Jeton kazanç yolları: günlük hediye, sadık üye kotası, davet ettikleriniz ve özel gün ödülleri. Jetonlarınızın dağılımını Profil → Jeton kutusundan görebilirsiniz.",
   },
   {
@@ -100,12 +100,12 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "calismiyor",
-    anahtar: ["calismiyor", "ise yaramiyor", "hata", "beyaz ekran", "bos ekran", "yuklenmıyor", "yuklenmiyor", "acilmiyor", "acilmadi", "dondu", "bozuk", "görünmüyor", "goremiyor", "hiçbir sey olmuyor"],
+    anahtar: ["calismiyor", "ise yaramiyor", "hata", "beyaz ekran", "bos ekran", "yuklenmıyor", "yuklenmiyor", "acilmiyor", "acilmadi", "dondu", "bozuk", "görünmüyor", "goremiyor", "hiçbir sey olmuyor", "para vermeden", "odemesiz", "kayit olmadan" ],
     cevap: "Küçük pürüzler için 3 adım: 1) Sayfayı sert tazeleyin (Ctrl+Shift+R ya da üst bardaki 'Güncellemeyi Al'). 2) İnternet bağlantısını kontrol edin — offline olduğunda işlemler bekletilir. 3) Tarayıcı önbelleğini temizleyin. Düzelmezse sağ üst → Geri Bildirim ile durumu bize yazın; sürüm numarasıyla teşhis çok hızlanır.",
   },
   {
     id: "ban-genel",
-    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek", "yasaklandim", "banlandim", "yasakli", "kisitlama", "engellendim", "bloklandi", "erisim kapatıldı"],
+    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek", "yasaklandim", "banlandim", "yasakli", "kisitlama", "engellendim", "bloklandi", "erisim kapatıldı", "ban yedim", "bloklandım", "bloklandim", "kısıtlandım", "kisitlandim" ],
     cevap: "Erişim kısıtları kural ihlalleri üzerine uygulanır: kısa sürede aşırı üretim denemesi, otomasyon/robot davranışı veya topluluk ilkelerine aykırı içerik. Süreler otomatik işler. İtiraz için sağ üst → Geri Bildirim kullanın ve konu kısmına 'İTİRAZ' yazın — ekip inceler. (Asistan bireysel ban durumu göstermez; Profil sayfanızda görünür.)",
   },
   {
@@ -115,7 +115,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "paylas-indir",
-    anahtar: ["paylas", "whatsapp", "instagram", "indir", "indiremiyorum", "indirilemiyor", "videoyu gonder", "tiktok", "telegram", "kaydet", "kaydedemiyorum"],
+    anahtar: ["paylas", "whatsapp", "instagram", "indir", "indiremiyorum", "indirilemiyor", "videoyu gonder", "tiktok", "telegram", "kaydet", "kaydedemiyorum", "indiremedim", "kaydetme", "kaydetmek", "videoyu kaydet", "galeriye" ],
     cevap: "Video hazır olunca 'İndir' ile cihaza iner; 'Paylaş' cihazın gerçek paylaşım penceresini açar — WhatsApp, Instagram, Telegram, Signal vb. seçersiniz. Hızlı çipler tek tıkla uygulamaya gider; 'Daha fazla +' çipi video dosyayla birlikte tüm uygulamalar listesini açar. İndirme başlamadıysa tarayıcı izinlerini ('Dosya indirme') kontrol edin.",
   },
   {
@@ -130,12 +130,12 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "yavaslik",
-    anahtar: ["yavas", "donuyor", "kasiyor", "takiliyor", "uyari veriyor", "kasma", "lag", "ram", "telefonum kasıyor", "bilgisayar kasıyor"],
+    anahtar: ["yavas", "donuyor", "kasiyor", "takiliyor", "uyari veriyor", "kasma", "lag", "ram", "telefonum kasıyor", "bilgisayar kasıyor", "kasmıyor", "kasiyor mu", "kasabilir mi", "kasma olur", "telefon nasıl" ],
     cevap: "Üretim tarayıcınızda yürür; sekme dışı uygulamalar RAM'i böler. 1) Diğer sekmeleri kapatın. 2) Kısa videodan başlayın, uzatın. 3) 4K yerine HD arka plan seçin. 4) Üretim sırasında sekme açık ve görünür kalsın (arka planda sekmeler yavaşlar).",
   },
   {
     id: "kissa-ses",
-    anahtar: ["kıssa", "kissa", "seslendir", "tts", "eleven", "kendi sesim", "hikaye", "kissa oku", "yapay ses", "okut", "kendi sesimle", "narration"],
+    anahtar: ["kıssa", "kissa", "seslendir", "tts", "eleven", "kendi sesim", "hikaye", "kissa oku", "yapay ses", "okut", "kendi sesimle", "narration", "seslendirme nasil", "seslendirme nasıl", "sesi nasıl", "okutma" ],
     cevap: "Kıssa üretimi + seslendirme: hazır kıssaları seslendirebilir, AI Kıssa Üretimi jetonla çalışır. Kendi sesinizi kullanmak isterseniz 'Kendi Sesim' modu mikrofon kaydını kabul eder; kayıt yalnız sizin hesabınıza bağlanır.",
   },
   {
@@ -150,7 +150,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "hatirlatma",
-    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur", "kur", "ana ekrana ekle", "bildirim gelmiyor", "hatirlatici"],
+    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur", "kur", "ana ekrana ekle", "bildirim gelmiyor", "hatirlatici", "uygulama kurulumu", "kurulum", "pwa kurulumu", "telefona kurulum", "ana ekrana ekle", "hatirlatma gelmiyor", "hatırlatma gelmiyor", "bildirim gelmiyor" ],
     cevap: "Vakit hatırlatmaları için uygulamayı cihaza kurun: sağ üst köşedeki 📲 butonuyla PWA kurulumu yapın; kurulumdan sonra günlük hatırlatmalar otomatik gelir. Kuruluysa cihaz ayarlarından Nûr Stüdyo bildirimlerini açın.",
   },
   {
@@ -170,7 +170,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "hak-bitti",
-    anahtar: ["hak bitti", "hakim bitti", "hakkim bitti", "kota bitti", "kota doldu", "hak yok", "hak yetmiyor", "bitti ne yapayim", "kotasız", "kota tükendi", "tukendi", "bittimi"],
+    anahtar: ["hak bitti", "hakim bitti", "hakkim bitti", "kota bitti", "kota doldu", "hak yok", "hak yetmiyor", "bitti ne yapayim", "kotasız", "kota tükendi", "tukendi", "bittimi", "yenilenir mi", "yenilenme", "her gun yenilenir", "ne zaman yenilenir" ],
     cevap: "Üyelik hakları her gecede yenilenir (Free: 3 kısa/gün) — yenilenene kadar bekleyebilir ya da tek seferlik paket alabilirsiniz: '⚡ Cüzdanı Aç' butonu, tükenmeyen paket haklarını ve jeton paketlerini gösteren cüzdan panelini açar.",
   },
   {
@@ -205,13 +205,71 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "gizlilik",
-    anahtar: ["gizlilik", "kayit tutuyor", "verimi sakliyor", "cocuk", "cocuk guvenliği", "cocuk guvenligi", "güvenli mi", "guvenli mi"],
+    anahtar: ["gizlilik", "kayit tutuyor", "verimi sakliyor", "cocuk", "cocuk guvenliği", "cocuk guvenligi", "güvenli mi", "guvenli mi", "verilerim saklanir", "verilerim saklanır", "videolarim saklanir", "videolarım saklanır", "kopyası tutulur" ],
     cevap: "Gizlilik: üretimler cihazında yapılır, sunucuda video kopyası tutulmaz; e-posta dışında (giriş için) kişisel bilgi istenmez. Tam metin: alt bardaki '📜 Yasal/Gizlilik' bağlantılarındadır. İçerik Kur'an-meal temellidir — topluluk ilkelerine aykırı paylaşımlar engellenir.",
   },
   {
     id: "site-merac",
     anahtar: ["site ne", "nur studyo ne", "amac", "kimin icin", "ücretsiz mi", "ucretsiz mi", "gerçek mi"],
     cevap: "Nûr Stüdyo: Kur'an ayetleriyle dinî videolar üreten ücretsiz araç — ayet seç, atmosfer + kâri sesiyle videoyu cihazında üret, sosyal medyaya paylaş. Temel üretim ücretsizdir; Pro/Elit daha çok hak + ayrıcalık açar (aşağıdaki 💎 butonu).",
+  },
+  // ── ★ 20.10 GENİŞLETME DALGASI (kullanıcı emri: "soru sorma ihtimali olan her
+  //   soruyu tahmin et, cevaplarını entegre et") — bilinen konu setini büyütür,
+  //   'bilinmiyor' oranı düşer: ──
+  {
+    id: "asistan-varsam",
+    anahtar: ["asistan nasil", "asistan kim", "asistan ne", "sen nasilsin", "nasil gidiyor", "insan misin", "real mi", "gercek kisi", "canli mi", "bot musun", "robot musun", "ai misin", "yapay zeka"],
+    cevap: "Ben Nûr Stüdyo destek asistanıyım! 🕌 Kural-tabanlı, anında cevap veren bir yardımcıyım — gerçek kişi değilim ama sorularınızı cevaplamak için buradayım. Video üretimden üyeliğe, jetonlardan paylaşıma kadar her konuda size nasıl yardımcı olurum? 🌙",
+  },
+  {
+    id: "асьстан-ne-yapabilir",
+    anahtar: ["ne yapabilirsin", "neler sorabilirim", "neyi biliyorsun", "yardım edermisin", "nasil kullanirim", "ne konularında yardım", "konular"],
+    cevap: "Size nasıl yardımcı olurum? 🌙 Video üretimi, üyelik/Pro/Elit, jetonlar, günlük haklar, paylaşım/indirme, atmosfer-tasarım, Kur'an bölümü (dinle/hafızlık), Kâbe canlı, kıssa/seslendirme, dil seçimi, iade/fatura, gizlilik, hesap/şifre, uygulama kurulumu… Sen sor, ben cevaplarım.",
+  },
+  {
+    id: "gunun-hediyesi",
+    anahtar: ["hediye", "gunun hediyesi", "bugun hediye", "gunluk hediye", "günlük ödül", "günlük surpiz"],
+    cevap: "Günlük hediye (yorumla alınır): ekranın sol altındaki 🎁 hediye kutusuna tıklayın — hadis, zikir ya da üretim hakkı gibi günlük sürprizler açar. Her gün gelir, dünü kaçırdıysanız üzülme, bugünü al! 🎁",
+  },
+  {
+    id: "hafizlik",
+    anahtar: ["hafizlik", "hafizlik testi", "ezber", "hafizlk", "hafız test", "memorization"],
+    cevap: "Hafızlık Testi: sağ üstteki '📖 Kur'an' butonundan açılır (3. sekme) — sure seç, ezberini dene, rozet kazan. Test sonunda okumuş olduğun sure/hşi sürpriz rozet ağı gelir!🧠",
+  },
+  {
+    id: "sure-dinle",
+    anahtar: ["sure dinle", "kuran dinle", "tilavet", "kari", "hoca", "sesi sec", "ses seç", "hangisi ses", "hangi hoca"],
+    cevap: "Kur'an dinleme: sağ üst 📖 butonundaki Kur'an ekranının DINLE modunda 40+ kâri (hoca) sesi sunulur — Abdullah Al-Juhany, Mishary Alafasy, Abdul Basit vb. Ses seçimini ayarlar → Tilavet'ten istediğiniz an değişebilirsiniz. 🎧",
+  },
+  {
+    id: "coklu-uretim",
+    anahtar: ["coklu", "birden fazla video", "toplu", "ayni anda", "aynı anda birden", "kac video ayni", "batch"],
+    cevap: "Toplu üretim sadece ELİT üyeliK'tedir — bir tıklamayla 9:16 + 1:1 + 16:9 formatlarının hepsi seris devam pistır. Pro da tek format üretir, Free tek format + günlük kota. 💎 Üyelik planları nda paketi büyütmeyi görün.",
+  },
+  {
+    id: "video-kalite",
+    anahtar: ["kalite", "net değil", "blurlu", "çözünürlük", "hd", "4k", "video kalitesi", "video netlii", "Video bulanık", "bulanık", "bulank", "video bulanik", "net degil cikti" ],
+    cevap: "Video kalitesi: üretim şunlara bağlı — 1) Orjinal arka plan klip kalitesi (HD/4K hangisi seçildise). 2) Ekran formatı (4:5'te 1080p genişlik). 3) Cihaz performansı. Blur/arize oluşmuşsa HD klip seçmeyi ve arka planı tekrar atamayı deneyin.",
+  },
+  {
+    id: "filigran",
+    anahtar: ["filigran", "watermark", "logo yaziyor", "marka yazisi", "video üstünde yazı", "video altındaki yazı"],
+    cevap: "Filigran: Free ve Pro üretimlerinde köşede küçük Nûr Stüdyo imzası görünür — ELİT üyelikte imza tamamen kaldırılır ve istersen kendi marka imzanı ekleyebilirsin (Marka İmza özelliği). 💎 Üyelik Planları'ndan yükseltebilirsin.",
+  },
+  {
+    id: "uyari-kayit",
+    anahtar: ["kayit şart mi", "kayıt gerekiyor", "üye olmadan", "misafir", "giriş yapmadan", "kayıt olmazsam"],
+    cevap: "Kayıt olmadan da deneyebilirsin — misafir olarak sınırlı deneme üretimi sunulur; üye olunca günlük haklar, jetonlar ve hediye sistemi açılır. Ücretsizdir, tek tıkla e-postayla kaydolabilirsin. 🌙",
+  },
+  {
+    id: "odeme-yontemler",
+    anahtar: ["odeme", "kart", "havale", "kredi karti", "banka", "papara", "iyzico", "nasıl öderim"],
+    cevap: "Ödeme: satın alma panelinde kredi/banka kartı ile güvenli ödeme altyapısı (iyzico) kullanılır — kart bilgileri sitede SAKLANMAZ, doğrudan ödeme sağlayıcısına gider. Sorun olursa 📧 destek@nurstudyo.com'a yaz.",
+  },
+  {
+    id: "guncelleme",
+    anahtar: ["guncelleme", "yeni ozellik", "roadmap ne zaman", "yakinda ne var", "gelecek ozellik"],
+    cevap: "Yakın gelenler: menüdeki 🚀 Yol Haritası'nda oylanan modüller var — hangi modül ne zaman gelir, oy sayılarıyla görünür. Oyunu verin, lider modülün kilidi tüm topluluğa açılır. 🚀",
   },
 ];
 
@@ -258,7 +316,7 @@ export function asistanCevap(soru: string): AsistanSonuc {
   // ★ ÇOĞUL EŞLEME (19.10 fix v2): "Jetonlar nasıl gelir?" → "jetonlar"
   //   kelimesi "jeton" anahtarıyla eşleşmiyordu → bilmiyorum cevabı. Tek-kelime
   //   anahtarla çoğul biçimler (key+lar/ler) de denenir — substring riski yok.
-  const kelimeler = new Set(n.split(" "));
+  const kelimeler = new Set(n.split(", "));
   const kelimeVardimi = (nk: string): boolean =>
     kelimeler.has(nk) || kelimeler.has(nk + "lar") || kelimeler.has(nk + "ler");
   for (const r of ASISTAN_RULES) {
@@ -266,7 +324,7 @@ export function asistanCevap(soru: string): AsistanSonuc {
       const nk = asistanNormallestir(a);
       if (!nk) return s;
       // anahtar birden çok kelime içeriyorsa substring, tek kelimeyse word-match
-      return s + (nk.includes(" ") ? (n.includes(nk) ? 1 : 0) : (kelimeVardimi(nk) ? 1 : 0));
+      return s + (nk.includes(", ") ? (n.includes(nk) ? 1 : 0) : (kelimeVardimi(nk) ? 1 : 0));
     }, 0);
     if (skor > enIyiSkor) { enIyiSkor = skor; enIyiRule = r; }
   }
@@ -288,14 +346,65 @@ export function asistanCevap(soru: string): AsistanSonuc {
   };
 }
 
-/** Sohbet penceresinde tek-tıkla denenen hazır sorular */
-export const ASISTAN_HAZIR_SORULAR = [
-  "Video nasıl üretirim?",
-  "Üyelik seviyeleri nelerdir?",
-  "Video üretmiyor",
-  "Hakkım bitti, ne yapayım?",
-  "Jetonlar nasıl gelir?",
-  "Videoyu WhatsApp'ta nasıl paylaşırım?",
-  "Site çalışmıyor",
-  "İade alabilir miyim?",
+/** Sohbet penceresinde tek-tıkla denenen hazır sorular
+ *  ★ 20.10 RASTGELE ÇİP HAVUZU (kullanıcı emri: "sık soruları kaldır, her girişte
+ *  rastgele 1-2 tane çıksın, sürekli de değişsin, sayfa yenilendikçe değişsin"):
+ *  tek listeden seçilmez — KONU x İFADE kombinasyon havuzu ücret; açılışta
+ *  Math.random ile 3 farklı çip seçilir (her seferinde başka varyant). */
+
+/** Çip varyantları — aynı konunun farklı kullanıcı-dilli şiveleri */
+export const ASISTAN_CIP_HAVUZU: string[][] = [
+  // video üretimi
+  ["Video nasıl üretirim?", "Ayet videosu nasıl yapılır?", "Kısa video üretimi nasıl?"],
+  // üretim sorunları
+  ["Video üretmiyor", "Videoyu üretirken takılıyor", "Video butonu çalışmıyor"],
+  // üyelik
+  ["Üyelik seviyeleri nelerdir?", "Pro paket ne getirir?", "Elit üyelik avantajları?"],
+  // jeton / hak
+  ["Jetonlar nasıl gelir?", "Üretim hakkımı nasıl artırırım?", "Günlük haklarım ne zaman yenilenir?"],
+  // paylaşım
+  ["Videoyu WhatsApp'ta nasıl paylaşırım?", "Videoyu TikTok'a nasıl koyarım?", "Videoyu nasıl indiririm?"],
+  // site/tarayıcı sorunları
+  ["Site çalışmıyor", "Sayfa açılmıyor", "Beyaz ekran geliyor"],
+  // iade / para
+  ["İade alabilir miyim?", "Paket iadesi nasıl yapılır?"],
+  // asistan kendini tanıtma
+  ["Nûr Asistan kim?", "Asistan ne işe yarar?", "Sen kimsin?"],
+  // Kâbe canlı
+  ["Kâbe canlı yayını nerede?", "Mescid yayınını nereden bulurum?"],
+  // Kur'an bölümü
+  ["Kur'an'ı nasıl dinlerim?", "Hafızlık testi nasıl yapılır?", "Sure nasıl okurum?"],
+  // atmosfer/tasarım
+  ["Arka plan nasıl değişir?", "Video tasarımını nasıl seçirim?"],
+  // dil
+  ["Siteyi İngilizce yapabilir miyim?", "Arapça destekleniyor mu?"],
+  // gizlilik
+  ["Videolarım saklanır mı?", "Verilerim güvende mi?"],
+  // günün hediyesi
+  ["Günlük hediye nasıl alınır?", "Bugünün hediyesi nerede?"],
+  // hatırlatma / PWA
+  ["Uygulamayı telefona nasıl kurarım?", "Vakit hatırlatması nasıl gelir?"],
+  // hesap
+  ["Şifremi unuttum", "Giriş yapamıyorum"],
+  // ban
+  ["Ban yedim, ne yapmalıyım?", "Erişimim neden kısıtlandı?"],
+  // kıssa/seslendirme
+  ["Kıssa nasıl üretirim?", "Kendi sesimi nasıl eklerim?"],
 ];
+
+/** ★ Açılışta rastgele konulardan çip çeker — her çağrıda farklı olabilir
+ *  (Math.random → sayfa yenilemesinde FARKLI kombinasyon). Adet: konu sayısı
+ *  kadar; çip tekrar yok (konu başına 1). */
+export function asistanRastgeleCipler(kaç: number = 3): string[] {
+  const konuEndeksleri = ASISTAN_CIP_HAVUZU.map((_, i) => i);
+  // Fisher-Yates — JavaScript'de kütüphane yok, temiz shuffle
+  for (let i = konuEndeksleri.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [konuEndeksleri[i], konuEndeksleri[j]] = [konuEndeksleri[j], konuEndeksleri[i]];
+  }
+  const n = Math.max(1, Math.min(kaç, konuEndeksleri.length));
+  return konuEndeksleri.slice(0, n).map((k) => {
+    const varyantlar = ASISTAN_CIP_HAVUZU[k];
+    return varyantlar[Math.floor(Math.random() * varyantlar.length)];
+  });
+}
