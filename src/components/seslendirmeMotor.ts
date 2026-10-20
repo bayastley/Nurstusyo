@@ -110,21 +110,25 @@ function kancaPuani(cumle: string): number {
   const ilkKelime = (s.toLocaleLowerCase("tr").match(/[a-zçğıöşü]+/) || [""])[0];
   if (KANCA_KELIMELER.has(ilkKelime)) p += 3;      // AMA/ANCAK/OYSA başlangıcı — devam şart
   if (KANCA_KELIMELER.has(s.toLocaleLowerCase("tr").replace(/[^a-zçğıöşü ]/g, "").trim().split(/\s+/).pop() || "")) p += 3; // cümle sonu kanca kelimesi
-  const kelimeSay = (s.match(/\S+/g) || []).length;
-  if (kelimeSay > 0 && kelimeSay <= 5) p += 2;     // çarpıcı kısa cümle — öne çekilmiş vurgu
+  // ★ 20.10: kısa-cümle (5-6-7 kelime) kanca PUANI KALDIRILDI — kullanıcı emri:
+  //   "part kısadır, 5-6-7 kelimeden sonra ilk nokta bölümü olmasın".
+  //   Kısa cümle artık kesim tetikleyicisi değil; kesim yalnız part uzadıktan sonra olur.
   return p;
 }
 
-/** ★ 18.10 KANCA MOTORU: kancalı cümle planına göre part bölümü —
- *  partlar mümkünse soru/üç-nokta/AMA-ancaK sonlarında kesilir,
- *  dinleyicinin merakı ortada kopmaz. Balans: part MIN 12, HEDEF 25, MAX 45 kelime. */
+/** ★ 20.10 UZUN-PART MOTORU (kullanıcı emri: "part uzun olsun, kısa değil;
+ *  2-3 cümle sonrası bölünme olsun, kelimeler tam çıksın, anlamsız olmasın"):
+ *  Bir part ancak 1) en az AZ_CUMLE cümle biriktikten VE 2) en az HEDEF kelime
+ *  ulaştıktan sonra bir kanca (soru/üç-nokta/AMA-ancak) cümle sonunda kesilir.
+ *  Kesim noktaları her zaman cümle sonlarıdır — kelime asla ortadan bölünmez.
+ *  Balans: part en az 2 cümle + 55 kelime; MAX 95 kelimede zorunlu kesim. */
 function mBolKanca(metin: string): { m: string; kat: string }[] | null {
-  const MIN = 12, HEDEF = 25, MAX = 45;
+  const AZ_CUMLE = 2, HEDEF = 55, MAX = 95;
   const cumleler = metin.replace(/\s+/g, " ").match(/[^.!?…]+[.!?…]+["»')\]]*\s*|[^.!?…]+$/g) || [];
-  if (cumleler.length < 2) return null;
+  if (cumleler.length < AZ_CUMLE + 1) return null;
   const kSay = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
   const toplam = cumleler.reduce((t, c) => t + kSay(c), 0);
-  if (toplam < MIN * 2) return null; // çok kısa — zaten tek part
+  if (toplam < HEDEF + 20) return null; // çok kısa — zaten tek part
   // part sınırı adayları: her cümle sonu, kanca puanıyla
   interface Aday { idx: number; sonKelimeIdx: number; puan: number }
   const adaylar: Aday[] = [];
@@ -133,30 +137,25 @@ function mBolKanca(metin: string): { m: string; kat: string }[] | null {
     acc += kSay(c);
     if (i < cumleler.length - 1) adaylar.push({ idx: i, sonKelimeIdx: acc, puan: kancaPuani(c) });
   });
-  // ardışık illerle: her part ~HEDEF kadar uzar; pencerideki en yüksek kanca puanlı
-  // nokerin partı kestirilir (pencere: [HEDEF-10, HEDEF+20] kelimeler arası)
   const out: { m: string; kat: string }[] = [];
-  let partBasIdx = 0, partKelime = 0;
+  let partBasIdx = 0, partKelime = 0, partCumle = 0;
   for (let i = 0; i < cumleler.length; i++) {
     partKelime += kSay(cumleler[i]);
+    partCumle++;
     const sonPart = i === cumleler.length - 1;
-    const pencereyeGirdi = partKelime >= HEDEF - 8;
-    const tasma = partKelime >= MAX + 1;
     if (sonPart) {
       out.push({ m: cumleler.slice(partBasIdx, i + 1).join(" ").trim(), kat: mSkorla(cumleler.slice(partBasIdx, i + 1).join(" ")) });
       break;
     }
-    // pencerede en iyi kanca adayı olup part uzunluğu uygunsa kes
+    // ★ kesim koşulu: part 2+ cümle OLMAZSA ve 55 kelimeye ulaşMADIYSA ASLA kesme —
+    //   erken (kısa) part yok. MAX aşılmadıysa kanca puanı beklenir; aşıldıysa
+    //   bu cümle sonunda zorunlu kesim (kelime yine TAM kalır, cümle sonudur).
+    const kesOlgun = partCumle >= AZ_CUMLE && partKelime >= HEDEF;
     const aday = adaylar.find((a) => a.idx === i);
-    if (aday && pencereyeGirdi && (aday.puan >= 4 || tasma)) {
+    const kancali = aday ? aday.puan >= 4 : false;
+    if (kesOlgun && (kancali || partKelime >= MAX)) {
       out.push({ m: cumleler.slice(partBasIdx, i + 1).join(" ").trim(), kat: mSkorla(cumleler.slice(partBasIdx, i + 1).join(" ")) });
-      partBasIdx = i + 1; partKelime = 0;
-      continue;
-    }
-    if (tasma && partKelime >= HEDEF - 8) {
-      // kanca bulunamadan MAX taşındı → bu cümle sonunda kes (en azwhere kötü seçenek)
-      out.push({ m: cumleler.slice(partBasIdx, i + 1).join(" ").trim(), kat: mSkorla(cumleler.slice(partBasIdx, i + 1).join(" ")) });
-      partBasIdx = i + 1; partKelime = 0;
+      partBasIdx = i + 1; partKelime = 0; partCumle = 0;
     }
   }
   if (out.length <= 1) return null;
@@ -213,7 +212,10 @@ export function mBol(metin: string): { m: string; kat: string }[] {
       if (grup.length) out.push({ m: grup.join(", "), kat: mSkorla(grup.join(" ")) });
       continue;
     }
-    if ((bufSay + sy > MAX && buf.length) || (bufKat && c.kat !== bufKat && bufSay >= MIN)) {
+    // ★ 20.10 (kullanıcı emri "kısa part olmasın"): atmosfer kat değişiminde
+    //   MIN(20) kelimeyle kesme KALDIRILDI — part en az HEDEF(35) kelime dolmadan
+    //   kesilmez; sadece MAX aşımında zorunlu kesim var.
+    if (bufSay + sy > MAX && buf.length) {
       out.push({ m: buf.join(" "), kat: bufKat! });
       buf = [c.m]; bufSay = sy; bufKat = c.kat; continue;
     }
@@ -221,6 +223,12 @@ export function mBol(metin: string): { m: string; kat: string }[] {
     if (!bufKat) bufKat = c.kat;
     if (bufSay >= HEDEF) { out.push({ m: buf.join(" "), kat: bufKat }); buf = []; bufSay = 0; bufKat = null; }
   }
-  if (buf.length) out.push({ m: buf.join(" "), kat: bufKat || mSkorla(buf.join(" ")) });
+  if (buf.length) {
+    // ★ artık-parça temizliği: son kalıntı çok kısaysa (< 10 kelime) önceki parta
+    //   birleştir — "Ne mutlu onlara!" gibi tek başına minik part oluşmasın.
+    const kalinti = buf.join(" ");
+    if (out.length && bufSay < 10) out[out.length - 1].m += " " + kalinti;
+    else out.push({ m: kalinti, kat: bufKat || mSkorla(kalinti) });
+  }
   return out.length ? out : [{ m: metin, kat: mSkorla(metin) }];
 }

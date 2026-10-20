@@ -558,10 +558,12 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 BUTON TAMAMEN KALDIRILDI — kilitli görünmez, "yok". Canlı TTS API (nur-tts)
                 500 fix'i (lazy-load bb328a3) deploy olup doğrulanana kadar halka açık
                 bozuk buton göstermek istemiyoruz; admin kendi hesabında test etmeye devam eder.
-                API sağlamlaştırınca tek satırla herkese açılır (koşulu kaldır). */}
+                ★ 20.10 MOBİL DÜZELTME (kullanıcı canlı raporu: "admin mobilde de görmüyor"):
+                eski sınıf "hidden md:flex" butonu <768px'te TAMAMEN gizliyordu — admin
+                mobilde de bakıp boş görüyordu. Artık her boyutta görünür (admin-only). */}
             {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
               <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
-                className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+                className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
                 style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
                 title="Sesli Meal / Kıssa Seslendirme (admin test)">
                 🔊 Seslendirme
