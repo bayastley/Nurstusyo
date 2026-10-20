@@ -28,6 +28,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 
 declare const process: { env: Record<string, string | undefined>; cwd: () => string };
+declare const __dirname: string;
 
 /** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
  *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
@@ -109,15 +110,26 @@ let __TR_KUTUPHANE: Array<{ title: string; source: string; ar: string; tr: strin
 async function trKutuphaneLazy(): Promise<typeof __TR_KUTUPHANE> {
   if (__TR_KUTUPHANE) return __TR_KUTUPHANE;
   try {
-    // ★ 20.10: Vercel serverless'ta fs çalışma dizini repo kökü — dosya buradan
-    //   okunur (bundle'dan değil, diskten); okunamazsa null döner, cömert
-    //   fallback ile /ayetler TR boş döner ama 500 VERMEZ (fail-soft).
+    // ★ 20.10 CANLI ADAY-YOL TURU: Vercel @vercel/node bundle'da cwd bazen REPL
+    //   KÖKÜNÜ değil api/ klasörünü gösterir. Aday listesiyle sıralı denenir.
     const fs = await import("fs");
     const path = await import("path");
-    const dosya = path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json");
-    const raw = fs.readFileSync(dosya, "utf8");
-    __TR_KUTUPHANE = JSON.parse(raw);
-    return __TR_KUTUPHANE;
+    const adayYollar = [
+      path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json"),
+      path.join(process.cwd(), "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
+      path.join(process.cwd(), "api", "nur-tts", "ayet-kutuphane.json"),
+      path.join(__dirname, "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
+      path.join(__dirname, "..", "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
+    ];
+    for (const dosya of adayYollar) {
+      try {
+        if (!fs.existsSync(dosya)) continue;
+        __TR_KUTUPHANE = JSON.parse(fs.readFileSync(dosya, "utf8"));
+        if (Array.isArray(__TR_KUTUPHANE) && __TR_KUTUPHANE.length) return __TR_KUTUPHANE;
+      } catch { /* volgende aday */ }
+    }
+    console.error('[nur-tts] TR kutuphane dosyalari bulunamadi:', adayYollar);
+    return null;
   } catch { return null; }
 }
 
