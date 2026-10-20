@@ -27,7 +27,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 //   yüklemeyi dener, patlarsa değilse %100 yolu yaşıyor.
 
 
-declare const process: { env: Record<string, string | undefined> };
+declare const process: { env: Record<string, string | undefined>; cwd: () => string };
 
 /** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
  *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
@@ -97,22 +97,40 @@ function limitAsildi(req: VercelRequest, maks: number): boolean {
 }
 
 // ── TR kütüphanesi (197KB) çalışma anında tek kez okunur ──
-// ★ @vercel/node serverless'ta fs workdir repo kökü; public/ klasörü bundle'a girmez.
-//   Bu yüzden kütüphane hem public/nur-tts (statik büyük dosya, tarayıcıda gösterim)
-//   hem de bu fonksiyonla birlikte gömülü (import) biçimde taşınır — Vercel build
-//   esbuild graph içinde JSON import'ta tanıdığı için fonksiyon şu kaynaktan okur.
-//   ★ resolveJsonModule gereği .json uzantısı zorunlu; esm-tarama kuralı da bunu bekler.
-import trKutuphaneJson from "../../public/nur-tts/ayet-kutuphane.json";
-const TR_KUTUPHANE = trKutuphaneJson as Array<{ title: string; source: string; ar: string; tr: string }>;
+// ★ 20.10 CANLI 500 FIX İKİNCİ TUR (kullanıcı canlı test: tüm yollar hâlâ
+//   FUNCTION_INVOCATION_FAILED — lazy msedge-tts yalnız yetmedi):
+//   ikinci top-level yük, 197KB'lik JSON import'ının Vercel @vercel/node
+//   Lambda cold-start'inde crash etmesidir (module wrap + esbuild JSON→JS inline,
+//   public/ klasöründen resolve sorunu). JSON importu da LAZY'a taşınır →
+//   module-graph top-level yükün tamamı kalkar; /sesler gibi hafif yollar
+//   artık hiçbir heavy kaynağa bakmadan %200 çalışır. TR kütüphanesi sadece
+//   /ayetler?dil=tr istegi gelince bir kez okunur.
+let __TR_KUTUPHANE: Array<{ title: string; source: string; ar: string; tr: string }> | null = null;
+async function trKutuphaneLazy(): Promise<typeof __TR_KUTUPHANE> {
+  if (__TR_KUTUPHANE) return __TR_KUTUPHANE;
+  try {
+    // ★ 20.10: Vercel serverless'ta fs çalışma dizini repo kökü — dosya buradan
+    //   okunur (bundle'dan değil, diskten); okunamazsa null döner, cömert
+    //   fallback ile /ayetler TR boş döner ama 500 VERMEZ (fail-soft).
+    const fs = await import("fs");
+    const path = await import("path");
+    const dosya = path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json");
+    const raw = fs.readFileSync(dosya, "utf8");
+    __TR_KUTUPHANE = JSON.parse(raw);
+    return __TR_KUTUPHANE;
+  } catch { return null; }
+}
 
 interface ServerSure { number: number; name: string; englishName: string; ayahs: Array<{ numberInSurah: number; text: string }> }
 const DİL_RATE_AYETLER = 30;     // /ayetler için dakika limiti
 const DİL_RATE_OKUT = 60;        // /okut için dakika limiti (kullanıcı başına)
 
 async function mealliAyetler(dil: string): Promise<Array<{ title: string; source: string; ar: string; tr: string }> | null> {
-  // TR → hazır kütüphane (.font/meal/fonetik düzeltmesi sunucu-kopyayla aynı)
+  // TR → hazır kütüphane (★ 20.10: lazy fs — top-level JSON import lambdayı çökertiyordu)
   if (dil === "tr") {
-    return TR_KUTUPHANE.map((a) => ({ title: a.title || "", source: a.source || "", ar: a.ar || "", tr: a.tr || "" }));
+    const kutuphane = await trKutuphaneLazy();
+    if (!kutuphane) return null;
+    return kutuphane.map((a) => ({ title: a.title || "", source: a.source || "", ar: a.ar || "", tr: a.tr || "" }));
   }
   // Diğer diller → canlı alquran.cloud (kayma korumasız düz çekim — serverless'ta
   //   studioHelpers tarayıcı-bağımlıdır; burada basit sürüm yeterlidir).

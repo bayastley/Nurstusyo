@@ -150,10 +150,14 @@ function mBolKanca(metin: string): { m: string; kat: string }[] | null {
     // ★ kesim koşulu: part 2+ cümle OLMAZSA ve 55 kelimeye ulaşMADIYSA ASLA kesme —
     //   erken (kısa) part yok. MAX aşılmadıysa kanca puanı beklenir; aşıldıysa
     //   bu cümle sonunda zorunlu kesim (kelime yine TAM kalır, cümle sonudur).
+    // ★ 20.10 YARIKAYA 지점 (kullanıcı: "partlar çok.UZUN olmasın"): HEDEF'e since
+    //   ulaşıp BİR cümle daha eklenirse (HEDEF+15) kanca beklemeden kes — kısa
+    //   cümleli metinlerde (her cümle 9-10 kelime) 108 kelimeye kadar şişmeyi önler.
     const kesOlgun = partCumle >= AZ_CUMLE && partKelime >= HEDEF;
     const aday = adaylar.find((a) => a.idx === i);
     const kancali = aday ? aday.puan >= 4 : false;
-    if (kesOlgun && (kancali || partKelime >= MAX)) {
+    const tasmaZorla = kesOlgun && partKelime >= HEDEF + 15;
+    if (kesOlgun && (kancali || partKelime >= MAX || tasmaZorla)) {
       out.push({ m: cumleler.slice(partBasIdx, i + 1).join(" ").trim(), kat: mSkorla(cumleler.slice(partBasIdx, i + 1).join(" ")) });
       partBasIdx = i + 1; partKelime = 0; partCumle = 0;
     }
