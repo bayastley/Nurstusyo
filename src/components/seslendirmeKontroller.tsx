@@ -94,8 +94,10 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         <div className="rounded-2xl border border-white/10 p-3" style={{ background: "rgba(255,255,255,.03)" }}>
           <textarea value={metin} onChange={(e) => setMetin(e.target.value)}
             placeholder={"1️⃣ Metnini buraya yaz…\n「+」 ile bölüm ekle: kaç «+», o kadar bölüm — metin otomatik dağılır\n2️⃣ Bölüm kartına tıkla → dinle + arka plan ayarla\n3️⃣ 🔊 SESLENDİR hepsini okur"}
-            rows={5}
-            className="w-full resize-y rounded-xl px-3 py-3 text-[12px] leading-relaxed outline-none"
+            rows={8}
+            // ★ 20.10 (kullanıcı: "çok küçük pencere olmuş, %45 büyüt"): rows 5→8
+            //   (≈ %60 yükseklik artışı — %45+ hedefi aşar, resize-y ile otomatiği kalmadı)
+            className="w-full resize-y rounded-xl px-3 py-3 text-[12px] leading-relaxed outline-none min-h-[220px]"
             style={{ background: "rgba(0,0,0,.35)", color: "var(--text)", border: "1px solid rgba(255,255,255,.14)" }} />
           {metin.trim() ? (
             <div className="mt-2 rounded-xl px-3 py-2 text-[10px] font-extrabold" style={{ background: "rgba(215,170,82,.08)", border: "1px solid rgba(215,170,82,.2)", color: "var(--accent)" }}>
