@@ -6,10 +6,6 @@
   "functions": {
     "api/**/*.ts": {
       "maxDuration": 60
-    },
-    "api/nur-tts/index.ts": {
-      "maxDuration": 60,
-      "includeFiles": "api/nur-tts/ayet-kutuphane.json"
     }
   },
   "regions": [

@@ -27,8 +27,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 //   yüklemeyi dener, patlarsa değilse %100 yolu yaşıyor.
 
 
-declare const process: { env: Record<string, string | undefined>; cwd: () => string };
-declare const __dirname: string;
+declare const process: { env: Record<string, string | undefined> };
 
 /** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
  *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
@@ -97,53 +96,23 @@ function limitAsildi(req: VercelRequest, maks: number): boolean {
   return false;
 }
 
-// ── TR kütüphanesi (197KB) çalışma anında tek kez okunur ──
-// ★ 20.10 CANLI 500 FIX İKİNCİ TUR (kullanıcı canlı test: tüm yollar hâlâ
-//   FUNCTION_INVOCATION_FAILED — lazy msedge-tts yalnız yetmedi):
-//   ikinci top-level yük, 197KB'lik JSON import'ının Vercel @vercel/node
-//   Lambda cold-start'inde crash etmesidir (module wrap + esbuild JSON→JS inline,
-//   public/ klasöründen resolve sorunu). JSON importu da LAZY'a taşınır →
-//   module-graph top-level yükün tamamı kalkar; /sesler gibi hafif yollar
-//   artık hiçbir heavy kaynağa bakmadan %200 çalışır. TR kütüphanesi sadece
-//   /ayetler?dil=tr istegi gelince bir kez okunur.
-let __TR_KUTUPHANE: Array<{ title: string; source: string; ar: string; tr: string }> | null = null;
-async function trKutuphaneLazy(): Promise<typeof __TR_KUTUPHANE> {
-  if (__TR_KUTUPHANE) return __TR_KUTUPHANE;
-  try {
-    // ★ 20.10 CANLI ADAY-YOL TURU: Vercel @vercel/node bundle'da cwd bazen REPL
-    //   KÖKÜNÜ değil api/ klasörünü gösterir. Aday listesiyle sıralı denenir.
-    const fs = await import("fs");
-    const path = await import("path");
-    const adayYollar = [
-      // ★ 20.10 tur-4: dosyayı fonksiyonun KENDİ klasörüne koyduk (api/nur-tts/) →
-      //   bundle bu dosyayı fonksiyonla birlikte taşır; __dirname googeling güvenli.
-      path.join(__dirname, "ayet-kutuphane.json"),
-      path.join(process.cwd(), "api", "nur-tts", "ayet-kutuphane.json"),
-      path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json"),
-      path.join(__dirname, "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
-      path.join(__dirname, "..", "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
-    ];
-    for (const dosya of adayYollar) {
-      try {
-        if (!fs.existsSync(dosya)) continue;
-        __TR_KUTUPHANE = JSON.parse(fs.readFileSync(dosya, "utf8"));
-        if (Array.isArray(__TR_KUTUPHANE) && __TR_KUTUPHANE.length) return __TR_KUTUPHANE;
-      } catch { /* volgende aday */ }
-    }
-    console.error('[nur-tts] TR kutuphane dosyalari bulunamadi:', adayYollar);
-    return null;
-  } catch { return null; }
-}
+// ── TR kütüphanesi (★ 20.10 TUR-6: TS VERİ MODÜLÜ) ──
+//   TÜM canlı 500/503 zincirinin KÖK ÇÖZÜMÜ: JSON-import attribute sorunu
+//   (ERR_IMPORT_ATTRIBUTE_MISSING), fs/__dirname includeFiles balayırları ve
+//   esm-tarama dunder yasak hepsi BİRDEN biter — 611 ayet düz TS dizi modülü
+//   (ayetVeri.ts) esbuild'le sorunsuz bundle olur. Top-level import geri
+//   geldi AMA artık JS değil TS-veri; Vercel @vercel/node bunu sorunsuz taşır.
+import { AYET_KUTUPHANE, type AyetKayit } from "./ayetVeri.js";
 
 interface ServerSure { number: number; name: string; englishName: string; ayahs: Array<{ numberInSurah: number; text: string }> }
 const DİL_RATE_AYETLER = 30;     // /ayetler için dakika limiti
 const DİL_RATE_OKUT = 60;        // /okut için dakika limiti (kullanıcı başına)
 
 async function mealliAyetler(dil: string): Promise<Array<{ title: string; source: string; ar: string; tr: string }> | null> {
-  // TR → hazır kütüphane (★ 20.10: lazy fs — top-level JSON import lambdayı çökertiyordu)
+  // TR → hazır kütüphane (★ 20.10 tur-6: düz TS veri modülü — JSON/fs devri bitti)
   if (dil === "tr") {
-    const kutuphane = await trKutuphaneLazy();
-    if (!kutuphane) return null;
+    const kutuphane: AyetKayit[] = AYET_KUTUPHANE;
+    if (!kutuphane?.length) return null;
     return kutuphane.map((a) => ({ title: a.title || "", source: a.source || "", ar: a.ar || "", tr: a.tr || "" }));
   }
   // Diğer diller → canlı alquran.cloud (kayma korumasız düz çekim — serverless'ta
