@@ -115,9 +115,11 @@ async function trKutuphaneLazy(): Promise<typeof __TR_KUTUPHANE> {
     const fs = await import("fs");
     const path = await import("path");
     const adayYollar = [
-      path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json"),
-      path.join(process.cwd(), "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
+      // ★ 20.10 tur-4: dosyayı fonksiyonun KENDİ klasörüne koyduk (api/nur-tts/) →
+      //   bundle bu dosyayı fonksiyonla birlikte taşır; __dirname googeling güvenli.
+      path.join(__dirname, "ayet-kutuphane.json"),
       path.join(process.cwd(), "api", "nur-tts", "ayet-kutuphane.json"),
+      path.join(process.cwd(), "public", "nur-tts", "ayet-kutuphane.json"),
       path.join(__dirname, "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
       path.join(__dirname, "..", "..", "..", "public", "nur-tts", "ayet-kutuphane.json"),
     ];
