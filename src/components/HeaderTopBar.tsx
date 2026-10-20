@@ -560,8 +560,13 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 bozuk buton göstermek istemiyoruz; admin kendi hesabında test etmeye devam eder.
                 ★ 20.10 MOBİL DÜZELTME (kullanıcı canlı raporu: "admin mobilde de görmüyor"):
                 eski sınıf "hidden md:flex" butonu <768px'te TAMAMEN gizliyordu — admin
-                mobilde de bakıp boş görüyordu. Artık her boyutta görünür (admin-only). */}
-            {(isAdminEmail(user?.email || "") || isMasterSürüm) && (
+                mobilde de bakıp boş görüyordu. Artık her boyutta görünür.
+                ★ 20.10 ELİT KAPISI (kullanıcı emri: "seslendirme elit üyelere açılacak,
+                herkese kilitli olsun, olurda açarsam gizlilik elitlere uygun"):
+                admin/master KALICI muaf (KALICI EMİR: adminde her kilit açık); elit üye
+                da görür/tıklar; diğer herkes buton YOK. Render kapısı + ModalsContainer
+                mount kapısı ikisi birden devrede. */}
+            {(isAdminEmail(user?.email || "") || isMasterSürüm || tier === "elit") && (
               <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
                 className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
                 style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}

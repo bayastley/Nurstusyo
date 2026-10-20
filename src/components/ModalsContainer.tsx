@@ -668,8 +668,11 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           ★ 18.10 V3 ADMİN KİLİDİ (kullanıcı emri): admin haricinde HERKESE kapalı —
           modal bir an bile mount edilmez (içerik sızmasın); admin-gizli adm- maddesi
           AdminGizliFeatures panelinden free/pro/elit'e açılabilir (o zaman UYE_GATE
-          tier'ı devreye girer). Kod tarafı fail-closed: isMasterSurum da admin değilse kapı kapalı. */}
-      {(isMasterSürüm || isAdminEmail(user?.email || "")) && (
+          tier'ı devreye girer). Kod tarafı fail-closed: isMasterSurum da admin değilse kapı kapalı.
+          ★ 20.10 ELİT KAPISI (kullanıcı emri: "seslendirme elit üyelere açılacak, herkese
+          kilitli olsun"): admin/master KALICI muaf + elite tier'a da mount izni.
+          Free/pro kullanıcının modalı bir an bile mount OLMAZ (içerik sızmasın). */}
+      {(isMasterSürüm || isAdminEmail(user?.email || "") || tier === "elit") && (
       <SeslendirmeModal open={modal === "seslendirme"} onClose={() => setModal(null)} notify={notify ?? undefined} />
       )}
 

@@ -343,6 +343,9 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           gununAyetiObj={gununAyetiObj}
           shuffleAyet={shuffleAyet}
           akilliAyetSec={akilliAyetSec}
+          // ★ 20.10 ELİT KİLİDİ (kullanıcı emri): Akıllı AI sadece elit — elite değilse buton Premium'u açar
+          akilliElitIzin={typeof tierAtLeast === "function" ? tierAtLeast(accessTier, "elit") : accessTier === "elit"}
+          akilliPremiumAc={openPremium ? () => openPremium("uyelik") : hatKilitTiklandi}
           ruhHaliMetin={ruhHaliMetin}
           setRuhHaliMetin={setRuhHaliMetin}
           ruhHaliUygula={ruhHaliUygula}

@@ -38,6 +38,10 @@ export const AyetSecimBolumu: React.FC<{
   shuffleAyet: () => void;
   /** 🎯 Akıllı AI: ayetin ruh haline/kelimelerine göre ayet + uyumlu arka plan kendisi seçilir */
   akilliAyetSec: () => void;
+  /** ★ 20.10 ELİT KİLİDİ (kullanıcı emri): Akıllı AI sadece elit — elite değilse
+   *  Premium/uyelik sayfası açılır; admin/master muaf (elitIzin=true gelir). */
+  akilliElitIzin?: boolean;
+  akilliPremiumAc?: () => void;
   /** ★ AI RUH HALİ (01.10): serbest metin / çip → ayet + arka plan + kart ayarları */
   ruhHaliMetin: string;
   setRuhHaliMetin: (v: string) => void;
@@ -47,7 +51,7 @@ export const AyetSecimBolumu: React.FC<{
   /** ★ 04.10 TUR 4: kart mealı/kaynağı seçili dilde (yoksa kartın TR verisi) */
   mealCevir?: (k: AyetKarti) => string;
   kaynakCevir?: (k: AyetKarti) => string;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir }) => {
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -115,15 +119,19 @@ export const AyetSecimBolumu: React.FC<{
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akAyetiniSec")}</span>
             <div className="ml-auto flex items-center gap-1.5">
-              {/* 🎯 Akıllı AI — ayetin duygu/kelime ipuçlarından ayet + uyumlu arka plan tek tuşla */}
+              {/* 🎯 Akıllı AI — ayetin duygu/kelime ipuçlarından ayet + uyumlu arka plan tek tuşla
+                  ★ 20.10: ELİT kilidi — elite değilse Premium üyelik sayfası açılır */}
               <button
                 type="button"
-                onClick={akilliAyetSec}
+                onClick={() => {
+                  if (!akilliElitIzin) { if (akilliPremiumAc) akilliPremiumAc(); return; }
+                  akilliAyetSec();
+                }}
                 className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[9.5px] font-black text-black transition hover:brightness-110 active:scale-95"
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                title={tt("akAkilliSecim")}
+                title={akilliElitIzin ? tt("akAkilliSecim") : "Akıllı AI · ELİT üyelik özelliği — tıkla, Elite yüksel"}
               >
-                <Wand2 size={11} /> {tt("akAkilliAI")}
+                <Wand2 size={11} /> {tt("akAkilliAI")}{!akilliElitIzin && <span className="rounded bg-black/25 px-1 py-px text-[7px] font-black">ELİT</span>}
               </button>
               <button
                 type="button"

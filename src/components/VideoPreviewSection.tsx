@@ -525,12 +525,29 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3.5">
-          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />{t("vpAkilliAiAd")} <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("vpUcretsiz")}</span></p>
+          <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Wand2 size={13} />{t("vpAkilliAiAd")}
+            {/* ★ 20.10 (kullanıcı emri): ÜCRETSİZrozeti ELİT'e taşındı — artık ELİT rozeti.
+                Elite olmayan kullanıcıda rozet kilitli görünür; tıklayınca Premium/uyelik sayfası açılır. */}
+            <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}
+              onClick={(e) => { if (!(isMasterSürüm || tierAtLeast(tier, "elit"))) { e.stopPropagation(); openPremium("uyelik"); } }}>
+              {"ELİT"}
+            </span></p>
           <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? t("akilliAiAciklama") : t("akilliAiKapaliAciklama")}</p>
           <button
             onMouseEnter={() => setAiTooltipHover(true)}
             onMouseLeave={() => setAiTooltipHover(false)}
-            onClick={() => { setSmartAiEnabled(!smartAiEnabled); if (!smartAiEnabled) window.setTimeout(applySmartBackgrounds, lowPower ? 700 : 300); }}
+            // ★ 20.10 ELİT KİLİDİ (kullanıcı emri: "akıllı aı sadece elit üyelere aktif olsun,
+            //   tıklayınca elit olma yeri açılsın"): elite değilse toggle yerine Premium
+            //   üyelik sayfası açılır. admin/master muaf. Açıkken Elite olmayan
+            //   (tier düşüşü vb.) yeniden kapatılamaz ama toggle da edemez — güvenli sessiz blok.
+            onClick={() => {
+              if (!(isMasterSürüm || tierAtLeast(tier, "elit"))) {
+                if (!smartAiEnabled) { openPremium("uyelik"); notify("✨ Akıllı AI ELİT özelliğidir — üyelik sayfasından Elite yüksel"); }
+                else setSmartAiEnabled(false); // zaten açıkken kapanabilir (tier düşüşü durumunda kapansın)
+                return;
+              }
+              setSmartAiEnabled(!smartAiEnabled); if (!smartAiEnabled) window.setTimeout(applySmartBackgrounds, lowPower ? 700 : 300);
+            }}
             className="relative w-full rounded-xl py-2 text-[10px] font-black text-black"
             style={{ background: smartAiEnabled ? "#34d399" : "#ef4444" }}
           >
