@@ -108,7 +108,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     if (kd === dil) return;
     if (runningRef.current) durdur();
     setDil(kd); setAyetler([]); setSurler([]); setKuyruk([]); setKuyrukSec(0); setSesListe([]); setSes(null);
-    setMetin(""); setBg(null);
+    setMetin(""); setBg(null); setBolumSayi(0); // ★ sayaç da sıfır — 17-yalan fix
     yaz(`${DILLER.find((d) => d.kod === kd)?.bayrak} ${DILLER.find((d) => d.kod === kd)?.ad} — meallar hazırlanıyor…`);
   };
   // okut URL'i — dil + seçili ses (ses seçildiyse onu kullan)
@@ -207,11 +207,46 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         ? kancaBirlestir(kancaPlan, n)   // çok part → komşuları birleştir (ınızdan sonra)
         : metinPartArttir(kancaPlan, n); // az part → partları 2-3 cümlelik parçalara büyüt
     if (!kes.length) return;
+    // ★ 20.10 SAYAÇ SENKRON FİX (kullanıcı canlı Rapor: "boş metinde bile 17·bölüm
+    //  diyor"): kök neden — ➕ her basışta n'i koşulsuz +1 yapıp setBolumSayi(n)
+    //  diyordu; OYSA metinPartArttir tek kelimelik/aşırı kısa metni BÖLEMEDİĞİNDE
+    //  1 parçayla dönüyordu → sayaç 17 diyordu, kuyrukta 1 chip vardı (yalan).
+    //  Yeni kural: sayaç = GERÇEK üretilen parça sayısı. Bölücü tavanına
+    //  ulaştıysak artık büyütmüyoruz, kibirde uyarı veriyoruz.
+    if (kes.length < n) {
+      const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
+      setKuyruk(yeniKuyruk);
+      setKuyrukSec(kes.length - 1);
+      setBolumSayi(kes.length); // GENÇLIK ASLA YALAN SAYMAZ — sayaç gerçeğe kilitlendi
+      yaz(`⚠️ Metin bu haliyle en fazla ${kes.length}·bölüm — daha uzun yaz ki daha fazla bölünsün`, "hata");
+      return;
+    }
     const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
     setKuyruk(yeniKuyruk);
     setBolumSayi(n);
     setKuyrukSec(n - 1);
     yaz(`🧩 ${n}·bölüm hazır — kanca noktalarında kesildi, kartlara tıkla: dinle / arka plan ayarla`);
+  };
+
+  /** ★ 20.10 BÖLÜM AZALT (➖) — kullanıcı sorusu: "bölüm azaltma yok mu kanka":
+   *  her basışta hedef bölüm sayısı −1 (min 1); motor planı mBol'den okunur,
+   *  fazla parçalar KOMŞU birleşimiyle hedefe indirilir (içerik kaybolmaz,
+   *  kanca-kesim bölümünde birleşme kancaBirlestir ile yapılır).
+   *  Tamamını sıfırlamak isteyen kartın ✕'ini kullanır (o kuyruğu boşaltıyor). */
+  const bolumCikar = () => {
+    if (!metin.trim()) return;
+    if (bolumSayi <= 1) { yaz("Zaten minimum bölümde — sıfırlamak için kartın ✕'ine bas", "hata"); return; }
+    const hedefN = bolumSayi - 1;
+    const kancaPlan = mBol(metin.trim());
+    if (!kancaPlan.length) return;
+    // motor planı zaten küçükse (metin değişti/az part üretti) plana saygı duyar
+    const kes = kancaPlan.length <= hedefN ? kancaPlan : kancaBirlestir(kancaPlan, hedefN);
+    if (!kes.length) return;
+    const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
+    setKuyruk(yeniKuyruk);
+    setBolumSayi(Math.min(kes.length, hedefN));
+    setKuyrukSec(Math.max(kes.length - 1, 0));
+    yaz(`🧩 ${kes.length}·bölüm — azaltıldı, komşu parçalar birleşti ✓`);
   };
 
   /** ★ 20.10: mBol az part (2-3) ürettiyse ve kullanıcı daha fazla bölüm istedi →
@@ -263,7 +298,16 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
    *  tetikliyor; kart tıklaması artık YALNIZ O PART'ı okur (Sesler/Spotify davranışı).
    *  sıralı-devam istenirse SESLENDİR ana buton uçlarından zaten tüm kuyruk açılır. */
   const bolumDinle = async (i: number) => {
-    if (runningRef.current || !kuyruk[i]) return;
+    if (!kuyruk[i]) return;
+    // ★ 21.10 CANLI FIX (kullanıcı: "part 5 tıklayıp sesi dinlemek istiyorum 1. den başlıyor"):
+    //   kök neden — eski guard `if (runningRef.current) return;` SESLENDİR'den kalan
+    //   okuma sürerken kart tıklamasını sessizce yok sayıyordu; arkada 1/7'den oynamaya
+    //   devam ediyordu. Yeni kural: kart tıklaması = mevcut oynatmayı KES + seçili
+    //   partı başlat (Spotify davranışı — kullanıcı her durumda tıkladığı partı duyar).
+    if (runningRef.current) {
+      seqRef.current++;               // bekleyen zincir/ses işleyicileri iptal
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    }
     runningRef.current = true; seqRef.current++;
     yaz(`Parça ${i + 1} dinleniyor…`, "okuyor");
     const mySeq = seqRef.current;
@@ -280,11 +324,20 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       const audio = new Audio(url);
       audioRef.current = audio;
       await new Promise<void>((res) => {
-        const bit = () => res();
-        audio.onended = bit; audio.onerror = bit;
+        let bitti = false;
+        const bit = () => { if (!bitti) { bitti = true; res(); } };
+        audio.onended = bit;
+        // ★ 20.10 SESSIZ-HATA FIX (aynı kök, kart dinleme): hatayı yutup "bitti ✓"
+        //   yazmak yerine gerçek hatayı göster — CSP/onerror zincirini sonlandır.
+        audio.onerror = () => {
+          if (bitti) return;
+          bitti = true; seqRef.current++; runningRef.current = false;
+          yaz(`⚠️ Parça ${i + 1} çalınamadı — ${audio.error?.message || "tarayıcı ses kaynağını blokladı (CSP)"}`, "hata");
+          res();
+        };
         setTimeout(bit, 120000);
         try { audio.currentTime = 0; } catch { /* autoplay koruması */ }
-        audio.play().catch(bit);
+        audio.play().catch(() => { /* onerror zaten devrede */ });
       });
       if (mySeq === seqRef.current) yaz(`Parça ${i + 1} bitti ✓ — sıradaki kartı tıkla ya da SESLENDİR ile tümünü`, "bitti");
     } catch (e: unknown) {
@@ -391,17 +444,43 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         if (kuyruk.length) setKuyrukSec(listedenBasla + i); // ★ 18.10: toplam kuyrukta doğru kart işaretlenir
         yaz(`Parça ${i + 1}/${liste.length} · ${ATM[p.kat]?.[0] || p.kat} · Ahmet okuyor…`, "okuyor");
         const { audio: a } = await siradaki;
+        const my = seqRef.current; // ★ 21.10 SIZINTI FIX: döngü scope'u — break kontrolü buradan okur
         audioRef.current = a;
         // mevcut parça çalarken sıradakini hazırla (buffer doluyor — geçiş anında)
         siradaki = i + 1 < liste.length ? audioHazirla(liste[i + 1].m) : siradaki;
         await new Promise<void>((res) => {
-          const my = seqRef.current; let bitti = false;
-          const bit = () => { if (!bitti) { bitti = true; if (my === seqRef.current) res(); } };
-          a.onended = bit; a.onerror = bit;
+          let bitti = false;
+          // ★ 21.10 SIZINTI FIX: `bit` koşulsuz resolve eder — kart kesmesi (seq++ +
+          //   pause) sonrası onended/onerror tetikLENMEZ ve eski zincirin promise'i
+          //   sonsuza dek askıda kalıyordu (aynı awaiting bellekte stkta). Döngü,
+          //   sonra my !== seqRef kontrolüyle temiz break eder (aşağıda).
+          const bit = () => { if (!bitti) { bitti = true; res(); } };
+          a.onended = bit;
+          // ★ 20.10 SESSIZ-HATA FIX (kullanıcı: "seslendire tıkladım son parta geçti ses yok"):
+          //   kök neden — CSP media-src data: YOKTU; tarayıcı data-URL sesini blokluyordu,
+          //   a.onerror sessizce bit() tetikliyor → sıradaki parta geçiçiyordu; 5 part 1 sn'de
+          //   "Tamamlandı ✓" yalanı. İki katman: (1) vercel.json media-src'ye data: eklendi
+          //   (kalıcı fix, redeploy gerektirir); (2) onerror artık yutmadan DURUR ve
+          //   gerçek hatayı yazar — sıradaki parta geçmez (bitKes atık bağı).
+          a.onerror = () => {
+            if (bitti) return;
+            bitti = true;
+            seqRef.current++;
+            runningRef.current = false;
+            const kisaKat = a.error?.message || "tarayıcı ses kaynağını blokladı (CSP) — sayfa yöneticisiye media-src'ye data: eklenecek";
+            yaz(`⚠️ Parça ${i + 1} çalınamadı — ${kisaKat}`, "hata");
+            res();
+          };
           setTimeout(bit, 120000);
           try { a.currentTime = 0; } catch { /* autoplay koruması */ }
-          a.play().catch(bit);
+          a.play().catch(() => {
+            // play() reddi (autoplay bloğu) — zaten onerror/mobile-guard devrede
+          });
         });
+        // ★ 21.10 SIZINTI FIX (devam): kart kesmesi sonrası bu döngünün kimliği
+        //   artık geçersiz — seq uyuşmaz + running bayrağı bolumDinle'ye geçti.
+        //   Sessiz break: sıradaki partı hazırlamaya/okumaya devam ETMEZ.
+        if (my !== seqRef.current) break;
         if (i + 1 < liste.length && runningRef.current) {
           await new Promise((r) => setTimeout(r, PARCA_ARASI)); // parça arası nefes
         }
@@ -492,7 +571,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               ayetIdx={ayetIdx} setAyetIdx={setAyetIdx}
               ayetEkle={ayetEkle} sureEkle={sureEkle}
               metin={metin} setMetin={setMetin} plan={plan}
-              bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumDinle={bolumDinle}
+              bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumCikar={bolumCikar} bolumDinle={bolumDinle}
               kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar}
               seslendir={seslendir} durdur={durdur}
               durum={durum} durumTip={durumTip}

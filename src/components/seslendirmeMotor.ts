@@ -43,7 +43,11 @@ export function mSkorla(metin: string): string {
   for (const x of w) {
     for (const [kw, k] of Object.entries(KEY)) {
       const l = kw.length;
-      if ((x === kw || x.startsWith(kw)) && l > 0) skor[k] = (skor[k] || 0) + l;
+      // ★ 21.10 SULTAN-DENİZ FİX (kullanıcı: "akıllı AI sürekli deniz atıyor, sultan
+      //  geçiyor bu su atıyor"): kök neden — eşleşme startsWith idi; "sultan"→"su"
+      //  başlangıç yanılgısı kıssanın her kelimesini Deniz puanı yapıyordu.
+      //  Kısa keyword (≤2 harf, "su") artık SADECE tam eşleşir; uzun kw için startsWith sürer.
+      if (x === kw || (l > 2 && x.startsWith(kw))) skor[k] = (skor[k] || 0) + l;
     }
   }
   let best = "musaf", bs = 0;
@@ -68,7 +72,8 @@ function mKelimeBol(metin: string): { m: string; kat: string }[] | null {
     let enIyi: string | null = null, enIyiLen = 0;
     for (const [kw, k] of Object.entries(KEY)) {
       const l = kw.length;
-      if (norm && (norm === kw || norm.startsWith(kw)) && l > enIyiLen) { enIyi = k; enIyiLen = l; }
+      // ★ 21.10 SULTAN-DENİZ FİX (ary mSkorla ile aynı kural): kısa kw (≤2 harf) tam eşleşme
+      if (norm && (norm === kw || (l > 2 && norm.startsWith(kw))) && l > enIyiLen) { enIyi = k; enIyiLen = l; }
     }
     buf.push(kelime);
     if (enIyi) bufSkor[enIyi] = (bufSkor[enIyi] || 0) + enIyiLen;

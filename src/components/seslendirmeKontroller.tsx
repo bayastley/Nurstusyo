@@ -30,6 +30,7 @@ export interface SeslendirmeKontrollerProps {
   // ★ 16.10 BÖLÜM SİSTEMİ — yeni akış
   bolumSayi: number;                    // oluşturulmuş bölüm sayısı (1..N)
   bolumEkle: () => void;                // ➕ — bölüm sayısını +1 yapar, metni dağıtır
+  bolumCikar: () => void;               // ➖ — bölüm sayısını −1 yapar (min 1), komşu birleşimi
   bolumDinle: (i: number) => void;      // bölüm karta tıkla → sadece o bölümü oku
   // kuyruk
   kuyruk: KuyrukOgesi[];
@@ -46,7 +47,7 @@ export interface SeslendirmeKontrollerProps {
 export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
   mod, setMod, ayetler, surler, sureIdx, setSureIdx, ayetIdx, setAyetIdx, ayetEkle, sureEkle,
   metin, setMetin, plan,
-  bolumSayi, bolumEkle, bolumDinle,
+  bolumSayi, bolumEkle, bolumCikar, bolumDinle,
   kuyruk, kuyrukSec, setKuyrukSec, ogCikar,
   seslendir, durdur, durum, durumTip,
 }) => {
@@ -104,12 +105,20 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
               🧩 {bolumSayi}·{bolumSayi === 1 ? "bölüm" : "bölüm"} hazır · kartlara tıkla → dinle / arka plan ayarla
             </div>
           ) : null}
-          {/* ★ ➕ BÖLÜM EKLE — her basışta kesim sayısı +1 */}
-          <button onClick={bolumEkle}
-            className={`${gold} mt-2 w-full`}
-            style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>
-            ➕ Bölüm Ekle{bolumSayi > 1 ? ` — şu an ${bolumSayi} bölüm` : ""} (metni otomatik böler)
-          </button>
+          {/* ★ ➕/➖ BÖLÜM SAYISI — ➕ kesimi artırır, ➖ azaltır (min 1) */}
+          <div className="mt-2 flex gap-2">
+            <button onClick={bolumEkle}
+              className={`${gold} flex-1`}
+              style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>
+              ➕ Bölüm Ekle{bolumSayi > 1 ? ` — şu an ${bolumSayi} bölüm` : ""} (metni otomatik böler)
+            </button>
+            <button onClick={bolumCikar} disabled={bolumSayi <= 1}
+              title="Bölüm sayısını azalt — fazla parçalar komşu birleşimiyle birleşir"
+              className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-black transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: "rgba(255,255,255,.06)", color: "var(--accent-2)", border: "1px solid rgba(255,255,255,.14)" }}>
+              ➖
+            </button>
+          </div>
         </div>
       )}
 
