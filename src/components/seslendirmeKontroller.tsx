@@ -37,7 +37,7 @@ export interface SeslendirmeKontrollerProps {
   setKuyrukSec: (i: number) => void;
   ogCikar: (i: number) => void;
   // oynatma
-  seslendir: () => void;
+  seslendir: (baslangicIdx?: number) => void;
   durdur: () => void;
   durum: string;
   durumTip: DurumTip;
