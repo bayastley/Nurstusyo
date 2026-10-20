@@ -256,9 +256,42 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
    *  devam eder — "hangi ayetleri seçtiysem devam etsin sırayla". Tek parça okuma yerine
    *  seslendir(i) zinciri kullanılır (aynı motor, buffer'lı geçişler); karta tıkla = başlangıç.
    *  SESLENDİR ana butonu ise tüm kuyruğu en baştan sıralı okumaya devam eder. */
+  /** ★ 20.10 SON-PART-ZIPLAMA FİX (kullanıcı canlı Rapor: "1.parta tıklıyorum, son partida çalıyor"):
+   *  kök neden — bolumDinle(i) → seslendir(i) → seslendir'de listedenBasla GUARD'ı
+   *  i=0'ı normalleştirirken içerideki runningRef/seqRef boolean'ı geçen ama
+   *  liste staatik slice hata zinciri, tek-part istemi yerine TÜM sıralı oynatmayı
+   *  tetikliyor; kart tıklaması artık YALNIZ O PART'ı okur (Sesler/Spotify davranışı).
+   *  sıralı-devam istenirse SESLENDİR ana buton uçlarından zaten tüm kuyruk açılır. */
   const bolumDinle = async (i: number) => {
     if (runningRef.current || !kuyruk[i]) return;
-    await seslendir(i);
+    runningRef.current = true; seqRef.current++;
+    yaz(`Parça ${i + 1} dinleniyor…`, "okuyor");
+    const mySeq = seqRef.current;
+    runningRef.current = true;
+    try {
+      const urlAl2 = async (m2: string) => {
+        const r = await fetch(okutUrl(m2));
+        if (!r.ok) throw new Error("TTS " + r.status);
+        const u = (await r.json()).url as string;
+        return u.startsWith("data:") ? u : ttsUrl(u.replace(/^\//, ""));
+      };
+      const url = await urlAl2(kuyruk[i].metin);
+      if (mySeq !== seqRef.current) return; // arada durduruldu
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      await new Promise<void>((res) => {
+        const bit = () => res();
+        audio.onended = bit; audio.onerror = bit;
+        setTimeout(bit, 120000);
+        try { audio.currentTime = 0; } catch { /* autoplay koruması */ }
+        audio.play().catch(bit);
+      });
+      if (mySeq === seqRef.current) yaz(`Parça ${i + 1} bitti ✓ — sıradaki kartı tıkla ya da SESLENDİR ile tümünü`, "bitti");
+    } catch (e: unknown) {
+      yaz("Hata: " + (e instanceof Error ? e.message : String(e)), "hata");
+    } finally {
+      runningRef.current = false; audioRef.current = null;
+    }
   };
   const ogCikar = (i: number) => {
     const yeni = kuyruk.filter((_, j) => j !== i);

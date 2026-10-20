@@ -138,7 +138,8 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
 
       {/* SESLENDİR */}
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={seslendir} disabled={durumTip === "okuyor"}
+        {/* ★ 20.10 fix: seslendir'e event nesnesi sızmasını engelle — 0 parametres çağır */}
+        <button onClick={() => { void seslendir(0); }} disabled={durumTip === "okuyor"}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-50`}
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>🔊 SESLENDİR</button>
         <button onClick={durdur} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)" }}>⏹ DURDUR</button>
