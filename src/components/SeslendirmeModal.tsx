@@ -189,22 +189,51 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   /** ➕ bölüm ekle — her basışta bölüm sayısı +1, kuyruk yeniden dağılır.
    *  ★ 18.10 KANCA DAĞITIM: planKes artık düz dilimle değil mBol'un KANCA planınden okur —
    *  hedef sayıya en yakın kanca kesimi (AMA/soru/üç-nokta) seçilir, partlar merak
-   *  uyandırıcı yerden kopar (kullanıcı: "en dikkat çekici kısımda böl"). */
+   *  uyandırıcı yerden kopar (kullanıcı: "en dikkat çekici kısımda böl").
+   *  ★ 20.10 CANLI FIX (kullanıcı: "338 kelimelik kıssayı 1 part yaptı, 5-7 olmalıydı"):
+   *  kök neden — İLK ➕ basışı n=1 isterken kancaBirlestir mBol'un 5-part planını
+   *  TEK dev part'a geri indiriyordu. Yeni kural: motor kendi kancalı planını
+   *  BASLANGIÇ sayar; ➕ motor planından itibaren ARTIRIR (divide-down yok).
+   *  Yani kıssada ilk basış = motorun 5-part planı, ikinci = 6-part siki vb. */
   const bolumEkle = () => {
     if (!metin.trim()) { yaz("Önce metin yaz", "hata"); return; }
-    const n = bolumSayi + 1;
-    const kancaPlan = mBol(metin.trim()); // kancalı plan (part sayısı motorun kararı)
+    const kancaPlan = mBol(metin.trim()); // motorun kararı (part sayısı + kancalar)
+    if (!kancaPlan.length) return;
+    // ★ hedef: motor planının sayısını GEÇMEZ aşşağı inmez — ilk basış motoru planını verir
+    const n = Math.max(bolumSayi + 1, kancaPlan.length);
     const kes = kancaPlan.length === n
       ? kancaPlan            // motor tam istenen sayıya böldü
       : kancaPlan.length > n
-        ? kancaBirlestir(kancaPlan, n)   // çok part → komşuları birleştir, kancaları koru
-        : planKes(n);        // az part → eski genişletici (metin motoru)
+        ? kancaBirlestir(kancaPlan, n)   // çok part → komşuları birleştir (ınızdan sonra)
+        : metinPartArttir(kancaPlan, n); // az part → partları 2-3 cümlelik parçalara büyüt
     if (!kes.length) return;
     const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
     setKuyruk(yeniKuyruk);
     setBolumSayi(n);
     setKuyrukSec(n - 1);
     yaz(`🧩 ${n}·bölüm hazır — kanca noktalarında kesildi, kartlara tıkla: dinle / arka plan ayarla`);
+  };
+
+  /** ★ 20.10: mBol az part (2-3) ürettiyse ve kullanıcı daha fazla bölüm istedi →
+   *  mevcut partları EN UZUN cümle-sonundan yararak çoğalt (kelime yarı bölme YOK,
+   *  cümle bütünlüğü korunur). planKes'ten farkı: daha uzun DAĞTIK — part ARAMIŞZ. */
+  const metinPartArttir = (planParcalar: { m: string; kat: string }[], hedefN: number): { m: string; kat: string }[] => {
+    const out = planParcalar.map((p) => ({ ...p }));
+    let turSayisi = 0;
+    while (out.length < hedefN && turSayisi < 20) {
+      turSayisi++;
+      // en uzun partı bul ve cümle sınırında ikiye böl
+      let maxI = 0, maxLen = 0;
+      out.forEach((p, j) => { const l = p.m.split(/[^.!?…]+[.!?…]+/).length; if (l > maxLen) { maxLen = l; maxI = j; } });
+      const buyuk = out[maxI];
+      const cumleler = buyuk.m.trim().match(/[^.!?…]+[.!?…]+["»')\]]*\s*|[^.!?…]+$/g) || [buyuk.m];
+      if (cumleler.length < 2) break; // daha bölünmez
+      const yari = Math.ceil(cumleler.length / 2);
+      const ilk = cumleler.slice(0, yari).join("").trim(), ikinci = cumleler.slice(yari).join("").trim();
+      if (!ikinci) break;
+      out.splice(maxI, 1, { m: ilk, kat: mSkorla(ilk) }, { m: ikinci, kat: mSkorla(ikinci) });
+    }
+    return out;
   };
 
   /** ★ 18.10 kanca planı hedef sayıya inince: en kısa komşu çiftlerini birleştir
