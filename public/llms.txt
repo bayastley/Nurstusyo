@@ -15,5 +15,5 @@ Nûr Stüdyo, ayetleri dakikalar içinde sinematik Kur'an videolarına dönüşt
 
 ## Kaynaklar
 - Kur'an metni: api.alquran.cloud / api.quran.com (Diyanet, Yazır, Vakıf mealleri)
-- Ses: everyayah.com, mp3quran.net (telifsiz paylaşıım izinli kaynaklar)
+- Ses: everyayah.com, mp3quran.net (telifsiz paylaşım izni olan kaynaklar)
 - Mushaf görselleri: kuran.diyanet.gov.tr

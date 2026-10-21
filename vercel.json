@@ -60,7 +60,7 @@
       "destination": "/api/quran/fetch?_p=$1"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/",
       "destination": "/index.html"
     }
   ],
