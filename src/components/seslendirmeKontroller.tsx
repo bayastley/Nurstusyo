@@ -32,6 +32,8 @@ export interface SeslendirmeKontrollerProps {
   bolumEkle: () => void;                // ➕ — bölüm sayısını +1 yapar, metni dağıtır
   bolumCikar: () => void;               // ➖ — bölüm sayısını −1 yapar (min 1), komşu birleşimi
   bolumDinle: (i: number) => void;      // bölüm karta tıkla → sadece o bölümü oku
+  // ★ 21.10 AKILLI AI BUTONU — tüm parçaların atmosferini zekice yeniden seçer
+  akilliAta: () => void;
   // kuyruk
   kuyruk: KuyrukOgesi[];
   kuyrukSec: number;
@@ -48,6 +50,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
   mod, setMod, ayetler, surler, sureIdx, setSureIdx, ayetIdx, setAyetIdx, ayetEkle, sureEkle,
   metin, setMetin, plan,
   bolumSayi, bolumEkle, bolumCikar, bolumDinle,
+  akilliAta,
   kuyruk, kuyrukSec, setKuyrukSec, ogCikar,
   seslendir, durdur, durum, durumTip,
 }) => {
@@ -154,6 +157,11 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-50`}
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>🔊 SESLENDİR</button>
         <button onClick={durdur} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)" }}>⏹ DURDUR</button>
+        {/* ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor; akıllı AI butonu
+            koy bari de tıklayalım"): tüm parçaların atmosferini geniş kelime
+            indeksi + baskınlık eşiğiyle yeniden seçer — musaf emin olamadığında. */}
+        <button onClick={akilliAta} title="Bölümlerin atmosferini zekice yeniden seç — emin olmadığını Musaf yapar"
+          className={ghostY} style={{ background: "rgba(215,170,82,.12)", border: "1px solid rgba(215,170,82,.35)", color: "var(--accent)", whiteSpace: "nowrap" }}>🤖 Akıllı AI</button>
         <span className={`ml-1 text-[10.5px] font-bold`}
           style={durumTip === "hata" ? { color: "#f87171" } : durumTip === "okuyor" ? { color: "#6ee7b7" } : { color: "var(--accent)" }}>
           {durum}

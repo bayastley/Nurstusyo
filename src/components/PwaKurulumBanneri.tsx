@@ -45,6 +45,10 @@ export const PwaKurulumBanneri: React.FC = () => {
   const [bipEvent, setBipEvent] = useState<BIPEvent | null>(null);
   const [ios, setIos] = useState(false);
   const [manuelTalimat, setManuelTalimat] = useState(false);
+  // ★ 21.10 TIK-ANI BEKLEME (kullanıcı: "şimdi kura tıklayınca kursun"): erken tıklamada
+  //   BIP henüz gelmemiş olabilir — 5 sn dinler, gelir gelmez kurulum penceresi
+  //   kendiliğinden açılır; gelmezse manuel talimata düşer.
+  const [kurBeklers, setKurBeklers] = useState(false);
   // Katman 1: gerçekten bekleyen (waiting) SW varsa "Yenile" bandı
   const [guncellemeVar, setGuncellemeVar] = useState(false);
   // Katman 2: yeni sürüm aktive olduktan sonra 1 kez gösterilen bilgi (6 sn'de kaybolur)
@@ -166,8 +170,14 @@ export const PwaKurulumBanneri: React.FC = () => {
     const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent) && !(window as any).MSStream;
     setIos(isIos);
     const timer = window.setTimeout(() => setGorunur(true), 2500);
-    const onBip = (e: Event) => { e.preventDefault(); setBipEvent(e as BIPEvent); setGorunur(true); };
+    const onBip = (e: Event) => { e.preventDefault(); setBipEvent(e as BIPEvent); setManuelTalimat(false); setGorunur(true); };
     const onInstalled = () => { try { localStorage.setItem(KURULUM_KEY, "1"); } catch {} setGorunur(false); setKucuk(false); };
+    // ★ 21.10 GLOBAL DEVRALMA: main.tsx pwaBipCapture, banner mount'tan ÖNCE gelen
+    //   BIP'i window.__nur_bip'e koyar (lazy StudioApp artık açılışta atılayabilir);
+    //   burada tek kullanımlık olarak devralınır. Varlık yoksa banner kendi
+    //   onBip dinleyicisiyle normal yol sürer — iki yol birbirini dışlamaz.
+    const erken = (window as any).__nur_bip as BIPEvent | undefined;
+    if (erken) { (window as any).__nur_bip = undefined; setBipEvent(erken); setGorunur(true); }
     window.addEventListener("beforeinstallprompt", onBip);
     window.addEventListener("appinstalled", onInstalled);
     return () => { window.clearTimeout(timer); window.removeEventListener("beforeinstallprompt", onBip); window.removeEventListener("appinstalled", onInstalled); };
@@ -182,23 +192,42 @@ export const PwaKurulumBanneri: React.FC = () => {
     setKucuk(true);
   };
 
-  const kur = async () => {
-    if (bipEvent) {
-      try {
-        await bipEvent.prompt();
-        const choice = await bipEvent.userChoice;
-        if (choice.outcome === "accepted") {
-          try { localStorage.setItem(KURULUM_KEY, "1"); } catch {}
-          setGorunur(false); setKucuk(false);
-          return;
-        }
+  /** ★ 21.10 TEK KULLANIMLI BIP KABI (kur() ile paylaşımlı): pencereyi aç, kararı işle,
+   *  beklemeyi söndür. Chat tık-anı akışı: kullanıcı erken tıkladıysa bu yardımcı
+   *  gelen BIP'i sadece o an devralıp kurulum penceresini kendi kendine açar. */
+  const promptIle = async (e: BIPEvent) => {
+    try {
+      await e.prompt();
+      const secim = await e.userChoice;
+      if (secim.outcome === "accepted") {
+        try { localStorage.setItem(KURULUM_KEY, "1"); } catch { /* yut */ }
+        setGorunur(false); setKucuk(false);
+      } else {
         // kullanıcı reddettse banner'ı kapat ama tekrar çıkabilir
         setGorunur(false); setKucuk(true);
-        return;
-      } catch { /* event tükenmiş olabilir → manuel talimata düş */ }
+      }
+    } catch { /* pencere açılamadı (event tükenmiş) */ }
+    setKurBeklers(false);
+  };
+
+  const kur = async () => {
+    // ★ 21.10: mount-öncesi yakalanan olay (main.tsx global) devral — state'a
+    //   daha önce gelmemiş olsa bile CLICK ANINDA kullanılabilir olması şart.
+    const gelen = ((bipEvent || (window as any).__nur_bip) as BIPEvent | undefined);
+    if (gelen) {
+      try { (window as any).__nur_bip = undefined; } catch { /* yut */ }
+      await promptIle(gelen);
+      return;
     }
-    // beforeinstallprompt gelmediyse (Moz/Edge kısıtlı, zaten tükenmiş vb.) → menü talimatı
-    setManuelTalimat(true);
+    // ★ BIP gelmedi — ÇOĞUNLUKLA erken tık: 5 sn dinle, gelir gelmez otomatik aç.
+    //   (Chrome BIP'i açılıştan saniyeler içinde basar; bannerın kendi onBip'i
+    //   de aynı event'i yakalayarak kurBeklers durumunu manuel'e indirir.)
+    setKurBeklers(true);
+    setManuelTalimat(false);
+    const sunucuAc = (e: Event) => { e.preventDefault(); void promptIle(e as BIPEvent); };
+    const temiz = () => { window.removeEventListener("beforeinstallprompt", sunucuAc); window.clearTimeout(nobet); };
+    const nobet = window.setTimeout(() => { temiz(); setKurBeklers(false); setManuelTalimat(true); }, 5000);
+    window.addEventListener("beforeinstallprompt", sunucuAc, { once: true });
   };
 
   if (!gorunur && !kucuk && !guncellemeVar && !guncellendi) return null;
@@ -278,9 +307,17 @@ export const PwaKurulumBanneri: React.FC = () => {
               <p className="text-white/40">{tt("pwaElNot")}</p>
             </div>
           ) : (
-            <button type="button" onClick={kur} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-              <Download size={12} /> {tt("pwaKurBtn")}
-            </button>
+            <div>
+              <button type="button" onClick={kur} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+                <Download size={12} /> {tt("pwaKurBtn")}
+              </button>
+              {/* ★ 21.10 TIK-ANI BEKLEME — erken tıklandığında BIP gelene kadarki pencere */}
+              {kurBeklers && (
+                <p className="mt-1.5 rounded-xl bg-emerald-400/10 px-3 py-1.5 text-center text-[9px] font-bold text-white/70">
+                  ⏳ Kurulum penceresi hazırlanıyor — tarayıcı izin verir vermez kendiliğinden açılır…
+                </p>
+              )}
+            </div>
           )
         )}
       </div>

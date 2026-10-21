@@ -5,6 +5,10 @@
 // hiçbir davranış değişmedi, sadece dosya ayrıldı.
 // ═══════════════════════════════════════════════════════════════
 
+// ★ 21.10 AKILLI AI ŞINIFLANDIRICI kaynağı — ana stüdyo ile aynı zekice kelime
+//   tablosu (clips/index.ts CLIP_AI_KEYWORDS); modal havuzuna daraltılır.
+import { CLIP_AI_KEYWORDS } from "../clips/index";
+
 // ── atmosfer keyword tablosu + paleti (mockup'tak birebir) ──
 export const KEY: Record<string, string> = {
   "namaz": "namaz", "secde": "namaz", "cami": "namaz", "seccade": "namaz", "ibadet": "namaz",
@@ -36,23 +40,54 @@ export const ATM: Record<string, [string, string, string]> = {
   musaf: ["Musaf", "📖", "linear-gradient(180deg,#1a1206,#2a2012 50%,#3a3018)"],
 };
 
-/** kelime tabanlı atmosfer skorlama — mockup mSkorla birebir */
+// ★ 21.10 AKILLI AI KELİME İNDEKSİ (kullanıcı: "sürekli deniz koyuyor kanka") —
+//   eski KEY tablosu ~30 kelimeydi; sultan-düzeltmesinden sonra bile parça başına
+//   BİR rasgele "su/gemi/çöl" kelimesi tümü Deniz/Çöl yapıyordu. Yeni indeks:
+//   CLIP_AI_KEYWORDS (ana stüdyo AI'ın tablosu) modal'ın 15 atmosferine daraltılır +
+//   baskınlık eşiği gelir (aşağıda mSkorla). Kısa kelime ≤3 harf SADECE tam eşleşir
+//   (sultan≠su, suyunu≠su yanılgısı bitti); uzun keyword için startsWith.
+const ATM_KELIME: Record<string, string[]> = (() => {
+  const h: Record<string, Set<string>> = {};
+  const ekle = (kat: string, kelime: string) => { (h[kat] ||= new Set()).add(kelime); };
+  // 1) eski mockup tablosu temel — peygamber/kıssa gibi dini bağlam kelimeleri korunur
+  for (const [kw, kat] of Object.entries(KEY)) ekle(kat, kw);
+  // 2) ana stüdyo tablosu → modal havuzuna alt eşleme (bulut/cami/göl ATM'de yok)
+  const ALT_KAT: Record<string, string> = {
+    cami: "namaz", gece: "yildizlar", sehir: "yildizlar",
+    selale: "deniz", gol: "deniz", bulut: "deniz",
+    gunbatimi: "col", hurma: "col",
+  };
+  for (const [kat, kws] of Object.entries(CLIP_AI_KEYWORDS)) {
+    const hedef = ATM[kat] ? kat : ALT_KAT[kat];
+    if (!hedef) continue; // (desen vs. — metne yansımayan görsel kategori, skorla asla)
+    for (const w of kws.split(/\s+/)) { const x = w.toLocaleLowerCase("tr"); if (x) ekle(hedef, x); }
+  }
+  const out: Record<string, string[]> = {};
+  for (const [k, s] of Object.entries(h)) out[k] = [...s];
+  return out;
+})();
+
+/** ★ 21.10 AKILLI SİNİFLANDİRİCİ — mSkorla yükseltildi:
+ *  1) Geniş indeks (yukarıda ATM_KELIME, KEY+CLIP_AI_KEYWORDS): "zaman/ağaç/deniz
+ *     gemisi/test/terazi" gibi zengin metinde doğru kategori bulur.
+ *  2) BASKINLIK EŞİĞİ: kazanan en az 5 puan kopsun VE ikinciye ≥1.5× fark atsın;
+ *     aksi halde "musaf" (Kitap/Mushaf görsel) — en az-yanlış gerçek varsayılan.
+ *     Tek geçen "su/gemisi/zirve" kelimesi artık Deniz/Çöl getiremez;
+ *     kullanıcı emri: "sürekli deniz koyuyor" BİTTİ — emin olmadığında mushaf sayfa.
+ *  Kısa keyword (≤3 harf, "su","gul","ari","bul") tam eşleşme; uzunları startsWith. */
 export function mSkorla(metin: string): string {
   const w = metin.toLocaleLowerCase("tr").split(/[^a-zçğıöşü]+/).filter(Boolean);
   const skor: Record<string, number> = {};
   for (const x of w) {
-    for (const [kw, k] of Object.entries(KEY)) {
-      const l = kw.length;
-      // ★ 21.10 SULTAN-DENİZ FİX (kullanıcı: "akıllı AI sürekli deniz atıyor, sultan
-      //  geçiyor bu su atıyor"): kök neden — eşleşme startsWith idi; "sultan"→"su"
-      //  başlangıç yanılgısı kıssanın her kelimesini Deniz puanı yapıyordu.
-      //  Kısa keyword (≤2 harf, "su") artık SADECE tam eşleşir; uzun kw için startsWith sürer.
-      if (x === kw || (l > 2 && x.startsWith(kw))) skor[k] = (skor[k] || 0) + l;
+    for (const [k, kws] of Object.entries(ATM_KELIME)) {
+      let enIyi = 0;
+      for (const kw of kws) if ((x === kw || (kw.length > 3 && x.startsWith(kw))) && kw.length > enIyi) enIyi = kw.length;
+      if (enIyi) skor[k] = (skor[k] || 0) + enIyi;
     }
   }
-  let best = "musaf", bs = 0;
-  for (const [k, s] of Object.entries(skor)) if (s > bs) { best = k; bs = s; }
-  return best;
+  const sirali = Object.entries(skor).sort((a, b) => b[1] - a[1]);
+  if (sirali.length && sirali[0][1] >= 5 && (!sirali[1] || sirali[0][1] >= sirali[1][1] * 1.5)) return sirali[0][0];
+  return "musaf";
 }
 
 /** kelime yürüyüşü — atmosfer geçişinde kes (mockup mKelimeBol birebir) */

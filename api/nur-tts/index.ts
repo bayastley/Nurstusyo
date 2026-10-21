@@ -84,6 +84,76 @@ async function cacheSet(key: string, val: string): Promise<void> {
   } catch { /* yut */ }
 }
 
+// ★ 21.10 EDGE TTS ÇÖKME DÜZELTMESİ (kullanıcı: "Microsoft tarafında hâlâ çökmüş —
+//   NE DEMEK SAÇMALAMA ÇÖKMESİN DÜZELT BİNLERCE İNSAN KULLANACAK DÜZGÜN YAP"):
+//   CANLI TEŞHİS: prod /okut 503 döndürüyordu, gerçek hata "Edge TTS WebSocket
+//   error: Unexpected server response: 429" — Microsoft'un paylaşılan Edge Read
+//   Aloud protokolü ekim'de kuralları değiştirdi (v2 Sec-MS-GEC + yeni host;
+//   msedge-tts 2.1.0 bu düzeltmeyi içeriyor, local buna çalışan). Prod 429 =
+//   kota/aşırı-istek: binlerce kullanıcı tek anonim uç noktayı dövmesin diye
+//   1) TEKRAR + BACKOFF: 429 çoğu zaman kısa sureli — ilk girişimde pes etmiyoruz,
+//      3 girişim (0/1.5/4 sn aralık) boyunca tekrar deniyoruz.
+//   2) İSTEĞE BAĞLI / RESMİ AZURE SPEECH YOLU: AZURE_SPEECH_KEY + AZURE_SPEECH_REGION
+//      env'leri verildiği AN yük resmi endpoint'e geçer (binlerce kullanıcı düşünce
+//      yük artarken tek anonim yola gidemez) — anahtar yoksa msedge anonim yolu çalışır.
+
+const xmlKac = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+
+/** ★ RESMİ AZURE SPEECH REST — AZURE_SPEECH_KEY + AZURE_SPEECH_REGION env varsa
+ *  ilk kolu devreye girer; yoksa null döner (msedge yoluna düş).
+ *  Ücretsiz kademede 500K karakter/ay — binlerce kullanıcının başına taşınır.
+ *  sesId aynı Azure ses adlarıyla çalışır (tr-TR-AhmetNeural Azure'da resmî). */
+async function azureTts(sesId: string, metin: string): Promise<Buffer | null> {
+  const key = process.env.AZURE_SPEECH_KEY;
+  const region = process.env.AZURE_SPEECH_REGION;
+  if (!key || !region) return null;
+  const dl = /^[a-z]{2}-[A-Za-z]{2}/.exec(sesId)?.[0] || "tr-TR";
+  const ssml = `<speak version='1.0' xml:lang='${dl}'><voice name='${sesId}'>${xmlKac(metin)}</voice></speak>`;
+  const r = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+    method: "POST",
+    headers: {
+      "Ocp-Apim-Subscription-Key": key,
+      "Content-Type": "application/ssml+xml",
+      "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
+      "User-Agent": "nurstudyo",
+    },
+    body: ssml,
+  });
+  if (!r.ok) return null;
+  const buf = Buffer.from(await r.arrayBuffer());
+  return buf.length > 200 ? buf : null;
+}
+
+/** ★ EDGE YOLU — TEKRAR + BACKOFF: 429/boş dönen kısa sureli olabileceği için
+ *  her girişim TAZE MsEdgeTTS bağlantısı + 10 sn sınıfta; 3 girişim ~38 sn cap
+ *  serverless maxDuration(60)'ın altında kalır. Rastgele jitter eş zamanlı
+ *  binlerce istemin aynı anda çarpmasını azaltır. */
+async function msEdgeOkut(sesId: string, metin: string): Promise<Buffer> {
+  const mod = await msEdgeLazy();
+  if (!mod) throw new Error("ses motoru yüklenemedi");
+  let sonHata: unknown = null;
+  const bekleme = [0, 1_500, 4_000];
+  for (let i = 0; i < bekleme.length; i++) {
+    if (bekleme[i]) { try { await new Promise((r) => setTimeout(r, bekleme[i] + Math.floor(Math.random() * 600))); } catch { /* yoksay */ } }
+    try {
+      const tts = new mod.MsEdgeTTS();
+      await tts.setMetadata(sesId, mod.OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
+      const { audioStream } = tts.toStream(metin);
+      const chunklar: Buffer[] = [];
+      await new Promise<void>((cöz, reddet) => {
+        audioStream.on("data", (c: Buffer) => chunklar.push(c));
+        audioStream.on("end", () => cöz());
+        audioStream.on("error", reddet);
+        setTimeout(() => reddet(new Error("tts-zamanasımı")), 10_000);
+      });
+      const mp3 = Buffer.concat(chunklar);
+      if (mp3.length < 800) throw new Error("ses motoru boş döndü");
+      return mp3;
+    } catch (e) { sonHata = e; }
+  }
+  throw sonHata instanceof Error ? sonHata : new Error("ses üretilemedi");
+}
+
 // ── rate limit (quran/fetch deseninin sadeleştirilmiş hali) ──
 const __RL_MAP = new Map<string, number[]>();
 function limitAsildi(req: VercelRequest, maks: number): boolean {
@@ -175,26 +245,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ url: cached }); // client'in beklediği: data:audio/mpeg;base64,…
     }
     try {
-      const mod = await msEdgeLazy();
-      if (!mod) return res.status(503).json({ ok: false, error: "ses motoru yüklenemedi" });
-      const tts = new mod.MsEdgeTTS();
-      await tts.setMetadata(sesId, mod.OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3);
-      const { audioStream } = tts.toStream(metin);
-      const chunklar: Buffer[] = [];
-      await new Promise<void>((cöz, reddet) => {
-        audioStream.on("data", (c: Buffer) => chunklar.push(c));
-        audioStream.on("end", () => cöz());
-        audioStream.on("error", reddet);
-        setTimeout(() => reddet(new Error("tts-zamanasımı")), 20_000);
-      });
-      const mp3 = Buffer.concat(chunklar);
+      // ★ 21.10 YÜK SIRASI: cache → AZURE (anahtar varsa resmi yol) → EDGE tekrar+backoff
+      const azure = await azureTts(sesId, metin);
+      const mp3 = azure ?? (await msEdgeOkut(sesId, metin));
       if (mp3.length < 800) throw new Error("ses motoru boş döndü");
       const dataUrl = "data:audio/mpeg;base64," + mp3.toString("base64");
       await cacheSet(anahtar, dataUrl);
       res.setHeader("Cache-Control", "public, max-age=86400");
       return res.status(200).json({ url: dataUrl });
     } catch (e: unknown) {
-      return res.status(503).json({ ok: false, error: e instanceof Error ? e.message.slice(0, 140) : "ses üretilemedi" });
+      const ham = e instanceof Error ? e.message : "ses üretilemedi";
+      const ipucu = /429/.test(ham) ? " (Microsoft kotası — birkaç sn sonra tekrar dene)" : "";
+      return res.status(503).json({ ok: false, error: (ham.slice(0, 120) + ipucu).slice(0, 140) });
     }
   }
 

@@ -111,6 +111,29 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     setMetin(""); setBg(null); setBolumSayi(0); // ★ sayaç da sıfır — 17-yalan fix
     yaz(`${DILLER.find((d) => d.kod === kd)?.bayrak} ${DILLER.find((d) => d.kod === kd)?.ad} — meallar hazırlanıyor…`);
   };
+  // ★ 21.10 MOD GEÇİŞİ (kullanıcı: "sure ayetten metin yaza geçince hâlâ sure/ayet kısmından ses geliyor"):
+  //  kök neden — setMod ham state'ti: sekme değişince (1) çalmakta olan ayet sesi hiç
+  //  kesilmiyor, (2) kuyruk bileşik kalıyor + metin modunda SESLENDİR eski ayet
+  //  parçalarını okuyordu. Yeni davranış: geçişte ses anında durur, kuyruk
+  //  mod-başına arşivlenir/geri yüklenir — her sekme kendi işinde kalır, bölüm
+  //  kaybolmaz. En baştaki "kuyruk (ayet↔metin karışmaz)" sözü artık kodda da.
+  const kuyrukArsiv = React.useRef<Partial<Record<"ayet" | "metin", { liste: KuyrukOgesi[]; sec: number; bolum: number }>>>({});
+  const modDegistir = (m: "ayet" | "metin") => {
+    if (m === mod) return;
+    // 1) SES: ayet oynatma zinciri (bolumDinle / SESLENDİR döngüsü) anında kesilsin
+    if (runningRef.current) durdur();
+    // 2) KUYRUK: mevcudu bu modun kasasına koy, geçilen modun listesini geri getir
+    kuyrukArsiv.current[mod] = { liste: kuyruk, sec: kuyrukSec, bolum: bolumSayi };
+    const geri = kuyrukArsiv.current[m];
+    const liste = geri?.liste || [];
+    setKuyruk(liste);
+    setKuyrukSec(Math.min(geri?.sec ?? 0, Math.max(liste.length - 1, 0)));
+    setBolumSayi(m === "metin" ? (geri?.bolum || 0) : 0); // sayaç yalnızca metin bölümü sayar
+    setBg(null); // seçilen parçaya bağlı özel arka plan — yeni sekmede oto'ya dön
+    yaz(m === "metin"
+      ? "✍ Metin Yaz — bölüm listesi bu sekmeye geçti, ayet sesi durdu"
+      : "📖 Sure/Ayet — bölüm listesi bu sekmeye geçti, metin sesi durdu");
+  };
   // okut URL'i — dil + seçili ses (ses seçildiyse onu kullan)
   const okutUrl = (m: string) => {
     if (ses) return ttsUrl(`okut?dil=${dil}&ses=${encodeURIComponent(ses)}&metin=${encodeURIComponent(m)}`);
@@ -386,6 +409,25 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     setKuyruk(kuyruk.map((o, j) => (j === i ? { ...o, kat } : o)));
     yaz(`Parça ${i + 1} → ${ATM[kat]?.[0] || kat} atandı ✓`);
   };
+  /** ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor kanka; akıllı AI
+   *  butonu koy bari de tıklayalım"): kuyruktaki TÜM parçaların atmosferini
+   *  yeniden seçer — mSkorla artık geniş CLIP_AI_KEYWORDS indeksi + baskınlık
+   *  eşiğiyle çalışır; emin olmadığı parçalarda mushaf sayfa (en az-yanlış).
+   *  Manuel atanmışı ayırır mı? Hayır — buton YENİDEN SKORLAR; kullanıcı elle
+   *  seçmişse sonrasında •  tekrar elle seçebilir (buton idempotent değil,
+   *  bilinçli yenileme). Arka plan da oto'ya döner ki yeni katlar görünür. */
+  const akilliAta = () => {
+    if (!kuyruk.length) { yaz("Önce bölüm/ayet ekle — sonra Akıllı AI'a bas", "hata"); return; }
+    let degisen = 0;
+    const yeni = kuyruk.map((o) => {
+      const kat = mSkorla(o.tip === "ayet" ? `${o.baslik || ""} ${o.meal || o.metin} ${o.kaynak || ""}` : o.metin);
+      if (kat !== o.kat) degisen++;
+      return { ...o, kat };
+    });
+    setKuyruk(yeni);
+    setBg(null); // oto arka plan → her parçanın yeni kategorisi hemen görünür
+    yaz(degisen ? `🤖 Akıllı AI: ${degisen} parçanın atmosferi zekice güncellendi ✓` : "🤖 Akıllı AI: atmosferler zaten isabetli 👌");
+  };
 
   // ── canlı bölme önizlemesi ──
   const plan = React.useMemo(() => (metin.trim() ? mBol(metin.trim()) : []), [metin]);
@@ -565,7 +607,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
             />
             {/* SAĞ: kontroller */}
             <SeslendirmeKontroller
-              mod={mod} setMod={setMod}
+              mod={mod} setMod={modDegistir}
               ayetler={ayetler} surler={surler}
               sureIdx={sureIdx} setSureIdx={setSureIdx}
               ayetIdx={ayetIdx} setAyetIdx={setAyetIdx}
@@ -573,6 +615,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               metin={metin} setMetin={setMetin} plan={plan}
               bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumCikar={bolumCikar} bolumDinle={bolumDinle}
               kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar}
+              akilliAta={akilliAta}
               seslendir={seslendir} durdur={durdur}
               durum={durum} durumTip={durumTip}
             />
