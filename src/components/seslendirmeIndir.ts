@@ -11,6 +11,22 @@ import type { KuyrukOgesi } from "./seslendirmeSabitler";
 /** Bölümler arası sesli nefes payı (sn) — motor çalarken de nefes bırakır. */
 const NEFES_SN = 0.35;
 
+/**
+ * CANLIDA okut yanıtı "data:audio/mpeg;base64,…" döner — CSP connect-src'te
+ * 'data:' yok, fetch(data:) engellenir (Canlı deneme 21.10: "Failed to fetch").
+ * Bu yüzden data-URL'i fetch ETMEDEN atob ile Uint8Array'e çözeriz;
+ * http(s) URL'lerde normal fetch gider.
+ */
+async function sesBaytları(url: string): Promise<ArrayBuffer> {
+  if (!url.startsWith("data:")) return (await fetch(url)).arrayBuffer();
+  const virgül = url.indexOf(",");
+  const b64 = url.slice(virgül + 1);
+  const bin = atob(b64);
+  const dizi = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) dizi[i] = bin.charCodeAt(i);
+  return dizi.buffer;
+}
+
 /** AudioBuffer → mono/stereo korunarak WAV (16-bit PCM) Blob */
 function wavYaz(buf: AudioBuffer): Blob {
   const kanal = buf.numberOfChannels, örnek = buf.sampleRate;
@@ -58,7 +74,7 @@ export async function kuyrukIndir(
     for (let i = 0; i < kuyruk.length; i++) {
       yaz(`📥 İndirme — bölüm ${i + 1}/${kuyruk.length} sunucudan alınıyor…`);
       const url = await urlAl(kuyruk[i].metin);
-      const ab = await (await fetch(url)).arrayBuffer();
+      const ab = await sesBaytları(url);
       // data: URL grupları da decodeAudioData'dan geçebilir; hafıza dostu gemeinsame ctx
       const dec = await ctx.decodeAudioData(ab);
       parcalar.push(dec);
