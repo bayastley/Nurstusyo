@@ -14,6 +14,7 @@
 import React from "react";
 import { katBilgi, mBol, mSkorla } from "./seslendirmeMotor";
 import { ttsUrl, DILLER, type DilKodu, type DurumTip, type KuyrukOgesi, type AyetKayit } from "./seslendirmeSabitler";
+import { kuyrukIndir } from "./seslendirmeIndir";
 import { SeslendirmeOnizleme } from "./seslendirmeOnizleme";
 import { SeslendirmeKontroller } from "./seslendirmeKontroller";
 
@@ -157,6 +158,20 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     if (ses) return ttsUrl(`okut?dil=${dil}&ses=${encodeURIComponent(ses)}&metin=${encodeURIComponent(m)}`);
     return ttsUrl(dil === "tr" ? `okut?ses=ahmet&metin=${encodeURIComponent(m)}` : `okut?dil=${dil}&metin=${encodeURIComponent(m)}`);
   };
+
+  // ★ 21.10 İNDİRME (kullanıcı: "seslendirmede metin yazıp ayarladık indirme
+  //  butonu yok mu şaka mısın") — kuyruktaki TÜM bölümleri sunucudan sırayla
+  //  alıp tarayıcıda TEK dosyaya birleştirip kaydeder (seslendirmeIndir.ts).
+  //  Çalma zincirine dokunmaz; okutCek+okutUrl ile çalma akışının AYNI TTS
+  //  ayarlarını (dil + ses) kullanır. İndirme sırasında DURDUR'un zincirini
+  //  bozmamak için ayrı Promise hattı, runningRef'e bakmaz.
+  const indirUrlAl = React.useCallback(async (m: string) => {
+    const r = await okutCek(okutUrl(m));
+    if (!r.ok) throw new Error("TTS " + r.status);
+    const u = (await r.json()).url as string; // "data:audio/mpeg;…" (canlı) | "/mp3/…" (dev)
+    return u.startsWith("data:") ? u : ttsUrl(u.replace(/^\//, ""));
+  }, [ses, dil]);
+  const [indiriyor, setIndiriyor] = React.useState(false);
 
   // ★ 21.10 YINELEME KORUMASI (kullanıcı: "tüm sure ekle dedim ekledi tekrar
   //  tıklayınca tekrar niye ekliyor"): kuyrukta etiketiyle ("Tâhâ Suresi 76") aynı
@@ -586,6 +601,19 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     yaz(`🗑 ${n} bölüm komple temizlendi — canlı önizlemeye dönüldü`);
   };
 
+  // ★ 21.10 İNDİR: kuyruk barrışça çalma zincirini DURDUR (sonu okunur bir dosya
+  //  istiyor) — parça parça sunucudan al tektele birleştir kaydet (seslendirmeIndir).
+  const indir = React.useCallback(async () => {
+    if (!kuyruk.length) { yaz("İndirilecek bölüm yok — önce metin yazıp bölüm oluştur", "hata"); return; }
+    if (indiriyor) return;
+    setIndiriyor(true);
+    // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın
+    if (runningRef.current) durdur();
+    try {
+      await kuyrukIndir(kuyruk, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"));
+    } finally { setIndiriyor(false); }
+  }, [kuyruk, indiriyor, indirUrlAl, durdur, yaz]);
+
   // ── önizleme öğesi — kuyruk doluysa onu, değilse sekmenin canlı seçimini göster ──
   const onizOg: KuyrukOgesi | null = (() => {
     if (kuyruk.length) return kuyruk[Math.min(kuyrukSec, kuyruk.length - 1)];
@@ -666,6 +694,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumCikar={bolumCikar} bolumDinle={bolumDinle}
               kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar} kuyrukTemizle={kuyrukTemizle}
               akilliAta={akilliAta}
+              indir={indir} indiriyor={indiriyor}
               seslendir={seslendir} durdur={durdur}
               durum={durum} durumTip={durumTip}
             />

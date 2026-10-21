@@ -34,6 +34,9 @@ export interface SeslendirmeKontrollerProps {
   bolumDinle: (i: number) => void;      // bölüm karta tıkla → sadece o bölümü oku
   // ★ 21.10 AKILLI AI BUTONU — tüm parçaların atmosferini zekice yeniden seçer
   akilliAta: () => void;
+  // ★ 21.10 İNDİRME — kuyruğu TEK dosya olarak indirir
+  indir: () => void;
+  indiriyor: boolean;
   // kuyruk
   kuyruk: KuyrukOgesi[];
   kuyrukSec: number;
@@ -53,6 +56,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
   metin, setMetin, plan,
   bolumSayi, bolumEkle, bolumCikar, bolumDinle,
   akilliAta,
+  indir, indiriyor,
   kuyruk, kuyrukSec, setKuyrukSec, ogCikar, kuyrukTemizle,
   seslendir, durdur, durum, durumTip,
 }) => {
@@ -166,6 +170,14 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         <button onClick={() => { void seslendir(0); }} disabled={durumTip === "okuyor"}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-50`}
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>🔊 SESLENDİR</button>
+        {/* ★ 21.10 İNDİRME (kullanıcı: "indirme butonu yok mu şaka mısın") —
+            kuyruğu sunucudan sırayla alıp tarayıcıda TEK dosyaya birleştirir */}
+        <button onClick={indir} disabled={indiriyor || kuyruk.length === 0}
+          title="Tüm bölümleri tek ses dosyası olarak indir (WAV — tarayıcı birleşimi)"
+          className={`${gold} disabled:cursor-not-allowed disabled:opacity-40`}
+          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", whiteSpace: "nowrap" }}>
+          {indiriyor ? "⏬ İndiriliyor…" : "📥 İndir"}
+        </button>
         <button onClick={durdur} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)" }}>⏹ DURDUR</button>
         {/* ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor; akıllı AI butonu
             koy bari de tıklayalım"): tüm parçaların atmosferini geniş kelime
