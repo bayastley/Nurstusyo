@@ -12,7 +12,7 @@
 //   sağ kolon → seslendirmeKontroller.tsx. Burada durum + orkestrasyon + kabuk kaldı.
 // ═══════════════════════════════════════════════════════════════
 import React from "react";
-import { ATM, mBol, mSkorla } from "./seslendirmeMotor";
+import { katBilgi, mBol, mSkorla } from "./seslendirmeMotor";
 import { ttsUrl, DILLER, type DilKodu, type DurumTip, type KuyrukOgesi, type AyetKayit } from "./seslendirmeSabitler";
 import { SeslendirmeOnizleme } from "./seslendirmeOnizleme";
 import { SeslendirmeKontroller } from "./seslendirmeKontroller";
@@ -424,7 +424,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   const atmosAta = (kat: string) => {
     const i = kuyrukSec;
     setKuyruk(kuyruk.map((o, j) => (j === i ? { ...o, kat } : o)));
-    yaz(`Parça ${i + 1} → ${ATM[kat]?.[0] || kat} atandı ✓`);
+    yaz(`Parça ${i + 1} → ${katBilgi(kat).ad} atandı ✓`);
   };
   /** ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor kanka; akıllı AI
    *  butonu koy bari de tıklayalım"): kuyruktaki TÜM parçaların atmosferini
@@ -501,7 +501,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         if (!runningRef.current) break;
         const p = liste[i];
         if (kuyruk.length) setKuyrukSec(listedenBasla + i); // ★ 18.10: toplam kuyrukta doğru kart işaretlenir
-        yaz(`Parça ${i + 1}/${liste.length} · ${ATM[p.kat]?.[0] || p.kat} · Ahmet okuyor…`, "okuyor");
+        yaz(`Parça ${i + 1}/${liste.length} · ${katBilgi(p.kat).ad} · Ahmet okuyor…`, "okuyor");
         const { audio: a } = await siradaki;
         const my = seqRef.current; // ★ 21.10 SIZINTI FIX: döngü scope'u — break kontrolü buradan okur
         audioRef.current = a;
@@ -562,7 +562,9 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     return mevcutAyet ? ayetKuyrukOg(mevcutAyet) : null;
   })();
   const onizKat = onizOg?.kat || "musaf";
-  const atmos = ATM[onizKat] || ATM.musaf;
+  // ★ 21.10 YÜZLERCE ATMOSFER — admin kategorileri de katBilgi ile doğru ad/ikon/gradyan alır
+  const kb = katBilgi(onizKat);
+  const atmos = [kb.ad, kb.ikon, kb.gradyan] as readonly [string, string, string];
 
   if (!open) return null;
 

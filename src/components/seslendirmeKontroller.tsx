@@ -5,7 +5,7 @@
 // Davranış birebir; sadece bileşen olarak ayrıldı.
 // ═══════════════════════════════════════════════════════════════
 import React from "react";
-import { ATM } from "./seslendirmeMotor";
+import { katBilgi } from "./seslendirmeMotor";
 import type { AyetKayit, DurumTip, KuyrukOgesi, PlanParcasi } from "./seslendirmeSabitler";
 
 const gold = "cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-black text-black transition";
@@ -132,7 +132,8 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           <div className="mb-1 text-[8.5px] font-black tracking-wider text-white/50">📋 BÖLÜMLER — {kuyruk.length} · tıkla: dinle · ✕: çıkar</div>
           <div className="flex flex-wrap gap-1">
             {kuyruk.map((o, i) => {
-              const atm = ATM[o.kat] || ATM.musaf;
+              // ★ 21.10 YÜZLERCE ATMOSFER: admin kategorileri de katBilgi ile chip'de düzgün görünür
+              const ikon = katBilgi(o.kat).ikon;
               return (
                 <span key={`${o.tip}-${o.metin.slice(0, 8)}-${i}`}
                   onClick={() => { setKuyrukSec(i); bolumDinle(i); }}
@@ -141,7 +142,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
                   style={i === kuyrukSec
                     ? { background: "rgba(215,170,82,.35)", borderColor: "rgba(215,170,82,.5)", color: "#fff" }
                     : { background: "rgba(255,255,255,.06)", borderColor: "rgba(255,255,255,.1)", color: "rgba(255,255,255,.7)" }}>
-                  ▶ {atm[1]} {o.tip === "ayet" ? o.etiket : `bölüm ${i + 1}`}
+                  ▶ {ikon} {o.tip === "ayet" ? o.etiket : `bölüm ${i + 1}`}
                   <b onClick={(e) => { e.stopPropagation(); ogCikar(i); }} style={{ cursor: "pointer", marginLeft: 3, color: "#ff8a8a" }}>✕</b>
                 </span>
               );

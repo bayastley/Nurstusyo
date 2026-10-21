@@ -8,6 +8,14 @@
 // ★ 21.10 AKILLI AI ŞINIFLANDIRICI kaynağı — ana stüdyo ile aynı zekice kelime
 //   tablosu (clips/index.ts CLIP_AI_KEYWORDS); modal havuzuna daraltılır.
 import { CLIP_AI_KEYWORDS } from "../clips/index";
+// ★ 21.10 YÜZLERCE ATMOSFER ENTEGRASYONU (kullanıcı: "yüzlerce atmosfer kanka işte
+//   bak o atmosfer kategorilere göre entegre et"): kıssa part'ları artık 15 modal
+//   kategorisiyle sınırlı DEĞİL — admin AI manifestindeki 80+ özel kategori
+//   ("yusuf kuyu", "at savaş", "belkıs taht", "mağara"...) da skorlanır; isabet
+//   metindeki kelimelere EN YAKIN kategoriye gider, techadmin R2 kliplerine otomatik
+//   arka plan düşer (SES_ARKA_HAVUZ zaten ALL_CLIPS ile admin klipleri barındırır).
+import { ADMIN_AI_KEYWORDS } from "../adminAiKeywords";
+import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 
 // ── atmosfer keyword tablosu + paleti (mockup'tak birebir) ──
 export const KEY: Record<string, string> = {
@@ -67,6 +75,22 @@ const ATM_KELIME: Record<string, string[]> = (() => {
   return out;
 })();
 
+// ★ 21.10 ADMIN KATEGORİ SÖZLÜĞ Ü — id → temiz ad ("admin_joseph_deep_well" → "Yusuf Kuyusu")
+const ADMIN_KATEGORI_ADLARI: Record<string, string> = (() => {
+  const h: Record<string, string> = {};
+  for (const k of ADMIN_ATMOSPHERE_CATEGORIES) h[k.id] = k.label.replace(/^🎞\s*/, "");
+  return h;
+})();
+
+/** ★ 21.10 YÜZLERCE ATMOSFER: admin AI kategorileri + temel kategoriler BİR PİSTE.
+ *  Admin kategoriler listede ÖNDE — eşit puan çakışmasında öz-ele kategori kazanır
+ *  (ör. tek "gemi" kelimesi hem deniz hem "Denizde Yük Gemileri"ne oturur → admin kazanır,
+ *  çünkü R2 kütüphanesiyle birebir bağlantılı, dikkatli üretildi). */
+const TAM_HAVUZ: [string, string[]][] = [
+  ...Object.entries(ADMIN_AI_KEYWORDS).map(([kat, soz]) => [kat, soz.split(/\s+/).map((x) => x.toLocaleLowerCase("tr")).filter(Boolean)] as [string, string[]]),
+  ...Object.entries(ATM_KELIME),
+];
+
 /** ★ 21.10 AKILLI SİNİFLANDİRİCİ — mSkorla yükseltildi:
  *  1) Geniş indeks (yukarıda ATM_KELIME, KEY+CLIP_AI_KEYWORDS): "zaman/ağaç/deniz
  *     gemisi/test/terazi" gibi zengin metinde doğru kategori bulur.
@@ -77,17 +101,37 @@ const ATM_KELIME: Record<string, string[]> = (() => {
  *  Kısa keyword (≤3 harf, "su","gul","ari","bul") tam eşleşme; uzunları startsWith. */
 export function mSkorla(metin: string): string {
   const w = metin.toLocaleLowerCase("tr").split(/[^a-zçğıöşü]+/).filter(Boolean);
-  const skor: Record<string, number> = {};
+  const puan: Record<string, number> = {};
+  const hit: Record<string, number> = {};
   for (const x of w) {
-    for (const [k, kws] of Object.entries(ATM_KELIME)) {
+    for (const [k, kws] of TAM_HAVUZ) {
       let enIyi = 0;
       for (const kw of kws) if ((x === kw || (kw.length > 3 && x.startsWith(kw))) && kw.length > enIyi) enIyi = kw.length;
-      if (enIyi) skor[k] = (skor[k] || 0) + enIyi;
+      if (enIyi) { puan[k] = (puan[k] || 0) + enIyi; hit[k] = (hit[k] || 0) + 1; }
     }
   }
-  const sirali = Object.entries(skor).sort((a, b) => b[1] - a[1]);
-  if (sirali.length && sirali[0][1] >= 5 && (!sirali[1] || sirali[0][1] >= sirali[1][1] * 1.5)) return sirali[0][0];
-  return "musaf";
+  // sıra: puan → hit (stabil sort; admin kategoriler TAM_HAVUZ'da önde = eşitlikte kazanır).
+  // ★ 21.10 EŞİTLİK KABULÜ: iki kategori EŞİT puanla yarışıyorsa (ör. "denize...gemiye"
+  //   → deniz 9 vs Denizde Yük Gemileri 9) musaf'a düşürme YANLINDI — kelimeler
+  //   açıkça temalı; eşitlikte önde-sıradaki (admin özelek) kazanır. Üstünlükte
+  //   1.2× hafif eşik korundu (eski 1.5 musaf onlarında kaybı yaratiyordu).
+  const sirali = Object.keys(puan).sort((a, b) => puan[b] - puan[a] || hit[b] - hit[a]);
+  const birinci = sirali[0] as string | undefined;
+  const ikinciPuani = sirali[1] ? puan[sirali[1]] : 0;
+  const kazandi = !!birinci && puan[birinci] >= 5 && (!sirali[1] || puan[birinci] === ikinciPuani || puan[birinci] >= ikinciPuani * 1.1);
+  return kazandi && birinci ? birinci : "musaf";
+}
+
+// ★ 21.10 katBilgi — 15 ATM VE admin kategorileri için tek gösterim kaynağı:
+//   chip'ler + önizleme rozeti admin kategorilerini de düzgün gösterir (label + konservatif koyu gradyan).
+const ADMIN_VEKIL_GRADYAN = "linear-gradient(180deg,#14101a,#201822 50%,#2d232e)";
+export function katBilgi(katId: string): { ad: string; ikon: string; gradyan: string } {
+  const t = ATM[katId];
+  if (t) return { ad: t[0], ikon: t[1], gradyan: t[2] };
+  const adminAd = ADMIN_KATEGORI_ADLARI[katId];
+  if (adminAd) return { ad: adminAd, ikon: "🎬", gradyan: ADMIN_VEKIL_GRADYAN };
+  if (katId && katId.startsWith("admin_")) return { ad: katId.slice("admin_".length).replace(/_/g, " "), ikon: "🎬", gradyan: ADMIN_VEKIL_GRADYAN };
+  return { ad: ATM.musaf[0], ikon: ATM.musaf[1], gradyan: ATM.musaf[2] };
 }
 
 /** kelime yürüyüşü — atmosfer geçişinde kes (mockup mKelimeBol birebir) */
