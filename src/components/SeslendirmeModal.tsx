@@ -23,6 +23,18 @@ export interface SeslendirmeModalProps {
   notify?: (msg: string) => void;
 }
 
+/** ★ 21.10 İSTEMCİ TTS TEKRAR (kullanıcı: "çökmesin düzgün yap"): sunucu Edge
+ *  kotasına (429→503) takılırsa sessiz bekle+tekrar (2,5 sn / 5 sn) — kullanıcıya
+ *  hata metni dönmüyor; sunucu zaten 3 girişim yapiyor, burada tavan tekrar katmanı. */
+const okutCek = async (u: string, deneme = 0): Promise<Response> => {
+  const r = await fetch(u);
+  if (!r.ok && r.status >= 500 && deneme < 2) {
+    await new Promise((k) => setTimeout(k, deneme === 0 ? 2_500 : 5_000));
+    return okutCek(u, deneme + 1);
+  }
+  return r;
+};
+
 export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClose }) => {
   const [mod, setMod] = React.useState<"ayet" | "metin">("ayet");
   const [ayetler, setAyetler] = React.useState<AyetKayit[]>([]);
@@ -337,7 +349,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     runningRef.current = true;
     try {
       const urlAl2 = async (m2: string) => {
-        const r = await fetch(okutUrl(m2));
+        const r = await okutCek(okutUrl(m2));
         if (!r.ok) throw new Error("TTS " + r.status);
         const u = (await r.json()).url as string;
         return u.startsWith("data:") ? u : ttsUrl(u.replace(/^\//, ""));
@@ -439,7 +451,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       let zincir: Promise<unknown> = Promise.resolve(null);
       plan.forEach((p) => {
         zincir = zincir.then(() =>
-          runningRef.current ? null : fetch(okutUrl(p.m)).catch(() => null));
+        runningRef.current ? null : okutCek(okutUrl(p.m)).catch(() => null));
       });
     }, 900);
     return () => clearTimeout(parlak);
@@ -467,7 +479,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       if (!liste.length) { yaz("Önce ayet veya metin ekle", "hata"); return; }
 
       const urlAl = async (m2: string) => {
-        const r = await fetch(okutUrl(m2));
+        const r = await okutCek(okutUrl(m2));
         if (!r.ok) throw new Error("TTS " + r.status);
         const u = (await r.json()).url as string; // "data:audio/mpeg;…" (canlı) | "/mp3/…" (dev)
         // ★ 18.10: canlı data-URL direkt; dev disk yolu ttsUrl ile ön eklenir
