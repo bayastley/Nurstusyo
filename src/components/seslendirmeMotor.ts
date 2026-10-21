@@ -75,6 +75,8 @@ const ATM_KELIME: Record<string, string[]> = (() => {
   return out;
 })();
 
+const TR2 = (t: string) => { if (globalThis.__KISSA_TRACE) console.log(" [trace]" + t); };
+
 // ★ 21.10 ADMIN KATEGORİ SÖZLÜĞ Ü — id → temiz ad ("admin_joseph_deep_well" → "Yusuf Kuyusu")
 const ADMIN_KATEGORI_ADLARI: Record<string, string> = (() => {
   const h: Record<string, string> = {};
@@ -86,10 +88,46 @@ const ADMIN_KATEGORI_ADLARI: Record<string, string> = (() => {
  *  Admin kategoriler listede ÖNDE — eşit puan çakışmasında öz-ele kategori kazanır
  *  (ör. tek "gemi" kelimesi hem deniz hem "Denizde Yük Gemileri"ne oturur → admin kazanır,
  *  çünkü R2 kütüphanesiyle birebir bağlantılı, dikkatli üretildi). */
-const TAM_HAVUZ: [string, string[]][] = [
-  ...Object.entries(ADMIN_AI_KEYWORDS).map(([kat, soz]) => [kat, soz.split(/\s+/).map((x) => x.toLocaleLowerCase("tr")).filter(Boolean)] as [string, string[]]),
-  ...Object.entries(ATM_KELIME),
-];
+// ★ 21.10 ANLATI ZENGİNLEŞTİRME (kullanıcı: "kıssada adam diyor balık diyor — mushaf ne alaka"):
+//   kıssa metinlerinde geçen yaygın anlatı kelimeleri admin klipleriyle birebir bağlanır —
+//   "adam"→Yaşlı Adam, "balık"→Su Altı Akıntıları, "taht/saray"→admin saray/taht...
+//   Mushaf artık kıssalarda SON ÇARE değil (mSkorla fallback zinciri sürer).
+const OZEL_KELIME: Record<string, string> = {
+  admin_aging_elderly_man: "adam adamlar ihtiyar yaşlı",
+  admin_belkis_throne_kingdom: "taht şah hükümdar kral krallık saltanat",
+  admin_luxury_palace_interior: "saray zindan köşk sarayı",
+  admin_market_place_trade: "pazar çarşı kervan takas",
+  admin_underwater_currents_dark: "balık balığı sualtı dalgıç",
+  admin_karun_treasures_gold: "altın hazine ganimet define",
+  admin_praying_hands_islamic: "dua hamdolsun el açma", 
+  admin_hudhud_water_suleyman_hoopoe_bird: "hüdhüd kuşlar",
+  admin_gushing_spring_river: "pınar kaptan gemiciler",
+  admin_pearl_coral_diving: "inci mercan",
+  admin_desert_oasis_sources: "vaha bağçenen",
+  admin_solar_eclipse_sun: "güneş",
+  admin_two_sea_merging: "iki deniz akışı",
+  admin_grazing_cattle_sheep: "koyun sığır sürü",
+  admin_hadid_iron_metal: "demirci demirciler demir döven dövme çekiç çekici cekic ökse oğu ağır iş atılan kıvılcım",
+};
+const TAM_HAVUZ: [string, string[]][] = (() => {
+  const h: Record<string, Set<string>> = {};
+  for (const [kat, soz] of Object.entries(ADMIN_AI_KEYWORDS)) {
+    (h[kat] ||= new Set());
+    for (const x of soz.split(/\s+/)) if (x) h[kat].add(x.toLocaleLowerCase("tr"));
+    if (OZEL_KELIME[kat]) for (const x of OZEL_KELIME[kat].split(/\s+/)) if (x) h[kat].add(x.toLocaleLowerCase("tr"));
+  }
+  // ★ BUG FIX (21.10 v2): ATM_KELIME = { kategori: kelimeler[] } — ANAHTAR değil
+  //   DEĞER kelimeleri havuza eklenmeli (eski kod kategori adını keyword yapmış:
+  //   "karınca/deniz/ateş" hiç skorlanamıyor → her şey mushaf'a düşüyordu)
+  for (const [kat, kws] of Object.entries(ATM_KELIME)) {
+    (h[kat] ||= new Set());
+    if (Array.isArray(kws)) for (const w of kws) { const x = String(w).toLocaleLowerCase("tr"); if (x) h[kat].add(x); }
+  }
+  TR2("toplam havuz kategori=" + Object.keys(h).length + " kelime=" + Object.values(h).reduce((t, s) => t + s.size, 0));
+  const out: [string, string[]][] = [];
+  for (const [k, s] of Object.entries(h)) out.push([k, [...s]]);
+  return out;
+})();
 
 /** ★ 21.10 AKILLI SİNİFLANDİRİCİ — mSkorla yükseltildi:
  *  1) Geniş indeks (yukarıda ATM_KELIME, KEY+CLIP_AI_KEYWORDS): "zaman/ağaç/deniz
@@ -98,9 +136,12 @@ const TAM_HAVUZ: [string, string[]][] = [
  *     aksi halde "musaf" (Kitap/Mushaf görsel) — en az-yanlış gerçek varsayılan.
  *     Tek geçen "su/gemisi/zirve" kelimesi artık Deniz/Çöl getiremez;
  *     kullanıcı emri: "sürekli deniz koyuyor" BİTTİ — emin olmadığında mushaf sayfa.
- *  Kısa keyword (≤3 harf, "su","gul","ari","bul") tam eşleşme; uzunları startsWith. */
-export function mSkorla(metin: string): string {
+ *  Kısa keyword (≤3 harf, "su","gul","ari","bul") tam eşleşme; uzunları startsWith.
+ *  ★ 21.10 kıssa-fallback parametresi: kıssa bölücüsü önceki part'ın katını verir —
+ *     eşik geçmezse mushaf yerine SAHNE AKISI sürer ("mushaf ne alaka" bitti). */
+export function mSkorla(metin: string, fallback = "musaf"): string {
   const w = metin.toLocaleLowerCase("tr").split(/[^a-zçğıöşü]+/).filter(Boolean);
+  const ___trace = globalThis.__SKOR_TRACE ? (kz: Record<string, number>, wz: string[]) => console.log(" [skor]" + wz.join(" "), JSON.stringify(kz)) : null;
   const puan: Record<string, number> = {};
   const hit: Record<string, number> = {};
   for (const x of w) {
@@ -119,7 +160,87 @@ export function mSkorla(metin: string): string {
   const birinci = sirali[0] as string | undefined;
   const ikinciPuani = sirali[1] ? puan[sirali[1]] : 0;
   const kazandi = !!birinci && puan[birinci] >= 5 && (!sirali[1] || puan[birinci] === ikinciPuani || puan[birinci] >= ikinciPuani * 1.1);
-  return kazandi && birinci ? birinci : "musaf";
+  if (___trace) ___trace(puan, w);
+  return kazandi && birinci ? birinci : fallback;
+}
+
+/** ★ 21.10 KIŞSA BÖLÜCÜ — anlatı ritmi: 5-7 part (kullanıcı: "musa kıssası en az 5 part
+ *  olmalı"). Cümle sınırından parçalara dengeli dağıt; her part'ın katı O part'ın
+ *  kelimeklere göre mSkorla'dan, eşik geçmezse ÖNCEKİ sahnenin katı sürer (akış —
+ *  mushaf fallback'ı kıssalarda yürür). */
+export function mKissaPartla(metin: string, minPart = 5): { m: string; kat: string }[] {
+  const TR = (t: string) => { if (globalThis.__KISSA_TRACE) console.log(" [trace]" + t); };
+  const kSay = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+  // 1) cümleleri böl (nokta/soru/ünlem/…)
+  let birimler = (metin.replace(/\s+/g, " ").match(/[^.!?…]+[.!?…]+["»')\]]*\s*|[^.!?…]+$/g) || [metin])
+    .map((c) => c.trim()).filter(Boolean);
+  // 2) kısa öncülleri birleştir ("Hz." "Ş." gibi) — kendini başlıksız part yapma
+  const birlesik: string[] = [];
+  for (const b of birimler) {
+    birlesik.push(b);
+  }
+  // "Hz."/"Ş." gibi sonraki cümlenin başına ait kısa öncülleri geri birleştir —
+  //    (a) tek başına "Hz." cümlesi (b) "Nemrut, Hz." gibi cümle SONuna takışmış öncül
+  for (let i = 0; i < birlesik.length; i++) {
+    if (/^[A-ZÇĞİÖŞÜ][a-zçğıöşü]{0,2}\.$/.test(birlesik[i]) && birlesik[i + 1]) {
+      birlesik[i + 1] = birlesik[i] + " " + birlesik[i + 1]; birlesik.splice(i, 1); i--;
+      continue;
+    }
+    const oncu = birlesik[i].match(/([A-ZÇĞİÖŞÜ][a-zçğıöşü]{0,2}\.)\s*$/);
+    if (oncu && kSay(birlesik[i]) <= 4 && birlesik[i + 1]) {
+      birlesik[i] = birlesik[i].slice(0, birlesik[i].length - oncu[1].length - 1).trimEnd();
+      birlesik[i + 1] = oncu[1] + " " + birlesik[i + 1];
+    }
+  }
+  birimler = birlesik.filter(Boolean);
+  // 3) hedef part adedi: uzun metinde 5-7; kısa metinde de minPart'a esne
+  const toplam = birimler.reduce((t, c) => t + kSay(c), 0);
+  let hedef = Math.max(minPart, Math.min(7, Math.round(toplam / 42)));
+  TR("birlesik=" + birimler.length + " toplam=" + toplam + " hedef=" + hedef);
+  // 4) cümle sayısı yetmezse noktalı virgülle, sonra virgülle alt birimlere in —
+  //    kıssa anlatımı "deniz açıldı; gemiye vurdu; balık kaptı" mini-olaylı olduğu
+  //    için ';' / ',' doğal kesim noktasıdır (kısa metinde de 5 part sağlar).
+  if (birimler.length < hedef) birimler = birimler.flatMap((s) => s.split(/;\s*/));
+  if (birimler.length < hedef) birimler = birimler.flatMap((s) => s.split(/,\s+/));
+  birimler = birimler.map((s) => s.trim()).filter(Boolean);
+  TR("alt-birim=" + birimler.length);
+  if (birimler.length < 2) { TR("erken-dusmek: birim<2"); return [{ m: metin, kat: mSkorla(metin) }]; }
+  hedef = Math.min(birimler.length, Math.max(2, hedef));
+  // 5) birimleri hedef part'a DENGELEN dağıt: kesim noktaları önceden hesaplanır —
+  //    her part-toplamı toplam kelime/hedef'e en yakın birim sınırına kilitli.
+  //    Greedy değil → kuyruk kilidi yok, tam hedef part garantisi.
+  const onEkum: number[] = [0];
+  for (const b of birimler) onEkum.push(onEkum[onEkum.length - 1] + kSay(b));
+  const kesimler: number[] = [];
+  for (let p = 1; p < hedef; p++) {
+    const hedefKelime = (p / hedef) * toplam;
+    let enIyi = (kesimler[kesimler.length - 1] || 0) + 1;
+    let enIyiFark = Infinity;
+    for (let i = enIyi; i < birimler.length; i++) {
+      const fark = Math.abs(onEkum[i] - hedefKelime);
+      if (fark < enIyiFark) { enIyiFark = fark; enIyi = i; }
+      if (onEkum[i] > hedefKelime + 15) break;
+    }
+    // son dilim(ler) boş kalmasın: j. kesim en fazla birimler.length - (kalan part) olabilir
+    const ustSinir = birimler.length - (hedef - p);
+    kesimler.push(Math.min(Math.max(enIyi, (kesimler[kesimler.length - 1] || 0) + 1), ustSinir));
+  }
+  const partlar: { m: string; kat: string }[] = [];
+  for (let p = 0; p < hedef; p++) {
+    const bas = p === 0 ? 0 : kesimler[p - 1];
+    const son = p === hedef - 1 ? birimler.length : kesimler[p];
+    const m = birimler.slice(bas, son).join(" ").trim();
+    if (!m) continue;
+    const oncelKat = partlar.length ? partlar[partlar.length - 1].kat : "musaf";
+    partlar.push({ m, kat: mSkorla(m, oncelKat) });
+  }
+  TR("partlar=" + partlar.length + " kesimler=" + kesimler.join(","));
+  // ★ MUSAF-I TEMİZLE: kıssalarda eşiği geçemeyen part mushaf'ta kalmasın —
+  //    önceki sahnenin katından akar (ilk partta sonrakinin katı).
+  //    (kullanıcı: "adam diyor balık diyor, mushaf ne alaka")
+  for (let i = 1; i < partlar.length; i++) if (partlar[i].kat === "musaf" && partlar[i - 1].kat !== "musaf") partlar[i].kat = partlar[i - 1].kat;
+  for (let i = partlar.length - 2; i >= 0; i--) if (partlar[i].kat === "musaf" && partlar[i + 1].kat !== "musaf") partlar[i].kat = partlar[i + 1].kat;
+  return partlar.length > 1 ? partlar : [{ m: metin, kat: mSkorla(metin) }];
 }
 
 // ★ 21.10 katBilgi — 15 ATM VE admin kategorileri için tek gösterim kaynağı:

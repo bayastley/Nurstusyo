@@ -137,6 +137,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   }>({});
   const modDegistir = (m: "ayet" | "metin") => {
     if (m === mod) return;
+    setMod(m); // ★ 21.10 FİX — setMod çağrısı eksik kalmıştı: tıklamada sekme hiç değişmiyordu
     // 1) SES: ayet oynatma zinciri (bolumDinle / SESLENDİR döngüsü) anında kesilsin
     if (runningRef.current) durdur();
     // 2) KUYRUK: mevcudu bu modun kasasına koy, geçilen modun listesini geri getir
@@ -157,19 +158,36 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     return ttsUrl(dil === "tr" ? `okut?ses=ahmet&metin=${encodeURIComponent(m)}` : `okut?dil=${dil}&metin=${encodeURIComponent(m)}`);
   };
 
+  // ★ 21.10 YINELEME KORUMASI (kullanıcı: "tüm sure ekle dedim ekledi tekrar
+  //  tıklayınca tekrar niye ekliyor"): kuyrukta etiketiyle ("Tâhâ Suresi 76") aynı
+  //  ayet varsa tekrar eklenmez — tekrar basış no-op olur + bilgi mesajı yazar.
+  const kuyruktakiEtiketler = React.useMemo(
+    () => new Set(kuyruk.filter((x) => x.tip === "ayet").map((x) => x.etiket)),
+    [kuyruk],
+  );
   const ayetEkle = () => {
     if (!mevcutAyet) return;
+    const og = ayetKuyrukOg(mevcutAyet);
+    if (og.etiket && kuyruktakiEtiketler.has(og.etiket)) {
+      yaz(`${og.etiket} zaten kuyrukta — tekrar eklenmedi ✓`);
+      return;
+    }
     const metinVardi = kuyruk.some((x) => x.tip === "metin");
-    const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), ayetKuyrukOg(mevcutAyet)];
+    const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), og];
     setKuyruk(yeni); setKuyrukSec(yeni.length - 1);
     yaz((metinVardi ? "Önizlemedeki metin silindi — " : "") + `Eklendi: ${yeni[yeni.length - 1].etiket} (kuyruk ${yeni.length}) ✓`);
   };
   const sureEkle = () => {
     if (!ekranSure) return;
+    const adaylar = ekranSure.kartlar.map((i) => ayetKuyrukOg(ayetler[i])).filter((o) => !o.etiket || !kuyruktakiEtiketler.has(o.etiket));
+    if (!adaylar.length) {
+      yaz(`${ekranSure.ad} zaten kuyrukta — tekrar eklenmedi ✓`);
+      return;
+    }
     const metinVardi = kuyruk.some((x) => x.tip === "metin");
-    const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), ...ekranSure.kartlar.map((i) => ayetKuyrukOg(ayetler[i]))];
-    setKuyruk(yeni); setKuyrukSec(Math.max(yeni.length - ekranSure.kartlar.length, 0));
-    yaz((metinVardi ? "Önizlemedeki metin silindi — " : "") + `${ekranSure.ad} Suresi eklendi (${ekranSure.kartlar.length} ayet) ✓`);
+    const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), ...adaylar];
+    setKuyruk(yeni); setKuyrukSec(Math.max(yeni.length - adaylar.length, 0));
+    yaz((metinVardi ? "Önizlemedeki metin silindi — " : "") + `${ekranSure.ad} Suresi eklendi (${adaylar.length} ayet, ${ekranSure.kartlar.length - adaylar.length} zaten vardı) ✓`);
   };
   // ★ 16.10 YENİ AKIŞ: metinEkle (eski "Metni Önizlemeye Ekle") KALDIRILDI yerine
   //   BÖLÜM EKLE sistemi geldi — kullanıcının emri:
@@ -554,6 +572,19 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     yaz("⏹ durduruldu");
   };
+  // ★ 21.10 HEPSİNİ TEMİZLE (kullanıcı: "seçilileri komple temizleme olsun" —
+  //  seçililer ekranındaki "Temizle" ile aynı davranış): okuma vardsa KES,
+  //  kuyruk + seçim + bölüm sayacıkomple sıfır → canlı önizlemeye dön.
+  const kuyrukTemizle = () => {
+    if (!kuyruk.length) return;
+    if (runningRef.current) {
+      seqRef.current++; runningRef.current = false;
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    }
+    const n = kuyruk.length;
+    setKuyruk([]); setKuyrukSec(0); setBolumSayi(0);
+    yaz(`🗑 ${n} bölüm komple temizlendi — canlı önizlemeye dönüldü`);
+  };
 
   // ── önizleme öğesi — kuyruk doluysa onu, değilse sekmenin canlı seçimini göster ──
   const onizOg: KuyrukOgesi | null = (() => {
@@ -633,7 +664,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               ayetEkle={ayetEkle} sureEkle={sureEkle}
               metin={metin} setMetin={setMetin} plan={plan}
               bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumCikar={bolumCikar} bolumDinle={bolumDinle}
-              kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar}
+              kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar} kuyrukTemizle={kuyrukTemizle}
               akilliAta={akilliAta}
               seslendir={seslendir} durdur={durdur}
               durum={durum} durumTip={durumTip}

@@ -39,6 +39,8 @@ export interface SeslendirmeKontrollerProps {
   kuyrukSec: number;
   setKuyrukSec: (i: number) => void;
   ogCikar: (i: number) => void;
+  /** ★ 21.10 HEPSİNİ TEMİZLE — kuyruğu komple siler (seçililer ekranındaki "Temizle" gibi) */
+  kuyrukTemizle: () => void;
   // oynatma
   seslendir: (baslangicIdx?: number) => void;
   durdur: () => void;
@@ -51,7 +53,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
   metin, setMetin, plan,
   bolumSayi, bolumEkle, bolumCikar, bolumDinle,
   akilliAta,
-  kuyruk, kuyrukSec, setKuyrukSec, ogCikar,
+  kuyruk, kuyrukSec, setKuyrukSec, ogCikar, kuyrukTemizle,
   seslendir, durdur, durum, durumTip,
 }) => {
   // ── canlı seçim (kütüphane) — seçici değerleri için ──
@@ -129,7 +131,14 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           (seslendirSec çağrısı: sadece bu parça) + sol atmosfer paneli aç (kuyrukSec set) */}
       {kuyruk.length > 0 ? (
         <div className="rounded-xl border border-white/10 p-2" style={{ background: "rgba(0,0,0,.35)" }}>
-          <div className="mb-1 text-[8.5px] font-black tracking-wider text-white/50">📋 BÖLÜMLER — {kuyruk.length} · tıkla: dinle · ✕: çıkar</div>
+          <div className="mb-1 flex items-center justify-between gap-2">
+            <span className="text-[8.5px] font-black tracking-wider text-white/50">📋 BÖLÜMLER — {kuyruk.length} · tıkla: dinle · ✕: çıkar</span>
+            {/* ★ 21.10 HEPSİNİ TEMİZLE (kullanıcı: "seçilileri komple temizleme olsun") —
+                seçililer ekranındaki "Temizle" ile aynı davranış: tek basışta komple boşalt */}
+            <button onClick={kuyrukTemizle}
+              className="cursor-pointer text-[8.5px] font-black tracking-wider text-red-300/70 transition hover:text-red-300"
+              title="Tüm bölümleri tek seferde temizle">Temizle</button>
+          </div>
           <div className="flex flex-wrap gap-1">
             {kuyruk.map((o, i) => {
               // ★ 21.10 YÜZLERCE ATMOSFER: admin kategorileri de katBilgi ile chip'de düzgün görünür

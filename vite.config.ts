@@ -75,6 +75,14 @@ export default defineConfig(({ mode }) => {
 
     // ─── Prod build: agresif obfuscation ────────────────────────
     build: {
+      // ★ 21.10 CSP HASH DÜRÜSTLÜĞÜ: Vite'ın modulepreload polyfill'i index.html'e
+      //   INLINE script gömer; içeriği her build/Vite-değişiminde değişir → vercel.json
+      //   CSP'deki 'sha256-...' hashler bayatlar → CANLIDA TÜM inline JS bloklanır
+      //   (kullanıcı vakası 21.10: düğmeler TIKLANMIYOR, konsolda 'Executing inline
+      //   script violates CSP'). Polyfill KAPALI → index.html'deki inline scriptler
+      //   yalnız BİZİM sabit metinlerimiz (JSON-LD + SW kaydı) kalır, hashler artık
+      //   build'den build'e kırılmaz.
+      modulePreload: { polyfill: false },
       // Kaynak haritası KAPALI — canlıda sızmasın
       sourcemap: false,
       // Terser: en agresif minify + mangle

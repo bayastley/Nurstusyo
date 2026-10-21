@@ -48,6 +48,12 @@ const GUVENLIK_ANAHTARLARI = [
 export function asistanNormallestir(s: string): string {
   return s
     .toLowerCase()
+    // ★ 21.10 nokta-kombinesi FIX: JS'te "İ".toLowerCase() → "i̇" (i + U+0307).
+    //   Nokta-kombinesi harf-sınıfı regex'te HAYATTA kalıyor ve kelimeyi BÖLÜYORDU:
+    //   "İade" → "i" + "ade", "İngilizce" → "i" + "ngilizce" — çip soruları kendi
+    //   anahtarlarına bile eşleşmiyordu ("Hmm bunu tam bilemedim" yüzü). U+0307
+    //   burada temizlenir → "iade", "ingilizce" doğru kelime olur.
+    .replace(/\u0307/g, "")
     .replace(/ı/g, "i").replace(/İ/g, "i")
     .replace(/ş/g, "s").replace(/Ş/g, "s")
     .replace(/ğ/g, "g").replace(/Ğ/g, "g")
@@ -94,8 +100,24 @@ export const ASISTAN_RULES: AsistanRule[] = [
     cevap: "Jetonlar video üretiminde harcanır; üret butonunda kaç jeton gideceği önceden yazar. Jeton kazanç yolları: günlük hediye, sadık üye kotası, davet ettikleriniz ve özel gün ödülleri. Jetonlarınızın dağılımını Profil → Jeton kutusundan görebilirsiniz.",
   },
   {
+    // ★ 21.10 TAM PRO LİSTESİ (kullanıcı: "pro ne getirir dediginde pro özellikleri
+    //   saysın komple") — sayılar premiumModalHelpers PRO_FEATURES + tier.ts
+    //   DAILY_QUOTA/FEATURE_GATES kaynaklı; panelde gösterilenle birebir.
+    //   ★ Kurallar uyelik'ten ÖNDE durmaktadır — beraberlikte İLK gelen kazanır:
+    //     "Elit üyelik avantajları?" genel uyelik yerine tam Elit listesine düşer.
+    id: "pro-paket",
+    anahtar: ["pro paket", "pro getirir", "pro getirdiği", "pro avantaj", "pro fark", "pro neler", "pro içerir", "nen var proda", "proda ne var", "nur pro", "proya", "pro abone"],
+    cevap: "NÛR PRO paketinin kazandırdıkları 💎 — 1) Üretim kotası: günde 8 kısa + 3 uzun video (600 sn) üretme hakkı (Free: 3 kısa). 2) 25 kâri sesi — 10 ücretsiz kârinin üstüne 15 PRO-özel kâri. 3) 60 tema erişimi (51 PRO + 9 ücretsiz tema). 4) Sinematik filtreler: videoya sinematik atmosfer klip havuzu ve kategori filtreleri. 5) AI başlık ve açıklama varyasyonları: metni/başlığı tek tıkla yenile, varyasyon üret. 6) Uzun video modu + 16:9 yatay ekran formatı açılır. Aylık ya da yıllık (%10 indirim) seçeneklerle satın alım panelinden hemen açılır — aşağıdaki 💎 butonu. 🌙",
+  },
+  {
+    // ★ 21.10 ELİT LİSTESİ — ELIT_FEATURES birebir (PremiumModal ile aynı kaynaktan)
+    id: "elit-paket",
+    anahtar: ["elit paket", "elit getirir", "elit avantaj", "elit fark", "elit neler", "elit içerir", "elit what", "nur elit", "en üst seviye", "elit", "elit uyelik", "elit ne getirir", "elit ne", "elitde", "elit>Welcome"],
+    cevap: "NÛR ELİT paketinin kazandırdıkları 👑 — 1) Üretim kotası: günde 15 kısa + 5 uzun video (600 sn) + 1 tam sure sürümü. 2) Tüm 45 kâri sesi — hepsi açık. 3) Tüm 106 tema. 4) Filigransız 1080p üretim — köşedeki imza tamamen kalkar. 5) AI hashtag paketleri. 6) Gelişmiş sosyal paylaşım araçları. 7) Tasarım stüdyosu + kendi marka imzân (Marka İmza). Üstelik toplu üretim (birden fazla format bir seferde) ELİT'tedir. Aşağıdaki 💎 butonundan plan paneline bakabilirsin. 🌙",
+  },
+  {
     id: "uyelik",
-    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit", "fiyat", "fiyatlari", "parali", "ücret", "abone ol", "abonelik", "pro ol", "yükselt", "uyelik nasil", "satın al", "ode"],
+    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit ne kim", "fiyat", "fiyatlari", "parali", "ücret", "abone ol", "abonelik", "pro ol", "yükselt", "uyelik nasil", "satın al", "ode", "uyelik seviye", "seviyeleri nedir"],
     cevap: "Üyelik seviyeleri: Free (temel), Pro ve Elit. Üst seviyeler daha yüksek üretim hakkı, filigransız video, renk çubuğu ve premium atmosfer kategorileri açar. Fiyatlar ve avantajlar, aşağıdaki '💎 Üyelik Planlarını Gör' butonuyla açılan satın alma panelinde listelenir.",
   },
   {
@@ -105,7 +127,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "ban-genel",
-    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek", "yasaklandim", "banlandim", "yasakli", "kisitlama", "engellendim", "bloklandi", "erisim kapatıldı", "ban yedim", "bloklandım", "bloklandim", "kısıtlandım", "kisitlandim" ],
+    anahtar: ["ban ne", "ban how", "kural ihlal", "banin sebebi", "banin", "yasak ne demek", "yasaklandim", "banlandim", "yasakli", "kisitlama", "engellendim", "bloklandi", "erisim kapatıldı", "ban yedim", "kisitlandi", "kisitlandim", "bloklandım", "bloklandim", "kısıtlandım", "kisitlandim" ],
     cevap: "Erişim kısıtları kural ihlalleri üzerine uygulanır: kısa sürede aşırı üretim denemesi, otomasyon/robot davranışı veya topluluk ilkelerine aykırı içerik. Süreler otomatik işler. İtiraz için sağ üst → Geri Bildirim kullanın ve konu kısmına 'İTİRAZ' yazın — ekip inceler. (Asistan bireysel ban durumu göstermez; Profil sayfanızda görünür.)",
   },
   {
@@ -150,7 +172,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "hatirlatma",
-    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur", "kur", "ana ekrana ekle", "bildirim gelmiyor", "hatirlatici", "uygulama kurulumu", "kurulum", "pwa kurulumu", "telefona kurulum", "ana ekrana ekle", "hatirlatma gelmiyor", "hatırlatma gelmiyor", "bildirim gelmiyor" ],
+    anahtar: ["hatirlat", "push", "bildirim", "vakit", "pwa", "uygulamayı kur", "kur", "ana ekrana ekle", "bildirim gelmiyor", "hatirlatici", "uygulama kurulumu", "kurulum", "pwa kurulumu", "telefona kurulum", "telefona kur", "kurarim", "ana ekranda", "hatirlatma gelmiyor", "hatırlatma gelmiyor", "bildirim gelmiyor" ],
     cevap: "Vakit hatırlatmaları için uygulamayı cihaza kurun: sağ üst köşedeki 📲 butonuyla PWA kurulumu yapın; kurulumdan sonra günlük hatırlatmalar otomatik gelir. Kuruluysa cihaz ayarlarından Nûr Stüdyo bildirimlerini açın.",
   },
   {
@@ -175,7 +197,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "iade",
-    anahtar: ["iade", "refund", "para geri", "odeme sorun", "kart cekildi", "çift odemе", "çift odeme", "fatura"],
+    anahtar: ["iade", "iadesi", "iadesini", "refund", "para geri", "odeme sorun", "kart cekildi", "çift odemе", "çift odeme", "fatura"],
     cevap: "İade şartları: tek seferlik paket hiç üretim yapılmadan kullanılmadıysa satın almadan itibaren 7 gün içinde 📧 destek@nurstudyo.com'a ödeme kanıtını ekleyerek yazın (en geç 2 iş günü). Üretim başlamış paketlerde iade yok. Aylık üyelik dönem sonunda pasif olur — yenileme zorunlu değil.",
   },
   {
@@ -190,7 +212,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "kurani-oku",
-    anahtar: ["kuran oku", "sure oku", "dinle", "radyo", "tilavet dinle", "ayet dinle", "kalici", "hatim"],
+    anahtar: ["kuran oku", "sure oku", "okurum", "dinle", "radyo", "tilavet dinle", "ayet dinle", "kalici", "hatim", "her sureyi oku", "sureyi ac", "adin", "sure nereden", "sureyi sec", "sure okuyorum", "kuran okurum"],
     cevap: "Kur'an bölümü: sağ üstteki '📖 Kur'an' butonu — sure okuma, dinleme (40+ kâri) ve ezber testi modları içerir. '🔊 Seslendirme' ile seçili ayeti 5 dilde anlatım alıntılarıyla dinleyebilirsiniz. Radyo ihtiyacına canlı tilavet istasyonu hazırdır.",
   },
   {
@@ -205,7 +227,7 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
   {
     id: "gizlilik",
-    anahtar: ["gizlilik", "kayit tutuyor", "verimi sakliyor", "cocuk", "cocuk guvenliği", "cocuk guvenligi", "güvenli mi", "guvenli mi", "verilerim saklanir", "verilerim saklanır", "videolarim saklanir", "videolarım saklanır", "kopyası tutulur" ],
+    anahtar: ["gizlilik", "kayit tutuyor", "verimi sakliyor", "cocuk", "cocuk guvenliği", "cocuk guvenligi", "güvenli mi", "guvenli mi", "verilerim", "guvende", "güvende", "verilerim saklanir", "verilerim saklanır", "videolarim saklanir", "videolarım saklanır", "kopyası tutulur" ],
     cevap: "Gizlilik: üretimler cihazında yapılır, sunucuda video kopyası tutulmaz; e-posta dışında (giriş için) kişisel bilgi istenmez. Tam metin: alt bardaki '📜 Yasal/Gizlilik' bağlantılarındadır. İçerik Kur'an-meal temellidir — topluluk ilkelerine aykırı paylaşımlar engellenir.",
   },
   {
@@ -316,9 +338,19 @@ export function asistanCevap(soru: string): AsistanSonuc {
   // ★ ÇOĞUL EŞLEME (19.10 fix v2): "Jetonlar nasıl gelir?" → "jetonlar"
   //   kelimesi "jeton" anahtarıyla eşleşmiyordu → bilmiyorum cevabı. Tek-kelime
   //   anahtarla çoğul biçimler (key+lar/ler) de denenir — substring riski yok.
+  // ★ KÖK EŞLEME (21.10, kullanıcı: "soru senin çiplerinden çıkıyor, cevap
+  //   bilemiyor bu ne alaka"): çipler "paylaşırım/indirebilirim/dinlerim" gibi
+  //   EK理解和 biçimdiler; anahtar kelimesi eşleşmezdi. Artık 5+ harf kök
+  //   anahtar kelime Başına eşleşir ("indir"→"indirebilirim" ✓, "paylas"→
+  //   "paylasirim" ✓, "dinle"→"dinlerim" ✓). 4- ve al takılı hiç eşleşmez.
   const kelimeler = new Set(n.split(", "));
-  const kelimeVardimi = (nk: string): boolean =>
-    kelimeler.has(nk) || kelimeler.has(nk + "lar") || kelimeler.has(nk + "ler");
+  const kelimeVardimi = (nk: string): boolean => {
+    if (kelimeler.has(nk) || kelimeler.has(nk + "lar") || kelimeler.has(nk + "ler")) return true;
+    if (nk.length >= 5) {
+      for (const w of kelimeler) if (w.startsWith(nk) && w.length >= nk.length) return true;
+    }
+    return false;
+  };
   for (const r of ASISTAN_RULES) {
     const skor = r.anahtar.reduce((s, a) => {
       const nk = asistanNormallestir(a);
@@ -332,7 +364,7 @@ export function asistanCevap(soru: string): AsistanSonuc {
     // ★ YÖNLENDİRME BUTONU (19.10): hangi kurala hangi buton?
     //   uyelik → satın alma paneli · hak-bitti/iade/hediye-kodu → cüzdan · iletişim/hesap-sil/üretmiyor → mailto
     const AKSIYON_MAP: Record<string, AsistanSonuc["aksiyon"]> = {
-      uyelik: "uyelik", "hak-bitti": "cuzdan", iade: "cuzdan", "hediye-kodu": "cuzdan",
+      uyelik: "uyelik", "pro-paket": "uyelik", "elit-paket": "uyelik", "hak-bitti": "cuzdan", iade: "cuzdan", "hediye-kodu": "cuzdan",
       iletisim: "mail", "hesap-sil": "mail", uretmiyor: "mail",
     };
     const aksiyon = AKSIYON_MAP[enIyiRule.id];
