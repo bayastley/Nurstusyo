@@ -168,7 +168,7 @@ function limitAsildi(req: VercelRequest, maks: number): boolean {
 
 // ── TR kütüphanesi (★ 20.10 TUR-6: TS VERİ MODÜLÜ) ──
 //   TÜM canlı 500/503 zincirinin KÖK ÇÖZÜMÜ: JSON-import attribute sorunu
-//   (ERR_IMPORT_ATTRIBUTE_MISSING), fs/__dirname includeFiles balayırları ve
+//   (ERR_IMPORT_ATTRIBUTE_MISSING), fs'ile includeFiles yapılandırma derdi ve
 //   esm-tarama dunder yasak hepsi BİRDEN biter — 611 ayet düz TS dizi modülü
 //   (ayetVeri.ts) esbuild'le sorunsuz bundle olur. Top-level import geri
 //   geldi AMA artık JS değil TS-veri; Vercel @vercel/node bunu sorunsuz taşır.

@@ -129,7 +129,12 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   //  parçalarını okuyordu. Yeni davranış: geçişte ses anında durur, kuyruk
   //  mod-başına arşivlenir/geri yüklenir — her sekme kendi işinde kalır, bölüm
   //  kaybolmaz. En baştaki "kuyruk (ayet↔metin karışmaz)" sözü artık kodda da.
-  const kuyrukArsiv = React.useRef<Partial<Record<"ayet" | "metin", { liste: KuyrukOgesi[]; sec: number; bolum: number }>>>({});
+  // ★ esm-tarama uyumu: Record generic'i JSX taranıcıya <Record/> sanılıyor —
+  //   ayni yapıyı düz obje tipli yaz (ayet/metin anahtarları tip-güvenceli).
+  const kuyrukArsiv = React.useRef<{
+    ayet?: { liste: KuyrukOgesi[]; sec: number; bolum: number };
+    metin?: { liste: KuyrukOgesi[]; sec: number; bolum: number };
+  }>({});
   const modDegistir = (m: "ayet" | "metin") => {
     if (m === mod) return;
     // 1) SES: ayet oynatma zinciri (bolumDinle / SESLENDİR döngüsü) anında kesilsin
