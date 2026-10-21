@@ -601,18 +601,27 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     yaz(`🗑 ${n} bölüm komple temizlendi — canlı önizlemeye dönüldü`);
   };
 
-  // ★ 21.10 İNDİR: kuyruk barrışça çalma zincirini DURDUR (sonu okunur bir dosya
-  //  istiyor) — parça parça sunucudan al tektele birleştir kaydet (seslendirmeIndir).
+  // ★ 21.10 İNDİR: kuyruk doluyken çalma zincirini DURDUR (sonu okunur bir dosya
+  //  istiyor) — parça parça sunucudan al tek parça birleştir kaydet (seslendirmeIndir).
+  // ★ Sure/Ayet sekmesinde de (kullanıcı: "sure ayette neden indir koymadın kanka"):
+  //  kuyruk boşsa mevcut seçim indirilir — ayet modunda seçili ayet, metin
+  //  modunda yazİlmiş metnin plan parsaları. SESLENDİR'in tamListe mantığı aynısı.
+  const indirHazir = !!kuyruk.length || (mod === "ayet" ? !!mevcutAyet : !!metin.trim());
   const indir = React.useCallback(async () => {
-    if (!kuyruk.length) { yaz("İndirilecek bölüm yok — önce metin yazıp bölüm oluştur", "hata"); return; }
     if (indiriyor) return;
+    const liste: { metin: string; kat?: string }[] = kuyruk.length
+      ? kuyruk
+      : mod === "ayet" && mevcutAyet
+        ? [ayetKuyrukOg(mevcutAyet)]
+        : plan.map((p) => ({ metin: p.m, kat: p.kat }));
+    if (!liste.length) { yaz("İndirilecek şey yok — önce ayet seç ya da metin yaz", "hata"); return; }
     setIndiriyor(true);
     // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın
     if (runningRef.current) durdur();
     try {
-      await kuyrukIndir(kuyruk, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"));
+      await kuyrukIndir(liste, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"));
     } finally { setIndiriyor(false); }
-  }, [kuyruk, indiriyor, indirUrlAl, durdur, yaz]);
+  }, [kuyruk, mod, mevcutAyet, plan, indiriyor, indirUrlAl, durdur, yaz]);
 
   // ── önizleme öğesi — kuyruk doluysa onu, değilse sekmenin canlı seçimini göster ──
   const onizOg: KuyrukOgesi | null = (() => {
@@ -694,7 +703,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               bolumSayi={bolumSayi} bolumEkle={bolumEkle} bolumCikar={bolumCikar} bolumDinle={bolumDinle}
               kuyruk={kuyruk} kuyrukSec={kuyrukSec} setKuyrukSec={setKuyrukSec} ogCikar={ogCikar} kuyrukTemizle={kuyrukTemizle}
               akilliAta={akilliAta}
-              indir={indir} indiriyor={indiriyor}
+              indir={indir} indiriyor={indiriyor} indirHazir={indirHazir}
               seslendir={seslendir} durdur={durdur}
               durum={durum} durumTip={durumTip}
             />

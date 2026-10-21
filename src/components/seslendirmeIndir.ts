@@ -6,7 +6,8 @@
 // WAV (PCM 16-bit) yazımı ile saf tarayıcı çözümü: TTS üretim
 // hattına hiç dokunmaz, çalma akışını etkilemez.
 // ═══════════════════════════════════════════════════════════════
-import type { KuyrukOgesi } from "./seslendirmeSabitler";
+// ★ 21.10 Sure/Ayet kampanyası: kuyruk boşken mevcut seçim de indirilebilsin —
+// yalnızca metin gerekir, tip/etiket zorunlu değildir.
 
 /** Bölümler arası sesli nefes payı (sn) — motor çalarken de nefes bırakır. */
 const NEFES_SN = 0.35;
@@ -59,7 +60,7 @@ export type IndirYaz = (mesaj: string) => void;
  * (data: veya /api/nur-tts) — modal'daki urlAl ile aynı kaynak.
  */
 export async function kuyrukIndir(
-  kuyruk: KuyrukOgesi[],
+  kuyruk: readonly { metin: string; kat?: string }[],
   urlAl: (m: string) => Promise<string>,
   yaz: IndirYaz,
 ): Promise<void> {
