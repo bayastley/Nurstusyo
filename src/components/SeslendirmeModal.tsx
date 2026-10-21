@@ -609,7 +609,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   const indirHazir = !!kuyruk.length || (mod === "ayet" ? !!mevcutAyet : !!metin.trim());
   const indir = React.useCallback(async () => {
     if (indiriyor) return;
-    const liste: { metin: string; kat?: string }[] = kuyruk.length
+    const liste: { metin: string; kat?: string; etiket?: string }[] = kuyruk.length
       ? kuyruk
       : mod === "ayet" && mevcutAyet
         ? [ayetKuyrukOg(mevcutAyet)]
@@ -619,9 +619,11 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın
     if (runningRef.current) durdur();
     try {
-      await kuyrukIndir(liste, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"));
+      // ★ İNDİRME V2: dosya artık atmosfer görseli + sesi birleştiren TAM VİDEO —
+      //   seçili arka plan (bg) kayda verilir; videosu yüklenmezse poster/gradyan dener.
+      await kuyrukIndir(liste, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"), bg);
     } finally { setIndiriyor(false); }
-  }, [kuyruk, mod, mevcutAyet, plan, indiriyor, indirUrlAl, durdur, yaz]);
+  }, [kuyruk, mod, mevcutAyet, plan, indiriyor, indirUrlAl, durdur, yaz, bg]);
 
   // ── önizleme öğesi — kuyruk doluysa onu, değilse sekmenin canlı seçimini göster ──
   const onizOg: KuyrukOgesi | null = (() => {
