@@ -23,6 +23,45 @@ import { TIER_PRICE_TRY } from "../tier";
 const TIER_AYLIK = TIER_PRICE_TRY;
 import { PremiumKotaGostergesi, PremiumAlinanPaketler, PremiumSozlesme } from "./premiumBolumler";
 
+// ★ AC/KAPA PANOSU (22.10): plan kartındaki "nelere sahiptir" listesi karışmasın —
+//   küçük satır sayısı önizle (3) gösterilir, "Neler dahil?" satırına tıklayınca
+//   tamamı açılır / tekrar kapanır. NÛR ASİSTAN da aynı listeyi sözlü anlatır.
+const PlanOzellikAcKapa: React.FC<{
+  features: string[];
+  dil: string;
+  accent: string;
+}> = ({ features, dil, accent }) => {
+  const t = (k: string): string => translate(dil, k);
+  const [acik, setAcik] = useState(false);
+  const ONIZLEME = 3;
+  return (
+    <>
+      <ul className="mt-4 space-y-1.5">
+        {(acik ? features : features.slice(0, ONIZLEME)).map((f) => (
+          <li key={f} className="flex items-start gap-1.5 text-[10.5px] leading-snug text-white/70">
+            <Check size={11} className="mt-0.5 shrink-0" style={{ color: accent }} />
+            {f}
+          </li>
+        ))}
+      </ul>
+      {features.length > ONIZLEME && (
+        <button
+          type="button"
+          onClick={() => setAcik((v) => !v)}
+          aria-expanded={acik}
+          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[.04] py-1.5 text-[9.5px] font-black transition hover:border-white/25 hover:bg-white/10"
+          style={{ color: accent }}
+        >
+          <Sparkles size={10} />
+          {t("planNelerDahil")}
+          <span className="text-white/35">({features.length})</span>
+          <span aria-hidden className="text-white/50">{acik ? "▴" : "▾"}</span>
+        </button>
+      )}
+    </>
+  );
+};
+
 
 export const PremiumModal: React.FC<PremiumModalProps> = ({
   open = true,
@@ -32,6 +71,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
   notify,
   initialTab,
   premiumTab,
+  hedefTier,
   currentTier,
   onClose,
   onPurchase,
@@ -73,6 +113,24 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
       .catch(() => undefined);
     return () => { canli = false; };
   }, [open]);
+
+  // ★ 22.10 HEDEF PLAN VURGUSU (kullanıcı emri: "pro kişi elit özelliğe tıklayınca
+  //   onu direkt elit pakete yönlendir") — openPremium("uyelik", "elit") ile gelen
+  //   hedefTier'a göre ilgili plan kartı modal açıldığında EKRANA KAYDIRILIR ve
+  //   2.6 sn altın parlaklık ile vurgulanır. Free→pro tıklamaları da aynı kapıdan
+  //   geçer (hedef "pro") — sistem zaten aynı.
+  const hedefRef = useRef<HTMLDivElement | null>(null);
+  const [hedefParla, setHedefParla] = useState(false);
+  useEffect(() => {
+    if (!open || !hedefTier) { setHedefParla(false); return; }
+    setTab((t) => (t === "uyelik" ? t : "uyelik"));
+    const id = window.setTimeout(() => {
+      hedefRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHedefParla(true);
+      window.setTimeout(() => setHedefParla(false), 2600);
+    }, 180);
+    return () => window.clearTimeout(id);
+  }, [hedefTier, open]);
   const activeTier: Tier = tier ?? currentTier ?? "free";
 
   // ★ Abonelik kalan gün sayısı
@@ -275,14 +333,11 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                   <span className="mb-1 text-[10px] font-bold text-white/35">{t("fiyatHerZaman")}</span>
                 </div>
 
-                <ul className="mt-4 space-y-1.5">
-                  {[0, 1, 2, 3, 4, 5, 6].map((i) => t(`planUcretsizOzellik${i}`)).map((f) => (
-                    <li key={f} className="flex items-start gap-1.5 text-[10.5px] leading-snug text-white/70">
-                      <Check size={11} className="mt-0.5 shrink-0 text-emerald-300" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+                <PlanOzellikAcKapa
+                  features={[0, 1, 2, 3, 4, 5, 6].map((i) => t(`planUcretsizOzellik${i}`))}
+                  dil={dil}
+                  accent="#34d399"
+                />
 
                 <button
                   type="button"
@@ -309,13 +364,19 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                 return (
                   <div
                     key={code}
+                    ref={hedefTier && hedefTier === (isElit ? "elit" : "pro") ? hedefRef : undefined}
                     className="relative overflow-hidden rounded-2xl p-5 transition-transform hover:scale-[1.015]"
                     style={{
                       background: isElit
                         ? "linear-gradient(160deg, rgba(215,170,82,.16), rgba(139,105,20,.06))"
                         : "linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.02))",
                       border: isElit ? "1.5px solid rgba(232,212,138,.55)" : "1px solid rgba(255,255,255,.1)",
-                      boxShadow: isElit ? "0 12px 40px rgba(215,170,82,.18)" : undefined,
+                      boxShadow:
+                        hedefTier === (isElit ? "elit" : "pro") && hedefParla
+                          ? "0 0 0 4px rgba(215,170,82,.35), 0 12px 40px rgba(215,170,82,.45)"
+                          : isElit
+                            ? "0 12px 40px rgba(215,170,82,.18)"
+                            : undefined,
                     }}
                   >
                     {isElit && (
@@ -356,14 +417,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
                       </p>
                     )}
 
-                    <ul className="mt-4 space-y-1.5">
-                      {features.map((f, fi) => (
-                        <li key={f} className="flex items-start gap-1.5 text-[10.5px] leading-snug text-white/70">
-                          <Check size={11} className="mt-0.5 shrink-0" style={{ color: isElit ? "#f5dda6" : "#34d399" }} />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
+                    <PlanOzellikAcKapa features={features} dil={dil} accent={isElit ? "#f5dda6" : "#34d399"} />
 
                     {/* Günlük Kota Gridi */}
                     <div className="mt-4 grid grid-cols-3 gap-2">

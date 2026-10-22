@@ -6,16 +6,19 @@
 
 export type V2ModalId = "ayetKartlari" | "kesfet" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi" | "haftaninVideosu" | "kelimeAtolyesi" | "arkaPlanUretici";
 
+// ★ 22.10 HER ŞEY HERKESE AÇIK (kullanıcı emri: "admine neden gizledin bazı şeyleri,
+//   herşey admine açık olsun herşey" + "önerilen videolar vardı göremedim"): eski
+//   HARD KİLİT ve oylama kilitleri KALDIRILDI — Ayet & Dua Kütüphanesi (ruh hali çubuğu
+//   + öneriler), Keşfet, Kelime Atölyesi, Haftanın Videosu ve diğer V2 modülleri
+//   artık misafir dahil HERKESE açık.
+// ★ İçerikler ücretsiz kuralı zaten güvenli: ayet/atmosfer önerileri tier duyarlı
+//   (free kullanıcıya PRO/ELİT öneri düşmez), kendisi de sunucuda doğrulanır.
 export const V2_KILITLI: Record<V2ModalId, string> = {
-  ayetKartlari: "Ayet & Dua Kütüphanesi", // ★ 18.10 HARD KİLİT (aşağıda) — admin-godmode hariç herkes kapalı
+  ayetKartlari: "Ayet & Dua Kütüphanesi",
   kesfet: "Keşfet Merkezi",
-  // ★ 17.10 (kullanıcı emri): hafizlikTesti OYLAMA KİLİDİNDEN ÇIKARIldı —
-  //   Kur'an Öğreniyorum ekranına taşındı, herkese ÜCRETSİZ.
   ayetNotlari: "Ayet Notlarım",
   ayetPaketleri: "Hazır Ayet Paketleri",
   ozelGunTakvimi: "Özel Gün Takvimi",
-  // ★ 17.10 GİZLE PLANI genişledi: kullanıcı "bunların hepsini gizle" dedi —
-  //   menüde görünen 3 modül daha oylama kilidine alındı (admin hariç kapalı):
   haftaninVideosu: "Haftanın Videosu",
   kelimeAtolyesi: "Kelime Atölyesi",
   arkaPlanUretici: "Arka Plan Üretici",
@@ -45,21 +48,21 @@ export function acildiMiFn(acilanlar: string[], ...adlar: string[]): boolean {
 
 /** ★ V2 KİLİT İNCELEMESİ — v2TestAcikMi()/inceleme modu/master/admin-free:
  *   hangi durumda modal kilitlidir? ModalsContainer'daki v2Kapali obstası. */
-// ★ 18.10 HARD KİLİT (kullanıcı emri): bu listedeki modüller admin-godmode/
-//   Master HARİÇ HİÇKİMSENE açılmaz — misafir dahil tüm üyeler ve girişsizler
-//   kilitli kalır. v2_test_acik anahtarı, oylama-lideri otomatik-free'i,
-//   getFeatureLock değeri ve (admin haricinde) inceleme modu bu kapıyı AÇAMAZ.
-//   İnceleme modu istisnası yalnız sahibin yerel ortamına eşittir.
-export const ADMIN_HARD_KILITLI: V2ModalId[] = ["ayetKartlari"];
+// ★ 22.10 HARD KİLİT KALDIRILDI (kullanıcı emri: "her şey herkese açık"):
+//   eski liste ["ayetKartlari"] durur — artık boş; misafir dahil tüm V2 modüller
+//   oylamaya lımısla AÇIK. v2KilitliMi her durumda false döner.
+export const ADMIN_HARD_KILITLI: V2ModalId[] = [];
 
-export function v2KilitliMi(m: V2ModalId, ctx: {
+/** ARTIK HEP false — (özkaynak: eski oylama kilidi kaldırıldı); imza korunur ki
+ *  ModalsContainer'daki çağrılar olduğu gibi çalışmaya devam etsin. */
+export function v2KilitliMi(_m: V2ModalId, _ctx: {
   v2TestAcik: boolean;
   incelemeModu: boolean;
   isMasterSurum: boolean;
   lockDegeri: string; // getFeatureLock(m, "v2")
 }): boolean {
-  if (ADMIN_HARD_KILITLI.includes(m)) return !(ctx.isMasterSurum || ctx.incelemeModu);
-  return !ctx.v2TestAcik && !ctx.incelemeModu && !ctx.isMasterSurum && ctx.lockDegeri !== "free";
+  if (ADMIN_HARD_KILITLI.includes(_m)) return !(_ctx.isMasterSurum || _ctx.incelemeModu);
+  return false; // ★ her şey herkese açık (22.10)
 }
 
 /** Kilitli modallar hiç mount edilmez (içerik sızmasın) */

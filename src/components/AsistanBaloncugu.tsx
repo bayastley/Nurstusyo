@@ -14,7 +14,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useEffect, useRef, useState } from "react";
-import { asistanCevap, asistanRastgeleCipler, type AsistanSonuc } from "../asistan/asistanCevap";
+import { asistanCevap, asistanRastgeleCipler, type AsistanSonuc, type AsistanSeviye } from "../asistan/asistanCevap";
 
 /** ★ 19.10: PremiumModal + mailto açılış köprüsü — StudioApp bu prop'ları doldurur */
 interface AsistanBaloncuguProps {
@@ -22,6 +22,9 @@ interface AsistanBaloncuguProps {
   openPremiumUyelik: () => void;
   /** cüzdan/paket panelini (PremiumModal, jeton tab'i) açar */
   openPremiumCuzdan: () => void;
+  /** ★ 22.10: üyenin plan seviyesi — "nelere sahibim" satış hat ifadesi
+   *  (free→Pro öner, pro→Elit öner). Yoksa "free" varsayılır. */
+  seviye?: AsistanSeviye;
 }
 
 interface Mesaj {
@@ -34,7 +37,7 @@ interface Mesaj {
 
 const ACIK_KEY = "nur_asistan_okundu"; // balon rozetini susturmak için
 
-export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumUyelik, openPremiumCuzdan }) => {
+export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumUyelik, openPremiumCuzdan, seviye = "free" }) => {
   const [acik, setAcik] = useState(false);
   const [rozet, setRozet] = useState(false);
   const [giris, setGiris] = useState("");
@@ -65,7 +68,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
     const temiz = metin.trim();
     if (!temiz || temiz.length > 300) return; // uzun spam-pasta kalsın
     let sonuc: AsistanSonuc;
-    try { sonuc = asistanCevap(temiz); } catch { return; } // motor hata etmesin — sessiz yut
+    try { sonuc = asistanCevap(temiz, seviye); } catch { return; } // motor hata etmesin — sessiz yut
     setMesajlar((onceki) => [
       ...onceki.slice(-40), // pencere şişmesin
       { kim: "kullanici", metin: temiz },

@@ -301,7 +301,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           <Segmented
             value={aspect}
             onChange={setAspect}
-            isLocked={(id) => id !== "9:16" && !tierAtLeast(accessTier, "pro")}
+            // ★ 22.10 (kullanıcı emri): 9:16 / 1:1 / 16:9 FREE — üye olmayan da format
+            //   değiştirebilsin (önizleme metni kendi içinde düzelsin). Yalnız 4:5 PRO'da.
+            isLocked={(id) => id === "4:5" && !tierAtLeast(accessTier, "pro")}
             onLocked={() => openPremium("uyelik")}
             lockLabel={() => t("dafProUyelik")}
             items={ASPECTS}
@@ -324,7 +326,8 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           <div className="mt-2 flex gap-1">
             {(["9:16", "1:1", "16:9", "4:5"] as Aspect[]).map((item) => {
               const active = batchFormats.includes(item);
-              const locked = item !== "9:16" && !tierAtLeast(accessTier, "pro");
+              // ★ 22.10: tek format seçimi FREE (yalnız 4:5 PRO); çoklu işaretleme yine ELİT
+              const locked = item === "4:5" && !tierAtLeast(accessTier, "pro");
               return (
                 <button
                   key={item}

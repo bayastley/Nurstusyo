@@ -15,7 +15,23 @@
 //   3. Fail-closed: hiçbir kural eşleşmezse bilmiyorum + iletişim yönlendirme.
 //   4. Normalleştirme sadece KARŞILAŞTIRMA için; cevaplar sabit metindir —
 //      kullanıcının yazdığı hiçbir metin cevaba yansımaz (injection yok).
+//
+// ★ SATIŞ HATTE (kullanıcı emri, 22.10): "nelere sahibim" sorusu seviyeye göre
+//   cevaplanır — FREE sorarsa plandakiler + PRO'NU önerir ("daha kapsamlı"),
+//   PRO sorarsa plandakiler + ELİT'i dikkat çekerek önerir. ELİT sorarsa zirve
+//   listesi gelir, upsell YOK. Admin/kişisel veri hâlâ her koşulda KAPALI:
+//   sahiplik cevabı planın GENEL içeriğidir (kota, abonelik durumu, admin
+//   listesi gibi kişisel/veren veri asla girmez).
 // ════════════════════════════════════════════════════════
+
+// ★ 22.10 MEGA BİLGİ TABANI — asistanBilgi.ts'ten ek kural havuzu import edilir:
+//   aynı kural motoruyla skorlanır, güvenlik kapısı ÖNCE çalışmaya devam eder.
+import { ASISTAN_BILGI_KURALLARI } from "./asistanBilgi";
+
+/** Kullanıcının plan seviyesi — AsistanBaloncugu StudioApp'ten `tier`'ı taşır.
+ *  ★ Sadece planİN GENEL ağırlığını belirler; kişisel veri (kalan hak, bakiye,
+ *  abonelik durumu, ban) asisten cevaplarına ZATEN HİÇBİR koşulda giremez. */
+export type AsistanSeviye = "free" | "pro" | "elit";
 
 export interface AsistanRule {
   /** kural kimliği (test için) */
@@ -60,8 +76,16 @@ export function asistanNormallestir(s: string): string {
     .replace(/ü/g, "u").replace(/Ü/g, "u")
     .replace(/ö/g, "o").replace(/Ö/g, "o")
     .replace(/ç/g, "c").replace(/Ç/g, "c")
-    .replace(/[^\p{L}\p{N}\s]/gu, ", ")
-    .replace(/\s+/g, ", ")
+    // ★ 22.10 ŞAPKA HARFLERİ: "kâri"  ilk anahtarlarla eşişiyordu (â→a) — kâri/karî/îdare şapkalı yazımlar düs uniform:
+    .replace(/â/g, "a").replace(/Â/g, "A")
+    .replace(/î/g, "i").replace(/Î/g, "I")
+    .replace(/û/g, "u").replace(/Û/g, "U")
+    // ★ 22.10 APOSTROF SİLİMİ — "Kur'an" karakter-punc Run'te "kur, an" bölünüyordu; silini → "kuran" bir kelime:
+    .replace(/[\u2019'`\u00B4]/g, "")
+    // ★ 22.10 RUN-SEKME (canlı-test fix): artı işareti遮めし字集、"nasil?" → "nasil," gibi DİP-bileşik virgül bırakıyordu
+    //   → kelime-setine "nasil," geçiyor ve word-match KAYBEDİYORDU. Tümú işaret/boşluk RUN'ı TEK ", " olur:
+    .replace(/[^\p{L}\p{N}]+/gu, ", ")
+    .replace(/(?:,\s*)+$/, "")
     .trim();
 }
 
@@ -107,18 +131,27 @@ export const ASISTAN_RULES: AsistanRule[] = [
     //     "Elit üyelik avantajları?" genel uyelik yerine tam Elit listesine düşer.
     id: "pro-paket",
     anahtar: ["pro paket", "pro getirir", "pro getirdiği", "pro avantaj", "pro fark", "pro neler", "pro içerir", "nen var proda", "proda ne var", "nur pro", "proya", "pro abone"],
-    cevap: "NÛR PRO paketinin kazandırdıkları 💎 — 1) Üretim kotası: günde 8 kısa + 3 uzun video (600 sn) üretme hakkı (Free: 3 kısa). 2) 25 kâri sesi — 10 ücretsiz kârinin üstüne 15 PRO-özel kâri. 3) 60 tema erişimi (51 PRO + 9 ücretsiz tema). 4) Sinematik filtreler: videoya sinematik atmosfer klip havuzu ve kategori filtreleri. 5) AI başlık ve açıklama varyasyonları: metni/başlığı tek tıkla yenile, varyasyon üret. 6) Uzun video modu + 16:9 yatay ekran formatı açılır. Aylık ya da yıllık (%10 indirim) seçeneklerle satın alım panelinden hemen açılır — aşağıdaki 💎 butonu. 🌙",
+    cevap: "NÛR PRO paketinin kazandırdıkları 💎 — 1) Üretim kotası: günde 8 kısa + 3 uzun video (600 sn) üretme hakkı (Free: 3 kısa). 2) 25 kâri sesi — 10 ücretsiz kârinin üstüne 15 PRO-özel kâri. 3) 60 tema erişimi (51 PRO + 9 ücretsiz tema). 4) Sinematik filtreler: videoya sinematik atmosfer klip havuzu ve kategori filtreleri. 5) AI başlık ve açıklama varyasyonları: metni/başlığı tek tıkla yenile, varyasyon üret. 6) Uzun video modu + 16:9 yatay ekran formatı açılır. 7) Etiketsiz üretim (22.10): videonda nurstudyo.com imzası ÇIKMAZ — Ücretsiz'in bir üst avantajı. Aylık ya da yıllık (%10 indirim) seçeneklerle satın alım panelinden hemen açılır — aşağıdaki 💎 butonu. 🌙",
   },
   {
     // ★ 21.10 ELİT LİSTESİ — ELIT_FEATURES birebir (PremiumModal ile aynı kaynaktan)
     id: "elit-paket",
     anahtar: ["elit paket", "elit getirir", "elit avantaj", "elit fark", "elit neler", "elit içerir", "elit what", "nur elit", "en üst seviye", "elit", "elit uyelik", "elit ne getirir", "elit ne", "elitde", "elit>Welcome"],
-    cevap: "NÛR ELİT paketinin kazandırdıkları 👑 — 1) Üretim kotası: günde 15 kısa + 5 uzun video (600 sn) + 1 tam sure sürümü. 2) Tüm 45 kâri sesi — hepsi açık. 3) Tüm 106 tema. 4) Filigransız 1080p üretim — köşedeki imza tamamen kalkar. 5) AI hashtag paketleri. 6) Gelişmiş sosyal paylaşım araçları. 7) Tasarım stüdyosu + kendi marka imzân (Marka İmza). Üstelik toplu üretim (birden fazla format bir seferde) ELİT'tedir. Aşağıdaki 💎 butonundan plan paneline bakabilirsin. 🌙",
+    cevap: "NÛR ELİT paketinin kazandırdıkları 👑 — 1) Üretim kotası: günde 15 kısa + 5 uzun video (600 sn) + 1 tam sure sürümü. 2) Tüm 45 kâri sesi — hepsi açık. 3) Tüm 106 tema. 4) Filigransız 1080p + KENDİ marka etiketin — videonu kendi imzânla paylaşırsın (Marka İmza). 5) Açıklama üretimi (AI varyasyonları). 6) AI hashtag paketleri. 7) Gelişmiş sosyal paylaşım araçları. 8) Tasarım stüdyosu + kendi imzân. 9) Seslendirme (NÛR SES içerikleri). 10) Kendi sesinle üretim. 11) Haftanın Videosu vitrine ekleme. 12) Akıllı AI arka plan seçimi. Üstelik toplu üretim (birden fazla format bir seferde) ELİT'tedir. Aşağıdaki 💎 butonundan plan paneline bakabilirsin. 🌙",
   },
   {
     id: "uyelik",
-    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit ne kim", "fiyat", "fiyatlari", "parali", "ücret", "abone ol", "abonelik", "pro ol", "yükselt", "uyelik nasil", "satın al", "ode", "uyelik seviye", "seviyeleri nedir"],
-    cevap: "Üyelik seviyeleri: Free (temel), Pro ve Elit. Üst seviyeler daha yüksek üretim hakkı, filigransız video, renk çubuğu ve premium atmosfer kategorileri açar. Fiyatlar ve avantajlar, aşağıdaki '💎 Üyelik Planlarını Gör' butonuyla açılan satın alma panelinde listelenir.",
+    //   ★ 22.10: "yıllık/aylık üyelik alalım" sorusuz kalmasın — anahtarlar hem
+    //   üyelik kuralına, hem ayrı kısa verilen yıllık tanımlı kurala geçirildi.
+    anahtar: ["uyelik", "uye ol", "abone", "premium", "pro ne", "elit ne kim", "fiyat", "fiyatlari", "parali", "ücret", "abone ol", "abonelik", "pro ol", "yükselt", "uyelik nasil", "satın al", "ode", "uyelik seviye", "seviyeleri nedir", "yıllık", "yillik", "yıllık satın", "aylık", "aylik", "aylık satın"],
+    cevap: "Üyelik seviyeleri: Free (temel), Pro ve Elit. Üst seviyeler daha yüksek üretim hakkı, etiketsiz üretim, renk çubuğu ve premium atmosfer kategorileri açar (22.10 kuralı: Ücretsiz = nurstudyo.com etiketi, Pro = etiketsiz, Elit = kendi etiketin). AYLIK ya da YILLIK (%10 indirimli) iki ödeme planı da satın alma panelinde durur — aşağıdaki '💎 Üyelik Planlarını Gör' butonuyla aç, PRO/ELİT kartında periyot seçicisinden 'Yıllık'ı seç.",
+  },
+  {
+    id: "yillik-uyelik",
+    // ★ 22.10: sadece yıllık/aylık ödeme periyodu sorusu — ayrı kısa cevap (vurgu: yıllıkta %10 indirim).
+    //   Çok-kelimeli anahtarlar substring olarak aranır: "yıllık üyelik nasıl alınır?" → "yıllık üyelik" ✓
+    anahtar: ["yıllık üyelik", "yıllık üye", "yıllık paket", "yıllık abonelik", "yıllık satın al", "yıllık alma", "yıllık nasıl", "yıllık plan", "yıllık indirim", "yıllık ne kadar", "yıllık alım", "yıllık alınır", "yıllık mi aylık mi", "aylık mi yıllık mi", "yıllık kayıt"],
+    cevap: "Yıllık üyelik 💎 — tüm planlarda (Pro/Elit) aylıkla aynı avantajlar, YILLIK ödemede %10 indirimli fiyat. Satın alma panelinde (aşağıdaki 💎 butonu) PRO veya ELİT kartını seçip periyot seçicisinden 'Yıllık'a bak; fiyat yıllık toplam olarak güncellenir ve ödemeyi kartla güvenle yapabilirsin. İptal/yenileme istemezsen dönem sonunda pasife döner — zorunlu yenileme yok. 🌙",
   },
   {
     id: "calismiyor",
@@ -276,7 +309,8 @@ export const ASISTAN_RULES: AsistanRule[] = [
   {
     id: "filigran",
     anahtar: ["filigran", "watermark", "logo yaziyor", "marka yazisi", "video üstünde yazı", "video altındaki yazı"],
-    cevap: "Filigran: Free ve Pro üretimlerinde köşede küçük Nûr Stüdyo imzası görünür — ELİT üyelikte imza tamamen kaldırılır ve istersen kendi marka imzanı ekleyebilirsin (Marka İmza özelliği). 💎 Üyelik Planları'ndan yükseltebilirsin.",
+    // ★ 22.10 ETİKET KURALI (kullanıcı emri): FREE = etiket zorunlu · PRO = etiketsiz · ELİT = kendi etiketin
+    cevap: "Etiket kuralı: Ücretsiz üretimlerde köşede küçük 'nurstudyo.com' imzası görünür ve kaldırılamaz. PRO'da çıktın tamamen etiketsiz çıkar. ELİT'te üstelik KENDİ marka etiketini/imzâni ekleyebilirsin (Marka İmza özelliği). 💎 Üyelik Planları'ndan yükseltebilirsin.",
   },
   {
     id: "uyari-kayit",
@@ -295,6 +329,47 @@ export const ASISTAN_RULES: AsistanRule[] = [
   },
 ];
 
+/** ★ 22.10 SAHIP OLMA TESBİT — "nelere sahibim / sahip olduklarım" sorularının
+ *  kavrayıcıları. Güvenlik kapısından ÖNCE ama kişisel-markalardan SONRA bakılır:
+ *  "üyeliğimde nelere sahibim" → plan listesi (meşru), "kotam ne, nelere sahibim"
+ *  → güvenlik kapısı (kişisel veri avcısı). */
+const SAHIP_TESBITLERI = [
+  "nelere sahip", "neye sahip", "sahip olduk", "sahip oldugum",
+  "uyeligim nelere", "uyeligimde neler",
+];
+
+/** ★ Sahiplik sorusunda bile şüphe varsa özel cevabı KAPATAN kişisel/admin
+ *  işaretleri — varsa akış normal güvenlik kapısına yönlenir. */
+const SAHIP_KORUMA_MARKALARI = [
+  "admin", "yonetici", "moderator", "baskasin", "kisinin", "sifre",
+  "epostam", "mailim", "telefon", "bakiyem", "jetonum", "kotam",
+  "banlimi", "ban yedim", "askida", "uye listesi", "kullanicilar",
+];
+
+/** ★ 22.10 SATIŞ HATTE — seviyeye göre detaylı "nelere sahiptir" cevabı.
+ *  Sayılar premiumModalHelpers PRO_FEATURES / ELIT_FEATURES + plan kartlarıyla
+ *  BİREBİR aynı kaynaktan (kullanıcı panelde farklı görürse anında kendini ele
+ *  veritesi yok). Upsell hattı: free→Pro önerisi, pro→Elit önerisi, elit→zirve.
+ *  ★ Kişisel/admin veri YOK: yalnız planın genel içeriği anlatılır. */
+function sahiplikCevabi(seviye: AsistanSeviye): { cevap: string; aksiyon?: AsistanSonuc["aksiyon"] } {
+  if (seviye === "pro") {
+    return {
+      cevap: "NÛR PRO'da neler var 💎 — 1) Günde 8 kısa + 3 uzun video (600 sn). 2) 25 kâri sesi (10 ücretsiz + 15 PRO-özel). 3) 60 tema (51 PRO + 9 ücretsiz). 4) Sinematik filtreler. 5) Renk çubuğu + özel yazı. 6) Foto üzerine ayet — Ayet & Dua Kütüphanesi. 7) Uzun video modu + 16:9 yatay ekran. 8) Etiketsiz üretim — videonda nurstudyo.com ÇIKMAZ. — Bu paket zaten güçlü, ama bir adım ötede NÛR ELİT farkı gözle görülür 👑: günde 15 kısa + 5 uzun + 1 tam sure sürümü, TÜM 45 kâri sesi + TÜM 106 tema, açıklama üretimi, AI hashtag paketleri, gelişmiş sosyal paylaşım araçları, Tasarım stüdyosu + marka imza, Seslendirme, Kendi sesinle üretim, Haftanın Videosu vitrine ekleme ve Akıllı AI arka plan seçimi DAHİL. Paylaştığın videoda sergilenen imza senin olur — büyütmek istersen aşağıdaki 💎 butonu seni plan paneline götürür. 🌙",
+      aksiyon: "uyelik",
+    };
+  }
+  if (seviye === "elit") {
+    return {
+      cevap: "NÛR ELİT'te neler var 👑 — 1) Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sure sürümü. 2) Tüm 45 kâri sesi — hepsi açık. 3) Tüm 106 tema. 4) Filigransız 1080p üretim + KENDİ marka etiketin — videonu kendi adınla imzalarsın. 5) Açıklama üretimi (AI varyasyonları). 6) AI hashtag paketleri. 7) Gelişmiş sosyal paylaşım araçları. 8) Tasarım stüdyosu + kendi imzan. 9) Seslendirme (NÛR SES). 10) Kendi sesinle üretim. 11) Haftanın Videosu vitrine ekleme. 12) Akıllı AI arka plan seçimi. 13) Toplu üretim: 9:16 + 1:1 + 16:9 formatları tek tıkla. Elit, zirve plandır — platformun en yüksek gücü tamamı senin. 👑",
+    };
+  }
+  // free → Pro önerisi daha kapsamlı diye öne çıkarılır
+  return {
+    cevap: "Ücretsiz planda neler var 🌿 — 1) Her gün 3 kısa video (59 sn). 2) 10 kâri sesi. 3) 1300+ atmosfer klibi. 4) 9 ücretsiz tema. 5) Başlık üretimi + 16:9 format. 6) Kâbe canlı, Kur'an okuma/dinleme, hafızlık testi, Nur araçları ve radyo — HERKESE ÜCRETSİZ. 7) Çıktılarda köşede 'nurstudyo.com' etiketi olur (kaldırılamaz). — Başlamak için birebir! Ama sana NÛR PRO'yu öneririm 💎: günde 8 kısa + 3 uzun (600 sn) video, 25 kâri sesi, 60 tema, sinematik filtreler, renk çubuğu + özel yazı, Foto üzerine ayet (Ayet & Dua Kütüphanesi), 16:9 yatay format VE etiketsiz üretim (nurstudyo.com yazmaz). Kısacası Ücretsiz'in en az 2 katı hak. Aşağıdaki 💎 butonundan plan panelini açıp hemen inceleyebilirsin. 🌙",
+    aksiyon: "uyelik",
+  };
+}
+
 /** ★ Güvenlik-kapısı cevabı — kişisel/admin veri okumaya çalışan soruların tek sabit cevabı */
 const GUVENLIK_MESAJI =
   "Bu asistan güvenlik gereği KİŞİSEL VERİ sunmaz — kendi hesabınızın bakiye/ban/seviye bilgisi de, başka bir kişinin ya da admin'in e-posta/şifre/telefon bilgisi de vermez. Hesabınızla ilgili bilgi Profil sayfanızda, ekibe soru Geri Bildirim kutusundan gider. Başka bir konuda yardımcı olabilir miyim? 🌙";
@@ -312,9 +387,12 @@ export interface AsistanSonuc {
   aksiyon?: "uyelik" | "cuzdan" | "mail";
 }
 
-/** ★ Çekirdek — GÜVENLİK ÖNCE: kural motoru güvenlik kapısı geçilmezse dahi
- *   sorularda kişisel/admin veri avcısı anahtar varsa dönmüyor. */
-export function asistanCevap(soru: string): AsistanSonuc {
+/** ★ Çekirdek — GÜVENLİK ÖNCE
+ *   ★ 22.10: seviye parametresi üyenin planıdır (StudioApp `tier`) —
+ *   "nelere sahibim" sorusuna seviyeye uygun satış kodu döner:
+ *   free→PRO öner, pro→ELİT öner, elit→zirve listesi (upsell yok).
+ *   Admin/kişisel veri HER koşulda kapalıdır. */
+export function asistanCevap(soru: string, seviye: AsistanSeviye = "free"): AsistanSonuc {
   const n = asistanNormallestir(soru);
   if (!n) {
     return {
@@ -322,6 +400,17 @@ export function asistanCevap(soru: string): AsistanSonuc {
       cevap: "Sorunuzu yazın — ya da aşağıdaki hazır sorulardan birini seçin. 🌙",
       guvenlikKapisi: false,
     };
+  }
+
+  // ★ 22.10 SAHIP OLMA (satış hatte): soru "nelere sahibim" tarzındaysa ve
+  //   kişisel/admin işareti taşıMıyorsa, seviyeye göre detaylı plandaki
+  //   kazandırdıkları cevap döner — güvenlik kapısı bu yolu BÜTÜN halde
+  //   korur (şüphe varsa özel cevap atlanır, kapı çalışır).
+  const sahipVardi = SAHIP_TESBITLERI.some((m) => n.includes(m))
+    && !SAHIP_KORUMA_MARKALARI.some((m) => n.includes(m));
+  if (sahipVardi) {
+    const s = sahiplikCevabi(seviye);
+    return { kural: "sahiplik", cevap: s.cevap, guvenlikKapisi: false, aksiyon: s.aksiyon };
   }
 
   const guvenlikVardi = GUVENLIK_ANAHTARLARI.some((m) => n.includes(asistanNormallestir(m)));
@@ -351,7 +440,10 @@ export function asistanCevap(soru: string): AsistanSonuc {
     }
     return false;
   };
-  for (const r of ASISTAN_RULES) {
+  // ★ 22.10 MEGA BİLGİ TABANI: ana kuralların ARKASINDA ek haven —
+  //   skor beraberliğinde İLK gelen (ana kurallar) kazanır, önceki öncelikler
+  //   korunur; bilgi tabanı yalnız daha iyi eşleşirse devreye girer.
+  for (const r of [...ASISTAN_RULES, ...ASISTAN_BILGI_KURALLARI]) {
     const skor = r.anahtar.reduce((s, a) => {
       const nk = asistanNormallestir(a);
       if (!nk) return s;
@@ -363,9 +455,13 @@ export function asistanCevap(soru: string): AsistanSonuc {
   if (enIyiRule && enIyiSkor > 0) {
     // ★ YÖNLENDİRME BUTONU (19.10): hangi kurala hangi buton?
     //   uyelik → satın alma paneli · hak-bitti/iade/hediye-kodu → cüzdan · iletişim/hesap-sil/üretmiyor → mailto
+    //   ★ 22.10 MEGA BİLGİ TABANI yönlendirmeleri eklendi.
     const AKSIYON_MAP: Record<string, AsistanSonuc["aksiyon"]> = {
       uyelik: "uyelik", "pro-paket": "uyelik", "elit-paket": "uyelik", "hak-bitti": "cuzdan", iade: "cuzdan", "hediye-kodu": "cuzdan",
       iletisim: "mail", "hesap-sil": "mail", uretmiyor: "mail",
+      "fiyat-listesi": "uyelik", "bolgesel-fiyat": "uyelik", "fiyat-abonelik": "uyelik",
+      "cuzdan-paneli": "cuzdan", "cuzdan-nedir": "cuzdan", "vidje-refund": "cuzdan", "video-refund": "cuzdan",
+      "destek-mail": "mail", "oynerilen-videolar": "cuzdan",
     };
     const aksiyon = AKSIYON_MAP[enIyiRule.id];
     return { kural: enIyiRule.id, cevap: enIyiRule.cevap, guvenlikKapisi: false, aksiyon };
@@ -391,7 +487,7 @@ export const ASISTAN_CIP_HAVUZU: string[][] = [
   // üretim sorunları
   ["Video üretmiyor", "Videoyu üretirken takılıyor", "Video butonu çalışmıyor"],
   // üyelik
-  ["Üyelik seviyeleri nelerdir?", "Pro paket ne getirir?", "Elit üyelik avantajları?"],
+  ["Üyelik seviyeleri nelerdir?", "Pro paket ne getirir?", "Elit üyelik avantajları?", "Nelere sahibim?"],
   // jeton / hak
   ["Jetonlar nasıl gelir?", "Üretim hakkımı nasıl artırırım?", "Günlük haklarım ne zaman yenilenir?"],
   // paylaşım

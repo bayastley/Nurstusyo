@@ -26,8 +26,9 @@ import { getVideoUrl, getPosterUrlSync } from "../videoUrl";
 /** Ana sayfa arka planı için katmanlar — Namaz & Kâbe + Kur'an & Mushaf
  *  (ADMIN: tamHavuz=true → TÜM aktif kategoriler — kullanıcı: "her şey admine açık olsun") */
 const KATEGORILER: readonly string[] = ["namaz", "musaf"];
-/** Döngü hızı (kullanıcı: 10 saniyede bir dönsün) */
-const DEGISME_MS = 10000;
+/** Döngü hızı (★ 22.10 kullanıcı emri: "arka plandakiler hep aynı gibi kanka
+ *  30 saniyeye çıkar") — atmosfer videosu artık 30 saniyede bir değişir. */
+const DEGISME_MS = 30000;
 /** Çapraz geçiş süresi (CSS transition) */
 const GECIS_MS = 1200;
 /** Video katmanının opaklığı — "hafif görünecek" */
@@ -129,7 +130,7 @@ export const AtmosferGirisArkaPlani: React.FC<{ tamHavuz?: boolean }> = ({ tamHa
   const [hareketsiz] = useState(HAREKETSIZ_OLMAMALI);
   const sonrakiRef = useRef(HAVUZ.length > 1 ? 2 : 0);
 
-  // 10 sn'de bir: gizli sekmede dur, pasif katmana sıradaki klibi yerleştir
+  // 30 sn'de bir: gizli sekmede dur, pasif katmana sıradaki klibi yerleştir
   const ilerle = useCallback(() => {
     if (HAVUZ.length < 2) return;
     const n = sonrakiRef.current % HAVUZ.length;

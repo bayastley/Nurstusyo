@@ -12,7 +12,7 @@ interface SocialSharePanelProps {
   shareDescription: string;
   setShareDescription: React.Dispatch<React.SetStateAction<string>>;
   accessTier: Tier;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
+  openPremium: (tab?: "uyelik" | "jeton", hedefTier?: "pro" | "elit") => void;
   tierAtLeast: (have: Tier, need: Tier) => boolean;
   selected: SelectedAyah[];
   verseIndex: number;
@@ -82,9 +82,10 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
           <div>
             <SectionTitle icon={Share2} title={t("shareTitle")} />
             
-            {/* Title Input */}
+            {/* Title Input — ★ 22.10 KULLANICI EMRİ: BAŞLIK HERKESE (free).
+                Artık ücretsiz kullanıcı da başlığı düzenleyip üretebilir. */}
             <div className="relative mb-2">
-              <div className={accessTier === "free" ? "pointer-events-none select-none blur-md" : ""}>
+              <div>
                 <input
                   value={shareTitle}
                   maxLength={80}
@@ -93,23 +94,19 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-white/25">{shareTitle.length}/80</span>
               </div>
-              {accessTier === "free" && (
-                <button type="button" onClick={() => openPremium("uyelik")} className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/25 text-[9px] font-black text-[color:var(--accent-2)]">
-                  {t("ssProBaslikAcik")}
-                </button>
-              )}
             </div>
 
-            {/* Description Textarea */}
+            {/* Description Textarea — ★ 22.10 KULLANICI EMRİ: AÇIKLAMA ELİT'te.
+                Free/PRO'da metin bulanır, üstünde ELİT açımı ve yönlendiren kapı durur. */}
             <div className="relative">
               <textarea
                 value={shareDescription}
                 rows={5}
                 onChange={(event) => setShareDescription(event.target.value)}
-                className={`glass-soft w-full resize-none rounded-xl px-3 py-2.5 text-[11px] leading-relaxed text-white/75 outline-none scrollbar-thin ${accessTier === "free" ? "pointer-events-none select-none blur-md" : ""}`}
+                className={`glass-soft w-full resize-none rounded-xl px-3 py-2.5 text-[11px] leading-relaxed text-white/75 outline-none scrollbar-thin ${!tierAtLeast(accessTier, "elit") ? "pointer-events-none select-none blur-md" : ""}`}
               />
-              {accessTier === "free" && (
-                <button type="button" onClick={() => openPremium("uyelik")} className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/25 text-[9px] font-black text-[color:var(--accent-2)]">
+              {!tierAtLeast(accessTier, "elit") && (
+                <button type="button" onClick={() => openPremium("uyelik", "elit")} className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/25 text-[9px] font-black text-[color:var(--accent-2)]">
                   {t("ssProAciklamaAcik")}
                 </button>
               )}
@@ -148,12 +145,13 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
 
             {/* SATIR 2: Rastgele + Hashtag */}
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <button onClick={() => { if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName, dil); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName, dil); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
+              {/* ★ 22.10 KULLANICI EMRİ: rastgele AÇIKLAMA üretimi ELİT'te. */}
+              <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik", "elit"); return; } const cur = selected[verseIndex] || selected[0]; const sName = cur?.sName ?? "Bakara"; const s = cur?.s ?? 2; const a = cur?.a ?? 255; let yeniAciklama = pickDesc(sName, s, a, reciterName, dil); let tries = 0; while (yeniAciklama === lastDescRef.current && tries < 6) { yeniAciklama = pickDesc(sName, s, a, reciterName, dil); tries += 1; } lastDescRef.current = yeniAciklama; setShareDescription(yeniAciklama); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
                 <RefreshCw size={9} />{t("ssRastgeleAciklama")}
-                {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik", "elit")} position="top-right" />}
               </button>
+              {/* ★ 22.10 KULLANICI EMRİ: (AI) BAŞLIK HERKESE (free) — kilit tamamen kalktı. */}
               <button onClick={async () => {
-                if (!tierAtLeast(accessTier, "pro")) { openPremium("uyelik"); return; }
                 const cur = selected[verseIndex] || selected[0];
                 if (!cur) { notify(t("ssOnceAyetSecin")); return; }
                 notify(t("ssAiBaslikUretiliyor"));
@@ -192,11 +190,11 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                 notify(t("ssRastgeleBaslikSecildi"));
               }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-[9px] font-bold text-white/80 border border-white/5 hover:border-[color:var(--accent)]/30 hover:text-white hover:bg-white/[0.04] transition active:scale-98">
                 <RefreshCw size={9} />{t("ssRastgeleBaslik")}
-                {!tierAtLeast(accessTier, "pro") && <LockBadge kind="pro" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
               </button>
-              <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; } setVisibleTags((current) => pickRandomTags(14, current)); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
+              {/* ★ HASHTAG — zaten ELİT; 22.10: hedef vurguları eklendi (pro kullanıcı elite yönelir). */}
+              <button onClick={() => { if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik", "elit"); return; } setVisibleTags((current) => pickRandomTags(14, current)); }} className="glass-soft relative flex items-center gap-1 rounded-xl px-2 py-1.5 text-[9px] text-white/50">
                 <Shuffle size={9} />{t("ssHashtagBtn")}
-                {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik", "elit")} position="top-right" />}
               </button>
             </div>
 
@@ -211,7 +209,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                       <button
                         key={tag}
                         onClick={() => {
-                          if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik"); return; }
+                          if (!tierAtLeast(accessTier, "elit")) { openPremium("uyelik", "elit"); return; }
                           if (!inDesc) setShareDescription((current) => `${current.trim()} ${tag}`);
                           notify(t("ssEtiketEklendi").replace("{tag}", tag));
                         }}
@@ -225,7 +223,7 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                     );
                   })}
                 </div>
-                {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik")} position="top-right" />}
+                {!tierAtLeast(accessTier, "elit") && <LockBadge kind="elit" onUpgrade={() => openPremium("uyelik", "elit")} position="top-right" />}
               </div>
             </div>
           </div>

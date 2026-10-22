@@ -8,27 +8,44 @@ import type { Tier, VideoKind } from "../tier";
 // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): buradaki her sayı koddaki gerçek veriyle
 //   eşleşir — 45 kâri (src/reciters.ts; 10 free + 15 pro + 20 elit, src/tier.ts), 1300+ benzersiz atmosfer
 //   klibi (src/clips/*), 106 tema (9 free + 51 pro + 46 elit, data/themesData.ts
-//   THEME_TIER). Filigran yalnız ELİT'te kaldırılır (studio/useCanvasDraw.ts) —
-//   PRO'ya "filigransız" VAAT EDİLEMEZ. Değişirse KAYNAĞI da güncelle.
+//   THEME_TIER).
+//   ★ ETİKET KURALI (22.10 KULLANICI EMRİ): FREE = nurstudyo.com etiketi
+//   ZORUNLU · PRO = etiketsiz üretim · ELİT = etiketsiz + kendi marka
+//   etiketini koyma (Marka İmza). Motor tarafı: studio/useCanvasDraw.ts —
+//   etiket artık yalnız FREE'ye çizilir. Değişirse KAYNAĞI da güncelle.
 export const PRO_FEATURES = [
   "Günde 8 kısa + 3 uzun video (600 sn)",
   "25 kâri sesi (10 ücretsiz + 15 PRO)",
   "60 tema erişimi (51 PRO + 9 ücretsiz)",
   "Sinematik filtreler",
-  "AI başlık ve açıklama varyasyonları",
+  "Renk çubuğu + özel yazı",
+  "Foto üzerine ayet — Ayet & Dua Kütüphanesi",
+  "Etiketsiz üretim — videonda nurstudyo.com yazmaz",
 ];
 
 export const ELIT_FEATURES = [
   "Günde 15 kısa + 5 uzun video (600 sn) + 1 tam sürüm",
   "Tüm 45 kâri sesi",
   "Tüm 106 tema",
-  "Filigransız 1080p üretim",
+  "Filigransız 1080p üretim + kendi marka etiketin",
+  "Açıklama üretimi (AI varyasyonları)",
   "AI hashtag paketleri",
   "Gelişmiş sosyal paylaşım araçları",
   "Tasarım stüdyosu + kendi imzan",
+  "Seslendirme (NÛR SES içerikleri)",
+  "Kendi sesinle üretim",
+  "Haftanın Videosu vitrine ekleme",
+  "Akıllı AI arka plan seçimi",
   // ★ 06.10 (kullanıcı kararı): "Öncelikli destek" kaldırıldı — destek herkese açıkken
   //   öncelik vaadi adil değil; ELIT_FEATURES ile planElitOzellik* anahtarları birlikte azaltıldı.
 ];
+// ★ 22.10 PLANA GÖRE HARİTA (kullanıcı emri) — KAYNAK LİSTESİ BURASI:
+//   seslendirme ELİT · kendi ses ELİT · açıklama üretimi ELİT · başlık FREE ·
+//   hashtag ELİT · haftanın videosu ELİT · renk çubuğu+özel yazı PRO ·
+//   sinematik filtre PRO · yazı tasarımı (typografi+marka) ELİT ·
+//   foto üzerine ayet (Ayet Kütüphanesi) PRO · Kur'an araçları (Kâbe canlı,
+//   sayfalar, hatim, hafızlık testi, radyo) HERKESE ÜCRETSİZ.
+//   planXxxOzellikN sözlük anahtarları (5 dil) bu sırayla birebir karşılıklıdır.
 
 export const DAILY_QUOTA: Record<Tier, Record<string, number>> = {
   free: { kisa: 3, uzun: 0, tam: 0 },
@@ -89,6 +106,9 @@ export interface PremiumModalProps {
   user?: { email?: string; googleId?: string } | null;
   initialTab?: PremiumTab;
   premiumTab?: PremiumTab;
+  /** ★ 22.10 hedef seviye: pro kullanıcı elite özellik tıkladığında ELİT (ya da
+   *  hedef) kartına otomatik kaydırır + geçici vurgu ring'i basar. */
+  hedefTier?: "pro" | "elit";
   currentTier?: Tier;
   onClose?: () => void;
   onPurchase?: (newTier: Tier) => void;

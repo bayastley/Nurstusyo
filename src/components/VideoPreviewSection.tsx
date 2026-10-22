@@ -424,15 +424,16 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         <Segmented value={clipKind} onChange={(kind) => { setClipKind(kind); onClipKindChangeRef.current?.(kind); if (background?.cat !== "yuklenenler") setBackground(randomClip(kind)); }} items={[{ id: "img", label: t("vpSablon"), icon: ImageIcon }, { id: "vid", label: t("motion"), icon: Film }]} />
         {/* ★ Sayaç yalnızca admin'de görünür — kullanıcıya rakam göstermiyoruz */}
         {clipKind === "img" && isMasterSürüm && <p className="mt-1 text-center text-[9px] font-bold text-amber-300">{t("vpSablonHazir").replace("{n}", ADMIN_TEMPLATE_CLIPS.length.toLocaleString("tr-TR"))}</p>}
-        {/* ★ KENDİ SESİNLE ÜRET (30.09) — ★ 17.10 V3 KİLİDİ: ELİT'ten V3 uzun vadeli plana çekildi;
-            buton tıklayınca yol haritasına (oy) yönlendirilir (StudioApp onKendiSesAc). */}
+        {/* ★ KENDİ SESİNLE ÜRET (30.09) — ★ 22.10 KULLANICI EMRİ: ELİT kapısı.
+            Buton herkese görünür; tıklayınca ELİT üye/admin direkt modal, free/PRO
+            premium panelin ELİT kartına yönlendirilir (StudioApp onKendiSesAc). */}
         <button
           onClick={onKendiSesAc}
           className={`mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-2 text-[9.5px] font-black transition ${kendiSesAktifMi ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/40 hover:bg-emerald-500/25" : "bg-amber-500/10 text-amber-300 ring-1 ring-amber-400/30 hover:bg-amber-500/20"}`}
           title={kendiSesAktifMi ? t("vpKendiSesAktifTitle") : t("vpKendiSesTitle")}
         >
           {kendiSesAktifMi ? t("vpKendiSesAktif") : t("vpKendiSesUret")}
-          {!kendiSesAktifMi && <span className="rounded bg-indigo-400/20 px-1 py-px text-[7px] font-black tracking-wide text-indigo-200">V3</span>}
+          {!kendiSesAktifMi && <span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>}
         </button>
       </div>
 

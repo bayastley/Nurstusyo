@@ -26,7 +26,11 @@ interface UseTierReturn {
   setPremiumOpen: (v: boolean) => void;
   premiumTab: "uyelik" | "jeton";
   setPremiumTab: (t: "uyelik" | "jeton") => void;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
+  openPremium: (tab?: "uyelik" | "jeton", hedefTier?: "pro" | "elit") => void;
+  /** ★ 22.10 HEDEF SEVİYE YÖNLENDİRMESİ (kullanıcı emri): PRO kullanıcı ELİT özelliğe
+   *  tıklayınca premium paneli AÇILIR ve direkt ELİT kartına kaydırılır/vurgulanır.
+   *  openPremium("uyelik", "elit") → premiumHedef state'i PremiumModal'a gider. */
+  premiumHedef: "pro" | "elit" | null;
   checkTier: (need: Tier) => boolean;
   tryUnlockElitFeature: (key: "batch" | "ai_search", label: string) => boolean;
   tryUnlockFullMode: () => boolean;
@@ -39,7 +43,13 @@ export function useTier({ isMasterSürüm, notify, jetonCount, setJetonCount }: 
 
   const accessTier: Tier = isMasterSürüm ? "elit" : tier;
 
-  const openPremium = useCallback((tab: "uyelik" | "jeton" = "uyelik") => {
+  const [premiumHedef, setPremiumHedef] = useState<"pro" | "elit" | null>(null);
+
+  // ★ 22.10: 2. parametre hedef seviye — hedef tier'ın plan kartı open sırasında
+  //   vurgulanır (PremiumModal hedefTier prop'u). Örn: PRO üye ELİT özelliğe tıklar
+   //   → panel açılır, ELİT kartına kaydırılır.
+  const openPremium = useCallback((tab: "uyelik" | "jeton" = "uyelik", hedefTier?: "pro" | "elit") => {
+    setPremiumHedef(hedefTier ?? null);
     setPremiumTab(tab);
     setPremiumOpen(true);
   }, []);
@@ -113,6 +123,7 @@ export function useTier({ isMasterSürüm, notify, jetonCount, setJetonCount }: 
     accessTier,
     premiumOpen, setPremiumOpen,
     premiumTab, setPremiumTab,
+    premiumHedef,
     openPremium,
     checkTier,
     tryUnlockElitFeature,

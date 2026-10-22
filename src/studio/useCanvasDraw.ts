@@ -87,6 +87,21 @@ export function useCanvasDraw(p: CanvasDrawParams) {
       return lines;
     };
 
+    // ★ 22.10 TAŞMA SİGORTASI (kullanıcı: "metin kenarlardan taşıyor, üye olmayan
+    //   format değiştiremedigi için düzeltemiyor"): ölçüm bazen gerçek çizimden dar
+    //   kalabilir (font geç yüklemesi/fallback farkı) — satır canvas'tan taşarsa
+    //   ölçülüp yatayda sıkıştırılır; hiçbir tier'da metin kesilmez.
+    const sigortaliSatir = (ctx: CanvasRenderingContext2D, metin: string, aveaMaxX: number, merkezX: number, ciz: (yeniX: number) => void) => {
+      const genislik = ctx.measureText(metin).width;
+      if (genislik <= aveaMaxX) { ciz(merkezX); return; }
+      const s = aveaMaxX / genislik;
+      ctx.save();
+      ctx.translate(merkezX, 0);
+      ctx.scale(s, 1);
+      ciz(0);
+      ctx.restore();
+    };
+
     const cover = (ctx: CanvasRenderingContext2D, source: CanvasImageSource & { videoWidth?: number; videoHeight?: number; naturalWidth?: number; naturalHeight?: number }, width: number, height: number, zoom = 1) => {
       const sw = source.videoWidth || source.naturalWidth || 0, sh = source.videoHeight || source.naturalHeight || 0;
       if (!sw || !sh) return false;
@@ -279,8 +294,10 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                   : -1;
                 arabicLines.forEach((line) => {
                   if (activeIdx === -1) {
-                    // Sadece tam satırı çiz (Safari ve tüm mobil tarayıcılar için kusursuz birleşik Arapça harfler)
-                    ctx.fillText(line, width / 2 + ox, y + arabicSize * 0.8);
+                    // ★ Sadece tam satırı çiz (Safari ve tüm mobil tarayıcılar için
+                    //   kusursuz birleşik Arapça harfler) + taşma sigortası: satır
+                    //   ölçümden geniş çıkarsa yatayda küçülerek çizilir.
+                    sigortaliSatir(ctx, line, width * 0.94, width / 2 + ox, (cx2) => { ctx.fillText(line, cx2, y + arabicSize * 0.8); });
                     y += arabicHeight;
                     return;
                   }
@@ -340,10 +357,13 @@ export function useCanvasDraw(p: CanvasDrawParams) {
                 ctx.lineWidth = 3; 
                 ctx.strokeStyle = "#000000";
 
-                translationLines.forEach((line) => { 
-                  ctx.strokeText(line, width / 2 + ox, y + translationSize); 
-                  ctx.fillText(line, width / 2 + ox, y + translationSize); 
-                  y += translationSize * 1.6; 
+                translationLines.forEach((line) => {
+                  // ★ taşma sigortası: stroke + fill birlikte yatay küçültülerek çizilir
+                  sigortaliSatir(ctx, line, width * 0.94, width / 2 + ox, (cx2) => {
+                    ctx.strokeText(line, cx2, y + translationSize);
+                    ctx.fillText(line, cx2, y + translationSize);
+                  });
+                  y += translationSize * 1.6;
                 });
                 ctx.shadowBlur = 0;
               }
@@ -354,8 +374,12 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           //   videoya alır — mesaj katmanı planındaki tasarım buraya kuruldu.
           doldurucu.cubukCiz(ctx, width, height, p.cubuk);
           drawMesajYazisi(ctx, width, height, p.mesaj, (text, maxW) => wrapText(ctx, text, maxW));
+          // ★ ETİKET KURALI (22.10 kullanıcı emri): nurstudyo.com etiketi YALNIZ
+          //   ücretsiz üretimlerde görünür — PRO etiketsiz çıkar, ELİT üstelik
+          //   kendi marka imzasını koyabilir (aşağıda). watermark_remove
+          //   kapısı tier.ts'te zaten "pro" — motor artık onunla uyumlu.
           const realTierForWatermark = !p.user && !p.isMasterSürüm ? "free" : p.accessTier;
-          if (realTierForWatermark === "free" || realTierForWatermark === "pro") {
+          if (realTierForWatermark === "free") {
             ctx.save(); ctx.font = `700 ${Math.round(height * 0.018)}px Inter,sans-serif`; ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
             ctx.shadowColor = "rgba(0, 0, 0, 0.7)"; ctx.shadowBlur = 4; ctx.textAlign = "right"; ctx.fillText("nurstudyo.com", width * 0.95, height * 0.965); ctx.restore();
           }

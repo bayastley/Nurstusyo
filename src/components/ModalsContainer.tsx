@@ -179,6 +179,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   setPickingForAtmos,
   kendiSesSeciliAyetler,
   kendiSesAyahBackgrounds,
+  premiumHedef,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
   // ★ Destek Merkezi yıldız puanı (opsiyonel 1-5, veritabanına kaydedilir)
@@ -258,9 +259,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   //   PORTALINA, 2) üye ama o seviyede değilse PREMIUM sayfasına yönlendirilir.
   // ★ ÜYE GATE listesindeki modüller için merkezî geçit burada, tüm tetikleyicileri
   //   (menü / stüdyo butonu / yol haritası) tek yerden yakalar. admin-godmode + master geçer.
-  const UYE_GATE: Record<string, Tier> = { zip: "elit", kendiSes: "elit" };
-  // ★ 18.10: "seslendirme" UYE_GATE'ten ÇIKARILDI — V3 admin kilidi yukarıda render kapısı
-  //   olarak maruz kaldı (admin haricinde modal hiç mount edilmez).
+  // ★ 22.10 KULLANICI EMRİ — PLANA GÖRE KATMAN HARİTASI:
+  //   • ayetKartlari (Foto üzerine Ayet & Dua Kütüphanesi) → PRO
+  //   • haftaninVideosu (Haftanın Videosu vitrini) → ELİT
+  //   • seslendirme (NÛR SES) → ELİT (render kapısı ayrıca aşağıda)
+  //   • kendiSes (Kendi sesinle üretim) → ELİT
+  //   • zip (Medya yükleme/ZIP) → V3, admin kilidi kalsın
+  const UYE_GATE: Record<string, Tier> = { zip: "elit", kendiSes: "elit", seslendirme: "elit", haftaninVideosu: "elit", ayetKartlari: "pro" };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (!modal) return;
@@ -276,8 +281,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     }
     if (!tierAtLeast(tier, gereken)) {
       setModal(null);
+      // ★ 22.10: hedef seviye geçilir — panelin içindeki GEREKEN plan kartı vurgulanır
+      //   (pro kullanıcı elit özellik tıklayınca direkt ELİT kartına kayar)
       notify(`👑 ${gereken === "pro" ? "PRO" : "ELİT"} üyelik gerekli — premium sayfası açıldı`);
-      openPremium("uyelik");
+      openPremium("uyelik", gereken === "pro" || gereken === "elit" ? gereken : undefined);
     }
   }, [modal]);
 
@@ -366,6 +373,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         <React.Suspense fallback={null}>
         <PremiumModal
           lang={lang}
+          hedefTier={premiumHedef ?? undefined}
           initialTab={premiumTab}
           currentTier={tier}
           user={user ?? null}
@@ -438,8 +446,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
         </ErrorBoundary>
       )}
 
-      {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ★ 17.10 V3 KİLİDİ: ELİT'ten V3 uzun vadeye çekildi (kullanıcı emri); admin + master hariç kapalı */}
-      {modal === "kendiSes" && (isMasterSürüm || isAdminEmail(user?.email || "")) && (
+      {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ★ 22.10 KULLANICI EMRİ: ELİT üyelere AÇILDI
+          (admin/V3 kilidi kalktı); ELİT olmayan UYE_GATE effect'inde premium'a düşer.
+          admin + master her zaman açık. */}
+      {modal === "kendiSes" && (isMasterSürüm || isAdminEmail(user?.email || "") || tierAtLeast(accessTier, "elit")) && (
         <React.Suspense fallback={null}>
         <KendiSesModal
           open
@@ -549,8 +559,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       </React.Suspense>
       )}
 
-      {/* ★ HAFTANIN VİDEOSU — admin onaylı topluluk vitrini (madde 17) */}
-      {acildiMi("haftaninVideosu") && (
+      {/* ★ HAFTANIN VİDEOSU — admin onaylı topluluk vitrini (madde 17)
+          ★ 22.10 KULLANICI EMRİ: HAFTANIN VİDEOSU ELİT üyelere — olmayan UYE_GATE'te
+          premium'a düşer; render kapısı da elit şartlıdır (içerik sızmasın). */}
+      {acildiMi("haftaninVideosu") && (isMasterSürüm || isAdminEmail(user?.email || "") || tierAtLeast(accessTier, "elit")) && (
       <React.Suspense fallback={null}>
       <HaftaninVideosuModal open={modal === "haftaninVideosu"} onClose={() => setModal(null)} notify={notify} />
       </React.Suspense>

@@ -84,7 +84,9 @@ export interface ModalsContainerProps {
   filteredClips: Clip[];
   hoveredClip: string | null;
   setHoveredClip: (id: string | null) => void;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
+  openPremium: (tab?: "uyelik" | "jeton", hedefTier?: "pro" | "elit") => void;
+  /** ★ 22.10 hedef seviye — PremiumModal pass-through (pro→elit tık akışı) */
+  premiumHedef?: "pro" | "elit" | null;
   packRights: { kisa: number; uzun: number; tam: number };
   subscriptionEndsAt?: string | null;
   pickClip: (clip: Clip) => void;

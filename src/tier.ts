@@ -385,9 +385,10 @@ export const FEATURE_GATES: Record<FeatureKey, FeatureGate> = {
   atmos_video_pro: { kind: "tier", tier: "pro" }, atmos_video_elit: { kind: "tier", tier: "elit" },
   tema_pro: { kind: "tier", tier: "pro" }, tema_elit: { kind: "tier", tier: "elit" },
   mode_long: { kind: "tier", tier: "pro" }, mode_full: { kind: "tier", tier: "elit" },
-  aspect_1_1: { kind: "tier", tier: "free" }, aspect_16_9: { kind: "tier", tier: "pro" },
+  aspect_1_1: { kind: "tier", tier: "free" }, aspect_16_9: { kind: "tier", tier: "free" }, // ★ 22.10: 16:9 da FREE — üye olmayan da yatay video hazırlayabilsin (kullanıcı emri)
   batch: { kind: "tier", tier: "elit" }, ai_search: { kind: "tier", tier: "elit" },
-  refresh_text: { kind: "tier", tier: "pro" }, refresh_title: { kind: "tier", tier: "pro" },
+  // ★ 22.10 kullanıcı emri: BAŞLIK HERKESE (free), AÇIKLAMA üretimi ELİT tier'ına taşındı.
+  refresh_text: { kind: "tier", tier: "elit" }, refresh_title: { kind: "tier", tier: "free" },
   hashtag_add: { kind: "tier", tier: "elit" }, watermark_remove: { kind: "tier", tier: "pro" },
   social_share: { kind: "tier", tier: "elit" }, zip_upload: { kind: "version", version: "v3" },
   story_kuran: { kind: "version", version: "v2" }, story_kissa: { kind: "version", version: "v2" },

@@ -211,6 +211,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // ★ ÖNERİ EKLE — haftada 1
+      // ★ 22.10 KULLANICI EMRİ — HAFTANIN VİDEOSU → ELİT: UI kapısı (UYE_GATE +
+      //   render kapısı) elit'e bağlanmıştı; sunucu tarafı da fail-closed olsun.
+      //   Oturum geçerli olsa bile ELİT (veya admin) olmayan öneri gönderemez.
+      try {
+        const uRows = await db<Array<{ tier?: "free" | "pro" | "elit" | null; is_admin?: boolean }>>(
+          `nur_users?id=eq.${encodeURIComponent(session.id)}&select=tier,is_admin`,
+        ).catch(() => [] as Array<{ tier?: "free" | "pro" | "elit" | null; is_admin?: boolean }>);
+        const uTier = uRows?.[0]?.tier;
+        const uAdmin = Boolean(uRows?.[0]?.is_admin);
+        if (uTier !== "elit" && !uAdmin) {
+          return res.status(403).json({ ok: false, error: "👑 Haftanın Videosu'na öneri eklemek için NÛR ELİT üyelik gerekli" });
+        }
+      } catch { /* tier okunamazsa davranış eskisi gibi sürer — UI kapısı zaten devrede */ }
       const baslik = sanitize(body.baslik, 100);
       const aciklama = sanitize(body.aciklama, 500);
       const link = sanitize(body.video_link, 500);

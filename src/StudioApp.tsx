@@ -80,6 +80,7 @@ import { BugunHediye } from "./components/BugunHediye";
 import { MiniTur } from "./components/MiniTur"; // ★ madde 3: ilk girişte 5 duraklı tur
 import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4: dürüst aylık harf sayacı
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
+import { OnerilenVideolar, type OneriVideo } from "./components/OnerilenVideolar"; // ★ 22.10: güne özel hazır video taslakları
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { AsistanBaloncugu } from "./components/AsistanBaloncugu"; // ★ 19.10 ücretsiz SSS asistanı
 import { RoadmapModal } from "./components/RoadmapModal";
@@ -897,6 +898,52 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ TELİF UYARI ZİNCİRİ — kabul edilince son handleGenerate tekrar koşar (SRP tur 4)
   useEffect(() => devamiBagla(() => { handleGenerate(); }), [handleGenerate]);
 
+  // ★ 22.10 ÖNERİLEN VİDEOLAR — HAZIR TASLAK (kullanıcı emri: "önerilen ATMOSFER değil,
+  //   ÖNERİLEN VİDEO. Cuma ise cumayı anlatan video: kâri seçilmiş, atmosfer atanmış,
+  //   ayet yazılmış. Perşembe başka bir şey; sürekli değişsin"): OnerilenVideolar
+  //   güne/mübarek güne özel taslakları rotasyonla önerir; "Üret" → seçim temizlenir,
+  //   ayetler çekilir, kâri + atmosfer atanır ve üretim NORMAL yolculuğuyla başlar
+  //   (misafir kapısı, jeton onayı, /api/render/authorize… — öneriye bedava yetki yok).
+  const oneriHavuzu = useMemo(
+    () => combinedAllClips.filter((clip) => clip.kind === clipKind && clip.cat !== "yuklenenler" && isClipAccessible(clip)),
+    [combinedAllClips, clipKind, isClipAccessible],
+  );
+  const oneriKullanilanlar = useMemo(
+    () => Array.from(new Set([background, ...Object.values(ayahBackgrounds)].map((c) => c?.cat).filter(Boolean))) as string[],
+    [background, ayahBackgrounds],
+  );
+  const oneriKabileleri = useMemo(
+    () => sortedReciters.filter((r) => tierAtLeast(accessTier, reciterRequiredTier(r))).map((r) => ({ id: r.id, name: r.name })),
+    [sortedReciters, accessTier],
+  );
+  const oneriUygulaVeUret = useCallback((oneri: OneriVideo) => {
+    if (generating) return;
+    setSelected([]);
+    setReciterId(oneri.reciterId);
+    notify(`✨ Taslak yükleniyor: ${oneri.baslik}`);
+    void (async () => {
+      for (const a of oneri.ayetler) { await addAyah(a.s, a.a); }
+      // Ayet metinleri (ar/tr) gelmeden üretimde boş ekran çıkar — bekle (max ~6 sn)
+      const bas = Date.now();
+      while (Date.now() - bas < 6000) {
+        const eksik = oneri.ayetler.some((a) => {
+          const sl = selectedRef.current.find((x) => x.id === `${a.s}:${a.a}`);
+          return !sl || !sl.ar;
+        });
+        if (!eksik && selectedRef.current.length > 0) break;
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      // Atmosfer: taslağın klibi tüm ayet slotlarına (kullanıcının kendi dosyası hariç)
+      const sonraki: Record<string, Clip> = {};
+      selectedRef.current.forEach((item) => {
+        sonraki[item.id] = ayahBackgroundsRef.current[item.id]?.cat === "yuklenenler" ? ayahBackgroundsRef.current[item.id] : oneri.katliClip;
+      });
+      setAyahBackgrounds(sonraki);
+      if (backgroundRef.current?.cat !== "yuklenenler") setBackground(oneri.katliClip);
+      window.setTimeout(() => handleGenerate(), 500);
+    })();
+  }, [generating, notify, setSelected, setReciterId, addAyah, setAyahBackgrounds, setBackground, handleGenerate]);
+
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
   const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify, t });
 
@@ -1015,7 +1062,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         <MaintenanceScreen message={maintenance.message} endsAt={maintenance.endsAt ?? null} />
       )}
       {/* ★ 22.10 GİRİŞ ARKA PLANI — Kâbe/Namaz + Kur'an/Mushaf atmosfer videoları,
-          ana sayfa arkasında hafif görünür şekilde 5 sn'de bir döner. Zemin -z-30 (var(--page)),
+          ana sayfa arkasında hafif görünür şekilde 30 sn'de bir döner (kullanıcı emri:
+          "hep aynı gibi — 30 saniyeye çıkar"). Zemin -z-30 (var(--page)),
           dönen video -z-20, üstündeki ışıma/gradyan -z-10 olur — içeriğin HEPSİNİN altında. */}
       <AtmosferGirisArkaPlani tamHavuz={isMasterSürüm || adminGodMode || isAdminEmail(user?.email || "")} />
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%)` }} />
@@ -1179,21 +1227,31 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           t={t}
           kendiSesAktifMi={Boolean(kendiSesAktif)}
           onKendiSesAc={() => {
-            // ★ 17.10 V3 KİLİDİ (kullanıcı emri): elit'ten V3 uzun vadeli plana çekildi —
-            //   admin/master hariç kimse açamaz; kalanlar yol haritasında oy görebilir.
-            // ★ 18.10 DÜZELTME (admin dalı erken return): admin artık yol haritasına düşmez —
-            //   direkt modal açılır; non-admin ise V3 yol haritasına atılır, modal HİÇ açılmaz.
+            // ★ 22.10 KULLANICI EMRİ — KENDİ SESİNLE ÜRET → ELİT KAPISI:
+            //   önceki "V3 uzun vadeli plana çekildi" kararı bu turda geri alındı.
+            //   Artık admin/master + ELİT üye direkt modalı açar; free/PRO
+            //   premium panelin ELİT kartına yönlendirilir (hedefTier vurgusu).
             const adminMi = isAdminEmail(user?.email || "");
-            if (isMasterSürüm || adminMi) {
+            if (isMasterSürüm || adminMi || tierAtLeast(tier, "elit")) {
               if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
               setModal("kendiSes");
               return;
             }
-            notify("🎬 Kendi sesinle üretim V3 yol haritasında — Güncellemeler ekranından oy ver!");
-            setRoadmapOpen?.(true);
+            notify("👑 Kendi sesinle üretim NÛR ELİT'te — premium panel açıldı");
+            openPremium("uyelik", "elit");
           }}
         />
         </PanelSuspense>
+        {/* ★ ÖNERİLEN VİDEOLAR (22.10): bugüne özel HAZIR TASLAKLAR — ayet+kâri+atmosfer
+            atanmış, tek tıkla üretim. Üretim yaptıktan sonra değil HER ZAMAN üstte. */}
+        <OnerilenVideolar
+          havuz={oneriHavuzu}
+          kullanilanKategoriler={oneriKullanilanlar}
+          kabileler={oneriKabileleri}
+          generating={generating}
+          userAnahtar={user?.email || "misafir"}
+          onUret={oneriUygulaVeUret}
+        />
         </div>
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}
@@ -1534,7 +1592,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       <PwaKurulumBanneri />
 
       {/* ★ NÛR ASİSTAN — sağ alt köşe balon, ücretsiz SSS asistanı (19.10) */}
-      <AsistanBaloncugu openPremiumUyelik={() => openPremium("uyelik")} openPremiumCuzdan={() => openPremium("jeton")} />
+      <AsistanBaloncugu openPremiumUyelik={() => openPremium("uyelik")} openPremiumCuzdan={() => openPremium("jeton")} seviye={tier} />
 
       {/* V2-V3 YOL HARİTASI */}
       <RoadmapModal open={roadmapOpen} onClose={() => setRoadmapOpen(false)} adminEmail={user?.email} />
