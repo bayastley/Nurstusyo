@@ -52,7 +52,10 @@ const GUVENLIK_ANAHTARLARI = [
   "jetonum", "bakiyem", "kotam", "aboneligim", "uyeligim ne",
   "ban yedim mi", "banlimi", "banlı mı", "askidami", "askıya alındım",
   // ★ 20.10 GENİŞLETME: kod/altyapı/gizli-bilgi sızdırma avcıları — kural motoruna düşmez
-  "kaynak kodu", "kaynak kod", " kodu", " kodunu", "repo", "githubin", "git reposu", "commit listesi",
+  // ★ 22.10: " kodu" / " kodunu" serbest kelimei KAPI'dan ÇIKARILDI — kelime-eşleşsayıda
+  //   "virüs yazma KODU" tarzı ZARARLI kapılara yakalançası soruları güvenlik kapısına
+  //   çarpıyordu; kaynak-kod soruları "kaynak kod(u)" çift-kelime anahtarlarıyla yakalanır.
+  "kaynak kodu", "kaynak kod",  "repo", "githubin", "git reposu", "commit listesi",
   "api anahtar", "apı key", "apikey", "secret", "gizli anahtar", "env dosya", "env deger", "ornek env",
   "veritabani sifre", "supabase sifre", "service role key", "hmac sifre", "oturum sifre",
   "log kayitlar", "hatayi goster", "hic hatayi da", "console hata", "sunucu logu", "veritabani sorgusu",
@@ -87,6 +90,30 @@ export function asistanNormallestir(s: string): string {
     .replace(/[^\p{L}\p{N}]+/gu, ", ")
     .replace(/(?:,\s*)+$/, "")
     .trim();
+}
+
+/** ★ 22.10 KAPI EŞLEŞTİRİCİ — kök-çip panzehirinin kapı uyarlaması.
+ *  (a) DÜZ includes kötüydü: kelime-sırası cinsi dizilişler kapıyı kaçırtıyordu.
+ *  (b) kesfetArama.kelimeUyar'ın Levenshtein toleransı İSE envy fazla cömert:
+ *      "kota" ↔ "kotam" (lev 1) gibi NORMAL soruları güvenlik kapısına
+ *      düşürüyordu. Kapılar kapı KEŞKİN kesinlik istedi aşağıdaki kurallarla:
+ *      tek kelime anahtarlar: metin word'ü birebir ya da anahtarın uzun-türevi
+ *      ("m" eki: "epostam"→"epostami"), 4-harf-altı için word-set exact.
+ *      çok-kelimeli anahtar: HER kelimesi yukarıdaki kurala uymalı. */
+function kapiEslestir(metin: string, anahtar: string): boolean {
+  const nk = asistanNormallestir(anahtar);
+  if (!nk) return false;
+  const kelimeler = new Set(metin.split(", "));
+  const kelimeBul = (p: string): boolean => {
+    if (!p) return false;
+    if (kelimeler.has(p)) return true;
+    for (const w of kelimeler) {
+      if (w.length > p.length && w.startsWith(p)) return true; // uzun-türev ek
+    }
+    return false;
+  };
+  // nk asistanNormallestir'den virgüllü gelir — kapı-motoru virgülleri boşluğa çevirir
+  return nk.replace(/,\s*/g, " ").split(" ").filter(Boolean).every(kelimeBul);
 }
 
 export const ASISTAN_RULES: AsistanRule[] = [
@@ -381,7 +408,11 @@ const ZARARLI_ANAHTARLARI = [
   "bombasi", "bombası",
   "silah yap", "silah nasıl", "silah nasil", "silah evde", "tabanca yap",
   "uyusturucu", "uyuşturucu", "uyuşturucu yap", "uyusturucu yap", "esrar", "metamfetamin",
-  "zehir yap", "zehir nasıl", "zehir nasil", "virüs yaz", "virus yaz", "troyan yaz", "keylogger yaz", "ddos saldiri", "ddos saldırı", "hiz bilgisayar", "hiz bilgisayarları", "hesap çal", "hesap cal",
+  "zehir yap", "zehir nasıl", "zehir nasil", "virüs yaz", "virus yaz", "virüs yap", "virus yap",
+  "virüs olustur", "virus olustur", "virüs yazilim", "virus yazilim",
+  "troyan", "trojan", "malware", "keylogger", "keylogger yaz",
+  "ddos saldiri", "ddos saldırı", "ddos saldirmasi", "hiz bilgisayar", "hiz bilgisayarları",
+  "hesap çal", "hesap cal", "hesap çalın", "hesap calin", "hesap hırsızligi",
 ];
 const ZARARLI_MESAJI =
   "Bu konuda yardım edemem 🙏 — Zarar verici içerik (bomba/silah/uyuşturucu/virüs/hesap hırsızlığı vb.) sorularına asistan cevap vermez; Nûr Stüdyo yalnızca Kur'an/dua/İslamî içerik üretimi içindir. Başka bir konuda yardımcı olabilir miyim? 🌙";
@@ -425,12 +456,15 @@ export function asistanCevap(soru: string, seviye: AsistanSeviye = "free"): Asis
     return { kural: "sahiplik", cevap: s.cevap, guvenlikKapisi: false, aksiyon: s.aksiyon };
   }
 
-  const guvenlikVardi = GUVENLIK_ANAHTARLARI.some((m) => n.includes(asistanNormallestir(m)));
+  // ★ 22.10 (kök-çip panzehiri v2): kapılar da kelime-bütünlüklü + harf-hata toleranslı
+  //   kelimeVardimi ile aranır — düz includes kelime sırası ve "trojan"↔"troyan"
+  //   tarzı yanlışlamaları kapıdan kaçırtıyordu.
+  const guvenlikVardi = GUVENLIK_ANAHTARLARI.some((m) => kapiEslestir(n, m));
   if (guvenlikVardi) {
     return { kural: "guvenlik", cevap: GUVENLIK_MESAJI, guvenlikKapisi: true };
   }
   // ★ zararlı içerik red kapısı — kişisel veri kapısından sonra, kural motorundan önce
-  const zararliVardi = ZARARLI_ANAHTARLARI.some((m) => n.includes(asistanNormallestir(m)));
+  const zararliVardi = ZARARLI_ANAHTARLARI.some((m) => kapiEslestir(n, m));
   if (zararliVardi) {
     return { kural: "zararli", cevap: ZARARLI_MESAJI, guvenlikKapisi: true };
   }
