@@ -20,28 +20,29 @@
 // ══════════════════════════════════════════════════════════════════
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { MOTION_CLIPS, type Clip } from "../clips";
+import { MOTION_CLIPS, ACTIVE_CATEGORIES, type Clip } from "../clips";
 import { getVideoUrl, getPosterUrlSync } from "../videoUrl";
 
-/** Ana sayfa arka planı için katmanlar — Namaz & Kâbe + Kur'an & Mushaf */
+/** Ana sayfa arka planı için katmanlar — Namaz & Kâbe + Kur'an & Mushaf
+ *  (ADMIN: tamHavuz=true → TÜM aktif kategoriler — kullanıcı: "her şey admine açık olsun") */
 const KATEGORILER: readonly string[] = ["namaz", "musaf"];
-/** Döngü hızı (kullanıcı: 5 saniyede bir) */
-const DEGISME_MS = 5000;
+/** Döngü hızı (kullanıcı: 10 saniyede bir dönsün) */
+const DEGISME_MS = 10000;
 /** Çapraz geçiş süresi (CSS transition) */
 const GECIS_MS = 1200;
 /** Video katmanının opaklığı — "hafif görünecek" */
 const VIDEO_OPASITE = 0.38;
 
-/** Havuz: namaz + musaf videoları, oturum başına bir kez karıştırılır ve
- *  ilk 12 ile sınırlanır (imza API limiti + bant genişliği dostu). */
-const HAVUZ: Clip[] = (() => {
-  const kesisim = MOTION_CLIPS.filter((k) => k.kind === "vid" && KATEGORILER.includes(k.cat));
+/** Havuz kurucu: ücretsiz kullanıcı → namaz+musaf (12 klip); ADMIN → TÜM aktif
+ *  kategoriler (30 klip). Oturum başına karıştırılır — imza API limiti dostu. */
+function havuzKur(tamHavuz: boolean): Clip[] {
+  const kesisim = MOTION_CLIPS.filter((k) => k.kind === "vid" && (tamHavuz ? ACTIVE_CATEGORIES.includes(k.cat) : KATEGORILER.includes(k.cat)));
   for (let i = kesisim.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [kesisim[i], kesisim[j]] = [kesisim[j], kesisim[i]];
   }
-  return kesisim.slice(0, 12);
-})();
+  return kesisim.slice(0, tamHavuz ? 30 : 12);
+}
 
 /** döngüye ihtiyacı var mı? (sessiz ortam testi) */
 const HAREKETSIZ_OLMAMALI = (): boolean => {
@@ -120,24 +121,27 @@ const Kat: React.FC<{ clip: Clip; aktif: boolean; hareketsiz: boolean }> = ({ cl
 };
 
 // ─── ANA BİLEŞEN ───────────────────────────────────────────────────
-export const AtmosferGirisArkaPlani: React.FC = () => {
-  const [durum, setDurum] = useState(() => ({ indexA: 0, indexB: Math.min(1, HAVUZ.length - 1), aktif: "a" as "a" | "b" }));
+export const AtmosferGirisArkaPlani: React.FC<{ tamHavuz?: boolean }> = ({ tamHavuz = false }) => {
+  const havuzRef = useRef<Clip[] | null>(null);
+  if (!havuzRef.current) havuzRef.current = havuzKur(tamHavuz); // mount'ta bir kez kurulur
+  const HAVUZ = havuzRef.current;
+  const [durum, setDurum] = useState(() => ({ indexA: 0, indexB: HAVUZ.length > 1 ? 1 : 0, aktif: "a" as "a" | "b" }));
   const [hareketsiz] = useState(HAREKETSIZ_OLMAMALI);
   const sonrakiRef = useRef(HAVUZ.length > 1 ? 2 : 0);
 
-  // 5 sn'de bir: gizli sekmede dur, pasif katmana sıradaki klibi yerleştir
+  // 10 sn'de bir: gizli sekmede dur, pasif katmana sıradaki klibi yerleştir
   const ilerle = useCallback(() => {
     if (HAVUZ.length < 2) return;
     const n = sonrakiRef.current % HAVUZ.length;
     sonrakiRef.current = (n + 1) % HAVUZ.length;
     setDurum((d) => (d.aktif === "a" ? { ...d, indexB: n, aktif: "b" } : { ...d, indexA: n, aktif: "a" }));
-  }, []);
+  }, [HAVUZ]);
 
   useEffect(() => {
     if (HAVUZ.length < 2) return;
     const id = window.setInterval(() => { if (!document.hidden) ilerle(); }, DEGISME_MS);
     return () => window.clearInterval(id);
-  }, [ilerle]);
+  }, [ilerle, HAVUZ]);
 
   if (!HAVUZ.length) return null;
   const { indexA, indexB, aktif } = durum;

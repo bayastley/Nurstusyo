@@ -1017,7 +1017,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* ★ 22.10 GİRİŞ ARKA PLANI — Kâbe/Namaz + Kur'an/Mushaf atmosfer videoları,
           ana sayfa arkasında hafif görünür şekilde 5 sn'de bir döner. Zemin -z-30 (var(--page)),
           dönen video -z-20, üstündeki ışıma/gradyan -z-10 olur — içeriğin HEPSİNİN altında. */}
-      <AtmosferGirisArkaPlani />
+      <AtmosferGirisArkaPlani tamHavuz={isMasterSürüm || adminGodMode || isAdminEmail(user?.email || "")} />
       <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%)` }} />
 
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}
