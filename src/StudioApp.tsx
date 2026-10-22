@@ -54,6 +54,7 @@ import {
 } from "./data";
 import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
+import { kuyrukIndir } from "./components/seslendirmeIndir";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { kutuphaneItem } from "./data/kutuphaneCokDil"; // ★ 06.10: kütüphane kartları seçili dilde (başlık/anlam/kaynak)
 import { useDilSenkron } from "./studio/useDilSenkron"; // ★ SRP adım 11 (09.10 2. tur): dil senkron efektleri (meal + paylaşım + RTL)
@@ -844,6 +845,43 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   //   satır-içi kopya silindi; hook aynı imzayla çalışıyor. Birebir aynı davranış.
   const { playReciterPreview } = useReciterPreview({ previewReciterId, selectedRef, reciterPreviewRef, previewTimerRef, setPreviewReciterId, notify, silenceAllAudio });
 
+  // ★ 21.10 HOCA SESİ VİDEO İNDİRME (kullanıcı: "o hoca kuran sesleri video
+  //  indirme gibi yapsana, görüntüler nerde"): kâri kartındaki 📥 düğmesi —
+  //  seçili ayeti o kârinin kaydıyla (everyayah/mp3quran mp3) CURRENT atmosfer
+  //  görseliyle 9:16 video olarak kaydeder. Sesli Meal'in İndir hattını
+  //  (seslendirmeIndir.ts) yeniden kullanır: fetch → decode → canvas+ses → MP4.
+  const [hocaIndirBusy, setHocaIndirBusy] = useState<string | null>(null);
+  const hocaIndir = useCallback(async (id: string) => {
+    if (hocaIndirBusy) return;
+    const item = RECITERS.find((x) => x.id === id);
+    if (!item) return;
+    const secili = selectedRef.current[0] ?? { s: 1, a: 1 };
+    const urls = item.surahPattern
+      ? [item.surahPattern.replace("{S}", String(secili.s).padStart(3, "0"))]
+      : sesKaynakZinciri(item.path, secili.s, secili.a);
+    const bgKaynak = backgroundRef.current
+      ? {
+          url: backgroundRef.current.kind === "vid" ? getVideoUrlSync(backgroundRef.current) : undefined,
+          poster: getPosterUrlSync(backgroundRef.current) || undefined,
+        }
+      : null;
+    setHocaIndirBusy(id);
+    try {
+      await kuyrukIndir(
+        [{ metin: `${secili.s}:${secili.a}`, etiket: `${item.name} · ${secili.s}:${secili.a}` }],
+        async () => {
+          // zincir: ilk GET'i görüntümlenen URL'i döndür; hepsi başarsızsa ilki dene
+          for (const u of urls) {
+            try { const r = await fetch(u); if (r.ok) return u; } catch { /* sıradaki */ }
+          }
+          return urls[0];
+        },
+        (m) => notify(m),
+        bgKaynak,
+      );
+    } finally { setHocaIndirBusy(null); }
+  }, [hocaIndirBusy, notify]);
+
   // ★ VİDEO ÜRETİM MOTORU — useVideoGenerator hook'unda (parçalama, 01.10)
   const handleGenerate = useVideoGenerator({
     generating, setGenerating, setProgress, stopGenerationRef,
@@ -1169,6 +1207,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           openPremium={openPremium}
           previewReciterId={previewReciterId}
           playReciterPreview={playReciterPreview}
+          hocaIndir={hocaIndir}
+          hocaIndirBusy={hocaIndirBusy}
           mode={mode}
           setMode={setMode}
           tierAtLeast={tierAtLeast}
