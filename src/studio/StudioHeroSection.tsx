@@ -1,5 +1,19 @@
+import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { translate } from "../i18n";
+
+/** ★ 22.10 CANLI-DİL FIX: dil `nur_lang` localStorage'dan okunur; state-temelli
+ *  çeviri sistemiyle üzerinden zamanla kayar. StudioApp setLang artık
+ *  `nur_lang_degisti` olayı bildirir — bu hook'u çağıran bileşen anında çevrilir
+ *  (eski davranış: sayfa yenilenince düzelENiyordu). */
+function useDilDinleyicisi(): void {
+  const [, tazele] = useState(0);
+  useEffect(() => {
+    const dinler = () => tazele((x) => x + 1);
+    window.addEventListener("nur_lang_degisti", dinler);
+    return () => window.removeEventListener("nur_lang_degisti", dinler);
+  }, []);
+}
 
 // ★ i18n (03.10): başlık + tagline'lar t() anahtarlarına taşındı (05: prompt-1).
 //   Dil değişince track yeniden kurulur — CSS animasyonu içerik uzunluğundan
@@ -7,6 +21,7 @@ import { translate } from "../i18n";
 const TAG_KEYS = ["heroTag1", "heroTag2", "heroTag3", "heroTag4"] as const;
 
 export function StudioHeroSection() {
+  useDilDinleyicisi();
   const lang = localStorage.getItem("nur_lang");
   const t = (key: string) => translate(lang, key);
   // ★ 22.10 ORTALAMA (kullanıcı: "burayı ortalasın"): intro ilk ekranın

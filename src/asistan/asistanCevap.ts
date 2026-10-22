@@ -374,6 +374,18 @@ function sahiplikCevabi(seviye: AsistanSeviye): { cevap: string; aksiyon?: Asist
 const GUVENLIK_MESAJI =
   "Bu asistan güvenlik gereği KİŞİSEL VERİ sunmaz — kendi hesabınızın bakiye/ban/seviye bilgisi de, başka bir kişinin ya da admin'in e-posta/şifre/telefon bilgisi de vermez. Hesabınızla ilgili bilgi Profil sayfanızda, ekibe soru Geri Bildirim kutusundan gider. Başka bir konuda yardımcı olabilir miyim? 🌙";
 
+/** ★ 22.10 ZARARLI İÇERİK KAPISI — bomba/patlayıcı/silah/uyuşturucu tarzı
+ *  sorular "bilinmiyor" cevabına düşüp muştra gibi görülmemeli; net red döner. */
+const ZARARLI_ANAHTARLARI = [
+  "patlayici", "patlayıcı", "bomba", "el yapımı bomba", "el yapimi bomba",
+  "bombasi", "bombası",
+  "silah yap", "silah nasıl", "silah nasil", "silah evde", "tabanca yap",
+  "uyusturucu", "uyuşturucu", "uyuşturucu yap", "uyusturucu yap", "esrar", "metamfetamin",
+  "zehir yap", "zehir nasıl", "zehir nasil", "virüs yaz", "virus yaz", "troyan yaz", "keylogger yaz", "ddos saldiri", "ddos saldırı", "hiz bilgisayar", "hiz bilgisayarları", "hesap çal", "hesap cal",
+];
+const ZARARLI_MESAJI =
+  "Bu konuda yardım edemem 🙏 — Zarar verici içerik (bomba/silah/uyuşturucu/virüs/hesap hırsızlığı vb.) sorularına asistan cevap vermez; Nûr Stüdyo yalnızca Kur'an/dua/İslamî içerik üretimi içindir. Başka bir konuda yardımcı olabilir miyim? 🌙";
+
 export interface AsistanSonuc {
   /** eşleşen kural kimliği ('guvenlik' | kural id | 'bilinmiyor' | 'bos') */
   kural: string;
@@ -416,6 +428,11 @@ export function asistanCevap(soru: string, seviye: AsistanSeviye = "free"): Asis
   const guvenlikVardi = GUVENLIK_ANAHTARLARI.some((m) => n.includes(asistanNormallestir(m)));
   if (guvenlikVardi) {
     return { kural: "guvenlik", cevap: GUVENLIK_MESAJI, guvenlikKapisi: true };
+  }
+  // ★ zararlı içerik red kapısı — kişisel veri kapısından sonra, kural motorundan önce
+  const zararliVardi = ZARARLI_ANAHTARLARI.some((m) => n.includes(asistanNormallestir(m)));
+  if (zararliVardi) {
+    return { kural: "zararli", cevap: ZARARLI_MESAJI, guvenlikKapisi: true };
   }
 
   let enIyiRule: AsistanRule | null = null;

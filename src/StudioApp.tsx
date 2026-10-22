@@ -52,7 +52,7 @@ import {
   THEME_TIER,
   THEME_EMOJI_EXTRA,
 } from "./data";
-import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
+import { LANGS, MEAL_EDITIONS, T, translate, dilSaukle, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { kuyrukIndir } from "./components/seslendirmeIndir";
 import { AtmosferGirisArkaPlani } from "./components/AtmosferGirisArkaPlani";
@@ -163,7 +163,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const { genConfirmOpen, genConfirmData, showGenerateConfirm, handleGenConfirm, riskOnayData, showRiskOnay, handleRiskOnay } = useOnayPencereleri();
 
   // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
-  const [lang, setLang] = useState<Lang>(() => {
+  // ★ 22.10 CANLI-DİL FIX: bazı bileşenler (StudioHeroSection, AnnouncementBar…)
+  //   dil okumayı `nur_lang` localStorage'dan yapar; düz setState ile localStorage
+  //   efekttren sonra yazılıyor → dil değişimi ancak sayfa yenilenince uygulanıyordu.
+  //   setLang artık localStorage'ı SENKRON yazar (render anında okunabilmesi için)
+  //   ve `nur_lang_degisti` olayı bildirir — dinleyen bileşenler anında çevrilir.
+  const [lang, setLangState] = useState<Lang>(() => {
     const saved = localStorage.getItem("nur_lang");
     if (saved && LANGS.some((item) => item.code === saved)) return saved as Lang;
     // ★ ENDONEZYA ODAĞI (madde 5, 02.10): dil tercihi kayıtsızsa tarayıcı diline bak —
@@ -512,6 +517,22 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem(themeKey, theme.id); }, [theme, themeKey]);
   useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
+  /** ★ 22.10: dil güncelleyici — localStorage senkron + olay bildirimi (yukarıdaki not).
+   *  ★ 22.10 LAZY-DICT FIX: sözlükler lazy — dili değiştirirken hedef dil sözlüğü
+   *  hâlâ boşsa translate() TR'ye düşüyor (hero AR'da Türkçe kaliyordu).
+   *  Önce hedef dil sözlüğünü kur, sonra state+olay tetikle. */
+  const setLang = useCallback((value: Lang) => {
+    try {
+      localStorage.setItem("nur_lang", value);
+      const current = LANGS.find((item) => item.code === value);
+      document.documentElement.lang = value;
+      document.documentElement.dir = current?.dir ?? "ltr";
+    } catch { /* localStorage kapalı — state yine güncellenir */ }
+    void dilSaukle(value).then(() => {
+      setLangState(value);
+      window.dispatchEvent(new Event("nur_lang_degisti"));
+    });
+  }, []);
   // ★ DİL SENKRON EFEKTLERİ — useDilSenkron hook'unda (SRP adım 11, 09.10 2. tur):
   //   meal-dil senkronu + paylaşım metni dili + RTL mirror — birebir aynı davranış.
   useDilSenkron({
