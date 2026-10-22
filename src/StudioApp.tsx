@@ -55,6 +55,7 @@ import {
 import { LANGS, MEAL_EDITIONS, T, translate, type Lang } from "./i18n";
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { kuyrukIndir } from "./components/seslendirmeIndir";
+import { AtmosferGirisArkaPlani } from "./components/AtmosferGirisArkaPlani";
 import { LIBRARY_ITEMS, type LibraryItem, type LibraryType, type Emotion } from "./dualar";
 import { kutuphaneItem } from "./data/kutuphaneCokDil"; // ★ 06.10: kütüphane kartları seçili dilde (başlık/anlam/kaynak)
 import { useDilSenkron } from "./studio/useDilSenkron"; // ★ SRP adım 11 (09.10 2. tur): dil senkron efektleri (meal + paylaşım + RTL)
@@ -1013,7 +1014,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {maintenance.enabled && (!maintenance.startsAt || Date.now() >= new Date(maintenance.startsAt).getTime()) && (!maintenance.endsAt || Date.now() < new Date(maintenance.endsAt).getTime()) && !isMasterSürüm && (
         <MaintenanceScreen message={maintenance.message} endsAt={maintenance.endsAt ?? null} />
       )}
-      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%),var(--page)` }} />
+      {/* ★ 22.10 GİRİŞ ARKA PLANI — Kâbe/Namaz + Kur'an/Mushaf atmosfer videoları,
+          ana sayfa arkasında hafif görünür şekilde 5 sn'de bir döner. Zemin -z-30 (var(--page)),
+          dönen video -z-20, üstündeki ışıma/gradyan -z-10 olur — içeriğin HEPSİNİN altında. */}
+      <AtmosferGirisArkaPlani />
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: `radial-gradient(900px 560px at 88% -8%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),radial-gradient(800px 600px at -10% 100%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 58%)` }} />
 
       {/* ANNOUNCEMENT BAR (DİNAMİK MANEVİ TAKVİM & TIKLA-AL ÖDÜL ŞERİDİ) */}
       <AnnouncementBar

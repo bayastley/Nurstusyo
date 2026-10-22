@@ -9,8 +9,11 @@ const TAG_KEYS = ["heroTag1", "heroTag2", "heroTag3", "heroTag4"] as const;
 export function StudioHeroSection() {
   const lang = localStorage.getItem("nur_lang");
   const t = (key: string) => translate(lang, key);
+  // ★ 22.10 ORTALAMA (kullanıcı: "burayı ortalasın"): intro ilk ekranın
+  //   içinde dikeyde ortalanır — arka plandaki atmosfer videosuyla dengeli,
+  //   üste yapışık durmaz.
   return (
-    <section className="relative mx-auto max-w-[1500px] px-4 pb-3 pt-10 text-center sm:pt-14">
+    <section className="relative mx-auto flex min-h-[42svh] max-w-[1500px] flex-col items-center justify-center px-4 pb-6 pt-6 text-center sm:min-h-[52svh] sm:pt-8">
       {/* ★ 04.10: Basmala — U+FDFD ligatürü yerine sabit Arapça yazım + notranslate.
           Ligatürü Google Translate "Bismillahirrahmanirrahim" diye çeviriyordu;
           basmala hiçbir dilde çevrilmez, Arapça kalır. */}
