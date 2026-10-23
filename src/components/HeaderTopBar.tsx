@@ -80,9 +80,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     { icon: Film, label: "Haftanın Videosu", target: "haftaninVideosu" as ModalName, hedef: "free" },
     { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName, hedef: "free" },
     { icon: Moon, label: "Ramazan & Kandil", target: "ramazan" as ModalName, hedef: "free" },
-    { icon: Radio, label: t("menuKabeCanli"), target: "quranLearn" as ModalName, hedef: "free", kabe: true },
+    // ★ 23.10 (kullanıcı emri): Kâbe Canlı ve İçindekiler kaldırıldı — ikisi de
+    //   zaten üst barda ayrı buton olarak duruyor (yeşil 🕋 + info), menüde
+    //   tekrar etmek gereksiz yer kaplıyordu.
     { icon: Heart, label: "Arkadaşını Davet Et · Ödül", target: "davet" as ModalName, hedef: "free" },
-    { icon: Info, label: "İçindekiler · Site Hakkında", target: "siteHakkinda" as ModalName, hedef: "free" },
     { icon: Sparkles, label: "Kendi Sesinle Üret", target: "kendiSes" as ModalName, hedef: "elit" },
     { icon: Headphones, label: "Sesli Meal · Seslendirme", target: "seslendirme" as ModalName, hedef: "elit" },
   ];
