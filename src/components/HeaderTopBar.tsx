@@ -300,26 +300,40 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
                       { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName },
                       { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                    ].map((item) => (
-                      <button key={item.target} onClick={() => { setModal(item.target as ModalName); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                        <item.icon size={14} style={{ color: "var(--accent)" }} />
+                    ].map((item) => {
+                      // ★ 23.10 (kullanıcı emri): V2-kilitli satır normal kullanıcıya
+                      //   SOLUK GRI + TIKLANAMAZ — rozet kadar satır da kilit hissi verir.
+                      //   Admin/master'da davranış değişmez (rozet gizli, satır normal).
+                      //   Derin savunma: ModalsContainer'daki merkezî v2Gate yerinde kalır.
+                      const v2Idler = ["ayetKartlari", "ayetNotlari", "kesfet", "haftaninVideosu", "ozelGunTakvimi", "kelimeAtolyesi", "arkaPlanUretici", "ayetPaketleri"];
+                      const adminMisini = user != null && isAdminEmail(user.email || "");
+                      const v2Kilitli = typeof item.target === "string" && (v2Idler as string[]).includes(item.target) && !(adminMisini || isMasterSürüm);
+                      return (
+                      <button
+                        key={item.target}
+                        disabled={v2Kilitli}
+                        aria-disabled={v2Kilitli || undefined}
+                        onClick={() => { if (v2Kilitli) return; setModal(item.target as ModalName); setMenuOpen(false); }}
+                        className={
+                          v2Kilitli
+                            ? "flex min-h-[42px] w-full cursor-not-allowed items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/25"
+                            : "flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white"
+                        }
+                      >
+                        <item.icon size={14} style={{ color: v2Kilitli ? "rgba(255,255,255,.18)" : "var(--accent)" }} />
                         <span className="flex-1 truncate">{item.label}</span>
-                        {/* ★ 17.10 V2 KİLİT ÇİPÜ: oylamaya konan modüllerde 🔒 rozet —
-                            admin/master'da gizli; tıklanınca v2Gate yol haritasına atar. */}
-                        {(() => {
-                          // ★ 17.10: hafizlikTesti çıkarıldı — artık free, Kur'an Öğreniyorum altında
-                          const v2Idler = ["ayetKartlari", "ayetNotlari", "kesfet", "haftaninVideosu", "ozelGunTakvimi", "kelimeAtolyesi", "arkaPlanUretici", "ayetPaketleri"];
-                          const adminMisini = user != null && isAdminEmail(user.email || "");
-                          const v2Kilitli = typeof item.target === "string" && (v2Idler as string[]).includes(item.target) && !(adminMisini || isMasterSürüm);
-                          if (!v2Kilitli) return null;
-                          return (
-                            <span className="ml-auto shrink-0 rounded-full bg-amber-500/15 border border-amber-400/25 px-1.5 py-0.5 text-[7px] font-black tracking-wide text-amber-300" title="Oylamada — Yol Haritası'ndan oy ver">
-                              🔒 V2
-                            </span>
-                          );
-                        })()}
+                        {v2Kilitli && (
+                          // ★ 23.10: amber rozet SOLUK GRI oldu — "yakında" hissi, tıklanabilir öneri değil
+                          <span
+                            className="ml-auto shrink-0 rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[7px] font-black tracking-wide text-white/35"
+                            title={t("lockV2Tooltip")}
+                          >
+                            🔒 V2
+                          </span>
+                        )}
                       </button>
-                    ))}
+                      );
+                    })}
 
                     <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
                       <HelpCircle size={14} style={{ color: "var(--accent)" }} />
