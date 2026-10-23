@@ -33,6 +33,8 @@ export const MOOD_ONERI_GORUNUM: Record<string, Partial<Record<Lang, string>>> =
   "çocukluk anıları":              { en: "childhood memories",          ar: "ذكريات الطفولة",           id: "kenangan masa kecil",          ur: "بچپن کی یادیں" },
   "tespih sonrası dinginlik":      { en: "calm after dhikr beads",      ar: "سكينة بعد التسبيح",        id: "ketenangan setelah tasbih",    ur: "تسبیح کے بعد سکون" },
   "vahşi okyanus dalgaları":       { en: "wild ocean waves",            ar: "أمواج المحيط الهائجة",     id: "ombak lautan yang liar",       ur: "وحشی سمندری لہریں" },
+  "çölde peygamber izinde":        { en: "on the Prophet's desert path", ar: "على خطى النبي في الصحراء", id: "di jalan Nabi di gurun",       ur: "صحرا میں نبی کے نقش قدم پر" },
+  "hicret kumulları":              { en: "the dunes of hijrah",         ar: "كثبان الهجرة",             id: "gumuk hijrah",                 ur: "ہجرت کے ریت کے ٹیلے" },
 };
 
 /** Çipin seçili dildeki görünen etiketi — çeviri yoksa TR metin */
@@ -64,6 +66,7 @@ export const MOOD_AD_COKDIL: Record<string, Partial<Record<Lang, string>>> = {
   "imtihan":    { en: "Trial & Storm",   ar: "الابتلاء والعاصفة", id: "Ujian & Badai", ur: "آزمائش اور طوفان" },
   "saf":        { en: "Pure & Clear",    ar: "الصفاء والنقاء", id: "Murni & Jernih", ur: "پاکی اور صفائی" },
   "sanat":      { en: "Pattern & Art",   ar: "الزخرفة والفن", id: "Corak & Seni",  ur: "نقش و نگار" },
+  "col":        { en: "Desert & Hijrah", ar: "الصحراء والهجرة", id: "Gurun & Hijrah", ur: "صحرا اور ہجرت" },
   "kuranyolu":  { en: "Mushaf & Reading", ar: "المصحف والقراءة", id: "Mushaf & Membaca", ur: "مصحف اور تلاوت" },
 };
 
@@ -86,6 +89,7 @@ export const MOOD_PLAN_COKDIL: Record<string, Partial<Record<Lang, string>>> = {
   "saf":       { en: "Snow + cloud whiteness, neutral cinema tone: simplicity.", ar: "بياض الثلج + السحاب، نغمة سينمائية محايدة: البساطة.", id: "Keputihan salju + awan, nada sinema netral: kesederhanaan.", ur: "برف کی سفیدی + بادل، غیر جانبدار سینمائی لہجہ: سادگی۔" },
   "sanat":     { en: "Geometric pattern + architectural detail, golden accent: a handcrafted feel.", ar: "زخرفة هندسية + تفصيل معماري، لمسة ذهبية: إحساس الصناعة اليدوية.", id: "Pola geometris + detail arsitektur, aksen emas: nuansa kerajinan tangan.", ur: "ہندسی نقش + تعمیری تفصیل، سنہری نمایاں: دستکاری کا احساس۔" },
   "kuranyolu": { en: "Mushaf + pattern, warm reading light: a scene close to the Word.", ar: "المصحف + الزخرفة، ضوء قراءة دافئ: مشهد قريب من الكلمة.", id: "Mushaf + pola, cahaya baca hangat: adegan dekat dengan Sabda.", ur: "مصحف + نقش، گرم مطالعاتی روشنی: کلام کے قریب منظر۔" },
+  "col":       { en: "Desert dunes + golden-hour light + mountain silhouette: a scene of hijrah and patience, in warm golden-traditional tone.", ar: "كثبان الصحراء + ضوء الساعة الذهبية + ظل الجبل: مشهد الهجرة والصبر بنائر ذهبي دافئ.", id: "Gumuk gurun + cahaya jam keemasan + siluet pegunungan: adegan hijrah dan kesabaran, nada emas hangat.", ur: "صحرا کے ریت کے ٹیلے + عصرِ زرین کی روشنی + پہاڑوں کا سایہ: ہجرت اور صبر کا منظر، گرم سنہری لہجے میں۔" },
 };
 
 /** Mood plan cümlesinin seçili dildeki görünümü — çeviri yoksa TR plan */

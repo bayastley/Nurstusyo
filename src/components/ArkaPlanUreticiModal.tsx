@@ -179,6 +179,19 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
                 <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
               )}
             </div>              <p className="text-[10px] leading-relaxed text-white/55">{moodPlanGorunum(aktifMood.id, aktifMood.plan, lang)}</p>
+            {/* ★ 23.10: ayet önerisi — mood'a yakışan ayet bilgi olarak gösterilir (emir değil) */}
+            {aktifMood.ayet && (
+              <p className="mt-2 rounded-lg border border-white/10 bg-white/[.04] p-2 text-[9.5px] leading-relaxed text-white/70">
+                📖 Ayet önerisi: {aktifMood.ayet}
+              </p>
+            )}
+            {/* ★ 23.10: dürüst eşleşme notu — tam eşleşme yoksa kullanıcı bunu bilsin */}
+            {!tamEslesme && (
+              <p className="mt-2 text-[9px] leading-relaxed text-amber-200/70">
+                ℹ️ Birebir mood eşleşmesi bulunamadı — yazdığın metinden en yakın sahne önerildi.
+                Anahtar kelimeler işe yarar, ör.: çöl, peygamber, hicret, gece, Kâbe, deniz, dağ.
+              </p>
+            )}
             <p className="mt-2 text-[8.5px] italic text-white/35">{tt("auDurustNot")}</p>
           </div>
 

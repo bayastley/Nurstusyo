@@ -28,6 +28,8 @@ export interface MoodPreset {
   filtre: string;
   /** Kullanıcının metnine döndürülen dürüst açıklama */
   plan: string;
+  /** ★ 23.10: bu ruh hâline yakışan ayet önerisi (sahne kartında bilgi olarak gösterilir) */
+  ayet?: string;
 }
 
 // ── Mood presetleri: yazılan ruh hâli → sahne planı ──────
@@ -52,6 +54,14 @@ export const MOOD_PRESETLERI: MoodPreset[] = [
     anahtarlar: ["kabe", "hac", "umre", "mekke", "namaz", "secde", "kible"],
     cats: ["namaz", "cami", "desen"], filtre: "kabe",
     plan: "Kâbe + İslam mimarisi, 'Kâbe Vurgulu' altın kontrastıyla." },
+  // ★ 23.10 (kullanıcı emri): ÇOL/PEYGAMBER preset EKLENDİ — "çölde peygamber gidiyor"
+  //   gibi metinler önceden hiçbir anahtarla eşleşmiyor ve sessizce Huzur planına
+  //   (göl+gece) düşüyordu. Artık çöl kumulları + altın saat ışığı atanır.
+  { id: "col", emoji: "🏜️", ad: "Çöl & Hicret",
+    anahtarlar: ["col", "peygamber", "nebi", "hicret", "kum", "sahra"],
+    cats: ["col", "gunbatimi", "daglar"], filtre: "altinsaat",
+    plan: "Çöl kumulları + gün batımı ışığı + dağ silüeti: hicret ve sabır sahnesi, sıcak altın saat filtresiyle.",
+    ayet: "Tevbe 9:40 — «...ikisi mağarada iken arkadaşına der ki: üzülme, Allah bizimledir...» — çölde hicret ve sabır sahnesine birebir." },
   { id: "yesil", emoji: "🌿", ad: "Cennet Yeşili",
     anahtarlar: ["cennet", "yesil", "bahce", "ormat", "orman", "hayat", "taze", "buyume"],
     cats: ["cennet", "orman", "cicekler"], filtre: "zumrut",
@@ -172,6 +182,7 @@ export const MOOD_ONERILERI: string[] = [
   "dağların ardında gün doğumu", "bulutların üstünde uçmak",
   "camide akşam ezanı", "mescidin avlusunda gölge",
   "ırmak kenarında zikir", "yıldız kayması dileği",
+  "çölde peygamber izinde", "hicret kumulları",
   "anne kucağı sıcaklığı", "çocukluk anıları",
   "tespih sonrası dinginlik", "vahşi okyanus dalgaları",
 ];
