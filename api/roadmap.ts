@@ -318,6 +318,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rmCache = null;
         return res.status(200).json({ ok: true });
       }
+      // ★ 23.10 BOŞALTI (sahibin emri): yalnızca V3 (uzun vadeli) satırları DB'den sil.
+      //   Kod tarafında DEFAULT_V3 artık BOŞ (roadmapVeri.ts); DB'deki eski maddeler
+      //   Get'te canlı yaşamaya devam etmesin diye bu tek tıkla temizlenir. V2
+      //   oylama satırları ve oylar DOKUNULMAZ — kullanıcı bir seansta yönetir, oy kaybı yok.
+      if (action === "clearV3") {
+        await db("nur_roadmap_features?version=eq.V3", { method: "DELETE" });
+        rmCache = null;
+        return res.status(200).json({ ok: true });
+      }
       // ★ 10.10: Admin-gizli maddeyi V2 oylama listesine EKLER.
       //   Kullanıcılar göremez (getFeatureLock "hidden" → ... admin?) — sadece admin.
       //   Admin istediğini "free"/"pro"/"elit"e çekince "yeni güncelleme" gibi

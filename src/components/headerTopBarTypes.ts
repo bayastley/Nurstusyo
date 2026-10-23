@@ -21,7 +21,9 @@ export interface HeaderTopBarProps {
   setBatchFormats: (val: any) => void;
   notify: (msg: string) => void;
   jetonCount: number;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
+  /** ★ 23.10: hedefTier passthrough — üyeliğe dağıtılan menü satırı kilitliyse
+   *   PremiumModal doğrudan pro/elit kartına odaklanır (ModalsContainer ile aynı imza). */
+  openPremium: (tab?: "uyelik" | "jeton", hedefTier?: "pro" | "elit") => void;
   lang: Lang;
   setLang: (lang: Lang) => void;
   langOpen: boolean;

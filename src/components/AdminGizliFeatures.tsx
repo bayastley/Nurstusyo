@@ -163,19 +163,40 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
     finally { setBusyId(null); }
   };
 
+  // ★ 23.10 BOŞALTI (sahibin emri): V3 (uzun vadeli) satırlarını DB'den boşalt —
+  //   listeyi admin roadmap panelindeki "Ekle" formuyla kendisi doldurur.
+  //   V2 oylama satırları ve oylar dokunulmaz.
+  const v3Bosalt = async () => {
+    setYukleniyor(true);
+    try {
+      const r = await fetch("/api/roadmap", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clearV3" }),
+      });
+      const d = await r.json().catch(() => null) as { ok?: boolean; error?: string } | null;
+      if (r.ok && d?.ok) {
+        notify("🧹 V3 (uzun vadeli) listesi boşaltıldı — V2 oylaması ve oylar korundu");
+      } else notify(d?.error || "Boşaltma başarısız");
+    } catch { notify("Sunucuya ulaşılamadı"); }
+    finally { setYukleniyor(false); }
+  };
+
   // ★ Oylama listesini sıfırla + admin maddelerini ekle (tek tık)
+  // ★ 23.10 FIX: resetAllFeatures + addAdminFeatures API'de DELETE altındaydı;
+  //   POST gönderiliyordu → 400 "Geçersiz özellik" dönüşüp hiç çalışmıyordu.
   const hazirla = async () => {
     setYukleniyor(true);
     try {
       const resetResponse = await fetch("/api/roadmap", {
-        method: "POST",
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "resetAllFeatures" }),
       });
       const resetData = await resetResponse.json().catch(() => null) as { ok?: boolean } | null;
       if (!resetResponse.ok || !resetData?.ok) { notify("Sıfırlama başarısız"); return; }
       const addResponse = await fetch("/api/roadmap", {
-        method: "POST",
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "addAdminFeatures" }),
       });
@@ -213,6 +234,15 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}
         >
           <RotateCcw size={13} /> Oylama Listesini Sıfırla + 22 Gizli Maddeyi Yerleştir
+        </button>
+        {/* ★ 23.10 BOŞALTI — V3 uzun vadeli listeyi tek tıkla temizler (sahibin emri:
+            "uzun vadelileri boşalt, hiçbir şey yazma, biz dolduralım"). V2 + oylar korunur. */}
+        <button
+          onClick={v3Bosalt}
+          disabled={yukleniyor}
+          className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/15 py-2 text-[10px] font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
+        >
+          <EyeOff size={12} /> V3 (Uzun Vadeli) Listesini Boşalt — V2 oyuna dokunma
         </button>
       </div>
 

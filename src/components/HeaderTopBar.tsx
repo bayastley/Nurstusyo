@@ -9,7 +9,7 @@ import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, isSadikUye } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, isSadikUye, tierAtLeast, getCurrentTier } from "../tier";
 import { TIER_LABEL } from "./premiumModalHelpers";
 import { getSystemConfig, fetchRemoteConfig, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
@@ -59,6 +59,33 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     return () => window.removeEventListener("nur_araclar_ac", ac);
   }, []);
   const updatesTimer = React.useRef<number>(0);
+
+  // ★ 23.10 TAM MODÜL MENÜSÜ + ÜYELİK DAĞITIMI (kullanıcı emri):
+  //   "bütün özellikler sol üç çizgide gözüksün, aç; üyeliklere dağıt".
+  //   • Her özellik menüde GÖRÜNÜR ve SATIR AÇIK — artık tıklanamaz 🔒 V2 satırı yok.
+  //   • Üyelik dağıtımı (hedef alanı): free satır herkese açılır; pro/elit satırı
+  //     kullanıcının tier'ı yetersizse PremiumModal'ı hedef kartla açar (satır kilitli değil).
+  //   • Admin/master'da her satır serbest (KALICI EMİR: adminte her kilit açık).
+  //   • Görsel dağılım artık demokratik: Roads RoadmapModal'dan bağımsız.
+  type MenuPozisyon = { icon: React.ElementType; label: string; target: ModalName; hedef: "free" | "pro" | "elit"; kabe?: boolean };
+  const MENU_OZELLIKLER: MenuPozisyon[] = [
+    { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName, hedef: "pro" },
+    { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName, hedef: "pro" },
+    { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName, hedef: "free" },
+    { icon: Type, label: "Kelime Atölyesi", target: "kelimeAtolyesi" as ModalName, hedef: "pro" },
+    { icon: NotebookPen, label: "Ayet Notlarım", target: "ayetNotlari" as ModalName, hedef: "elit" },
+    { icon: Wand2, label: "AI Arka Plan Üretici", target: "arkaPlanUretici" as ModalName, hedef: "elit" },
+    { icon: Compass, label: "Keşfet Merkezi", target: "kesfet" as ModalName, hedef: "free" },
+    { icon: Brain, label: "Hafızlık Testi", target: "hafizlikTesti" as ModalName, hedef: "free" },
+    { icon: Film, label: "Haftanın Videosu", target: "haftaninVideosu" as ModalName, hedef: "free" },
+    { icon: CalendarDays, label: "Özel Gün Takvimi", target: "ozelGunTakvimi" as ModalName, hedef: "free" },
+    { icon: Moon, label: "Ramazan & Kandil", target: "ramazan" as ModalName, hedef: "free" },
+    { icon: Radio, label: t("menuKabeCanli"), target: "quranLearn" as ModalName, hedef: "free", kabe: true },
+    { icon: Heart, label: "Arkadaşını Davet Et · Ödül", target: "davet" as ModalName, hedef: "free" },
+    { icon: Info, label: "İçindekiler · Site Hakkında", target: "siteHakkinda" as ModalName, hedef: "free" },
+    { icon: Sparkles, label: "Kendi Sesinle Üret", target: "kendiSes" as ModalName, hedef: "elit" },
+    { icon: Headphones, label: "Sesli Meal · Seslendirme", target: "seslendirme" as ModalName, hedef: "elit" },
+  ];
 
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
   const [banCount, setBanCount] = React.useState<number>(() => getBanLogs().length);
@@ -152,7 +179,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                   <button className="fixed inset-0 z-40 cursor-default" aria-label={t("hbrMenuKapat")} onClick={() => setMenuOpen(false)} />
                   <div
                     data-sidebar-panel="true"
-                    className="modal-in absolute left-0 top-12 z-50 w-60 rounded-xl py-1.5 shadow-2xl"
+                    className="modal-in absolute left-0 top-12 z-50 w-60 max-h-[calc(100dvh-72px)] overflow-y-auto rounded-xl py-1.5 shadow-2xl"
                     style={{
                       background: "#101219",
                       border: "1px solid rgba(255,255,255,.10)",
@@ -296,39 +323,37 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                           ModalsContainer'daki merkezî v2 geçidi kilitliyken modalı bir an
                           bile açmaz, yol haritasına atar. */
                     }
-                    {[
-                      { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName },
-                      { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName },
-                      { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName },
-                    ].map((item) => {
-                      // ★ 23.10 (kullanıcı emri): V2-kilitli satır normal kullanıcıya
-                      //   SOLUK GRI + TIKLANAMAZ — rozet kadar satır da kilit hissi verir.
-                      //   Admin/master'da davranış değişmez (rozet gizli, satır normal).
-                      //   Derin savunma: ModalsContainer'daki merkezî v2Gate yerinde kalır.
-                      const v2Idler = ["ayetKartlari", "ayetNotlari", "kesfet", "haftaninVideosu", "ozelGunTakvimi", "kelimeAtolyesi", "arkaPlanUretici", "ayetPaketleri"];
-                      const adminMisini = user != null && isAdminEmail(user.email || "");
-                      const v2Kilitli = typeof item.target === "string" && (v2Idler as string[]).includes(item.target) && !(adminMisini || isMasterSürüm);
+                    {MENU_OZELLIKLER.map((item) => {
+                      // ★ 23.10 ÜYELİK DAĞITIMI: satır herkes için GÖRÜNÜR ve TIKLANABİLİR.
+                      //   Kullanıcı tier'ı satırın hedefi yerine düşükse PremiumModal hedef
+                      //   kartla açılır ("üyelik" sekmesi, pro/elit odak); yeterliyse modal
+                      //   doğrudan açılır. Admin/master her satırda serbest (KALICI EMİR).
+                      const adminGecis = (user != null && isAdminEmail(user.email || "")) || isMasterSürüm;
+                      const mevcutTier: "free" | "pro" | "elit" = adminGecis ? "elit" : (tier || getCurrentTier());
+                      const yetersiz = !adminGecis && item.hedef !== "free" && !tierAtLeast(mevcutTier, item.hedef);
                       return (
                       <button
                         key={item.target}
-                        disabled={v2Kilitli}
-                        aria-disabled={v2Kilitli || undefined}
-                        onClick={() => { if (v2Kilitli) return; setModal(item.target as ModalName); setMenuOpen(false); }}
-                        className={
-                          v2Kilitli
-                            ? "flex min-h-[42px] w-full cursor-not-allowed items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/25"
-                            : "flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white"
-                        }
+                        onClick={() => {
+                          setMenuOpen(false);
+                          if (item.kabe) window.dispatchEvent(new Event("nur_kabe_ac"));
+                          if (yetersiz) openPremium("uyelik", item.hedef === "elit" ? "elit" : "pro");
+                          else setModal(item.target);
+                        }}
+                        className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white"
                       >
-                        <item.icon size={14} style={{ color: v2Kilitli ? "rgba(255,255,255,.18)" : "var(--accent)" }} />
+                        <item.icon size={14} style={{ color: "var(--accent)" }} />
                         <span className="flex-1 truncate">{item.label}</span>
-                        {v2Kilitli && (
-                          // ★ 23.10: amber rozet SOLUK GRI oldu — "yakında" hissi, tıklanabilir öneri değil
+                        {item.hedef !== "free" && !adminGecis && (
                           <span
-                            className="ml-auto shrink-0 rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-[7px] font-black tracking-wide text-white/35"
-                            title={t("lockV2Tooltip")}
+                            className={`ml-auto shrink-0 rounded-full border px-1.5 py-0.5 text-[7px] font-black tracking-wide ${
+                              item.hedef === "elit"
+                                ? "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300"
+                                : "border-amber-400/40 bg-amber-500/15 text-amber-300"
+                            }`}
+                            title={item.hedef === "elit" ? "ELİT üyelikle açılır" : "PRO üyelikle açılır"}
                           >
-                            🔒 V2
+                            {item.hedef === "elit" ? "ELİT" : "PRO"}
                           </span>
                         )}
                       </button>
