@@ -47,6 +47,9 @@ interface CanvasDrawParams {
   previewDuration: number;
   previewIsSurah: boolean;
   user: unknown;
+  /** ★ Üretim sürerken canvas üretici motorun elindedir (0.66 düşük çöz. ölçeği,
+   *  toplu format döngüsü) — önizleme senkronu bu pencerede KAPALI olmalı */
+  generating: boolean;
   /** ★ RENK ÇUBUĞU (01.10) — çerçeve iç kenarında dikey gökkuşağı şeridi (ayetKartMotoru ile paylaşımlı) */
   cubuk: CubukAyar;
   /** ★ ÖZEL YAZI (01.10) — kullanıcının kendi mesajı, videonun içine çizilir */
@@ -170,7 +173,7 @@ export function useCanvasDraw(p: CanvasDrawParams) {
         //   (taşan metin, kesik satırlar). Artık hedef boyuttan saparsa her kare
         //   yeniden boyutlanır — hiçbir tier'da önizleme bozulmuş görünmez.
         const [targetW, targetH] = dimensions(p.aspectRef.current);
-        if (canvas.width !== targetW || canvas.height !== targetH) {
+        if (!p.generating && (canvas.width !== targetW || canvas.height !== targetH)) {
           canvas.width = targetW;
           canvas.height = targetH;
         }

@@ -640,7 +640,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     videoWatchdog, imageCache, videoCache, ensureImage, ensureVideo,
     showArapca, showSubMeal, accessTier, arabicFontCss, arabicFontWeight: arabicFontW, textSizeMul, mealSizeMul: mealSizeFine, shimmerCfg, shimmerIntensity, cardBg, textOffset,
     cubuk: cubukAyar, mesaj: mesajAyar,
-    cineFilter, isMasterSürüm, brandSignature, brandOn, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user,
+    cineFilter, isMasterSürüm, brandSignature, brandOn, brandPos, previewFps: renderQuality.previewFps, previewTime, previewDuration, previewIsSurah: Boolean(reciter.surahPattern), user, generating,
   });
 
   // Canvas draw kodu useCanvasDraw hook'una taşındı
