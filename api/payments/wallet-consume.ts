@@ -26,8 +26,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "payments/wallet-consume"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* ★ 23.10 FIX: öz-yinelemeli logServerError çağrısı kaldırıldı (sonsuz özyineleme) */ }
 }
 
 // ═══════════════════════════════════════════════════════════════

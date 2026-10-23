@@ -27,8 +27,9 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "auth/logout"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* ★ 23.10 FIX: eskiden burada logServerError kendini tekrar çağırıyordu —
+    log yazımı sürekli patlarsa sonsuz özyineleme (stack overflow) üretiyordu.
+    Log yazımı siteyi ASLA bozmaz: sessizce yut. */ }
 }
 
 const ALLOWED_ORIGINS = new Set([

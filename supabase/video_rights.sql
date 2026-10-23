@@ -47,8 +47,11 @@ as $$
 declare
   v_remaining integer;
 begin
-  if coalesce(auth.role(), '') <> 'service_role'
-     and (auth.uid() is null or auth.uid()::text <> p_user_id) then
+  -- ★ 23.10 PENTEST FIX (self-grant açık): eski koşul auth.uid() = p_user_id
+  --   eşleşmesine izin veriyordu — execute yetkisi bugün kapalı olsa da, ileride
+  --   execute grant geri açılırsa kullanıcı KENDİNE sınırsız paket hakkı verebilirdi.
+  --   Sipariş/callback akışı hep SERVICE_ROLE ile çağırır → sadece service_role.
+  if coalesce(auth.role(), '') <> 'service_role' then
     return query select false, 0, 'UNAUTHORIZED';
     return;
   end if;

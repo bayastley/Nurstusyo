@@ -219,17 +219,14 @@ export default async function handler(req: any, res: any) {
       return;
     }
 
+    // ★ 23.10 FIX: eski CATALOG_TRY_MINOR tablosu SİLİNDİ — hiçbir yerde
+    //   okunmuyordu VE fiyatları eskiydi (250₺). Tek doğru kaynak aşağıdaki
+    //   bolgePlanlari.TR + yukarıdaki PRODUCT_CATALOG'tur (ikisi de 149₺/249₺).
     // ★ BÖLGESEL ÜCRETLENDİRME ANAHTARI (05.10):
     //   NUR_MULTI_CURRENCY=true iken Vercel geo header'ına göre abonelikler
     //   USD/EUR/GBP ücretlendirilir (iyzico destekler); anahtar yoksa/yok ülkeyse
     //   HERKES TRY (mevcut davranış — hiçbir canlı ödeme bozulmaz).
     //   Fiyatlar src/payments/pricingData.ts REGIONAL_PLANS ile TEK KAYNAK.
-    const CATALOG_TRY_MINOR: Record<string, number> = {
-      SUB_PRO_1M: 25000, SUB_ELIT_1M: 49900, SUB_PRO_1Y: 270000, SUB_ELIT_1Y: 509000,
-      PK_KISA_15: 3500, PK_KISA_35: 6900, PK_KISA_70: 11900,
-      PK_UZUN_8: 4500, PK_UZUN_20: 8900, PK_UZUN_40: 14900,
-      PK_TAM_2: 3900, PK_TAM_5: 8900, PK_TAM_10: 15900,
-    };
     const geoCountry = String(req.headers['x-vercel-ip-country'] || '').toUpperCase();
     const multiPara = process.env.NUR_MULTI_CURRENCY === 'true' && /^[A-Z]{2}$/.test(geoCountry);
     let price = catalogItem.price;
@@ -238,8 +235,11 @@ export default async function handler(req: any, res: any) {
     if (multiPara) {
       const EUR_ULKELER = new Set(['DE','FR','NL','BE','AT','IT','ES','PT','SE','DK','FI','IE','GR','PL','CZ','SK','HU','RO','BG','HR','SI','EE','LV','LT','LU','MT','CY']);
       const bolge = geoCountry === 'TR' ? 'TR' : (geoCountry === 'GB' || geoCountry === 'UK') ? 'GBP' : EUR_ULKELER.has(geoCountry) ? 'EUR' : 'USD';
+      // ★ 23.10 FIX: TR satırı eski 250₺ fiyatını taşıyordu — NUR_MULTI_CURRENCY=true
+      //   iken TR ziyaretçisi PRO için 149 yerine 250₺ ödeyecekti. Katalogla hizalandı
+      //   (SUB_PRO_1M 149 / SUB_ELIT_1M 249 / PRO 1Y 1610 / ELİT 1Y 2540).
       const bolgePlanlari: Record<string, Record<string, number>> = {
-        TR:  { SUB_PRO_1M: 250, SUB_ELIT_1M: 499, SUB_PRO_1Y: 2700, SUB_ELIT_1Y: 5090 },
+        TR:  { SUB_PRO_1M: 149, SUB_ELIT_1M: 249, SUB_PRO_1Y: 1610, SUB_ELIT_1Y: 2540 },
         USD: { SUB_PRO_1M: 10, SUB_ELIT_1M: 20, SUB_PRO_1Y: 108, SUB_ELIT_1Y: 204 },
         EUR: { SUB_PRO_1M: 9, SUB_ELIT_1M: 18, SUB_PRO_1Y: 97, SUB_ELIT_1Y: 184 },
         GBP: { SUB_PRO_1M: 8, SUB_ELIT_1M: 16, SUB_PRO_1Y: 86, SUB_ELIT_1Y: 163 },

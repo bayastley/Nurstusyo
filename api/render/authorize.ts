@@ -27,8 +27,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "render/authorize"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* ★ 23.10 FIX: öz-yinelemeli logServerError çağrısı kaldırıldı (sonsuz özyineleme) */ }
 }
 
 declare const process: { env: Record<string, string | undefined> };
