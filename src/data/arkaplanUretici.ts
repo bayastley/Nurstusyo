@@ -133,16 +133,92 @@ export interface MoodSonuc {
   eslesen: string;
 }
 
-/** Kullanıcı metninden mood preset bulur (birebir > kelime başlangıcı) */
+import { MOOD_SOZLUK, type MoodId } from "./moodSozluk";
+
+/**
+ * ★ 23.10 SÖZLÜK MOTORU (kullanıcı emri: "tek tek anahtar eklemeyeyim,
+ * sözlükte ne varsa olsun, 5 dil entegre"): moodBul artık 4 kademeli —
+ *
+ *   1) SÖZLÜK EXACT — tr/en/ar/id/ur geniş sözlükte (moodSozluk.ts)
+ *      tam kelime; çift kelimeli girişler ("gun batimi") tam metin 
+ *      adayında aranır.
+ *   2) SÖZLÜK PREFIX — "çölde/çölün/golda" gibi ekli yazım; kök ≥3 harf
+ *      olduğunda aday kelime köküne başlıyorsa yakalanır.
+ *   3) PRESET ANAHTARI — eski davranış korundu (LiTE anahtar kümesi).
+ *   4) FALLBACK — hiçbiri tutmazsa dürüst uyarı işaretli Huzur planı.
+ *
+ *   ARAPÇA/URDUCA: TR normalizasyon bu yazıları siler; bu yüzden ikinci
+ *   bir "uniholder" normalizasyon (harfleri korur, alef/hamza yield)
+ *   celularla sözlük arapçaya karşı çalışır.
+ */
+
+/** Sözlük anahtarını/query tokenını sadeleştirir: alef çeşitleri katlanır,
+ *  noktalama/diyakritik düşer, harf korunur (ar/ur dizilerinde şart). */
+export function uniformKelime(s: string): string {
+  return s
+    .toLocaleLowerCase("tr-TR")
+    .replace(/[\u0626\u0623\u0625\u0622]/g, "\u0627") // أ إ آ → ا
+    .replace(/[\u064B-\u065F\u0670\u0640]/g, "")       // diyakritikler + kashida
+    .replace(/\u0649/g, "\u064A")                      // ى → ي
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const presetFromId = (id: MoodId): MoodPreset | null =>
+  MOOD_PRESETLERI.find((p) => p.id === id) ?? null;
+
+/** Çok-dillere dayanıklı arama index — module load'da bir kez kurulur */
+const SOZLUK_INDEX: Readonly<Record<string, MoodPreset>> = (() => {
+  const m: Record<string, MoodPreset> = {};
+  for (const [key, id] of Object.entries(MOOD_SOZLUK)) {
+    const norm = uniformKelime(key);
+    if (norm && !m[norm]) m[norm] = presetFromId(id) as MoodPreset;
+  }
+  return m;
+})();
+
+const PARCA_OLCUM = (adet: number) => adet >= 3; // sözlük min kelime uz.
+
 export function moodBul(metin: string): MoodSonuc {
-  const q = normalizeMood(metin);
-  const tokenler = q.split(" ").filter(Boolean);
-  const adaylar = [q, ...tokenler].filter(Boolean);
+  const qTr = normalizeMood(metin);
+  const qUn = uniformKelime(metin);
+  const trToks = qTr.split(" ").filter(Boolean);
+  const unToks = qUn.split(" ").filter(Boolean);
+  const bigrams = (toks: string[]): string[] => {
+    const r: string[] = [];
+    for (let i = 0; i + 1 < toks.length; i++) r.push(`${toks[i]} ${toks[i + 1]}`);
+    return r;
+  };
+  // ★ Arapça belirtme edatı "ال-" — "الصحراء" → "صحراء" diye kök adayı ekle
+  const alKokleri = unToks
+    .filter((t) => t.startsWith("ال") && t.length > 4)
+    .map((t) => t.slice(2))
+    .filter(Boolean);
+  const adaylar = [
+    qTr, ...trToks, ...bigrams(trToks),
+    ...(qUn !== qTr ? [qUn, ...unToks, ...alKokleri, ...bigrams(unToks)] : []),
+  ].filter(Boolean);
+
+  // 1) sözlük exact
+  for (const a of adaylar) {
+    const p = SOZLUK_INDEX[a];
+    if (p) return { preset: p, tam: true, eslesen: a };
+  }
+  // 2) sözlük prefix — ekli yazım ("çölde"→col, "gullerde"→gul)
+  for (const a of adaylar) {
+    for (const [key, p] of Object.entries(SOZLUK_INDEX)) {
+      if (PARCA_OLCUM(key.length) && a.length >= key.length && a.startsWith(key))
+        return { preset: p, tam: true, eslesen: a };
+    }
+  }
+  // 3) preset anahtarları exact (eski davranış)
   for (const token of adaylar) {
     for (const p of MOOD_PRESETLERI) {
       if (p.anahtarlar.includes(token)) return { preset: p, tam: true, eslesen: token };
     }
   }
+  // 4) preset anahtarları prefix
   for (const token of adaylar) {
     for (const p of MOOD_PRESETLERI) {
       const hit = p.anahtarlar.find((a) => a.length >= 3 && token.startsWith(a));
