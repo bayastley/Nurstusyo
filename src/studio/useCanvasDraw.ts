@@ -163,8 +163,14 @@ export function useCanvasDraw(p: CanvasDrawParams) {
       const canvas = p.canvasRef.current;
       if (canvas) {
         // Önizleme ve render boyutlarını dinamik yönet
+        // ★ 23.10 SİGORTA (kullanıcı: "öneriden sonra önizleme bozuk, metin kenarlardan
+        //   taşıyor; free kullanıcı düzeltmek için üyeliğe mecbur kalacak"): boyutlar
+        //   eskiden SADECE ilk çizimde (width===0) atanıyordu — format sonradan
+        //   değişince canvas ESKİ boyutta kalıyor, kutu yeni oranla kırpılıyordu
+        //   (taşan metin, kesik satırlar). Artık hedef boyuttan saparsa her kare
+        //   yeniden boyutlanır — hiçbir tier'da önizleme bozulmuş görünmez.
         const [targetW, targetH] = dimensions(p.aspectRef.current);
-        if (canvas.width === 0 || canvas.height === 0) {
+        if (canvas.width !== targetW || canvas.height !== targetH) {
           canvas.width = targetW;
           canvas.height = targetH;
         }

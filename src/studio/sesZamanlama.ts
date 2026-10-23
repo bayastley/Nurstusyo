@@ -151,7 +151,27 @@ export function taramaYap(buffer: AudioBuffer, ayetSayisi: number, sureSiniri?: 
       if (!sesli[p]) { if (bosBas < 0) bosBas = p; }
       else { if (bosBas > 0) bosluklar.push({ bas: bosBas, genislik: p - bosBas }); bosBas = -1; }
     }
-    const kesilecek = [...bosluklar].sort((a, b) => b.genislik - a.genislik).slice(0, Math.max(0, ayetSayisi - 1));
+    // ★ PASS-2 SINIRLANDIRME (23.10 — test vakası): yalnız "en büyük boşluk" sıralaması,
+    //   kelime-içi kısa duraklar (nefes/tıklama, 2-3 pencere) gerçek ayet boşluğuyla
+    //   (3 pencere) berabere kalınca konuşma ORTASINDAN kesiyordu → segment minimum
+    //   süreyi tutmadığından pass-2 iptal → eşit böl (yanlış hizalama).
+    //   Sıralama: genişlik + min(önceki koşu, boşluk-sonrası koşu)×0.35 — gerçek ayet
+    //   geçişinin HER İKİ YANINDA uzun okuma koşusu vardır; kelime-içi durağın
+    //   en az bir yanı kısadır. Koşular boşluğun KENARINDAN sayılır (başından değil).
+    const kosuOncesi = (bas: number): number => {
+      let r = 0;
+      while (bas - 1 - r >= 0 && sesli[bas - 1 - r] && r < 25) r += 1;
+      return r;
+    };
+    const kosuSonrasi = (bas: number, genislik: number): number => {
+      let r = 0;
+      const ilk = bas + genislik;
+      while (ilk + r < toplam && sesli[ilk + r] && r < 25) r += 1;
+      return r;
+    };
+    const adayPuani = (b: { bas: number; genislik: number }): number =>
+      b.genislik + Math.min(kosuOncesi(b.bas), kosuSonrasi(b.bas, b.genislik)) * 0.35;
+    const kesilecek = [...bosluklar].sort((a, b) => adayPuani(b) - adayPuani(a)).slice(0, Math.max(0, ayetSayisi - 1));
     if (kesilecek.length === ayetSayisi - 1 && ayetSayisi >= 2) {
       const sinirPencereleri = kesilecek.map((b) => b.bas + Math.floor(b.genislik / 2)).sort((a, b) => a - b);
       // Tam kesim: baştaki sessizlik + ilk sesli blok ayet 1'e aittir (BAS_ETIKET_SN ruhu) →

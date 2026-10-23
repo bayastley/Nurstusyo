@@ -318,6 +318,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
   //   milisanielik ayet senkronu (sessizlik-sınırı algılama; sesZamanlama.ts)
   const { aktif: kendiSesAktif, yukleniyor: kendiSesYukleniyor, kayitlar: kendiSesKayitlari, yukle: kendiSesYukle, yukleAyetAyri: kendiSesYukleAyetAyri, sec: kendiSesSec, sil: kendiSesSil, zamanlamaKaydet: kendiSesZamanlamaKaydet, kaldirAktif: kendiSesKaldir, yenidenTara: kendiSesYenidenTara } = useKendiSesiniYukle({ notify });
+  // ★ 23.10: modalın sn sınırı — tarama ve üretim aynı sınırı kullanır (0 = mod sınırı)
+  const [kendiSesMaksSn, setKendiSesMaksSn] = useState(0);
   const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
   const { dailyPool, dailyIndex, dailyPaused, daily } = useDailyAyah({ lang, setSelected });
 
@@ -657,6 +659,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     combinedAllClips, reciterName: reciter.name, smartAiEnabled,
     setBackground, setAyahBackgrounds, setShareTitle, setShareDescription,
   });
+  // ★ 23.10: modal içi sure seçimi — seçimi seçilen surenin tamamına çevirir (tek sure şart)
+  //   (addWholeSurah'tan sonra tanımlı: bağımlılık dizisi anında değerlendirilir — TDZ)
+  const kendiSesSureEkle = useCallback(async (s: number) => {
+    setSelected((current) => current.filter((x) => x.s === s));
+    await addWholeSurah(s);
+  }, [setSelected, addWholeSurah]);
   // ★ SEKME DEĞİŞİMİ (Şablon V2 ↔ Hareketli) — zaten atanmış ayet arka planlarını
   //   yeni türe (img/vid) yeniden atar. Eski davranışta sadece ana arka plan
   //   randomClip ile değişiyordu; ayet kayıtları eski türemiş gibi kalıyor, üretim
@@ -878,7 +886,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     if (hocaIndirBusy) return;
     const item = RECITERS.find((x) => x.id === id);
     if (!item) return;
-    const secili = selectedRef.current[0] ?? { s: 1, a: 1 };
+    // ★ 23.10: indirmeye arapça ayet + meal de geçirilir — videoya sabit ayet,
+    //   okuma başlarken senkron meal düşer (seslendirmeIndir ayet+meal hattı).
+    const secili = selectedRef.current[0] ?? { s: 1, a: 1, ar: "", tr: "" };
     const urls = item.surahPattern
       ? [item.surahPattern.replace("{S}", String(secili.s).padStart(3, "0"))]
       : sesKaynakZinciri(item.path, secili.s, secili.a);
@@ -891,7 +901,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     setHocaIndirBusy(id);
     try {
       await kuyrukIndir(
-        [{ metin: `${secili.s}:${secili.a}`, etiket: `${item.name} · ${secili.s}:${secili.a}` }],
+        [{ metin: `${secili.s}:${secili.a}`, ar: secili.ar || undefined, meal: secili.tr || undefined, etiket: `${item.name} · ${secili.s}:${secili.a}` }],
         async () => {
           // zincir: ilk GET'i görüntümlenen URL'i döndür; hepsi başarsızsa ilki dene
           for (const u of urls) {
@@ -909,7 +919,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   const handleGenerate = useVideoGenerator({
     generating, setGenerating, setProgress, stopGenerationRef,
     user, isMasterSürüm, setLoginTab, setModal, notify,
-    selected, canvasRef, reciter, kendiSesAktif, batchFormats, aspect, mode, accessTier, jetonCount,
+    selected, canvasRef, reciter, kendiSesAktif, kendiSesMaksSn, batchFormats, aspect, mode, accessTier, jetonCount,
     silenceAllAudio, showGenerateConfirm, showRiskOnay, riskOnayEsigi: RISK_ONAY_ESIGI,
     videoCache, imageCache, ayahBackgroundsRef, backgroundRef,
     verseIndexRef, aspectRef, setVerseIndex, setOutputs, setActiveOutputId,
@@ -1583,6 +1593,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         kendiSesZamanlamaKaydet={kendiSesZamanlamaKaydet}
         kendiSesKaldir={kendiSesKaldir}
         kendiSesYenidenTara={kendiSesYenidenTara}
+        kendiSesSureEkle={kendiSesSureEkle}
+        kendiSesMaksSn={kendiSesMaksSn}
+        kendiSesMaksAyarla={setKendiSesMaksSn}
         setPickingForAtmos={(id) => setPickingFor(id)}
         kendiSesSeciliAyetler={selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName }))}
         kendiSesAyahBackgrounds={ayahBackgrounds}

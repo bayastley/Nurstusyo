@@ -331,11 +331,10 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               return (
                 <button
                   key={item}
+                  // ★ 23.10 KULLANICI EMRİ: çoklu format artık 24s kilit açmasız — kaç format
+                  //   seçildiğinde üretimde o kadar hak düşer (2 format = 2 hak, 4 = 4).
                   onClick={() => {
                     if (locked) { openPremium("uyelik"); return; }
-                    if (!active && batchFormats.length >= 1 && !tierAtLeast(accessTier, "elit")) {
-                      if (!tryUnlockElitFeature("batch", t("dafTopluUretim"))) return;
-                    }
                     setBatchFormats((current) => active ? current.filter((entry) => entry !== item) : [...current, item]);
                   }}
                   className={`relative flex-1 rounded-lg py-1 text-[8px] font-bold transition ${active ? "text-black" : "glass-soft text-white/35"}`}
@@ -343,15 +342,14 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 >
                   {item}
                   {locked && <span className="ml-1 text-[7px] text-amber-300">PRO</span>}
-                  {!locked && !tierAtLeast(accessTier, "elit") && !hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-amber-300">ELİT</span>}
-                  {!tierAtLeast(accessTier, "elit") && hasMicroUnlock("batch") && <span className="ml-1 text-[7px] text-emerald-400">24s AÇIK</span>}
                   {isMasterSürüm && <span className="ml-1 text-[7px] text-emerald-400">ADMIN</span>}
                 </button>
               );
             })}
           </div>
           <div className="mt-1.5 text-center text-[8px] text-white/30">
-            {t("dafUcFormat1")} <span className="font-black text-amber-300">ELİT</span> {t("dafUcFormat2").replace("{m}", String(videoMaliyeti("short", tier)))}
+            {/* ★ 23.10: düz maliyet metni — her format bir hak (2 format = 2 hak) */}
+            Her ek format bir üretim hakkı: 2 format = 2 hak · 4 format = 4 hak
           </div>
         </div>
       </div>

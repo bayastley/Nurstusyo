@@ -31,6 +31,8 @@ interface UseVideoGeneratorParams {
   reciter: any;
   // ★ KENDİ SESİNLE ÜRETİM (03.10): aktif kendi-sesi kaydı varsa üretim onunla yapılır
   kendiSesAktif: KendiSesAktif | null;
+  // ★ 23.10: modal'dan sn sınırı — 0 = mod sınırı (59/600/7200); asla üstüne çıkamaz
+  kendiSesMaksSn: number;
   batchFormats: Aspect[];
   aspect: Aspect;
   mode: Mode;
@@ -85,21 +87,8 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     generating,
     setGenerating,
     setProgress,
-    stopGenerationRef,
-    user,
-    isMasterSürüm,
-    setLoginTab,
-    setModal,
-    notify,
-    selected,
-    canvasRef,
-    reciter,
-    kendiSesAktif,
-    batchFormats,
-    aspect,
-    mode,
-    accessTier,
-    jetonCount,    silenceAllAudio, showGenerateConfirm, showRiskOnay, riskOnayEsigi,
+    stopGenerationRef,    user, isMasterSürüm, setLoginTab, setModal, notify,
+    selected, canvasRef, reciter, kendiSesAktif, kendiSesMaksSn, batchFormats, aspect, mode, accessTier, jetonCount,    silenceAllAudio, showGenerateConfirm, showRiskOnay, riskOnayEsigi,
     videoCache,
     imageCache,
     ayahBackgroundsRef,
@@ -269,6 +258,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       if (kendi && kendiUygun) {
         try {
           setProgress(8);
+          const kendiSiniri = kendiSesMaksSn > 0 ? Math.min(kendiSesMaksSn, cap) : cap; // ★ 23.10: kullanıcı sn sınırı (0 = mod sınırı)
           const tamBuffer = await audioContext.decodeAudioData(await kendi.blob.arrayBuffer());
           const enBuyukAyet = Math.max(...selected.map((item) => item.a));
           // Segment→ayet eşlemesi: tüm-sure kaydı (segment sayısı ≥ en büyük ayet no) → indeks = ayet no - 1;
@@ -281,7 +271,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             const item = selected[index];
             const seg = kendi.segments[konumaGore ? item.a - 1 : (siralamaPozisyonu.get(item.id) ?? index)];
             if (!seg) { dustu += 1; continue; }
-            if (cursor > 0 && cursor + seg.dur > cap) { dustu += 1; continue; }
+            if (cursor > 0 && cursor + seg.dur > kendiSiniri) { dustu += 1; continue; }
             const parcasi = ayetParcasi(tamBuffer, seg, audioContext);
             audioOffsets.push(cursor); buffers.push(parcasi); usedItems.push(item);
             ayetSüreleri.push({ start: cursor, dur: parcasi.duration });

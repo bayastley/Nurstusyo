@@ -130,14 +130,19 @@ export interface ModalsContainerProps {
   kendiSesKayitlari: StoredSes[];
   kendiSesYukleniyor: boolean;
   kendiSesNefes: number;
-  kendiSesYukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number) => Promise<unknown>;
+  kendiSesYukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn?: number) => Promise<unknown>;
   kendiSesYukleAyetAyri: (dosya: File, sure: number, ayet: number) => Promise<boolean>;
   kendiSesSec: (id: string) => Promise<boolean>;
   kendiSesSil: (id: string) => Promise<void>;
   kendiSesZamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
   kendiSesKaldir: () => void;
-  /** Eski kaydın zamanlamalarını güncel motorla yeniden tara (nefes sıfırlanır) */
-  kendiSesYenidenTara: (id: string, ayetSayisi: number) => Promise<boolean>;
+  /** Eski kaydın zamanlamalarını güncel motorla yeniden tara (nefes sıfırlanır); maksSn = süre sınırı */
+  kendiSesYenidenTara: (id: string, ayetSayisi: number, maksSn?: number) => Promise<boolean>;
+  /** ★ 23.10: modal içi sure seçimi — stüdyo seçimini o surenin tamamına çevirir */
+  kendiSesSureEkle: (s: number) => Promise<void>;
+  /** ★ 23.10 SÜRE SINIRI: üretimde kullanılacak maks süre (sn) — 0 = mod sınırı */
+  kendiSesMaksSn: number;
+  kendiSesMaksAyarla: (sn: number) => void;
   /** Modaldan açılırken ayet-başına arka plan ataması için hedef ayet */
   setPickingForAtmos: (id: string) => void;
   /** Modalın senkron sırası: seçili ayetler (s, a, sName) */

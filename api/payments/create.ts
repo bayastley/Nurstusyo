@@ -238,11 +238,17 @@ export default async function handler(req: any, res: any) {
       // ★ 23.10 FIX: TR satırı eski 250₺ fiyatını taşıyordu — NUR_MULTI_CURRENCY=true
       //   iken TR ziyaretçisi PRO için 149 yerine 250₺ ödeyecekti. Katalogla hizalandı
       //   (SUB_PRO_1M 149 / SUB_ELIT_1M 249 / PRO 1Y 1610 / ELİT 1Y 2540).
+      // ★ USD/EUR/GBP HİZALAMA (23.10 — kullanıcı onaylı): sunucu tablosu eski
+      //   "~2× prim" değerlerini taşıyordu (PRO $10); PremiumModal REGIONAL_PLANS'tan
+      //   $6/$10 gösteriyordu → "ekranda 6, çarpan 10" uyuşmazlığı. Artık birebir
+      //   src/payments/pricingData.ts REGIONAL_PLANS (16.10 küsüratsız) ile aynı:
+      //   USD 6/10/65/102 · EUR 6/9/59/92 · GBP 5/8/52/82. Biri değişirse ÖBİRİ DE
+      //   değişmeli — tek fiziksel kaynak olamadığından bu satır yoruma kilitli.
       const bolgePlanlari: Record<string, Record<string, number>> = {
         TR:  { SUB_PRO_1M: 149, SUB_ELIT_1M: 249, SUB_PRO_1Y: 1610, SUB_ELIT_1Y: 2540 },
-        USD: { SUB_PRO_1M: 10, SUB_ELIT_1M: 20, SUB_PRO_1Y: 108, SUB_ELIT_1Y: 204 },
-        EUR: { SUB_PRO_1M: 9, SUB_ELIT_1M: 18, SUB_PRO_1Y: 97, SUB_ELIT_1Y: 184 },
-        GBP: { SUB_PRO_1M: 8, SUB_ELIT_1M: 16, SUB_PRO_1Y: 86, SUB_ELIT_1Y: 163 },
+        USD: { SUB_PRO_1M: 6, SUB_ELIT_1M: 10, SUB_PRO_1Y: 65, SUB_ELIT_1Y: 102 },
+        EUR: { SUB_PRO_1M: 6, SUB_ELIT_1M: 9, SUB_PRO_1Y: 59, SUB_ELIT_1Y: 92 },
+        GBP: { SUB_PRO_1M: 5, SUB_ELIT_1M: 8, SUB_PRO_1Y: 52, SUB_ELIT_1Y: 82 },
       };
       const p = bolgePlanlari[bolge]?.[productCode];
       if (p !== undefined) {

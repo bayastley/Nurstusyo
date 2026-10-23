@@ -47,6 +47,20 @@ function pickMime(): string | undefined {
   return undefined;
 }
 
+/** metni genişliğe göre satırlara böler (canvas ölçümü ile — arapça/meal için) */
+function satirBol(g: CanvasRenderingContext2D, metin: string, maxGen: number): string[] {
+  const kelimeler = metin.split(/\s+/).filter(Boolean);
+  const satirlar: string[] = [];
+  let satir = "";
+  for (const kelime of kelimeler) {
+    const aday = satir ? `${satir} ${kelime}` : kelime;
+    if (!satir || g.measureText(aday).width <= maxGen) satir = aday;
+    else { satirlar.push(satir); satir = kelime; }
+  }
+  if (satir) satirlar.push(satir);
+  return satirlar;
+}
+
 /** medyayı cover (taşan, ortalı) çizer — dikey 9:16 panele uygun */
 function coverCiz(ctx: CanvasRenderingContext2D, el: CanvasImageSource, vw: number, vh: number): void {
   if (!vw || !vh) return;
@@ -56,7 +70,10 @@ function coverCiz(ctx: CanvasRenderingContext2D, el: CanvasImageSource, vw: numb
 }
 
 export async function kuyrukIndir(
-  liste: readonly { metin: string; kat?: string; etiket?: string }[],
+  // ★ 23.10 AYET+MEAL (kullanıcı emri): `ar` verildiğinde indirilen videoya
+  //  arapça ayet SABİT yazılır, `meal` (yoksa metin) okuma başladığında
+  //  ~300ms fade-in ile ekrana gelir — ayet-bazlı senkron.
+  liste: readonly { metin: string; kat?: string; etiket?: string; ar?: string; meal?: string }[],
   urlAl: (m: string) => Promise<string>,
   yaz: IndirYaz,
   bg: BgKaynak = null, // seçili atmosfer: videosu/posteri varsa arka planda oynar
@@ -129,6 +146,14 @@ export async function kuyrukIndir(
     // 4) ÇİZİM DÖNGÜSÜ — kayıt süresi boyunca her frame
     const başZam = başAn; // ses zaman çizgisiyle aynı saat
     const etikets = liste.map((o) => o.etiket || "");
+    // ★ 23.10 AYET+MEAL: segment başlangıçları (sn) — sesin ofset döngüsüyle AYNI hesap;
+    //   arapça = o.meal yoksa o.metin ("3:12" gibi anahtar metin overlay'e alınmaz)
+    const baslar: number[] = [];
+    let birikim = 0;
+    for (const b of parcalar) { baslar.push(birikim); birikim += (b.duration || 0) + NEFES_SN; }
+    const arMetinler = liste.map((o) => (o.ar || "").trim());
+    const mealMetinler = liste.map((o) => ((o.meal || o.metin) || "").trim());
+    const anahtarGibi = (m: string) => /^\d+:\d+$/.test(m);
     let sonPct = -1;
     let döngüId: number | null = null;
     const ciz = () => {
@@ -154,6 +179,38 @@ export async function kuyrukIndir(
         g.fillStyle = "#f5dda6";
         g.fillText(etikets[okunan], G.W / 2, 96);
         g.shadowBlur = 0;
+      }
+      // ★ 23.10 AYET+MEAL — AudioContext saatiyle milisaniye senkronu:
+      //   arapça ayet okunduğu sürece SABİT (üst bölge, RTL), meal ayetin sesi
+      //   başladığı andan ~300ms'de fade-in olup alt bölgede kaç satırsa okunur.
+      if (okunan >= 0) {
+        const baslangic = baslar[okunan] ?? 0;
+        const arMetin = arMetinler[okunan];
+        if (arMetin) {
+          g.direction = "rtl";
+          g.font = '600 42px "Amiri", "Scheherazade New", "Noto Naskh Arabic", "Times New Roman", serif';
+          g.textAlign = "center";
+          g.fillStyle = "rgba(245,221,166,.95)";
+          g.shadowColor = "rgba(0,0,0,.85)"; g.shadowBlur = 10;
+          const arSatirlar = satirBol(g, arMetin, G.W - 100).slice(0, 4);
+          arSatirlar.forEach((s, k) => g.fillText(s, G.W / 2, 196 + k * 58));
+          g.shadowBlur = 0;
+          g.direction = "ltr";
+        }
+        const mealMetin = mealMetinler[okunan];
+        if (mealMetin && !anahtarGibi(mealMetin)) {
+          const alfa = Math.min(1, Math.max(0, (t - baslangic) / 0.3));
+          if (alfa > 0) {
+            g.font = "500 25px Inter, system-ui, sans-serif";
+            g.textAlign = "center";
+            g.fillStyle = `rgba(255,255,255,${(0.93 * alfa).toFixed(3)})`;
+            g.shadowColor = "rgba(0,0,0,.85)"; g.shadowBlur = 10;
+            const satirlar = satirBol(g, mealMetin, G.W - 110).slice(0, 6);
+            const yBas = G.H - 64 - (satirlar.length - 1) * 36;
+            satirlar.forEach((s, k) => g.fillText(s, G.W / 2, yBas + k * 36));
+            g.shadowBlur = 0;
+          }
+        }
       }
       const pct = Math.min(99, Math.round((t / toplamSn) * 100));
       if (pct !== sonPct) { sonPct = pct; yaz(`📥 Video kaydı — %${pct} (${Math.round(Math.min(t, toplamSn))} sn / ${Math.round(toplamSn)} sn)`); }

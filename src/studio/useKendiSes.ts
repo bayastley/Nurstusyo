@@ -92,8 +92,8 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
     return rows;
   }, []);
 
-  /** PCM taraması + depoya yaz. Dönen segmentler UI'da gösterilir. */
-  const yukle = useCallback(async (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number): Promise<{ segments: SesSegmenti[]; id: string; total: number } | null> => {
+  /** PCM taraması + depoya yaz; maksSn (sn, 0 = sınır yok) taramayı sınırlar (23.10). */
+  const yukle = useCallback(async (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn = 0): Promise<{ segments: SesSegmenti[]; id: string; total: number } | null> => {
     if (!dosya) return null;
     if (dosya.size > 60 * 1024 * 1024) { notify("⚠️ Ses dosyası 60 MB'den büyük olamaz"); return null; }
     if (!/^(audio|video)\//.test(dosya.type || "")) { notify("⚠️ Lütfen ses dosyası yükleyin (mp3, m4a, wav, ogg)"); return null; }
@@ -106,7 +106,8 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         // ★ METADATA↔PCM UYUMSUZLUĞU (01.10): oynatıcı metadata'ya inanır; tarama PCM'e.
         //   İkisi çelişirse küçük olanı esas al — aksi halde seek edilemeyen segment üretilir.
         const oynatilabilir = await oynatilabilirSure(dosya);
-        const sureSiniri = oynatilabilir ? Math.min(oynatilabilir, buf.duration) : buf.duration;
+        const sureSiniri = maksSn > 0 ? Math.min(oynatilabilir ?? buf.duration, buf.duration, maksSn) : (oynatilabilir ?? buf.duration); // ★ 23.10: kullanıcı sn sınırı
+        if (maksSn > 0 && buf.duration > maksSn) notify(`⏱ Senin sn sınırın ${maksSn} — kayıttan fazlası kullanılmaz`);
         const tarama = taramaYap(buf, konum === "tum" ? Math.max(ayetSayisi, 1) : 1, sureSiniri);
         if (tarama.segments.length === 0) {
           notify("⚠️ Seste okunan bölüm algılanamadı — dosya sessiz veya bozuk olabilir");
@@ -151,10 +152,8 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
     }
   }, [kayitlariTazele, notify, urlTasi]);
 
-  /** ★ YENİDEN ANALİZ (01.10): eski kayıtların donmuş (eşit-böl dönemi) zamanlamalarını
-   *  güncel motorla tekrar tarar. Nefes sıfırlanır — eski kayıttaki çifte-nefes şişmesi de
-   *  böylece temizlenir. aktif bu id ise dönen segmentlerle tazelenir. */
-  const yenidenTara = useCallback(async (id: string, ayetSayisi: number): Promise<boolean> => {
+  /** ★ YENİDEN ANALİZ (01.10): donmuş zamanlamaları güncel motorla tekrar tarar; maksSn (0 = sınır yok) taramayı sınırlar (23.10). */
+  const yenidenTara = useCallback(async (id: string, ayetSayisi: number, maksSn = 0): Promise<boolean> => {
     const row = await sesOku(id);
     if (!row) { notify("⚠️ Kayıt bulunamadı"); return false; }
     setYukleniyor(true);
@@ -163,9 +162,9 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
       const ctx = new AudioCtx();
       try {
         const buf = await ctx.decodeAudioData(await row.blob.arrayBuffer());
-        // ★ Aynı metadata sınırı yeniden analizde de geçerli (01.10)
+        // ★ Aynı metadata sınırı yeniden analizde de geçerli (01.10) — 23.10: kullanıcı sn sınırı da
         const oynatilabilir = await oynatilabilirSure(row.blob);
-        const sureSiniri = oynatilabilir ? Math.min(oynatilabilir, buf.duration) : buf.duration;
+        const sureSiniri = maksSn > 0 ? Math.min(oynatilabilir ?? buf.duration, buf.duration, maksSn) : (oynatilabilir ?? buf.duration);
         const tarama = taramaYap(buf, Math.max(ayetSayisi, 1), sureSiniri);
         if (tarama.segments.length === 0) { notify("⚠️ Seste okunan bölüm algılanamadı"); return false; }
         const segments = duzelt(tarama.segments, tarama.total);

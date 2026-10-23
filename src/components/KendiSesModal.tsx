@@ -31,14 +31,18 @@ interface Props {
   yukleniyor: boolean;
   isElit: boolean;
   nefes: number;
-  yukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number) => Promise<unknown>;
+  yukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn?: number) => Promise<unknown>;
   yukleAyetAyri: (dosya: File, sure: number, ayet: number) => Promise<boolean>;
   sec: (id: string) => Promise<boolean>;
   sil: (id: string) => Promise<void>;
   zamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
   kaldirAktif: () => void;
   /** Eski kaydı güncel motorla yeniden tara (01.10) — donmuş yanlış zamanlamaları düzeltir */
-  yenidenTara: (id: string, ayetSayisi: number) => Promise<boolean>;
+  yenidenTara: (id: string, ayetSayisi: number, maksSn?: number) => Promise<boolean>;
+  /** ★ 23.10: modal içi sure seçimi + üretimde maks süre (sn, 0 = mod sınırı) */
+  sureEkle: (s: number) => Promise<void>;
+  maksSn: number;
+  maksAyarla: (sn: number) => void;
   /** Ayet kartına arka plan ata (pickingFor mekanizmasıyla aynı kapı) */
   setPickingFor: (id: string) => void;
   setModal: (m: "atmos" | null) => void;
@@ -75,10 +79,12 @@ const MAHREM_UYARISI = (
 export const KendiSesModal: React.FC<Props> = ({
   open, onClose, sure, seciliAyetler, aktifSes, kayitlar, yukleniyor, isElit, nefes,
   yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara,
+  sureEkle, maksSn, maksAyarla,
   setPickingFor, setModal, ayahBackgrounds, openPremium, notify,
 }) => {
   const [mod, setMod] = useState<"tum" | "ayet">("tum");
   const [duzenleIdx, setDuzenleIdx] = useState<number | null>(null);
+  const [sureEkleniyor, setSureEkleniyor] = useState(false); // ★ 23.10
   const [nefesDeger, setNefesDeger] = useState(nefes);
   const [sesliIdx, setSesliIdx] = useState<number | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -115,7 +121,7 @@ export const KendiSesModal: React.FC<Props> = ({
     input.onchange = async () => {
       const f = input.files?.[0];
       if (!f) return;
-      if (mod === "tum") await yukle(f, sure, ayetSayisi, konum);
+      if (mod === "tum") await yukle(f, sure, ayetSayisi, konum, maksSn);
       else await yukleAyetAyri(f, sure, konum as number);
     };
     input.click();
@@ -165,7 +171,9 @@ export const KendiSesModal: React.FC<Props> = ({
           <div className="min-w-0">
             <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>KENDİ SESİNLE ÜRET</h3>
             <p className="text-[9.5px] leading-relaxed text-white/45">
-              {sureAdi} · {ayetSayisi} ayet — okuyuşun ne kadar hızlı/yavaş olursa olsun ayetler ve arka planlar sesine <b className="text-white/70">milisanielik</b> kilitlenir.
+              {ayetSayisi > 0
+                ? <>{sureAdi} · {ayetSayisi} ayet — okuyuşun ne kadar hızlı/yavaş olursa olsun ayetler ve arka planlar sesine <b className="text-white/70">milisanielik</b> kilitlenir.</>
+                : "Henüz sure seçilmedi — aşağıda 114 sureden uzun ya da kısa istediğini seç."}
             </p>
           </div>
         </div>
@@ -202,6 +210,46 @@ export const KendiSesModal: React.FC<Props> = ({
 
         {isElit && (
           <>
+            {/* ★ 23.10: modal içi sure seçici — boş seçimde "Fâtiha · 0 ayet" e kilitliyordu */}
+            <div className="mb-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[9px] font-bold text-white/50">📚 Sure</span>
+                <select
+                  value={seciliAyetler[0]?.s ?? 0}
+                  disabled={sureEkleniyor || yukleniyor}
+                  onChange={async (e) => {
+                    const s = Number(e.target.value);
+                    if (!s || s === seciliAyetler[0]?.s) return;
+                    setSureEkleniyor(true);
+                    try { await sureEkle(s); } finally { setSureEkleniyor(false); }
+                  }}
+                  className="w-full rounded-xl bg-white/[.04] px-3 py-2 text-[10px] font-bold text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60 disabled:opacity-50"
+                >
+                  <option value={0} className="bg-[#141414]">— Sure seç —</option>
+                  {SURAHS.map((sr) => (
+                    <option key={sr.n} value={sr.n} className="bg-[#141414]">{sr.n}. {sr.name} ({sr.count} ayet)</option>
+                  ))}
+                </select>
+              </div>
+              {/* ★ 23.10: maks süre (sn) — modun kotası tavandır, yalnız daraltılır */}
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-[9px] font-bold text-white/50">⏱ Maks süre</span>
+                <input
+                  type="number"
+                  min={10}
+                  max={7200}
+                  value={maksSn}
+                  onChange={(e) => maksAyarla(Math.min(7200, Math.max(0, Math.floor(Number(e.target.value) || 0))))}
+                  className="w-20 rounded-lg bg-white/[.04] px-2 py-1.5 text-right text-[10px] font-bold tabular-nums text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60"
+                />
+                <span className="text-[9px] text-white/60">sn</span>
+                {[60, 300, 600].map((v) => (
+                  <button key={v} onClick={() => maksAyarla(v)} className={`rounded-lg px-1.5 py-1 text-[8.5px] font-black transition ${maksSn === v ? "bg-[color:var(--accent)]/20 text-[color:var(--accent-2)]" : "bg-white/[.05] text-white/45 hover:bg-white/10"}`}>{v}</button>
+                ))}
+              </div>
+              <p className="text-[8px] leading-relaxed text-white/30">0 sn = mod sınırı (kısa 59 · uzun 600 · tam 7200) — sınırın fazlası üretimde kullanılmaz.</p>
+            </div>
+
             {/* Mod seçimi */}
             <div className="mb-3 grid grid-cols-2 gap-2">
               <button onClick={() => setMod("tum")} className={`rounded-xl px-3 py-2.5 text-left text-[10px] font-bold ring-1 transition ${mod === "tum" ? "bg-[color:var(--accent)]/15 text-white ring-[color:var(--accent)]/60" : "bg-white/[.04] text-white/55 ring-white/10 hover:bg-white/[.07]"}`}>
@@ -220,7 +268,7 @@ export const KendiSesModal: React.FC<Props> = ({
                   <p className="mt-1 text-[9px] font-bold text-amber-300">⚠ {aktifSes.segments.length} bölüm ≠ {ayetSayisi} ayet — geçiş sayısı uyuşmuyor, yeniden analiz öner</p>
                 )}
                 <div className="mt-1 flex items-center gap-3">
-                  <button onClick={async () => { setTaslaklar(null); setDuzenleIdx(null); await yenidenTara(aktifSes.id, ayetSayisi); }} disabled={yukleniyor} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline disabled:opacity-40">🔬 Yeniden analiz et</button>
+                  <button onClick={async () => { setTaslaklar(null); setDuzenleIdx(null); await yenidenTara(aktifSes.id, ayetSayisi, maksSn); }} disabled={yukleniyor} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline disabled:opacity-40">🔬 Yeniden analiz et</button>
                   <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); setTaslaklar(null); }} className="text-[9px] text-white/50 hover:text-white">Kaldır (kayıtlar saklanır)</button>
                 </div>
               </div>

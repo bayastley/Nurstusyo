@@ -176,6 +176,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   kendiSesZamanlamaKaydet,
   kendiSesKaldir,
   kendiSesYenidenTara,
+  kendiSesSureEkle, // ★ 23.10
+  kendiSesMaksSn,
+  kendiSesMaksAyarla,
   setPickingForAtmos,
   kendiSesSeciliAyetler,
   kendiSesAyahBackgrounds,
@@ -468,6 +471,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           zamanlamaKaydet={kendiSesZamanlamaKaydet}
           kaldirAktif={kendiSesKaldir}
           yenidenTara={kendiSesYenidenTara}
+          sureEkle={kendiSesSureEkle}
+          maksSn={kendiSesMaksSn}
+          maksAyarla={kendiSesMaksAyarla}
           setPickingFor={setPickingForAtmos}
           setModal={setModal}
           ayahBackgrounds={kendiSesAyahBackgrounds}
