@@ -116,7 +116,7 @@ import { ensureImageYukle, ensureVideoYukle } from "./studio/medyaOnYukleme";
 import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal, TelifRiskOnayBalonu, RISK_ONAY_ESIGI, RenderKaplanmaEkran, ModalsKatman } from "./components/studioAppBolumler";
 // ★ SRP adım 12 (30.09): medya ön yükleme fabrikası studio/medyaOnYukleme.ts'e taşındı
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
-import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
+import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, getFeatureLock, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
 import type { SelectedAyah, Output, DailyAyah, User, Mode, Aspect, ModalName, LoginTab } from "./types";
 
 void SES_TARZI_ORDER; void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
@@ -423,7 +423,17 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             //   önceki "V3 uzun vadeli plana çekildi" kararı bu turda geri alındı.
             //   Artık admin/master + ELİT üye direkt modalı açar; free/PRO
             //   premium panelin ELİT kartına yönlendirilir (hedefTier vurgusu).
+            // ★ 25.10 V2 GRİ ÖNCEÇEK (kullanıcı emri): admin panelde featureLock "kendiSes"
+            //   "v2"/"v3"/"off" iken satır grî kilide düşer — buton yol haritasına atar
+            //   (menü satırındaki ile aynı davranış); admin "elit" verince ELİT kapısı döner.
             const adminMi = isAdminEmail(user?.email || "");
+            const kendiSesKilit = getFeatureLock("kendiSes", "free");
+            const kendiSesV2 = kendiSesKilit === "v2" || kendiSesKilit === "v3" || kendiSesKilit === "off";
+            if (!isMasterSürüm && !adminMi && kendiSesV2) {
+              notify("🔒 Kendi Sesinle Üret oylamada — Yol Haritası'ndan oy ver!");
+              setRoadmapOpen(true);
+              return;
+            }
             if (isMasterSürüm || adminMi || tierAtLeast(tier, "elit")) {
               if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
               setModal("kendiSes");

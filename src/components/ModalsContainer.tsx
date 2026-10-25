@@ -469,7 +469,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* KENDİ SESİNİ YÜKLE MODAL (30.09) — ★ 22.10 KULLANICI EMRİ: ELİT üyelere AÇILDI
           (admin/V3 kilidi kalktı); ELİT olmayan UYE_GATE effect'inde premium'a düşer.
           admin + master her zaman açık. */}
-      {modal === "kendiSes" && (isMasterSürüm || isAdminEmail(user?.email || "") || tierAtLeast(accessTier, "elit")) && (
+      {modal === "kendiSes" && !v2Kapali("kendiSes") && (isMasterSürüm || isAdminEmail(user?.email || "") || tierAtLeast(accessTier, "elit")) && (
         <React.Suspense fallback={null}>
         <KendiSesModal
           open

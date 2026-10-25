@@ -4,7 +4,7 @@
 // ModalsContainer ile birebir aynıdır; durum ModalsContainer'da kalır.
 // ════════════════════════════════════════════════════════
 
-export type V2ModalId = "ayetKartlari" | "kesfet" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi" | "haftaninVideosu" | "kelimeAtolyesi" | "arkaPlanUretici";
+export type V2ModalId = "ayetKartlari" | "kesfet" | "ayetNotlari" | "ayetPaketleri" | "ozelGunTakvimi" | "haftaninVideosu" | "kelimeAtolyesi" | "arkaPlanUretici" | "kendiSes";
 
 // ★ 22.10 HER ŞEY HERKESE AÇIK (kullanıcı emri: "admine neden gizledin bazı şeyleri,
 //   herşey admine açık olsun herşey" + "önerilen videolar vardı göremedim"): eski
@@ -22,6 +22,10 @@ export const V2_KILITLI: Record<V2ModalId, string> = {
   haftaninVideosu: "Haftanın Videosu",
   kelimeAtolyesi: "Kelime Atölyesi",
   arkaPlanUretici: "Arka Plan Üretici",
+  // ★ 25.10 (kullanıcı emri): "Kendi Sesinle Üret" şimdilik GRİ V2 görünümünde —
+  //   admin panel → Özellik Kilitleri'nden "elit" verildiği anda ELİT kapısına
+  //   döner (v2KilitliMi v2/v3/off ⇄ pro/elit/free akışı birebir çalışır).
+  kendiSes: "Kendi Sesinle Üret",
 };
 
 // ★ 18.10 KUR'AN ÖĞRENME İÇERİKLERİ HEPSİ ÜCRETSİZ (kullanıcı emri):
