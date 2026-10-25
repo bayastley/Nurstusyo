@@ -117,8 +117,10 @@ async function sadikUyeSayaci(): Promise<{ toplamKayitli: number; kontenjan: num
     });
     const cr = r.headers.get("content-range") || "";
     const toplam = Number(cr.split("/")[1] || 0);
-    return { toplamKayitli: Number.isFinite(toplam) && toplam > 0 ? toplam : 0, kontenjan: 100 };
-  } catch { return { toplamKayitli: 0, kontenjan: 100 }; }
+    // ★ 25.10 (sahibin emri): sadık üye kontenjanı 100 → 500; +1 ömür boyu
+    //   bonus iptal — banner artık yalnız sadakat rozeti vaat eder.
+    return { toplamKayitli: Number.isFinite(toplam) && toplam > 0 ? toplam : 0, kontenjan: 500 };
+  } catch { return { toplamKayitli: 0, kontenjan: 500 }; }
 }
 
 // ═════════════════════════════════════════════════════════
@@ -211,6 +213,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(cfgSnapshot.body as Record<string, unknown>);
     }
     res.setHeader("Cache-Control", "no-store");
-    return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null, sadikUye: { toplamKayitli: 0, kontenjan: 100 } });
+    return res.status(200).json({ ok: true, announcement: null, featureLocks: [], maintenance: null, sadikUye: { toplamKayitli: 0, kontenjan: 500 } });
   }
 }

@@ -217,8 +217,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let sadikUye = false;
     try {
       const { url: sUrl, key: sKey } = supabaseConfig();
+      // ★ 25.10: ilk 100 → ilk 500 kontenjan (sahibin emri); +1 bonus iptal,
+      //   sadık üyelik artık yalnız rozet (tier.sadikUyeBonusu hep 0).
       const sResp = await fetch(`${sUrl}/rest/v1/nur_users?select=id&order=created_at.asc`, {
-        headers: { apikey: sKey, Authorization: `Bearer ${sKey}`, Prefer: "count=exact", Range: "0-99" },
+        headers: { apikey: sKey, Authorization: `Bearer ${sKey}`, Prefer: "count=exact", Range: "0-499" },
         cache: "no-store",
       });
       if (sResp.ok) {

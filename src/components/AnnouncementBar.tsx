@@ -86,7 +86,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
           } catch { /* yut */ }
         }
         if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
-          setSadikUyeSayac({ toplamKayitli: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan) || 100 });
+          setSadikUyeSayac({ toplamKayitli: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan) || 500 });
         }
       }
     };

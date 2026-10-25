@@ -235,13 +235,12 @@ export function quotaText(kind: VideoKind, tier: Tier = getCurrentTier()): strin
 
 // ════════════════════════════════════════════════════════
 // ★ SADIK ÜYE KAMPANYASI (05.10 — SAHİBİN EMRİ)
-//   Sistemi ilk keşfeden ve inanan üreticilere: ilk 100 kayıta "Sadık Üye"
-//   etiketi + standart günlük kotaya EK ömür boyu her gün +1 üretim hakkı.
+//   Sistemi ilk keşfeden ve inanan üreticilere: ilk 500 kayıta "Sadık Üye"
+//   etiketi. ★ 25.10 GÜNCELLEME (sahibin emri): ömür boyu +1 bonus İPTAL —
+//   lansman döneminde herkesin üretim hakkı tek ortak deneme hakkından
+//   yönetiliyor; sadık üyelik artık salt şeref rozeti, kota eklemiyor.
 //   Otorite sunucuda: /api/auth/me cevabındaki sadikUye bayrağı (created_at
-//   sıralamasıyla hesaplanır) local secureStore'a yazılır; kota motoru
-//   kisa türüne +1 ekler (uzun/tam değişmez). Bayrak yoksa (yeni kurulum,
-//   misafir, ağ hatası) davranış eski haliyle sürer — fail-open.
-//   Sunucu tarafı dayatma yok: bu bir HEDİYE, kısıt değil.
+//   sıralamasıyla hesaplanır) local secureStore'a yazılır.
 // ════════════════════════════════════════════════════════
 const SADIK_UYE_KEY = "nur_sadik_uye_v1";
 
@@ -255,9 +254,9 @@ export function isSadikUye(): boolean {
   return secureGet<boolean>(SADIK_UYE_KEY, false) === true;
 }
 
-/** Sadık üyeye ek günlük hak: yalnız kısa video +1 (uzun/tam değişmez) */
+/** ★ 25.10: +1 bonus İPTAL — sadık üyelik salt rozet oldu (0 ek hak) */
 export function sadikUyeBonusu(kind: VideoKind): number {
-  return kind === "kisa" && isSadikUye() ? 1 : 0;
+  return 0;
 }
 
 // ════════════════════════════════════════════════════════
