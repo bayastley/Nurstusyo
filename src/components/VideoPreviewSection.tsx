@@ -257,9 +257,10 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           <button
             type="button"
             onClick={() => { notify("🎨 Renk Çubuğu PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
-            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/30 transition hover:text-white/60"
+            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[9px] font-bold text-white/60 transition hover:border-white/25 hover:text-white/90"
+            style={{ background: "rgba(255,255,255,.04)" }}
           >
-            <Palette size={11} className="opacity-50" /> {t("vpRenkCubugu")}
+            <Palette size={11} className="opacity-70" /> {t("vpRenkCubugu")}
             <LockBadge kind="pro" position="top-right" onUpgrade={() => openPremium("uyelik")} />
           </button>
         )}
@@ -323,9 +324,10 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           <button
             type="button"
             onClick={() => { notify("✏️ Özel Yazı PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
-            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/30 transition hover:text-white/60"
+            className="relative flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[9px] font-bold text-white/60 transition hover:border-white/25 hover:text-white/90"
+            style={{ background: "rgba(255,255,255,.04)" }}
           >
-            <PenLine size={11} className="opacity-50" /> {t("vpOzelYazi")}
+            <PenLine size={11} className="opacity-70" /> {t("vpOzelYazi")}
             <LockBadge kind="pro" position="top-right" onUpgrade={() => openPremium("uyelik")} />
           </button>
         )}
