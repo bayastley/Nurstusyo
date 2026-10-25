@@ -111,7 +111,15 @@ export function setCurrentTier(tier: Tier): void {
 }
 
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elit: 2 };
+// ★ 25.10 LANSMAN DENEMESİ — SAHİBİN EMRİ: deneme hakkı (5) olan HER kullanıcı,
+//   tier'ı ne olursa olsun PRO/ELİT kapılarından geçer; rozet/kilit UI'ı da
+//   aynı fonksiyonu okuduğu için PRO/ELİT rozetleri son giren kullanıcının
+//   gözüne hiç görünmez. Deneme bakiyesi bitince (kalan=0) eski davranış döner.
+//   Sunucuda üretim yine /api/render/authorize ile DOĞRULAR (2. sağlam kapı).
+//   Circular import koruması: deneme modülü tier.ts'ten hiçbir şey import etmez.
+import { denemeAktifMi } from "./studio/deneme";
 export function tierAtLeast(have: Tier, need: Tier): boolean {
+  if (need !== "free" && denemeAktifMi()) return true;
   return TIER_RANK[have] >= TIER_RANK[need];
 }
 

@@ -249,8 +249,9 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   const v2Gate = (m: V2ModalId): boolean => {
     if (!v2Kapali(m)) return true;
     setModal(null);
-    notify(`🔒 ${V2_KILITLI[m]} oylamada — Yol Haritası'ndan oy ver, en çok oyu alan açılır!`);
-    setRoadmapOpen?.(true);
+    // ★ 25.10 OYLAMA KAPISI KALDIRILDI (sahibin emri): modül oylamaya devretmez,
+    //   kullanıcı net 'yakında' bildirimi alır. Roadmap artık yalnız admin'de.
+    notify(`🔒 ${V2_KILITLI[m]} yakında geliyor — hazır olduğunda duyurulacak!`);
     return false;
   };
   // Kilitli modallar hiç mount edilmez (içerik sızmasın)

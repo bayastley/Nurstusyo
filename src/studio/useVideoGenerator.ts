@@ -13,6 +13,8 @@ import { storeVideo } from "./videoStore";
 import { checkGuestGate, bumpGuestUsed } from "./useGuestTrial";
 import { telifUyarisiGerekli } from "../telifUyari";
 import { devamBeklet, uyariAc } from "./telifUyariAkisi";
+import { denemeAktifMi, denemeAyarla, DENEME_TOPLAM } from "./deneme"; // ★ 25.10 lansman denemesi
+import { bolumKullanimiYaz } from "./usageIzle"; // ★ 25.10 bölüm kullanım istatistiği
 import { uretimIstYaz } from "../components/islamicToolsVucut";
 import type { Aspect, LoginTab, Mode, ModalName, Output, SelectedAyah, User } from "../types";
 
@@ -168,7 +170,9 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     //   Vazgeçerse üretim iptal olur ve jeton/hak düşmez (authorize'a hiç gelmedik).
     const riskYuzde = Number(reciter.telifRiski) || 0;
     const riskOnayAdminMi = user?.isAdmin === true;
-    if (!isMasterSürüm && !riskOnayAdminMi && (accessTier === "pro" || accessTier === "elit") && riskYuzde > riskOnayEsigi) {
+    // ★ 25.10: lansman denemesi aktifken free kullanıcı da PRO/ELİT kâriyle üretebilir
+    //   → bilgilendirilmiş-onay penceresi onlar için de gösterilir (telif dürüstlüğü).
+    if (!isMasterSürüm && !riskOnayAdminMi && (accessTier === "pro" || accessTier === "elit" || denemeAktifMi()) && riskYuzde > riskOnayEsigi) {
       const onaylandi = await showRiskOnay(reciter.name, riskYuzde);
       if (!onaylandi) { notify("Üretim iptal edildi · jeton düşmedi"); return; }
     }
@@ -185,11 +189,23 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mode, formats: batchFormats.length ? batchFormats : [aspect] }),
         });
-        const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number } | null;
+        const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number; source?: string; packLeft?: number } | null;
         if (!response.ok || !data?.ok) {
           notify(data?.error || "Üretim yetkisi doğrulanamadı");
           return;
         }
+        // ★ 25.10 LANSMAN DENEMESİ — sahibin emri: "5 hak yaptıkça düşer, kalan
+        //   altında yazsın, bitince üyeliğe yöneltsin". Sunucu tek doğruluk kaynağı:
+        //   RPC nur_consume_video ÖNCE deneme hakkından (5 ortak), sonra kota/paket.
+        //   source==='deneme' → packLeft = kalan hak; deneme bitti (kota/paket).
+        if (data.source === "deneme") {
+          denemeAyarla(Number(data.packLeft) || 0);
+          notify(`🎁 Lansman denemesi: ${data.packLeft}/${DENEME_TOPLAM} üretim hakkı kaldı`);
+        } else {
+          denemeAyarla(0); // deneme bitti → PRO/ELİT/V2 kilitleri geri gelir
+          if (denemeAktifMi()) denemeAyarla(0);
+        }
+        bolumKullanimiYaz("video-uret"); // ★ 25.10 analitik: en çok kullanılan bölüm
       } catch {
         notify("Üretim yetkisi için sunucuya ulaşılamadı");
         return;

@@ -10,6 +10,8 @@ import { CubukRenkSecici, CerceveDuzRenkleri } from "./renkCubuguSecici";
 import { HatFontuSeridi } from "./hatFontuSeridi";
 import type { ModalName, Output, SelectedAyah, Tier, LoginTab } from "../types";
 import type { MicroUnlockKey } from "../microUnlock";
+import { getFeatureLock } from "../services/adminSyncService"; // ★ 25.10 kendiSes dinamik kilidi
+import { denemeAktifMi, denemeKalan, DENEME_TOPLAM } from "../studio/deneme"; // ★ 25.10 lansman denemesi
 
 interface VideoPreviewSectionProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -435,7 +437,19 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           title={kendiSesAktifMi ? t("vpKendiSesAktifTitle") : t("vpKendiSesTitle")}
         >
           {kendiSesAktifMi ? t("vpKendiSesAktif") : t("vpKendiSesUret")}
-          {!kendiSesAktifMi && <span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>}
+          {!kendiSesAktifMi && (() => {
+            // ★ 25.10 KENDİ SES DİNAMİK KİLİT (sahibin emri): admin panelde
+            //   featureLock "kendiSes" "v2"/"v3"/"off" → GRİ 'Yakında·V2' rozet;
+            //   "pro" → PRO rozet; "elit"/satır yok → ELİT rozet (eski ayar).
+            //   Lansman denemesi aktifken tierAtLeast bypass eder → rozet gizlenir.
+            const kilit = getFeatureLock("kendiSes", "elit");
+            const v2Kilitli = kilit === "v2" || kilit === "v3" || kilit === "off";
+            const gecer = isMasterSürüm || denemeAktifMi() || tierAtLeast(tier, "elit");
+            if (gecer) return null;
+            if (v2Kilitli) return (<span className="rounded bg-slate-400/20 px-1 py-px text-[7px] font-black tracking-wide text-slate-300">V2 · YAKINDA</span>);
+            if (kilit === "pro") return (<span className="rounded bg-purple-400/20 px-1 py-px text-[7px] font-black tracking-wide text-purple-200">PRO</span>);
+            return (<span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>);
+          })()}
         </button>
       </div>
 
@@ -564,6 +578,18 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
           {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
         </button>
+        {/* ★ 25.10 LANSMAN DENEMESİ — sahibin emri: "hakkın kaç kaldığı altında da
+            yazsın, sonra üyelik almaya yöneltsin". Misafirde görünmez (null). */}
+        {!isMasterSürüm && denemeKalan() !== null && (
+          denemeAktifMi() ? (
+            <p className="text-center text-[9px] font-bold text-emerald-300/80">🎁 Lansman denemesi: {denemeKalan()}/{DENEME_TOPLAM} üretim hakkı kaldı</p>
+          ) : (
+            <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-amber-300/90">
+              <span>Lansman denemesi bitti</span>
+              <button type="button" onClick={() => openPremium("uyelik")} className="rounded-full px-2 py-0.5 text-black" style={{ background: "linear-gradient(135deg,#fde68a,#d97706)" }}>💎 Üyeliğe geç</button>
+            </div>
+          )
+        )}
         {/* ★ CANLI RAM GÖSTERGESİ: üretim sırasında tarayıcı belleği MB bazlı izlenir.
             120 dk hatim gibi uzun üretimlerde bellek şişerse kullanıcı önceden görür. */}
         {generating && ramMb !== null && (

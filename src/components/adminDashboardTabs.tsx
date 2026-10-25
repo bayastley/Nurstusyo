@@ -253,3 +253,124 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
     </div>
   );
 };
+
+// ════════════════════════════════════════════════════════
+// ★ 25.10 BÖLÜM KULLANIM ANALİZ TAB'I — sahibin emri: "bütün kullanıcıları
+//   test eden, en çok hangi bölüm kullanılıyor gösteren özellik, admin panelde,
+//   yüzde kaç hangisi, haftalık güncellenen +50 kayıt saklanan, listede tarih
+//   seçtikçe bakılabilen". Veri tamamen sunucu tarafı (nur_bolum_kullanim);
+//   istemci sadece görüntüler — normal kullanıcı erişemez.
+// ════════════════════════════════════════════════════════
+
+/** ★ 25.10: /api/admin/usage (mod11 API) satırı — AdminKullanimTab + AdminDashboardModal ortak tip */
+export type KullanimHafta = { pazar: string; bolumler: Array<{ bolum: string; adet: number; yuzde: number }> };
+const BOLUM_ADLARI: Record<string, string> = {
+  "video-uret": "🎬 Üret (Video Üretim)",
+  kesfet: "📖 Keşfet Merkezi",
+  atmos: "🎨 Atmosfer Kataloğu",
+  themes: "🖼️ Tema Galeri",
+  prayer: "🕌 Namaz Rehberi",
+  history: "📜 Namaz Duaları",
+  guide: "🧭 İslam Rehberi",
+  stories: "📚 Kıssalar",
+  library: "📚 Kütüphane",
+  quranLearn: "📗 Kuran Öğret",
+  quranListen: "🎧 Kuran Dinle",
+  ayetKartlari: "🌙 Ayet Kartları",
+  ayetPaketleri: "📦 Ayet Paketleri",
+  hafizlikTesti: "🧠 Hafızlık Testi",
+  kelimeAtolyesi: "🔤 Kelime Atölyesi",
+  ayetNotlari: "📝 Ayet Notlarım",
+  arkaPlanUretici: "🌌 Arka Plan Üretici",
+  ramazan: "🌙 Ramazan Özel",
+  ozelGunTakvimi: "📅 Özel Gün Takvimi",
+  davet: "🤝 Arkadaşını Davet Et",
+  haftaninVideosu: "👑 Haftanın Videosu",
+  kendiSes: "🎙️ Kendi sesinle üret",
+  seslendirme: "🔊 Seslendirme",
+  zip: "📦 Zip Load",
+  login: "🔐 Giriş / Üyelik",
+  siteHakkinda: "ℹ️ Site Hakkında",
+  adminDashboard: "🛠 Admin Panel",
+};
+
+function bolumAdi(id: string): string { return BOLUM_ADLARI[id] || id; }
+
+function haftaEtiketi(iso: string): string {
+  const bas = new Date(`${iso}T00:00:00Z`);
+  const son = new Date(`${iso}T00:00:00Z`);
+  son.setUTCDate(son.getUTCDate() + 6);
+  const fmt = new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", timeZone: "UTC" });
+  return `${fmt.format(bas)} – ${fmt.format(son)}`;
+}
+
+export const AdminKullanimTab: React.FC<{
+  rows: KullanimHafta[];
+  seciliHafta: string | null;
+  setSeciliHafta: (v: string | null) => void;
+  onYenile: () => void;
+  notify: (msg: string) => void;
+}> = ({ rows, seciliHafta, setSeciliHafta, onYenile }) => {
+  const secili = rows.find((r) => r.pazar === seciliHafta) ?? rows[0] ?? null;
+  const toplam = secili ? secili.bolumler.reduce((s, b) => s + b.adet, 0) : 0;
+  const tr = new Intl.NumberFormat("tr-TR");
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-sky-500/30 bg-sky-500/[0.08] p-4">
+        <p className="text-[12px] font-black text-sky-200">📈 Bölüm Kullanım Analizi</p>
+        <p className="mt-1 text-[10px] text-white/55">
+          {secili ? `${haftaEtiketi(secili.pazar)} haftasında toplam ${tr.format(toplam)} bölüm açılışı kaydedildi.` : "Henüz kayıt yok — kullanıcılar siteyi kullandıkça haftalık satırlar burada birikir."}
+        </p>
+      </div>
+
+      {rows.length === 0 ? (
+        <p className="p-6 text-center text-[10px] text-white/40 italic">Henüz haftalık kayıt oluşmamış. (İlk kayıt, ilk tam hafta —— pazar tatilinde —— oluşan ilk veriyle yazılır.)</p>
+      ) : (
+        <>
+          {/* Hafta seçici — tarihe göre tıkla */}
+          <div className="flex flex-wrap gap-1.5">
+            {rows.map((h) => (
+              <button key={h.pazar}
+                onClick={() => setSeciliHafta(h.pazar)}
+                className={`rounded-xl px-2.5 py-1.5 text-[9.5px] font-bold transition ${h.pazar === seciliHafta ? "bg-sky-400/90 text-black" : "bg-white/10 text-white/65 hover:bg-white/20"}`}
+                title={`${haftaEtiketi(h.pazar)} — ${tr.format(h.bolumler.reduce((s, b) => s + b.adet, 0))} açılış`}>
+                {haftaEtiketi(h.pazar)}
+              </button>
+            ))}
+          </div>
+
+          {secili && secili.bolumler.length > 0 ? (
+            <div className="rounded-2xl border border-white/15 bg-white/[0.04] p-3.5">
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/40">Haftalık dağılım — {haftaEtiketi(secili.pazar)}</p>
+              <div className="mt-2.5 space-y-2">
+                {secili.bolumler.map((b, i) => (
+                  <div key={b.bolum}>
+                    <div className="flex items-center justify-between text-[10px]">
+                      <span className="font-bold text-white/80">{i + 1}. {bolumAdi(b.bolum)}</span>
+                      <span className="font-black tabular-nums text-sky-200">{tr.format(b.adet)} · %{b.yuzde.toFixed(1).replace(".", ",")}</span>
+                    </div>
+                    <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${Math.max(b.yuzde, 2)}%`, background: i === 0 ? "linear-gradient(90deg,#7dd3fc,#0284c7)" : "linear-gradient(90deg,#a5b4fc,#6366f1)" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="p-6 text-center text-[10px] text-white/40 italic">Seçilen haftada kayıt yok.</p>
+          )}
+
+          <p className="text-[8.5px] text-white/30">
+            Veriler sunucu tarafında haftalık (pazar bitişi) yuvarlanmış +50 kayıt saklanır; en eski 50 hafta otomatik silinir. İsimle örtük karışma olursa lütfen raporla.
+          </p>
+        </>
+      )}
+
+      <button onClick={onYenile}
+        className="w-full rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
+        ↻ Yenile
+      </button>
+    </div>
+  );
+};

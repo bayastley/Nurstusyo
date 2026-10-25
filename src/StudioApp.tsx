@@ -91,7 +91,8 @@ import { useShareActions } from "./studio/useShareActions";
 import { VARSAYILAN_CUBUK, VARSAYILAN_MESAJ, type CubukAyar, type MesajAyar } from "./studio/mesajKatmani";
 import { tierAtLeast, reciterRequiredTier, JETON, isAdminEmail, ADMIN_SECRET_PATH, getJeton, setJeton as persistJetonSecure, getCurrentTier, setCurrentTier, isRamadan, isFriday, videoMaliyeti, isFeatureUnlocked, featureLockLabel, hasMicroUnlock, type Tier } from "./tier";
 import { useManualAuthActions } from "./studio/useManualAuthActions";
-
+import { denemeKalan, denemeyiTazele, DENEME_TOPLAM } from "./studio/deneme"; // ★ 25.10 lansman denemesi
+import { bolumKullanimiYaz } from "./studio/usageIzle"; // ★ 25.10 bölüm kullanım istatistiği
 // ★ Yeni Hook'lar
 import { useAuth } from "./studio/useAuth";
 import { useTier } from "./studio/useTier";
@@ -127,7 +128,6 @@ void SES_TARZI_ORDER; void KATEGORI_TIER; void FREE_VIDEOS_PER_CATEGORY;
 export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_MASTER_SURUM }: { isMasterSürüm?: boolean }) {
   // ★ İlk açılışta remote config'i çek (feature locks, announcements vs. global senkronizasyon)
   useEffect(() => { ensureRemoteSync(); }, []);
-
   // Wallet sync → useWallet hook'unda
 
   // ★ Ücretsiz, tek satırlık ziyaretçi analitiği (Supabase nur_page_views'e yazar)
@@ -170,7 +170,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     previewReciterId, setPreviewReciterId,
     generating, setGenerating, progress, setProgress, outputs, setOutputs, activeOutputId, setActiveOutputId,
     shareTitle, setShareTitle, shareDescription, setShareDescription, pickRandomTags, visibleTags, setVisibleTags,
-    now, menuOpen, setMenuOpen, roadmapOpen, setRoadmapOpen, langOpen, setLangOpen, modal, setModal,
+    now, menuOpen, setMenuOpen, roadmapOpen, setRoadmapOpen, langOpen, setLangOpen, modal, setModal: setModalCekirdek,
     bekleyenDavetKodu, tosOpen, setTosOpen, legalTab, setLegalTab, debugGuideModal, setDebugGuideModal,
     tosAccepted, setTosAccepted, contactType, setContactType, contactMessage, setContactMessage,
     hoveredClip, setHoveredClip, smartAiEnabled, setSmartAiEnabled, aiTooltipHover, setAiTooltipHover,
@@ -181,6 +181,14 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
     combinedAllClips, sortedReciters, reciter, activeOutput, t,
     ALL_THEMES, themeTier, themeEmoji, setLang, toast, setToast,
   } = stCekirdek;
+
+  // ★ 25.10 BÖLÜM KULLANIM İSTATİSTİĞİ (sahibin emri): merkezî setModal sarmalayıcı —
+  //   hangi bölüm ne kere açıldı sunucuya haftalık olarak kaydedilir (misafir dahil,
+  //   kullanıcı kimliği gönderilmez). video üret ise useVideoGenerator'da kaydedilir.
+  const setModal = useCallback((deger: React.SetStateAction<ModalName>) => {
+    if (typeof deger === "string" && deger) bolumKullanimiYaz(deger);
+    return setModalCekirdek(deger);
+  }, [setModalCekirdek]);
 
   useCanvasDraw({
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
@@ -220,6 +228,12 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // ★ TELİF UYARI ZİNCİRİ — kabul edilince son handleGenerate tekrar koşar (SRP tur 4)
   useEffect(() => devamiBagla(() => { handleGenerate(); }), [handleGenerate]);
+
+  // ★ 25.10 LANSMAN DENEMESİ (sahibin emri): kullanıcının sunucudaki kalan 5 üretim
+  //   hakkı çekilir; deneme aktifken PRO/ELİT/V2 kilitleri istemcide otomatik açılır
+  //   (tierAtLeast + getFeatureLock bypass → ilk giren kimse elit/pro görmez).
+  const denemeAnahtar = user?.id || user?.email || "";
+  useEffect(() => { if (denemeAnahtar) void denemeyiTazele(); }, [denemeAnahtar]);
 
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
   const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify, t });
@@ -430,8 +444,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             const kendiSesKilit = getFeatureLock("kendiSes", "free");
             const kendiSesV2 = kendiSesKilit === "v2" || kendiSesKilit === "v3" || kendiSesKilit === "off";
             if (!isMasterSürüm && !adminMi && kendiSesV2) {
-              notify("🔒 Kendi Sesinle Üret oylamada — Yol Haritası'ndan oy ver!");
-              setRoadmapOpen(true);
+              // ★ 25.10 OYLAMA KAPISI KALDIRILDI: net 'yakında' bildirimi; yol haritası yalnız admin'de.
+              notify("🔒 Kendi Sesinle Üret yakında geliyor — hazır olduğunda duyurulacak!");
               return;
             }
             if (isMasterSürüm || adminMi || tierAtLeast(tier, "elit")) {

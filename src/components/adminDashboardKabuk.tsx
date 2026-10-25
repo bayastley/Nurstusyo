@@ -12,7 +12,7 @@ import type { BanLog } from "../services/adminSyncService";
 //   (usePanelSaglik.ts) — hangi sekme çalışmıyorsa rozet + sekme noktası gösterir.
 import type { PanelSaglik, SaglikTab } from "./usePanelSaglik";
 
-export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures";
+export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim";
 
 /** Sağlık tooltip'i için kısa sekme adları (panel TR hardcoded — i18n kullanmaz, 06.10) */
 const SEKME_ETIKETLERI: Record<SaglikTab, string> = {
@@ -197,6 +197,19 @@ export const AdminPanelKabuk: React.FC<{
             <span>Haftalık Rapor</span>
             {saglikNokta("rapor")}
           </button>
+          {/* ★ 25.10 BÖLÜM KULLANIM TAB'ı (sahibin emri): hangi bölüm yüzde kaç
+              kullanılıyor — haftalık kayıt listesinde tarih seçerek karşılaştır. */}
+          <button
+            onClick={() => setActiveTab("kullanim")}
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "kullanim" ? "text-black font-black" : "text-sky-300 hover:text-white"
+            }`}
+            style={activeTab === "kullanim" ? { background: "linear-gradient(135deg,#7dd3fc,#0284c7)" } : { background: "rgba(125,211,252,0.12)", border: "1px solid rgba(125,211,252,0.3)" }}
+          >
+            📈
+            <span>Bölüm Kullanımı</span>
+          </button>
+
           <button
             onClick={() => setActiveTab("feedback")}
             className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap relative ${

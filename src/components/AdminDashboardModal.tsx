@@ -12,7 +12,7 @@ import { AdminUsersTab } from "./AdminUsersTab";
 import { AdminModulesSyncTab } from "./AdminModulesSyncTab";
 // ★ 10.10 (Öncelik-1 GİZLE/BAKIM PLANI): admin-gizli özellikler sekmesi
 import { AdminGizliFeaturesTab } from "./AdminGizliFeatures";
-import { AdminHaftaVideoTab, AdminHaftalikRaporTab } from "./adminDashboardTabs";
+import { AdminHaftaVideoTab, AdminHaftalikRaporTab, AdminKullanimTab, type KullanimHafta } from "./adminDashboardTabs";
 import { AdminBanLogsTab, AdminFeedbackTab, AdminErrorsTab } from "./adminDashboardBolumler";
 // ★ SRP (01.10): panel ÇERÇEVESİ adminDashboardKabuk.tsx'e taşındı — header + 7 sekmeli
 //   nav + hata alarmı + footer. Bu dosya yalnız STATE + İŞ MANTIĞI + sekme içerikleri.
@@ -38,7 +38,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim">("users");
   // ★ 06.10 SAĞLIK ROZETİ: mount'ta salt-okunur action ping'leri → kabukta 🩺 rozet + sekme noktaları
   const panelSaglik = usePanelSaglik();
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
@@ -187,6 +187,28 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // Ban & Siber Denetim sekmesi açılınca sunucudan taze çek
   useEffect(() => {
     if (activeTab === "banLogs") void loadBannedUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  // ★ 25.10 BÖLÜM KULLANIM ANALİZİ — /api/admin/usage hazine verisini çeker.
+  //   Sekme ilk açılışında + Yenile butonunda tetiklenir; hafta seçimi client-side.
+  const [kullanimRows, setKullanimRows] = useState<KullanimHafta[]>([]);
+  const [kullanimHafta, setKullanimHafta] = useState<string | null>(null);
+  const loadKullanim = async () => {
+    try {
+      const response = await fetch("/api/admin/usage", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" } });
+      const data = await response.json().catch(() => null) as { ok?: boolean; haftalar?: KullanimHafta[]; error?: string } | null;
+      if (data?.ok && Array.isArray(data.haftalar)) {
+        setKullanimRows(data.haftalar);
+        setKullanimHafta((cur) => (cur && data.haftalar!.some((h) => h.pazar === cur) ? cur : data.haftalar![0]?.pazar ?? null));
+      } else {
+        setKullanimRows([]);
+        notify(data?.error || "Kullanım verisi alınamadı");
+      }
+    } catch { setKullanimRows([]); notify("Sunucuya ulaşılamadı"); }
+  };
+  useEffect(() => {
+    if (activeTab === "kullanim" && kullanimRows.length === 0) void loadKullanim();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
@@ -453,9 +475,18 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             />
           )}
 
-          {/* TAB: HAFTANIN VİDEOSU — admin onay kuyruğu */}
-          {activeTab === "haftaVideo" && (
-            <AdminHaftaVideoTab notify={notify} />
+          {/* ★ 25.10 TAB: BÖLÜM KULLANIM ANALİZİ — hangi bölüm yüzde kaç kullanılıyor,
+              haftalık pazar-bitiminde yuvarlanmış +50 kayıt saklanır; tarih seçilince o
+              haftanın dağılımı gösterilir. Veriler GATE_KAPISI arkasında okunduğu için
+              normal kullanıcı hiçbir yol ile erişemez, mod11 istemcisi yoktur. */}
+          {activeTab === "kullanim" && (
+            <AdminKullanimTab
+              rows={kullanimRows}
+              seciliHafta={kullanimHafta}
+              setSeciliHafta={setKullanimHafta}
+              onYenile={() => void loadKullanim()}
+              notify={notify}
+            />
           )}
 
           {/* TAB: HAFTALIK RAPOR — 7 günlük özet */}

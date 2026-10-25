@@ -269,9 +269,11 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             <p className="mt-0.5 text-[8.5px] text-white/35">{t("hbrV2V3Takvim")}</p>
                           </div>
 
-                          {/* ★ YOL HARİTASI — V2 kilidi KALDIRILDI (topluluk oylaması):
-                              herkes açıp yenilikleri görebilir ve oy verebilir.
-                              Oy vermek için giriş gerekir (API tarafında zorunlu). */}
+                          {/* ★ 25.10 OYLAMA KALDIRILDI (sahibin emri): Yol Haritası artık
+                              YALNIZCA admin'e görünür; normal kullanıcı oy/kilitleme
+                              vitrinini görmez. Kilidi kapalı modüller (v2/v3/off)
+                              menüde 'Yakında' rozetli kalır, tık anında net bildirim verir. */}
+                          {(user && (isAdminEmail(user.email || "") || isMasterSürüm)) && (
                           <div className="relative">
                             <button
                               type="button"
@@ -280,9 +282,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             >
                               <span className="text-base">🚀</span>
                               <span className="min-w-0 flex-1 truncate">{t("hbrYolHaritasi")}</span>
-                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">{t("hbrOyla")}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">ADMIN</span>
                             </button>
                           </div>
+                          )}
 
                           {/* ★ SADELEŞTİRME: V2/V3 rozetli maddeler (Ayet & Dua Kütüphanesi, Kur'an Hikayeleri,
                               Kıssalar, Hadisler, Dualar & Zikirler, Kurumsal) menüden kaldırıldı —
@@ -359,7 +362,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         onClick={() => {
                           setMenuOpen(false);
                           if (item.kabe) window.dispatchEvent(new Event("nur_kabe_ac"));
-                          if (v2Kilitli) { setRoadmapOpen?.(true); return; }
+                          // ★ 25.10 OYLAMA KAPISI KALDIRILDI: v2 kilitli modüller artık
+                          //   oylamaya HİÇ devretmez — kullanıcıya net 'yakında' bildirimi.
+                          if (v2Kilitli) { notify?.(`🔒 ${item.label} yakında geliyor — hazır olduğunda duyurulacak`); return; }
                           if (yetersiz) openPremium("uyelik", efektifHedef === "elit" ? "elit" : "pro");
                           else setModal(item.target);
                         }}

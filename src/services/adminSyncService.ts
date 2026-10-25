@@ -177,8 +177,18 @@ export function isRemoteSyncReady(): boolean {
   return _remoteSyncReady;
 }
 
+// ★ 25.10 LANSMAN DENEMESİ bypass (sahibin emri: "ilk giren kimse elit pro görmesin,
+//   herşey 5 kullanım olsun; haklar bitince eski kilitler geri gelsin"): deneme hakki
+//   >0 iken PRO/ELİT/V2/V3 kilit değerleri istemci tarafında "free" sayılır — menü
+//   rozetleri, modal kapıları ve buton rozetleri tek noktadan açılır. "off" ve
+//   "maintenance" GENUINELY YAKALANIR (admin kapatma bilinçli olduğu için açılmaz).
+//   Sunucuda üretim yine /api/render/authorize ile tek doğruk kaynak demiştir.
+import { denemeAktifMi } from "../studio/deneme";
+
 export function getFeatureLock(featureId: string, fallback: FeatureLock = "free"): FeatureLock {
-  return getSystemConfig().featureLocks[featureId] ?? fallback;
+  const value = getSystemConfig().featureLocks[featureId] ?? fallback;
+  if ((value === "pro" || value === "elit" || value === "v2" || value === "v3") && denemeAktifMi()) return "free";
+  return value;
 }
 
 // ★ V2 TEST KİLİDİ (01.10 — deploy'suz aç/kapa): kod sabiti V2_TEST_ACIK kaldırıldı;
