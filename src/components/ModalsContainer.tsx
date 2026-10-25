@@ -36,7 +36,7 @@ import { KISSAS } from "../data";
 import { secureGet, secureSet } from "../secureStore";
 import { T, type Lang } from "../i18n";
 import { JETON, isAdminEmail } from "../tier"; // ★ 17.10: kendiSes/zip V3 kilidi admin tespiti
-import { getFeatureLock, v2TestAcikMi } from "../services/adminSyncService";
+import { getFeatureLock, v2TestAcikMi, type FeatureLock } from "../services/adminSyncService";
 import { startCheckout } from "../payments/pricing";
 import type { ModalName, LoginTab, Tier } from "../types";
 import type { ModalsContainerProps } from "./modalsContainerTypes";
@@ -271,7 +271,16 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(() => {
     if (!modal) return;
-    const gereken = UYE_GATE[modal];
+    // ★ 25.10 KİLİT-BAGI DAVRANIS DÜZELTMESİ (kullanıcı emri: "elit seçince sadece elit mi
+    //   alabiliyor — her şeyi kilitle/aç kontrol et"): admin panel Özellik Kilitleri'nde
+    //   modüle "Pro üyelere"/"Elit üyelere" seçildiyse gereken tier O SEVİYEDEN gelir
+    //   (menü rozetiyle birebir aynı — HeaderTopBar efektifHedef). "free" seçildiyse kapı
+    //   tamamen kalkar, HERKES (misafir dahil) açabilir. Satır yoksa fallback sayesinde
+    //   varsayılan UYE_GATE haritası geçerli — mevcut plan davranışı korunur.
+    const varsayilanGate = UYE_GATE[modal];
+    const kilitDegeri = getFeatureLock(modal, (varsayilanGate ?? "hidden") as FeatureLock);
+    if (kilitDegeri === "free") return; // admin herkese açtı (explicit) — kapı yok
+    const gereken = (kilitDegeri === "pro" || kilitDegeri === "elit" ? kilitDegeri : varsayilanGate);
     if (!gereken) return;
     if (isMasterSürüm || isAdminEmail(user?.email || "")) return; // admin/masten her şey açık
     if (!user?.email) {

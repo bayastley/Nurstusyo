@@ -17,6 +17,11 @@ interface GizliOzellik {
   title: string;
   desc: string;
   icon: string;
+  /** ★ 25.10 KİLİT BAĞI: v2 modül kapısının okuduğu camelCase kimlik (ayetKartlari
+   *  vb.). Aç/Gizle çağrısında featureId olarak gönderilir → nur_feature_locks'a
+   *  GERÇEK kapının okuduğu satır da yazılır; eski davranışta sadece "adm-..."
+   *  roadmap satırı güncelleniyordu ve buton davranış üretmiyordu. */
+  modul?: string;
   /** hangi tier'a henüz açılmadı (hidden = admin-gizli; v3 = admin-gizli + V3 etiketi) */
   lock_level: "free" | "pro" | "elit" | "v3" | "hidden";
   hidden_feature?: boolean;
@@ -44,13 +49,18 @@ const GIZLI_MADDELER: Array<Omit<GizliOzellik, "lock_level">> = [
   //   panelde görünür, tek tıkla free/pro/elit'e açılabilir. KODDA ayrıca ADMIN_HARD_KILITLI
   //   (modalsContainerV2.ts) onu admin-godmode haricinde herkese kapalı tutar; bu satır
   //   admin'in kilit YÖNETİMİ'nin görünür yüzü olarak burada durur.
-  { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı.", icon: "📚" },
-  { id: "adm-ayet-notlari", title: "Ayet Notlarım", desc: "Seçili ayetlere kendi notunu ekle; manevi arşiv şifreli durur.", icon: "📝" },
-  { id: "adm-kesfet-rehber", title: "Keşfet: Hadis · Kıssa · Rehber", desc: "Hadis bankası, kıssalar ve dua rehberi tek Keşfet ekranında.", icon: "❓" },
-  { id: "adm-haftanin-videosu", title: "Haftanın Videosu", desc: "En beğenilen üretimler her hafta vitrinde.", icon: "🎬" },
-  { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı.", icon: "✍️" },
-  { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Metnin ruhuna uygun arka plan sahnesi üretir.", icon: "✨" },
-  { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır — tek tıkla paketlenmiş ayet setleri.", icon: "📦" },
+  { id: "adm-ayet-kutuphanesi", title: "Ayet & Dua Kütüphanesi", desc: "616 ayet, 13 mood filtresi, Günün Ayeti ve kart tasarımı.", icon: "📚", modul: "ayetKartlari" },
+  // ★ 25.10 KALICI EMİR: Ayet Notlarım herkese ücretsiz — modül bağına rağmen v2KilitliMi
+  //   neon ayetNotlari muafiyetiyle AÇIK kalır; admin dahi kapatabilmez.
+  { id: "adm-ayet-notlari", title: "Ayet Notlarım", desc: "Seçili ayetlere kendi notunu ekle; manevi arşiv şifreli durur.", icon: "📝", modul: "ayetNotlari" },
+  { id: "adm-kesfet-rehber", title: "Keşfet: Hadis · Kıssa · Rehber", desc: "Hadis bankası, kıssalar ve dua rehberi tek Keşfet ekranında.", icon: "❓", modul: "kesfet" },
+  { id: "adm-haftanin-videosu", title: "Haftanın Videosu", desc: "En beğenilen üretimler her hafta vitrinde.", icon: "🎬", modul: "haftaninVideosu" },
+  { id: "adm-kelime-atolyesi", title: "Kelime Atölyesi", desc: "Tek kelime yaz: ayet önerileri, atmosfer ve video taslağı.", icon: "✍️", modul: "kelimeAtolyesi" },
+  { id: "adm-ai-arkaplan", title: "AI Arka Plan Üretici", desc: "Metnin ruhuna uygun arka plan sahnesi üretir.", icon: "✨", modul: "arkaPlanUretici" },
+  { id: "adm-ayet-paketleri", title: "Hazır Ayet Paketleri", desc: "Kandil, cuma, sabır — tek tıkla paketlenmiş ayet setleri.", icon: "📦", modul: "ayetPaketleri" },
+  // ★ 25.10: Sesli Meal artık RevealFeature bağında — admin free/pro/elit seçimi
+  //   UYE_GATE davranışı doğrudan değiştirir (getFeatureLock seviyesinden okulur).
+  { id: "adm-seslendirme", title: "Sesli Meal · Seslendirme", desc: "Ayet metnini TTS'le okut, 5 dil + 15 atmosfer.", icon: "🔊", modul: "seslendirme" },
   // ★ 18.10 UZUN VADELİ GÜN (Kur'an ekranı): kodda ÇALIŞAN özellikler — admin-gizli;
   //   revealFeature ile free/pro/elit'e açılınca butonları kullanıcıda belirir.
   { id: "adm-kabe-canli", title: "Kâbe Canlı Yayın", desc: "Mescid-i Haram'dan 7/24 canlı yayın (Kur'an modal üst barında).", icon: "🕋" },
@@ -134,7 +144,10 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       const response = await fetch("/api/roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "revealFeature", id, tier }),
+        // ★ 25.10 KİLİT BAĞI: v2 modül kapısı camelCase kimlikle kontrol ediyor —
+        //   modül bağına eşlenen hesaplar featureId de gönderilerek gerçek kapı
+        //   değiştirilir (daha önce sadece "adm-" roadmap satırı güncelleniyordu).
+        body: JSON.stringify({ action: "revealFeature", id, tier, featureId: (liste.find((f) => f.id === id)?.modul || "") }),
       });
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (response.ok && data?.ok) {
@@ -152,7 +165,8 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       const response = await fetch("/api/roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "hideFeature", id }),
+        // ★ 25.10 KİLİT BAĞI: gerçek kapı satırını da 'hidden'a çek (ayrıca yazılır).
+        body: JSON.stringify({ action: "hideFeature", id, featureId: (liste.find((f) => f.id === id)?.modul || "") }),
       });
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (response.ok && data?.ok) {

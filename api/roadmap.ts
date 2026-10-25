@@ -418,12 +418,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const admin = session;
         const id = sanitize(body.id, 60);
         const tier = sanitize(body.tier, 10) as "free" | "pro" | "elit" | "v3" | "";
+        // ★ 25.10 KİLİT BAĞI: AdminGizliFeatures artık modül bağına eşlenen camelCase
+        //   kapı kimliğini (ayetKartlari vb.) da gönderiyor. Bu ikinci satır yoksa
+        //   admin panelindeki "free/pro/elit'e aç" gerçek kapıya HİÇ dokunmuyor ve
+        //   buton davranış üretmiyordu (modalsContainer(ModalsContainer) v2KilitliMi
+        //   getFeatureLock(camelKimlik) okuyordu).
+        const featureId = sanitize(body.featureId, 40);
         if (!id || !tier) return res.status(400).json({ ok: false, error: "Geçersiz özellik/seviye" });
         await db("nur_feature_locks?on_conflict=feature_id", {
           method: "POST",
           headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
           body: JSON.stringify({ feature_id: id, lock_level: tier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
         });
+        // ★ Gerçek kapı satırı — camelCase modül kimliği (admine aynen davranış)
+        if (featureId) {
+          await db("nur_feature_locks?on_conflict=feature_id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({ feature_id: featureId, lock_level: tier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+          });
+        }
         await db(`nur_roadmap_features?id=eq.${encodeURIComponent(id)}`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
@@ -436,12 +450,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (action === "hideFeature") {
         const admin = session;
         const id = sanitize(body.id, 60);
+        // ★ 25.10 KİLİT BAĞI: gerçek kapı satırını da 'hidden' seviyesine çek.
+        const featureId = sanitize(body.featureId, 40);
         if (!id) return res.status(400).json({ ok: false, error: "Geçersiz özellik" });
         await db("nur_feature_locks?on_conflict=feature_id", {
           method: "POST",
           headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
           body: JSON.stringify({ feature_id: id, lock_level: "hidden", active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
         });
+        if (featureId) {
+          await db("nur_feature_locks?on_conflict=feature_id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({ feature_id: featureId, lock_level: "hidden", active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+          });
+        }
         await db(`nur_roadmap_features?id=eq.${encodeURIComponent(id)}`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
