@@ -7,6 +7,7 @@
 import React from "react";
 import { X, AlertTriangle, Ban, Zap, ShieldAlert } from "lucide-react";
 import type { DebugGuideMessage } from "../debugGuide";
+import { ModalsContainer } from "./ModalsContainer";
 
 interface GenConfirmData { mode: string; formatCount: number; cost: number; remaining: number }
 
@@ -259,3 +260,75 @@ export function HataKilavuzModal({
         </div>
   );
 }
+
+
+// ── 🎬 TAM SAYFA RENDER KAPLANMA EKRANI (25.10 parçalama — StudioApp'ten taşındı) ──
+export function RenderKaplanmaEkran({ progress, onIptal }: { progress: number; onIptal: () => void }) {
+  return (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 p-6 backdrop-blur-md text-center select-none modal-in">
+          <div className="max-w-md w-full rounded-3xl border border-gold/30 bg-slate-950/80 p-8 shadow-2xl space-y-5">
+            {/* Altın renkli lüks parlayan yükleme efekti */}
+            <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/10 border border-gold/30 text-gold shadow-xl">
+              <span className="absolute inset-0 rounded-3xl border-2 border-gold border-t-transparent animate-spin"></span>
+              <span className="text-xl font-bold animate-pulse">🎬</span>
+            </div>
+
+            <div className="space-y-2">
+              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-red-300 animate-pulse">
+                SİSTEM AKTİF RENDER MODUNDA
+              </span>
+              <h2 className="font-display text-lg font-black text-white leading-normal">
+                LÜTFEN BU SEKMEYİ KAPATMAYIN VEYA ARKA PLANA ALMAYIN
+              </h2>
+            </div>
+
+            <p className="text-[11.5px] leading-relaxed text-white/70">
+              Tarayıcı tabanlı video birleştirme işlemi başladığı için, başka bir sekmeye geçmek veya uygulamayı arka plana almak tarayıcının işlemi askıya almasına ve <b className="text-gold">videonun donmasına/bozulmasına</b> neden olur.
+            </p>
+
+            {/* İlerleme çubuğu */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex justify-between text-[10px] font-bold text-white/50">
+                <span>Video İşleniyor...</span>
+                <span className="text-gold font-black font-mono">%{progress}</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300 shadow-[0_0_10px_rgba(217,119,6,0.5)]"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+              <button
+                onClick={onIptal}
+                className="w-full rounded-xl bg-red-500/10 border border-red-500/30 py-3 text-[11px] font-bold text-red-300 transition hover:bg-red-500/20 active:scale-98"
+              >
+                Üretimi İptal Et
+              </button>
+              <p className="text-[9.5px] text-white/35 font-medium leading-normal">
+                İptal ettiğinizde üretim hakkı (jeton) hesabınızdan düşmez.
+              </p>
+            </div>
+          </div>
+        </div>
+  );
+}
+
+// ── ★ MODAL KAPSA — 25.10 parçalama: StudioApp'teki 125 satırlık ModalsContainer
+//    çağrı bloğu buraya taşındı; üç kanca-objesinin (çekirdek/atmosfer/seçim)
+//    içindeki isimler birebir ModalsContainer'a düşer, eksikler `ekstra` ile beslenir.
+export const ModalsKatman: React.FC<{
+  cekirdek: object;
+  arka: object;
+  secici: object;
+  ekstra: object;
+}> = ({ cekirdek, arka, secici, ekstra }) => (
+  <ModalsContainer
+    {...(cekirdek as Parameters<typeof ModalsContainer>[0])}
+    {...(arka as Parameters<typeof ModalsContainer>[0])}
+    {...(secici as Parameters<typeof ModalsContainer>[0])}
+    {...(ekstra as Parameters<typeof ModalsContainer>[0])}
+  />
+);

@@ -8,6 +8,9 @@ import {
   ARABIC_FONTS as _ARABIC_FONTS, SHIMMER_STYLES as _SHIMMER_STYLES, CINE_FILTERS as _CINE_FILTERS, arabicFontWeight, arabicIdealScale,
 } from "./studio/studioConstants";
 import { useCanvasDraw } from "./studio/useCanvasDraw";
+import { useStudioCekirdek } from "./studio/useStudioCekirdek";
+import { useStudioArkaPlanBag } from "./studio/useStudioArkaPlanBag";
+import { useStudioPicker } from "./studio/useStudioPicker";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./studio/ayetKategori"; // ★ SRP adım 13 (02.10): ayet→kategori motoru
 import { akilliKlipSec } from "./studio/atmosferBag"; // ★ 16.10: Akıllı AI seçimi tekrar-düşman DÖNEN TORBA (Math.random tekrarı çözüldü)
 import { storeVideo, loadStoredVideos } from "./studio/videoStore";
@@ -110,7 +113,7 @@ import { useAyetSecim } from "./studio/useAyetSecim"; // ★ SRP (09.10): ayet s
 import { getVideoUrlSync, getPosterUrlSync, getVideoUrl, getPosterUrl, isR2Media } from "./videoUrl";
 import { checkRateLimit } from "./rateLimiter";
 import { ensureImageYukle, ensureVideoYukle } from "./studio/medyaOnYukleme";
-import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal, TelifRiskOnayBalonu, RISK_ONAY_ESIGI } from "./components/studioAppBolumler";
+import { UretimOnayBalonu, BanEngelEkrani, HataKilavuzModal, TelifRiskOnayBalonu, RISK_ONAY_ESIGI, RenderKaplanmaEkran, ModalsKatman } from "./components/studioAppBolumler";
 // ★ SRP adım 12 (30.09): medya ön yükleme fabrikası studio/medyaOnYukleme.ts'e taşındı
 import { onErrorCaptured, reportRenderError, type DebugGuideMessage } from "./debugGuide";
 import { fetchRemoteConfig, ensureRemoteSync, getSystemConfig, banUserInDb, getBanLogs, type MaintenanceConfig } from "./services/adminSyncService";
@@ -132,508 +135,52 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
   // Payment flow → usePaymentFlow hook'unda
 
-  const [adminGodMode, setAdminGodMode] = useState(() => false);  // ★ Sunucudan gelen isAdmin'e güven, localStorage'a değil
-  const [maintenance, setMaintenance] = useState<MaintenanceConfig>(() => getSystemConfig().maintenance!);
-  const isDevMaster = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV && developerMaster);
-  const [isMasterSürüm, setIsMasterSürüm] = useState(isDevMaster || adminGodMode);
-
-  // ★ adminGodMode değiştiğinde isMasterSürüm'ü senkronize et
-  useEffect(() => {
-    if (!isDevMaster) {
-      setIsMasterSürüm(adminGodMode);
-      if (!adminGodMode) localStorage.removeItem("nur_admin_session");
-    }
-  }, [adminGodMode, isDevMaster]);
-
-  // Toast (erkenden tanımlı çünkü hook'lar buna ihtiyaç duyuyor)
-  const [toast, setToast] = useState<string | null>(null);
-  const notify = useCallback((message: string) => setToast(message), []);
-
-  // ★ Cookie Consent — yeni KVKK component'i tarafından yönetiliyor
-
-  // ★ TELİF UYARI DEVAMI (SRP tur 4, 16.10): eski telifTetik/effect çifti
-  //   modül-düzeyi telifUyariAkisi ile değiştirildi. Üretim motoru uyarı gerektiğinde
-  //   uyariAc() abonesini çağırır; TelifDisclaimer "Anladım" basılınca bekleyenDevamiYurut()
-  //   son handleGenerate'i tekrar çağırır.
-  const [telifUyariAcik, setTelifUyariAcik] = useState(false);
-  useEffect(() => uyariAcilisiBagla(() => setTelifUyariAcik(true)), []);
-
-  // ★ SRP PARÇALAMA TUR 3 (16.10): üretim-onay + telif-risk-onay pencereleri
-  //   useOnayPencereleri hook'unda — birebir aynı davranış.
-  const { genConfirmOpen, genConfirmData, showGenerateConfirm, handleGenConfirm, riskOnayData, showRiskOnay, handleRiskOnay } = useOnayPencereleri();
-
-  // Hook'lara gereken state'ler (yukarıda tanımlı olmalı)
-  // ★ 22.10 CANLI-DİL FIX: bazı bileşenler (StudioHeroSection, AnnouncementBar…)
-  //   dil okumayı `nur_lang` localStorage'dan yapar; düz setState ile localStorage
-  //   efekttren sonra yazılıyor → dil değişimi ancak sayfa yenilenince uygulanıyordu.
-  //   setLang artık localStorage'ı SENKRON yazar (render anında okunabilmesi için)
-  //   ve `nur_lang_degisti` olayı bildirir — dinleyen bileşenler anında çevrilir.
-  const [lang, setLangState] = useState<Lang>(() => {
-    const saved = localStorage.getItem("nur_lang");
-    if (saved && LANGS.some((item) => item.code === saved)) return saved as Lang;
-    // ★ ENDONEZYA ODAĞI (madde 5, 02.10): dil tercihi kayıtsızsa tarayıcı diline bak —
-    //   Endonezce/Arapça/Urduca/İngilizce gelen kendi dilinde karşılanır (çeviriler hazır).
-    //   Tespit edilen dil ilk render'da nur_lang'e yazılır → sonraki girişlerde kalıcı olur;
-    //   kullanıcı farklı dil seçerse seçimi ezberin üstüne geçer.
-    try {
-      const diller = [navigator.language, ...(navigator.languages ?? [])].filter(Boolean);
-      for (const ham of diller) {
-        const kod = (ham || "").slice(0, 2).toLowerCase();
-        if (kod === "id") return "id";
-        if (kod === "ar") return "ar";
-        if (kod === "ur") return "ur";
-        if (kod === "en") return "en";
-        if (kod === "tr") return "tr";
-      }
-    } catch { /* yut */ }
-    return "tr";
-  });
-  // ★ Tema HESABA ÖZEL (aşağıda user tanımlandıktan sonra hesap anahtarına bağlanır)
-  const [themeId, setThemeId] = useState(() => localStorage.getItem("nur_theme") || "nur");
-  const [query, setQuery] = useState("");
-  // ★ Arama sonuçları ortak hook'ta (kendi kendine gecikmeli istek + Türkçe sadeleştirme)
-  const { results, searching } = useSearchResults(query, lang);
-  // ★ Açılışta hiçbir sure/ayet seçili olmasın — kullanıcı kendisi seçsin
-  // ★ Sure seçici "1" (Fâtiha) ile başlar — dropdown'da Fatiha görünüyorsa state de gerçekten Fatiha olsun.
-  //   Eskiden "" ile başlıyordu: tarayıcı ilk seçeneği (Fatiha) GÖSTERİR ama state boş kalır,
-  //   "Tüm Sure" basınca "Önce bir sure seç" uyarısı çıkıyordu (görünüş ↔ gerçek çelişkisi).
-  const [surah, setSurah] = useState("1");
-  const [ayah, setAyah] = useState("");
-  const [selected, setSelected] = useState<SelectedAyah[]>([]);
-  const [verseIndex, setVerseIndex] = useState(0);
-  const [background, setBackground] = useState<Clip>(MOTION_CLIPS[0]);
-  const [ayahBackgrounds, setAyahBackgrounds] = useState<Record<string, Clip>>({});
-  const [pickingFor, setPickingFor] = useState<string | null>(null);
-  // ★ KULLANICI MEDYASI (28.09): medya yükleyiciden eklenen video/resim/ses dosyaları
-  //   IndexedDB'de KALICI saklanır; hook açılışta buraya Clip olarak yükler → atmosfer
-  //   galerisinde "📁 Yüklediklerim" kategorisinde arka plan olarak seçilebilir.
-  const { medyaClips, medyaArkaPlanYap, onMedyaSenkron } = useMedyaYukleme({
-    notify, setBackground, setAyahBackgrounds, pickingFor, selected,
-  });
-  const [clipKind, setClipKind] = useState<"img" | "vid">("vid");
-  const [atmosCategory, setAtmosCategory] = useState<CatId | "all">("all");
-  const [atmosQuery, setAtmosQuery] = useState("");
-  const [mode, setMode] = useState<Mode>("short");
-  const [lockTip, setLockTip] = useState<string | null>(null);
-  const [aspect, setAspect] = useState<Aspect>("9:16");
-  const [batchFormats, setBatchFormats] = useState<Aspect[]>(["9:16"]);
-  const [reciterId, setReciterId] = useState("maher"); // ★ Varsayılan: Maher el-Muaiqly (ömer tercihi)
-
-  // ★ Hook'lar (state'lerden sonra çağrılır)
-  const { user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode, setSentCode, serverAdminVerified, setServerAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput, adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard, adminSonEmail, setAdminSonEmail } = useAuth({ isMasterSürüm, isDevMaster, notify });
-  const { jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet } = useWallet(notify, user);
-  const { tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier, tryUnlockElitFeature, tryUnlockFullMode } = useTier({ isMasterSürüm, notify, jetonCount, setJetonCount });
-  // ★ TIER ÇİPİ DÜZELTMESİ (08.10): useAuth setCurrentTier ile secureStore'a yazıyordu ama
-  //   React state'ini güncellemiyordu — üst bar çipi eski "Ücretsiz"te takılı kalıyordu.
-  //   Hook sırası gereği setter parametreyle geçilemediği için event köprüsü kurulur.
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const t = (e as CustomEvent<Tier>).detail;
-      if (t === "pro" || t === "elit" || t === "free") setTier(t);
-    };
-    window.addEventListener("nur_tier_state", handler);
-    return () => window.removeEventListener("nur_tier_state", handler);
-  }, [setTier]);
-  const { localBanned, setLocalBanned, localBanReason, setLocalBanReason } = useBan({ user, isMasterSürüm, notify });
-  usePaymentFlow({ setUser, setTier, syncWallet });
-
-  // ★ Tema HESABA ÖZEL: anahtar email içerir — bir hesapta mavi seçince başka hesaba taşınmaz.
-  //   Misafir için ortak anahtar; giriş yapınca o hesabın kayıtlı temasına otomatik geçilir.
-  const themeKey = user?.email ? `nur_theme:${user.email.toLowerCase()}` : "nur_theme";
-  useEffect(() => { setThemeId(localStorage.getItem(themeKey) || "nur"); }, [themeKey]);
-
-  // ★ Admin modu ÇİFT KATMANLA (30.09): e-posta eşleşmesi TEK BAŞINA god mode
-  //   vermez — /api/admin/session sunucu teyidi (HMAC + NUR_ADMIN_EMAILS +
-  //   DB is_admin) gerekir. Sunucu "ok" derse admin modu açılır; istemci
-  //   artık kendi kendine yetki veremez (VITE_ değişkeni herkese açık).
-  useEffect(() => {
-    if (!user?.email) return;
-    if (isMasterSürüm) return; // zaten açık
-    let live = true;
-    (async () => {
-      try {
-        const r = await fetch("/api/admin/session", { cache: "no-store" });
-        if (r.ok && live) {
-          setAdminGodMode(true);
-          setIsMasterSürüm(true);
-          setServerAdminVerified(true);
-          localStorage.setItem("nur_admin_session", "1");
-          console.log("[admin] Sunucu teyidi geldi:", user.email, "→ sınırsız mod aktif");
-        }
-      } catch { /* offline: admin modu kaplı kalır — fail-closed */ }
-    })();
-    return () => { live = false; };
-  }, [user?.email]);
-
-  // ★ PremiumModal her açıldığında cüzdanı yenile
-  useEffect(() => {
-    if (premiumOpen) {
-      syncWallet();
-    }
-  }, [premiumOpen]);
-
-  // Tier senkronizasyonu — auth/me'den gelen tier React state'e yazilir
-  // ★ KUL HAKKI (05.10): auth/me artık abonelik bitişini de hesaba katıyor
-  //   (süresi dolmuşsa FREE döner) — buradaki senkron o düşüşü istemciye taşır.
-  //   Ek güvence: cüzdandan gelen bitiş tarihi geçmişse istemci de kendini FREE'ye çeker
-  //   (syncWallet 30 sn'de bir koşuyor; sunucu erişilemezse bile eski abone yeni gün kotası alamaz).
-  useEffect(() => {
-    if (!user) return;
-    const dbTier = (user as any)?.tier as Tier | undefined;
-    // ★ ADMIN DUYARLILIK (08.10): admin god mode'da accessTier=zaten "elit" —
-    //   secureStore'daki admin tier'ı "Ücretsiz" dbTier ile EZİLMEsin
-    //   (kullanıcı bildirimi: admin hesabında çip Ücretsiz'de takılıydı).
-    if (user.isAdmin) {
-      const adminTier: Tier = dbTier === "pro" || dbTier === "elit" ? dbTier : "elit";
-      setTier(adminTier);
-      return;
-    }
-    // ★ DENEME DUYARLILIK (08.10): auth/me abonelik yoksa "free" döner ama 7 günlük
-    //   PRO denemesi aktifken etkin tier "pro"dur (getCurrentTier hesaplar) — çip
-    //   "Ücretsiz"de takılıyordu, deneme hakkı görünmez oluyordu. React state'i
-    //   her zaman ETKİN tier'a (db + deneme) çek.
-    const hedef = getCurrentTier();
-    if (hedef !== dbTier) console.log('[tier] Etkin senkron:', hedef, '(db:', dbTier, ')');
-    setTier(hedef);
-  }, [user]);
-
-  // ★ Abonelik bitiş watch-dog'u: bitiş tarihi geçtiyse tier'ı FREE'ye indir
-  useEffect(() => {
-    if (!subscriptionEndsAt) return;
-    const end = Date.parse(subscriptionEndsAt);
-    if (!Number.isFinite(end)) return;
-    const kontrol = () => {
-      if (Date.now() > end && getCurrentTier() !== "free") {
-        setTier("free");
-        console.log('[tier] Abonelik süresi doldu → FREE');
-        notify(translate(lang, "abonelikBittiFree"));
-      }
-    };
-    kontrol();
-    const iv = window.setInterval(kontrol, 60_000);
-    return () => window.clearInterval(iv);
-  }, [subscriptionEndsAt]);
-
-  const { previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration, silenceAllAudio, reciter: audioReciter } = useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId, notify });
-  // ★ KENDİ SESİNİ YÜKLE (30.09) — ELİT özelliği: kullanıcının kendi okuyuşuyla
-  //   milisanielik ayet senkronu (sessizlik-sınırı algılama; sesZamanlama.ts)
-  const { aktif: kendiSesAktif, yukleniyor: kendiSesYukleniyor, kayitlar: kendiSesKayitlari, yukle: kendiSesYukle, yukleAyetAyri: kendiSesYukleAyetAyri, sec: kendiSesSec, sil: kendiSesSil, zamanlamaKaydet: kendiSesZamanlamaKaydet, kaldirAktif: kendiSesKaldir, yenidenTara: kendiSesYenidenTara } = useKendiSesiniYukle({ notify });
-  // ★ 23.10: modalın sn sınırı — tarama ve üretim aynı sınırı kullanır (0 = mod sınırı)
-  const [kendiSesMaksSn, setKendiSesMaksSn] = useState(0);
-  const { prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings } = usePrayerTime();
-  const { dailyPool, dailyIndex, dailyPaused, daily } = useDailyAyah({ lang, setSelected });
-
-  const [previewMaximized, setPreviewMaximized] = useState(false);
-  const previewWidth = useMemo(() => {
-    // Büyütme efekti scale() ile yapılıyor; genişlik sabit kalır
-    return aspect === "9:16" ? 300 : aspect === "4:5" ? 340 : aspect === "1:1" ? 380 : 500;
-  }, [aspect]);
-
-  const renderQuality = useMemo(() => {
-    const nav = navigator as Navigator & { deviceMemory?: number };
-    const memory = nav.deviceMemory ?? 8;
-    const cores = navigator.hardwareConcurrency ?? 8;
-    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const low = mobile || memory <= 4 || cores <= 4;
-    const mid = !low && (memory <= 6 || cores <= 6);
-    return {
-      low,
-      previewFps: mobile ? 20 : low ? 24 : mid ? 30 : 30, // Mobilde daha düşük FPS
-      // ★ Daha stabil render: 60fps/24Mbps WebM bazı cihazlarda donuk video üretir.
-      renderFps: mobile ? 20 : low ? 24 : mid ? 30 : 30,
-      bitrateScale: mobile ? 0.28 : low ? 0.38 : mid ? 0.55 : 0.62,
-      audioBitrate: mobile ? 96_000 : low ? 128_000 : 160_000,
-    };
-  }, []);
-
-  // ★ SRP PARÇALAMA TUR 3 (16.10): video tasarım ayarları useVideoTasarimAyarlar hook'unda —
-  //   font/boyut/ışıltı/marka/bant/mesaj/cinematic/göster-gizle — birebir aynı davranış.
+  const stCekirdek = useStudioCekirdek({ developerMaster });
   const {
-    ARABIC_FONTS, arabicFont, setArabicFont, arabicFontCss, arabicFontW,
-    textSize, setTextSize, textSizeMul, textSizeFine, setTextSizeMul,
-    mealSizeFine, setMealSizeMul,
-    SHIMMER_STYLES, shimmerStyle, setShimmerStyle, shimmerCfg,
-    shimmerIntensity, setShimmerIntensity,
-    cardBg, setCardBg,
-    brandSignature, setBrandSignature, brandPos, setBrandPos, brandOn, setBrandOn,
-    cubukAyar, setCubukAyar, mesajAyar, setMesajAyar,
-    CINE_FILTERS, cinematic, setCinematic, cineFilter,
-    showArapca, setShowArapca, showSubMeal, setShowSubMeal,
-  } = useVideoTasarimAyarlar(notify);
-  const [textOffset, setTextOffset] = useState({ x: 0, y: 0 });
-
-  const [libType, setLibType] = useState<LibraryType | "tumu">("tumu");
-  const [libEmotion, setLibEmotion] = useState<Emotion | "tum">("tum");
-  const [libSearch, setLibSearch] = useState("");
-  const [previewReciterId, setPreviewReciterId] = useState<string | null>(null);
-  const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const { outputs, setOutputs, restoreStoredOutputs } = useOutputKalici();
-  // ★ AÇILIŞTA GERİ YÜKLEME: IndexedDB'deki videolar outputs'a geri gelir.
-  useEffect(() => restoreStoredOutputs(), []); // eslint-disable-line react-hooks/exhaustive-deps
-  const [activeOutputId, setActiveOutputId] = useState<string | null>(null);
-
-  // ★ 03.10 (5 dil): paylaşım başlığı/açıklaması/hashtag başlangıcı seçili dilde üretilir
-  const [shareTitle, setShareTitle] = useState(() => genTitle(undefined, 2, 255, lang));
-  const [shareDescription, setShareDescription] = useState(() => genDesc(undefined, 2, 255, undefined, lang));
-  const pickRandomTags = useCallback((count = 14, avoid?: string[]) => {
-    const shuffled = [...hashtagPool(lang)].sort(() => Math.random() - 0.5);
-    const filtered = avoid?.length ? shuffled.filter((t) => !avoid.includes(t)) : shuffled;
-    const pool = filtered.length >= count ? filtered : shuffled;
-    return pool.slice(0, count);
-  }, [lang]);
-  const [visibleTags, setVisibleTags] = useState<string[]>(() => pickRandomTags(14));
-  // copied → useShareActions hook'unda
-  // dailyPool, dailyIndex, dailyPaused → useDailyAyah hook'unda
-  // prayerCity, prayerSearch, prayerTimings → usePrayerTime hook'unda
-  const [now, setNow] = useState(new Date());
-  const [menuOpen, setMenuOpen] = useState(false);
-  // ★ 20.10 MINI TUR menü açma köprüsü (kullanıcı emri: "sol paneli açsın, ilgili
-  //   seçeneği göstersin"): MiniTur menü-ici durağa gelince event basar (araclar,
-  //   hafizlik-testi), burada sol panel açılır — tur item'ı madalyonla gösterir.
-  useEffect(() => {
-    const minorMenuAc = () => setMenuOpen(true);
-    window.addEventListener("nur_minitur_menu_ac", minorMenuAc);
-    return () => window.removeEventListener("nur_minitur_menu_ac", minorMenuAc);
-  }, []);
-  const [roadmapOpen, setRoadmapOpen] = useState(false);
-  const [langOpen, setLangOpen] = useState(false);
-  const [modal, setModal] = useState<ModalName>(null);
-  // ★ İş 5: Linkten gelen davet kodu (?davet=KOD) — giriş yapınca DavetModal otomatik kullanır
-  const [bekleyenDavetKodu, setBekleyenDavetKodu] = useState<string | null>(() => {
-    try {
-      const m = new URLSearchParams(window.location.search).get("davet");
-      if (m && /^[A-Z0-9]{4,12}$/i.test(m)) return m.toUpperCase();
-    } catch { /* SSR/güvenli mod */ }
-    return null;
-  });
-  useEffect(() => {
-    if (!bekleyenDavetKodu) return;
-    try { window.history.replaceState({}, "", window.location.pathname); } catch { /* ignore */ }
-  }, [bekleyenDavetKodu]);
-  const [tosOpen, setTosOpen] = useState(false);
-  // localBanned, localBanReason → useBan hook'unda
-
-  // Ban cleanup → useBan hook'unda
-
-  const [legalTab, setLegalTab] = useState<LegalTab>("tos");
-  // ★ YASAL SEKME KÖPRÜSÜ — çerez banner'ı ve diğer bağımsız bileşenler
-  //   LegalModal'ı buradan açar (KVKK m.10: aydınlatmaya kolay erişim şartı)
-  useEffect(() => {
-    setLegalTabAçıcı((tab) => { setLegalTab(tab); setTosOpen(true); });
-  }, []);
-  const [debugGuideModal, setDebugGuideModal] = useState<DebugGuideMessage | null>(null);
-  const [tosAccepted, setTosAccepted] = useState(false);
-  const [contactType, setContactType] = useState<"oneri" | "sikayet">("oneri");
-  const [contactMessage, setContactMessage] = useState("");
-  const [hoveredClip, setHoveredClip] = useState<string | null>(null);
-
-  const [smartAiEnabled, setSmartAiEnabled] = useState(false);
-  const [aiTooltipHover, setAiTooltipHover] = useState(false);
-
-  // tier, accessTier, premiumOpen, premiumTab → useTier hook'unda
-  const [fullUnlockConfirmOpen, setFullUnlockConfirmOpen] = useState(false);
-  // serverAdminVerified, adminEmailInput, adminCodeInput, adminError, adminAuthOpen → useAuth hook'unda
-  // jetonCount, setJetonCount → useWallet hook'unda
-
-  // openPremium, checkTier → useTier hook'unda
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const verseAudioRef = useRef<HTMLAudioElement | null>(null);
-  const reciterPreviewRef = useRef<HTMLAudioElement | null>(null);
-  const previewTimerRef = useRef<number>(0);
-  const durationWarnRef = useRef<{ key: string; at: number }>({ key: "", at: 0 });
-  const stopGenerationRef = useRef<() => void>(() => undefined);
-  const lastTitleRef = useRef<string>("");
-  const lastDescRef = useRef<string>("");
-  const selectedRef = useRef(selected), verseIndexRef = useRef(verseIndex), backgroundRef = useRef(background);
-  const ayahBackgroundsRef = useRef(ayahBackgrounds), aspectRef = useRef(aspect), themeRef = useRef(THEMES[0]);
-  const clipKindRef = useRef(clipKind); clipKindRef.current = clipKind;
-  const smartAiEnabledRef = useRef(smartAiEnabled); smartAiEnabledRef.current = smartAiEnabled;
-  const isClipAccessibleRef = useRef<(clip: Clip) => boolean>(() => true);
-  useEffect(() => { ayahBackgroundsRef.current = ayahBackgrounds; }, [ayahBackgrounds]);
-  useEffect(() => { selectedRef.current = selected; }, [selected]);
-  useEffect(() => { verseIndexRef.current = verseIndex; }, [verseIndex]);
-  useEffect(() => { backgroundRef.current = background; }, [background]);
-  const imageCache = useRef(new Map<string, HTMLImageElement>()), videoCache = useRef(new Map<string, HTMLVideoElement>());
-  // ★ Render sırasında videonun donmasını engelleyen canlılık izleyicisi (watchdog)
-  const videoWatchdog = useRef(new Map<HTMLVideoElement, { t: number; at: number }>());
-
-  const combinedAllClips = useMemo(
-    () => [...medyaClips, ...ALL_CLIPS, ...QURAN_CLIPS],
-    [medyaClips]
-  );
-
-  const ALL_THEMES = useMemo(() => [...THEMES, ...EXTRA_THEMES], []);
-  const theme = ALL_THEMES.find((item) => item.id === themeId) ?? ALL_THEMES[0];
-  const themeEmoji = (id: string) => THEME_EMOJI[id] ?? THEME_EMOJI_EXTRA[id] ?? "✦";
-  const themeTier = (id: string): Tier => THEME_TIER[id] ?? "free";
-  void themeEmoji; void themeTier;
-
-  const sortedReciters = useMemo(() => {
-    return [...RECITERS].sort((a, b) => {
-      const aLocked = reciterRequiredTier(a) !== "free" && !tierAtLeast(accessTier, reciterRequiredTier(a));
-      const bLocked = reciterRequiredTier(b) !== "free" && !tierAtLeast(accessTier, reciterRequiredTier(b));
-      if (aLocked !== bLocked) return aLocked ? 1 : -1;
-      if (!aLocked && a.id === "alfaqih") return -1;
-      if (!bLocked && b.id === "alfaqih") return 1;
-      const riskDiff = a.telifRiski - b.telifRiski;
-      if (riskDiff !== 0) return riskDiff;
-      const ta = RECITER_SES_TARZI[a.id] ?? "orta";
-      const tb = RECITER_SES_TARZI[b.id] ?? "orta";
-      return SES_TARZI_ORDER[ta] - SES_TARZI_ORDER[tb];
-    });
-  }, [accessTier]);
-
-  const reciter = RECITERS.find((item) => item.id === reciterId) ?? RECITERS[0];
-
-  const activeOutput = outputs.find((output) => output.id === activeOutputId) ?? outputs[0] ?? null;
-  const t = (key: keyof (typeof T)["tr"]) => T[lang][key] ?? T.tr[key];
-
-  // openAdminDashboard → useAuth hook'unda  const [, setMicroUnlockTick] = useState(0);
-
-
-
-
-  useEffect(() => {
-    if (generating) return;
-    aspectRef.current = aspect;
-    const cv = canvasRef.current;
-    if (cv) {
-      const [w, h] = dimensions(aspect);
-      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
-    }
-  }, [aspect, generating]);
-
-  // ★ ENGELLEYİCİ: Üretim (render) sırasında sayfanın kapatılmasını/yenilenmesini engelle
-  useEffect(() => {
-    if (!generating) return;
-    const preventClose = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "Video üretimi devam ediyor. Sekmeyi kapatırsanız üretim yarıda kesilir ve jetonunuz boşa gidebilir.";
-      return e.returnValue;
-    };
-    window.addEventListener("beforeunload", preventClose);
-    return () => window.removeEventListener("beforeunload", preventClose);
-  }, [generating]);
-
-  useEffect(() => { themeRef.current = theme; const style = document.documentElement.style; style.setProperty("--accent", theme.acc); style.setProperty("--accent-2", theme.acc2); style.setProperty("--page", theme.bg); style.setProperty("--page-2", theme.bg2); style.setProperty("--text", theme.txt); localStorage.setItem(themeKey, theme.id); }, [theme, themeKey]);
-  useEffect(() => { localStorage.setItem("nur_lang", lang); const current = LANGS.find((item) => item.code === lang); document.documentElement.lang = lang; document.documentElement.dir = current?.dir ?? "ltr"; }, [lang]);
-  /** ★ 22.10: dil güncelleyici — localStorage senkron + olay bildirimi (yukarıdaki not).
-   *  ★ 22.10 LAZY-DICT FIX: sözlükler lazy — dili değiştirirken hedef dil sözlüğü
-   *  hâlâ boşsa translate() TR'ye düşüyor (hero AR'da Türkçe kaliyordu).
-   *  Önce hedef dil sözlüğünü kur, sonra state+olay tetikle. */
-  const setLang = useCallback((value: Lang) => {
-    try {
-      localStorage.setItem("nur_lang", value);
-      const current = LANGS.find((item) => item.code === value);
-      document.documentElement.lang = value;
-      document.documentElement.dir = current?.dir ?? "ltr";
-    } catch { /* localStorage kapalı — state yine güncellenir */ }
-    void dilSaukle(value).then(() => {
-      setLangState(value);
-      window.dispatchEvent(new Event("nur_lang_degisti"));
-    });
-  }, []);
-  // ★ DİL SENKRON EFEKTLERİ — useDilSenkron hook'unda (SRP adım 11, 09.10 2. tur):
-  //   meal-dil senkronu + paylaşım metni dili + RTL mirror — birebir aynı davranış.
-  useDilSenkron({
-    lang, notify, t,
-    selectedRef, setSelected,
-    reciterName: reciter.name,
-    setShareTitle, setShareDescription, setVisibleTags,
-    verseIndexRef, pickRandomTags,
-  });
-  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(null), 2400); return () => window.clearTimeout(timer); }, [toast]);
-  useEffect(() => { const interval = window.setInterval(() => setNow(new Date()), 1000); return () => window.clearInterval(interval); }, []);
-  useEffect(() => {
-    const refreshMaintenance = () => setMaintenance(getSystemConfig().maintenance!);
-    window.addEventListener("nur_config_updated", refreshMaintenance);
-    // ★ CROSS-TAB: admin başka sekmede kilit/bakım değiştirdiğinde secureStore'un
-    //   localStorage'ına yazılır → 'storage' event'i bu sekmede de tetiklenir → anında güncellenir
-    const onStorage = (e: StorageEvent) => { if (e.key && e.key.includes("nur_system_sync_config")) refreshMaintenance(); };
-    window.addEventListener("storage", onStorage);
-    return () => { window.removeEventListener("nur_config_updated", refreshMaintenance); window.removeEventListener("storage", onStorage); };
-  }, []);
-
-  useEffect(() => {
-    if (window.location.pathname === ADMIN_SECRET_PATH) setAdminAuthOpen(true);
-  }, []);
-
-  // ★ Ücretsiz ziyaretçi analitiği — tek seferlik, gizlilik dostu (IP hash'lenir)
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem("nur_pageview_sent")) return;
-      sessionStorage.setItem("nur_pageview_sent", "1");
-      const payload = JSON.stringify({
-        path: window.location.pathname || "/",
-        referrer: document.referrer || "",
-        screen: `${window.screen.width}x${window.screen.height}`,
-        lang: navigator.language || "",
-      });
-      if (typeof navigator.sendBeacon === "function") {
-        navigator.sendBeacon("/api/analytics/track", new Blob([payload], { type: "application/json" }));
-      } else {
-        fetch("/api/analytics/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => undefined);
-      }
-    } catch { /* analitik asla uygulamayı bozmaz */ }
-  }, []);
-
-  useEffect(() => {
-    if (selected.length === 0) { if (verseIndex !== 0) setVerseIndex(0); return; }
-    if (verseIndex >= selected.length) setVerseIndex(selected.length - 1);
-  }, [selected.length, verseIndex]);
-
-  // ★ Süre modu aşımı erken uyarısı: Ayet yarım kesilmez; seçilen modun sığdıracağı
-  //   son tam ayetten sonrası otomatik bırakılır. Kullanıcı bunu seçim anında görür.
-  useEffect(() => {
-    if (selected.length < 2) return;
-    const cap = mode === "short" ? 59 : mode === "long" ? 600 : JETON.TAM_SURUM_CAP_SANIYE;
-    const estimateAyahSeconds = (item: SelectedAyah) => {
-      if (!item.tr || !item.ar) return 4;
-      if (item.s === 0) return Math.max(4, Math.min(22, item.tr.length * 0.055));
-      const arClean = item.ar.replace(/[\u064B-\u065F\u0670]/g, "");
-      return Math.max(3.2, Math.min(34, arClean.length * 0.105 + item.tr.length * 0.012 + 0.8));
-    };
-    const durations = selected.map(estimateAyahSeconds);
-    const total = durations.reduce((sum, d) => sum + d + 0.03, 0);
-    if (total <= cap) return;
-    let fitCount = 0;
-    let acc = 0;
-    for (const dur of durations) {
-      if (fitCount > 0 && acc + dur > cap) break;
-      acc += dur + 0.03;
-      fitCount += 1;
-    }
-    const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (120 dk)";
-    const key = `${mode}-${selected.length}-${fitCount}-${Math.round(total)}`;
-    const nowMs = Date.now();
-    if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;
-    durationWarnRef.current = { key, at: nowMs };
-    notify(`⚠️ ${modeLabel} süresi seçili ayetlere yetmiyor · ayet yarım kalmasın diye yaklaşık ilk ${fitCount} ayet alınır, sonrası bırakılır`);
-  }, [selected, mode, notify]);
-
-  const ensureImage = useCallback((url: string) => ensureImageYukle(imageCache, url), []);
-  const ensureVideo = useCallback((url: string, fallbackUrl?: string) => ensureVideoYukle(videoCache, url, fallbackUrl), []);
-
-  // ★ SEÇİLEN ATMOSFERİ ANINDA HAZIRLA: R2 klipler imza korumalı, canvas imzalı adresi
-  //   senkron okuyor. Seçim anında imza yoksa tuvale poster/kaleydoskop düşüyor, video
-  //   "geç" yansıyordu. Artık seçilince imza arka planda alınır ve video önceden ısıtılır.
-  // ★ ÖNCELİK: seçili arka plan (background) imzası kuyruğun ÖnÜNE alınır — galerinin
-  //   diğer 15+ klibinin arkasında beklemez. Ayet atamaları normal sıradan devam eder.
-  useEffect(() => {
-    const candidates = [background, ...Object.values(ayahBackgrounds)];
-    for (const clip of candidates) {
-      if (!clip || clip.kind !== "vid" || !isR2Media(clip)) continue;
-      const isPrimary = clip === background;
-      const cached = getVideoUrlSync(clip);
-      if (cached) { ensureVideo(cached, isR2Media(clip) ? undefined : clip.src); continue; }
-      getVideoUrl(clip, isPrimary)
-        .then((url) => { if (url) ensureVideo(url, clip.src); })
-        .catch(() => undefined);
-      void getPosterUrl(clip).catch(() => undefined);
-    }
-  }, [background, ayahBackgrounds, ensureVideo]);
+    adminGodMode, setAdminGodMode, setIsMasterSürüm, maintenance, isDevMaster, isMasterSürüm, setSentCode, setAdminSonEmail, notify,
+    telifUyariAcik, setTelifUyariAcik,
+    genConfirmOpen, genConfirmData, showGenerateConfirm, handleGenConfirm, riskOnayData, showRiskOnay, handleRiskOnay,
+    lang, themeId, setThemeId, query, setQuery, results, searching,
+    surah, setSurah, ayah, setAyah, selected, setSelected, verseIndex, setVerseIndex,
+    background, setBackground, ayahBackgrounds, setAyahBackgrounds, pickingFor, setPickingFor,
+    medyaArkaPlanYap, onMedyaSenkron,
+    clipKind, setClipKind, atmosCategory, setAtmosCategory, atmosQuery, setAtmosQuery,
+    mode, setMode, lockTip, setLockTip, aspect, setAspect, batchFormats, setBatchFormats, reciterId, setReciterId,
+    user, setUser, loginTab, setLoginTab, phone, setPhone, verifyCode, setVerifyCode, sentCode,
+    serverAdminVerified, adminEmailInput, setAdminEmailInput, adminCodeInput, setAdminCodeInput,
+    adminError, setAdminError, adminAuthOpen, setAdminAuthOpen, openAdminDashboard, adminSonEmail,
+    jetonCount, setJetonCount, syncWallet, consumeRight, packRights, subscriptionEndsAt, resetWallet,
+    tier, setTier, accessTier, premiumOpen, setPremiumOpen, premiumTab, setPremiumTab, openPremium, checkTier,
+    tryUnlockElitFeature, tryUnlockFullMode, localBanned, setLocalBanned, localBanReason, setLocalBanReason,
+    themeKey, previewPlaying, setPreviewPlaying, previewTime, setPreviewTime, previewDuration, setPreviewDuration,
+    silenceAllAudio, audioReciter,
+    kendiSesAktif, kendiSesYukleniyor, kendiSesKayitlari, kendiSesYukle, kendiSesYukleAyetAyri, kendiSesSec,
+    kendiSesSil, kendiSesZamanlamaKaydet, kendiSesKaldir, kendiSesYenidenTara, kendiSesMaksSn, setKendiSesMaksSn,
+    prayerCity, setPrayerCity, prayerSearch, setPrayerSearch, prayerTimings,
+    dailyPool, dailyIndex, dailyPaused, daily,
+    previewMaximized, setPreviewMaximized, previewWidth, renderQuality,
+    ARABIC_FONTS,
+    arabicFont, setArabicFont, arabicFontCss, arabicFontW, textSize, setTextSize, textSizeMul, setTextSizeMul,
+    textSizeFine, SHIMMER_STYLES, CINE_FILTERS,
+    mealSizeFine, setMealSizeMul, shimmerStyle, setShimmerStyle, shimmerCfg, shimmerIntensity, setShimmerIntensity,
+    cardBg, setCardBg, brandSignature, setBrandSignature, brandPos, setBrandPos, brandOn, setBrandOn,
+    cubukAyar, setCubukAyar, mesajAyar, setMesajAyar, cinematic, setCinematic, cineFilter,
+    showArapca, setShowArapca, showSubMeal, setShowSubMeal, textOffset, setTextOffset,
+    libType, setLibType, libEmotion, setLibEmotion, libSearch, setLibSearch,
+    previewReciterId, setPreviewReciterId,
+    generating, setGenerating, progress, setProgress, outputs, setOutputs, activeOutputId, setActiveOutputId,
+    shareTitle, setShareTitle, shareDescription, setShareDescription, pickRandomTags, visibleTags, setVisibleTags,
+    now, menuOpen, setMenuOpen, roadmapOpen, setRoadmapOpen, langOpen, setLangOpen, modal, setModal,
+    bekleyenDavetKodu, tosOpen, setTosOpen, legalTab, setLegalTab, debugGuideModal, setDebugGuideModal,
+    tosAccepted, setTosAccepted, contactType, setContactType, contactMessage, setContactMessage,
+    hoveredClip, setHoveredClip, smartAiEnabled, setSmartAiEnabled, aiTooltipHover, setAiTooltipHover,
+    fullUnlockConfirmOpen, setFullUnlockConfirmOpen,
+    lastTitleRef, lastDescRef, canvasRef, verseAudioRef, reciterPreviewRef, previewTimerRef, stopGenerationRef,
+    selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef, clipKindRef, smartAiEnabledRef,
+    isClipAccessibleRef, imageCache, videoCache, videoWatchdog, ensureImage, ensureVideo,
+    combinedAllClips, sortedReciters, reciter, activeOutput, t,
+    ALL_THEMES, themeTier, themeEmoji, setLang, toast, setToast,
+  } = stCekirdek;
 
   useCanvasDraw({
     canvasRef, selectedRef, verseIndexRef, backgroundRef, ayahBackgroundsRef, aspectRef, themeRef,
@@ -644,276 +191,21 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   });
 
   // Canvas draw kodu useCanvasDraw hook'una taşındı
-
-  // ★ SRP adım 13 (02.10): ayet→kategori motoru studio/ayetKategori.ts'e taşındı
-  //   (saf fonksiyonlar; davranış birebir aynı). Eski isimler uç noktalar bozulmasın
-  //   diye modül düzeyi sabitlere takma ad olarak kalır.
-  const detectCategoryFromAyah = ayetKategorisiBul;
-  const detectAdminCategoryFromAyah = adminAyetKategorisiBul; // ★ (useAyetSecim dışındaki reassign/applySmart için tekrar tanımlık)
-  // ★ AYET SEÇİM MOTORU — studio/useAyetSecim.ts'e taşındı (SRP parçalama, 09.10):
-  //   addAyah (akıllı AI + optimistic update + kullanıcı medyası kuralı) +
-  //   toggleAyah + addWholeSurah hook içinde; dışa açık imza aynı.
-  const { addAyah, toggleAyah, addWholeSurah } = useAyetSecim({
-    notify, t, lang, selectedRef, setSelected, setVerseIndex,
-    backgroundRef, ayahBackgroundsRef, verseIndexRef, clipKindRef,
-    combinedAllClips, reciterName: reciter.name, smartAiEnabled,
-    setBackground, setAyahBackgrounds, setShareTitle, setShareDescription,
+  // ★ 25.10 parçalama: atmosfer atama/zar + seçim motoru + kütüphane + hoca indirme
+  //   studio/useStudioArkaPlanBag.ts'e taşındı; dışa açık isimler aynı.
+  const stArka = useStudioArkaPlanBag({
+    notify, t, lang, isMasterSürüm, accessTier, reciter, clipKind, smartAiEnabled,
+    selected, setSelected, setVerseIndex, setModal, combinedAllClips,
+    libType, libEmotion, libSearch, previewReciterId, setPreviewReciterId, silenceAllAudio,
+    ensureImage, ensureVideo, setBackground, setAyahBackgrounds, setShareTitle, setShareDescription,
+    backgroundRef, ayahBackgroundsRef, selectedRef, verseIndexRef, clipKindRef,
+    smartAiEnabledRef, isClipAccessibleRef, reciterPreviewRef, previewTimerRef,
   });
-  // ★ 23.10: modal içi sure seçimi — seçimi seçilen surenin tamamına çevirir (tek sure şart)
-  //   (addWholeSurah'tan sonra tanımlı: bağımlılık dizisi anında değerlendirilir — TDZ)
-  const kendiSesSureEkle = useCallback(async (s: number) => {
-    setSelected((current) => current.filter((x) => x.s === s));
-    await addWholeSurah(s);
-  }, [setSelected, addWholeSurah]);
-  // ★ SEKME DEĞİŞİMİ (Şablon V2 ↔ Hareketli) — zaten atanmış ayet arka planlarını
-  //   yeni türe (img/vid) yeniden atar. Eski davranışta sadece ana arka plan
-  //   randomClip ile değişiyordu; ayet kayıtları eski türemiş gibi kalıyor, üretim
-  //   o yüzden Şablon V2 seçiliyken bile HAREKETLİ video basıyordu.
-  const reassignBackgroundsForKind = useCallback((kind: "img" | "vid") => {
-    const items = selectedRef.current;
-    if (!items.length) return;
-    // ★ KULLANICI MEDYASI KUTSAL (30.09): "Yüklediklerim"e atanmış slotlar sekme
-    //   değişiminde ASLA ezilmez — yalnız diğerleri yeniden atanır.
-    const korunacak = Object.entries(ayahBackgroundsRef.current)
-      .filter(([, clip]) => clip.cat === "yuklenenler")
-      .map(([id]) => id);
-    const duzenlecekler = items.filter((item) => !korunacak.includes(item.id));
-    const next: Record<string, Clip> = {};
-    items.forEach((item) => {
-      if (korunacak.includes(item.id)) next[item.id] = ayahBackgroundsRef.current[item.id];
-    });
-    if (!duzenlecekler.length) { notify("📁 Yüklediklerin korundu — sekme değişimi onlara dokunmadı"); return; }
-    if (smartAiEnabledRef.current) {
-      // Akıllı AI açıksa: her ayete yeni türde tematik sahne (★ 16.10 torba tekrarsız dağıtıyor)
-      duzenlecekler.forEach((item) => {
-        const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
-        let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === kind);
-        if (poolCat.length === 0) {
-          const adminCat = detectAdminCategoryFromAyah(item.ar, item.tr, item.sName);
-          if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === kind);
-        }
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === kind);
-        if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === kind);
-        if (!poolCat.length) return;
-        // ★ 16.10 DÖNEN TORBA: Math.random yerine — aynı klasör tam tur bitmedikçe aynı klip dönmez
-        const chosen = akilliKlipSec(poolCat);
-        if (chosen) next[item.id] = chosen;
-      });
-    } else {
-      // Akıllı AI kapalıysa: yeni türden mushaf/nötr klip dağıt
-      const pool = combinedAllClips.filter((clip) => clip.kind === kind && isClipAccessibleRef.current(clip));
-      if (!pool.length) return;
-      duzenlecekler.forEach((item) => { next[item.id] = pool[Math.floor(Math.random() * pool.length)]; });
-    }
-    if (Object.keys(next).length) {
-      setAyahBackgrounds(next);
-      // ★ KULLANICI SEÇİMİ KUTSAL (30.09): ana arka plan kullanıcının kendi dosyasıysa
-      //   sekme değişimi onu rastgele bir kliple DEĞİŞTİREMEZ — yalnız slotlar yeniden atanır.
-      if (backgroundRef.current?.cat !== "yuklenenler") {
-        const first = next[items[0].id];
-        if (first) setBackground(first);
-      }
-    }
-  }, [smartAiEnabledRef, combinedAllClips, detectCategoryFromAyah, detectAdminCategoryFromAyah, isClipAccessibleRef]);
-
-  const useFromLibrary = useCallback((ham: LibraryItem) => {
-    // ★ 06.10 (5 dil): karta tıklanınca SEÇİLİ DİLDEKİ başlık/anlam stüdyoya taşınır
-    //   (Arapça asıl `ar` alanı hiçbir dile çevrilmez). `t` dep ile yeniden tanımlanır.
-    const item = kutuphaneItem(lang, ham);
-    const s = item.s ?? 0, a = item.a ?? 0;
-    const id = item.type === "ayet" && s > 0 ? `${s}:${a}` : `lib-${item.id}`;
-    if (selectedRef.current.some((x) => x.id === id)) { notify(t("guestLimit")); setModal(null); return; }
-    setSelected((current) => [...current, { id, s, a, sName: item.title, ar: item.ar || "", tr: item.tr || "" }]);
-    setVerseIndex(selectedRef.current.length);
-    notify(t("libStudEklendi").replace("{ad}", item.title));
-    setModal(null);
-  }, [notify, t, lang]);
-
-  const libraryFiltered = useMemo(() => {
-    let pool = LIBRARY_ITEMS;
-    if (libType !== "tumu") pool = pool.filter((i) => i.type === libType);
-    if (libEmotion !== "tum") pool = pool.filter((i) => i.emotions.includes(libEmotion));
-    // ★ 06.10 (5 dil): arama seçili dilin çevrilmiş başlık/anlam/kaynağında da koşar
-    const q = libSearch.trim().toLocaleLowerCase("tr");
-    if (q) pool = pool.filter((i) => { const c = kutuphaneItem(lang, i); return (c.title + c.tr + c.source).toLocaleLowerCase("tr").includes(q); });
-    return pool;
-  }, [libType, libEmotion, libSearch, lang]);
-
-  const isClipAccessible = useCallback((clip: Clip): boolean => {
-    // ★ Yüklediklerim: kullanıcının kendi dosyaları her zaman erişilebilir (kendi cihazı)
-    if (clip.cat === "yuklenenler") return true;
-    if (isMasterSürüm || ATMOSPHERE_PREVIEW_UNLOCKED) return true;
-    // ★ ADMIN KATEGORİ PLANI: onaylı dağıtıma göre (pro/elit tier kilidi,
-    //   v2 kilitli, hidden admin-only) — adminCategoryAccess.ts okur
-    if (clip.cat.startsWith("admin_")) return adminCatUsable(clip.cat, accessTier);
-    const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
-    if (!tierAtLeast(accessTier, catTier)) return false;
-    const sameCat = combinedAllClips.filter((c) => c.cat === clip.cat && c.kind === clipKind);
-    const idx = sameCat.findIndex((c) => c.id === clip.id);
-    const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
-    if (idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier)) return false;
-    return true;
-  }, [accessTier, clipKind, combinedAllClips, isMasterSürüm]);
-  isClipAccessibleRef.current = isClipAccessible;
-
-  const randomizeBackgrounds = useCallback((scopeCat?: CatId) => {
-    let pool = combinedAllClips.filter((clip) => clip.kind === clipKind && isClipAccessible(clip));
-    if (scopeCat) pool = pool.filter((clip) => clip.cat === scopeCat);
-    if (pool.length === 0) { notify(t("guestLimit")); return; }
-    // ★ KULLANICI SEÇİMİ KUTSAL (30.09): "Zar" kullanıcının kendi dosyasını ezemez —
-    //   yalnız kullanıcı Yüklediklerim kategorisini bilerek uygularsa (scopeCat) atanır.
-    if (!scopeCat && backgroundRef.current?.cat === "yuklenenler") {
-      notify("📁 Kendi dosyan korundu — zar onu değiştirmez");
-      return;
-    }
-    const pick = () => pool[Math.floor(Math.random() * pool.length)];
-    if (!selectedRef.current.length) {
-      const c = pick();
-      setBackground(c);
-      notify(`Rastgele seçildi: ${c.label}`);
-      return;
-    }
-    // ★ Kullanıcının kendi dosyasına atanmış slotlar zar/çeşitlilik dalgasından muaf
-    const korunanSlotlar = scopeCat === "yuklenenler"
-      ? new Set<string>()
-      : new Set(
-          Object.entries(ayahBackgroundsRef.current)
-            .filter(([, clip]) => clip.cat === "yuklenenler")
-            .map(([id]) => id),
-        );
-    const atananlar = selectedRef.current.filter((item) => !korunanSlotlar.has(item.id));
-    if (!atananlar.length) { notify("📁 Kendi dosyaların zatanmış durumda — zar onlara dokunmadı"); return; }
-    const anaArkaPlanKorunur = backgroundRef.current?.cat === "yuklenenler" && scopeCat !== "yuklenenler";
-    const next: Record<string, Clip> = {};
-    // ★ setAyahBackgrounds TÜM state'i değiştirir — korunan slotlar next'e geri yazılmalı
-    //   (yalnız hâlâ seçili ayetlere ait olanlar taşınır)
-    korunanSlotlar.forEach((id) => {
-      if (!selectedRef.current.some((item) => item.id === id)) return;
-      const korunan = ayahBackgroundsRef.current[id];
-      if (korunan) next[id] = korunan;
-    });
-    if (scopeCat) {
-      const shuffled = [...pool].sort(() => Math.random() - 0.5);
-      atananlar.forEach((item, index) => { next[item.id] = shuffled[index % shuffled.length]; });
-      const catLabel = CATEGORIES.find((c) => c.id === scopeCat)?.label ?? scopeCat;
-      setAyahBackgrounds(next);
-      if (!anaArkaPlanKorunur && next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
-      notify(`✨ ${atananlar.length} ayete "${catLabel}" içinden rastgele atmosfer atandı`);
-      return;
-    }
-    // ★ GERÇEK ÇEŞİTLİLİK — hem kategori hem klip tekrarını engeller
-    const categories = Array.from(new Set(pool.map((c) => c.cat)));
-    const shuffledCats = [...categories].sort(() => Math.random() - 0.5);
-    const usedIds = new Set<string>();
-    atananlar.forEach((item, index) => {
-      const cat = shuffledCats[index % shuffledCats.length];
-      const catPool = pool.filter((c) => c.cat === cat);
-      // Önce bu kategoride HİÇ kullanılmamış klipleri dene
-      const freshInCat = catPool.filter((c) => !usedIds.has(c.id));
-      // O da bittiyse tüm havuzda kullanılmamışlara bak
-      const freshAny = pool.filter((c) => !usedIds.has(c.id));
-      const source = freshInCat.length ? freshInCat : freshAny.length ? freshAny : catPool.length ? catPool : pool;
-      const chosen = source[Math.floor(Math.random() * source.length)] ?? pick();
-      usedIds.add(chosen.id);
-      next[item.id] = chosen;
-    });
-    setAyahBackgrounds(next);
-    if (!anaArkaPlanKorunur && next[atananlar[0]?.id]) setBackground(next[atananlar[0].id]);
-    const korunanSayi = korunanSlotlar.size;
-    notify(korunanSayi > 0
-      ? `✨ ${atananlar.length} ayete farklı kategorilerden atmosfer atandı · ${korunanSayi} kendi dosyan korundu`
-      : `✨ ${atananlar.length} ayete farklı kategorilerden rastgele atmosfer atandı`);
-  }, [clipKind, combinedAllClips, notify, isClipAccessible]);
-
-  const applySmartBackgrounds = useCallback(() => {
-    if (!selectedRef.current.length) { notify("Önce en az bir ayet seçin"); return; }
-    const wantKind = clipKindRef.current;
-    // ★ KULLANICI MEDYASI KUTSAL (30.09): AI "Aç + Uygula" kullanıcının kendi dosyalarını
-    //   EZEMEZ. Yüklediklerim slotları AI atamasından muaf — diğer slotlara sahne atanır.
-    const korunanSlotlar = new Set(
-      Object.entries(ayahBackgroundsRef.current)
-        .filter(([, clip]) => clip.cat === "yuklenenler")
-        .map(([id]) => id),
-    );
-    const next: Record<string, Clip> = {};
-    // ★ setAyahBackgrounds TÜM state'i değiştirir — korunan slotlar next'e geri yazılmalı,
-    //   yoksa "korumak" yerine silmiş oluruz (30.09 düzeltmesi). Yalnız hâlâ seçili
-    //   ayetlere ait olanlar taşınır — bayat kayıt geri gelmesin.
-    korunanSlotlar.forEach((id) => {
-      if (!selectedRef.current.some((item) => item.id === id)) return;
-      const korunan = ayahBackgroundsRef.current[id];
-      if (korunan) next[id] = korunan;
-    });
-    selectedRef.current.forEach((item) => {
-      if (korunanSlotlar.has(item.id)) return;
-      const detectedCat = detectCategoryFromAyah(item.ar, item.tr, item.sName);
-      let poolCat = combinedAllClips.filter((clip) => clip.cat === detectedCat && clip.kind === wantKind);
-      // ★ Kategoride seçili türden klip yoksa: ayet kelimeleriyle admin kategorisi taraması (Şablon V2 uyumu)
-      if (poolCat.length === 0) {
-        const adminCat = detectAdminCategoryFromAyah(item.ar, item.tr, item.sName);
-        if (adminCat) poolCat = combinedAllClips.filter((clip) => clip.cat === adminCat && clip.kind === wantKind);
-      }
-      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.cat === "musaf" && clip.kind === wantKind);
-      if (poolCat.length === 0) poolCat = combinedAllClips.filter((clip) => clip.kind === wantKind);
-      if (poolCat.length === 0) return;
-      // ★ 16.10 DÖNEN TORBA: Math.random yerine — aynı klasör tam tur bitmedikçe aynı klip dönmez
-      const chosen = akilliKlipSec(poolCat);
-      if (chosen) next[item.id] = chosen;
-    });
-    setAyahBackgrounds(next);
-    // ★ Ana arka plan da kutsal: kullanıcının kendi dosyasıysa AI onu değiştiremez —
-    //   yalnız kullanıcı dosyası olmayan ilk slotla ana önizlemeyi tazeler.
-    if (
-      selectedRef.current[0] &&
-      next[selectedRef.current[0].id] &&
-      backgroundRef.current?.cat !== "yuklenenler"
-    ) setBackground(next[selectedRef.current[0].id]);
-    const ezilen = korunanSlotlar.size;
-    notify(ezilen > 0 ? t("dafAiSahneKorundu").replace("{n}", String(ezilen)) : t("dafAiSahne"));
-  }, [combinedAllClips, notify, detectCategoryFromAyah, detectAdminCategoryFromAyah]);
-
-  // ★ KÂRİ ÖNİZLEME — useReciterPreview hook'unda (SRP parçalama tur 3, 16.10):
-  //   satır-içi kopya silindi; hook aynı imzayla çalışıyor. Birebir aynı davranış.
-  const { playReciterPreview } = useReciterPreview({ previewReciterId, selectedRef, reciterPreviewRef, previewTimerRef, setPreviewReciterId, notify, silenceAllAudio });
-
-  // ★ 21.10 HOCA SESİ VİDEO İNDİRME (kullanıcı: "o hoca kuran sesleri video
-  //  indirme gibi yapsana, görüntüler nerde"): kâri kartındaki 📥 düğmesi —
-  //  seçili ayeti o kârinin kaydıyla (everyayah/mp3quran mp3) CURRENT atmosfer
-  //  görseliyle 9:16 video olarak kaydeder. Sesli Meal'in İndir hattını
-  //  (seslendirmeIndir.ts) yeniden kullanır: fetch → decode → canvas+ses → MP4.
-  const [hocaIndirBusy, setHocaIndirBusy] = useState<string | null>(null);
-  const hocaIndir = useCallback(async (id: string) => {
-    if (hocaIndirBusy) return;
-    const item = RECITERS.find((x) => x.id === id);
-    if (!item) return;
-    // ★ 23.10: indirmeye arapça ayet + meal de geçirilir — videoya sabit ayet,
-    //   okuma başlarken senkron meal düşer (seslendirmeIndir ayet+meal hattı).
-    const secili = selectedRef.current[0] ?? { s: 1, a: 1, ar: "", tr: "" };
-    const urls = item.surahPattern
-      ? [item.surahPattern.replace("{S}", String(secili.s).padStart(3, "0"))]
-      : sesKaynakZinciri(item.path, secili.s, secili.a);
-    const bgKaynak = backgroundRef.current
-      ? {
-          url: backgroundRef.current.kind === "vid" ? getVideoUrlSync(backgroundRef.current) : undefined,
-          poster: getPosterUrlSync(backgroundRef.current) || undefined,
-        }
-      : null;
-    setHocaIndirBusy(id);
-    try {
-      await kuyrukIndir(
-        [{ metin: `${secili.s}:${secili.a}`, ar: secili.ar || undefined, meal: secili.tr || undefined, etiket: `${item.name} · ${secili.s}:${secili.a}` }],
-        async () => {
-          // zincir: ilk GET'i görüntümlenen URL'i döndür; hepsi başarsızsa ilki dene
-          for (const u of urls) {
-            try { const r = await fetch(u); if (r.ok) return u; } catch { /* sıradaki */ }
-          }
-          return urls[0];
-        },
-        (m) => notify(m),
-        bgKaynak,
-      );
-    } finally { setHocaIndirBusy(null); }
-  }, [hocaIndirBusy, notify]);
+  const {
+    reassignBackgroundsForKind, useFromLibrary, libraryFiltered, isClipAccessible,
+    randomizeBackgrounds, applySmartBackgrounds, playReciterPreview, hocaIndir, hocaIndirBusy,
+    kendiSesSureEkle, addAyah, toggleAyah, addWholeSurah,
+  } = stArka;
 
   // ★ VİDEO ÜRETİM MOTORU — useVideoGenerator hook'unda (parçalama, 01.10)
   const handleGenerate = useVideoGenerator({
@@ -929,159 +221,28 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ TELİF UYARI ZİNCİRİ — kabul edilince son handleGenerate tekrar koşar (SRP tur 4)
   useEffect(() => devamiBagla(() => { handleGenerate(); }), [handleGenerate]);
 
-  // ★ 22.10 ÖNERİLEN VİDEOLAR — HAZIR TASLAK (kullanıcı emri: "önerilen ATMOSFER değil,
-  //   ÖNERİLEN VİDEO. Cuma ise cumayı anlatan video: kâri seçilmiş, atmosfer atanmış,
-  //   ayet yazılmış. Perşembe başka bir şey; sürekli değişsin"): OnerilenVideolar
-  //   güne/mübarek güne özel taslakları rotasyonla önerir; "Üret" → seçim temizlenir,
-  //   ayetler çekilir, kâri + atmosfer atanır ve üretim NORMAL yolculuğuyla başlar
-  //   (misafir kapısı, jeton onayı, /api/render/authorize… — öneriye bedava yetki yok).
-  const oneriHavuzu = useMemo(
-    () => combinedAllClips.filter((clip) => clip.kind === clipKind && clip.cat !== "yuklenenler" && isClipAccessible(clip)),
-    [combinedAllClips, clipKind, isClipAccessible],
-  );
-  const oneriKullanilanlar = useMemo(
-    () => Array.from(new Set([background, ...Object.values(ayahBackgrounds)].map((c) => c?.cat).filter(Boolean))) as string[],
-    [background, ayahBackgrounds],
-  );
-  const oneriKabileleri = useMemo(
-    () => sortedReciters.filter((r) => tierAtLeast(accessTier, reciterRequiredTier(r))).map((r) => ({ id: r.id, name: r.name })),
-    [sortedReciters, accessTier],
-  );
-  const oneriUygulaVeUret = useCallback((oneri: OneriVideo) => {
-    if (generating) return;
-    setSelected([]);
-    setReciterId(oneri.reciterId);
-    notify(`✨ Taslak yükleniyor: ${oneri.baslik}`);
-    void (async () => {
-      for (const a of oneri.ayetler) { await addAyah(a.s, a.a); }
-      // Ayet metinleri (ar/tr) gelmeden üretimde boş ekran çıkar — bekle (max ~6 sn)
-      const bas = Date.now();
-      while (Date.now() - bas < 6000) {
-        const eksik = oneri.ayetler.some((a) => {
-          const sl = selectedRef.current.find((x) => x.id === `${a.s}:${a.a}`);
-          return !sl || !sl.ar;
-        });
-        if (!eksik && selectedRef.current.length > 0) break;
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      }
-      // Atmosfer: taslağın klibi tüm ayet slotlarına (kullanıcının kendi dosyası hariç)
-      const sonraki: Record<string, Clip> = {};
-      selectedRef.current.forEach((item) => {
-        sonraki[item.id] = ayahBackgroundsRef.current[item.id]?.cat === "yuklenenler" ? ayahBackgroundsRef.current[item.id] : oneri.katliClip;
-      });
-      setAyahBackgrounds(sonraki);
-      if (backgroundRef.current?.cat !== "yuklenenler") setBackground(oneri.katliClip);
-      window.setTimeout(() => handleGenerate(), 500);
-    })();
-  }, [generating, notify, setSelected, setReciterId, addAyah, setAyahBackgrounds, setBackground, handleGenerate]);
-
   // ★ PAYLAŞIM FONKSİYONLARI — useShareActions hook'undan (parçalama)
   const { copied, copyShare, shareOutput, downloadVideo, shareToWhatsApp, shareToYouTube, shareToTikTok, shareToInstagram, shareToX, paylasCihazi } = useShareActions({ shareTitle, shareDescription, notify, t });
 
-  const nextPrayer = useMemo(() => {
-    if (!prayerTimings) return null;
-    let next: { name: string; key: string; diff: number } | null = null;
-    for (const [name, key] of PRAYERS) {
-      const value = prayerTimings[key]; if (!value) continue;
-      const [hour, minute] = value.slice(0, 5).split(":").map(Number), target = new Date(now);
-      target.setHours(hour, minute, 0, 0);
-      let diff = target.getTime() - now.getTime();
-      if (diff <= 0) diff += 86400000;
-      if (!next || diff < next.diff) next = { name, key, diff };
-    }
-    return next;
-  }, [now, prayerTimings]);
-
-  const filteredClips = useMemo(() => {
-    let pool = combinedAllClips;
-    pool = pool.filter((clip) => clip.kind === clipKind);
-    if (atmosCategory !== "all") { pool = pool.filter((clip) => clip.cat === atmosCategory); }
-    else { pool = pool.filter((clip) => isClipAccessible(clip)); } // ★ "Tümü": sadece erişilebilir (kullanıcının açabildiği) klipler — boş grid olmasın
-    const value = atmosQuery.trim().toLocaleLowerCase("tr");
-    if (value) { pool = pool.filter((clip) => clip.label.toLocaleLowerCase("tr").includes(value)); }
-    // ★ Performans: eski karşılaştırıcı her adımda tüm arşivi tarıyordu (O(n²)) ve
-    //   mobilde/site genelinde donmaya yol açıyordu. Kilit durumu tek geçişte hesaplanıyor (O(n)).
-    const idxMap = new Map<string, number>();
-    const seen = new Map<string, number>();
-    for (const clip of pool) {
-      const key = clip.cat as string;
-      const n = seen.get(key) ?? 0;
-      idxMap.set(clip.id, n);
-      seen.set(key, n + 1);
-    }
-    const lockMap = new Map<string, number>();
-    for (const clip of pool) {
-      const catTier = KATEGORI_TIER[clip.cat as CatId] ?? "free";
-      const nextTier: Tier = catTier === "free" ? "pro" : catTier === "pro" ? "elit" : "elit";
-      const unlocked = tierAtLeast(accessTier, catTier);
-      const idx = idxMap.get(clip.id) ?? 0;
-      const locked = !unlocked || (idx >= FREE_VIDEOS_PER_CATEGORY && !tierAtLeast(accessTier, nextTier));
-      lockMap.set(clip.id, locked ? 1 : 0);
-    }
-    return [...pool].sort((a, b) => (lockMap.get(a.id) ?? 0) - (lockMap.get(b.id) ?? 0));
-  }, [atmosCategory, atmosQuery, clipKind, combinedAllClips, accessTier, isClipAccessible]);
-
-  // ★ ŞEHİR ARAMASI (02.10): TR + DÜNYA şehirleri birlikte aranır; dünya kayıtları
-  //   "Mekke · Suudi Arabistan" etiketiyle listelenir, seçilince gerçek ad setPrayerCity'ye gider.
-  const filteredCities = useMemo(() => {
-    const value = prayerSearch.trim().toLocaleLowerCase("tr");
-    const dunyaEtiketleri = DUNYA_SEHIRLERI.map((s) => `${s.ad} · ${s.ulke}`);
-    const havuz = [...TURKISH_CITIES, ...dunyaEtiketleri];
-    return value ? havuz.filter((city) => city.toLocaleLowerCase("tr").includes(value)) : havuz;
-  }, [prayerSearch]);
-
-  const pickClip = (clip: Clip) => {
-    // ★ TIKLAMA ANINDA ÖN İMZA: useEffect render'ı bekler, biz beklemeden imzayı
-    //   kuyruğun en önüne şimdi atıyoruz — seçim ile imza isteği aynı milisaniyede başlar.
-    if (clip.kind === "vid" && isR2Media(clip) && !getVideoUrlSync(clip)) {
-      getVideoUrl(clip, true).then((url) => { if (url) ensureVideo(url, clip.src); }).catch(() => undefined);
-      void getPosterUrl(clip).catch(() => undefined);
-    }
-    if (pickingFor) setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip }));
-    else {
-      setBackground(clip);
-      // ★ KULLANICI MEDYASI KUTSAL (30.09): galeriden kendi dosyası (Yüklediklerim)
-      //   seçilirse TÜM ayet slotlarına uygulanır — eski atmosferler üretimi ezemesin.
-      if (clip.cat === "yuklenenler") {
-        const items = selectedRef.current;
-        if (items.length) {
-          setAyahBackgrounds((current) => {
-            const next = { ...current };
-            items.forEach((item) => { next[item.id] = clip; });
-            return next;
-          });
-        }
-      }
-    }
-    notify(`Atmosfer seçildi: ${clip.label}`);
-    setModal(null);
-    setPickingFor(null);
-  };
+  // ★ 25.10 parçalama: öneri motoru + misafir + pickClip → useStudioPicker
+  const stSecici = useStudioPicker({
+    combinedAllClips, clipKind, isClipAccessible, sortedReciters, accessTier, generating, notify,
+    setSelected, setReciterId, addAyah, setAyahBackgrounds, setBackground, handleGenerate,
+    background, ayahBackgrounds, selectedRef, ayahBackgroundsRef, backgroundRef,
+    prayerTimings, now, prayerSearch, atmosCategory, atmosQuery, pickingFor, setModal, setPickingFor, ensureVideo,
+  });
+  const {
+    oneriHavuzu, oneriKullanilanlar, oneriKabileleri, oneriUygulaVeUret,
+    nextPrayer, filteredClips, filteredCities, pickClip, getGuestUsed, handleGuestContinue,
+  } = stSecici;
 
   // ★ Manuel giriş/kayıt/çıkış akışları useManualAuthActions hook'unda (parçalama, 01.10)
   const { handleLoginSubmit, handleRegisterSubmit, handleForgotPassword, handleVerifyCode, handleLogout } = useManualAuthActions({
     phone, verifyCode, sentCode, tier, notify,
     setUser, setAdminGodMode, setIsMasterSürüm, setTier, setJetonCount, setSentCode, setLoginTab, setModal,
     setAdminSonEmail, resetWallet,
-  });
+  });;
 
-  // ★ MİSAFİR MODU — üye olmadan deneme hakkı
-  //   Sayaç + gün çıpası + zaman damgası useGuestTrial'daki bumpGuestUsed ile yönetilir:
-  //   günde en fazla GUEST_DAILY_CAP üretim, aralarında GUEST_COOLDOWN_SEC fren (F5 spam engeli).
-  //   GUEST_FREE_VIDEOS tek doğruluk kaynağı useGuestTrial export'u (kopya değil).
-  const getGuestUsed = () => {
-    try { return Number(localStorage.getItem("nur_guest_videos") || 0); } catch { return 0; }
-  };
-  const handleGuestContinue = useCallback(() => {
-    const used = getGuestUsed();
-    const left = Math.max(0, GUEST_FREE_VIDEOS - used);
-    if (left <= 0) {
-      notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +5 üretim hakkı kazan");
-      return;
-    }
-    setModal(null);
-    notify(`👋 Misafir modundasın · ${left} deneme videosu hakkın var · indirmek için üyelik gerekir`);
-  }, [notify]);
 
   // ★ Misafirin "Video Üret" akışı: hakkı/günü bitince kayıt modalı (yukarıda checkGuestGate kontrolü)
 
@@ -1386,62 +547,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       </PanelSuspense>
 
       {/* 🎬 TAM SAYFA VİDEO RENDER ENGELLEME VE BİLGİLENDİRME EKRANI */}
-      {generating && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 p-6 backdrop-blur-md text-center select-none modal-in">
-          <div className="max-w-md w-full rounded-3xl border border-gold/30 bg-slate-950/80 p-8 shadow-2xl space-y-5">
-            {/* Altın renkli lüks parlayan yükleme efekti */}
-            <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/10 border border-gold/30 text-gold shadow-xl">
-              <span className="absolute inset-0 rounded-3xl border-2 border-gold border-t-transparent animate-spin"></span>
-              <span className="text-xl font-bold animate-pulse">🎬</span>
-            </div>
-
-            <div className="space-y-2">
-              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-red-300 animate-pulse">
-                SİSTEM AKTİF RENDER MODUNDA
-              </span>
-              <h2 className="font-display text-lg font-black text-white leading-normal">
-                LÜTFEN BU SEKMEYİ KAPATMAYIN VEYA ARKA PLANA ALMAYIN
-              </h2>
-            </div>
-
-            <p className="text-[11.5px] leading-relaxed text-white/70">
-              Tarayıcı tabanlı video birleştirme işlemi başladığı için, başka bir sekmeye geçmek veya uygulamayı arka plana almak tarayıcının işlemi askıya almasına ve <b className="text-gold">videonun donmasına/bozulmasına</b> neden olur.
-            </p>
-
-            {/* İlerleme çubuğu */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex justify-between text-[10px] font-bold text-white/50">
-                <span>Video İşleniyor...</span>
-                <span className="text-gold font-black font-mono">%{progress}</span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
-                <div 
-                  className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-300 shadow-[0_0_10px_rgba(217,119,6,0.5)]"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  stopGenerationRef.current?.();
-                  notify("Üretim kullanıcı tarafından iptal edildi");
-                }}
-                className="w-full rounded-xl bg-red-500/10 border border-red-500/30 py-3 text-[11px] font-bold text-red-300 transition hover:bg-red-500/20 active:scale-98"
-              >
-                Üretimi İptal Et
-              </button>
-              <p className="text-[9.5px] text-white/35 font-medium leading-normal">
-                İptal ettiğinizde üretim hakkı (jeton) hesabınızdan düşmez.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
+      {/* 🎬 TAM SAYFA VİDEO RENDER ENGELLEME VE BİLGİLENDİRME EKRANI */}
+      {generating && <RenderKaplanmaEkran progress={progress} onIptal={() => {
+        stopGenerationRef.current?.();
+        notify("Üretim kullanıcı tarafından iptal edildi");
+      }} />}
       {/* TOAST NOTIFICATION */}
       {toast ? (
         <div className="glass modal-in select-none fixed bottom-5 left-1/2 z-[100] flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-[10px] text-white shadow-2xl">
@@ -1476,129 +586,23 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       )}
 
       <PanelSuspense minHeight={0}>
-      <ModalsContainer
-        modal={modal}
-        setModal={setModal}
-        setRoadmapOpen={setRoadmapOpen}
-        onMedyaArkaPlan={medyaArkaPlanYap}
-        onMedyaSenkron={onMedyaSenkron}
-        onClipKindChange={reassignBackgroundsForKind}
-        loginTab={loginTab}
-        setLoginTab={setLoginTab}
-        phone={phone}
-        setPhone={setPhone}
-        verifyCode={verifyCode}
-        setVerifyCode={setVerifyCode}
-        sentCode={sentCode}
-        handleLoginSubmit={handleLoginSubmit}
-        handleRegisterSubmit={handleRegisterSubmit}
-        handleForgotPassword={handleForgotPassword}
-        handleVerifyCode={handleVerifyCode}
-        handleGuestContinue={handleGuestContinue}
-        guestTrialLeft={Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed())}
-        fullUnlockConfirmOpen={fullUnlockConfirmOpen}
-        setFullUnlockConfirmOpen={setFullUnlockConfirmOpen}
-        jetonCount={jetonCount}
-        tryUnlockFullMode={tryUnlockFullMode}
-        setMode={setMode}
-        premiumOpen={premiumOpen}
-        setPremiumOpen={setPremiumOpen}
-        premiumTab={premiumTab}
-        serverAdminVerified={serverAdminVerified || isDevMaster}
-        tier={tier}
-        setTier={setTier}
-        setCurrentTier={setCurrentTier}
-        setJetonCount={setJetonCount}
-        notify={notify}
-        adminAuthOpen={adminAuthOpen}
-        setAdminAuthOpen={setAdminAuthOpen}
-        adminEmailInput={adminEmailInput}
-        setAdminEmailInput={setAdminEmailInput}
-        adminCodeInput={adminCodeInput}
-        setAdminCodeInput={setAdminCodeInput}
-        adminError={adminError}
-        setAdminError={setAdminError}
-        setAdminGodMode={setAdminGodMode}
-        adminSonEmail={adminSonEmail}
-        pickingFor={pickingFor}
-        setPickingFor={setPickingFor}
-        clipKind={clipKind}
-        setClipKind={setClipKind}
-        atmosQuery={atmosQuery}
-        setAtmosQuery={setAtmosQuery}
-        isMasterSürüm={isMasterSürüm}
-        randomizeBackgrounds={randomizeBackgrounds}
-        setCinematic={setCinematic}
-        seciliAyetSayisi={selected.length}
-        bekleyenDavetKodu={bekleyenDavetKodu}
-        syncWallet={syncWallet}
-        atmosCategory={atmosCategory}
-        setAtmosCategory={setAtmosCategory}
-        combinedAllClips={combinedAllClips}
-        CATEGORY_ICONS={CATEGORY_ICONS}
-        lockTip={lockTip}
-        setLockTip={setLockTip}
-        accessTier={accessTier}
-        tierAtLeast={tierAtLeast}
-        filteredClips={filteredClips}
-        hoveredClip={hoveredClip}
-        setHoveredClip={setHoveredClip}
-        openPremium={openPremium}
-        packRights={packRights}
-        subscriptionEndsAt={subscriptionEndsAt}
-        pickClip={pickClip}
-        libSearch={libSearch}
-        setLibSearch={setLibSearch}
-        libType={libType}
-        setLibType={setLibType}
-        libEmotion={libEmotion}
-        setLibEmotion={setLibEmotion}
-        libraryFiltered={libraryFiltered}
-        useFromLibrary={useFromLibrary}
-        addAyah={addAyah}
-        ALL_THEMES={ALL_THEMES}
-        themeTier={themeTier}
-        themeEmoji={themeEmoji}
-        themeId={themeId}
-        setThemeId={setThemeId}
-        prayerSearch={prayerSearch}
-        setPrayerSearch={setPrayerSearch}
-        prayerCity={prayerCity}
-        setPrayerCity={setPrayerCity}
-        filteredCities={filteredCities}
-        prayerTimings={prayerTimings}
-        nextPrayer={nextPrayer}
-        formatRemaining={formatRemaining}
-        contactType={contactType}
-        setContactType={setContactType}
-        contactMessage={contactMessage}
-        setContactMessage={setContactMessage}
-        tosOpen={tosOpen}
-        setTosOpen={setTosOpen}
-        tosAccepted={tosAccepted}
-        setTosAccepted={setTosAccepted}
-        legalTab={legalTab}
-        setLegalTab={setLegalTab}
-        t={t}
-        lang={lang}
-        user={user}
-        kendiSesAktif={kendiSesAktif}
-        kendiSesKayitlari={kendiSesKayitlari}
-        kendiSesYukleniyor={kendiSesYukleniyor}
-        kendiSesNefes={kendiSesAktif?.nefes ?? 0}
-        kendiSesYukle={kendiSesYukle}
-        kendiSesYukleAyetAyri={kendiSesYukleAyetAyri}
-        kendiSesSec={kendiSesSec}
-        kendiSesSil={kendiSesSil}
-        kendiSesZamanlamaKaydet={kendiSesZamanlamaKaydet}
-        kendiSesKaldir={kendiSesKaldir}
-        kendiSesYenidenTara={kendiSesYenidenTara}
-        kendiSesSureEkle={kendiSesSureEkle}
-        kendiSesMaksSn={kendiSesMaksSn}
-        kendiSesMaksAyarla={setKendiSesMaksSn}
-        setPickingForAtmos={(id) => setPickingFor(id)}
-        kendiSesSeciliAyetler={selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName }))}
-        kendiSesAyahBackgrounds={ayahBackgrounds}
+      <ModalsKatman
+        cekirdek={stCekirdek}
+        arka={stArka}
+        secici={stSecici}
+        ekstra={{
+          guestTrialLeft: Math.max(0, GUEST_FREE_VIDEOS - getGuestUsed()),
+          serverAdminVerified: serverAdminVerified || isDevMaster,
+          setCurrentTier,
+          tierAtLeast,
+          seciliAyetSayisi: selected.length,
+          formatRemaining,
+          CATEGORY_ICONS,
+          kendiSesNefes: kendiSesAktif?.nefes ?? 0,
+          kendiSesMaksAyarla: setKendiSesMaksSn,
+          setPickingForAtmos: (id) => setPickingFor(id),
+          kendiSesSeciliAyetler: selected.map((x) => ({ s: x.s, a: x.a, sName: x.sName })),
+        }}
       />
       </PanelSuspense>
 
