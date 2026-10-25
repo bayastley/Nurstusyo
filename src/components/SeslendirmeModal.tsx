@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ═══════════════════════════════════════════════════════════════
 // SESLENDİRME MODALI — 14.10 mockup'tan (ai-mockup/ana-ekran-seslendirme.html)
 // ana projeye işlendi (kullanıcı emri: "şimdi koda işle, git push yasak,
@@ -561,7 +565,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg text-xs" style={{ background: "rgba(215,170,82,.15)" }}>🎧</div>
-            <h3 className="font-display text-base font-bold" style={{ color: "var(--accent-2)" }}>SESLİ MEAL</h3>
+            <h3 className="font-display text-base font-bold" style={{ color: "var(--accent-2)" }}>ttX2610("smBaslik")</h3>
           </div>
           <div className="flex items-center gap-2">
             {/* ★ 5 DİL: meal + TTS sesi seçilen dilde */}
@@ -594,8 +598,8 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
 
         {sunucuVar === false ? (
           <div className="rounded-xl p-8 text-center text-[11px] text-white/70">
-            🔒 <b className="text-white">Seslendirme şu an geliştirme özelliği</b> — canlı yayında kapalı.
-            <div className="mt-1 text-[10px] text-white/40">Lokal: <code>python ai-mockup/meal-sunucu.py</code> çalıştır → sayfayı yenile</div>
+            🔒 <b className="text-white">ttX2610("smGelistirme")</b> — canlı yayında kapalı.
+            <div className="mt-1 text-[10px] text-white/40">Lokal: <code>python ai-mockup/meal-sunucu.py</code> ttX2610("smAksiyon")</div>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-[290px_1fr]">

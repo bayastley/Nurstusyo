@@ -54,6 +54,19 @@ export const DAILY_DUAS = [
   { title: "Aksirince", arabic: "يَرْحَمُكَ اللَّهُ → يَهْدِيكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمْ", text: "Aksıran 'Allah size merhamet etsin' der, duyan 'Allah size hidayet versin, hâlinizi ıslah etsin' karşılığını verir.", source: "Buhârî, Edeb 124; Müslim, Zikr 44" },
   { title: "Camiye Girerken", arabic: "اللَّهُمَّ افْتَحْ لِي أَبْوَابَ رَحْمَتِكَ", text: "Allah'ım! Benim için rahmet kapılarını aç.", source: "Müslim, Salât 14 (IV/2092)" },
   { title: "Camiden Çıkarken", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ مِنْ فَضْلِكَ", text: "Allah'ım! Senden fazlını diliyorum.", source: "Müslim, Salât 14 (IV/2092)" },
+  // ★ 26.10: Kullanıcı emri — "günün dualarını çoğalt, aşırı dolu olsun, sahih olsun".
+  //   11 yeni sahih dua eklendi (Buhârî/Müslim/Ebû Dâvûd/Tirmizî kaynaklı).
+  { title: "Namaza Girerken (İftitah)", arabic: "وَجَّهْتُ وَجْهِيَ لِلَّذِي فَطَرَ السَّمَاوَاتِ وَالْأَرْضَ حَنِيفًا وَمَا أَنَا مِنَ الْمُشْرِكِينَ", text: "Yüzümü gökleri ve yeri yaratana çevirdim; ben hanîfim, müşriklerden değilim.", source: "Tirmizî, Salât 120" },
+  { title: "Namazdan Çıkarken", arabic: "أَسْتَغْفِرُ اللَّهَ، اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ", text: "Allah'tan bağışlanma dilerim. Allah'ım! Sen Selâm'sın, selâm Sendendir; ey Celâl ve İkrâm sahibi, bereketlisin!", source: "Buhârî, İsti'zân 121; Müslim" },
+  { title: "Abdest Aldıktan Sonra", arabic: "أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ وَأَشْهَدُ أَنَّ مُحَمَّدًا عَبْدُهُ وَرَسُولُهُ", text: "Allah'tan başka ilah olmadığına, tek ve ortağı olmayışına; Muhammed'in (s.a.v) O'nun kulu ve elçisi olduğuna şehadet getirdim.", source: "Müslim, Tahâret" },
+  { title: "Ezanı Duyunca", arabic: "اللَّهُمَّ رَبَّ هَذِهِ الدَّعْوَةِ التَّامَّةِ وَالصَّلَاةِ الْقَائِمَةِ آتِ مُحَمَّدًا الْوَسِيلَةَ وَالْفَضِيلَةَ", text: "Allah'ım! Bu tam dâvetin Rabb'i ve kılınmakta olan namazın sahibi olarak Hz. Muhammed'e (s.a.v) vesile ve fazileti bahşeyle!", source: "Buhârî, Ezân; Müslim, Salât 13" },
+  { title: "Dua Etmeye Başlarken", arabic: "اللَّهُمَّ إِنِّي أَسْأَلُكَ بِأَنَّ لَكَ الْحَمْدَ، لَا إِلَهَ إِلَّا أَنْتَ الْمَنَّانُ", text: "Allah'ım! Senden, Senin hamda lâyık oluşun, Senden başka ilah yokluğu ve Senin sonsuz ihsan sahibi olduğun hasebiyle istiyorum.", source: "Ebû Dâvûd, Vitr" },
+  { title: "Gece Konaklandığında", arabic: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ", text: "Allah'ın kâmil kelimeleriyle yaratılmışların şerrinden Sana sığınırım.", source: "Müslim, Zikr 55" },
+  { title: "Hasta Ziyaretinde", arabic: "لَا بَأْسَ، طَهُورٌ إِنْ شَاءَ اللَّهُ", text: "Zarar yok, inşallah bu hâlet (keffâret) fayda eder.", source: "Buhârî, Cenâiz" },
+  { title: "Seyahat Duası (Kapsamlı)", arabic: "اللَّهُمَّ إِنَّا نَسْأَلُكَ فِي سَفَرِنَا هَذَا الْبِرَّ وَالتَّقْوَى", text: "Allah'ım! Bu seyahatimizde bize hayırlılık ve takvâ ihsan ediver.", source: "Müslim, Hac 425" },
+  { title: "Yolculuktan Dönünce", arabic: "آيِبُونَ تَائِبُونَ عَابِدُونَ لِرَبِّنَا حَامِدُونَ", text: "Döndük, tövbekâr olduk, Rabbimize kulluk ettik ve O'na hamd ettik.", source: "Müslim, Hac 425" },
+  { title: "Kabir Ziyaretinde", arabic: "السَّلَامُ عَلَيْكُمْ أَهْلَ الدِّيَارِ مِنَ الْمُؤْمِنِينَ وَالْمُسْلِمِينَ", text: "Ey mü'min ve müslüman ahâli, selâm size! İsterseniz biz de ulaşırız; bu acı haber bize de erir.", source: "Müslim, Cenâiz" },
+  { title: "Toplantıya Girerken", arabic: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ", text: "Allah'ım! Seni noksanlıklardan tenzih eder, Sana hamd ederim; Senden başka ilah olmadığına şehadet eder, bağışlanmamı diler, Sana tövbe ederim.", source: "Ebû Dâvûd, Salât; Tirmizî" },
 ];
 
 export const ZIKIRLER = [

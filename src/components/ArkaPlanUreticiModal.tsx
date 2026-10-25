@@ -1,3 +1,6 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // ARKA PLAN ÜRETİCİ MODAL — İş 4: AI Arka Plan Üretici LİTE
 // Kullanıcı ruh hâlini (mood) yazar → sistem bir SAHNE PLANI
@@ -176,7 +179,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
                 {moodAdGorunum(aktifMood.id, aktifMood.ad, lang)} {tt("auSahneEki")}
               </h4>
               {!tamEslesme && (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">ttX2610("yaklasikVurus")</span>
               )}
             </div>              <p className="text-[10px] leading-relaxed text-white/55">{moodPlanGorunum(aktifMood.id, aktifMood.plan, lang)}</p>
             {/* ★ 23.10: ayet önerisi — mood'a yakışan ayet bilgi olarak gösterilir (emir değil) */}

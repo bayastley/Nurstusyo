@@ -3,6 +3,9 @@
 // dışa açık adları re-export eder — mevcut import edenler KIRILMAZ.
 import React, { useState } from "react";
 import { rozetlerOku, rozetleriTazele, ROZET_LISTESI, rozetOzelOku, rozetGuncelEsik, rozetEsikCarpani, rozetOduluHesapla } from "../hafizlikIstatistik";
+// ★ 26.10 i18n — LS diline göre çeviri
+import { translate } from "../i18n";
+const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
 
 // ★ ÇEVRİMDIŞI TİLAVET (İş 24+59) — Service Worker dinlenen ayet seslerini
 //   cache'e yazar. Bu kart yalnızca DURUMU gösterir:
@@ -41,20 +44,20 @@ export function CevrimdisiKart() {
       <div className="flex items-center gap-2">
         <span className="text-base" aria-hidden>📥</span>
         <div>
-          <p className="text-[10px] font-bold text-white">Çevrimdışı Tilavet</p>
+          <p className="text-[10px] font-bold text-white">{tt("itCevrimdisiTilavet")}</p>
           <p className="text-[8px] text-white/40">
             {cevrimdisi
-              ? "📡 Şu an çevrimdışısın — dinlediğin ayetler çalışır"
+              ? tt("itSimdiCevrimdisisun")
               : adet === null
-                ? "Cihazda saklanan ayet sesi sayılıyor…"
+                ? tt("itSesSayiliyor")
                 : adet === 0
-                  ? "Dinlediğin ayetler otomatik cihaza kaydedilir"
-                  : `${adet} ayet sesi cihazda — internetsiz çalar`}
+                  ? tt("itOtomatikKayit")
+                  : `${adet} ${tt("itAyetSesiHazir")}`}
           </p>
         </div>
       </div>
       <span className={`shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
-        {cevrimdisi ? "Çevrimdışı" : "Hazır"}
+        {cevrimdisi ? tt("itCevrimdisiEtiket") : tt("itHazirEtiket")}
       </span>
     </div>
   );
@@ -126,11 +129,11 @@ export function RozetlerKarti() {
       <div className="mb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-base" aria-hidden>🏅</span>
-          <p className="text-[10px] font-bold text-white">Başarım Rozetlerin</p>
+          <p className="text-[10px] font-bold text-white">{tt("itRozetlerIni")}</p>
         </div>
         <div className="flex items-center gap-1">
           {ozel.turNo > 1 && (
-            <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300" title={`Rozet serisi ${ozel.turNo - 1} kez tamamlandı — her turda hediyeler büyüdü, eşikler zorlaştı`}>★ {ozel.turNo - 1}</span>
+            <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300" title={tt("itRozetSerisi").replace("{n}", String(ozel.turNo - 1))}>★ {ozel.turNo - 1}</span>
           )}
           <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[8.5px] font-black text-amber-200">{kazanimSayisi}/{ROZET_LISTESI.length}</span>
         </div>
@@ -142,7 +145,7 @@ export function RozetlerKarti() {
       )}
       {yeniRozet && (
         <p className="mb-1.5 animate-pulse rounded-lg bg-emerald-500/15 px-2.5 py-1.5 text-center text-[9px] font-black text-emerald-200">
-          🎉 Yeni rozet: {yeniRozet}!
+          🎉 {tt("itYeniRozet")} {yeniRozet}!
         </p>
       )}
       <div className="grid grid-cols-7 gap-1">
@@ -151,7 +154,7 @@ export function RozetlerKarti() {
           // ★ KIRMIZI KÜÇÜK YILDIZ: rozet kaç turda kazanıldıysa sol üstünde o sayı yazar
           const tur = ozel.kazanimSayisi[r.id] || 0;
           const esik = rozetGuncelEsik(r.id, ozel.turNo);
-          const esikMetni = esik !== null ? ` · bu turda: ${esik}` : "";
+          const esikMetni = esik !== null ? ` · ${tt("itBuTurda")}${esik}` : "";
           // ★ MİNİ İLERLEME ÇUBUĞU (29.09, kullanıcı isteği): kilitli rozette bu turdaki
           //   hedefe ne kadar kaldı tek bakışta görünür. Değer = mevcut sayaç (taban
           //   üstünden), hedef = taban + eşik×çarpan (rozetGuncelEsik). Açık rozet ve
@@ -165,7 +168,7 @@ export function RozetlerKarti() {
           const oran = acik ? 1 : esik !== null ? Math.min(1, turIlerleme / turHedef) : 0;
           const kalan = Math.max(0, hedef - mevcut);
           return (
-            <div key={r.id} className="relative" title={`${r.ad} — ${r.aciklama}${esikMetni}${tur > 0 ? ` · ${tur}× kazanıldı` : ""}${!acik && esik !== null ? ` · kalan: ${kalan}` : ""}`}>
+            <div key={r.id} className="relative" title={`${r.ad} — ${r.aciklama}${esikMetni}${tur > 0 ? ` · ${tt("itKazanildiXS").replace("{n}", String(tur))}` : ""}${!acik && esik !== null ? ` · ${tt("itKalanXS").replace("{n}", String(kalan))}` : ""}`}>
               <div className={`flex aspect-square items-center justify-center rounded-lg text-base transition ${
                 acik ? "bg-amber-500/20 ring-1 ring-amber-400/40" : "bg-white/5 opacity-30 grayscale"
               }`}>
@@ -184,7 +187,7 @@ export function RozetlerKarti() {
                 </div>
               )}
               {tur > 0 && (
-                <span className="absolute -left-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[6.5px] font-black text-white shadow" title={`${r.ad}: ${tur} kez kazanıldı`}>★{tur > 1 ? tur : ""}</span>
+                <span className="absolute -left-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[6.5px] font-black text-white shadow" title={`${r.ad}: ${tt("itKazanildiYenis").replace("{n}", String(tur))}`}>★{tur > 1 ? tur : ""}</span>
               )}
             </div>
           );
@@ -193,13 +196,13 @@ export function RozetlerKarti() {
       {/* ★ DÖNGÜ BİLGİSİ: sıradaki ödül + zorluk çarpanı */}
       <p className="mt-1.5 text-center text-[7.5px] text-white/35">
         {ozel.turNo > 1
-          ? <>🔄 {ozel.turNo}. tur — eşikler <b className="text-red-300">{rozetEsikCarpani(ozel.turNo)}×</b> zor · hepsi bitince <b className="text-amber-300">+{odulHak} hak</b></>
-          : <>Hepsini kazan → <b className="text-amber-300">+{odulHak} üretim hakkı</b> kazan, sonra eşikler zorlaşır, ödül büyür</>}
+          ? <>🔄 {tt("itTurNo").replace("{n}", String(ozel.turNo))} · <b className="text-red-300">{rozetEsikCarpani(ozel.turNo)}×</b> · {tt("itBitinceOdul").replace("{h}", String(odulHak))}</>
+          : <>{tt("itRozetOdulOnay")} <b className="text-amber-300">+{odulHak}</b>{" "}{tt("itUretimHakki")}{tt("itSonraZorlasir")}</>}
       </p>
       {ozel.sonOdul > 0 && (
-        <p className="mt-0.5 text-center text-[7px] text-white/25">Son ödül: +{ozel.sonOdul} hak ({new Date(ozel.sonOdulTarih).toLocaleDateString("tr-TR")}) · rozet altındaki ★ = kaç kez kazanıldı</p>
+        <p className="mt-0.5 text-center text-[7px] text-white/25">{tt("itSonOdul").replace("{n}", String(ozel.sonOdul)).replace("{d}", new Date(ozel.sonOdulTarih).toLocaleDateString("tr-TR"))} · {tt("itRozetAltYildiz")}</p>
       )}
-      <p className="mt-1 text-center text-[7.5px] text-white/30">Rozetler cihazında saklanır — zikir, hatim, üretim ve testlerle açılır</p>
+      <p className="mt-1 text-center text-[7.5px] text-white/30">{tt("itRozetCihazDipnot")}</p>
     </div>
   );
 }
@@ -216,32 +219,32 @@ export function UreticiIstatistikKarti() {
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <div className="mb-1.5 flex items-center gap-2">
         <span className="text-base" aria-hidden>📊</span>
-        <p className="text-[10px] font-bold text-white">Üretici İstatistiklerin</p>
+        <p className="text-[10px] font-bold text-white">{tt("itUreticiIst")}</p>
       </div>
       {ist.toplam === 0 ? (
-        <p className="text-[8px] leading-relaxed text-white/40">Henüz video üretmedin — ilk üretiminle grafik başlar! Yalnızca bu cihazda sayılır, sunucuya gönderilmez.</p>
+        <p className="text-[8px] leading-relaxed text-white/40">{tt("itUreticiBos")}</p>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-1.5 text-center">
             <div className="rounded-lg bg-white/5 py-1.5">
               <p className="text-[13px] font-black text-emerald-300">{ist.toplam}</p>
-              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Toplam</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("itToplamK")}</p>
             </div>
             <div className="rounded-lg bg-white/5 py-1.5">
               <p className="text-[13px] font-black text-sky-300">{ist.kisa}</p>
-              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Kısa</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("itKisaK")}</p>
             </div>
             <div className="rounded-lg bg-white/5 py-1.5">
               <p className="text-[13px] font-black text-amber-300">{ist.uzun}</p>
-              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Uzun</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("itUzunK")}</p>
             </div>
             <div className="rounded-lg bg-white/5 py-1.5">
               <p className="text-[13px] font-black text-fuchsia-300">{ist.tam}</p>
-              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">Tam</p>
+              <p className="text-[7.5px] font-bold uppercase tracking-wider text-white/40">{tt("itTamK")}</p>
             </div>
           </div>
           <p className="mt-1.5 text-center text-[8px] text-white/35">
-            {gun > 0 ? `${gun} gündür üretiyorsun · ortalama ${(ist.toplam / gun).toFixed(1)} video/gün` : ""} · yalnızca bu cihazda sayılır
+            {gun > 0 ? tt("itUretimGun").replace("{g}", String(gun)).replace("{o}", (ist.toplam / gun).toFixed(1)) : ""} · {tt("itYalnizCihaz")}
           </p>
         </>
       )}

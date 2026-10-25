@@ -23,7 +23,7 @@ import { DUA_REHBERİ } from "../data/duaData";
 import { HOCA_KARSILASTIRMA_AYETLER } from "../data/hocaData";
 import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
 import { KANAL_REHBERI } from "../data/kanalData";
-import { TECVID_KURALLARI, TECVID_SEVIYE_ETIKETI } from "../data/tecvidData";
+import { TECVID_KURALLARI } from "../data/tecvidData";
 import { SURAHS } from "../data/surahs";
 import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
 import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
@@ -344,7 +344,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </div>
             </div>
           ))}
-          <p className="pt-1 text-center text-[8px] text-white/25">Vakit namazlarında rekat sayıları: Sabah 2 farz · Öğle 4 · İkindi 4 · Akşam 3 · Yatsı 4</p>
+          <p className="pt-1 text-center text-[8px] text-white/25">{tt("ktNamazRekat")}</p>
         </div>
       )}
 
@@ -356,7 +356,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 41: HOCA KARŞILAŞTIRMA ── */}
       {sekme === "hoca" && (
         <div className="space-y-3">
-          <p className="text-center text-[9px] text-white/40">Aynı ayeti farklı hocalardan dinle — "bu kelimeyi kim nasıl okuyor" 🎧 · üstteki aramaya <b className="text-white/70">bakara 250</b> gibi yaz, istediğin ayeti dinle</p>
+          <p className="text-center text-[9px] text-white/40">{tt("ktHocaOn")} <b className="text-white/70">{tt("ktHocaBold")}</b> {tt("ktHocaSon")}</p>
           <div className="flex flex-wrap gap-1.5">
             {hocaOzel && (
               <button key="ozel" type="button" onClick={() => { setHocaAyet(-1); setHocaCaliyor(false); hocaAudioRef.current?.pause(); }}
@@ -375,8 +375,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           {(() => { const ay = hocaAktifAyet; if (!ay) return null; return (
             <div className="rounded-xl border border-white/10 bg-white/[.03] p-3.5">
-              <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{hocaAyet === -1 ? "Aramadan seçtin" : ay.etiket}</p>
-              <p className="mt-0.5 text-[11px] font-bold text-white/85">{ay.sureAdi} Suresi · {ay.ayet}. Ayet</p>
+              <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{hocaAyet === -1 ? tt("ktHocaSectin") : ay.etiket}</p>
+              <p className="mt-0.5 text-[11px] font-bold text-white/85">{ay.sureAdi} · {tt("ktSureSonek").replace("{a}", String(ay.ayet))}</p>
               <div className="mt-2.5 grid max-h-[320px] gap-1.5 overflow-y-auto pr-1 sm:grid-cols-2">
                 {KARILER.map((k, i) => (
                   <button key={k.id} type="button" onClick={() => hocaCaliyor && hocaIdx === i ? hocaDurdur() : hocaCal(i)}
@@ -386,7 +386,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-center text-[8px] text-white/25">Ses kaynağı: everyayah.com · ayet bazlı kayıtlar</p>
+              <p className="mt-2 text-center text-[8px] text-white/25">{tt("ktSesKaynak")}</p>
             </div>
           ); })()}
         </div>
@@ -395,19 +395,19 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 47: CAMİ BULUCU ── */}
       {sekme === "cami" && (
         <div className="space-y-3">
-          <p className="text-center text-[9px] text-white/40">Bulunduğun yerin veya aradığın şehrin camilerini haritada gör 📍</p>
+          <p className="text-center text-[9px] text-white/40">{tt("ktCamiMetin")}</p>
           {/* ★ ORTADAKİ KONUM BUTONU (01.10): tıkla → cihaz konumu → harita anında açılır */}
           <button type="button" onClick={camiKonumAl} disabled={camiKonumAliniyor}
             className="mx-auto flex w-full max-w-[280px] items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-[11px] font-black text-white transition hover:brightness-110 active:scale-[.98] disabled:opacity-60"
             style={{ background: "linear-gradient(135deg,rgba(215,170,82,.25),rgba(215,170,82,.08))" }}>
-            {camiKonumAliniyor ? "⏳ Konum alınıyor…" : "📍 Konumumdan Bul"}
+            {camiKonumAliniyor ? tt("ktCamiAliniyor") : tt("ktCamiBul")}
           </button>
           <div className="flex gap-2">
             <input
               value={camiKonum}
               onChange={(e) => setCamiKonum(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && camiKonum.trim()) setCamiAranan(camiKonum.trim()); }}
-              placeholder="Şehir/ilçe yaz — örn. İstanbul Fatih..."
+              placeholder={tt("ktCamiPlaceholder")}
               className="glass-soft flex-1 rounded-xl px-3 py-2.5 text-[11px] outline-none placeholder:text-white/30"
             />
             <button
@@ -418,14 +418,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               className="shrink-0 rounded-xl px-3.5 py-2.5 text-[10px] font-black text-black transition hover:brightness-110 active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              Ara
+              {tt("ktAra")}
             </button>
           </div>
           {camiAranan && (
             <>
               <div className="overflow-hidden rounded-xl border border-white/10">
                 <iframe
-                  title="Cami haritası"
+                  title={tt("ktCamiHarita")}
                   src={camiHaritaUrl(camiAranan)}
                   className="h-[260px] w-full"
                   loading="lazy"
@@ -433,18 +433,18 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                 />
               </div>
               <a href={camiListeUrl(camiAranan)} target="_blank" rel="noopener noreferrer" className="block rounded-xl glass-soft py-2.5 text-center text-[10px] font-bold text-white/60 transition hover:text-white">
-                📋 Liste görünümünde aç (Google Maps)
+                {tt("ktCamiListe")}
               </a>
             </>
           )}
-          {!camiAranan && <p className="rounded-xl bg-white/[.03] px-3 py-3 text-center text-[9.5px] leading-relaxed text-white/45"><b className="text-white/70">📍 Konumumdan Bul</b>'a bas ya da şehir yazıp Enter'a bas — yakınınızdaki camiler haritada listelenir.</p>}
+          {!camiAranan && <p className="rounded-xl bg-white/[.03] px-3 py-3 text-center text-[9.5px] leading-relaxed text-white/45">{tt("ktCamiBos")}</p>}
         </div>
       )}
 
       {/* ── 12: KANAL REHBERİ ── */}
       {sekme === "rehber" && (
         <div className="space-y-2">
-          <p className="mb-1 text-center text-[9px] text-white/40">Ürettiğin videolarla büyümen için kanal ipuçları 🚀</p>
+          <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktRehberMetin")}</p>
           {KANAL_REHBERI.map((k, i) => (
             <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
               <div className="flex items-center gap-2">
@@ -460,9 +460,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 48: TECVİD REHBERİ ── */}
       {sekme === "tecvid" && (
         <div className="space-y-2">
-          <p className="mb-1 text-center text-[9px] text-white/40">Tilavetin kuralları — her kural tanım + örnekle 🎓</p>
+          <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktTecvidMetin")}</p>
           {TECVID_KURALLARI.filter((t) => !q || t.baslik.toLocaleLowerCase("tr").includes(q) || t.tanim.toLocaleLowerCase("tr").includes(q)).map((t, i) => {
-            const sv = TECVID_SEVIYE_ETIKETI[t.seviye];
             return (
               <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -472,7 +471,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                     t.seviye === "orta" ? "bg-sky-500/20 text-sky-300" :
                     "bg-fuchsia-500/20 text-fuchsia-300"
                   }`}>
-                    {sv?.label ?? t.seviye}
+                    {t.seviye === "temel" ? tt("tecvidTemel") : t.seviye === "orta" ? tt("tecvidOrta") : tt("tecvidIleri")}
                   </span>
                 </div>
                 <p className="mt-1 text-[9.5px] leading-relaxed text-white/65">{t.tanim}</p>
@@ -488,16 +487,16 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         <div className="space-y-3">
           {/* İşaretli ayetler */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">🔖 İşaretli Ayetler ({kitaplikVeri.isaretler.length})</p>
+            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ktKitaplikIsaret")} ({kitaplikVeri.isaretler.length})</p>
             {kitaplikVeri.isaretler.length === 0 ? (
-              <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] text-white/40">Henüz işaret yok — Kur'an ekranında sureyi açıp ayetlerin yanındaki 🔖 simgesiyle işaretleyince burada birikir.</p>
+              <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] text-white/40">{tt("ktKitaplikIsaretBos")}</p>
             ) : (
               <div className="space-y-1">
                 {kitaplikVeri.isaretler.map((k) => {
                   const [s, a] = k.split(":").map(Number);
                   return (
                     <div key={k} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[.02] px-3 py-1.5 text-[10px]">
-                      <span className="font-bold text-white/80">{SURAHS[s - 1]?.name ?? s} · {a}. ayet</span>
+                      <span className="font-bold text-white/80">{SURAHS[s - 1]?.name ?? s} · {tt("ktAyetSonek").replace("{a}", String(a))}</span>
                       <span className="text-[8.5px] text-white/35">{k}</span>
                     </div>
                   );
@@ -507,9 +506,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           {/* Notlar (şifreli secureStore'dan okunur — AyetNotlariModal ile aynı kaynak) */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">📝 Notlarım ({kitaplikVeri.notlar.length})</p>
+            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ktKitaplikNotlar")} ({kitaplikVeri.notlar.length})</p>
             {kitaplikVeri.notlar.length === 0 ? (
-              <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] text-white/40">Not yok — menüden "Ayet Notlarım"a girip ilk notunu yaz.</p>
+              <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] text-white/40">{tt("ktKitaplikNotBos")}</p>
             ) : (
               <div className="space-y-1">
                 {kitaplikVeri.notlar.slice(0, 10).map((n) => {
@@ -526,8 +525,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
           {/* İndirilen videolar — IndexedDB'de saklananlar */}
           <div>
-            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">🎬 İndirdiğin Videolar</p>
-            <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] leading-relaxed text-white/45">İndirdiğin videolar cihazında (IndexedDB) saklanır — video üretim ekranının sonuç listesinden istediğin zaman tekrar indirebilirsin. Kitaplıkta liste boyutu cihazına göre gösterilir.</p>
+            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ktKitaplikVideolar")}</p>
+            <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] leading-relaxed text-white/45">{tt("ktKitaplikVideoBilgi")}</p>
           </div>
         </div>
       )}

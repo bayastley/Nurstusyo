@@ -2,7 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { X, Compass, RotateCcw, ChevronDown, ChevronUp, Clock3, MapPin, Bell, CheckCircle2, Circle, Moon, BellRing } from "lucide-react";
 import { pushAboneOl, pushAbonelikIptal, pushAbonelikDurumu, pushDestekliyor, iosUyarisi } from "../utils/pushClient";
 import { zikirPencereDizisi, sonGunler, type ZikirGunKova } from "./zikirGrafik";
-import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS, ZIKIRLER, CITY_OPTIONS, sehirEtiketindenAd, parsePrayerTimes, minutesFromTime } from "./islamicToolsVeri";
+import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS, CITY_OPTIONS, sehirEtiketindenAd, parsePrayerTimes, minutesFromTime } from "./islamicToolsVeri";
+// ★ 26.10 YENİLEME (kullanıcı emri): panel KABUĞU 5 dile çevrildi — tr/en/ar/id/ur.
+import { translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
+import { duaDilSec } from "../data/duaCokDil";
 import { QiblaCompass, KazaTracker, IslamicCalendar } from "./islamicToolsBolumler";
 // ★ SRP adım 9 (30.09): veri blokları islamicToolsVeri.ts'e, kıble/kaza/takvim bileşenleri islamicToolsBolumler.tsx'e taşındı
 
@@ -14,6 +17,8 @@ import { QiblaCompass, KazaTracker, IslamicCalendar } from "./islamicToolsBoluml
 
 interface IslamicToolsPanelProps {
   open: boolean;
+  /** ★ 26.10: seçili UI dili — üst bardan gelir (HeaderTopBar) */
+  lang: Lang;
   onClose: () => void;
   prayerCity: string;
   setPrayerCity: (city: string) => void;
@@ -27,9 +32,13 @@ type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua" | "hat
 //   HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart,
 //   RozetlerKarti, UreticiIstatistikKarti. Bu dosya sekme düzeni + kabuk.
 import { Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim, HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart, RozetlerKarti, UreticiIstatistikKarti, uretimIstYaz, uretimIstOku, type UretimIst, URETIM_IST_KEY } from "./islamicToolsVucut";
+// ★ 26.10: Sahih Zikir & Dua Külliyatı — zikir dosyasındaki bileşenden doğrudan alınır
+import { SahihZikirKuliyati } from "./islamicToolsZikir";
 
-export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings }) => {
+export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings, lang }) => {
   const [activeTab, setActiveTab] = useState<ToolTab>("prayer");
+  // ★ 26.10: kısa çeviri yardımcısı — translate(lang, key) → TR → EN fallback (i18n/index.ts)
+  const t = (key: string): string => translate(lang, key);
   const [expandedDua, setExpandedDua] = useState<number | null>(null);
   const [clock, setClock] = useState(() => new Date());
 
@@ -54,14 +63,14 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
   if (!open) return null;
 
   const tabs: Array<{ id: ToolTab; icon: string; label: string }> = [
-    { id: "prayer", icon: "🕌", label: "Namaz Vakti" },
-    { id: "salah", icon: "✅", label: "Namaz Takibi" },
-    { id: "hatim", icon: "📖", label: "Hatim Takibi" },
-    { id: "qibla", icon: "🧭", label: "Kıble" },
-    { id: "zikir", icon: "📿", label: "Zikirmatik" },
-    { id: "kaza", icon: "📋", label: "Kaza Takibi" },
-    { id: "calendar", icon: "📅", label: "Dini Günler" },
-    { id: "dua", icon: "🤲", label: "Günün Duaları" },
+    { id: "prayer", icon: "🕌", label: t("itTabPrayer") },
+    { id: "salah", icon: "✅", label: t("itTabSalah") },
+    { id: "hatim", icon: "📖", label: t("itTabHatim") },
+    { id: "qibla", icon: "🧭", label: t("itTabQibla") },
+    { id: "zikir", icon: "📿", label: t("itTabZikir") },
+    { id: "kaza", icon: "📋", label: t("itTabKaza") },
+    { id: "calendar", icon: "📅", label: t("itTabCalendar") },
+    { id: "dua", icon: "🤲", label: t("itTabDua") },
   ];
 
   return (
@@ -79,9 +88,9 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gray-950/90 backdrop-blur px-6 py-4">
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <span className="text-xl">🤲</span> Nûr Araçları
+              <span className="text-xl">🤲</span> {t("sevapKosesi")}
             </h2>
-            <p className="text-[11px] text-white/40 mt-0.5">İslami yardımcı araçlar · Namaz, zikir, kıble</p>
+            <p className="text-[11px] text-white/40 mt-0.5">{t("itPanelAlt")}</p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 transition">
             <X size={18} className="text-white/50" />
@@ -114,10 +123,10 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Bugünkü Namaz Vakitleri</p>
-                    <p className="text-[9px] text-white/35 mt-1 flex items-center gap-1"><MapPin size={10} />Şehre göre hesaplanır · TR: Diyanet · Yurtdışı: MWL</p>
+                    <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">{t("itBugunVakitler")}</p>
+                    <p className="text-[9px] text-white/35 mt-1 flex items-center gap-1"><MapPin size={10} />{t("itVakitNot")}</p>
                   </div>
-                  <select value={prayerCity} onChange={(event) => setPrayerCity(sehirEtiketindenAd(event.target.value))} className="max-w-[150px] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] text-white/70 outline-none" title="Şehir seç — yurtdışı dahil">
+                  <select value={prayerCity} onChange={(event) => setPrayerCity(sehirEtiketindenAd(event.target.value))} className="max-w-[150px] rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-[9px] text-white/70 outline-none" title={t("itSehirSec")}>
                     {/* Seçili şehir listede yoksa (eski kayıt / konum) başa ekleyerek seçili kalır */}
                     {!CITY_OPTIONS.includes(prayerCity) && <option value={prayerCity}>{prayerCity}</option>}
                     {CITY_OPTIONS.map((city) => <option key={city} value={city}>{city}</option>)}
@@ -126,25 +135,25 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
 
                 {nextPrayer && (
                   <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2.5">
-                    <div className="flex items-center gap-2"><Clock3 size={16} className="text-amber-300" /><div><p className="text-[9px] text-white/45">Sıradaki vakit{nextPrayer.tomorrow ? " · yarın" : ""}</p><p className="text-xs font-black text-amber-200">{nextPrayer.name} · {nextPrayer.time}</p></div></div>
-                    <span className="text-[10px] font-bold text-white/65">{Math.floor(nextPrayer.remaining / 60)} sa {nextPrayer.remaining % 60} dk</span>
+                    <div className="flex items-center gap-2"><Clock3 size={16} className="text-amber-300" /><div><p className="text-[9px] text-white/45">{t("itSiradaki")}{nextPrayer.tomorrow ? t("itYarin") : ""}</p><p className="text-xs font-black text-amber-200">{vakitAdi(lang, nextPrayer.name)} · {nextPrayer.time}</p></div></div>
+                    <span className="text-[10px] font-bold text-white/65">{sureceCevir(lang, `${Math.floor(nextPrayer.remaining / 60)} sa ${nextPrayer.remaining % 60} dk`)}</span>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {prayerTimes.map(({ name, time }) => {
                     const isNext = nextPrayer?.name === name;
-                    return <div key={name} className={`rounded-xl border p-2.5 text-center transition ${isNext ? "border-amber-400/30 bg-amber-400/10" : "border-white/5 bg-white/5"}`}><p className="text-[8px] text-white/45">{name}</p><p className={`mt-1 text-sm font-black ${isNext ? "text-amber-200" : "text-white/85"}`}>{time}</p></div>;
+                    return <div key={name} className={`rounded-xl border p-2.5 text-center transition ${isNext ? "border-amber-400/30 bg-amber-400/10" : "border-white/5 bg-white/5"}`}><p className="text-[8px] text-white/45">{vakitAdi(lang, name)}</p><p className={`mt-1 text-sm font-black ${isNext ? "text-amber-200" : "text-white/85"}`}>{time}</p></div>;
                   })}
                 </div>
-                {!prayerTimings && <p className="text-center text-[9px] text-white/35">Vakitler yükleniyor veya konum izni bekleniyor...</p>}
+                {!prayerTimings && <p className="text-center text-[9px] text-white/35">{t("itVakitYukleniyor")}</p>}
                 <NamazBildirim prayerTimings={prayerTimings} />
                 <OgutVakti />
                 <CevrimdisiKart />
                 <UreticiIstatistikKarti />
                 <RozetlerKarti />
                 <GeceModuDugmesi />
-                <p className="text-center text-[8px] text-white/25">Vakitler Aladhan üzerinden Diyanet metodu ile hesaplanır.</p>
+                <p className="text-center text-[8px] text-white/25">{t("itVakitKaynak")}</p>
               </div>
             )}
 
@@ -169,20 +178,10 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                     gelen gerçek toplam yazılır; henüz kimse çekmediyse "İlk zikiri sen çek"
                     daveti gösterilir. Sitede asla uydurma sayı görünmez. */}
                 <ToplulukVitrinSayaci />
-                <p className="pt-1 text-[10px] font-bold text-white/60 uppercase tracking-wider">Sahih Zikir Listesi</p>
-                <div className="space-y-1.5">
-                  {ZIKIRLER.map((z, i) => (
-                    <div key={i} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
-                      <span className="text-[10px] font-bold text-amber-300 min-w-[28px]">{z.count}x</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-white">{z.name}</p>
-                        <p className="text-[8px] text-white/40">{z.text}</p>
-                        <p className="text-[7px] font-bold uppercase tracking-wider text-amber-300/60">Kaynak: {z.source}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[8px] text-white/30 text-center">Zikirler ve dualar Buhârî · Müslim · Tirmizî · Ebû Dâvûd sahih kaynaklıdır.</p>
+                {/* ★ 26.10: SAHİH ZİKİR KÜLLİYATI — arama + filtre + satıra tıkla/aç.
+                    Eski 12 zikir + genişlemiş havuz (hadis 🤍 / Kur'an dua 📖) birleşik;
+                    satırlar varsayılan KAPALI, ekranda kalabalık yok. */}
+                <SahihZikirKuliyati />
               </div>
             )}
 
@@ -193,35 +192,39 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
             {activeTab === "dua" && (
               <div className="space-y-2">
                 <DuaTakip />
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Günün Duaları & Ezkarı</p>
-                {DAILY_DUAS.map((dua, i) => (
+                <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">{t("itGununDualariEzkari")}</p>
+                {DAILY_DUAS.map((dua, i) => {
+                  // ★ 26.10: çok dilli başlık + manas (duaCokDil.ts) — eksik dil TR fallback
+                  const d = duaDilSec(lang, i, { title: dua.title, text: dua.text });
+                  return (
                   <div key={i} className="rounded-lg bg-white/5 overflow-hidden">
                     <button
                       onClick={() => setExpandedDua(expandedDua === i ? null : i)}
                       className="flex items-center gap-2 w-full px-3 py-2.5 text-left"
                     >
                       <span className="text-amber-400 text-[10px] font-bold min-w-[18px]">{i + 1}.</span>
-                      <span className="flex-1 text-[10px] font-bold text-white">{dua.title}</span>
+                      <span className="flex-1 text-[10px] font-bold text-white">{d.title}</span>
                       {expandedDua === i ? <ChevronUp size={12} className="text-white/40" /> : <ChevronDown size={12} className="text-white/40" />}
                     </button>
                     {expandedDua === i && (
                       <div className="px-3 pb-3 border-t border-white/5 pt-2">
                         {dua.arabic && <p className="mb-2 text-right text-[11px] leading-relaxed text-[#e8dfc0]" dir="rtl">{dua.arabic}</p>}
-                        <p className="text-[10px] leading-relaxed text-white/60">{dua.text}</p>
-                        {dua.source && <p className="mt-1.5 text-[7px] font-bold uppercase tracking-wider text-amber-300/60">Kaynak: {dua.source}</p>}
+                        <p className="text-[10px] leading-relaxed text-white/60">{d.text}</p>
+                        {dua.source && <p className="mt-1.5 text-[7px] font-bold uppercase tracking-wider text-amber-300/60">{t("itDuaKaynakPrefix")} {dua.source}</p>}
                       </div>
                     )}
                   </div>
-                ))}
-                <p className="text-[8px] text-white/30 text-center">Dualar sahih kaynaklardan derlenmiştir.</p>
+                  );
+                })}
+                <p className="text-[8px] text-white/30 text-center">{t("itDualarDerleme")}</p>
               </div>
             )}
           </div>
 
           {/* Footer */}
           <div className="text-center pt-2 pb-4 space-y-1">
-            <p className="text-[10px] text-white/30">🤲 Nûr Araçları — İslamî yaşamınız için yardımcı araçlar</p>
-            <p className="text-[9px] text-white/20">Bilgiler Diyanet İşleri Başkanlığı verilerine dayanır</p>
+            <p className="text-[10px] text-white/30">{t("itFooter")}</p>
+            <p className="text-[9px] text-white/20">{t("itFooterKaynak")}</p>
           </div>
         </div>
       </div>

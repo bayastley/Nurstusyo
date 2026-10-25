@@ -87,11 +87,11 @@ export function OgrenModu(p: OgrenProps) {
               {p.searchOpen && (p.filteredSurahs.length > 0 || p.ayahResults.length > 0 || p.searching) && (
                 <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-80 overflow-y-auto rounded-xl border border-gold/30 bg-slate-900 p-1 shadow-2xl scrollbar-thin">
                   {p.filteredSurahs.length > 0 && (
-                    <p className="px-2.5 pt-1.5 pb-1 text-[8px] font-black uppercase tracking-widest text-[#655f4c]">Sureler</p>
+                    <p className="px-2.5 pt-1.5 pb-1 text-[8px] font-black uppercase tracking-widest text-[#655f4c]">{p.ttQL("qoSurelerBaslik")}</p>
                   )}
                   {p.filteredSurahs.map(s => (
                     <button key={s.n} onClick={() => { p.setSurahNo(s.n); p.setQuery(""); p.setSearchOpen(false); p.setAyahResults([]); }} className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-[11px] transition hover:bg-gold/10">
-                      <span className="font-bold text-[#d8cfae]">{s.n}. {s.name} <span className="font-normal text-[#6e6853]">· {s.ayahs} ayet · {s.type}</span></span>
+                      <span className="font-bold text-[#d8cfae]">{s.n}. {s.name} <span className="font-normal text-[#6e6853]">· {s.ayahs} {p.ttQL("qrAyet")} · {s.type === "Mekkî" ? p.ttQL("qrMekki") : p.ttQL("qrMedeni")}</span></span>
                       <span className="font-arabic text-sm text-gold-light">سورة {s.name}</span>
                     </button>
                   ))}
@@ -100,7 +100,7 @@ export function OgrenModu(p: OgrenProps) {
                   )}
                   {p.ayahResults.map((r, idx) => (
                     <button key={`${r.s}:${r.a}:${idx}`} onClick={() => { p.setSurahNo(r.s); p.setAyahNo(r.a); p.setActiveWord(null); p.setQuery(""); p.setSearchOpen(false); p.setAyahResults([]); }} className="flex w-full flex-col gap-0.5 rounded-lg px-2.5 py-1.5 text-left transition hover:bg-gold/10">
-                      <span className="text-[10px] font-bold text-gold">{r.s}. {r.sn} — {r.a}. ayet</span>
+                      <span className="text-[10px] font-bold text-gold">{r.s}. {r.sn} — {r.a}. {p.ttQL("qrAyet")}</span>
                       <span className="line-clamp-2 text-[10px] text-white/55" dir="auto">{r.text}…</span>
                     </button>
                   ))}
@@ -119,8 +119,8 @@ export function OgrenModu(p: OgrenProps) {
             {/* ★ MEAL GÜNCELLENİYOR çipi — meal/dil değişiminde eski metin ekranda kalırken göster */}
             {p.mealYenileniyor && (
               <span className="flex items-center gap-1 rounded-full border border-gold/30 bg-gold/10 px-2.5 py-1 text-[9px] font-bold text-gold" role="status">
-                <Loader2 size={10} className="animate-spin" /> mealler güncelleniyor…
-              </span>
+            <Loader2 size={10} className="animate-spin" /> {p.ttQL("qrMeallerYukleniyor")}
+          </span>
             )}
             <select value={p.reciter} onChange={(e) => p.setReciter(e.target.value)} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold text-gold-light outline-none focus:border-gold/50" style={{ flex: "1 1 185px", minWidth: 175, maxWidth: 250 }}>
               {RECITERS.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -130,11 +130,11 @@ export function OgrenModu(p: OgrenProps) {
           {/* 3 kolon */}
           <div className="flex flex-1 flex-col overflow-hidden lg:flex-row">
             {p.loading ? (
-              <div className="flex flex-1 items-center justify-center gap-2 text-[12px] text-[#8f8870]"><Loader2 size={16} className="animate-spin" /> Ayetler yükleniyor…</div>
+              <div className="flex flex-1 items-center justify-center gap-2 text-[12px] text-[#8f8870]"><Loader2 size={16} className="animate-spin" /> {p.ttQL("qrAyetlerYukleniyor")}</div>
             ) : p.error ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
                 <p className="text-[12px] text-red-400">{p.error}</p>
-                <button onClick={() => p.setSurahNo(p.surahNo)} className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[10px] font-bold text-gold">Tekrar Dene</button>
+                <button onClick={() => p.setSurahNo(p.surahNo)} className="rounded-lg border border-gold/30 bg-gold/10 px-3 py-1.5 text-[10px] font-bold text-gold">{p.ttQL("qrTekrarDene")}</button>
               </div>
             ) : (
               <>
@@ -204,7 +204,7 @@ export function OgrenModu(p: OgrenProps) {
                       </div>
                       <div className="w-20 shrink-0 text-right">
                         <p className="text-[9px] font-black tracking-widest text-gold">NURSTUDYO</p>
-                        <p className="text-[8px] text-[#7a745f]">{surah.name} suresi</p>
+                        <p className="text-[8px] text-[#7a745f]">{p.ttQL("qoSuresi").replace("{ad}", surah.name)}</p>
                       </div>
                     </div>
                     {/* Kelimeler */}
@@ -455,7 +455,7 @@ export function DinleModu(p: DinleProps) {
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-xl border border-indigo-400/20 bg-indigo-950/30 p-2">
                   <span className="text-[9px] font-bold text-white/50">{p.ttQL("qoSureDolunca")}</span>
                   {[15, 30, 45, 60, 90, 120].map((dk) => (
-                    <button key={dk} onClick={() => p.kurUykuZamanlayici(dk)} className="rounded-lg bg-white/10 px-2.5 py-1 text-[9px] font-black text-indigo-200 transition hover:bg-indigo-500/30">{dk} dk</button>
+                    <button key={dk} onClick={() => p.kurUykuZamanlayici(dk)} className="rounded-lg bg-white/10 px-2.5 py-1 text-[9px] font-black text-indigo-200 transition hover:bg-indigo-500/30">                    {dk} {p.ttQL("qoDakikaKisa")}</button>
                   ))}
                   {p.uykuTimer !== null && (
                     <button onClick={() => p.kurUykuZamanlayici(null)} className="rounded-lg bg-red-500/20 px-2.5 py-1 text-[9px] font-black text-red-300 transition hover:bg-red-500/30">{p.ttQL("qoIptal")}</button>
@@ -471,7 +471,7 @@ export function DinleModu(p: DinleProps) {
                     2-3. ayetten başlıyordu (canlı testte kanıtlandı) */}
                 <span className="flex gap-1.5">
                   <select value={p.listenSurah} onChange={(e) => { p.setListenSurah(Number(e.target.value)); p.setListenAyahIdx(0); p.besmeleCalindiRef.current = 0; p.stopListening(); }} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
-                    {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} ayet)</option>)}
+                    {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} {p.ttQL("qrAyet")})</option>)}
                   </select>
                   {/* ★ BAŞINDAN BAŞLA (29.09, kullanıcı isteği): besmele hakkını sıfırla →
                       kullanıcı isterse TEKRAR besmeleyle başlasın. */}
@@ -501,11 +501,11 @@ export function DinleModu(p: DinleProps) {
                     const kisaId = r.full?.[0] ?? r.id;
                     const lock = getFeatureLock(kisaId, "free") || getFeatureLock(r.id, "free");
                     const locked = lock === "maintenance" || lock === "off" || lock === "v2" || lock === "v3";
-                    const lockLabel = lock === "maintenance" || lock === "off" ? "🔧 BAKIMDA" : locked ? "🔒 GÜNCELLEME" : "";
+                    const lockLabel = lock === "maintenance" || lock === "off" ? p.ttQL("kilitBakimda") : locked ? p.ttQL("kilitGuncelleme") : "";
                     return (
-                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; p.setListenReciter(r.id); p.besmeleCalindiRef.current = 0; p.stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : p.reciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? "Bu kâri şu anda bakımda / güncellemede — kısa süre içinde dönecek" : undefined}>
+                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; p.setListenReciter(r.id); p.besmeleCalindiRef.current = 0; p.stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : p.reciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? p.ttQL("kilitKariUyari") : undefined}>
                       <span className="truncate font-semibold">{r.name}{locked && <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/70">{lockLabel}</span>}</span>
-                      {p.reciter === r.id && !locked && <span className="text-[9px] font-black">✓ SEÇİLİ</span>}
+                      {p.reciter === r.id && !locked && <span className="text-[9px] font-black">✓ {p.ttQL("kilitSecili")}</span>}
                     </button>
                     );
                   })}
@@ -545,7 +545,7 @@ export function DinleModu(p: DinleProps) {
                         type="button"
                         onClick={() => p.listenScrollRef.current?.scrollBy({ top: -120, behavior: "smooth" })}
                         className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
-                        title="Metni yukarı kaydır"
+                        title={p.ttQL("qoKaydirYukari")}
                       >▲</button>
                       )}
                       {/* Hayalet oklar: aşağı */}
@@ -554,7 +554,7 @@ export function DinleModu(p: DinleProps) {
                         type="button"
                         onClick={() => p.listenScrollRef.current?.scrollBy({ top: 120, behavior: "smooth" })}
                         className="pointer-events-auto absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full bg-[#0d0b16]/60 p-1.5 text-gold/80 opacity-0 shadow transition group-hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 max-md:opacity-70"
-                        title="Metni aşağı kaydır"
+                        title={p.ttQL("qoKaydirAsagi")}
                       >▼</button>
                       )}
                     </div>

@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // STUDIOAPPBOLUMLER.TSX — StudioApp tam-ekran blokları
 // StudioApp.tsx'den ayrıldı (SRP adım 12, 30.09)
@@ -44,21 +48,21 @@ export function TelifRiskOnayBalonu({
             <ShieldAlert size={22} />
           </div>
           <div>
-            <h3 className="font-display text-base font-black text-white">Yüksek Telif Riski</h3>
-            <p className="text-[10px] text-white/50">Bilgilendirilmiş onay gerekiyor</p>
+            <h3 className="font-display text-base font-black text-white">ttX2610("rsRiskYuksek")</h3>
+            <p className="text-[10px] text-white/50">ttX2610("rsOnay")</p>
           </div>
         </div>
 
         <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4 text-[11px]">
           <p className="text-white/70">
             <span className="font-black text-white">{reciterName}</span> kârisinin telif riski{" "}
-            <span className="font-black text-amber-400">YÜKSEK</span>.{" "}
+            <span className="font-black text-amber-400">ttX2610("rsYuksek")</span>.{" "}
             Bu kâriyle üretim yaparsanız:
           </p>
           <ul className="list-none space-y-1 text-white/60">
-            <li>• YouTube/Instagram vb. platformlarda Content ID telif uyarısı alabilirsiniz</li>
-            <li>• Video kaldırılabilir veya kanalınız tehlikeye girebilir</li>
-            <li>• Tüm yayın sorumluluğu size aittir (Nûr Stüdyo hukuki sorumluluk kabul etmez)</li>
+            <li>ttX2610("rsYoutube")</li>
+            <li>ttX2610("rsKalkabilir")</li>
+            <li>ttX2610("rsSorumluluk")</li>
           </ul>
         </div>
 
@@ -97,18 +101,18 @@ export function UretimOnayBalonu({
                 <Zap size={22} className="text-white" />
               </div>
               <div>
-                <h3 className="font-display text-base font-black text-white">Üretim Onayı</h3>
+                <h3 className="font-display text-base font-black text-white">ttX2610("rsOnayBaslik")</h3>
                 <p className="text-[10px] text-white/50">Maliyet bilgisi</p>
               </div>
             </div>
 
             <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Üretim türü</span>
+                <span className="text-white/50">ttX2610("rsTur")</span>
                 <span className="font-bold text-white">{genConfirmData.mode === "short" ? "Kısa (59sn)" : genConfirmData.mode === "long" ? "Uzun (600sn)" : "Tam Sürüm"}</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Format sayısı</span>
+                <span className="text-white/50">ttX2610("rsFormat")</span>
                 <span className="font-bold text-white">{genConfirmData.formatCount} adet</span>
               </div>
               <div className="my-2 h-px bg-white/10" />
@@ -121,7 +125,7 @@ export function UretimOnayBalonu({
                 <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Üretim sonrası</span>
+                <span className="text-white/50">ttX2610("rsSonra")</span>
                 <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
                   {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
                 </span>
@@ -130,7 +134,7 @@ export function UretimOnayBalonu({
 
             {genConfirmData.remaining - genConfirmData.cost <= 0 && (
               <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
-                ⚠️ Jetonun yetersiz! Üretim sonrası bakiyen 0 olacak.
+                ⚠️ Jetonun yetersiz! ttX2610("rsSonra") bakiyen 0 olacak.
               </div>
             )}
 

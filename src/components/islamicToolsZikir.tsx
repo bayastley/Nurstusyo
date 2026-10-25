@@ -5,7 +5,19 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 import { zikirPencereDizisi, sonGunler, type ZikirGunKova } from "./zikirGrafik";
+import { ZIKIR_GENIS_LISTE, zikirAramaNormalize, type ZikirKaydi } from "./zikirListesi";
+import { ZIKIRLER } from "./islamicToolsVeri";
+// ★ 26.10 YENİLEME (kullanıcı emri): zikir ekranı metinleri 5 dilde —
+//   dil seçimi localStorage'dan okunur (PwaKurulumBanneri ile aynı desen).
+import { translate } from "../i18n";
+const tt = (key: string, fallback: string): string => {
+  try {
+    const out = translate(localStorage.getItem("nur_lang"), key);
+    return out !== key ? out : fallback; // anahtar yoksa Türkçe fallback (asla çlip anahtar gösterilmez)
+  } catch { return fallback; }
+};
 
 // ═══════════ ZİKİR — kaynak islamicToolsVucut 23-286 ═══════════
 // ★ Zikirmatik — kalıcı sayaç (localStorage) + topluluk toplamı (Supabase)
@@ -68,21 +80,21 @@ export function ToplulukVitrinSayaci() {
         <span className="text-base">🌍</span>
         <p className="text-[10px] font-bold text-white/70">
           {aktif && toplam !== null && toplam > 0
-            ? <>Topluluk toplamı: <b className="text-amber-200">{toplam.toLocaleString("tr-TR")}</b> zikir çekildi</>
-            : <>Topluluk sayacı canlı — <b className="text-amber-200">ilk zikiri sen çek</b> 📿</>}
+            ? <>{tt("itToplulukToplami", "Topluluk toplamı: ")}<b className="text-amber-200">{toplam.toLocaleString("tr-TR")}</b> {tt("itZikirCekildi", "zikir çekildi")}</>
+            : <>{tt("itToplulukCanli", "Topluluk sayacı canlı — ")}<b className="text-amber-200">{tt("itIlkZikirSen", "ilk zikiri sen çek")}</b> 📿</>}
         </p>
       </div>
       {grafikGoster && (
         <div className="rounded-xl border border-white/10 bg-white/[.03] px-2.5 pb-2 pt-1.5">
           <div className="mb-1 flex items-center justify-between">
             <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">
-              Günlük topluluk zikirleri
+              {tt("itGunlukToplulukZikirleri", "Günlük topluluk zikirleri")}
             </p>
             <div className="flex gap-1">
               {(["hafta", "tum"] as const).map((p) => (
                 <button key={p} onClick={() => setPencere(p)}
                   className={`rounded px-1.5 py-0.5 text-[7.5px] font-black transition ${pencere === p ? "bg-amber-500/25 text-amber-200" : "bg-white/5 text-white/40 hover:text-white/70"}`}>
-                  {p === "hafta" ? "7 GÜN" : `TÜMÜ (${tumDizi.length})`}
+                  {p === "hafta" ? tt("it7Gun", "7 GÜN") : `${tt("itTumu", "TÜMÜ")} (${tumDizi.length})`}
                 </button>
               ))}
             </div>
@@ -96,7 +108,7 @@ export function ToplulukVitrinSayaci() {
               const bugunMu = k.gun === bugun;
               return (
                 <div key={k.gun} className="flex min-w-0 flex-1 flex-col items-center gap-0.5"
-                  title={`${gunNo} ${gunTarih.toLocaleDateString("tr-TR", { month: "long", timeZone: "UTC" })} · ${k.adet.toLocaleString("tr-TR")} zikir`}>
+                  title={`${gunNo} ${gunTarih.toLocaleDateString("tr-TR", { month: "long", timeZone: "UTC" })} · ${k.adet.toLocaleString("tr-TR")} ${tt("itZikirKelime", "zikir")}`}>
                   <div className="flex h-11 w-full items-end">
                     <div
                       className={`w-full rounded-t-sm transition-all ${bugunMu ? "bg-gradient-to-t from-amber-600/70 to-amber-300" : "bg-gradient-to-t from-amber-500/40 to-amber-300/70"}`}
@@ -110,7 +122,7 @@ export function ToplulukVitrinSayaci() {
             })}
           </div>
           <p className="mt-0.5 text-center text-[7.5px] text-white/35">
-            {pencere === "hafta" ? (gosterilen.length < 7 ? `İlk ${gosterilen.length} gün` : "Bu hafta") : `Son ${gosterilen.length} gün`}: <b className="text-amber-200/90">{pencereToplam.toLocaleString("tr-TR")}</b> zikir
+            {pencere === "hafta" ? (gosterilen.length < 7 ? `${tt("itIlkNGun", "İlk ")}${gosterilen.length} ${tt("itGunKelime", "gün")}` : tt("itBuHafta", "Bu hafta")) : `${tt("itSonNGun", "Son ")}${gosterilen.length} ${tt("itGunKelime", "gün")}`}: <b className="text-amber-200/90">{pencereToplam.toLocaleString("tr-TR")}</b> {tt("itZikirKelime", "zikir")}
           </p>
         </div>
       )}
@@ -246,29 +258,172 @@ export function Zikirmatik() {
           <p className="text-3xl font-black tabular-nums text-amber-200" style={{ textShadow: "0 0 20px rgba(245,158,11,.3)" }}>{count}</p>
         </div>
         <p className="mt-1.5 text-[8.5px] font-bold text-amber-300/80">
-          {Math.floor(count / 33)} halka tamam · {count % 33 === 0 && count > 0 ? "halka doldu 🎉" : `halkaya ${33 - (count % 33)} kaldı`}
-          {streak.sayi > 0 && <span className="ml-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-orange-300">🔥 {streak.sayi} gün seri</span>}
+          {Math.floor(count / 33)} {tt("itHalkaTamam", "halka tamam")} · {count % 33 === 0 && count > 0 ? tt("itHalkaDoldu", "halka doldu 🎉") : `${tt("itHalkayaKaldi", "halkaya")} ${33 - (count % 33)} ${tt("itKaldi", "kaldı")}`}
+          {streak.sayi > 0 && <span className="ml-2 rounded bg-orange-500/20 px-1.5 py-0.5 text-orange-300">🔥 {streak.sayi} {tt("itGunSeri", "gün seri")}</span>}
         </p>
         {halkaMesaj && <p className="mt-1 text-[9px] font-black text-amber-300 animate-pulse">{halkaMesaj}</p>}
-        <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/40">{ZIKIR_METINLERI[seciliZikir].replace(/^[^ ]+ /, "")} · dokun ve çek</p>
+        <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-white/40">{ZIKIR_METINLERI[seciliZikir].replace(/^[^ ]+ /, "")} · {tt("itDokunVeCek", "dokun ve çek")}</p>
         {/* Hedef ilerlemesi */}
         <div className="mx-auto mt-3 h-1.5 w-3/4 overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all" style={{ width: `${ilerleme}%` }} />
         </div>
-        <p className="mt-1 text-[8px] text-white/35">Sonraki hedef: {sonrakiHedef} · {Math.max(0, sonrakiHedef - count)} kaldı</p>
+        <p className="mt-1 text-[8px] text-white/35">{tt("itSonrakiHedef", "Sonraki hedef")}: {sonrakiHedef} · {Math.max(0, sonrakiHedef - count)} {tt("itKaldi", "kaldı")}</p>
       </button>
 
       <div className="flex items-center justify-between gap-2">
         <button onClick={sifirla} className="rounded-lg bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white/50 hover:bg-white/10 hover:text-white/70 transition">
-          ↺ Sıfırla (bu oturum)
+          ↺ {tt("itSifirlaKisa", "Sıfırla (bu oturum)")}
         </button>
         {sunucuToplam !== null && sunucuToplam > 0 ? (
-          <p className="text-[9px] text-white/50">🌍 Toplulukla birlikte: <b className="text-amber-300">{sunucuToplam.toLocaleString("tr-TR")}</b> zikir</p>
+          <p className="text-[9px] text-white/50">🌍 {tt("itToplulukBirlikte2", "Toplulukla birlikte:")} <b className="text-amber-300">{sunucuToplam.toLocaleString("tr-TR")}</b> {tt("itZikirKelime", "zikir")}</p>
         ) : topluluk !== null && topluluk > 0 ? (
-          <p className="text-[9px] text-white/50">🌟 Bu cihazdan toplam: <b className="text-amber-300">{topluluk.toLocaleString("tr-TR")}</b></p>
+          <p className="text-[9px] text-white/50">🌟 {tt("itCihazToplam2", "Bu cihazdan toplam:")} <b className="text-amber-300">{topluluk.toLocaleString("tr-TR")}</b></p>
         ) : null}
       </div>
-      <p className="text-center text-[8px] text-white/25">Sayacın cihazında kalıcı saklanır{sunucuAktif ? " · topluluk sayacı canlı ☝" : ""}</p>
+      <p className="text-center text-[8px] text-white/25">{tt("itSayacCihazdaKisa", "Sayacın cihazında kalıcı saklanır")}{sunucuAktif ? tt("itToplulukCanliKisa", " · topluluk sayacı canlı ☝") : ""}</p>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════
+// ★ SAHİH ZİKİR & DUA KÜLLİYATI (26.10, çeşitlendirme emri)
+//   • Arama butonu → tıklayınca açılır; Türkçe duyarsız arar (İ→i, ş→s …).
+//   • Satırlar KAPALI görünür (tek satır: ad + rozet) — ekranda kalabalık YOK;
+//     satıra TIKLAYINCA metin + kaynak açılır.
+//   • Varsayılan ilk 6 satır; "Tümünü Göster" düğmesi kalabalığı açar.
+//   • 🔍 filtre çipleri: Hepsi · 🤍 Hadis · 📖 Kur'an.
+// ════════════════════════════════════════════════════════
+
+const GOSTERILEN_VARSAYILAN = 6;
+type Filtre = "hepsi" | "hadis" | "dua";
+
+interface ZikirSatiri {
+  ad: string;
+  metin?: string;
+  kaynak: string;
+  tur: ZikirKaydi["tur"];
+  sayi?: number;
+}
+
+/** Eski ZIKIRLER (arabica-metinli 12) + yeni geniş havuz (48) BİRLEŞTİRİLİR.
+ *  useMemo tablo statiktir — her render'da yeniden kurulmaz. */
+function kuliyatiTopla(): ZikirSatiri[] {
+  const eski: ZikirSatiri[] = ZIKIRLER.map((z) => ({
+    ad: String(z.name),
+    metin: String(z.text),
+    kaynak: String(z.source),
+    tur: "hadis" as const,
+    sayi: Number(z.count) || undefined,
+  }));
+  const yeni: ZikirSatiri[] = ZIKIR_GENIS_LISTE.map((z) => ({ ad: z.ad, kaynak: z.kaynak, tur: z.tur }));
+  // aynı isimli tekrarlara düş: eğer eski 12 zaten geniş listede başka yazımla
+  // vardıysa sorun değil — başlık farklıysa iki kayıt bilgiyi tamamlar.
+  return [...eski, ...yeni];
+}
+
+export function SahihZikirKuliyati() {
+  const hepsi = useMemo(kuliyatiTopla, []);
+  const [aramaAcik, setAramaAcik] = useState(false);
+  const [arama, setArama] = useState("");
+  const [filtre, setFiltre] = useState<Filtre>("hepsi");
+  const [hepsiGoster, setHepsiGoster] = useState(false);
+  const [acik, setAcik] = useState<number | null>(null);
+
+  const lista = useMemo(() => {
+    const q = zikirAramaNormalize(arama.trim());
+    return hepsi.filter((z) => {
+      if (filtre === "hadis" && z.tur !== "hadis") return false;
+      if (filtre === "dua" && z.tur !== "dua") return false;
+      if (!q) return true;
+      return zikirAramaNormalize(`${z.ad} ${z.kaynak} ${z.metin ?? ""}`).includes(q);
+    });
+  }, [hepsi, arama, filtre]);
+
+  const aramada = arama.trim().length > 0 || filtre !== "hepsi";
+  const gorunur = aramada || hepsiGoster ? lista : lista.slice(0, GOSTERILEN_VARSAYILAN);
+
+  const toggleSatir = (i: number) => setAcik(acik === i ? null : i);
+
+  return (
+    <div className="space-y-2">
+      {/* Başlık + ★ ARAMA BUTONU — tıklayınca açılır */}
+      <div className="flex items-center justify-between gap-2">
+        <p className="pt-1 text-[10px] font-bold text-white/60 uppercase tracking-wider">{tt("itSahihKuliyatKisa", "Sahih Zikir & Dua Külliyatı")} ({hepsi.length})</p>
+        <button
+          onClick={() => { setAramaAcik((v) => !v); if (aramaAcik) setArama(""); }}
+          className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-[9px] font-bold transition ${aramaAcik ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80"}`}
+          title={tt("itAraTitle", "Zikir veya kaynak ara")}
+        >
+          {aramaAcik ? <X size={11} /> : <Search size={11} />}
+          {aramaAcik ? tt("itKapat", "Kapat") : tt("itAra", "Ara")}
+        </button>
+      </div>
+
+      {/* ★ ARAMA KUTUSU — butona basılınca açılan alan */}
+      {aramaAcik && (
+        <input
+          type="text"
+          value={arama}
+          onChange={(e) => setArama(e.target.value)}
+          placeholder={tt("itAraPlaceholder", "Ne ararsan yaz: istigfar, secde, seyahat, Buhari…")}
+          className="w-full rounded-lg border border-amber-400/25 bg-amber-400/[.06] px-3 py-2 text-[10px] text-amber-100 placeholder:text-amber-200/30 outline-none focus:border-amber-400/50"
+          autoFocus
+        />
+      )}
+
+      {/* ★ FİLTRE ÇİPLERİ — Hepsi · 🤍 Hadis · 📖 Kur'an */}
+      <div className="flex flex-wrap gap-1">
+        {(["hepsi", "hadis", "dua"] as const).map((f) => (
+          <button
+            key={f}
+            onClick={() => setFiltre(f)}
+            className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold transition ${filtre === f ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/5 text-white/40 hover:text-white/70"}`}
+          >
+            {f === "hepsi" ? tt("itFiltreHepsi", "Hepsi") : f === "hadis" ? tt("itFiltreHadis", "🤍 Hadis") : tt("itFiltreKuran", "📖 Kur'an")}
+          </button>
+        ))}
+      </div>
+
+      {/* ★ SONUÇ/SATIR LİSTESİ — satırlar KAPALI, tıkla → açılır */}
+      <div className="space-y-1">
+        {gorunur.map((z, i) => (
+          <div key={`${z.ad}-${i}`} className="rounded-lg bg-white/5 overflow-hidden">
+            <button onClick={() => toggleSatir(i)} className="flex w-full items-center gap-2 px-3 py-2 text-left">
+              <span className="flex-1 min-w-0 truncate text-[10px] font-bold text-white">{z.ad}</span>
+              {z.sayi !== undefined && (
+                <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[8px] font-black text-amber-300">{z.sayi}x</span>
+              )}
+              {z.tur === "hadis" && <span className="shrink-0 text-[9px]" title={tt("itHadisKaynagi", "Hadis kaynağı")}>🤍</span>}
+              {z.tur === "dua" && <span className="shrink-0 text-[9px]" title={tt("itKuranDuasi", "Kur'an duası")}>📖</span>}
+              {acik === i ? <ChevronUp size={11} className="shrink-0 text-white/40" /> : <ChevronDown size={11} className="shrink-0 text-white/40" />}
+            </button>
+            {acik === i && (
+              <div className="px-3 pb-2.5 pt-0.5 border-t border-white/5">
+                {z.metin && <p className="text-[9.5px] leading-relaxed text-white/65">{z.metin}</p>}
+                <p className="mt-1.5 text-[7.5px] font-bold uppercase tracking-wider text-amber-300/60">{tt("itKaynak", "Kaynak")}: {z.kaynak}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ★ DARALT / GENİŞLET — kalabalık olmasın diye varsayılan 6 satır */}
+      {!aramada && lista.length > GOSTERILEN_VARSAYILAN && (
+        <button
+          onClick={() => setHepsiGoster((v) => !v)}
+          className="w-full rounded-lg border border-white/10 bg-white/[.03] py-1.5 text-[9px] font-bold text-amber-300/80 hover:text-amber-200 transition"
+        >
+          {hepsiGoster ? `${tt("itDaraltKisa", "↑ Daralt (ilk")} ${GOSTERILEN_VARSAYILAN})` : `${tt("itTumunuGosterKisa", "Tümünü Göster")} (+${lista.length - GOSTERILEN_VARSAYILAN} ${tt("itSatir", "satır")})`}
+        </button>
+      )}
+      {aramada && lista.length === 0 && (
+        <p className="rounded-lg bg-white/5 py-3 text-center text-[9px] text-white/35">{tt("itBulunamadi", "Aradığın bulunamadı — başka bir kelime dene.")}</p>
+      )}
+      {aramada && lista.length > 0 && (
+        <p className="px-1 text-center text-[7.5px] text-white/30">{lista.length} {tt("itSonucBulundu", "sonuç bulundu")}</p>
+      )}
+
+      <p className="text-[8px] text-white/30 text-center">{tt("itSahihKaynakDipnot", "Tüm zikirler ve dualar Buhârî · Müslim · Tirmizî · Ebû Dâvûd · İbn Mâce sahih kaynaklıdır.")}</p>
     </div>
   );
 }

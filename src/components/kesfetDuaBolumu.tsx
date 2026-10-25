@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // KESFETDUABOLUMU.TSX — Keşfet > Dua Rehberi sekmesi
 // KesfetModal.tsx'den ayrıldı (SRP adım 4b, 30.09)
@@ -37,7 +41,7 @@ export function DuaRehberBolumu({
   return (
     <div className="space-y-1.5">
       {/* ★ OKUNDU TAKİBİ — ✓ cihazda kalır; anahtar durum metnine bağlı, sıra değişse de işaret kaymaz */}
-      <p className="text-center text-[9px] text-white/40">Duruma göre dualar — ✓ ile okundu işaretle (takibin cihazında kalır)</p>
+      <p className="text-center text-[9px] text-white/40">ttX2610("ksfDuaNot")</p>
       {gosterilecek.map((d) => {
         const gununMu = filtredeVar && d.durum === gununDuasi.durum;
         const anahtar = `nur_dua_okundu_${encodeURIComponent(d.durum)}`;
@@ -53,7 +57,7 @@ export function DuaRehberBolumu({
           <>
             {gununMu && (
               <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>🌟 GÜNÜN DUASI</span>
+                <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>ttX2610("ksfGununDua")</span>
                 <button type="button" onClick={isaretle} title={okundu ? "İşareti kaldır" : "Okundu işaretle"}
                   className={`shrink-0 rounded-lg px-2 py-1 text-[9px] font-black transition ${okundu ? "bg-emerald-500/25 text-emerald-200" : "bg-white/10 text-white/50 hover:bg-white/20"}`}>✓</button>
               </div>

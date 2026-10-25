@@ -1,3 +1,6 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // KELİME ATÖLYESİ — İş 3: Kelime Tabanlı Video Üretimi
 // Kullanıcı bir kelime yazar ("sabır", "deniz", "huzur"...)
@@ -222,7 +225,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                 {aktifRecete.id === "fallback" ? aktifRecete.etiket : tt("kaTemaBaslik").replace("{t}", receteEtiketGorunum(aktifRecete.id, aktifRecete.etiket, lang))}
               </h4>
               {!tamEslesme && (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">yaklaşık eşleşme</span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">ttX2610("yaklasikVurus")</span>
               )}
             </div>
             <p className="text-[10px] leading-relaxed text-white/55">{aktifRecete.aciklama}</p>

@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ══════════════════════════════════════════════════════════════════
 // ÖNERİLEN VİDEOLAR — HAZIR TASLAK SÜRÜMÜ (22.10, kullanıcı emri)
 //
@@ -151,19 +155,19 @@ export const OnerilenVideolar: React.FC<OnerilenVideolarProps> = ({ havuz, kulla
         <p className="flex items-center gap-1.5 text-[10.5px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
           <Sparkles size={12} />
           Önerilen Videolar
-          <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">bugün hazır</span>
+          <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">ttX2610("ovBugun")</span>
         </p>
         <button
           type="button"
           onClick={() => setDagitucu((d) => d + 1)}
-          title="Yeni taslaklar öner"
+          title={ttX2610("ovOnerTitle")}
           className="rounded-lg bg-white/5 p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
         >
           <RefreshCw size={11} />
         </button>
       </div>
       <p className="mb-2 text-[9.5px] leading-relaxed text-white/45">
-        Bugüne özel ayet + kâri + atmosfer hazır gelmiş taslaklar — <b className="text-white/70">tek tıkla üretim</b>.
+        Bugüne özel ayet + kâri + atmosfer hazır gelmiş taslaklar — <b className="text-white/70">ttX2610("ovTekTik")</b>.
       </p>
       <div className="grid grid-cols-2 gap-2.5">
         {oneriler.map((o) => (

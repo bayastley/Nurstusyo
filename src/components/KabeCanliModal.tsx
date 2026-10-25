@@ -1,3 +1,6 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // KABECANLIMODAL.TSX — QuranLearnModal'dan ayrıldı (SRP, 01.10)
 // Kâbe/Mescid-i Nebi canlı yayın overlay'i: HLS bağlama, 3 kanal sekmesi,
@@ -76,18 +79,18 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-gold/30 bg-[#131322] shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="text-[12px] font-black text-gold">🕋 Kâbe — Mescid-i Haram Canlı Yayın</p>
+          <p className="text-[12px] font-black text-gold">ttX2610("ckBaslik")</p>
           <button onClick={onClose} aria-label="Kapat" className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
         </div>
         {/* ★ KANAL SEKMELERİ */}
         <div className="flex gap-2 border-b border-white/10 px-4 py-2">
-          <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Suudi resmî Quran TV — kesintisiz Kur'an tilaveti ve Mekke/Medine ibadet görüntüleri">
+          <button onClick={() => setKabeTab("quran")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "quran" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title={ttX2610("ckTitleTvl")}>
             📖 KUR'AN TV
           </button>
           <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
             📖 KUR'AN TV HD
           </button>
-          <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Mescid-i Nebi (Medine) resmî Suudi Sunnah TV — kesintisiz yayın, YouTube'suz">
+          <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title={ttX2610("ckTitleNebi")}>
             🕌 MEDİNE CANLI
           </button>
         </div>
@@ -125,18 +128,18 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
           />
           {kabeMuted && kabeStatus === "playing" && (
             <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
-              <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">🔇 Ses için ekrana dokun</span>
+              <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">ttX2610("ckSes")</span>
             </div>
           )}
           {kabeStatus === "loading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-              <p className="text-[10px] font-bold text-gold/70">Canlı yayına bağlanıyor…</p>
+              <p className="text-[10px] font-bold text-gold/70">ttX2610("ckBaglaniyor")</p>
             </div>
           )}
           {kabeStatus === "error" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <p className="text-[11px] font-black text-[#f5dda6]">Yayın şu an açılamadı</p>
+              <p className="text-[11px] font-black text-[#f5dda6]">ttX2610("ckAçilamadı")</p>
               <button onClick={() => { setKabeStatus("loading"); startHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
             </div>
           )}

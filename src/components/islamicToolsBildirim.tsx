@@ -7,6 +7,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell, BellRing } from "lucide-react";
 import { pushAboneOl, pushAbonelikIptal, pushAbonelikDurumu, pushDestekliyor, iosUyarisi } from "../utils/pushClient";
+// ★ 26.10 i18n — LS diline göre çeviri
+import { translate } from "../i18n";
+const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
 
 // ★ OKUYUCU MODU / GECE MUŞAFI (madde 34) — kehribar renkli uyku dostu ekran tonu
 //   Sayfanın kök div'ine amber filtre uygular; tekrar tıklayınca kapanır.
@@ -34,11 +37,11 @@ export function GeceModuDugmesi() {
       <div className="flex items-center gap-2 text-left">
         <span className="text-base">🌙</span>
         <div>
-          <p className="text-[10px] font-bold text-white/85">Okuyucu Modu</p>
-          <p className="text-[8px] text-white/40">{acik ? "Açık — kehribar ton, göz yormaz" : "Uykudan önce okuma için sıcak ton"}</p>
+          <p className="text-[10px] font-bold text-white/85">{tt("itOkuyucuModu")}</p>
+          <p className="text-[8px] text-white/40">{acik ? tt("itOkuyucuAcik") : tt("itOkuyucuKapali")}</p>
         </div>
       </div>
-      <span className={`rounded-lg px-2.5 py-1 text-[9px] font-black transition ${acik ? "bg-amber-500/25 text-amber-200" : "bg-white/10 text-white/50"}`}>{acik ? "Açık" : "Kapalı"}</span>
+      <span className={`rounded-lg px-2.5 py-1 text-[9px] font-black transition ${acik ? "bg-amber-500/25 text-amber-200" : "bg-white/10 text-white/50"}`}>{acik ? tt("itAcik") : tt("itKapali")}</span>
     </button>
   );
 }
@@ -58,17 +61,17 @@ export function OgutVakti() {
     if (aktif) {
       await pushAbonelikIptal();
       setAktif(false);
-      setMesaj("Bildirimler kapatıldı");
+      setMesaj(tt("itBildirimKapandi"));
     } else {
       const sonuc = await pushAboneOl();
       if (sonuc.ok) {
         setAktif(true);
-        setMesaj("Açık — günde 4 kısa hadis gelecek 🌙");
+        setMesaj(tt("itOgutAcik"));
         try {
-          new Notification("🌱 Hoş geldin — Öğüt Vakti açıldı", { body: "Günde 4 kısa sahih hadis hatırlatması alacaksın.", icon: "/logo.png", tag: "ogut-hosgeldin" });
+          new Notification(tt("itOgutHosGeldin"), { body: tt("itOgutHosBody"), icon: "/logo.png", tag: "ogut-hosgeldin" });
         } catch { /* some platforms need SW showNotification */ }
       } else {
-        setMesaj(sonuc.error || "Abonelik kurulamadı");
+        setMesaj(sonuc.error || tt("itAbonelikKurulamadi"));
       }
     }
     setYukleniyor(false);
@@ -81,16 +84,16 @@ export function OgutVakti() {
       <div className="flex items-center gap-2">
         <BellRing size={14} className={aktif ? "text-amber-300" : "text-white/35"} />
         <div>
-          <p className="text-[10px] font-bold text-white">Öğüt Vakti 🌙</p>
+          <p className="text-[10px] font-bold text-white">{tt("itOgutVakti")}</p>
           <p className="text-[8px] text-white/40">
-            {iosUyari && !aktif ? "iPhone: önce \"Ana Ekrana Ekle\" gerekli" : aktif ? "Günde 4 sahih hadis · sekme kapalıyken de gelir" : "Günde 4 kısa sahih hadis bildirimi"}
+            {iosUyari && !aktif ? tt("itOgutIos") : aktif ? tt("itOgutAktif") : tt("itOgutKapali")}
           </p>
           {mesaj && <p className="text-[8px] text-amber-300/80">{mesaj}</p>}
         </div>
       </div>
       <button onClick={toggle} disabled={yukleniyor}
         className={`rounded-lg px-3 py-1.5 text-[9px] font-black transition disabled:opacity-50 ${aktif ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
-        {yukleniyor ? "…" : aktif ? "✓ Açık" : "Aç"}
+        {yukleniyor ? "…" : aktif ? tt("itAcikEtiket") : tt("itAcEtiket")}
       </button>
     </div>
   );
@@ -118,7 +121,7 @@ export function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string,
     setAktif(yeni);
     try { localStorage.setItem("nur_namaz_bildirim", yeni ? "1" : "0"); } catch {}
     if (yeni && typeof Notification !== "undefined" && Notification.permission === "granted") {
-      new Notification("🕌 Namaz vakti hatırlatıcısı açıldı", { body: "Vakit girdiğinde nazik bir hatırlatma alacaksın.", icon: "/favicon.ico" });
+      new Notification(tt("itNamazHatirlaticAcildi"), { body: tt("itNamazHatirlaticBody"), icon: "/favicon.ico" });
     }
   };
 
@@ -138,7 +141,8 @@ export function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string,
         if (dakika === vakitDk && !bildirilenRef.current.has(anahtar)) {
           bildirilenRef.current.add(anahtar);
           if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-            new Notification(`🕌 ${label} vakti girdi`, { body: "Namaz vakti — huzur seni bekliyor.", icon: "/favicon.ico", tag: anahtar });
+            // ★ 26.10: vakit etiketi tt("vakit"+ad) ile dile göre
+            new Notification(`🕌 ${tt("vakit" + label)} ${tt("itVaktiGirdi")}`, { body: tt("itNamazVaktiBody"), icon: "/favicon.ico", tag: anahtar });
           }
         }
       }
@@ -155,13 +159,13 @@ export function NamazBildirim({ prayerTimings }: { prayerTimings: Record<string,
       <div className="flex items-center gap-2">
         <Bell size={14} className={aktif ? "text-amber-300" : "text-white/35"} />
         <div>
-          <p className="text-[10px] font-bold text-white">Namaz Vakti Hatırlatıcısı</p>
-          <p className="text-[8px] text-white/40">{izin === "granted" ? "Vakit girince tarayıcı bildirimi gelir" : "Bildirim izni gerekiyor"}</p>
+          <p className="text-[10px] font-bold text-white">{tt("itNamazHatirlatic")}</p>
+          <p className="text-[8px] text-white/40">{izin === "granted" ? tt("itNamazIzinOk") : tt("itIzinGerek")}</p>
         </div>
       </div>
       <button onClick={toggle}
         className={`rounded-lg px-3 py-1.5 text-[9px] font-black transition ${aktif ? "bg-amber-500/25 text-amber-200 ring-1 ring-amber-500/40" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
-        {aktif ? "✓ Açık" : "Aç"}
+        {aktif ? tt("itAcikEtiket") : tt("itAcEtiket")}
       </button>
     </div>
   );

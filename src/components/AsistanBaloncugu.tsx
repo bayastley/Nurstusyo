@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // ASİSTAN BALONCUĞU (19.10) — ÜCRETSİZ (AI'sız) DESTEK ASİSTANI
 //
@@ -96,8 +100,8 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
           onClick={ac}
           className="fixed bottom-36 left-3 z-[86] flex h-12 w-12 items-center justify-center rounded-full shadow-2xl transition hover:scale-110 active:scale-95 md:bottom-4 md:left-20"
           style={{ background: "linear-gradient(135deg,#0f3d2e,var(--accent))", border: "1px solid rgba(215,170,82,.45)" }}
-          title="Nûr Asistan — SSS & Yardım"
-          aria-label="Nûr Asistan Sohbetini Aç"
+          title={ttX2610("asBalonTitle")}
+          aria-label={ttX2610("asSohtai")}
         >
           <span className="text-xl" aria-hidden>🕌</span>
           {rozet && <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full bg-amber-300 ring-2 ring-black/40" />}
@@ -117,7 +121,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
               <span className="text-lg" aria-hidden>🕌</span>
               <div>
                 <p className="text-[12px] font-black text-white">Nûr Asistan</p>
-                <p className="text-[8.5px] font-bold text-emerald-200/70">💚 Ücretsiz · Anında · SSS</p>
+                <p className="text-[8.5px] font-bold text-emerald-200/70">ttX2610("asUcretsiz")</p>
               </div>
             </div>
             <button type="button" onClick={() => setAcik(false)} className="text-white/50 transition hover:text-white" aria-label="Kapat">✕</button>
@@ -177,8 +181,8 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
                 type="button"
                 onClick={cipleriYenile}
                 className="rounded-full border border-emerald-400/25 px-2 py-1 text-[9.5px] font-bold text-emerald-300/80 transition hover:bg-emerald-400/10 hover:text-emerald-200"
-                title="Başka soru çipleri getir"
-                aria-label="Başka soru çipleri getir"
+                title={ttX2610("asBaskaKipler")}
+                aria-label={ttX2610("asBaskaKipler")}
               >
                 🎲
               </button>
@@ -192,7 +196,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
               onChange={(e) => setGiris(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") gonder(giris); }}
               maxLength={300}
-              placeholder="Sorunuzu yazın…"
+              placeholder={ttX2610("asPlaceholder")}
               className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[.05] px-3 py-2 text-[11px] text-white placeholder:text-white/30 focus:border-emerald-400/40 focus:outline-none"
               aria-label="Soru yaz"
             />
@@ -201,7 +205,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
               onClick={() => gonder(giris)}
               className="rounded-xl px-3 py-2 text-[10px] font-black text-black transition active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-              aria-label="Gönder"
+              aria-label={ttX2610("asGonder")}
             >
               Gönder
             </button>

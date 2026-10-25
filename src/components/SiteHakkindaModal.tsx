@@ -1,3 +1,6 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // SITE HAKKINDA MODAL — "Bu sitede ne var?" (yol haritası madde 4)
 // Kaynak listesi (Diyanet, sahih hadis, mp3quran), telif bildirimi,
@@ -67,7 +70,7 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
             <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
               TANITIM
             </span>
-            <span className="text-[8.5px] text-white/35">Siteyi 2 dakikada tanı — girince aç, izleyin</span>
+            <span className="text-[8.5px] text-white/35">ttX2610("shTanitim")</span>
           </div>
           <video
             src={TANITIM_VIDEO_R2.trim()}
@@ -92,7 +95,7 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
             <iframe
               src={videoEmbed}
-              title="Nûr Stüdyo Tanıtım Videosu"
+              title={ttX2610("shVideoTitle")}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
               loading="lazy"

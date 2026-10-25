@@ -7,6 +7,9 @@
 import { useState } from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS } from "./islamicToolsVeri";
+// ★ 25.10 i18n — LS diline göre çeviri (IslamicToolsPanel'ın diğer parçalarıyla aynı desen)
+import { translate } from "../i18n";
+const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
 
 // ═══════════ ISLAMICTOOLSBOLUMLERI.TSX BLOK: takip (kaynak 287-523) ═══════════
 export function DuaTakip() {
@@ -30,26 +33,26 @@ export function DuaTakip() {
   const EZKAR_IDX = [0, 1]; // 0: Sabah Ezkârı, 1: Akşam Ezkârı
   return (
     <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[.06] p-3">
-      <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-emerald-300/80">🗣️ Ezkâr Takibi — bugün</p>
+      <p className="mb-2 text-[9px] font-black uppercase tracking-widest text-emerald-300/80">🗣️ {tt("itEzkarTakipBugun")}</p>
       <div className="flex gap-1.5">
         {EZKAR_IDX.map((idx) => {
           const isaretli = bugunku.includes(idx);
           return (
             <button key={idx} type="button" onClick={() => toggle(idx)}
               className={`flex-1 rounded-lg px-2 py-2 text-[9.5px] font-bold transition active:scale-95 ${isaretli ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40" : "bg-white/5 text-white/45 hover:bg-white/10"}`}>
-              {isaretli ? "✓ " : "○ "}{idx === 0 ? "Sabah Ezkârı" : "Akşam Ezkârı"}
+              {isaretli ? "✓ " : "○ "}{idx === 0 ? tt("itSabahEzkari") : tt("itAksamEzkari")}
             </button>
           );
         })}
       </div>
-      <p className="mt-1.5 text-[8px] text-white/35">Okuduktan sonra işaretle — kayıtlar cihazında kalır, seri alışkanlık kazan.</p>
+      <p className="mt-1.5 text-[8px] text-white/35">{tt("itIsaretleKayit")}</p>
     </div>
   );
 }
 
 // ★ SALAH TRACKER (madde 45) — 5 vakiti işaretle, seri (streak) sayacı
 export const SALAH_KEY = "nur_salah_tracker_v1";
-export const SALAH_5 = ["İmsak", "Öğle", "İkindi", "Akşam", "Yatsı"];
+export const SALAH_5 = ["İmsak", "Öğle", "İkindi", "Akşam", "Yatsı"]; // ★ etiketleri tt("vakit"+ad) ile çevrilir
 export function SalahTracker() {
   const [kayit, setKayit] = useState<Record<string, string[]>>(() => {
     try { return JSON.parse(localStorage.getItem(SALAH_KEY) || "{}"); } catch { return {}; }
@@ -85,8 +88,8 @@ export function SalahTracker() {
     <div className="space-y-3">
       <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/[.07] p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300/80">✅ Bugünün Vakitleri</p>
-          {streak > 0 && <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-black text-orange-300">🔥 {streak} gün seri</span>}
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-300/80">✅ {tt("itBugunVakitleri")}</p>
+          {streak > 0 && <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-black text-orange-300">🔥 {streak} {tt("itGunSeri")}</span>}
         </div>
         <div className="grid grid-cols-5 gap-1.5">
           {SALAH_5.map((v) => {
@@ -95,12 +98,12 @@ export function SalahTracker() {
               <button key={v} type="button" onClick={() => toggle(v)}
                 className={`flex h-14 flex-col items-center justify-center gap-1 rounded-lg text-[9px] font-bold transition active:scale-95 ${isaretli ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40" : "bg-white/5 text-white/45 hover:bg-white/10"}`}>
                 <span className="text-sm">{isaretli ? "✅" : "⭕"}</span>
-                {v}
+                {tt("vakit" + v)}
               </button>
             );
           })}
         </div>
-        <p className="mt-2 text-center text-[8.5px] text-white/40">Bugün {bugunVakitler.length}/5 vakit işaretli · kayıtlar cihazında kalır</p>
+        <p className="mt-2 text-center text-[8.5px] text-white/40">{tt("itSalahCap").replace("{n}", String(bugunVakitler.length))}</p>
       </div>
     </div>
   );
@@ -127,29 +130,29 @@ export function TopluHatim() {
   const yuzde = Math.round((benim / 30) * 100);
   return (
     <div className="rounded-xl border border-amber-400/20 bg-amber-400/[.07] p-3.5">
-      <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-amber-300/80">🤲 Bu Ay Toplu Hatim</p>
-      <p className="text-[10px] leading-relaxed text-white/65">Bu ayın toplu hatim kampanyasına katıl — bir cüz al, toplam hatim hedefine sen de katkı ver.</p>
+      <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-amber-300/80">🤲 {tt("itTopluHatim")}</p>
+      <p className="text-[10px] leading-relaxed text-white/65">{tt("itHatimKatil")}</p>
       <div className="mt-2.5 flex items-center justify-between">
         <div>
-          <p className="text-[10px] font-bold text-white/80">Senin cüzlerin: <b className="text-amber-200">{benim}/30</b></p>
-          <p className="text-[8.5px] text-white/40">Toplam katkı: {durum.toplamKatki} cüz · %{yuzde} tamam</p>
+          <p className="text-[10px] font-bold text-white/80">{tt("itSeninCuzler")} <b className="text-amber-200">{benim}/30</b></p>
+          <p className="text-[8.5px] text-white/40">{tt("itToplamKatki")} {durum.toplamKatki} {tt("itCuzWord")} · %{yuzde} {tt("itTamam")}</p>
         </div>
         {kalanCüz > 0 && (
           <button type="button" onClick={cüzAl}
             className="rounded-lg px-3 py-2 text-[10px] font-black text-black transition hover:brightness-110 active:scale-95"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-            Cüz Al
+            {tt("itCuzAl")}
           </button>
         )}
       </div>
       {benim > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {durum.cüzler.map((c) => (
-            <span key={c} className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[8.5px] font-bold text-amber-200">{c}. cüz ✓</span>
+            <span key={c} className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[8.5px] font-bold text-amber-200">{c}. {tt("itCuzWord")} ✓</span>
           ))}
         </div>
       )}
-      {benim === 30 && <p className="mt-2 text-center text-[9.5px] font-black text-emerald-300">🎉 Sen de bu ayın hatim halkasındasın — Allah kabul etsin!</p>}
+      {benim === 30 && <p className="mt-2 text-center text-[9.5px] font-black text-emerald-300">🎉 {tt("itHatimHalka")}</p>}
     </div>
   );
 }
@@ -188,29 +191,29 @@ export function HatimTakibi() {
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-3 text-center">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Kur'an İlerlemen</p>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">{tt("itKuranIlerlemen")}</p>
         <p className="mt-1 text-2xl font-black text-amber-200">%{yuzde}</p>
         <div className="mx-auto mt-2 h-2 w-full max-w-[240px] overflow-hidden rounded-full bg-white/10">
           <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-amber-400 to-amber-300 transition-all duration-500" style={{ width: `${yuzde}%` }} />
         </div>
-        <p className="mt-1.5 text-[9px] text-white/50">{okunan.size} / 114 sure okundu {okunan.size === 114 && "· 🎉 Hatim tamam!"}</p>
+        <p className="mt-1.5 text-[9px] text-white/50">{tt("itSurelerOkundu").replace("{n}", String(okunan.size))}{okunan.size === 114 && ` · 🎉 ${tt("itHatimTamam")}`}</p>
       </div>
       {/* ★ CÜZ-CÜZ GÖRSEL DOLUM — 30 hücre, işaretledikçe altın renkle dolar (madde 5) */}
       <div className="grid grid-cols-10 gap-1">
         {cuzDurum.map((c, i) => (
           <div key={i}
-            title={`${i + 1}. Cüz — %${Math.round(c.oran * 100)} işaretli${c.tam ? " · tamamlandı ✅" : ""}`}
+            title={`${i + 1}. ${tt("itCuzWord")} — %${Math.round(c.oran * 100)} ${tt("itIsarett")}${c.tam ? ` · ${tt("itTamamlandi")} ✅` : ""}`}
             className={`flex h-7 items-center justify-center rounded-md text-[8px] font-black tabular-nums transition-all ${c.tam ? "bg-amber-400 text-black shadow-[0_0_8px_rgba(251,191,36,.45)]" : c.oran > 0 ? "text-amber-200" : "text-white/30"}`}
             style={!c.tam ? { background: `rgba(245,158,11,${0.06 + c.oran * 0.28})` } : undefined}>
             {i + 1}
           </div>
         ))}
       </div>
-      <p className="text-center text-[8px] text-white/30">30 cüz · {cuzDurum.filter((c) => c.tam).length} cüz tamamlandı</p>
+      <p className="text-center text-[8px] text-white/30">{tt("itCuzDurumu").replace("{n}", String(cuzDurum.filter((c) => c.tam).length))}</p>
       {/* ★ HAFIZLIK İSTATİSTİĞİ (madde 52) — en çok işaretlenenler ve zor gelinenler */}
       {okunan.size > 0 && (
         <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
-          <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">📊 Hafızlık İstatistiği</p>
+          <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">📊 {tt("itHafizlikIst")}</p>
           {(() => {
             // En uzun sureler = en zor iş (az işaretlenme beklentisi) — işaretlenmişler arasında en uzun 3
             const enUzun = [...okunan].sort((a, b) => (SURE_LISTESI.find(s => s.n === b)?.ayet ?? 0) - (SURE_LISTESI.find(s => s.n === a)?.ayet ?? 0)).slice(0, 3);
@@ -218,15 +221,15 @@ export function HatimTakibi() {
             const hizli = SURE_LISTESI.filter(s => !okunan.has(s.n)).sort((a, b) => a.ayet - b.ayet).slice(0, 3);
             return (
               <div className="space-y-1.5 text-[9.5px]">
-                <p className="text-white/60">💪 En büyük işler (işaretlediklerin): {enUzun.map(n => SURE_LISTESI.find(s => s.n === n)?.ad).filter(Boolean).join(", ")}</p>
-                {hizli.length > 0 && <p className="text-white/60">⚡ Hızlı kazanım (kısa sureler): {hizli.map(s => s.ad).join(", ")}</p>}
-                <p className="text-white/50">Toplam <b className="text-amber-200">{okunan.size}</b> sure · kalan <b className="text-white/80">{114 - okunan.size}</b> sure</p>
+                <p className="text-white/60">💪 {tt("itEnBuyukIsler")}{enUzun.map(n => SURE_LISTESI.find(s => s.n === n)?.ad).filter(Boolean).join(", ")}</p>
+                {hizli.length > 0 && <p className="text-white/60">⚡ {tt("itHizliKazanim")}{hizli.map(s => s.ad).join(", ")}</p>}
+                <p className="text-white/50">{tt("itToplamSureler").replace("\\{n}", String(okunan.size)).replace("\\{k}", String(114 - okunan.size))}</p>
               </div>
             );
           })()}
         </div>
       )}
-      <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder="Sure ara..."
+      <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("itSureAra")}
         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] text-white outline-none placeholder:text-white/30" />
       <div className="max-h-[240px] space-y-1 overflow-y-auto pr-1">
         {filtreli.map((s) => (
@@ -235,11 +238,11 @@ export function HatimTakibi() {
             {okunan.has(s.n) ? <CheckCircle2 size={13} className="shrink-0 text-amber-400" /> : <Circle size={13} className="shrink-0 text-white/25" />}
             <span className="w-6 text-[9px] font-bold text-white/40 tabular-nums">{s.n}.</span>
             <span className={`flex-1 text-[10px] font-bold ${okunan.has(s.n) ? "text-amber-200" : "text-white/80"}`}>{s.ad}</span>
-            <span className="text-[8px] text-white/30">{s.ayet} ayet</span>
+            <span className="text-[8px] text-white/30">{s.ayet} {tt("itAyetK")}</span>
           </button>
         ))}
       </div>
-      <p className="text-center text-[8px] text-white/25">İşaretler cihazında saklanır · V2'de hesabıyla senkronize olacak</p>
+      <p className="text-center text-[8px] text-white/25">{tt("itIsaretlerSaklanir")}</p>
     </div>
   );
 }

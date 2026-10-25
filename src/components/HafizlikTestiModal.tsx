@@ -1,3 +1,6 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // HAFIZLIK TESTİ — yol haritası madde 44
 // "Devamını getir" modu: ayetin ilk kısmı gösterilir, kullanıcı
@@ -83,7 +86,7 @@ const TurDogrulukGrafigi: React.FC<{ gecmis: Array<{ dogru: boolean }>; tt: (k: 
         <span className="text-white/40">{tt("hafizlikTurGrafigi").replace("{n}", String(n))}</span>
         <span className={sonRenk}>{tt("hafizlikSon").replace("{n}", String(son))}</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label="Turun soru soru doğruluk grafiği">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label={ttX2610("htGrafikTitle")}>
         <defs>
           <linearGradient id="haf-tur-cizgi" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stopColor="#fbbf24" />
@@ -125,7 +128,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   // ★ İstatistik görünümü (madde 52)
   const [istGoster, setIstGoster] = useState(false);
   const [ist, setIst] = useState<HafizlikIstatistik>(() => hafizlikIstOku());
-  // ★ Kaldığın yerden devam (madde 38)
+  // ★ ttX2610("htDevam") (madde 38)
   const [devam, setDevam] = useState(() => hafizlikDevamOku());
   // ★ Sınırsız mod otomatik-tekrar referansları (28.09): modal kapanınca zamanlayıcı durur
   const yenidenDeneRef = React.useRef(0);
@@ -354,7 +357,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
           </div>
           <button type="button" onClick={() => { hocaAudioPauseGuvenli(); onClose(); }}
             className="shrink-0 rounded-lg bg-white/5 px-2.5 py-1.5 text-[9.5px] font-black text-white/60 transition hover:bg-white/10 hover:text-white"
-            title="Kur'an Öğren/Dinle ekranına dön">
+            title={ttX2610("htDonLinki")}>
             ❮ Kur'an'a Dön
           </button>
         </div>
@@ -375,7 +378,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               className="flex w-full items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-500/[.08] p-3 text-left transition hover:border-amber-400/50">
               <span className="text-xl">⚡</span>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-black text-amber-200">Kaldığın yerden devam</p>
+                <p className="text-[11px] font-black text-amber-200">ttX2610("htDevam")</p>
                 <p className="text-[8.5px] text-white/50">
                   {tt("hafizlikSonTur").replace("{seviye}", SEVIYELER.find((s) => s.id === devam.seviye) ? tt(SEVIYELER.find((s) => s.id === devam.seviye)!.adKey) : String(devam.seviye)).replace("{d}", String(devam.dogru)).replace("{t}", String(devam.toplam))}
                   {devam.tarih ? ` · ${new Date(devam.tarih).toLocaleDateString(lang === "tr" ? "tr-TR" : lang === "ar" ? "ar" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "en-US")}` : ""}
@@ -603,7 +606,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               if (turBoyu > 0 && puan.toplam >= turBoyu) { turOzetiGoster(); return; }
               const sonCevapDogru = secim !== null && soru.secenekler[secim] === soru.devam;
               soruHazirla();
-              // ★ Tur bitince devam kaydı — "Kaldığın yerden devam" bundan okur
+              // ★ Tur bitince devam kaydı — "ttX2610("htDevam")" bundan okur
               if (turBoyu > 0 && puan.toplam + 1 >= turBoyu) hafizlikDevamKaydet(seviye, puan.dogru + (sonCevapDogru ? 1 : 0), puan.toplam + 1);
               else hafizlikDevamKaydet(seviye, puan.dogru, puan.toplam);
             }}

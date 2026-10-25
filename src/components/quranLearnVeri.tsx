@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // QURANLEARNVERI.TSX — Kur'an Öğren/Dinle veri + alt bileşenler
 // QuranLearnModal.tsx'den ayrıldı (SRP adım 11, 30.09)
@@ -91,9 +95,9 @@ export const TafsirBox: React.FC<{ surahNo: number; ayahNo: number }> = ({ surah
               <button key={t.id} onClick={() => setTafsirId(t.id)} className={`rounded-lg border px-2 py-1 text-[8px] font-black transition ${tafsirId === t.id ? "border-[#D7AA41]/60 bg-[#D7AA41]/20 text-[#f5dda6]" : "border-white/10 bg-white/[.04] text-[#8f8870] hover:text-[#d8cfae]"}`}>{t.name}</button>
             ))}
           </div>
-          {loading ? <p className="mt-2 text-[10px] text-[#7a745f]">Tefsir yükleniyor…</p>
+          {loading ? <p className="mt-2 text-[10px] text-[#7a745f]">ttX2610("tfYukle")</p>
           : text ? <p className="mt-2 max-h-64 overflow-y-auto whitespace-pre-line text-[11px] leading-relaxed text-[#b8b093] scrollbar-thin" dir="ltr">{text}</p>
-          : <p className="mt-2 text-[10px] text-[#7a745f]">Bu ayet için bu tefsirde metin bulunamadı — başka tefsir seç.</p>}
+          : <p className="mt-2 text-[10px] text-[#7a745f]">ttX2610("tfBulunamadi")</p>}
         </>
       )}
     </div>

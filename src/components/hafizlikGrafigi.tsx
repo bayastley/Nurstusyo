@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ════════════════════════════════════════════════════════
 // HAFIZLIKGRAFIGI.TSX — Hafızlık testi performans çizgisi
 // HafizlikTestiModal.tsx'den ayrıldı (09.10): i18n'li birebir sürüm —
@@ -30,7 +34,7 @@ export const PerformansCizgisi: React.FC<{ gecmis: Array<{ dogru: boolean }>; tt
         <span className="text-white/40">{tt("hafizlikPerformans").replace("{n}", String(son20.length))}</span>
         <span className={sonRenk}>{tt("hafizlikSon").replace("{n}", String(Math.round(son)))}</span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label="Son 20 sorunun doğruluk çizgisi">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-12 w-full" role="img" aria-label={ttX2610("htGrafik20")}>
         <defs>
           <linearGradient id="haf-perf-alan" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#34d399" stopOpacity=".32" />

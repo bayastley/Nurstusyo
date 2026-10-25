@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ═══════════════════════════════════════════════════════════
 // MaintenanceScreen — bakım modu tam ekranı
 // ★ Canlı geri sayım: "yaklaşık 8 dakika sonra açılacaktır"
@@ -81,12 +85,12 @@ export function MaintenanceScreen({ message, endsAt }: MaintenanceScreenProps) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-6 text-center">
       <div className="max-w-md rounded-3xl border border-amber-300/30 bg-white/[.05] p-8 shadow-2xl">
         <div className="mb-4 text-4xl">🔧</div>
-        <h1 className="text-xl font-black text-white">Nûr Stüdyo kısa süreli bakımda</h1>
+        <h1 className="text-xl font-black text-white">ttX2610("mtBaslik")</h1>
         <p className="mt-3 text-sm leading-relaxed text-white/65">{message}</p>
         {endsAt && !sureDoldu && (
           <p className="mt-4 text-sm font-bold text-amber-200 tabular-nums">{kalanSureMetni(endsAt, simdi)}</p>
         )}
-        {sureDoldu && <p className="mt-4 text-sm font-bold text-emerald-300">Bakım tamamlandı — site açılıyor…</p>}
+        {sureDoldu && <p className="mt-4 text-sm font-bold text-emerald-300">ttX2610("mtBitti")</p>}
         {endsAt && !sureDoldu && <p className="mt-2 text-[10px] text-white/35">Tahmini bitiş: {new Date(endsAt).toLocaleString("tr-TR")}</p>}
 
         {/* ★ BAKIM BİTİNCE HABER VER — push bildirim onayı */}
@@ -102,10 +106,10 @@ export function MaintenanceScreen({ message, endsAt }: MaintenanceScreenProps) {
             {haberDurum === "kaydediliyor" ? "Kaydediliyor…" : "🔔 Bakım bitince haber ver"}
           </label>
         ) : haberDurum === "tamam" && (
-          <p className="mt-4 text-[11px] font-bold text-emerald-300">✅ Tamam — bakım bitince bildirim alacaksın</p>
+          <p className="mt-4 text-[11px] font-bold text-emerald-300">ttX2610("mtOk")</p>
         )}
         {haberDurum === "hata" && haberMesaj && <p className="mt-2 text-[10px] text-red-300/80">⚠️ {haberMesaj}</p>}
-        <p className="mt-5 text-[10px] text-white/35">Güncelleme tamamlandığında site otomatik olarak açılacaktır.</p>
+        <p className="mt-5 text-[10px] text-white/35">ttX2610("mtNot")</p>
       </div>
     </div>
   );

@@ -1,3 +1,7 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ═══════════════════════════════════════════════════════════════
 // SESLENDİRME KONTROLLERİ — SeslendirmeModal.tsx'ten çıkarıldı (14.10)
 // SAĞ kolon: 📖/✍ sekme düğmeleri, kütüphane+ayet seçici veya metin kutusu
@@ -76,7 +80,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
 
       {mod === "ayet" ? (
         <div className="rounded-2xl border border-white/10 p-3" style={{ background: "rgba(255,255,255,.03)" }}>
-          <div className="mb-2 text-[10px] font-black tracking-wider text-white/50">📖 KÜTÜPHANE &amp; AYET ARAMA</div>
+          <div className="mb-2 text-[10px] font-black tracking-wider text-white/50">ttX2610("skKutuphane")</div>
           <div className="flex gap-2">
             <select value={sureIdx} onChange={(e) => { setSureIdx(Number(e.target.value)); setAyetIdx(0); }}
               className="cursor-pointer rounded-xl px-3 py-2.5 text-[12px] outline-none" style={{ flex: 2, background: "rgba(0,0,0,.35)", color: "var(--accent-2)", border: "1px solid rgba(255,255,255,.14)" }}>
@@ -93,7 +97,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           </div>
           <div className="mt-2.5 flex gap-2">
             <button onClick={ayetEkle} className={gold} style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", flex: 1 }}>➕ Ayeti Ekle</button>
-            <button onClick={sureEkle} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}>📚 Tüm Sureyi Ekle</button>
+            <button onClick={sureEkle} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}>ttX2610("skSureEkle")</button>
           </div>
         </div>
       ) : (
@@ -102,10 +106,10 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
            1) Metin kutusuna yaz (tek hamle)
            2) ➕ bölüm ekle döngüsü: her basışta metni oransal parçalara dağıt — kaç +, o kadar bölüm
            3) Bölüm kartına tıkla → o bölüm ayrı ayrı dinle + arka plan/atmosfer paneli açılır
-           4) 🔊 SESLENDİR tümü, bölüm kartındaki ▶ sadece o bölüm */
+           4) ttX2610("skSeslendir") tümü, bölüm kartındaki ▶ sadece o bölüm */
         <div className="rounded-2xl border border-white/10 p-3" style={{ background: "rgba(255,255,255,.03)" }}>
           <textarea value={metin} onChange={(e) => setMetin(e.target.value)}
-            placeholder={"1️⃣ Metnini buraya yaz…\n「+」 ile bölüm ekle: kaç «+», o kadar bölüm — metin otomatik dağılır\n2️⃣ Bölüm kartına tıkla → dinle + arka plan ayarla\n3️⃣ 🔊 SESLENDİR hepsini okur"}
+            placeholder={ttX2610("skPhMetin")}
             rows={8}
             // ★ 20.10 (kullanıcı: "çok küçük pencere olmuş, %45 büyüt"): rows 5→8
             //   (≈ %60 yükseklik artışı — %45+ hedefi aşar, resize-y ile otomatiği kalmadı)
@@ -124,7 +128,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
               ➕ Bölüm Ekle{bolumSayi > 1 ? ` — şu an ${bolumSayi} bölüm` : ""} (metni otomatik böler)
             </button>
             <button onClick={bolumCikar} disabled={bolumSayi <= 1}
-              title="Bölüm sayısını azalt — fazla parçalar komşu birleşimiyle birleşir"
+              title={ttX2610("skAzalt")}
               className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-black transition disabled:cursor-not-allowed disabled:opacity-40"
               style={{ background: "rgba(255,255,255,.06)", color: "var(--accent-2)", border: "1px solid rgba(255,255,255,.14)" }}>
               ➖
@@ -143,7 +147,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
                 seçililer ekranındaki "Temizle" ile aynı davranış: tek basışta komple boşalt */}
             <button onClick={kuyrukTemizle}
               className="cursor-pointer text-[8.5px] font-black tracking-wider text-red-300/70 transition hover:text-red-300"
-              title="Tüm bölümleri tek seferde temizle">Temizle</button>
+              title={ttX2610("skTemizle")}>Temizle</button>
           </div>
           <div className="flex flex-wrap gap-1">
             {kuyruk.map((o, i) => {
@@ -153,7 +157,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
                 <span key={`${o.tip}-${o.metin.slice(0, 8)}-${i}`}
                   onClick={() => { setKuyrukSec(i); bolumDinle(i); }}
                   className="cursor-pointer rounded-full border px-2 py-1 text-[9px] font-extrabold transition hover:brightness-125"
-                  title="Bu bölümü dinle — aynı zaman arka plan paneli de açılır"
+                  title={ttX2610("skDinle")}
                   style={i === kuyrukSec
                     ? { background: "rgba(215,170,82,.35)", borderColor: "rgba(215,170,82,.5)", color: "#fff" }
                     : { background: "rgba(255,255,255,.06)", borderColor: "rgba(255,255,255,.1)", color: "rgba(255,255,255,.7)" }}>
@@ -171,7 +175,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         {/* ★ 20.10 fix: seslendir'e event nesnesi sızmasını engelle — 0 parametres çağır */}
         <button onClick={() => { void seslendir(0); }} disabled={durumTip === "okuyor"}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-50`}
-          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>🔊 SESLENDİR</button>
+          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>ttX2610("skSeslendir")</button>
         {/* ★ 21.10 İNDİRME (kullanıcı: "indirme butonu yok mu şaka mısın") —
             kuyruğu sunucudan sırayla alıp tarayıcıda TEK dosyaya birleştirir */}
         <button onClick={indir} disabled={indiriyor || !indirHazir}
@@ -184,8 +188,8 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         {/* ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor; akıllı AI butonu
             koy bari de tıklayalım"): tüm parçaların atmosferini geniş kelime
             indeksi + baskınlık eşiğiyle yeniden seçer — musaf emin olamadığında. */}
-        <button onClick={akilliAta} title="Bölümlerin atmosferini zekice yeniden seç — emin olmadığını Musaf yapar"
-          className={ghostY} style={{ background: "rgba(215,170,82,.12)", border: "1px solid rgba(215,170,82,.35)", color: "var(--accent)", whiteSpace: "nowrap" }}>🤖 Akıllı AI</button>
+        <button onClick={akilliAta} title={ttX2610("skAkilliAI")}
+          className={ghostY} style={{ background: "rgba(215,170,82,.12)", border: "1px solid rgba(215,170,82,.35)", color: "var(--accent)", whiteSpace: "nowrap" }}>ttX2610("skAI")</button>
         <span className={`ml-1 text-[10.5px] font-bold`}
           style={durumTip === "hata" ? { color: "#f87171" } : durumTip === "okuyor" ? { color: "#6ee7b7" } : { color: "var(--accent)" }}>
           {durum}

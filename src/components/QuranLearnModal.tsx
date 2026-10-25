@@ -13,6 +13,9 @@ import { isAdminEmail } from "../tier"; // ★ 18.10 admin-gizli uzun vadeli kil
 import { useQuranSes } from "../hooks/useQuranSes"; // ★ SRP 3. TUR (10.10): dinle modu ses motoru hook'a göçetti
 import { translate, type Lang } from "../i18n"; // ★ TUR 7: UI başlıkları çok dilli
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10): everyayah → islamic.network
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ★ SRP adım 11 (30.09): RECITERS/MEALS/SURAHS_DATA verisi + TafsirBox + saf yardımcılar quranLearnVeri.tsx'e taşındı
 // İkonlar: Play/Pause ortadaki büyük oynat düğmesi için
 
@@ -507,7 +510,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 select-none">
             <span className="animate-pulse text-4xl">🌙</span>
             <p className="text-[13px] font-bold text-white/60">Ekransız Dinleme — {listenSurah}. Sure</p>
-            <p className="text-[10px] text-white/30">Gözlerini dinlendir… ses sürüyor · kilit ekranından kontrol edebilirsin</p>
+            <p className="text-[10px] text-white/30">ttX2610("qkKilitUyku")</p>
           </div>
           <div className="absolute bottom-5 right-5 flex items-center gap-2">
             <button onClick={() => (paused ? resumeAyah() : pauseAyah())} className="rounded-full bg-white/10 px-4 py-2 text-[11px] font-black text-white/70 backdrop-blur transition hover:bg-white/20">
@@ -537,7 +540,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           {/* ★ KÂBE CANLI: üst barda — her iki modda da görünür, canlı yayın noktasıyla */}
           {/* ★ KÂBE CANLI: üst barda — ★ 18.10 admin-gizli kilidi (QK_kabe): kapalıyken buton YOK */}
           {QK_kabe && (
-          <button onClick={() => setKabeLive(true)} className="group relative flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-gradient-to-b from-emerald-800/60 to-emerald-950/60 px-3 py-1.5 text-[11px] font-black text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,.25)] transition hover:border-emerald-400/70 hover:brightness-125 active:scale-95" title="Mescid-i Haram'dan 7/24 kesintisiz canlı yayın">
+          <button onClick={() => setKabeLive(true)} className="group relative flex items-center gap-1.5 rounded-xl border border-emerald-500/40 bg-gradient-to-b from-emerald-800/60 to-emerald-950/60 px-3 py-1.5 text-[11px] font-black text-emerald-200 shadow-[0_0_14px_rgba(16,185,129,.25)] transition hover:border-emerald-400/70 hover:brightness-125 active:scale-95" title={ttX2610("qkKabeTitle")}>
             <span className="text-base leading-none">🕋</span> KÂBE CANLI
             <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -554,7 +557,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           )}
           {/* ★ 18.10 (kullanıcı emri): HAFIZLIK TESTİ İÇİNDEKİLER barında — SAYFALAR ile RADYO arası;
               menüdeki ayrı 'ÜCRETSİZ' girişi kaldırıldı, tek giriş burası (sekmelerden çıkıyor) */}
-          <button onClick={() => { if (mode === "learn" || mode === "listen") setSonQuranMod(mode); stopAudio(); setMode("test"); }} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${mode === "test" ? "border-gold/50 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#f5dda6] hover:brightness-125"}`} title="Devamını getir: ayetin yarısını gösterir, sen tamamını seç">
+          <button onClick={() => { if (mode === "learn" || mode === "listen") setSonQuranMod(mode); stopAudio(); setMode("test"); }} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${mode === "test" ? "border-gold/50 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#f5dda6] hover:brightness-125"}`} title={ttX2610("qkDevamTitle")}>
             🧠 {ttQL("menuHafizlikTesti")}
           </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
@@ -566,7 +569,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
               hatim takibi, sevap sayacı, zikirmatik orada duruyor */}
           <button onClick={() => window.dispatchEvent(new Event("nur_araclar_ac"))}
             className="flex items-center gap-1.5 rounded-xl border border-emerald-900/30 bg-emerald-950/30 px-3 py-1.5 text-[11px] font-black text-emerald-300 transition hover:brightness-125 active:scale-95"
-            title="Nûr Araçları — hatim takibi, sevap sayacı, zikirmatik">
+            title={ttX2610("qkAraclarTitle")}>
             🧭 {ttQL("nurAraclari")}
           </button>
           {/* ★ KAPAT: en sağda — modalı kapatır (radyo açıkken bile) */}
@@ -591,7 +594,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
             value={radioIdx}
             onChange={(e) => { setRadioIdx(Number(e.target.value)); setRadioNote(""); setRadioErr(false); }} // manuel seçimde eski yedek uyarısını temizle
             className="max-w-52 shrink-0 rounded-lg border border-white/10 bg-[#0d1a2c] px-2 py-1 text-[11px] font-bold text-sky-100 outline-none"
-            title="Radyo kanalı seç"
+            title={ttX2610("qkRadyoSec")}
           >
             {siraliKanallar.map(i => <option key={RADIO_STATIONS[i].url} value={i}>{RADIO_STATIONS[i].ad}{akilliAcik && akilliBolge && RADIO_STATIONS[i].bolge === akilliBolge ? " ★" : ""}</option>)}
           </select>

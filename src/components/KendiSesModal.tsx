@@ -7,6 +7,9 @@ import type { KendiSesAktif } from "../studio/useKendiSes";
 import type { StoredSes } from "../studio/sesDeposu";
 import { baslangicKaydir, type SesSegmenti } from "../studio/sesZamanlama";
 
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
 // ═══════════════════════════════════════════════════════════════
 // KENDİ SESİNİ YÜKLE MODALI (30.09) — ELİT ÜYELERE ÖZEL
 //
@@ -59,7 +62,7 @@ const fmt = (sn: number) => `${Math.floor(sn / 60)}:${String(Math.floor(sn % 60)
  *  (Sadece TR — uyarı fıkhî metin, çeviriye açılırsa ayrı turda değerlendirilir.) */
 const MAHREM_UYARISI = (
   <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
-    <p className="text-[10px] font-bold text-amber-200">🕌 Hanım kardeşlerimiz için hatırlatma</p>
+    <p className="text-[10px] font-bold text-amber-200">ttX2610("ks2Hanim")</p>
     <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
       Bazı fıkhı kaynaklara göre hanımın okuyuş sesini yabancı erkeklere duyurması caiz görülmez;
       bu videolar herkese açık platformlara yüklenip namahrem erkeklerce dinlenebilir. Kararı
@@ -169,7 +172,7 @@ export const KendiSesModal: React.FC<Props> = ({
         <div className="mb-3 flex items-start gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Mic size={18} /></span>
           <div className="min-w-0">
-            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>KENDİ SESİNLE ÜRET</h3>
+            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>ttX2610("ks2Baslik")</h3>
             <p className="text-[9.5px] leading-relaxed text-white/45">
               {ayetSayisi > 0
                 ? <>{sureAdi} · {ayetSayisi} ayet — okuyuşun ne kadar hızlı/yavaş olursa olsun ayetler ve arka planlar sesine <b className="text-white/70">milisanielik</b> kilitlenir.</>
@@ -183,8 +186,8 @@ export const KendiSesModal: React.FC<Props> = ({
           <div className="relative">
             <div className="pointer-events-none select-none opacity-25 blur-[1.5px]">
               <div className="mb-2 flex gap-2">
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">🎙️ Tüm Sure Ses</span>
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">🔢 Ayet Başına</span>
+                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">ttX2610("ks2TamSure")</span>
+                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">ttX2610("ks2AyetBasi")</span>
               </div>
               <div className="space-y-1.5">
                 {[0, 1, 2].map((i) => (
@@ -198,12 +201,12 @@ export const KendiSesModal: React.FC<Props> = ({
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 text-center">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40"><Crown size={20} className="text-amber-300" /></span>
-              <p className="text-[11px] font-black text-amber-200">ELİT ÜYELİK GEREKLİ</p>
-              <p className="max-w-[260px] text-[9.5px] leading-relaxed text-white/55">Kendi okuyuşunla video üret, ayet geçişleri sesine birebir senkron olsun. Her ayete ayrı arka plan seç.</p>
+              <p className="text-[11px] font-black text-amber-200">ttX2610("ks2Elit")</p>
+              <p className="max-w-[260px] text-[9.5px] leading-relaxed text-white/55">ttX2610("ks2ElitM")ete ayrı arka plan seç.</p>
               <button onClick={elitKapisi} className="mt-1 rounded-xl px-5 py-2.5 text-[11px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                 👑 ELİT'e Geç
               </button>
-              <button onClick={onClose} className="text-[9px] text-white/35 hover:text-white/70">Şimdilik kapat</button>
+              <button onClick={onClose} className="text-[9px] text-white/35 hover:text-white/70">ttX2610("ks2Kapat")</button>
             </div>
           </div>
         )}
@@ -225,7 +228,7 @@ export const KendiSesModal: React.FC<Props> = ({
                   }}
                   className="w-full rounded-xl bg-white/[.04] px-3 py-2 text-[10px] font-bold text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60 disabled:opacity-50"
                 >
-                  <option value={0} className="bg-[#141414]">— Sure seç —</option>
+                  <option value={0} className="bg-[#141414]">ttX2610("ks2SecSure")</option>
                   {SURAHS.map((sr) => (
                     <option key={sr.n} value={sr.n} className="bg-[#141414]">{sr.n}. {sr.name} ({sr.count} ayet)</option>
                   ))}
@@ -233,7 +236,7 @@ export const KendiSesModal: React.FC<Props> = ({
               </div>
               {/* ★ 23.10: maks süre (sn) — modun kotası tavandır, yalnız daraltılır */}
               <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[9px] font-bold text-white/50">⏱ Maks süre</span>
+                <span className="shrink-0 text-[9px] font-bold text-white/50">ttX2610("ks2Maks")</span>
                 <input
                   type="number"
                   min={10}
@@ -247,7 +250,7 @@ export const KendiSesModal: React.FC<Props> = ({
                   <button key={v} onClick={() => maksAyarla(v)} className={`rounded-lg px-1.5 py-1 text-[8.5px] font-black transition ${maksSn === v ? "bg-[color:var(--accent)]/20 text-[color:var(--accent-2)]" : "bg-white/[.05] text-white/45 hover:bg-white/10"}`}>{v}</button>
                 ))}
               </div>
-              <p className="text-[8px] leading-relaxed text-white/30">0 sn = mod sınırı (kısa 59 · uzun 600 · tam 7200) — sınırın fazlası üretimde kullanılmaz.</p>
+              <p className="text-[8px] leading-relaxed text-white/30">ttX2610("ks2SureNot")lanılmaz.</p>
             </div>
 
             {/* Mod seçimi */}

@@ -7,6 +7,14 @@
 import React, { useState, useEffect } from "react";
 import { Compass } from "lucide-react";
 import { getQiblaForCity } from "./islamicToolsVeri";
+// ★ 26.10 i18n — LS diline göre çeviri (panelin diğer parçalarıyla aynı desen)
+import { translate } from "../i18n";
+const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
+/** Dil → locale toLocaleDateString için (26.10) */
+const dilKodu = (): string => {
+  const l = typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") ?? "tr") : "tr";
+  return l === "ar" ? "ar-EG" : l === "id" ? "id-ID" : l === "ur" ? "ur-PK" : l === "en" ? "en-GB" : "tr-TR";
+};
 
 const cities = [
   { name: "İstanbul", lat: 41.0082, lon: 28.9784, qibla: getQiblaForCity(41.0082, 28.9784) },
@@ -41,12 +49,12 @@ export function QiblaCompass() {
           if (state === "granted") {
             window.addEventListener("deviceorientation", handler);
           }
-        }).catch(() => setError("Pusula izni verilmedi"));
+        }).catch(() => setError(tt("itPusulaIzin")));
       } else {
         window.addEventListener("deviceorientation", handler);
       }
     } else {
-      setError("Cihazınız pusula desteklemiyor");
+      setError(tt("itPusulaYok"));
     }
     return () => {
       if (handlerRef.current) {
@@ -77,21 +85,21 @@ export function QiblaCompass() {
             <div className="absolute inset-4 rounded-full bg-white/5 flex items-center justify-center">
               <div className="text-center">
                 <Compass size={24} className="text-amber-400 mx-auto mb-1" />
-                <p className="text-[9px] text-white/50">KÂBE</p>
+                <p className="text-[9px] text-white/50">{tt("itKabe")}</p>
                 <p className="text-[11px] font-black text-amber-300">{Math.round(current.qibla)}°</p>
               </div>
             </div>
             {/* N */}
-            <div className="absolute left-1/2 -top-1 -translate-x-1/2 text-[9px] font-bold text-white/60">K</div>
-            <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 text-[9px] font-bold text-white/60">G</div>
-            <div className="absolute top-1/2 -left-1 -translate-y-1/2 text-[9px] font-bold text-white/60">B</div>
-            <div className="absolute top-1/2 -right-1 -translate-y-1/2 text-[9px] font-bold text-white/60">D</div>
+            <div className="absolute left-1/2 -top-1 -translate-x-1/2 text-[9px] font-bold text-white/60">{tt("pusulaKuzey")}</div>
+            <div className="absolute left-1/2 -bottom-1 -translate-x-1/2 text-[9px] font-bold text-white/60">{tt("pusulaGuney")}</div>
+            <div className="absolute top-1/2 -left-1 -translate-y-1/2 text-[9px] font-bold text-white/60">{tt("pusulaBati")}</div>
+            <div className="absolute top-1/2 -right-1 -translate-y-1/2 text-[9px] font-bold text-white/60">{tt("pusulaDoyu")}</div>
           </div>
-          <p className="text-[9px] text-white/40">Cihazınızı düz tutun · Kıble yönü altın ok ile gösterilir</p>
+          <p className="text-[9px] text-white/40">{tt("itCihazDuz")}</p>
           <select value={city} onChange={e => setCity(e.target.value)} className="mt-2 text-left text-[9px] text-white/60 bg-white/5 rounded-lg px-2 py-1">
             {cities.map((c, i) => <option key={i} value={c.name}>{c.name} — {Math.round(c.qibla)}°</option>)}
           </select>
-          {current && <p className="text-[9px] text-amber-300/60">{current.name} kıblası: {Math.round(current.qibla)}°</p>}
+          {current && <p className="text-[9px] text-amber-300/60">{current.name} {tt("itKiblasi")} {Math.round(current.qibla)}°</p>}
         </>
       )}
     </div>
@@ -106,15 +114,15 @@ export function KazaTracker() {
   });
 
   const save = (d: Record<string, number>) => { setData(d); try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
-  const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+  // ★ 26.10 aylar — tt("ay"+ad) üzerinden 5 dile çevrilir
 
   return (
     <div className="space-y-2">
-      <p className="text-[9px] text-white/40">Kıldığınız her kaza namazını işaretleyin · Allah kabul etsin</p>
+      <p className="text-[9px] text-white/40">{tt("itKazaUst")}</p>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-        {months.map((m, i) => (
+        {["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"].map((m, i) => (
           <div key={i} className="rounded-lg bg-white/5 p-2 text-center">
-            <p className="text-[8px] text-white/50 mb-1">{m}</p>
+            <p className="text-[8px] text-white/50 mb-1">{tt("ay" + m)}</p>
             <div className="flex items-center justify-center gap-1">
               <button onClick={() => { const d = { ...data }; d[m] = Math.max(0, (d[m] || 0) - 1); save(d); }} className="text-white/30 hover:text-white/60 text-[10px]">−</button>
               <span className="text-[11px] font-bold text-white min-w-[16px] text-center">{data[m] || 0}</span>
@@ -124,7 +132,7 @@ export function KazaTracker() {
         ))}
       </div>
       <div className="text-center pt-1">
-        <p className="text-[10px] text-white/50">Toplam kaza: <span className="font-black text-amber-300">{Object.values(data).reduce((a, b) => a + b, 0)}</span> rekât</p>
+        <p className="text-[10px] text-white/50">{tt("itKazaToplam")} <span className="font-black text-amber-300">{Object.values(data).reduce((a, b) => a + b, 0)}</span> {tt("itRekat")}</p>
       </div>
     </div>
   );
@@ -133,13 +141,14 @@ export function KazaTracker() {
 // ─── DİNİ GÜNLER TAKVİMİ ────────────────────────────────
 export function IslamicCalendar() {
   // ★ Diyanet 2026-2027 takvimi — tarihler geçtikçe liste otomatik güncellenir
+  // ★ 26.10: etiket key'lerle — name artık anahtar; ad tt() ile dilde gösterilir
   const events = [
-    { name: "Ramazan Bayramı", date: "2027-03-10", emoji: "🎉" },
-    { name: "Arefe", date: "2027-05-16", emoji: "🕋" },
-    { name: "Kurban Bayramı", date: "2027-05-17", emoji: "🎊" },
-    { name: "Hicri Yılbaşı", date: "2027-06-26", emoji: "📅" },
-    { name: "Aşure Günü", date: "2027-07-05", emoji: "🍯" },
-    { name: "Mevlid Kandili", date: "2027-08-15", emoji: "🕌" },
+    { key: "diniRamazanBayrami", trAd: "Ramazan Bayramı", date: "2027-03-10", emoji: "🎉" },
+    { key: "diniArefe", trAd: "Arefe", date: "2027-05-16", emoji: "🕋" },
+    { key: "diniKurbanBayrami", trAd: "Kurban Bayramı", date: "2027-05-17", emoji: "🎊" },
+    { key: "diniHicriYilbasi", trAd: "Hicri Yılbaşı", date: "2027-06-26", emoji: "📅" },
+    { key: "diniAsure", trAd: "Aşure Günü", date: "2027-07-05", emoji: "🍯" },
+    { key: "diniMevlid", trAd: "Mevlid Kandili", date: "2027-08-15", emoji: "🕌" },
   ];
 
   const today = new Date();
@@ -151,21 +160,21 @@ export function IslamicCalendar() {
 
   return (
     <div className="space-y-2">
-      <p className="text-[9px] text-white/40">Yaklaşan dini günler ve geceler</p>
+      <p className="text-[9px] text-white/40">{tt("itYaklasanDini")}</p>
       {upcoming.map((e, i) => {
         const diff = Math.ceil((e.d.getTime() - today.getTime()) / 86400000);
         return (
           <div key={i} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
             <span className="text-lg">{e.emoji}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-white truncate">{e.name}</p>
-              <p className="text-[8px] text-white/40">{e.d.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</p>
+              <p className="text-[10px] font-bold text-white truncate">{tt(e.key)}</p>
+              <p className="text-[8px] text-white/40">{e.d.toLocaleDateString(dilKodu(), { day: "numeric", month: "long", year: "numeric" })}</p>
             </div>
-            <span className="text-[9px] font-bold text-amber-300 whitespace-nowrap">{diff} gün</span>
+            <span className="text-[9px] font-bold text-amber-300 whitespace-nowrap">{diff} {tt("itGun")}</span>
           </div>
         );
       })}
-      {upcoming.length === 0 && <p className="text-[10px] text-white/30 text-center py-2">Yaklaşan dini gün yok — takvim güncellenecek</p>}
+      {upcoming.length === 0 && <p className="text-[10px] text-white/30 text-center py-2">{tt("itYaklasanYok")}</p>}
     </div>
   );
 }
