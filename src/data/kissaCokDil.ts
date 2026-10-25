@@ -12,7 +12,7 @@
 
 import type { Lang } from "../i18n";
 
-export interface KissaCeviri { ad: string; sure: string; ozet: string; ders: string; dua: string }
+export interface KissaCeviri { ad: string; sure: string; ozet: string; ders: string; dua: string; kaynak?: string }
 
 const KISSA_COKDIL: Partial<Record<Lang, KissaCeviri[]>> = {
   en: [
@@ -102,7 +102,7 @@ const KISSA_COKDIL: Partial<Record<Lang, KissaCeviri[]>> = {
 };
 
 /** TR referans kayıt sayısı (kissaData.ts KISSA_LISTESI) — hizalama denetimi için */
-export const KISSA_TOPLAM = 19;
+export const KISSA_TOPLAM = 19; // ★ 25.10: TR çeviri referansı 19 kayıt (kissaData.ts). +12 yeni kıssa kissaEk.ts'te ayrı: KissaBolumu'nda [...kissaCevir(KISSA_LISTESI), ...KISSA_EK] birleşir; yeni kayıtlar çevirisiz → TR görünür.
 
 /**
  * Kıssa listesini seçili dile çevirir. Hizalama bozuksa (çeviri eksik/fazla)
@@ -115,5 +115,6 @@ export function kissaCevir(
   const code = String(lang || "tr").trim().toLowerCase() as Lang;
   const c = KISSA_COKDIL[code];
   if (!c || c.length !== liste.length) return liste;
-  return liste.map((k, i) => c[i] ?? k);
+  // ★ 25.10: çeviri olmayan kayıtlara TR veri ve kaynak (kaynak adı asıldır, çevrilmez)
+  return liste.map((k, i) => ({ kaynak: k.kaynak, ...c[i] ?? k }));
 }

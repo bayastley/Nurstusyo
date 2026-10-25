@@ -150,6 +150,40 @@ export const HADIS_BANKASI: HadisKaydi[] = [
   { tema: "merhamet", metin: "Yerdeki canlıların hepsi Allah'ın âilesidir; onlara karşı en hayırlınız, onlara en iyi muamele edendir.", kaynak: "Beyhaki, Şuab, 8/386 (meâl)", derece: "hasan" },
   { tema: "merhamet", metin: "Allah'a kulluk edin, O'na hiçbir şeyi ortak koşmayın; anne-babaya, akrabaya, yetimlere, yoksullara, yakın komşuya ve uzak komşuya, yakınınıza ve yolcuya, elinizin altında olana (çalıştırdıklarınıza) iyilik edin.", kaynak: "Nisâ 4:36 (ayet — meâl)", derece: "sahih" },
   { tema: "merhamet", metin: "Mü'min, kendisi için sevdiğini kardeşi için de sevdiği müddetçe gerçek mümindir; şefkatli olan Allah'ın sevgisine layıktır.", kaynak: "Buhari, İman, 7", derece: "sahih" },
+
+  // ═══ TÖVBE — genişleme (25.10) ═══
+  { tema: "tovbe", metin: "Tevbe eden kişi, günah işlememiş gibidir.", kaynak: "İbn Mâce, Zühd, 30 (meâl)", derece: "hasan" },
+  { tema: "tovbe", metin: "Allah, kulunun tevbesine, sizden birinin lokmayı temizleyip çıkarmak için gösterdiği itinadan daha fazla itina eder; tevbeyi asla geri çevirmez.", kaynak: "Müslim, Zühd, 39 (meâl)", derece: "sahih" },
+  { tema: "tovbe", metin: "Kul günah işlediğinde kalbinde siyah bir nokta belirir; tevbe edip istiğfar ederse marker parlar, günaha devam ederse nokta çoğalır ve kalp kararır.", kaynak: "İbn Mâce, Zühd, 29 (meâl)", derece: "hasan" },
+
+  // ═══ DUA — genişleme (25.10) ═══
+  { tema: "dua", metin: "Dua, ibadetin özüdür (nüvesidir); dua eden, ibadet etmiştir.", kaynak: "Tirmizi, Daavât, 1 (meâl)", derece: "hasan" },
+  { tema: "dua", metin: "Üç kişinin duası geri çevrilmez: oruçlunun iftar duası, adil yöneticinin duası ve mazlumun duası.", kaynak: "Tirmizi, Daavât, 77; İbn Mâce, Duâ, 8", derece: "hasan" },
+  { tema: "dua", metin: "Dua, mü'minin silahıdır.", kaynak: "Beyhaki, Şuab, 7/151 (meâl)", derece: "hasan" },
+
+  // ═══ KOMŞULUK — genişleme (25.10) ═══
+  { tema: "komşuluk", metin: "Kim Allah'a ve ahiret gününe iman ediyorsa, komşusuna iyilik eylesin.", kaynak: "Buhari, Edeb, 5; Müslim, İman, 74", derece: "sahih" },
+  { tema: "komşuluk", metin: "İman etmiş olan, komşusu acıktığı halde kendisi tok olarak yatmaz.", kaynak: "Beyhaki, Şuab (meâl)", derece: "hasan" },
+
+  // ═══ YETİM — genişleme (25.10) ═══
+  { tema: "yetim", metin: "Ben ve yetimin koruyucusunun Cennet'te bir yeri şöyledir: şerefiyle ayrılan iki parmak gibi (birbirimize yakınız).", kaynak: "Buhari, Edeb, 24 (meâl)", derece: "sahih" },
+  { tema: "yetim", metin: "Kim yetimin başını okşayarak şefkat gösterirse, elinin değdiği her saç teli için sevap kazanır (günahları afv olur).", kaynak: "Beyhaki, Şuab (meâl)", derece: "hasan" },
+  { tema: "yetim", metin: "Yetimin malına zulümle yaklaşan (yiyen), karnına ateş yutmuş gibidir; alevli cehennemde yanar.", kaynak: "Nisâ 4:10 (ayet — meâl)", derece: "sahih" },
+
+  // ═══ HAYIR & YARDIM — genişleme (25.10) ═══
+  { tema: "hayir", metin: "Kim bir hayra bir yol gösterirse, o hayrı işleyen kişinin sevabı kadar ona da sevap yazılır.", kaynak: "Müslim, İlim, 16", derece: "sahih" },
+
+  // ═══ ANA-BABA — genişleme (25.10) ═══
+  { tema: "ana-baba", metin: "Cennet, annelerin ayakları altındadır.", kaynak: "İbn Mâce, Adâb, 6; Nesâî, Cenâiz, 1 (meâl)", derece: "hasan" },
+  { tema: "ana-baba", metin: "Kişinin en önde iyilik edeceği kişi önce annesidir, sonra yine annesidir, sonra babasıdır.", kaynak: "Müslim, Birr, 1 (meâl)", derece: "sahih" },
+  { tema: "ana-baba", metin: "Allah'ın rızası, anne-babanın rızasında (gizlidir); onların rızasıyla Allah'ın rızasına ulaşılır.", kaynak: "Tirmizi, Birr, 3 (meâl)", derece: "hasan" },
+
+  // ═══ ZİKİR / AHLÂK / DİL / SABIR — çeşitlendirme (25.10) ═══
+  { tema: "zikir", metin: "Kim günde yüz defa 'Sübhânallâhi ve bihamdihî' derse, deniz köpüğü çokluğu kadar (günahları) olsa bile affedilir.", kaynak: "Müslim, Zikir, 28", derece: "sahih" },
+  { tema: "ahlak", metin: "Müslüman, insanların elinden ve dilinden güvende (kurtuldukları) kimsedir.", kaynak: "Buhari, İman, 5", derece: "sahih" },
+  { tema: "ahlak", metin: "Zarar (vermek) yoktur zarara karşılık zarar da yoktur; kimse kimseye zarar vermeye kalkışamaz.", kaynak: "İbn Mâce, Ahkâm, 17 (meâl)", derece: "hasan" },
+  { tema: "dil", metin: "Kim Allah'a ve ahiret gününe inanıyorsa, ya hayır konuşsun ya da susun.", kaynak: "Buhari, Edeb, 31; Müslim, Zühd, 15", derece: "sahih" },
+  { tema: "sabir", metin: "Sabrın (tam) sabrı, ilk vuruş anında (şokta) gösterilen sabırdır.", kaynak: "Buhari, Cenâiz, 36 (meâl)", derece: "hasan" },
 ];
 
 export const HADIS_TEMALARI = [

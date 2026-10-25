@@ -157,7 +157,7 @@ export function KissaBolumu({
   tt, filtreliKissalar, acikKissa, setAcikKissa,
 }: {
   tt: (k: string) => string;
-  filtreliKissalar: Array<{ ad: string; sure: string; ozet: string; ders: string; dua: string }>;
+  filtreliKissalar: Array<{ ad: string; sure: string; ozet: string; ders: string; dua: string; kaynak?: string }>;
   acikKissa: string | null;
   setAcikKissa: (v: string | null) => void;
 }) {
@@ -191,6 +191,8 @@ export function KissaBolumu({
                 <p className="mt-2 rounded-lg px-2.5 py-1.5 text-[9.5px] leading-relaxed" style={{ background: "rgba(215,170,82,.08)", color: "var(--accent-2)" }}>
                   <span className="font-black">{tt("ksKissaDuasi")}</span> {k.dua}
                 </p>
+                {/* ★ 25.10 (kullanıcı emri): sahih kaynak satırı — kıssanın altında */}
+                {k.kaynak && <p className="mt-2 text-[8.5px] font-bold" style={{ color: "var(--accent-2)" }}>📚 {k.kaynak}</p>}
               </div>
             )}
           </div>

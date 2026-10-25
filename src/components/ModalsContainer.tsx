@@ -240,13 +240,12 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     setAcilanlar((onceki) => acilanModalEkle(onceki, modal));
   }, [modal]);
   const acildiMi = (...adlar: string[]) => acildiMiFn(acilanlar, ...adlar);
-  // ★ V2 TEST KİLİDİ (01.10): kod sabiti değil — sunucu ayarı (nur_feature_locks
-  //   tablosunda "v2_test_acik" satırı; admin panel → Kilit Yönetimi'nden aç/kapa,
-  //   deploy'suz). Açıkken oylamadaki 6 V2 modalı herkese açık; kapalıyken kilitler
-  //   devreder: getFeatureLock "free" (admin kilidi veya /api/config'in gömdüğü
-  //   OYLAMA LİDERİ otomatik-free) olan modül açık, diğerleri yol haritasına düşer.
+  // ★ V2 KİLİTİ (25.10 — kullanıcı emri): satır YOK / "free" → AÇIK; admin panel
+  //   → Özellik Kilitleri'nden "off"/"v2"/"v3" seçildiğinde modül GRİ kilide düşer
+  //   ve yol haritasına devreder (deploy'suz, ~60 sn'de tüm istemcilere yayılır).
+  //   getFeatureLock çağrısı SATIR YOKSA "free" döner — hiçbir modül varsayılan kilitli DEĞİL.
   const v2Kapali = (m: V2ModalId): boolean =>
-    v2KilitliMi(m, { v2TestAcik: v2TestAcikMi(), incelemeModu: INCELEME_MODU, isMasterSurum: isMasterSürüm, lockDegeri: getFeatureLock(m, "v2") });
+    v2KilitliMi(m, { v2TestAcik: v2TestAcikMi(), incelemeModu: INCELEME_MODU, isMasterSurum: isMasterSürüm, lockDegeri: getFeatureLock(m, "free") });
   const v2Gate = (m: V2ModalId): boolean => {
     if (!v2Kapali(m)) return true;
     setModal(null);
@@ -533,7 +532,8 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* ★ AYET KÜTÜPHANESİ — ayet seç, kartın içine yazılsın, fotoğraf olarak indir */}
       {acildiMi("ayetKartlari") && (
       <React.Suspense fallback={null}>
-      <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} lang={lang} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} />
+      {/* ★ 25.10: jeton kuralı — normal kullanıcı 3/15 kısa hak ile açar, ELİT hep açık · admin muaf */}
+      <AyetKartlariModal open={v2Acik("ayetKartlari")} onClose={() => setModal(null)} notify={notify} lang={lang} accessTier={accessTier} tierAtLeast={tierAtLeast} openPremium={openPremium} kutuphaneMasterAcik={isMasterSürüm || isAdminEmail(user?.email || "")} />
       </React.Suspense>
       )}
 
@@ -554,6 +554,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {/* ★ HAZIR AYET PAKETLERİ — tek tuşla stüdyoya paket ekle (madde 8) */}
       {acildiMi("ayetPaketleri") && (
       <React.Suspense fallback={null}>
+      {/* ★ 25.10: paket günü 10 ek limit (elit dahil) — kural ayetKutuphaneKurali.ts */}
       <AyetPaketleriModal open={v2Acik("ayetPaketleri")} onClose={() => setModal(null)} addAyah={addAyah} notify={notify} lang={lang} />
       </React.Suspense>
       )}

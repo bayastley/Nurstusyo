@@ -135,7 +135,8 @@ export const KELIME_RECETELERI: KelimeRecete[] = [
     satir: "Yön vermek için dönmen gerekmez; kalbini çevir.",
     aciklama: "Beytullah temalı ayetler + Kâbe atmosferi." },
   { id: "cami", emoji: "🕌", etiket: "Cami",
-    anahtarlar: ["cami", "mescit", "mescid", "secde", "namaz", "ibadet"],
+    // ★ 25.10: "minber/hutbe/mimbar/vaaz" da buraya eklendi — bu kelimeler kur'an/mushaf'a değil camiye bağlanır.
+    anahtarlar: ["cami", "mescit", "mescid", "secde", "namaz", "ibadet", "minber", "hutbe", "mimbar", "vaaz"],
     moods: ["huzur", "ilim"], cats: ["cami", "namaz", "desen"],
     satir: "Secde, kalbin yeryüzüne en yakın olduğu andır.",
     aciklama: "Secde ve ibadet temalı ayetler + İslam mimarisi atmosferi." },

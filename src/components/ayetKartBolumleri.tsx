@@ -51,7 +51,15 @@ export const AyetSecimBolumu: React.FC<{
   /** ★ 04.10 TUR 4: kart mealı/kaynağı seçili dilde (yoksa kartın TR verisi) */
   mealCevir?: (k: AyetKarti) => string;
   kaynakCevir?: (k: AyetKarti) => string;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir }) => {
+  /** ★ 25.10 TÜM KUR'AN (sahibin emri: 6236 ayetin TAMAMI) — sure+ayet seç → karta aktar */
+  tkSure?: number;
+  setTkSure?: (v: number) => void;
+  tkAyet?: number;
+  setTkAyet?: (v: number) => void;
+  tkSureAyetSayisi?: number;
+  tkYukleniyor?: boolean;
+  tkAktar?: () => void;
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -115,6 +123,40 @@ export const AyetSecimBolumu: React.FC<{
               })}
             </div>
           </div>
+
+          {/* ★ 25.10 TÜM KUR'AN — sure + ayet seç, meal API'den gelir, anında kart kurulur */}
+          {tkSure !== undefined && tkAktar && (
+            <div className="mb-2 flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[.03] p-2">
+              <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-white/45">🌐 {tt("akTumKuran")}</span>
+              <select
+                value={tkSure}
+                onChange={(e) => { setTkSure?.(Number(e.target.value)); setTkAyet?.(1); }}
+                className="glass-soft min-w-0 flex-1 rounded-lg px-2 py-1.5 text-[9.5px] outline-none"
+              >
+                {SURE_ADLARI.map((ad, i) => (
+                  <option key={i + 1} value={i + 1} className="bg-neutral-900">{i + 1}. {ad}</option>
+                ))}
+              </select>
+              <select
+                value={tkAyet}
+                onChange={(e) => setTkAyet?.(Number(e.target.value))}
+                className="glass-soft w-[64px] shrink-0 rounded-lg px-2 py-1.5 text-[9.5px] outline-none"
+              >
+                {Array.from({ length: tkSureAyetSayisi ?? 286 }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n} className="bg-neutral-900">{n}. ayet</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={tkAktar}
+                disabled={tkYukleniyor}
+                className="shrink-0 rounded-lg px-2.5 py-1.5 text-[9px] font-black text-black transition hover:brightness-110 disabled:opacity-50"
+                style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+              >
+                {tkYukleniyor ? tt("akTumKuranYukleniyor") : `+ ${tt("akTumKuranGet")}`}
+              </button>
+            </div>
+          )}
 
           <div className="mb-2 flex items-center gap-2">
             <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akAyetiniSec")}</span>

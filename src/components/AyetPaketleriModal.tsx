@@ -13,6 +13,9 @@ import { Modal } from "./UIElements";
 import { paketGorunum } from "../data/ayetPaketleriCokDil";
 import { gorunenMeal, mealleriTasi } from "../data/ayetMealCokDil";
 import { SURE_ADLARI } from "../data/ayetKartlariData";
+// ★ 25.10 (sahibin emri): "hazır ayet paketlerinde limit 10 olsun" — günde 10
+//   ekleme (elit dahil), akPaketEklePlan ile sayılır ve localStorage'da tutulur.
+import { akPaketEklePlan, akPaketKalanBugun, akPaketKullan } from "../studio/ayetKutuphaneKurali";
 
 export interface AyetPaketiOgesi { s: number; a: number; baslik?: string }
 export interface AyetPaketi {
@@ -276,10 +279,26 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
   if (!open) return null;
 
   const paketEkle = (p: AyetPaketi) => {
-    p.ayetler.forEach((o) => addAyah(o.s, o.a));
-    notify(tt("apEklendi").replace("{ad}", paketGorunum(p.id, p.ad, p.aciklama, lang).ad).replace("{n}", String(p.ayetler.length)));
+    const plan = akPaketEklePlan(p.ayetler.length);
+    if (plan.tikanma) { notify(tt("apGunlukLimitBitti").replace("{k}", String(10))); return; }
+    akPaketKullan(plan.eklenecek);
+    p.ayetler.slice(0, plan.eklenecek).forEach((o) => addAyah(o.s, o.a));
+    const kalan = akPaketKalanBugun();
+    if (plan.eklenecek < p.ayetler.length) {
+      notify(tt("apGunlukKalan").replace("{k}", String(kalan)) + ` · ${p.ayetler.length - plan.eklenecek} ayet yarın sırada`);
+    } else {
+      notify(tt("apEklendi").replace("{ad}", paketGorunum(p.id, p.ad, p.aciklama, lang).ad).replace("{n}", String(p.ayetler.length)));
+    }
     onClose();
     onStudyyeDon?.();
+  };
+
+  // Tek satır ek butonları da günlük 10 limitini sayılır
+  const satirEkle = (o: { s: number; a: number }) => {
+    const plan = akPaketEklePlan(1);
+    if (plan.tikanma) { notify(tt("apGunlukLimitBitti").replace("{k}", String(10))); return; }
+    akPaketKullan(1);
+    addAyah(o.s, o.a);
   };
 
   return (
@@ -323,7 +342,7 @@ export const AyetPaketleriModal: React.FC<AyetPaketleriModalProps> = ({ open, on
                 </div>
                 <button
                   type="button"
-                  onClick={() => addAyah(o.s, o.a)}
+                  onClick={() => satirEkle(o)}
                   className="flex shrink-0 items-center gap-1 rounded-lg glass-soft px-2 py-1.5 text-[9px] font-bold text-white/65 transition hover:text-white"
                   title={tt("apSadeceEkle")}
                 >

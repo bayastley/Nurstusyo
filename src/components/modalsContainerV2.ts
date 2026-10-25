@@ -53,16 +53,25 @@ export function acildiMiFn(acilanlar: string[], ...adlar: string[]): boolean {
 //   oylamaya lımısla AÇIK. v2KilitliMi her durumda false döner.
 export const ADMIN_HARD_KILITLI: V2ModalId[] = [];
 
-/** ARTIK HEP false — (özkaynak: eski oylama kilidi kaldırıldı); imza korunur ki
- *  ModalsContainer'daki çağrılar olduğu gibi çalışmaya devam etsin. */
+/** ★ 25.10 V2 GRİ KİLİT — ADMİN PANELDEN AÇILIR (kullanıcı emri):
+ *  nur_feature_locks tablosunda modül satırı admin tarafından "v2" (Yakında)
+ *  olarak işaretlendiyse modül Gİ V2 kilidine düşer ve oylamaya devreder;
+ *  admin panel → Özellik Kilitleri'nden "free" yapıldığı anda herkese açılır
+ *  (deploy'suz — /api/config poll'u ~60 sn'de yayır).
+ *  Satır YOK ya da free/pro/elit → AÇIK (varsayılan şu andaki davranış korunur). */
 export function v2KilitliMi(_m: V2ModalId, _ctx: {
   v2TestAcik: boolean;
   incelemeModu: boolean;
   isMasterSurum: boolean;
-  lockDegeri: string; // getFeatureLock(m, "v2")
+  lockDegeri: string; // getFeatureLock(m, "free")
 }): boolean {
+  // ★ 25.10 KALICI EMİR: "ayet notlarım herkese ücretsiz olsun" — admin dahi
+  //   v2 kilidine çekemez; Notlar herkese (misafir dahil) hep açıktır.
+  if (_m === "ayetNotlari") return false;
   if (ADMIN_HARD_KILITLI.includes(_m)) return !(_ctx.isMasterSurum || _ctx.incelemeModu);
-  return false; // ★ her şey herkese açık (22.10)
+  // KALICI EMİR: adminte her kilit açık — isMasterSürüm/inceleme kilidi asla aşmaz
+  if (_ctx.isMasterSurum || _ctx.incelemeModu) return false;
+  return _ctx.lockDegeri === "v2" || _ctx.lockDegeri === "v3" || _ctx.lockDegeri === "off";
 }
 
 /** Kilitli modallar hiç mount edilmez (içerik sızmasın) */

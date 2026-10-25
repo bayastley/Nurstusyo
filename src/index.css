@@ -53,6 +53,25 @@
   font-family: 'Amiri', 'Traditional Arabic', 'Scheherazade New', serif;
 }
 
+/* ★ 25.10 MARQUEE — İSLÂMÎ ÖĞRENİYORUM etiketi üst-bar pill'ine sığmazsa
+   sola doğru akar ve kelime tam görünür; taşma miktarı React useEffect ile
+   ölçülür (scrollWidth - clientWidth) ve CSS değişkenine yazılır. */
+.nur-marquee {
+  display: inline-block;
+  max-width: 158px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+.nur-marquee-kayar {
+  animation: nurMarqueeKaydir 7s linear infinite alternate;
+  will-change: transform;
+}
+@keyframes nurMarqueeKaydir {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--nur-marquee-fazla, -100px)); }
+}
+
 .font-display {
   font-family: 'Cinzel', 'Trajan Pro', 'Cinzel Decorative', serif, system-ui;
 }

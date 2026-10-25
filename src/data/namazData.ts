@@ -3,18 +3,18 @@
 // kesfetData.ts'den ayrıldı (SRP, 03.10) — içerik değişmedi, bayt-duyarlı taşıma
 // ════════════════════════════════════════════════════════
 // ── 28: NAMAZ ÖĞRETİCİ (rekat rekat) ────────────────────────
-export interface NamazAdim { adim: string; yazi: string; arapca?: string }
+export interface NamazAdim { adim: string; yazi: string; arapca?: string; kaynak?: string }
 export const NAMAZ_REHBERİ: NamazAdim[] = [
-  { adim: "1. Niyet + Tekbir", yazi: "Kalbende niyet et, elleri kulaklara kaldırıp 'Allâhu Ekber' de.", arapca: "اللَّهُ أَكْبَرُ" },
-  { adim: "2. Kıyam (ayakta)", yazi: "Eller bağlanır; Sübhâneke, E'ûzü-Besmele ve Fâtiha okunur; ardından bir sure (3 kısa ayet).", arapca: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ" },
-  { adim: "3. Rükû (eğilme)", yazi: "'Allâhu Ekber' deyip eğil; bel düz, dizlere eller dayalı: 'Sübhâne Rabbiye'l-Azîm' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْعَظِيمِ" },
-  { adim: "4. İ'tidal (kalkma)", yazi: "'Semi'allâhü limen hamideh' diyerek doğrul, ayakta: 'Rabbenâ leke'l-hamd'.", arapca: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ" },
-  { adim: "5. Secde (baş koyma)", yazi: "'Allâhu Ekber' deyip yere kapan; alnı, burnu, elleri, dizleri yerde: 'Sübhâne Rabbiye'l-A'lâ' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْأَعْلَى" },
-  { adim: "6. Oturuş (birinci)", yazi: "'Allâhu Ekber' diye doğrul, 'Rabbiğfirlî' diye otur; sonra ikinci rekat için secdeye dön.", arapca: "رَبِّ اغْفِرْ لِي" },
-  { adim: "7. İkinci rekat", yazi: "Fâtiha + sure okunup rükû-secde tekrar edilir (yukarıdaki adımlar)." },
-  { adim: "8. Et-Tehiyyâtü", yazi: "İkinci rekatın oturuşunda 'Et-Tehiyyâtü…' okunur (2 rekatta burada son oturuş).", arapca: "التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ" },
-  { adim: "9. Salli-Bârik", yazi: "3+ rekatta ikinci oturuşta Salli-Bârik duaları da okunur.", arapca: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ" },
-  { adim: "10. Selam", yazi: "Önce sağa, sonra sola dönerek 'Es-Selâmu aleyküm ve rahmetullah' de ve namazı bitir.", arapca: "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ" },
+  { adim: "1. Niyet + Tekbir", yazi: "Kalbende niyet et, elleri kulaklara kaldırıp 'Allâhu Ekber' de.", arapca: "اللَّهُ أَكْبَرُ", kaynak: "Hadis-i Cibrîl — Buhârî, Îmân, 37 · Müslim, Îmân, 8" },
+  { adim: "2. Kıyam (ayakta)", yazi: "Eller bağlanır; Sübhâneke, E'ûzü-Besmele ve Fâtiha okunur; ardından bir sure (3 kısa ayet).", arapca: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ", kaynak: "Sübhâneke: Müslim, Salât, 30 · Fâtiha farzlığı: Buhârî, Salât, 9" },
+  { adim: "3. Rükû (eğilme)", yazi: "'Allâhu Ekber' deyip eğil; bel düz, dizlere eller dayalı: 'Sübhâne Rabbiye'l-Azîm' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْعَظِيمِ", kaynak: "Buhârî, Adap, 126 · Müslim, Salât, 38" },
+  { adim: "4. İ'tidal (kalkma)", yazi: "'Semi'allâhü limen hamideh' diyerek doğrul, ayakta: 'Rabbenâ leke'l-hamd'.", arapca: "سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ", kaynak: "Buhârî, Salât, 46 · Müslim, Salât, 43" },
+  { adim: "5. Secde (baş koyma)", yazi: "'Allâhu Ekber' deyip yere kapan; alnı, burnu, elleri, dizleri yerde: 'Sübhâne Rabbiye'l-A'lâ' ×3.", arapca: "سُبْحَانَ رَبِّيَ الْأَعْلَى", kaynak: "Buhârî, Adap, 127 · Müslim, Salât, 40" },
+  { adim: "6. Oturuş (birinci)", yazi: "'Allâhu Ekber' diye doğrul, 'Rabbiğfirlî' diye otur; sonra ikinci rekat için secdeye dön.", arapca: "رَبِّ اغْفِرْ لِي", kaynak: "Ebû Dâvûd, Salât, 125 · Tirmizî, Salât, 176 (hasan)" },
+  { adim: "7. İkinci rekat", yazi: "Fâtiha + sure okunup rükû-secde tekrar edilir (yukarıdaki adımlar).", kaynak: "Fâtiha + sure: Buhârî, Salât, 9 " },
+  { adim: "8. Et-Tehiyyâtü", yazi: "İkinci rekatın oturuşunda 'Et-Tehiyyâtü…' okunur (2 rekatta burada son oturuş).", arapca: "التَّحِيَّاتُ لِلَّهِ وَالصَّلَوَاتُ وَالطَّيِّبَاتُ", kaynak: "Buhârî, Ezan, 101-102 · Müslim, Salât, 11" },
+  { adim: "9. Salli-Bârik", yazi: "3+ rekatta ikinci oturuşta Salli-Bârik duaları da okunur.", arapca: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ", kaynak: "Abdullah b. Ebî Evfâ hadisi — Buhârî, Salât, 60 · Müslim, Salât, 67" },
+  { adim: "10. Selam", yazi: "Önce sağa, sonra sola dönerek 'Es-Selâmu aleyküm ve rahmetullah' de ve namazı bitir.", arapca: "السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ", kaynak: "Buhârî, Ezan, 159 · Müslim, Salât, 74" },
 ];
 
 // ── 45/58: SALAH TRACKER + DUA TAKİBİ gün anahtarları ───────

@@ -12,7 +12,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "./UIElements";
-import { AYET_KARTILARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
+import { AYET_KARTILARI, SURE_ADLARI, sureNoFromSource, gununAyeti, type AyetKarti } from "../data/ayetKartlariData";
+import { SURAHS } from "../data/surahs";
 import type { Tier } from "../tier";
 import { BACKGROUNDS, catLabel, akilliBgSec, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { RUH_HALLERI, ruhHaliEsle, ruhHaliAd, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
@@ -21,6 +22,10 @@ import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKar
 // ★ 04.10 TUR 4: kart mealı/kaynağı site diline göre (kullanıcı talebi)
 import { gorunenMeal, gorunenKart, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
 import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — arama + bildirim başlığı dilli
+// ★ 25.10 KÜTÜPHANE KURALI (sahibin emri): sınırsız değil — jetonla 24 saat / 1 hafta,
+//   açıkken günde N indirme; ELİT üyelik boyunca açık. admin/master muaf.
+import { akErisim, akKutuphaneAc, akIndirmeKullan, type AkErisim } from "../studio/ayetKutuphaneKurali";
+import { fetchAyah } from "../studio/studioHelpers";
 
 interface AyetKartlariModalProps {
   open: boolean;
@@ -32,9 +37,11 @@ interface AyetKartlariModalProps {
   accessTier?: Tier;
   tierAtLeast?: (have: Tier, need: Tier) => boolean;
   openPremium?: (tab?: "uyelik" | "jeton") => void;
+  /** ★ 25.10: admin/master muafiyeti — ModalsContainer'dan gelir (her kilit admin'de açık) */
+  kutuphaneMasterAcik?: boolean;
 }
 
-export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify, lang = "tr", accessTier = "free", tierAtLeast, openPremium }) => {
+export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onClose, notify, lang = "tr", accessTier = "free", tierAtLeast, openPremium, kutuphaneMasterAcik = false }) => {
   // ★ FULL I18N (01.10): modal başlık/sub dict'ten — 5 dil (tr/en/ar/id/ur)
   const tt = (k: string): string => translate(lang, k);
   // ★ HAT PALETİ PRO+ (01.10): temel stil (Aa Türkçe) herkese; 20 hat fontu pro/elit'te.
@@ -66,6 +73,47 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   //   kart arka planına hat sanatı ayeti işlenir. Fotoğraf YALNIZCA tarayıcıda
   //   kalır — hiçbir sunucuya gönderilmez (KVKK dostu).
   const kendiFotoBg = useMemo<BgItem>(() => ({ id: "kendi-foto", label: translate(lang, "akKendiFotografin"), cat: "kendi", src: "" }), [lang]);
+
+  // ── ★ 25.10 KÜTÜPHANE KURALI: erişim + günlük indirme sayacı ──
+  //   normal kullanıcı jetonla açar (3 hak → 24 saat, 15 hak → 1 hafta);
+  //   aacıkken günde 3 (ELİT 5). Jetonlu açma sonrası akTick UI'ı tazeler.
+  const [akTick, setAkTick] = useState(0);
+  const erisim: AkErisim = useMemo(() => akErisim(accessTier, kutuphaneMasterAcik), [accessTier, kutuphaneMasterAcik, akTick]);
+  const jetonlaAc = useCallback((sure: "24" | "7") => {
+    const sonuc = akKutuphaneAc(sure, accessTier);
+    notify?.(sonuc.mesaj);
+    if (!sonuc.ok && openPremium) openPremium("jeton");
+    setAkTick((v) => v + 1);
+  }, [accessTier, notify, openPremium]);
+
+  // 🌐 TÜM KUR'AN (25.10, sahibin emri: "bütün ayetleri ekle — 611'de kalmasın"):
+  //   sure + ayet seç → meal API'den çekilir → kart dinamik kurulur.
+  const [tkSure, setTkSure] = useState<number>(1);
+  const [tkAyet, setTkAyet] = useState<number>(1);
+  const [tkYukleniyor, setTkYukleniyor] = useState(false);
+  const tkSureAyetSayisi = useMemo<number>(() => SURAHS.find((s) => s.n === tkSure)?.count ?? 286, [tkSure]);
+  const tkAktar = useCallback(async () => {
+    if (tkYukleniyor) return;
+    setTkYukleniyor(true);
+    try {
+      const { ar, tr } = await fetchAyah(tkSure, tkAyet);
+      if (!ar && !tr) throw new Error("bos");
+      const dinamik: AyetKarti = {
+        id: `kuran-${tkSure}-${tkAyet}`,
+        mood: "huzur",
+        title: `${SURE_ADLARI[tkSure - 1] ?? tkSure}. Suresi`,
+        ar: ar || "",
+        tr: tr || "",
+        source: `${SURE_ADLARI[tkSure - 1] ?? tkSure} Suresi • ${tkAyet}. Ayet`,
+      };
+      setDinamikKart(dinamik);
+      setAyetId(dinamik.id);
+    } catch {
+      notify?.(tt("akTumKuranHata"));
+    } finally { setTkYukleniyor(false); }
+  }, [tkSure, tkAyet, tkYukleniyor, notify]);
+  //   Dinamik kurulan ayet: listede olmaz — ayet() lookup dinamikKart'ı önce dener.
+  const [dinamikKart, setDinamikKart] = useState<AyetKarti | null>(null);
   const [kendiFoto, setKendiFoto] = useState<HTMLImageElement | null>(null);
   const [kendiFotoAd, setKendiFotoAd] = useState("");
 
@@ -115,7 +163,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     });
   }, [bgSearch, bgCat]);
 
-  const ayet = useMemo(() => AYET_KARTILARI.find((a) => a.id === ayetId) ?? AYET_KARTILARI[0], [ayetId]);
+  const ayet = useMemo(() => dinamikKart && ayetId === dinamikKart.id ? dinamikKart : (AYET_KARTILARI.find((a) => a.id === ayetId) ?? AYET_KARTILARI[0]), [ayetId, dinamikKart]);
   // ★ TUR 4: seçili dil TR değilse görünür kartların meallerini seçili dilde getir
   //   (sure-bazlı cache; gelen cevap listeyi mealTick ile tazeler; hata → TR kalır)
   useEffect(() => {
@@ -207,6 +255,11 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   // ── İNDİR — PNG olarak fotoğraf kaydeder ────────────────
   const download = useCallback(async (kind: "45" | "11" | "916") => {
     if (!ayet) return;
+    // ★ 25.10 KÜTÜPHANE KURALI: açıkken günde N indirme (normal 3 · ELİT 5)
+    if (erisim.acik && erisim.kalanBugun <= 0) {
+      notify?.(tt("akGunlukLimitBitti").replace("{g}", String(erisim.gunlukLimit)));
+      return;
+    }
     // ★ EMNİYET (28.09): kendi-foto seçili ama fotoğraf yüklenmemişse kullanıcıya net söyle
     if (bgId === "kendi-foto" && !kendiFoto) {
       notify?.(tt("akNotifFotoOnce"));
@@ -233,13 +286,15 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       a.click();
       a.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+      akIndirmeKullan();
+      setAkTick((v) => v + 1); // kalan hak göstergesini tazele
       notify?.(tt("akNotifIndirildi"));
     } catch {
       notify?.(tt("akNotifHata"));
     } finally {
       setDownloading(false);
     }
-  }, [ayet, ayetGorunum, bg, bgId, kendiFoto, ayar, ensureImage, notify, lang]);
+  }, [ayet, ayetGorunum, bg, bgId, kendiFoto, ayar, ensureImage, notify, lang, erisim.acik, erisim.kalanBugun, erisim.gunlukLimit, akTick]);
 
   // ★ KARIŞTIR (03.10, kullanıcı kararı): hem ayet hem arka plan rastgele değişir —
   //   bilinçli eşleştirme YOK (uyumlu seçim Akıllı Seç'in işi).
@@ -317,6 +372,48 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
 
   if (!open) return null;
 
+  // ═══ ★ 25.10 KÜTLİFT KAPISI (sahibin emri: "sinirsız olmasın · jetonla aç").
+  //   Kütüphane kapalıyken vitrin ücretsiz: Günun Ayeti'ni okuyabilirsin —
+  //   liste + kart + indirme jeton/ELİT katından sonra açılır.
+  if (!erisim.acik) {
+    const va = gununAyetiObj;
+    return (
+      <Modal title={tt("v2AyetKartlariTitle")} sub={tt("akKilitBaslik")} onClose={onClose} wide>
+        <div className="mx-auto max-w-[560px]">
+          {/* Vitrin — Günun Ayeti (ÜCRETSİZ) */}
+          <div className="rounded-2xl border border-white/10 bg-white/[.03] p-4 text-center">
+            <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{tt("akUcretsizVitrin")}</p>
+            <p className="mt-2 font-arabic text-[15px] leading-loose" style={{ color: "var(--accent-2)" }}>{va.ar}</p>
+            <p className="mt-2 text-[11px] text-white/80">"{va.tr}"</p>
+            <p className="mt-1.5 text-[9px] font-semibold" style={{ color: "var(--accent)" }}>{va.source}</p>
+          </div>
+          {/* Kural */}
+          <p className="mt-3 text-center text-[10px] leading-relaxed text-white/60">{tt("akKilitAciklama").replace("{g}", "3")}</p>
+          {/* Jetonla açma butonları */}
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <button type="button" onClick={() => jetonlaAc("24")}
+              className="rounded-xl py-3 text-[10.5px] font-black text-black transition hover:brightness-110 active:scale-[.98]"
+              style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
+              🔓 {tt("akJeton24")}
+            </button>
+            <button type="button" onClick={() => jetonlaAc("7")}
+              className="rounded-xl border border-amber-400/30 bg-amber-400/10 py-3 text-[10.5px] font-black text-amber-200 transition hover:bg-amber-400/20">
+              🔓 {tt("akJetonHafta")}
+            </button>
+          </div>
+          <button type="button" onClick={() => { if (openPremium) openPremium("uyelik"); }}
+            className="mt-2 w-full rounded-xl border border-[color:var(--accent)]/35 bg-white/[.03] py-3 text-[10px] font-black tracking-wider transition hover:bg-white/[.06]"
+            style={{ color: "var(--accent-2)" }}>
+            👑 {tt("akElitTeklif").replace("{g}", "5")}
+          </button>
+          <p className="mt-2 text-center text-[8.5px] text-white/35">
+            {tt("akGundeKalan").replace("{k}", "0").replace("{g}", "3")}
+          </p>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       title={tt("v2AyetKartlariTitle")}
@@ -349,6 +446,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           ruhHaliMetin={ruhHaliMetin}
           setRuhHaliMetin={setRuhHaliMetin}
           ruhHaliUygula={ruhHaliUygula}
+          tkSure={tkSure}
+          setTkSure={setTkSure}
+          tkAyet={tkAyet}
+          setTkAyet={setTkAyet}
+          tkSureAyetSayisi={tkSureAyetSayisi}
+          tkYukleniyor={tkYukleniyor}
+          tkAktar={tkAktar}
           lang={lang}
           mealCevir={(k) => gorunenMeal(k, lang)}
           kaynakCevir={(k) => kartKaynagi(lang, k.source)}

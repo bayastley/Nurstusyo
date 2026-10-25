@@ -13,6 +13,7 @@ import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import { HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
 import { KISSA_LISTESI } from "../data/kissaData";
+import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
 import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
 import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
@@ -219,7 +220,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     return () => { canli = false; clearTimeout(t); };
   }, [sekme, q, filtreliHadisler.length]);
   // ★ KISSA ÇOKDİL (06.10): önce dile çevir, sonra arama çevrilmiş ad/özet üzerinden koşsun
-  const filtreliKissalar = useMemo(() => kissaCevir(lang, KISSA_LISTESI).filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q, lang]);
+  // ★ 25.10 GENİŞLETME: çeviri hizası 19 referansta korunur; 12 yeni kıssa (KISSA_EK) çevirisiz eklenir — TR görünür
+  const filtreliKissalar = useMemo(() => [...kissaCevir(lang, KISSA_LISTESI), ...KISSA_EK].filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q, lang]);
   const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
   const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
@@ -337,6 +339,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                 <p className="text-[10.5px] font-black text-white/90">{a.adim}</p>
                 <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/60">{a.yazi}</p>
                 {a.arapca && <p className="mt-1 text-right font-arabic text-[13px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.arapca}</p>}
+                {/* ★ 25.10 (kullanıcı emri): sahih kaynak satırı — her adımın altında */}
+                {a.kaynak && <p className="mt-1 text-[8px] font-bold" style={{ color: "var(--accent)" }}>📚 {a.kaynak}</p>}
               </div>
             </div>
           ))}
