@@ -355,9 +355,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       //   doğrudan açılır. Admin/master her satırda serbest (KALICI EMİR).
                       const adminGecis = (user != null && isAdminEmail(user.email || "")) || isMasterSürüm;
                       const mevcutTier: "free" | "pro" | "elit" = adminGecis ? "elit" : (tier || getCurrentTier());
-                      const yetersiz = !adminGecis && item.hedef !== "free" && !tierAtLeast(mevcutTier, item.hedef);
-                      // ★ 25.10 V2 GRİ KİLİT: admin panelde modül "v2"/"v3"'e alındığında menüde GRİ rozet.
+                      // ★ 25.10 TİET KİLİDİ (kullanıcı emri: "elit seçince sadece elit mi alabiliyor"): admin
+                      //   panelde modülün kilit seviyesi "Pro üyelere"/"Elit üyelere" seçilirse satırın
+                      //   gerçek hedefi O seviye olur — menüde PRO/ELİT rozet, tıklayında o seviyenin
+                      //   üyelik kapısı (müşterinin dışı hiçbir yerden örtülmez).
                       const kilitDegeri = getFeatureLock(item.target as string, "free");
+                      const efektifHedef: "free" | "pro" | "elit" = (kilitDegeri === "pro" || kilitDegeri === "elit") ? kilitDegeri : item.hedef;
+                      const yetersiz = !adminGecis && efektifHedef !== "free" && !tierAtLeast(mevcutTier, efektifHedef);
+                      // ★ 25.10 V2 GRİ KİLİT: admin panelde modül "v2"/"v3"'e alındığında menüde GRİ rozet.
                       const v2Kilitli = !adminGecis && (kilitDegeri === "v2" || kilitDegeri === "v3" || kilitDegeri === "off");
                       return (
                       <button
@@ -366,7 +371,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                           setMenuOpen(false);
                           if (item.kabe) window.dispatchEvent(new Event("nur_kabe_ac"));
                           if (v2Kilitli) { setRoadmapOpen?.(true); return; }
-                          if (yetersiz) openPremium("uyelik", item.hedef === "elit" ? "elit" : "pro");
+                          if (yetersiz) openPremium("uyelik", efektifHedef === "elit" ? "elit" : "pro");
                           else setModal(item.target);
                         }}
                         className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white"
@@ -378,16 +383,16 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             🔒 V2
                           </span>
                         )}
-                        {item.hedef !== "free" && !adminGecis && (
+                        {efektifHedef !== "free" && !adminGecis && !v2Kilitli && (
                           <span
                             className={`ml-auto shrink-0 rounded-full border px-1.5 py-0.5 text-[7px] font-black tracking-wide ${
-                              item.hedef === "elit"
+                              efektifHedef === "elit"
                                 ? "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300"
                                 : "border-amber-400/40 bg-amber-500/15 text-amber-300"
                             }`}
-                            title={item.hedef === "elit" ? "ELİT üyelikle açılır" : "PRO üyelikle açılır"}
+                            title={efektifHedef === "elit" ? "ELİT üyelikle açılır" : "PRO üyelikle açılır"}
                           >
-                            {item.hedef === "elit" ? "ELİT" : "PRO"}
+                            {efektifHedef === "elit" ? "ELİT" : "PRO"}
                           </span>
                         )}
                       </button>
