@@ -325,7 +325,7 @@ export const AdminKullanimTab: React.FC<{
       </div>
 
       {rows.length === 0 ? (
-        <p className="p-6 text-center text-[10px] text-white/40 italic">Henüz haftalık kayıt oluşmamış. (İlk kayıt, ilk tam hafta —— pazar tatilinde —— oluşan ilk veriyle yazılır.)</p>
+        <p className="p-6 text-center text-[10px] text-white/40 italic">Henüz haftalık kayıt oluşmamış. Kullanıcılar bölümleri açtıkça satırlar burada birikir; her hafta ayrı bir tarih etiketiyle listelenir.</p>
       ) : (
         <>
           {/* Hafta seçici — tarihe göre tıkla */}
@@ -362,7 +362,7 @@ export const AdminKullanimTab: React.FC<{
           )}
 
           <p className="text-[8.5px] text-white/30">
-            Veriler sunucu tarafında haftalık (pazar bitişi) yuvarlanmış +50 kayıt saklanır; en eski 50 hafta otomatik silinir. İsimle örtük karışma olursa lütfen raporla.
+            Veriler sunucuda haftalık satırlar (tablo başına en fazla 50 hafta) olarak saklanır. Rapor yalnızca senin admin oturumunla okunabilir.
           </p>
         </>
       )}
