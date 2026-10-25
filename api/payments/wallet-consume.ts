@@ -119,7 +119,10 @@ export default async function handler(req: any, res: any) {
   const user = userFromSession(req);
   if (!user) return res.status(401).json({ ok: false, error: "Giriş yapın" });
 
-  const kind = String(req.body?.kind || "");
+  // ★ 25.10: req.body erişimi Vercel runtime'da bozuk gövdede fatal atabilir — sarılı erişim
+  let bodySafe: any = {};
+  try { bodySafe = req.body || {}; } catch { bodySafe = {}; }
+  const kind = String(bodySafe?.kind || "");
   if (!["kisa", "uzun", "tam"].includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz video türü" });
   // ★ ADMIN: tüm üretim hakları sınırsız — kota RPC'sine hiç gitmeden onay
   if (user.isAdmin) {

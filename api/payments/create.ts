@@ -205,10 +205,16 @@ export default async function handler(req: any, res: any) {
   if (!(await allowRequest(req, res))) return;
 
   try {
-    let body = req.body || {};
-    if (typeof body === 'string') {
-      try { body = JSON.parse(body); } catch { body = {}; }
-    }
+    // ★ 25.10 CANLI FIX: Vercel Node runtime'ı Content-Type json + bozuk/boş gövdede
+    //   req.body erişiminde "Invalid JSON" fatal atıyor (Logs 23.10 19:09:59). Bütük
+    //   gövde erişimi artık saran try içinde — bozuk gövde zarif biçimde {} olur.
+    let body: any = {};
+    try {
+      const rawBody = req.body;
+      if (typeof rawBody === 'string') { try { body = JSON.parse(rawBody); } catch { body = {}; } }
+      else { body = rawBody || {}; }
+    } catch { body = {}; }
+    if (typeof body === 'string') { try { body = JSON.parse(body); } catch { body = {}; } }
 
     // ─── Product code'dan fiyatı bul ───
     const productCode = String(body.productCode || '');

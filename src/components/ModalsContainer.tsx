@@ -396,6 +396,15 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
               notify("⏳ Ödeme sayfası hazırlanıyor...");
               const result = await startCheckout({ productCode });
               if (!result.ok) {
+                // ★ 25.10 CANLI FIX: oturum yok/şifre bittiğinde create 401 "Giriş yapmalısınız"
+                //   dönüyor; PremiumModal açık kalıp boş hata gösteriyordu — artık login kapısı açılır
+                //   (Vercel loglarında 19:07-19:08 15x 401 retry fırtınasının düzeltmesi).
+                if (/giriş yap/i.test(String(result.error || ""))) {
+                  notify("🔐 Ödeme için giriş yapmalısınız");
+                  setLoginTab("login");
+                  setModal("login");
+                  return;
+                }
                 notify(`❌ Ödeme hatası: ${result.error || "Bilinmeyen hata — lütfen tekrar deneyin"}`);
                 return;
               }
