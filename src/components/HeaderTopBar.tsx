@@ -58,7 +58,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     window.addEventListener("nur_araclar_ac", ac);
     return () => window.removeEventListener("nur_araclar_ac", ac);
   }, []);
-  const updatesTimer = React.useRef<number>(0);
 
   // ★ 25.10 MARQUEE ÖLÇÜMÜ — İSLÂMÎ ÖĞRENİYORUM etiketi haber pill'ine sığmazsa
   //   sola doğru kayar (kelime tamamen görünür). scrollWidth − clientWidth > 2px
@@ -150,14 +149,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     return () => document.removeEventListener("mousedown", kapatac);
   }, [menuOpen]);
 
-  const openUpdates = () => {
-    window.clearTimeout(updatesTimer.current);
-    setUpdatesOpen(true);
-  };
-  const closeUpdatesDelayed = () => {
-    window.clearTimeout(updatesTimer.current);
-    updatesTimer.current = window.setTimeout(() => setUpdatesOpen(false), 220);
-  };
 
   return (
     <>
@@ -239,10 +230,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     </button>
                     {/* ★ GÜNCELLEMELER EN ÜSTTE (kullanıcı kararı 27.09) — yenilikler ilk bakışta görünsün */}
                     <div
-                      className="relative"
-                      onMouseEnter={openUpdates}
-                      onMouseLeave={closeUpdatesDelayed}
-                    >
+                      // ★ 25.10 (kullanıcı emri): güncellemeler paneli artık HOVER ile DEĞİL,
+                      //   SADECE TIKLAMA ile açılır/kapanır (buton onClick toggle);
+                      //   kapanış: yeniden tık / menü kapanışı / dışarı tık.
+                      >
                       <button
                         type="button"
                         onClick={() => setUpdatesOpen((v) => !v)}
@@ -261,8 +252,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                       {updatesOpen && (
                         <div
                           data-sidebar-flyout="true"
-                          onMouseEnter={openUpdates}
-                          onMouseLeave={closeUpdatesDelayed}
                           onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
                           className="modal-in absolute left-[calc(100%+8px)] top-0 z-[70] w-60 overflow-hidden rounded-xl py-1.5 shadow-2xl"
