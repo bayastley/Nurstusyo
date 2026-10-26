@@ -2045,5 +2045,9 @@
   "ks2TumSure": "Tüm sure",
   "ks2AyetNum2": "Ayet {n}",
   "renkAltin": "Altın",
-  "dspFormatMaliyet": "Her ek format bir üretim hakkı: 2 format = 2 hak · 4 format = 4 hak"
+  "dspFormatMaliyet": "Her ek format bir üretim hakkı: 2 format = 2 hak · 4 format = 4 hak",
+  "lansKampanyaKalan": "🎉 Lansman Kampanyası: HERKES PRO — kalan {h} hafta",
+  "lansKampanyaKalanTitle": "Lansman dönemi boyunca herkes PRO özelliklerini üretim hakları PRO kotalarıyla sınırlı biçimde kullanır",
+  "lansKampanyaBitti": "⏳ 7 haftalık PRO kampanyası bitti — abonelikle devam edebilirsin",
+  "lansKampanyaBittiTitle": "Kampanya süresi doldu; PRO özellikleri abonelikle geri gelir"
 }

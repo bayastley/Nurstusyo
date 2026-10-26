@@ -2045,5 +2045,9 @@
   "ks2TumSure": "Seluruh surah",
   "ks2AyetNum2": "Ayat {n}",
   "renkAltin": "Emas",
-  "dspFormatMaliyet": "Tiap format tambahan = satu kuota render: 2 format = 2 kuota · 4 format = 4 kuota"
+  "dspFormatMaliyet": "Tiap format tambahan = satu kuota render: 2 format = 2 kuota · 4 format = 4 kuota",
+  "lansKampanyaKalan": "🎉 Kampanya Peluncuran: SEMUA PRO — tersisa {h} minggu",
+  "lansKampanyaKalanTitle": "Selama masa peluncuran semua memakai fitur PRO dalam batas kuota PRO",
+  "lansKampanyaBitti": "⏳ Kampanya PRO 7 minggu telah berakhir — berlangganan untuk lanjut",
+  "lansKampanyaBittiTitle": "Kampanya berakhir; fitur PRO kembali dengan langganan"
 }

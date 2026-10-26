@@ -8,6 +8,8 @@ import { claimHolyDayReward, getHolyDayState, type HolyDayBannerState } from "..
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 import type { User, ModalName } from "../types";
 import { translate } from "../i18n";
+// ★ 26.10 7-HAFTA KAMPANYA ÇİPLERİ — lansman dönemi "herkes PRO" sayacı + bitiş bildirimi
+import { lansKampanyaAktif, lansKampanyaHaftaKaldi, lansKampanyaBitti } from "../tier";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
@@ -26,9 +28,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
   //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
   const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
-  // ★ SADIK ÜYE SAYAÇ (05.10): /api/config'ten (poll'un beraberinde) gelir;
-  //   "Sadık Üye: {katilan}/{toplam} üretici kaydoldu" çipi kontenjan açıkken görünür.
-  const [sadikUye, setSadikUyeSayac] = useState<{ toplamKayitli: number; kontenjan: number } | null>(null);
+  // ★ SADIK ÜYE SAYAÇ KALDIRILDI (26.10, sahibin emri): ömür boyu +1 kampanyası bitti —
+  //   yerine 7-hafta PRO lansman kampanyası geçti (tier.ts LANS_KAMPANYA bloğu).
   // ★ KİLİT GÜNCELLEMESİ (19.10): /api/config poll'u v2/v3 kilitlerini veya admin
   //   gizli-reveal'ları (nur_feature_locks) değişik olarak yakalarsa "Güncellemeyi
   //   Al" bildirimi basılır — kullanıcı yenilemeyle yeni modülleri görsün.
@@ -86,7 +87,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
           } catch { /* yut */ }
         }
         if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
-          setSadikUyeSayac({ toplamKayitli: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan) || 500 });
+          // ★ 26.10: sadık üye çipi kaldırıldı — /api/config alanı sunucuda admin analitiği
+          //   olarak durabilir; kullanıcıya artık yerde görüntü yok.
         }
       }
     };
@@ -208,14 +210,26 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               {t("noAnnouncementYet")}
             </span>
           )}
-          {sadikUye && sadikUye.toplamKayitli < sadikUye.kontenjan && (
+          {/* ★ 26.10 7-HAFTA PRO KAMPANYASI (sahibin emri): sadık üye sayaç çipinin
+              yerine kampanya sayacı — aktifken kalan haftayı gösterir; bitince
+              7 gün boyunca bitiş bildirimi gösterilir (bildirim/demir atıldı). */}
+          {lansKampanyaAktif() && (
+            <span
+              title={t("lansKampanyaKalanTitle")}
+              className="flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1.5 font-black text-amber-200"
+            >
+              <Sparkles size={12} className="text-amber-300 animate-pulse" />
+              <span data-testid="lans-kampanya-sayac">{t("lansKampanyaKalan").replace("{h}", String(lansKampanyaHaftaKaldi()))}</span>
+            </span>
+          )}
+          {lansKampanyaBitti() && (
             <button
               onClick={() => setModalSafe?.("login")}
-              title={t("sadikUyeKontenjanTitle")}
-              className="flex items-center gap-1.5 rounded-full border border-emerald-300/35 bg-emerald-400/10 px-3 py-1.5 font-black text-emerald-200 transition hover:bg-emerald-400/20"
+              title={t("lansKampanyaBittiTitle")}
+              className="flex items-center gap-1.5 rounded-full border border-rose-300/40 bg-rose-400/10 px-3 py-1.5 font-black text-rose-200 transition hover:bg-rose-400/20"
             >
-              <Sparkles size={12} className="text-emerald-300" />
-              <span data-testid="sadik-uye-sayac">{t("sadikUyeKontenjan").replace("{katilan}", String(sadikUye.toplamKayitli)).replace("{toplam}", String(sadikUye.kontenjan))}</span>
+              <Sparkles size={12} className="text-rose-300" />
+              <span data-testid="lans-kampanya-bitti">{t("lansKampanyaBitti")}</span>
             </button>
           )}
           {holyDay.type !== "none" && (

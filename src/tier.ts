@@ -44,6 +44,37 @@ const TRIAL_KEY = "nur_trial_start";
 const TRIAL_DAYS = 7;
 
 // ════════════════════════════════════════════════════════
+// ★ 26.10 7-HAFTA LANS KAMPANYASI (sahibin emri — ömür boyu +1 kardesi ile bitti)
+//   Lansmandan başlayıp tam 7 hafta (49 gün) boyunca HERKES gerçek PRO'dur:
+//   • “Pro etiketler vurulur” → getCurrentTier kampanya boyunca pro döner; üst
+//     bardaki üyelik çipi, kilite UI ve PAYLAŞım rozetleri otomatik NÛR PRO görünür.
+//   • Özellikler açık → tier tabanli kapılar pro'dan geçer.
+//   • Haklar SINIR: üretim hakları/fat kotalar PRO seviyesiyle sınırlı — sınırsız değil.
+//   • Bitiş kamasona kapılır; bitişin ilk 7 günü kullanışamlara bitiş bildirimi
+//     (AnnouncementBar) gösterilir; admin ayrıca duyuru/push'sun alabilir.
+//   Tarihe bağlıdır (kayıt-depolama yok) → süresiz uzatma saldırısı imkânsız.
+// ════════════════════════════════════════════════════════
+export const LANS_KAMPANYA_BASLANGIC = Date.UTC(2026, 9, 26, 0, 0, 0); // 26.10.2026
+export const LANS_KAMPANYA_BITIS = Date.UTC(2026, 11, 14, 0, 0, 0); // 14.12.2026 = pak 7 hafta sonra
+
+export function lansKampanyaAktif(): boolean {
+  const n = Date.now();
+  return n >= LANS_KAMPANYA_BASLANGIC && n < LANS_KAMPANYA_BITIS;
+}
+
+/** Kampanya boyunca kalan tam hafta sayısı (bitiş dâhil değil) */
+export function lansKampanyaHaftaKaldi(): number {
+  const remain = LANS_KAMPANYA_BITIS - Date.now();
+  return remain > 0 ? Math.max(1, Math.ceil(remain / (7 * 86400 * 1000))) : 0;
+}
+
+/** BİTİŞ BİLDİRİMİ penceresi: bitişten sonraki ilk 7 gün true döner */
+export function lansKampanyaBitti(): boolean {
+  const n = Date.now();
+  return n >= LANS_KAMPANYA_BITIS && n < LANS_KAMPANYA_BITIS + 7 * 86400 * 1000;
+}
+
+// ════════════════════════════════════════════════════════
 // ★ SUNUCU TARAFI DENEME (02.10)
 //   Önceden deneme yalnız burada (localStorage) yaşıyordu: anahtarı
 //   silip yeniden kurunca 7 gün PRO sonsuza dek yenileniyordu.
@@ -104,6 +135,9 @@ export function getCurrentTier(): Tier {
   const value = secureGet<Tier>(CURRENT_TIER_KEY, "free");
   if (value === "elit") return "elit";
   if (value === "pro") return "pro";
+  // ★ 26.10 7-hafta lans kampanyası: kampanya aktifken herkes GERÇEK PRO'dur
+  //   (yukarıdaki LANS_KAMPANYA bloğu). Elit üyeler elit kalır.
+  if (lansKampanyaAktif()) return "pro";
   // ★ 7 günlük ücretsiz PRO denemesi — yeni üyeler için
   if (isTrialActive()) return "pro";
   return "free";

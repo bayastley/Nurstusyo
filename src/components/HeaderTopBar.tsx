@@ -11,7 +11,7 @@ import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, isSadikUye, tierAtLeast, getCurrentTier } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, tierAtLeast, getCurrentTier } from "../tier";
 // ★ 26.10 TIER ÇİPİ DİL BAĞI (kullanıcı raporu: "EN seçtim hala Ücretsiz"): eski
 //   TIER_LABEL['Ücretsiz'] hardcoded Türkçe'ydi; 5 dile çevrilmiş tierUcretsiz/
 //   tierPro/tierElit anahtarları sözlükte zaten vardı — artık oturum dilinden okunur.
@@ -220,18 +220,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                         <>
                           <LogIn size={14} style={{ color: "var(--accent)" }} />
                           <span className="flex-1 truncate" title={t("hbrHesapDegistir")}>{user.name}</span>
-                          {/* ★ SADIK ÜYE İSİM ETİKETİ (06.10, sahibin emri): ismin yanında
-                              parantezli gösterişli rozet — ilk 100 kayıt kampanyası.
-                              Glow + degrade; notranslate (Google Translate bozmasın). */}
-                          {isSadikUye() && (
-                            <span
-                              title={t("sadikUyeEtiketTitle")}
-                              className="notranslate ml-0.5 shrink-0 animate-pulse rounded bg-gradient-to-r from-emerald-500/30 to-teal-400/30 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-emerald-300"
-                              style={{ boxShadow: "0 0 10px rgba(52,211,153,.45), inset 0 0 0 1px rgba(52,211,153,.5)" }}
-                            >
-                              {t("sadikEtiketKisa")}
-                            </span>
-                          )}
+                          {/* ★ 26.10 SADIK ÜYE İSİM ROZETİ KALDIRILDI (sahibin emri:
+                              ömür boyu +1 kampanzası bitmıştır — 7 hafta PRO kampanyası yerini aldı). */}
                           <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title={t("hbrCikisTitle")}>{t("hbrCikis")}</button>
                         </>
                       ) : (
@@ -534,7 +524,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 title={t("hbrUyelikTitle")}
               >
                 <Gem size={10} style={{ color: "var(--accent)" }} />{t(TIER_SOZLUK[tier || "free"] || "tierUcretsiz")}
-                {isSadikUye() && <span className="ml-0.5 rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">★</span>}
+                {/* ★ 26.10: yanındaki ★ sadık-üye yıldızı kaldırıldı (sahibin emri) */}
               </button>
             </div>
           ) : (
@@ -614,7 +604,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
               <Gem size={11} style={{ color: "var(--accent)" }} />{user ? t(TIER_SOZLUK[tier || "free"] || "tierUcretsiz") : t("premium")}
-              {user && isSadikUye() && <span title={t("sadikUyeEtiketTitle")} className="rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">{t("sadikEtiketUzun")}</span>}
+              {/* ★ 26.10: kullanıcı-yanı '★ SADIK ÜYE' uzun rozeti kaldırıldı (sahibin emri) */}
             </button>
             <div className="relative notranslate" translate="no">
               {/* ★ 04.10: dil seçici — sade kodlar (TR/EN/AR/ID/UR) + notranslate.

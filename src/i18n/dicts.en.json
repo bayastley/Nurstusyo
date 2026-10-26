@@ -2044,5 +2044,9 @@
   "ks2TumSure": "Whole surah",
   "ks2AyetNum2": "Verse {n}",
   "renkAltin": "Gold",
-  "dspFormatMaliyet": "Each extra format = one render credit: 2 formats = 2 credits · 4 formats = 4 credits"
+  "dspFormatMaliyet": "Each extra format = one render credit: 2 formats = 2 credits · 4 formats = 4 credits",
+  "lansKampanyaKalan": "🎉 Launch Campaign: EVERYONE PRO — {h} weeks left",
+  "lansKampanyaKalanTitle": "During launch everyone uses PRO features with PRO-tier production rights limits",
+  "lansKampanyaBitti": "⏳ The 7-week PRO campaign has ended — subscribe to continue",
+  "lansKampanyaBittiTitle": "Campaign expired; PRO features return with a subscription"
 }
