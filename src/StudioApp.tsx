@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { BookOpen } from "lucide-react";
@@ -56,6 +57,8 @@ import {
   THEME_EMOJI_EXTRA,
 } from "./data";
 import { LANGS, MEAL_EDITIONS, T, translate, dilSaukle, type Lang } from "./i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { RECITERS, RECITER_SES_TARZI, SES_TARZI_ORDER, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "./reciters";
 import { kuyrukIndir } from "./components/seslendirmeIndir";
 import { AtmosferGirisArkaPlani } from "./components/AtmosferGirisArkaPlani";
@@ -284,7 +287,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         }}
         onTamperAttempt={(reason) => {
           // Tamper ban uygulamaz — sadece bildirim ver
-          notify(`⚠️ Güvenlik: ${reason}`);
+          notify(ttX2610("stGuvenlikUyari").replace("{a}", String(reason)));
         }}
       />
 
@@ -445,15 +448,15 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             const kendiSesV2 = kendiSesKilit === "v2" || kendiSesKilit === "v3" || kendiSesKilit === "off";
             if (!isMasterSürüm && !adminMi && kendiSesV2) {
               // ★ 25.10 OYLAMA KAPISI KALDIRILDI: net 'yakında' bildirimi; yol haritası yalnız admin'de.
-              notify("🔒 Kendi Sesinle Üret yakında geliyor — hazır olduğunda duyurulacak!");
+              notify(ttX2610("vpYakinda"));
               return;
             }
             if (isMasterSürüm || adminMi || tierAtLeast(tier, "elit")) {
-              if (!selected.length) { notify("Önce en az bir ayet seçin — senkron seçtiğin ayetlere kurulur"); return; }
+              if (!selected.length) { notify(ttX2610("ksOnceAyetSenkron")); return; }
               setModal("kendiSes");
               return;
             }
-            notify("👑 Kendi sesinle üretim NÛR ELİT'te — premium panel açıldı");
+            notify(ttX2610("vpKendiSesElitPanel"));
             openPremium("uyelik", "elit");
           }}
         />
@@ -574,7 +577,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* 🎬 TAM SAYFA VİDEO RENDER ENGELLEME VE BİLGİLENDİRME EKRANI */}
       {generating && <RenderKaplanmaEkran progress={progress} onIptal={() => {
         stopGenerationRef.current?.();
-        notify("Üretim kullanıcı tarafından iptal edildi");
+        notify(ttX2610("udKullaniciIptal"));
       }} />}
       {/* TOAST NOTIFICATION */}
       {toast ? (
@@ -647,8 +650,8 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) — YALNIZ girişli kullanıcılara; içerik seçili dilde */}
       <BugunHediye notify={notify} onHakDegisti={syncWallet} userEmail={user?.email || null} lang={lang} />
 
-      {/* ★ MINI TUR — ilk girişte 5 duraklı gezdirme (madde 3, 02.10) */}
-      <MiniTur lang={lang} />
+      {/* ★ MINI TUR — ilk girişte 5 duraklı gezdirme (madde 3, 02.10) — ★ 26.10: bitince Kur'an Öğreniyorum paneli AÇILIR ve orada kalır (kullanıcı emri) */}
+      <MiniTur lang={lang} onKuranAc={() => setModal("quranLearn")} />
 
       {/* ★ PWA KURULUM SİHİRBAZI — Ana Ekrana Ekle öğreticisi (madde 23) */}
       <PwaKurulumBanneri />

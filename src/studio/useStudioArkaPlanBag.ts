@@ -4,15 +4,19 @@
 // filtre + kâri önizleme + hoca video indirme. Birebir taşınma (davranış aynı).
 // ════════════════════════════════════════════════════════
 import { useCallback, useMemo, useRef, useState } from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const dilX2610 = (): string => typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr";
+const ttX2610 = (k: string): string => translate(dilX2610(), k);
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./ayetKategori";
 import { akilliKlipSec } from "./atmosferBag";
 import { adminCatUsable } from "../adminCategoryAccess";
 import { CATEGORIES, ATMOSPHERE_PREVIEW_UNLOCKED, KATEGORI_TIER, FREE_VIDEOS_PER_CATEGORY, type CatId, type Clip } from "../clips";
+import { atmosKategoriAdGorunum } from "../data/kategoriCokDil"; // ★ 26.10: kategori adı 5 dil
 import { LIBRARY_ITEMS, type LibraryItem, type Emotion } from "../dualar";
 import { kutuphaneItem } from "../data/kutuphaneCokDil";
 import type { SelectedAyah } from "../types";
 import type { ModalName } from "../types";
-import type { Lang } from "../i18n";
+import { translate, type Lang } from "../i18n";
 import { tierAtLeast } from "../tier";
 import type { Tier } from "../tier";
 import { RECITERS, sesKaynakZinciri } from "../reciters";
@@ -103,7 +107,7 @@ export function useStudioArkaPlanBag(p: ArkaPlanBagParam) {
     items.forEach((item) => {
       if (korunacak.includes(item.id)) next[item.id] = ayahBackgroundsRef.current[item.id];
     });
-    if (!duzenlecekler.length) { notify("📁 Yüklediklerin korundu — sekme değişimi onlara dokunmadı"); return; }
+    if (!duzenlecekler.length) { notify(ttX2610("sbYuklenenKorundu")); return; }
     if (smartAiEnabledRef.current) {
       // Akıllı AI açıksa: her ayete yeni türde tematik sahne (★ 16.10 torba tekrarsız dağıtıyor)
       duzenlecekler.forEach((item) => {
@@ -184,14 +188,14 @@ export function useStudioArkaPlanBag(p: ArkaPlanBagParam) {
     // ★ KULLANICI SEÇİMİ KUTSAL (30.09): "Zar" kullanıcının kendi dosyasını ezemez —
     //   yalnız kullanıcı Yüklediklerim kategorisini bilerek uygularsa (scopeCat) atanır.
     if (!scopeCat && backgroundRef.current?.cat === "yuklenenler") {
-      notify("📁 Kendi dosyan korundu — zar onu değiştirmez");
+      notify(ttX2610("sbDosyanKorundu"));
       return;
     }
     const pick = () => pool[Math.floor(Math.random() * pool.length)];
     if (!selectedRef.current.length) {
       const c = pick();
       setBackground(c);
-      notify(`Rastgele seçildi: ${c.label}`);
+      notify(ttX2610("sbRastgele").replace("{x}", String(c.label)));
       return;
     }
     // ★ Kullanıcının kendi dosyasına atanmış slotlar zar/çeşitlilik dalgasından muaf
@@ -203,7 +207,7 @@ export function useStudioArkaPlanBag(p: ArkaPlanBagParam) {
             .map(([id]) => id),
         );
     const atananlar = selectedRef.current.filter((item) => !korunanSlotlar.has(item.id));
-    if (!atananlar.length) { notify("📁 Kendi dosyaların zatanmış durumda — zar onlara dokunmadı"); return; }
+    if (!atananlar.length) { notify(ttX2610("sbDosyalarAtanmis")); return; }
     const anaArkaPlanKorunur = backgroundRef.current?.cat === "yuklenenler" && scopeCat !== "yuklenenler";
     const next: Record<string, Clip> = {};
     // ★ setAyahBackgrounds TÜM state'i değiştirir — korunan slotlar next'e geri yazılmalı
@@ -216,10 +220,10 @@ export function useStudioArkaPlanBag(p: ArkaPlanBagParam) {
     if (scopeCat) {
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
       atananlar.forEach((item, index) => { next[item.id] = shuffled[index % shuffled.length]; });
-      const catLabel = CATEGORIES.find((c) => c.id === scopeCat)?.label ?? scopeCat;
+      const catLabel = atmosKategoriAdGorunum(String(scopeCat), CATEGORIES.find((c) => c.id === scopeCat)?.label ?? String(scopeCat), dilX2610());
       setAyahBackgrounds(next);
       if (!anaArkaPlanKorunur && next[selectedRef.current[0].id]) setBackground(next[selectedRef.current[0].id]);
-      notify(`✨ ${atananlar.length} ayete "${catLabel}" içinden rastgele atmosfer atandı`);
+      notify(ttX2610("sbRastgeleAta").replace("{n}", String(atananlar.length)).replace("{x}", String(catLabel)));
       return;
     }
     // ★ GERÇEK ÇEŞİTLİLİK — hem kategori hem klip tekrarını engeller
@@ -247,7 +251,7 @@ export function useStudioArkaPlanBag(p: ArkaPlanBagParam) {
   }, [clipKind, combinedAllClips, notify, isClipAccessible]);
 
   const applySmartBackgrounds = useCallback(() => {
-    if (!selectedRef.current.length) { notify("Önce en az bir ayet seçin"); return; }
+    if (!selectedRef.current.length) { notify(ttX2610("sbOnceAyetSec")); return; }
     const wantKind = clipKindRef.current;
     // ★ KULLANICI MEDYASI KUTSAL (30.09): AI "Aç + Uygula" kullanıcının kendi dosyalarını
     //   EZEMEZ. Yüklediklerim slotları AI atamasından muaf — diğer slotlara sahne atanır.

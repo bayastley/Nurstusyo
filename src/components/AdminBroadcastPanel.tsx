@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState } from "react";
 import { Bell, LockKeyhole, Mail, Save, Send, Trash2, History, Unlock, RotateCcw, CheckCircle2, Rocket } from "lucide-react";
 import { type Announcement, type FeatureLock, saveAnnouncement, getSystemConfig, saveSystemConfig, setFeatureLock, v2TestAcikMi, V2_TEST_KILIT_ANAHTARI, type MaintenanceConfig } from "../services/adminSyncService";
@@ -218,7 +221,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       : kilitOk || duyuruOk
         ? `⚠️ Kısmen yayınlandı (DB erişimi) — cihazda aktif, canlıda ~60 sn'de düşer`
         : "⚠️ Supabase erişilemedi — admin oturumu gerekli");
-    if (kilitOk && duyuruOk) notify(`🚀 ${kalem.ad} yayınlandı — herkese duyuru gitti!`);
+    if (kilitOk && duyuruOk) notify(ttX2610("abKalemYayin").replace("{a}", kalem.ad));
   };
 
   // ★ DB SENKRONU (28.09, kullanıcı kararı): "maher kilitlenmiyor" — kilidin DB'ye
@@ -253,7 +256,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     saveLockHistory(history);
     refreshLocks();
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: "free" });
-    notify(`✅ "${targetId}" kilidi kaldırıldı — herkese açık`);
+    notify(ttX2610("abKilitKaldi").replace("{a}", targetId));
   };
 
   // ★ Tüm kilitleri kaldır
@@ -267,22 +270,22 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     const history = [{ id: uid(), target: `(tümü: ${targets.length} kilit)`, targetLabel: "Tümü", from: "mixed" as FeatureLock, to: "free" as FeatureLock, at: new Date().toISOString() }, ...loadLockHistory()];
     saveLockHistory(history);
     refreshLocks();
-    notify(`✅ ${targets.length} kilidin tamamı kaldırıldı`);
+    notify(ttX2610("abKilitToplu").replace("{a}", String(targets.length)));
   };
 
   // ★ Bir işlemi geri al — eski değere döndür
   const revertEntry = (entry: LockHistoryEntry) => {
-    if (entry.from === "mixed") { notify("Bu işlem tek tuşla geri alınamaz — kilitleri tek tek ayarla"); return; }
+    if (entry.from === "mixed") { notify(ttX2610("abTekKlikGeriAl")); return; }
     setFeatureLock(entry.target, entry.from);
     const history = loadLockHistory().map((h) => h.id === entry.id ? { ...h, reverted: true } : h);
     saveLockHistory(history);
     void adminAction({ action: "set_feature_lock", featureId: entry.target, lockLevel: entry.from });
     refreshLocks();
-    notify(`↩️ "${entry.target}" → ${LOCK_LABELS[entry.from] || entry.from} geri alındı`);
+    notify(ttX2610("abGeriAlindi").replace("{a}", entry.target).replace("{b}", String(LOCK_LABELS[entry.from] || entry.from)));
   };
 
   const publish = async () => {
-    if (!title.trim() || !message.trim()) { notify("Başlık ve kısa mesaj zorunlu"); return; }
+    if (!title.trim() || !message.trim()) { notify(ttX2610("abBaslikMesaj")); return; }
     setSaving(true);
     // localStorage'a yaz (anında)
     const ann: Announcement = {
@@ -303,9 +306,9 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     const ok = await adminAction({ action: "publish_announcement", announcement: ann });
     setSaving(false);
     if (ok) {
-      notify("✅ Duyuru tüm kullanıcılara yayınlandı");
+      notify(ttX2610("abDuyuruYayin"));
     } else {
-      notify("✅ Duyuru bu cihazda yayınlandı (Supabase erişimi yok — admin girişi gerekli)");
+      notify(ttX2610("abDuyuruCihaz"));
     }
     setTitle(""); setMessage(""); setDetail("");
   };
@@ -317,12 +320,12 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     saveSystemConfig(cfg);
     try { localStorage.removeItem("nur_read_announcement"); } catch { /* ignore */ }
     await adminAction({ action: "clear_all_announcements" });
-    notify("🗑️ Tüm duyurular kaldırıldı · Sayfa yenilenince tümünde gider");
+    notify(ttX2610("abDuyuruSil"));
   };
 
   const applyLock = () => {
     const targetId = lockType === "all" ? featureId : lockType === "category" ? selectedCategory : selectedReciter;
-    if (!targetId) { notify("Lütfen bir hedef seçin"); return; }
+    if (!targetId) { notify(ttX2610("abHedefSec")); return; }
     // localStorage'a yaz (anında)
     const oldValue = getSystemConfig().featureLocks[targetId] ?? "free";
     setFeatureLock(targetId, featureLock);
@@ -336,7 +339,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     const labelMap: Record<string, string> = { maintenance: "🔧 Bakımda", off: "Kapalı", free: "Açık", pro: "Pro", elit: "Elit", v2: "V2", v3: "V3" };
     const label = labelMap[featureLock] ?? featureLock;
     setLockStatus(`✅ ${targetLabel} → ${label} uygulandı`);
-    notify(`✅ "${targetLabel}" → ${label} uygulandı`);
+    notify(ttX2610("abUygulandi").replace("{a}", targetLabel).replace("{b}", String(label)));
     void adminAction({ action: "set_feature_lock", featureId: targetId, lockLevel: featureLock });
   };
 
@@ -345,7 +348,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
   const [mailBody, setMailBody] = useState("");
   const [mailSending, setMailSending] = useState(false);
   const sendCampaign = async () => {
-    if (!mailSubject.trim() || !mailBody.trim()) { notify("Konu ve içerik gerekli"); return; }
+    if (!mailSubject.trim() || !mailBody.trim()) { notify(ttX2610("abKonuIcerik")); return; }
     setMailSending(true);
     try {
       const res = await fetch("/api/marketing/send-campaign", {
@@ -353,26 +356,26 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subject: mailSubject.trim(),
-          html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#141414;color:#fff;border-radius:12px"><div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #333"><h2 style="color:#d7aa52;margin:0">🌙 Nûr Stüdyo</h2></div><div style="padding:16px 0;line-height:1.7;font-size:14px">${mailBody.trim().replace(/\n/g, "<br/>")}</div><div style="padding-top:16px;border-top:1px solid #333;font-size:11px;color:#888;text-align:center">Bu e-postayı aldınız çünkü Nûr Stüdyo'da e-posta bildirimlerine izin verdiniz. <a href="https://nurstudyo.com" style="color:#d7aa52">nurstudyo.com</a></div></div>`,
+          html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px;background:#141414;color:#fff;border-radius:12px"><div style="text-align:center;padding-bottom:16px;border-bottom:1px solid #333"><h2 style="color:#d7aa52;margin:0">${ttX2610("abpMailMarka")}</h2></div><div style="padding:16px 0;line-height:1.7;font-size:14px">${mailBody.trim().replace(/\n/g, "<br/>")}</div><div style="padding-top:16px;border-top:1px solid #333;font-size:11px;color:#888;text-align:center">${ttX2610("abpMailNeden")} <a href="https://nurstudyo.com" style="color:#d7aa52">nurstudyo.com</a></div></div>`,
         }),
       });
       const data = await res.json().catch(() => null) as any;
       if (data?.ok) {
-        notify(`✉️ ${data.sent}/${data.total} kullaniciya gönderildi`);
+        notify(ttX2610("abMailGonderildi").replace("{a}", String(data.sent)).replace("{b}", String(data.total)));
         setMailSubject(""); setMailBody("");
       } else notify(data?.error || "Gönderim başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setMailSending(false); }
   };
 
   const saveMaintenance = async () => {
     if (maintenance.startsAt && maintenance.endsAt && new Date(maintenance.endsAt) <= new Date(maintenance.startsAt)) {
-      notify("Bakım bitiş saati başlangıçtan sonra olmalı");
+      notify(ttX2610("abBakimSaat"));
       return;
     }
     // ★ Pencere geçmişteyse uyar — kullanıcı "kaydım çalışmadı" sanmasın
     if (maintenance.endsAt && new Date(maintenance.endsAt).getTime() <= Date.now()) {
-      notify("⚠️ Bitiş zamanı geçmiş — site bakıma girmez, ileri bir saat seç");
+      notify(ttX2610("abBitisGecmis"));
       return;
     }
     const next = { ...maintenance, updatedAt: new Date().toISOString() };
@@ -406,7 +409,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
     <div className="grid gap-4 lg:grid-cols-2">
       {/* ★ GİZLİ ÖZELLİK YAYINI (02.10) — kilit aç + güncelleme baloncuğu, TEK TIK */}
       <section className="rounded-2xl border border-emerald-400/30 bg-emerald-950/10 p-4">
-        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Rocket size={15} className="text-emerald-300" /> Gizli Özellik Yayını</h4>
+        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Rocket size={15} className="text-emerald-300" /> {ttX2610("abpGizliYayin")}</h4>
         <p className="mb-3 text-[9px] leading-relaxed text-white/40">Gizlediğin (V2/V3 oylamadaki) özelliği seç → seviyeyi seç → TEK TIK: kilit herkese açılır + bütün kullanıcılara yeşil "Yeni Güncelleme" baloncuğu gider. Tıklayanların sayfası tazelenir (Ctrl+Shift+R eşdeğeri), güncelleme yüklenir.</p>
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-2">
@@ -415,8 +418,8 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             </select>
             <select value={yayinSeviye} onChange={(e) => setYayinSeviye(e.target.value as typeof yayinSeviye)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white">
               <option value="free">Free — herkese</option>
-              <option value="pro">Pro üyelere</option>
-              <option value="elit">Elit üyelere</option>
+              <option value="pro">{ttX2610("abpProUyelere")}</option>
+              <option value="elit">{ttX2610("abpElitUyelere")}</option>
             </select>
           </div>
           <button onClick={gizliOzellikYayinla} disabled={yayiniyor} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black shadow-[0_0_18px_rgba(16,185,129,.45)] transition hover:bg-emerald-400 active:scale-[.98] disabled:opacity-50">
@@ -427,16 +430,16 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       </section>
 
       <section className="rounded-2xl border border-amber-400/25 bg-black/35 p-4">
-        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><Bell size={15} /> Canlı Duyuru</h4>
+        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><Bell size={15} /> {ttX2610("abpCanliDuyuru")}</h4>
         <div className="space-y-2">
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Duyuru başlığı" className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
-          <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Üstte görünecek kısa mesaj" className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
-          <textarea value={detail} onChange={(e) => setDetail(e.target.value)} placeholder="Tıklanınca açılacak detay (opsiyonel)" rows={3} className="glass-soft w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={ttX2610("abpBaslikP")} className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder={ttX2610("abpKisaP")} className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <textarea value={detail} onChange={(e) => setDetail(e.target.value)} placeholder={ttX2610("abpDetayP")} rows={3} className="glass-soft w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
           <div className="grid grid-cols-2 gap-2">
             <select value={kind} onChange={(e) => setKind(e.target.value as Announcement["kind"])} className="glass-soft rounded-xl px-3 py-2 text-xs text-white">
-              <option value="update">Güncelleme</option>
+              <option value="update">{ttX2610("abpGuncelleme")}</option>
               <option value="info">Bilgi</option>
-              <option value="warning">Uyarı</option>
+              <option value="warning">{ttX2610("abpUyari")}</option>
             </select>
             <label className="glass-soft flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs text-white">
               <input type="checkbox" checked={blinking} onChange={(e) => setBlinking(e.target.checked)} /> Yanıp sönsün
@@ -459,26 +462,26 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
         </div>
       </section>
       <section className="rounded-2xl border border-red-400/25 bg-red-950/10 p-4">
-        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Site Bakım Modu</h4>
+        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> {ttX2610("abpBakimModu")}</h4>
         <div className="grid gap-2 sm:grid-cols-2">
           <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white sm:col-span-2">
             <input type="checkbox" checked={maintenance.enabled} onChange={(e) => setMaintenance((v) => ({ ...v, enabled: e.target.checked }))} />
             Siteyi bakım moduna al
           </label>
-          <label className="text-[10px] text-white/60">Başlangıç<input type="datetime-local" value={maintenance.startsAt ? maintenance.startsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, startsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
-          <label className="text-[10px] text-white/60">Bitiş<input type="datetime-local" value={maintenance.endsAt ? maintenance.endsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, endsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
+          <label className="text-[10px] text-white/60">{ttX2610("abpBaslangic")}<input type="datetime-local" value={maintenance.startsAt ? maintenance.startsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, startsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
+          <label className="text-[10px] text-white/60">{ttX2610("abpBitis")}<input type="datetime-local" value={maintenance.endsAt ? maintenance.endsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, endsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
         </div>
-        <textarea value={maintenance.message} onChange={(e) => setMaintenance((v) => ({ ...v, message: e.target.value }))} rows={2} maxLength={300} placeholder="Bakım mesajı" className="glass-soft mt-2 w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
-        <button onClick={saveMaintenance} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-400 py-2.5 text-xs font-black text-black shadow-[0_0_18px_rgba(248,113,113,.45)] transition hover:bg-red-300 hover:shadow-[0_0_26px_rgba(248,113,113,.65)] active:scale-[.98] active:bg-red-200"><Save size={13} /> Bakım Planını Kaydet</button>
-        <button onClick={endMaintenanceNow} disabled={!maintenance.enabled && !maintenance.endsAt} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/15 py-2.5 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/25 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"><CheckCircle2 size={13} /> Bakımı Şimdi Bitir</button>
+        <textarea value={maintenance.message} onChange={(e) => setMaintenance((v) => ({ ...v, message: e.target.value }))} rows={2} maxLength={300} placeholder={ttX2610("abpBakimMesajP")} className="glass-soft mt-2 w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
+        <button onClick={saveMaintenance} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-400 py-2.5 text-xs font-black text-black shadow-[0_0_18px_rgba(248,113,113,.45)] transition hover:bg-red-300 hover:shadow-[0_0_26px_rgba(248,113,113,.65)] active:scale-[.98] active:bg-red-200"><Save size={13} /> {ttX2610("abpBakimKaydet")}</button>
+        <button onClick={endMaintenanceNow} disabled={!maintenance.enabled && !maintenance.endsAt} className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-500/15 py-2.5 text-xs font-black text-emerald-300 transition hover:bg-emerald-500/25 active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40"><CheckCircle2 size={13} /> {ttX2610("abpBakimBitir")}</button>
       </section>
 
       <section className="rounded-2xl border border-sky-400/25 bg-black/35 p-4 lg:col-span-2">
-        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Mail size={15} /> E-posta Kampanyası (Yeni Özellik Duyurusu)</h4>
+        <h4 className="mb-1 flex items-center gap-2 text-xs font-black text-white"><Mail size={15} /> {ttX2610("abpMailKampanya")}</h4>
         <p className="mb-3 text-[9px] text-white/40">Yalnızca giriş sayfasında "e-posta almak istiyorum" kutusunu işaretleyen kullanıcılara gider (KVKK uyumlu). Ücretsiz Resend planı: ayda 3.000 mail.</p>
         <div className="space-y-2">
-          <input value={mailSubject} onChange={(e) => setMailSubject(e.target.value)} placeholder="Mail konusu (örn: 🌙 V2 Güncellemesi Geldi!)" className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
-          <textarea value={mailBody} onChange={(e) => setMailBody(e.target.value)} placeholder="Mail içeriği (düz metin, satır sonları korunur)" rows={4} className="glass-soft w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <input value={mailSubject} onChange={(e) => setMailSubject(e.target.value)} placeholder={ttX2610("abpMailKonuP")} className="glass-soft w-full rounded-xl px-3 py-2 text-xs text-white outline-none" />
+          <textarea value={mailBody} onChange={(e) => setMailBody(e.target.value)} placeholder={ttX2610("abpMailIcerikP")} rows={4} className="glass-soft w-full resize-none rounded-xl px-3 py-2 text-xs text-white outline-none" />
           <button onClick={sendCampaign} disabled={mailSending} className="flex w-full items-center justify-center gap-2 rounded-xl bg-sky-500 py-3 text-xs font-black text-black disabled:opacity-50">
             <Send size={13} /> {mailSending ? "Gönderiliyor…" : "✉️ Onay Verenlere Gönder"}
           </button>
@@ -486,7 +489,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
       </section>
 
       <section className="rounded-2xl border border-emerald-400/20 bg-black/35 p-4">
-        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> Özellik Kilitleri</h4>
+        <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> {ttX2610("abpKilitler")}</h4>
         {/* ★ V2 TEST KİLİDİ (01.10): kod sabiti yerine DB ayarı — deploy'suz aç/kapa.
             AÇIK: oylamadaki 6 V2 modülü herkese açık (mevcut canlı davranış).
             KAPALI: kilitler oy sıralamasına devreder; en çok oyu alan V2 kalemi
@@ -495,14 +498,14 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-[10.5px] font-black text-amber-200"><Rocket size={12} /> V2 Test Kilidi</p>
-              <p className="mt-0.5 text-[9px] leading-relaxed text-white/45">Açık: oylamadaki 6 modül herkese açık · Kapalı: kilitler oy sıralamasına devreder (~60 sn'de yayılır, deploy gerekmez)</p>
+              <p className="mt-0.5 text-[9px] leading-relaxed text-white/45">ttX2610("abpKilitAciklama")</p>
               <p className="mt-1 text-[9px] font-bold text-white/60">🗳️ Oy lideri: <span className="text-amber-300">{roadmapLider || "…"}</span></p>
             </div>
             <button
               type="button"
               onClick={toggleV2Test}
               className={`shrink-0 rounded-full px-3 py-1.5 text-[9.5px] font-black transition ${v2TestAcik ? "bg-emerald-500 text-black hover:bg-emerald-400" : "bg-red-500/25 text-red-300 hover:bg-red-500/40"}`}
-              title="V2 test kilidini aç/kapa — nur_feature_locks'a yazılır"
+              title={ttX2610("abpV2Title")}
             >
               {v2TestAcik ? "AÇIK" : "KAPALI"}
             </button>
@@ -523,13 +526,13 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           )}
           {lockType === "category" && (
             <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
-              <option value="">Kategori seç...</option>
+              <option value="">{ttX2610("abpKategoriSec")}</option>
               {CATEGORY_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           )}
           {lockType === "reciter" && (
             <select value={selectedReciter} onChange={(e) => setSelectedReciter(e.target.value)} className="glass-soft w-full rounded-xl px-3 py-3 text-xs text-white">
-              <option value="">Hoca seç...</option>
+              <option value="">{ttX2610("abpHocaSec")}</option>
               {RECITER_OPTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
             </select>
           )}
@@ -562,14 +565,14 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
                   )}
                 </div>
                 {entries.length === 0 ? (
-                  <p className="py-2 text-center text-[9.5px] text-white/35 italic">Kilitli/bakımda bir şey yok — her şey herkese açık ✅</p>
+                  <p className="py-2 text-center text-[9.5px] text-white/35 italic">ttX2610("abpBos")</p>
                 ) : (
                   <div className="max-h-44 space-y-1.5 overflow-y-auto">
                     {entries.map(([id, lock]) => (
                       <div key={id} className="flex items-center justify-between gap-2 rounded-lg border border-white/5 bg-white/[.03] px-2 py-1.5">
                         <span className="min-w-0 flex-1 truncate text-[10px] font-bold text-white/80" title={id}>{labelFor(id)}</span>
                         <span className={`shrink-0 rounded border px-1.5 py-0.5 text-[8px] font-black ${LOCK_COLORS[lock] || LOCK_COLORS.free}`}>{LOCK_LABELS[lock] || lock}</span>
-                        <button onClick={() => removeLock(id)} title="Kilidi kaldır — herkese aç"
+                        <button onClick={() => removeLock(id)} title={ttX2610("abpKilidiKaldir")}
                           className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[9px] font-black text-emerald-300 transition hover:bg-emerald-500/20">
                           <Unlock size={9} />
                         </button>
@@ -584,7 +587,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           {/* ★ KİLİT İŞLEM GEÇMİŞİ — ne yaptıysan burada + geri al */}
           {lockHistory.length > 0 && (
             <div className="mt-2 space-y-2 rounded-xl border border-white/10 bg-black/30 p-3">
-              <span className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><History size={11} /> Kilit İşlem Geçmisi</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><History size={11} /> {ttX2610("abpGecmis")}</span>
               <div className="max-h-40 space-y-1.5 overflow-y-auto">
                 {lockHistory.slice(0, 15).map((h) => (
                   <div key={h.id} className={`flex items-center justify-between gap-2 rounded-lg border px-2 py-1.5 ${h.reverted ? "border-white/5 bg-white/[.02] opacity-50" : "border-white/5 bg-white/[.03]"}`}>
@@ -593,7 +596,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
                       <p className="text-[8px] text-white/35">{new Date(h.at).toLocaleString("tr-TR")}{h.reverted ? " · geri alındı" : ""}</p>
                     </div>
                     {!h.reverted && h.from !== "mixed" && (
-                      <button onClick={() => revertEntry(h)} title="Bu işlemi geri al — eski duruma dönsün"
+                      <button onClick={() => revertEntry(h)} title={ttX2610("abpGeriAlTitle")}
                         className="shrink-0 rounded bg-amber-500/15 px-2 py-0.5 text-[9px] font-black text-amber-300 transition hover:bg-amber-500/25">
                         ↩︎ Geri Al
                       </button>

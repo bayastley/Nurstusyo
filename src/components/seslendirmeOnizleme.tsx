@@ -5,6 +5,9 @@
 // Davranış birebir; sadece bileşen olarak ayrıldı.
 // ═══════════════════════════════════════════════════════════════
 import React from "react";
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { Lock } from "lucide-react";
 import { ATM } from "./seslendirmeMotor";
 import { SES_ATMOSFERLER, type KuyrukOgesi, type LockLevel } from "./seslendirmeSabitler";
@@ -115,7 +118,7 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
               const ilkClip = MOTION_CLIPS.find((c) => c.cat === kat.id);
               const gorsel = ilkClip?.r2Poster || ilkClip?.poster || null;
               const aktif = onizKat === kat.id;
-              const rozet = tier === "pro" ? "PRO" : tier === "elit" ? "ELİT" : tier === "v2" ? "V2" : null;
+              const rozet = tier === "pro" ? ttX2610("badgePro") : tier === "elit" ? ttX2610("badgeElit") : tier === "v2" ? ttX2610("badgeV2") : null;
               return (
                 <button key={kat.id} onClick={() => atmosAta(kat.id)} title={kat.ad}
                   className="group relative overflow-hidden rounded-lg border transition"

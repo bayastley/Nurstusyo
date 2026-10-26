@@ -118,7 +118,7 @@ async function sadikUyeSayaci(): Promise<{ toplamKayitli: number; kontenjan: num
     const cr = r.headers.get("content-range") || "";
     const toplam = Number(cr.split("/")[1] || 0);
     // ★ 25.10 (sahibin emri): sadık üye kontenjanı 100 → 500; +1 ömür boyu
-    //   bonus iptal — banner artık yalnız sadakat rozeti vaat eder.
+    //   bonus iptal — banner artık yalnız sadakat ayrıcalıkları vaat eder.
     return { toplamKayitli: Number.isFinite(toplam) && toplam > 0 ? toplam : 0, kontenjan: 500 };
   } catch { return { toplamKayitli: 0, kontenjan: 500 }; }
 }

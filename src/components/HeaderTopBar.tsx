@@ -1,4 +1,6 @@
 import React from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
 import {
   Sparkles, Menu, X, LogIn, UserPlus, BookOpen, HelpCircle, Palette, Headphones,
@@ -109,7 +111,10 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     //   tekrar etmek gereksiz yer kaplıyordu.
     { icon: Heart, label: t("menuDavetOdu"), target: "davet" as ModalName, hedef: "free" },
     { icon: Sparkles, label: t("menuKendiSesinleUret"), target: "kendiSes" as ModalName, hedef: "elit" },
-    { icon: Headphones, label: t("menuSesliMeal"), target: "seslendirme" as ModalName, hedef: "elit" },
+    // ★ 26.10 KALICI EMİR: sesli meal/seslendirme SADECE ADİMENE — üyeler ve normal
+    //   kullanıcılar menüde görmesin bile (elit dahil). Menü listesi array içinde
+    //   admin kapısıyla koşullu kurulur.
+    ...((((user != null && isAdminEmail(user.email || "")) || isMasterSürüm) ? [{ icon: Headphones, label: t("menuSesliMeal"), target: "seslendirme" as ModalName, hedef: "elit" as const }] : [])),
   ];
 
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
@@ -308,7 +313,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             >
                               <p className="flex items-center gap-1.5 text-[10px] font-black text-fuchsia-300">
                                 <span>🎙️</span> {t("hbrKendiSesBaslik")}
-                                <span className="ml-auto rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-1.5 py-0.5 text-[7px] font-black">ELİT</span>
+                                <span className="ml-auto rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-1.5 py-0.5 text-[7px] font-black">{t("tierElit")}</span>
                               </p>
                               <p className="mt-0.5 text-[8.5px] leading-snug text-white/50">{t("hbrKendiSesMetin")}</p>
                               <p className="mt-1 text-[8px] font-bold text-fuchsia-300/80">{t("hbrKendiSesBtn")}</p>
@@ -418,7 +423,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                             }`}
                             title={efektifHedef === "elit" ? t("kilitElitUyelik") : t("kilitProUyelik")}
                           >
-                            {efektifHedef === "elit" ? "ELİT" : "PRO"}
+                            {efektifHedef === "elit" ? t("tierElit") : "PRO"}
                           </span>
                         )}
                       </button>
@@ -493,9 +498,9 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               akış içinde (flex) — çakışma matematiksel olarak imkânsız. Dar ekranda
               "STÜDYO" kelimesi gizlenir, marka logosu+NÛR olarak kalır. */}
           <div className="flex shrink-0 items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-            <img src="/logo.png" alt="Nûr Stüdyo Logo" className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
+            <img src="/logo.png" alt={t("htLogoAlt")} className="h-7 w-7 rounded-lg object-contain shadow-md border border-[color:var(--accent)]/30" />
             <span className="font-display text-base font-black tracking-[.2em]" style={{ color: "var(--accent-2)" }}>NÛR</span>
-            <span className="hidden font-display text-base font-black tracking-[.2em] sm:inline" style={{ color: "var(--accent)" }}>STÜDYO</span>
+            <span className="hidden font-display text-base font-black tracking-[.2em] sm:inline" style={{ color: "var(--accent)" }}>{t("htStudio")}</span>
           </div>
           {/* ★ MOBİL HAK GÖSTERGESİ: masaüstündeki jeton/üyelik rozetleri sm:flex ile gizliydi —
               telefonda hakları hiç göremiyordu. Logo yanında kompakt sürüm: jeton + tier, tıklayınca panel açılır.
@@ -679,8 +684,11 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 herkese kilitli olsun, olurda açarsam gizlilik elitlere uygun"):
                 admin/master KALICI muaf (KALICI EMİR: adminde her kilit açık); elit üye
                 da görür/tıklar; diğer herkes buton YOK. Render kapısı + ModalsContainer
-                mount kapısı ikisi birden devrede. */}
-            {(isAdminEmail(user?.email || "") || isMasterSürüm || tier === "elit") && (
+                mount kapısı ikisi birden devrede.
+                ★ 26.10 GÜNCEL EMİR (kullanıcı): "sesli meal seslendirme admine açık —
+                bütün üyeler ve kullanıcılara kapalı" → ELİT erişimi KALDIRILDI; artık
+                yalnız admin/master butonu görür (menü öğesi + bu buton + mount kapısı). */}
+            {((isAdminEmail(user?.email || "") || isMasterSürüm)) && (
               <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
                 className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
                 style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
@@ -688,7 +696,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 🔊 {t("menuSesliMeal")}
               </button>
             )}
-            <button onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
+            <button data-minitur="namaz-vakti" onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
                 <span className="relative h-2 w-2 rounded-full bg-emerald-400" />

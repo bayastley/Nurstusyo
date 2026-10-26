@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ══════════════════════════════════════════════════════════════
 // QURANSAYFALAR.TSX — Kur'an Sayfaları (mushaf) okuma bölümü
 // Kullanıcı emri (02.10): sayfa sayfa Kral Fahd mushafı —
@@ -254,24 +257,24 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
       <div className={`flex min-h-0 flex-1 flex-col overflow-hidden ${tamEkran ? "" : "rounded-none md:rounded-2xl border border-[#D7AA41]/20"} bg-[#0d1a2c]`}>
         {/* ── ÜST BAR ── */}
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[#D7AA41]/20 px-3 py-2">
-          <button onClick={onClose} aria-label="Kapat" className="flex items-center gap-1 rounded-xl border border-red-900/30 bg-red-950/40 px-2.5 py-1.5 text-[10px] font-bold text-red-400 transition hover:bg-red-900/60 active:scale-95" title="Sayfaları kapat (Kur'an ekranı açık kalır)">
+          <button onClick={onClose} aria-label="Kapat" className="flex items-center gap-1 rounded-xl border border-red-900/30 bg-red-950/40 px-2.5 py-1.5 text-[10px] font-bold text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttX2610("qsSayfalarKapat")}>
             <X size={13} /> KAPAT
           </button>
           <span className="text-[11px] font-black tracking-wider text-gold">📖 KUR'AN SAYFALARI</span>
 
           {/* ★ KAYNAK BUTONLARI (03.10): Arapça = Diyanet beyaz mushaf · Meal = Diyanet mealı */}
-          <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1E293B] p-0.5" role="group" aria-label="Görünüm kaynağı">
+          <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1E293B] p-0.5" role="group" aria-label={ttX2610("qsKaynakAria")}>
             <button
               onClick={() => kaynakDegistir("arapca")}
               className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "arapca" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
-              title="Diyanet mushafı — beyaz sayfa, gerçek Kral Fahd Hafs hatlı mushaf"
+              title={ttX2610("qsMushafTitle")}
             >
               Arapça
             </button>
             <button
               onClick={() => kaynakDegistir("meal")}
               className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "meal" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
-              title="Diyanet İşleri Başkanlığı mealı — sayfa sayfa Türkçe çeviri (beyaz sayfa)"
+              title={ttX2610("qsMealTitle")}
             >
               Meal
             </button>
@@ -282,7 +285,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
             <button
               onClick={() => setSayfa(kayitliSayfa)}
               className="flex items-center gap-1 rounded-full border border-sky-400/40 bg-sky-500/15 px-2.5 py-1 text-[10px] font-black text-sky-200 transition hover:bg-sky-500/25 active:scale-95"
-              title={`Son okuduğun sayfa: ${kayitliSayfa} — oradan devam et`}
+              title={ttX2610("qsDevamTitle").replace("{x}", String(kayitliSayfa))}
             >
               <MapPin size={11} /> Devam: s.{kayitliSayfa}
             </button>
@@ -304,7 +307,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           <span className="text-white/25">|</span>
           <span className="tabular-nums">Sayfa {sayfa}/{SAYFA_SAYISI}</span>
           {baslayanlar.length > 0 && (
-            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[9px] text-[#f5dda6]" title="Bu sayfada sure başlar">
+            <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[9px] text-[#f5dda6]" title={ttX2610("qsSureBaslarTitle")}>
               🌱 {baslayanlar.map((n) => SURAHS_DATA[n - 1]?.name).filter(Boolean).join(", ")} başlar
             </span>
           )}
@@ -328,7 +331,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           onMouseEnter={() => setOkGorunur(true)}
           onMouseLeave={() => setOkGorunur(false)}
           className="absolute inset-0 overflow-auto bg-[#b8912a] p-3 scrollbar-thin"
-          title="Çift tıkla büyüt/küçült · Ctrl+tekerlek zoom · kenarlara tıkla: sayfa çevir"
+          title={ttX2610("qsZoomTitle")}
         >
           <div className="flex min-h-full min-w-full items-center justify-center">
             {kaynak === "meal" ? (
@@ -345,7 +348,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 {mealDurum === "hata" && (
                   <div className="flex flex-col items-center gap-3 py-16 text-center">
                     <span className="text-3xl">📡</span>
-                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">Diyanet meal sayfası şu an yüklenemedi — bağlantını kontrol edip tekrar dener misin?</p>
+                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">ttX2610("qsMealHata")</p>
                     <button
                       onClick={() => { mealCacheRef.current.delete(sayfa); setMealYeniden((n) => n + 1); }}
                       className="flex items-center gap-1.5 rounded-xl bg-[#c9a227] px-3.5 py-1.5 text-[11px] font-black text-[#2b2416] transition hover:brightness-110 active:scale-95"
@@ -418,7 +421,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
             ) : (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
                 <span className="text-3xl">📡</span>
-                <p className="max-w-xs text-[11px] text-[#b8b093]">Sayfa yüklenemedi — internet bağlantını kontrol et. Tüm görüntü kaynakları denendi.</p>
+                <p className="max-w-xs text-[11px] text-[#b8b093]">ttX2610("qsYuklemeHatasi")</p>
                 <button
                   onClick={() => { setKaynakIdx(0); setYukleniyor(true); setHata(false); setImgKey((k) => k + 1); }}
                   className="flex items-center gap-1.5 rounded-xl bg-gold px-3 py-1.5 text-[11px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"
@@ -444,8 +447,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <div
                 onClick={solKenarTikla}
                 className="pointer-events-auto absolute bottom-0 left-0 top-0 w-[90px] cursor-w-resize"
-                title="← Önceki sayfa"
-                aria-label="Önceki sayfa"
+                title={ttX2610("qsOncekiTitle")}
+                aria-label={ttX2610("qsOncekiAria")}
                 role="button"
               />
               <div
@@ -464,9 +467,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <button
                 onClick={() => setSayfa((s) => Math.max(1, s - 1))}
                 disabled={sayfa <= 1}
-                aria-label="Önceki sayfa"
+                aria-label={ttX2610("qsOncekiAria")}
                 className={`absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
-                title="Önceki sayfa (←)"
+                title={ttX2610("qsOncekiTitle2")}
               >
                 <ChevronLeft size={22} strokeWidth={2.6} />
               </button>
@@ -492,7 +495,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               onClick={() => setSayfa((s) => Math.max(1, s - 1))}
               disabled={sayfa <= 1}
               className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.04] px-3 py-1.5 text-[10px] font-bold text-[#d8cfae] transition hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:hover:bg-white/[.04]"
-              title="Önceki sayfa"
+              title={ttX2610("qsOncekiTitle2")}
             >
               <ChevronLeft size={13} /> Önceki
             </button>
@@ -504,7 +507,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               onBlur={(e) => sayfayaGit(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") sayfayaGit((e.target as HTMLInputElement).value); }}
               className="h-8 w-14 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-center text-[11px] font-black tabular-nums text-gold outline-none focus:border-gold/50"
-              title="Sayfa numarası yaz + Enter"
+              title={ttX2610("qsSayfaYazTitle")}
             />
             <span className="text-[10px] font-bold text-[#6e6853]">/ {SAYFA_SAYISI}</span>
             <button
@@ -523,7 +526,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 setSayfa(hedef);
               }}
               className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-1.5 text-[10px] font-bold text-[#d8cfae] outline-none"
-              title="Cüze atla"
+              title={ttX2610("qsCuzTitle")}
             >
               {Array.from({ length: 30 }, (_, i) => (
                 <option key={i + 1} value={i + 1}>Cüz {i + 1}</option>
@@ -537,16 +540,16 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               onClick={() => setZoom((z) => adimla(z, -1))}
               disabled={zoom <= Z_MIN}
               className="rounded-lg px-2 py-1 text-[12px] font-black text-[#d8cfae] transition hover:bg-white/10 active:scale-95 disabled:opacity-30"
-              title="Küçült (−) · çift tık da çalışır"
+              title={ttX2610("qsKucultTitle")}
             >
               <Minus size={13} />
             </button>
-            <span className="min-w-10 text-center text-[10px] font-black tabular-nums text-gold" title="Yakınlaşma oranı">%{Math.round(zoom * 100)}</span>
+            <span className="min-w-10 text-center text-[10px] font-black tabular-nums text-gold" title={ttX2610("qsZoomAria")}>%{Math.round(zoom * 100)}</span>
             <button
               onClick={() => setZoom((z) => adimla(z, 1))}
               disabled={zoom >= Z_MAX}
               className="rounded-lg px-2 py-1 text-[12px] font-black text-[#d8cfae] transition hover:bg-white/10 active:scale-95 disabled:opacity-30"
-              title="Büyüt (+) · çift tık da çalışır"
+              title={ttX2610("qsBuyutTitle")}
             >
               <Plus size={13} />
             </button>

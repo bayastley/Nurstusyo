@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v8"; // ★ 18.10: deploy-kurtarma — HTML cache-first, JS fallback cache-first (detay aşağıda)
+const CACHE = "nurstudyo-v9"; // ★ 26.10: v8→v9 — eski shell cache'ten servirken yeni deploy'un kullanıcıya ulaşmadığı tespit edildi; sürüm artışı eski cache'i aktivasyonda temizletiyor
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.

@@ -79,7 +79,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-gold/30 bg-[#131322] shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="text-[12px] font-black text-gold">ttX2610("ckBaslik")</p>
+          <p className="text-[12px] font-black text-gold">{ttX2610("ckBaslik")}</p>
           <button onClick={onClose} aria-label="Kapat" className="rounded-lg px-2 py-1 text-[11px] font-bold text-white/50 hover:text-white"><X size={16} /></button>
         </div>
         {/* ★ KANAL SEKMELERİ */}
@@ -128,13 +128,13 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
           />
           {kabeMuted && kabeStatus === "playing" && (
             <div className="pointer-events-none absolute inset-x-0 bottom-12 flex justify-center">
-              <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">ttX2610("ckSes")</span>
+              <span className="rounded-full bg-black/70 px-3 py-1 text-[10px] font-black text-white/85 backdrop-blur-sm">{ttX2610("ckSes")}</span>
             </div>
           )}
           {kabeStatus === "loading" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-              <p className="text-[10px] font-bold text-gold/70">ttX2610("ckBaglaniyor")</p>
+              <p className="text-[10px] font-bold text-gold/70">{ttX2610("ckBaglaniyor")}</p>
             </div>
           )}
           {kabeStatus === "error" && (

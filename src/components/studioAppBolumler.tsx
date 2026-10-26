@@ -48,21 +48,21 @@ export function TelifRiskOnayBalonu({
             <ShieldAlert size={22} />
           </div>
           <div>
-            <h3 className="font-display text-base font-black text-white">ttX2610("rsRiskYuksek")</h3>
-            <p className="text-[10px] text-white/50">ttX2610("rsOnay")</p>
+            <h3 className="font-display text-base font-black text-white">{ttX2610("rsRiskYuksek")}</h3>
+            <p className="text-[10px] text-white/50">{ttX2610("rsOnay")}</p>
           </div>
         </div>
 
         <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4 text-[11px]">
           <p className="text-white/70">
             <span className="font-black text-white">{reciterName}</span> kârisinin telif riski{" "}
-            <span className="font-black text-amber-400">ttX2610("rsYuksek")</span>.{" "}
+            <span className="font-black text-amber-400">{ttX2610("rsYuksek")}</span>.{" "}
             Bu kâriyle üretim yaparsanız:
           </p>
           <ul className="list-none space-y-1 text-white/60">
-            <li>ttX2610("rsYoutube")</li>
-            <li>ttX2610("rsKalkabilir")</li>
-            <li>ttX2610("rsSorumluluk")</li>
+            <li>{ttX2610("rsYoutube")}</li>
+            <li>{ttX2610("rsKalkabilir")}</li>
+            <li>{ttX2610("rsSorumluluk")}</li>
           </ul>
         </div>
 
@@ -71,7 +71,7 @@ export function TelifRiskOnayBalonu({
             onClick={() => onConfirm(false)}
             className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
           >
-            Vazgeç
+            {ttX2610("mcbVazgec")}
           </button>
           <button
             onClick={() => { try { localStorage.setItem(YEREL_KEY, "1"); } catch { /* yoksay */ } onConfirm(true); }}
@@ -101,18 +101,18 @@ export function UretimOnayBalonu({
                 <Zap size={22} className="text-white" />
               </div>
               <div>
-                <h3 className="font-display text-base font-black text-white">ttX2610("rsOnayBaslik")</h3>
+                <h3 className="font-display text-base font-black text-white">{ttX2610("rsOnayBaslik")}</h3>
                 <p className="text-[10px] text-white/50">Maliyet bilgisi</p>
               </div>
             </div>
 
             <div className="mb-4 space-y-2 rounded-2xl bg-black/30 p-4">
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">ttX2610("rsTur")</span>
-                <span className="font-bold text-white">{genConfirmData.mode === "short" ? "Kısa (59sn)" : genConfirmData.mode === "long" ? "Uzun (600sn)" : "Tam Sürüm"}</span>
+                <span className="text-white/50">{ttX2610("rsTur")}</span>
+                <span className="font-bold text-white">{genConfirmData.mode === "short" ? ttX2610("rsKisa") : genConfirmData.mode === "long" ? ttX2610("rsUzun") : ttX2610("rsTam")}</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">ttX2610("rsFormat")</span>
+                <span className="text-white/50">{ttX2610("rsFormat")}</span>
                 <span className="font-bold text-white">{genConfirmData.formatCount} adet</span>
               </div>
               <div className="my-2 h-px bg-white/10" />
@@ -125,7 +125,7 @@ export function UretimOnayBalonu({
                 <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
               </div>
               <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">ttX2610("rsSonra")</span>
+                <span className="text-white/50">{ttX2610("rsSonra")}</span>
                 <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
                   {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
                 </span>
@@ -134,7 +134,7 @@ export function UretimOnayBalonu({
 
             {genConfirmData.remaining - genConfirmData.cost <= 0 && (
               <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
-                ⚠️ Jetonun yetersiz! ttX2610("rsSonra") bakiyen 0 olacak.
+                ⚠️ Jetonun yetersiz! {ttX2610("rsSonra")} bakiyen 0 olacak.
               </div>
             )}
 
@@ -279,21 +279,21 @@ export function RenderKaplanmaEkran({ progress, onIptal }: { progress: number; o
 
             <div className="space-y-2">
               <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3.5 py-1 text-[9px] font-black uppercase tracking-widest text-red-300 animate-pulse">
-                SİSTEM AKTİF RENDER MODUNDA
+                {ttX2610("rsSistemModu")}
               </span>
               <h2 className="font-display text-lg font-black text-white leading-normal">
-                LÜTFEN BU SEKMEYİ KAPATMAYIN VEYA ARKA PLANA ALMAYIN
+                {ttX2610("rsSekmeKapatma")}
               </h2>
             </div>
 
             <p className="text-[11.5px] leading-relaxed text-white/70">
-              Tarayıcı tabanlı video birleştirme işlemi başladığı için, başka bir sekmeye geçmek veya uygulamayı arka plana almak tarayıcının işlemi askıya almasına ve <b className="text-gold">videonun donmasına/bozulmasına</b> neden olur.
+              {ttX2610("rsBirlestirmeUyari")}<b className="text-gold">{ttX2610("rsVideoDonma")}</b>{ttX2610("rsBirlestirmeSon")}
             </p>
 
             {/* İlerleme çubuğu */}
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between text-[10px] font-bold text-white/50">
-                <span>Video İşleniyor...</span>
+                <span>{ttX2610("rsVideoIsleniyor")}</span>
                 <span className="text-gold font-black font-mono">%{progress}</span>
               </div>
               <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden border border-white/5">
@@ -309,10 +309,10 @@ export function RenderKaplanmaEkran({ progress, onIptal }: { progress: number; o
                 onClick={onIptal}
                 className="w-full rounded-xl bg-red-500/10 border border-red-500/30 py-3 text-[11px] font-bold text-red-300 transition hover:bg-red-500/20 active:scale-98"
               >
-                Üretimi İptal Et
+                {ttX2610("rsIptalBtn")}
               </button>
               <p className="text-[9.5px] text-white/35 font-medium leading-normal">
-                İptal ettiğinizde üretim hakkı (jeton) hesabınızdan düşmez.
+                {ttX2610("rsIptalNot")}
               </p>
             </div>
           </div>

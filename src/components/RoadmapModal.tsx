@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useEffect } from "react";
 import { X, ThumbsUp, Plus, Trash2, RotateCcw, Clock, Settings, Rocket, Edit3 } from "lucide-react";
 import { isAdminEmail } from "../tier";
@@ -299,11 +302,11 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
         <div className="flex-1 min-w-0">
           {isEditing ? (
             <div className="space-y-1.5">
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Özellik adı" />
-              <input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Açıklama" />
+              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder={ttX2610("rmOzellikAdiP")} />
+              <input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder={ttX2610("rmAciklamaP")} />
               <div className="flex gap-1.5">
                 <button onClick={() => handleSaveEdit(f.id, version)} className="rounded-lg bg-green-500/20 px-2 py-0.5 text-[9px] font-bold text-green-300">Kaydet</button>
-                <button onClick={() => setEditingId(null)} className="rounded-lg bg-white/10 px-2 py-0.5 text-[9px] text-white/50">İptal</button>
+                <button onClick={() => setEditingId(null)} className="rounded-lg bg-white/10 px-2 py-0.5 text-[9px] text-white/50">{ttX2610("rmIptal")}</button>
               </div>
             </div>
           ) : (
@@ -336,7 +339,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
             </>
           ) : isAdmin && adminMode ? (
             <>
-              <button onClick={() => { setEditingId(f.id); setEditTitle(f.title); setEditDesc(f.desc); }} className="p-1 rounded bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition" title="Düzenle">
+              <button onClick={() => { setEditingId(f.id); setEditTitle(f.title); setEditDesc(f.desc); }} className="p-1 rounded bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition" title={ttX2610("rmDuzenle")}>
                 <Edit3 size={10} />
               </button>
               <button onClick={() => handleDeleteFeature(f.id, version)} className="p-1 rounded bg-red-500/15 text-red-300 hover:bg-red-500/25 transition" title="Sil">
@@ -362,7 +365,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               <Rocket size={20} style={{ color: "var(--accent-2)" }} />
               Güncelleme Yol Haritası
             </h2>
-            <p className="text-[11px] text-white/40 mt-0.5">Nûr Stüdyo — Gelecek planları ve v2-v3 yenilikleri</p>
+            <p className="text-[11px] text-white/40 mt-0.5">ttX2610("rmBaslik")</p>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
@@ -389,7 +392,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               {/* Oylama Süresi */}
               <div className="flex items-center gap-2">
                 <Clock size={12} className="text-white/50" />
-                <span className="text-[10px] text-white/60">Oylama Bitiş Tarihi:</span>
+                <span className="text-[10px] text-white/60">ttX2610("rmOyBitisi")</span>
                 <input
                   type="datetime-local"
                   value={deadline}
@@ -398,7 +401,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                 />
                 <button onClick={handleSaveDeadline} className="rounded-lg bg-green-500/20 px-2 py-1 text-[9px] font-bold text-green-300">Kaydet</button>
                 {deadline && (
-                  <button onClick={() => { setDeadline(""); try { localStorage.removeItem(DEADLINE_KEY); } catch {} }} className="rounded-lg bg-white/10 px-2 py-1 text-[9px] text-white/40">Kaldır</button>
+                  <button onClick={() => { setDeadline(""); try { localStorage.removeItem(DEADLINE_KEY); } catch {} }} className="rounded-lg bg-white/10 px-2 py-1 text-[9px] text-white/40">{ttX2610("rmKaldir")}</button>
                 )}
               </div>
               {daysLeft !== null && (
@@ -419,12 +422,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                       <option value="V2">V2</option>
                       <option value="V3">V3</option>
                     </select>
-                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} className="flex-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Özellik adı (ör: AI Meal Seslendirme)" />
+                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} className="flex-1 rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder={ttX2610("rmOzellikOrnekP")} />
                   </div>
-                  <input value={newDesc} onChange={e => setNewDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder="Kısa açıklama (opsiyonel)" />
+                  <input value={newDesc} onChange={e => setNewDesc(e.target.value)} className="w-full rounded-lg bg-white/10 px-2 py-1 text-[10px] text-white outline-none" placeholder={ttX2610("rmKisaAciklamaP")} />
                   <div className="flex gap-2">
                     <button onClick={handleAddFeature} className="rounded-lg bg-green-500/20 px-3 py-1 text-[9px] font-bold text-green-300">Ekle</button>
-                    <button onClick={() => { setShowAddForm(false); setNewTitle(""); setNewDesc(""); }} className="rounded-lg bg-white/10 px-3 py-1 text-[9px] text-white/40">İptal</button>
+                    <button onClick={() => { setShowAddForm(false); setNewTitle(""); setNewDesc(""); }} className="rounded-lg bg-white/10 px-3 py-1 text-[9px] text-white/40">{ttX2610("rmIptal")}</button>
                   </div>
                 </div>
               )}
@@ -445,7 +448,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
           <div className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] via-amber-500/[0.07] to-transparent p-5">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="rounded-md bg-emerald-500/25 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-300 ring-1 ring-emerald-400/40">OYLAMA</span>
-              <h3 className="text-[15px] font-black text-white">Hangi Özellik Önce Gelsin?</h3>
+              <h3 className="text-[15px] font-black text-white">{ttX2610("rmHangiOnde")}</h3>
             </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-white/55">
               Menüdeki yeniliklere oyunu ver — en çok oy alanları ekibimiz sırayla hayata geçirir. Her özelliğe 1 oy, istersen oyunu değiştirebilirsin.
@@ -457,15 +460,15 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                 <span className="rounded-full bg-white/5 px-3 py-1 text-[9.5px] font-bold text-white/50">⏰ {daysLeft} gün kaldı</span>
               )}
               {isDeadlinePassed && (
-                <span className="rounded-full bg-red-500/15 px-3 py-1 text-[9.5px] font-bold text-red-300">⏰ Oylama süresi doldu</span>
+                <span className="rounded-full bg-red-500/15 px-3 py-1 text-[9.5px] font-bold text-red-300">{ttX2610("rmSureDoldu")}</span>
               )}
               {totalVotes === 0 && !isDeadlinePassed && (
-                <span className="animate-pulse rounded-full bg-emerald-500/15 px-3 py-1 text-[9.5px] font-black text-emerald-300">✨ İlk oyu sen ver!</span>
+                <span className="animate-pulse rounded-full bg-emerald-500/15 px-3 py-1 text-[9.5px] font-black text-emerald-300">{ttX2610("rmIlkOyuSenVer")}</span>
               )}
             </div>
             {isAdmin && adminMode && liderler.length > 0 && (
               <div className="mt-2.5 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2">
-                <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">👑 Admin Özeti — En Çok Oy Alanlar</p>
+                <p className="text-[9px] font-black uppercase tracking-wider text-amber-300">{ttX2610("rmAdminOzeti")}</p>
                 <ol className="mt-1 space-y-0.5">
                   {liderler.map((f, i) => (
                     <li key={f.id} className="flex items-center gap-2 text-[10px] text-white/75">
@@ -477,7 +480,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
                 </ol>
               </div>
             )}
-            <p className="mt-2 text-[9.5px] text-amber-200/60">🏆 En çok oy alan yenilikler oylama sonunda sırayla hayata geçirilir</p>
+            <p className="mt-2 text-[9.5px] text-amber-200/60">{ttX2610("rmSiraylaHayata")}</p>
             {voteMsg && <p className="mt-2 rounded-lg border border-amber-400/30 bg-amber-500/15 px-2.5 py-1.5 text-[9.5px] font-bold text-amber-200">{voteMsg}</p>}
           </div>
 
@@ -485,12 +488,12 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
           <div>
             <div className="flex items-center gap-2 mb-3">
               <div className="rounded-lg bg-gradient-to-r from-amber-300 to-emerald-300 px-2.5 py-1 text-[10px] font-black tracking-wider text-black shadow-[0_0_16px_rgba(245,190,70,.25)]">V2</div>
-              <span className="text-sm font-bold text-white">Yakında Gelen Güncellemeler</span>
+              <span className="text-sm font-bold text-white">{ttX2610("rmYakinda")}</span>
               <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2 py-0.5 text-[9px] font-bold text-emerald-300">{data.v2.filter(f => f.active).length} özellik · 1 oy seç</span>
             </div>
             <div className="space-y-2">
               {data.v2.filter(f => f.active).sort((a, b) => b.votes - a.votes).map((f, i) => renderFeature(f, "V2", i))}
-              {data.v2.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">Henüz V2 planı eklenmedi. İlk fikri sen belirle.</p>}
+              {data.v2.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">ttX2610("rmV2Bos")</p>}
             </div>
           </div>
 
@@ -503,14 +506,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
             </div>
             <div className="space-y-2">
               {data.v3.filter(f => f.active).sort((a, b) => b.votes - a.votes).map((f, i) => renderFeature(f, "V3", i))}
-              {data.v3.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">Henüz uzun vadeli plan eklenmedi. Birlikte şekillendireceğiz.</p>}
+              {data.v3.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">ttX2610("rmV3Bos")</p>}
             </div>
           </div>
 
           {/* Footer */}
           <div className="text-center pt-2 pb-4 space-y-1">
             <p className="text-[10px] text-white/30">🕌 Nûr Stüdyo — Dünyada tek "Kur'an Video Üreten AI Stüdyo"</p>
-            <p className="text-[9px] text-white/20">Özellikler developmental sırayla eklenecektir</p>
+            <p className="text-[9px] text-white/20">ttX2610("rmSiraylaEklenecek")</p>
           </div>
         </div>
       </div>

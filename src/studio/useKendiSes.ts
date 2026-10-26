@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useState, useEffect, useCallback, useRef, type MutableRefObject } from "react";
 import { taramaYap, duzelt, nefesAraliklariEkle, type SesSegmenti } from "./sesZamanlama";
 import { sesleriOku, sesYaz, sesSil, zamanlamalariGuncelle, sesOku, type StoredSes } from "./sesDeposu";
@@ -95,8 +98,8 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
   /** PCM taraması + depoya yaz; maksSn (sn, 0 = sınır yok) taramayı sınırlar (23.10). */
   const yukle = useCallback(async (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn = 0): Promise<{ segments: SesSegmenti[]; id: string; total: number } | null> => {
     if (!dosya) return null;
-    if (dosya.size > 60 * 1024 * 1024) { notify("⚠️ Ses dosyası 60 MB'den büyük olamaz"); return null; }
-    if (!/^(audio|video)\//.test(dosya.type || "")) { notify("⚠️ Lütfen ses dosyası yükleyin (mp3, m4a, wav, ogg)"); return null; }
+    if (dosya.size > 60 * 1024 * 1024) { notify(ttX2610("ukBoyutSinir")); return null; }
+    if (!/^(audio|video)\//.test(dosya.type || "")) { notify(ttX2610("ukSesYukleyin")); return null; }
     setYukleniyor(true);
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -107,10 +110,10 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         //   İkisi çelişirse küçük olanı esas al — aksi halde seek edilemeyen segment üretilir.
         const oynatilabilir = await oynatilabilirSure(dosya);
         const sureSiniri = maksSn > 0 ? Math.min(oynatilabilir ?? buf.duration, buf.duration, maksSn) : (oynatilabilir ?? buf.duration); // ★ 23.10: kullanıcı sn sınırı
-        if (maksSn > 0 && buf.duration > maksSn) notify(`⏱ Senin sn sınırın ${maksSn} — kayıttan fazlası kullanılmaz`);
+        if (maksSn > 0 && buf.duration > maksSn) notify(ttX2610("ukSinirSn").replace("{x}", String(maksSn)));
         const tarama = taramaYap(buf, konum === "tum" ? Math.max(ayetSayisi, 1) : 1, sureSiniri);
         if (tarama.segments.length === 0) {
-          notify("⚠️ Seste okunan bölüm algılanamadı — dosya sessiz veya bozuk olabilir");
+          notify(ttX2610("ukBolumAlgilanamadi"));
           return null;
         }
         const segments = duzelt(tarama.segments, tarama.total);
@@ -145,7 +148,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         ctx.close().catch(() => undefined);
       }
     } catch {
-      notify("⚠️ Ses dosyası çözümlenemedi — mp3/m4a/wav deneyin");
+      notify(ttX2610("ukCozumlenemedi"));
       return null;
     } finally {
       setYukleniyor(false);
@@ -155,7 +158,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
   /** ★ YENİDEN ANALİZ (01.10): donmuş zamanlamaları güncel motorla tekrar tarar; maksSn (0 = sınır yok) taramayı sınırlar (23.10). */
   const yenidenTara = useCallback(async (id: string, ayetSayisi: number, maksSn = 0): Promise<boolean> => {
     const row = await sesOku(id);
-    if (!row) { notify("⚠️ Kayıt bulunamadı"); return false; }
+    if (!row) { notify(ttX2610("ukKayitYok")); return false; }
     setYukleniyor(true);
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -166,7 +169,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         const oynatilabilir = await oynatilabilirSure(row.blob);
         const sureSiniri = maksSn > 0 ? Math.min(oynatilabilir ?? buf.duration, buf.duration, maksSn) : (oynatilabilir ?? buf.duration);
         const tarama = taramaYap(buf, Math.max(ayetSayisi, 1), sureSiniri);
-        if (tarama.segments.length === 0) { notify("⚠️ Seste okunan bölüm algılanamadı"); return false; }
+        if (tarama.segments.length === 0) { notify(ttX2610("ukBolumYok")); return false; }
         const segments = duzelt(tarama.segments, tarama.total);
         await zamanlamalariGuncelle(id, segments.map((s) => ({ start: +s.start.toFixed(3), dur: +s.dur.toFixed(3) })), 0);
         const rows = await kayitlariTazele();
@@ -181,7 +184,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         ctx.close().catch(() => undefined);
       }
     } catch {
-      notify("⚠️ Ses çözümlenemedi — yeniden analiz başarısız");
+      notify(ttX2610("ukYenidenAnaliz"));
       return false;
     } finally {
       setYukleniyor(false);
@@ -197,7 +200,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
   /** Aktif kaydı seç (depo) */
   const sec = useCallback(async (id: string): Promise<boolean> => {
     const row = await sesOku(id);
-    if (!row) { notify("⚠️ Kayıt bulunamadı"); return false; }
+    if (!row) { notify(ttX2610("ukKayitYok")); return false; }
     const url = urlTasi(row.blob);
     const segments = nefesAraliklariEkle(duzelt(row.zamanlamalar, row.sure_sn), row.nefes);
     setAktif({ id: row.id, sure: row.sure, kaynak: row.kaynak, segments, blob: row.blob, url, nefes: row.nefes });
@@ -220,7 +223,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
       const segments = nefesAraliklariEkle(duzelt(yeni, cur.segments[cur.segments.length - 1].start + cur.segments[cur.segments.length - 1].dur), nefes ?? cur.nefes);
       return { ...cur, segments, nefes: nefes ?? cur.nefes };
     });
-    notify("✅ Ayet zamanlamaları kaydedildi");
+    notify(ttX2610("ukZamanlamaKayit"));
   }, [kayitlariTazele, notify]);
 
   const kaldirAktif = useCallback(() => setAktif(null), []);

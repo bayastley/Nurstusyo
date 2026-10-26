@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // USEVIDEO TASARIM AYARLARI — StudioApp'ten taşındı (SRP parçalama tur 3, 16.10)
 // Video çizimine giden TÜM görsel ayarlar BİR TEK hook'ta toplanır:
@@ -52,7 +55,7 @@ export function useVideoTasarimAyarlar(notify: (msg: string) => void) {
     if (typeof navigator !== "undefined" && navigator.onLine === false) {
       if (!fontHataBildirildi.current.has(arabicFont)) {
         fontHataBildirildi.current.add(arabicFont);
-        notify(`📶 İnternet bağlantısı yok — "${font.label}" fontu yüklenemedi, Amiri kullanılacak`);
+        notify(ttX2610("vtInternetYok").replace("{x}", String(font.label)));
       }
       return;
     }
@@ -62,7 +65,7 @@ export function useVideoTasarimAyarlar(notify: (msg: string) => void) {
       if (yuklendi) return;
       if (!fontHataBildirildi.current.has(arabicFont)) {
         fontHataBildirildi.current.add(arabicFont);
-        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak (internet bağlantını kontrol et)`);
+        notify(ttX2610("vtFontKontrol").replace("{x}", String(font.label)));
       }
     }, 8000);
     document.head.appendChild(link);
@@ -81,7 +84,7 @@ export function useVideoTasarimAyarlar(notify: (msg: string) => void) {
       window.clearTimeout(zamanAsimi);
       if (!fontHataBildirildi.current.has(arabicFont)) {
         fontHataBildirildi.current.add(arabicFont);
-        notify(`⚠️ "${font.label}" fontu yüklenemedi — Amiri kullanılacak`);
+        notify(ttX2610("vtFontHata").replace("{x}", String(font.label)));
       }
     });
     return () => window.clearTimeout(zamanAsimi);

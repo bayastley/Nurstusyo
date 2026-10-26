@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React from "react";
 import { Plus, FolderPlus, CloudUpload, RefreshCw } from "lucide-react";
 import type { DynamicModule, SystemConfig } from "../services/adminSyncService";
@@ -38,7 +41,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
             <input
               value={newModTitle}
               onChange={(e) => setNewModTitle(e.target.value)}
-              placeholder="Modül Başlığı (ör: Günlük Zikirler)"
+              placeholder={ttX2610("amsBaslikP")}
               className="glass-soft rounded-xl px-3 py-2 text-[11px] text-white outline-none"
             />
             <select
@@ -46,17 +49,17 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
               onChange={(e) => setNewModLock(e.target.value as any)}
               className="glass-soft rounded-xl px-3 py-2 text-[11px] text-white outline-none cursor-pointer"
             >
-              <option value="free">Ücretsiz (Free)</option>
-              <option value="v2">V2 Güncellemesi Kilidi</option>
-              <option value="v3">V3 Güncellemesi Kilidi</option>
-              <option value="pro">Pro Üyelik Kilidi</option>
-              <option value="elit">Elit Üyelik Kilidi</option>
+              <option value="free">{ttX2610("amsUcretsiz")}</option>
+              <option value="v2">{ttX2610("amsV2")}</option>
+              <option value="v3">{ttX2610("amsV3")}</option>
+              <option value="pro">{ttX2610("amsPro")}</option>
+              <option value="elit">{ttX2610("amsElit")}</option>
             </select>
           </div>
           <input
             value={newModDesc}
             onChange={(e) => setNewModDesc(e.target.value)}
-            placeholder="Kısa Açıklama"
+            placeholder={ttX2610("amsAciklamaP")}
             className="glass-soft w-full rounded-xl px-3 py-2 text-[11px] text-white outline-none"
           />
           <button
@@ -115,7 +118,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
               <CloudUpload size={18} />
             </span>
             <div>
-              <h4 className="text-[12px] font-black text-white">100% Ücretsiz Sunucusuz Canlı Senkronizasyon</h4>
+              <h4 className="text-[12px] font-black text-white">ttX2610("amsSync")</h4>
               <p className="text-[9.5px] text-white/50 leading-relaxed">
                 GitHub Gist API kullanarak Admin panelinden yaptığınız her değişimi tüm dünya kullanıcılarına anlık canlı yayınlayabilirsiniz.
               </p>
@@ -140,7 +143,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
             <input
               value={ghGistId}
               onChange={(e) => setGhGistId(e.target.value)}
-              placeholder="Örn: 8f7d6a5e4b3c210..."
+              placeholder={ttX2610("amsOrnek")}
               className="glass-soft w-full rounded-xl px-3 py-2 text-[11px] font-mono text-white outline-none"
             />
           </div>

@@ -70,7 +70,7 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
             <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
               TANITIM
             </span>
-            <span className="text-[8.5px] text-white/35">ttX2610("shTanitim")</span>
+            <span className="text-[8.5px] text-white/35">{ttX2610("shTanitim")}</span>
           </div>
           <video
             src={TANITIM_VIDEO_R2.trim()}

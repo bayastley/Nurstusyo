@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import { sesKaynakZinciri, sesZinciriBagla, type Reciter } from "../reciters";
 
@@ -101,7 +104,7 @@ export function useVerseAudioPlayback({
         if (!destroyed) {
           cleanup();
           setPreviewPlaying(false);
-          notify("⚠️ Bu kârinin tam sure kaydı yüklenemedi · ayet konumu korundu");
+          notify(ttX2610("apTamsureHata"));
         }
       };
     } else {
@@ -130,7 +133,7 @@ export function useVerseAudioPlayback({
         if (destroyed) return;
         cleanup();
         setPreviewPlaying(false);
-        notify("⚠️ Bu kârinin ses kaydı yüklenemedi · ayet konumu korundu");
+        notify(ttX2610("uvKariSesHata"));
       });
       audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
       audio.onabort = () => { if (!destroyed) setPreviewPlaying(false); };

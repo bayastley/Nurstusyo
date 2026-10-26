@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useCallback, type MutableRefObject } from "react";
 import { RECITERS, sesKaynakZinciri, sesZinciriBagla, sesZinciriSoKup } from "../reciters";
 
@@ -76,7 +79,7 @@ export function useReciterPreview({
       sesZinciriBagla(audio, kaynaklar, () => {
         if (reciterPreviewRef.current !== audio) return;
         cleanup();
-        notify(`⚠️ ${target?.name ?? "Kâri"} · ses kaydı şu an yüklenemedi. Lütfen başka bir kâri deneyin.`);
+        notify(ttX2610("urSesHata").replace("{x}", String(target?.name ?? ttX2610("qariIsim"))));
       });
 
       audio.play().catch(() => {

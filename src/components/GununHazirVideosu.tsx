@@ -66,7 +66,7 @@ export const GununHazirVideosu: React.FC<GununHazirVideosuProps> = ({ accessTier
             {gt("gvBaslik")}
             {ozelMi && <span className="rounded-full bg-amber-500/25 px-2 py-0.5 text-[8px] font-black text-amber-200">{gt("gvMubarek")}</span>}
           </p>
-          <p className="mt-0.5 text-[11.5px] font-black leading-snug text-white/90">{kart.baslik}</p>
+          <p className="mt-0.5 text-[11.5px] font-black leading-snug text-white/90">{gt(kart.baslik)}</p>
         </div>
         <button
           type="button"

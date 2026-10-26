@@ -6,6 +6,8 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useState } from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import {
   X, Hourglass, Shield, Search, Plus, Mail, AlertTriangle, Send, Check, MapPin,
 } from "lucide-react";
@@ -61,8 +63,8 @@ export function LoginModalBolum({
 }) {
   return (
     <Modal
-      title="Nûr Stüdyo'ya Hoş Geldiniz"
-      sub="Telifsiz sinematik Kur'an videoları üretin ve paylaşın"
+      title={ttX2610("mcbHosGeldinTitle")}
+      sub={ttX2610("mcbHosGeldinAlt")}
       onClose={() => { setModal(null as never); setLoginTab("login"); }}
       wide={false}
     >
@@ -73,16 +75,16 @@ export function LoginModalBolum({
           className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white py-4 text-[13px] font-bold text-[#3c4043] shadow-lg transition hover:brightness-95 active:scale-[.98]"
         >
           <GoogleIcon size={20} />
-          Google ile Devam Et
+          {ttX2610("mcbGoogleDevam")}
         </button>
         {adminSonEmail && (
           <button
             onClick={() => handleGoogleAuth(adminSonEmail)}
             className="flex w-full items-center justify-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/10 py-3 text-[11px] font-black text-amber-300 transition hover:bg-amber-400/20 active:scale-[.98]"
-            title="Google hesap seçici son admin hesabınla açılır — güvenlik zinciri yine sunucuda doğrulanır"
+            title={ttX2610("mcbGoogleTitle")}
           >
             <Shield size={14} />
-            ADMIN OLARAK GERİ DÖN
+            {ttX2610("mcbAdminGeriDon")}
             {/* ★ GİZLİLİK (01.10): tam e-posta EKRANDA gösterilmez (ekran görüntüsü/
                 omuz-surf sızıntısı) — maskeli biçim (ba***ey@gmail.com). Gerçek adres
                 yalnızca login_hint URL parametresinde taşınır; Google seçicide yine
@@ -91,8 +93,8 @@ export function LoginModalBolum({
           </button>
         )}
         <p className="text-center text-[9px] leading-relaxed text-white/40">
-          Yeni hesap → otomatik oluşturulur · Mevcut hesap → doğrudan girilir<br />
-          Şifre gerekmez · Anında <b className="text-white/60">+5 ⚡ Üretim hakkı</b> hediye
+        {ttX2610("mcbHesapNotu")}<br />
+          {ttX2610("mcbSifreGerekmez")} <b className="text-white/60">{ttX2610("mcbUretimHakki")}</b> {ttX2610("mcbHediyeKelime")}
         </p>
 
         {/* ★ KVKK: Hesap oluşturma sözleşme gereği yapılır, onay kutusu GEREKMEZ.
@@ -106,7 +108,7 @@ export function LoginModalBolum({
             className="mt-0.5 accent-[#d7aa52]"
           />
           <span>
-            Yeni özellikler, indirim ve hatırlatmalardan haberdar olmak için e-posta almak istiyorum. (İsteğe bağlı, istediğiniz zaman iptal edebilirsiniz.)
+            {ttX2610("mcbKvkkRiza")}
           </span>
         </label>
 
@@ -115,13 +117,13 @@ export function LoginModalBolum({
           onClick={handleGuestContinue}
           className="glass-soft flex w-full items-center justify-center gap-2 rounded-xl py-3 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
         >
-          👋 Üye Olmadan Dene <span className="text-[9px] font-semibold text-white/40">({Math.max(0, (guestTrialLeft ?? 2))} deneme videosu kaldı)</span>
+          👋 {ttX2610("mcbMisafirDene")} <span className="text-[9px] font-semibold text-white/40">({Math.max(0, (guestTrialLeft ?? 2))} {ttX2610("mcbDenemeKalan")})</span>
         </button>
       </div>
       {loginTab === "verify" && (
         <div className="space-y-3">
           <p className="text-[11px] text-white/50">{t("codeSent")}: {sentCode}</p>
-          <input value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder="6 haneli kod" maxLength={6} className="glass-soft w-full rounded-xl px-4 py-3 text-center text-[14px] tracking-widest text-white outline-none" />
+          <input value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder={ttX2610("mcb6Haneli")} maxLength={6} className="glass-soft w-full rounded-xl px-4 py-3 text-center text-[14px] tracking-widest text-white outline-none" />
           <button onClick={handleVerifyCode} className="w-full rounded-xl py-3 text-[11px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("verifyBtn")}</button>
           <button onClick={() => setLoginTab("login")} className="w-full text-center text-[10px] text-white/50 hover:text-white">{t("backToLogin")}</button>
         </div>
@@ -130,7 +132,7 @@ export function LoginModalBolum({
         <div className="space-y-3">
           <p className="text-[11px] text-white/50">{t("resetPassword")}</p>
           <input type="password" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value)} placeholder={t("password")} className="glass-soft w-full rounded-xl px-4 py-3 text-[12px] text-white outline-none" />
-          <button onClick={() => { notify("Şifreniz sıfırlandı!"); setLoginTab("login"); }} className="w-full rounded-xl py-3 text-[11px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("resetPassword")}</button>
+          <button onClick={() => { notify(ttX2610("udSifreSifirlandi")); setLoginTab("login"); }} className="w-full rounded-xl py-3 text-[11px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{t("resetPassword")}</button>
         </div>
       )}
     </Modal>
@@ -163,16 +165,16 @@ export function FullUnlockConfirmBolum({
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="absolute right-3 top-3 rounded-full bg-white/5 p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white" aria-label="Kapat"><X size={15} /></button>
+        <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="absolute right-3 top-3 rounded-full bg-white/5 p-1.5 text-white/50 transition hover:bg-white/10 hover:text-white" aria-label={ttX2610("mcbKapat")}><X size={15} /></button>
         <div className="mb-3 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Hourglass size={16} /></span>
-          <div><h3 className="font-display text-sm font-black" style={{ color: "var(--accent-2)" }}>Tam Sürümü Aç</h3><p className="text-[9px] text-white/40">40 dakikaya kadar video modu</p></div>
+          <div><h3 className="font-display text-sm font-black" style={{ color: "var(--accent-2)" }}>{ttX2610("mcbTamSurumAc")}</h3><p className="text-[9px] text-white/40">{ttX2610("mcb40Dakika")}</p></div>
         </div>
-        <p className="text-[10px] leading-relaxed text-white/65">Tam Sürüm modu <b className="text-white">{MIKRO_UCRET} ⚡ Üretim hakkı</b> karşılığında <b className="text-white">24 saat</b> boyunca açılacak. Bu işlem onaydan sonra bakiyenden düşer.</p>
-        <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">Mevcut bakiye: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ Üretim hakkı</b></div>
+        <p className="text-[10px] leading-relaxed text-white/65">{ttX2610("mcbTamSurumModu")} <b className="text-white">{MIKRO_UCRET} ⚡ {ttX2610("mcbUretimHakki")}</b> {ttX2610("mcbKarsiliginda")}  <b className="text-white">24 saat</b> {ttX2610("mcbSuDenliAcilir")}</p>
+        <div className="mt-3 rounded-xl bg-white/[.04] px-3 py-2 text-[10px] text-white/55">{ttX2610("mcbMevcutBakiye")}: <b style={{ color: "var(--accent-2)" }}>{jetonCount} ⚡ {ttX2610("mcbUretimHakki")}</b></div>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="glass-soft rounded-xl py-2.5 text-[10px] font-bold text-white/65">Vazgeç</button>
-          <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{MIKRO_UCRET} ⚡ Üretim hakkı Öde ve Aç</button>
+          <button type="button" onClick={() => setFullUnlockConfirmOpen(false)} className="glass-soft rounded-xl py-2.5 text-[10px] font-bold text-white/65">{ttX2610("mcbVazgec")}</button>
+          <button type="button" onClick={() => { if (tryUnlockFullMode()) { setMode("full"); setFullUnlockConfirmOpen(false); } }} className="rounded-xl py-2.5 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{MIKRO_UCRET} ⚡ {ttX2610("mcbOdeVeAc")}</button>
         </div>
       </div>
     </div>
@@ -200,8 +202,8 @@ export function AdminAuthBolum({
         <div className="mb-4 flex items-center gap-2">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Shield size={16} /></span>
           <div>
-            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>KURUCU GİRİŞİ</h3>
-            <p className="text-[9px] text-white/40">Admin paneli için Google ile doğrulanmış admin oturumu gerekir</p>
+            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>{ttX2610("mcbKurucu")}</h3>
+            <p className="text-[9px] text-white/40">{ttX2610("mcbKurucuAciklama")}</p>
           </div>
         </div>
         <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100/80">
@@ -213,7 +215,7 @@ export function AdminAuthBolum({
             setModal("login" as never);
             setLoginTab("login");
             setAdminAuthOpen(false);
-            notify("Google ile admin hesabınızdan giriş yapın");
+            notify(ttX2610("abGoogleAdmin"));
           }}
           className="w-full rounded-xl py-3 text-[11px] font-black uppercase tracking-wider text-black"
           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
@@ -314,7 +316,7 @@ export function StoriesBolum({
             <p className="text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{story.ref}</p>
             <h4 className="mt-1 font-display text-sm font-bold text-white/90">{story.title}</h4>
             <p className="mt-2 text-[10px] leading-relaxed text-white/55">{story.text}</p>
-            <button type="button" onClick={() => { addAyah(story.s, story.a); setModal(null as never); }} className="mt-3 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[9px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Plus size={10} /> Ayeti Stüdyoya Ekle</button>
+            <button type="button" onClick={() => { addAyah(story.s, story.a); setModal(null as never); }} className="mt-3 flex items-center gap-1.5 rounded-lg px-3 py-2 text-[9px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Plus size={10} /> {ttX2610("mcbAyetStidyoya")}</button>
           </div>
         ))}
       </div>

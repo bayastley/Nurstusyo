@@ -7,6 +7,9 @@
 
 import React, { useRef } from "react";
 import { cubukDuraklari, cubukRengi } from "../studio/mesajKatmani";
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 
 export const CubukRenkSecici: React.FC<{
   etiket: string;
@@ -70,8 +73,8 @@ export const CerceveDuzRenkleri: React.FC<{ aktifDuz?: string; onSec: (renk: str
   <div className="flex items-center justify-center gap-1.5">
     {CERCEVE_DUZ_RENKLERI.map((r) => (
       <button key={r.renk} type="button" onClick={() => onSec(r.renk)}
-        title={`Çerçeve rengi: ${r.ad}`}
-        aria-label={`Çerçeve rengi: ${r.ad}`}
+        title={ttX2610("renkCerceve").replace("{x}", ttX2610("renk" + r.ad))}
+        aria-label={ttX2610("renkCerceve").replace("{x}", ttX2610("renk" + r.ad))}
         className={`h-4 w-4 rounded-full border transition hover:scale-110 ${aktifDuz === r.renk ? "border-white/80 ring-2 ring-[color:var(--accent)]" : "border-white/30"}`}
         style={{ background: r.renk }}
       />

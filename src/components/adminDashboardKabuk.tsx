@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // ADMINDASHBOARDKABUK.TSX — AdminDashboardModal'dan ayrıldı (SRP, 01.10)
 // Panelin ÇERÇEVESİ: header + 7 sekmeli navigasyon + hata alarmı + footer.
@@ -173,7 +176,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "haftaVideo" ? { background: "linear-gradient(135deg,#e879f9,#c026d3)" } : { background: "rgba(232,121,249,0.12)", border: "1px solid rgba(232,121,249,0.3)" }}
           >
             🎬
-            <span>Haftanın Videosu</span>
+            <span>{ttX2610("adkHaftaVideo")}</span>
             {saglikNokta("haftaVideo")}
           </button>
           <button
@@ -184,7 +187,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "gizliFeatures" ? { background: "linear-gradient(135deg,#f5dda6,#d7aa52)" } : { background: "rgba(232,121,249,0.12)", border: "1px solid rgba(232,121,249,0.3)" }}
           >
             🎭
-            <span>Gizli Özellikler</span>
+            <span>{ttX2610("adkGizliOzellikler")}</span>
           </button>
           <button
             onClick={() => setActiveTab("rapor")}
@@ -194,7 +197,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "rapor" ? { background: "linear-gradient(135deg,#2dd4bf,#0d9488)" } : { background: "rgba(45,212,191,0.12)", border: "1px solid rgba(45,212,191,0.3)" }}
           >
             📊
-            <span>Haftalık Rapor</span>
+            <span>{ttX2610("adkHaftaRapor")}</span>
             {saglikNokta("rapor")}
           </button>
           {/* ★ 25.10 BÖLÜM KULLANIM TAB'ı (sahibin emri): hangi bölüm yüzde kaç
@@ -207,7 +210,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "kullanim" ? { background: "linear-gradient(135deg,#7dd3fc,#0284c7)" } : { background: "rgba(125,211,252,0.12)", border: "1px solid rgba(125,211,252,0.3)" }}
           >
             📈
-            <span>Bölüm Kullanımı</span>
+            <span>{ttX2610("adkBolumKullanimi")}</span>
           </button>
 
           <button
@@ -232,7 +235,7 @@ export const AdminPanelKabuk: React.FC<{
                 {errorAlarm === "alarm" ? "🚨 ACİL HATA ALARMI" : "⚠️ HATA UYARISI"}
                 {errorStats ? ` — Son 24 saatte ${errorStats.total24h} hata (${errorStats.unique24h} benzersiz)` : ""}
               </p>
-              <p className="mt-1 text-[10px] text-white/60">Siteyi kullanıcılar hatalı kullanıyor olabilir. Ayrıntılar için Hata Logları sekmesine bak.</p>
+              <p className="mt-1 text-[10px] text-white/60">ttX2610("adkHataUyari")</p>
               <button onClick={() => setActiveTab("errors")} className="mt-2 rounded-lg bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 transition hover:bg-white/20">
                 → Hata Logları'na git
               </button>
@@ -243,7 +246,7 @@ export const AdminPanelKabuk: React.FC<{
 
         {/* Footer */}
         <div className="border-t border-white/10 bg-black/50 px-5 py-3 flex items-center justify-between text-[10px] text-white/40 shrink-0">
-          <span>AES+HMAC Korumalı · Dynamic Serverless Config Engine</span>
+          <span>ttX2610("adkGuvenlik")</span>
           <button
             onClick={onClose}
             className="rounded-xl bg-white/10 px-4 py-1.5 text-[10px] font-bold text-white hover:bg-white/20 transition"

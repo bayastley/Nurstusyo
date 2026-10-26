@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useCallback } from "react";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
 import { checkRateLimit } from "../rateLimiter";
@@ -44,7 +47,7 @@ export function useManualAuthActions({
 }: UseManualAuthActionsParams) {
   const handleLoginSubmit = useCallback(() => {
     const rl = checkRateLimit("auth");
-    if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
+    if (!rl.allowed) { notify(`${rl.message}  ${ttX2610("umSnKaldi").replace("{n}", String(Math.ceil(rl.retryAfterMs / 1000)))}`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "demo@nurstudio.app";
     // ★ ÇİFT KATMAN (30.09): demo formu admin e-postasını TANIMAZ — admin
     //   yetkisi yalnızca sunucu doğrulamalı Google oturumu + NUR_ADMIN_EMAILS
@@ -71,20 +74,20 @@ export function useManualAuthActions({
       setJetonCount(userJeton);
       persistJetonSecure(userJeton);
       syncUserInDb(email, newUser.name, "elit", userJeton);
-      notify("🛡️ Kurucu Admin girişi başarılı! Tüm kilitler açıldı.");
+      notify(ttX2610("umKurucuGiris"));
     } else {
       syncUserInDb(email, newUser.name, userTier, userJeton);
       // ★ DENEME OTOMASYONU (07.10): giriş formuyla girenlerde de 7 gün PRO denemesi
       //   garantilenir. startTrial() idempotenttir (var olan başlangıcı bozmaz).
       startTrial();
-      notify("Giriş başarılı! Hoş geldiniz.");
+      notify(ttX2610("umGirisOk"));
     }
     setModal(null);
   }, [notify, phone, setAdminGodMode, setIsMasterSürüm, setJetonCount, setModal, setTier, setUser, tier]);
 
   const handleRegisterSubmit = useCallback(() => {
     const rl = checkRateLimit("auth");
-    if (!rl.allowed) { notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`); return; }
+    if (!rl.allowed) { notify(`${rl.message}  ${ttX2610("umSnKaldi").replace("{n}", String(Math.ceil(rl.retryAfterMs / 1000)))}`); return; }
     const email = phone.includes("@") ? phone.trim().toLowerCase() : "user@nurstudio.app";
     // ★ ÇİFT KATMAN (30.09): kayıt formu da admin e-postasını TANIMAZ (bkz. yukarı).
     const isKurucuAdmin = false;
@@ -105,7 +108,7 @@ export function useManualAuthActions({
       setJetonCount(1000);
       persistJetonSecure(1000);
       syncUserInDb(email, newUser.name, "elit", 1000);
-      notify("🛡️ Kurucu Admin Hesabı Oluşturuldu! 1000 jeton + Nûr Elit tanımlandı.");
+      notify(ttX2610("umKurucuHesap"));
     } else {
       let nextJeton = getJeton();
       if (!localStorage.getItem("nur_register_bonus_granted")) {
@@ -118,9 +121,9 @@ export function useManualAuthActions({
         persistJetonSecure(nextJeton);
         localStorage.setItem("nur_register_bonus_granted", "1");
         setJetonCount(nextJeton);
-        notify(`🎉 Kayıt başarılı! Hoş geldiniz — +${JETON.KAYIT_BONUSU_FREE} üretim hakkı hediye edildi.`);
+        notify(ttX2610("umKayitBonus").replace("{x}", String(JETON.KAYIT_BONUSU_FREE)));
       } else {
-        notify("Kayıt başarılı! Hoş geldiniz.");
+        notify(ttX2610("umKayitOk"));
       }
       syncUserInDb(email, newUser.name, "free", nextJeton);
       startTrial(); // ★ 7 gün ücretsiz PRO denemesi başlat
@@ -132,15 +135,15 @@ export function useManualAuthActions({
     const code = String(Math.floor(100000 + Math.random() * 900000));
     setSentCode(code);
     setLoginTab("verify");
-    notify(`Doğrulama kodu: ${code}`);
+    notify(ttX2610("umKod").replace("{x}", String(code)));
   }, [notify, setLoginTab, setSentCode]);
 
   const handleVerifyCode = useCallback(() => {
     if (verifyCode === sentCode) {
-      notify("Kod doğrulandı! Şifrenizi sıfırlayabilirsiniz.");
+      notify(ttX2610("umKodOk"));
       setLoginTab("forgot");
     } else {
-      notify("Kod hatalı!");
+      notify(ttX2610("umKodHata"));
     }
   }, [notify, sentCode, setLoginTab, verifyCode]);
 

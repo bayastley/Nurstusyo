@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // ADMINGIZLIFEATURES.TSX — Admin'de GİZLİ özellikler sekmesi (10.10 · 17.10 güncellendi)
 // ★ Öncelik-1 GİZLE/BAKIM PLANI: 6 özellik kullanıcıdan "yok gibi" gizli tutulur;
@@ -152,9 +155,9 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (response.ok && data?.ok) {
         setListe((cur) => cur.map((f) => (f.id === id ? { ...f, lock_level: tier, hidden_feature: false } : f)));
-        notify(`🎉 ${id} → ${tier.toUpperCase()} kullanıcılarına açıldı · duyuru otomatik gider`); // 17.10
+        notify(ttX2610("agAcildi").replace("{a}", String(id)).replace("{b}", String(tier.toUpperCase()))); // 17.10
       } else notify(data?.error || "Açma işlemi başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setBusyId(null); }
   };
 
@@ -171,9 +174,9 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       const data = await response.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (response.ok && data?.ok) {
         setListe((cur) => cur.map((f) => (f.id === id ? { ...f, lock_level: "hidden", hidden_feature: true } : f)));
-        notify(`🙈 ${id} admin-gizliye çekildi — kullanıcılar artık göremez`);
+        notify(ttX2610("agGizli").replace("{a}", String(id)));
       } else notify(data?.error || "Gizleme işlemi başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setBusyId(null); }
   };
 
@@ -190,9 +193,9 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       });
       const d = await r.json().catch(() => null) as { ok?: boolean; error?: string } | null;
       if (r.ok && d?.ok) {
-        notify("🧹 V3 (uzun vadeli) listesi boşaltıldı — V2 oylaması ve oylar korundu");
+        notify(ttX2610("abV3Bosaltildi"));
       } else notify(d?.error || "Boşaltma başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setYukleniyor(false); }
   };
 
@@ -208,7 +211,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
         body: JSON.stringify({ action: "resetAllFeatures" }),
       });
       const resetData = await resetResponse.json().catch(() => null) as { ok?: boolean } | null;
-      if (!resetResponse.ok || !resetData?.ok) { notify("Sıfırlama başarısız"); return; }
+      if (!resetResponse.ok || !resetData?.ok) { notify(ttX2610("abSifirlamaHata")); return; }
       const addResponse = await fetch("/api/roadmap", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -216,15 +219,15 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       });
       const addData = await addResponse.json().catch(() => null) as { ok?: boolean; added?: number; error?: string } | null;
       if (addResponse.ok && addData?.ok) {
-        notify(`✅ Oylama listesi sıfırlandı + ${addData.added ?? 22} admin-gizli madde eklendi`);
+        notify(ttX2610("agOylamaSifir").replace("{a}", String(addData.added ?? 22)));
         await yukle();
       } else notify(addData?.error || "Ekleme başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setYukleniyor(false); }
   };
 
   if (yukleniyor && liste.length === 0) {
-    return <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center text-[11px] text-white/50">Gizli özellik listesi yükleniyor…</div>;
+    return <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center text-[11px] text-white/50">ttX2610("agfYukleniyor")</div>;
   }
 
   return (
@@ -261,7 +264,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
-        <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">🎭 Gizli Özellik Listesi</label>
+        <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">{ttX2610("agfBaslik")}</label>
         {liste.map((f) => (
           <div key={f.id} className="glass-soft rounded-xl px-3 py-2.5 border border-white/10 space-y-2">
             <div className="flex items-center justify-between">
@@ -303,9 +306,9 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
               {/* ★ 17.10: V3 etiketi — admin bu üyeye "V3 kilidi" koyar (kullanıcı haritası yol haritasında oy görmeye devam eder) */}
               <button
                 disabled={busyId === f.id || yukleniyor}
-                onClick={() => { notify("🎬 " + f.title + " → V3 kilide alındı · yol haritasında oy olarak kalır"); }}
+                onClick={() => { notify(ttX2610("agKiliteAlindi").replace("{a}", f.title)); }}
                 className="rounded-lg bg-indigo-500/20 px-2.5 py-1 text-[9px] font-black text-indigo-300 ring-1 ring-indigo-400/30 transition hover:bg-indigo-500/30 disabled:opacity-40"
-                title="Bu özelliği V3 uzun vadeli plana kilitle (admin tekrar açabilir)"
+                title={ttX2610("agfV3Title")}
               >
                 V3'e kilitle
               </button>
@@ -314,7 +317,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
                   disabled={busyId === f.id || yukleniyor}
                   onClick={() => gizleF(f.id)}
                   className="rounded-lg bg-white/5 px-2.5 py-1 text-[9px] font-black text-white/50 transition hover:bg-white/10 disabled:opacity-40"
-                  title="Tekrar admin-gizliye çek"
+                  title={ttX2610("agfGeriTitle")}
                 >
                   <EyeOff size={11} className="inline" /> tekrar gizle
                 </button>
@@ -330,7 +333,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
         </h4>
         <p className="text-[10px] leading-relaxed text-white/60">
           Atmosfer'de gizli kalan admin kategorileri buradan tier bilgisiyle açılabilir.
-          Etiket: <span className="text-sky-300 font-black">PRO</span>, <span className="text-fuchsia-300 font-black">ELİT</span>, <span className="text-emerald-300 font-black">FREE</span>.
+          Etiket: <span className="text-sky-300 font-black">PRO</span>, <span className="text-fuchsia-300 font-black">{ttX2610("tierElit")}</span>, <span className="text-emerald-300 font-black">FREE</span>.
           Seçtiğin tier'a açınca atmosfer seçicinde tüm kullanıcılara görünür.
         </p>
         <div className="grid gap-1.5 sm:grid-cols-2">

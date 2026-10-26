@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useCallback, useEffect, useState } from "react";
 import type { Clip } from "../clips";
 import { getStoredMedia } from "./medyaStore";
@@ -30,14 +33,14 @@ export function useMedyaYukleme(options: {
   //   IndexedDB'den blob okunur → taze blob URL'i → Clip → arka plan (+ pickingFor ise ayete atanır).
   const medyaArkaPlanYap = useCallback(async (medyaId: string, secilsinMi = true) => {
     const row = await getStoredMedia(medyaId);
-    if (!row) { notify("⚠️ Dosya kalıcı depoda bulunamadı — yeniden yüklemeyi dene"); return; }
-    if (row.tur === "ses") { notify("🎵 Ses dosyası arka plan olamaz — arka plan için video/resim seç"); return; }
+    if (!row) { notify(ttX2610("uyDepoYok")); return; }
+    if (row.tur === "ses") { notify(ttX2610("uySesArkaPlanOlmaz")); return; }
     try {
       const url = URL.createObjectURL(row.blob);
       const clip: Clip = { id: `medya-${row.id}`, label: row.name, cat: "yuklenenler", kind: row.tur === "resim" ? "img" : "vid", src: url };
       setMedyaClips((cur) => (cur.some((c) => c.id === clip.id) ? cur : [clip, ...cur]));
       // ★ secilsinMi=false: yalnız galeriye kaydet (Yüklediklerim klasörü), arka planı DEĞİŞTİRME
-      if (!secilsinMi) { notify(`📁 "${row.name}" Yüklediklerim klasörüne kaydedildi`); return; }
+      if (!secilsinMi) { notify(ttX2610("uyKaydedildi").replace("{x}", String(row.name))); return; }
       if (pickingFor) {
         setAyahBackgrounds((current) => ({ ...current, [pickingFor]: clip }));
       } else {
@@ -55,9 +58,9 @@ export function useMedyaYukleme(options: {
           });
         }
       }
-      notify(`💾 "${row.name}" arka plan olarak seçildi — kalıcı depodan`);
+      notify(ttX2610("uyArkaPlanSecildi").replace("{x}", String(row.name)));
     } catch {
-      notify("⚠️ Dosya açılamadı — depolama erişimi engellenmiş olabilir");
+      notify(ttX2610("uyDosyaAcilamadi"));
     }
   }, [pickingFor, notify, setBackground, setAyahBackgrounds, selected]);
 

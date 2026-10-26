@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import {
   X, Hourglass, Shield, Search, Lock, Plus, Mail, AlertTriangle, Send, Check, MapPin,
 } from "lucide-react";
@@ -251,7 +254,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     setModal(null);
     // ★ 25.10 OYLAMA KAPISI KALDIRILDI (sahibin emri): modül oylamaya devretmez,
     //   kullanıcı net 'yakında' bildirimi alır. Roadmap artık yalnız admin'de.
-    notify(`🔒 ${V2_KILITLI[m]} yakında geliyor — hazır olduğunda duyurulacak!`);
+    notify(ttX2610("mcYakindaGeliyor").replace("{a}", String(V2_KILITLI[m])));
     return false;
   };
   // Kilitli modallar hiç mount edilmez (içerik sızmasın)
@@ -286,7 +289,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
     if (isMasterSürüm || isAdminEmail(user?.email || "")) return; // admin/masten her şey açık
     if (!user?.email) {
       setModal(null);
-      notify("🔐 Bu özellik üyelere özel — önce giriş yap / üye ol!");
+      notify(ttX2610("vpLoginGerekli"));
       setLoginTab("register");
       setModal("login");
       return;
@@ -295,7 +298,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       setModal(null);
       // ★ 22.10: hedef seviye geçilir — panelin içindeki GEREKEN plan kartı vurgulanır
       //   (pro kullanıcı elit özellik tıklayınca direkt ELİT kartına kayar)
-      notify(`👑 ${gereken === "pro" ? "PRO" : "ELİT"} üyelik gerekli — premium sayfası açıldı`);
+      notify(ttX2610("mcUyelikGerekli").replace("{x}", gereken === "pro" ? ttX2610("badgePro") : ttX2610("badgeElit")));
       openPremium("uyelik", gereken === "pro" || gereken === "elit" ? gereken : undefined);
     }
   }, [modal]);
@@ -394,19 +397,19 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           onClose={() => setPremiumOpen(false)}
           onCheckout={async (productCode) => {
             try {
-              notify("⏳ Ödeme sayfası hazırlanıyor...");
+              notify(ttX2610("udOdemeHazirlaniyor"));
               const result = await startCheckout({ productCode });
               if (!result.ok) {
                 // ★ 25.10 CANLI FIX: oturum yok/şifre bittiğinde create 401 "Giriş yapmalısınız"
                 //   dönüyor; PremiumModal açık kalıp boş hata gösteriyordu — artık login kapısı açılır
                 //   (Vercel loglarında 19:07-19:08 15x 401 retry fırtınasının düzeltmesi).
                 if (/giriş yap/i.test(String(result.error || ""))) {
-                  notify("🔐 Ödeme için giriş yapmalısınız");
+                  notify(ttX2610("udLoginOdeme"));
                   setLoginTab("login");
                   setModal("login");
                   return;
                 }
-                notify(`❌ Ödeme hatası: ${result.error || "Bilinmeyen hata — lütfen tekrar deneyin"}`);
+                notify(ttX2610("udOdemeHata").replace("{a}", String(result.error || ttX2610("mcbBilinmeyenHata"))));
                 return;
               }
               // ★ DEMO KÖPRÜSÜ — modalsContainerOdeme.ts'e taşındı (09.10 parçalama);
@@ -422,22 +425,22 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
                 const blob = new Blob([result.checkoutFormContent], { type: 'text/html' });
                 window.location.href = URL.createObjectURL(blob);
               } else {
-                notify("Ödeme sayfası açılamadı");
+                notify(ttX2610("udSayfaAcilmadi"));
               }
             } catch {
-              notify("Ödeme servisine ulaşılamadı");
+              notify(ttX2610("udServis"));
             }
           }}
           onPurchase={(newTier) => {
             setTier(newTier);
             setCurrentTier(newTier);
             // Demo local bonus kaldırıldı — gerçek haklar sunucudan (callback/verify) gelir
-            notify(`Hoş geldin! NÛR ${newTier.toUpperCase()} aktif`);
+            notify(ttX2610("udTierAktif").replace("{a}", String(newTier.toUpperCase())));
           }}
           onTokenPurchase={(amount) => {
             const next = Number(secureGet<number>("nur_jeton", 0));
             setJetonCount(next);
-            notify(`${amount} ⚡ Üretim hakkı hesabına eklendi`);
+            notify(ttX2610("udHakEklendi").replace("{a}", String(amount)));
           }}
         />
         </React.Suspense>
@@ -675,7 +678,7 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           ★ onArkaPlanYap: seçilen dosya IndexedDB'den Clip'e çevrilip stüdyo atmosferine atanır
           ★ 17.10 V3 KİLİDİ: kullanıcı emri — ZIP/Image modülü V3 kilitli, admin + master hariç kapalı */}
       {modal === "zip" && (isMasterSürüm || isAdminEmail(user?.email || "")) && (
-        <Modal title="Medya Yükleme" sub="V3 · Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
+        <Modal title={ttX2610("zxBaslik")} sub="V3 · Admin · video, resim ve ses dosyaları — IndexedDB'de kalıcı saklanır" onClose={() => setModal(null)} wide>
           <div className="h-[65vh] min-h-[420px]"><React.Suspense fallback={null}><ZipExplorer onClose={() => setModal(null)} onArkaPlanYap={onMedyaArkaPlan} onMedyaDegisti={onMedyaSenkron} /></React.Suspense></div>
         </Modal>
       )}
@@ -709,9 +712,10 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           tier'ı devreye girer). Kod tarafı fail-closed: isMasterSurum da admin değilse kapı kapalı.
           ★ 20.10 ELİT KAPISI (kullanıcı emri: "seslendirme elit üyelere açılacak, herkese
           kilitli olsun"): admin/master KALICI muaf + elite tier'a da mount izni.
-          Free/pro kullanıcının modalı bir an bile mount OLMAZ (içerik sızmasın). */}
-      {(isMasterSürüm || isAdminEmail(user?.email || "") || tier === "elit") && (
-      <SeslendirmeModal open={modal === "seslendirme"} onClose={() => setModal(null)} notify={notify ?? undefined} />
+          Free/pro kullanıcının modalı bir an bile mount OLMAZ (içerik sızmasın). */}      {/* ★ 26.10 KALICI EMİR: sesli meal/seslendirme SADECE ADİMENE — elit dahil
+          üyelere kapalı (üst bar menü ve buton render kapısı ile aynı kepı) */}
+      {(isMasterSürüm || isAdminEmail(user?.email || "")) && (
+        <SeslendirmeModal open={modal === "seslendirme"} onClose={() => setModal(null)} notify={notify ?? undefined} />
       )}
 
       {/* LEGAL / TOS MODAL — LegalModal.tsx bileşenine taşındı */}

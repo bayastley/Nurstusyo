@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useEffect, useCallback } from "react";
 import {
   getJeton, setJeton as persistJetonSecure,
@@ -116,7 +119,7 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
       if (localStorage.getItem("nur_daily_bonus_date") === today) return;
 
       if (isDeviceClockTampered()) {
-        notify("⚠️ Sistem saatiniz gerçek zamanla uyuşmuyor. Özel gün bonusu askıya alındı.");
+        notify(ttX2610("uwSaatUyusmuyor"));
         return;
       }
 
@@ -130,8 +133,8 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
       const kadirBonus = bayraklar.kadir ? JETON.KADIR_GECESI : 0;
       if (friday > 0 || kadirBonus > 0) {
         addPurchasedJeton(friday + kadirBonus);
-        if (friday) notify(`🕌 Cuma bonusu: +${friday} jeton (tavan dışı)`);
-        if (kadirBonus) notify(`✨ Kadir Gecesi bonusu: +${kadirBonus} jeton (tavan dışı)`);
+        if (friday) notify(ttX2610("uwCuma").replace("{x}", String(friday)));
+        if (kadirBonus) notify(ttX2610("uwKadir").replace("{x}", String(kadirBonus)));
       }
 
       setJetonCount(getJeton());

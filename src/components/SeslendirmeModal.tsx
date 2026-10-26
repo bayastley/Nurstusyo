@@ -85,10 +85,10 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         setSunucuVar(true);
         // dilin ses listesini de çek
         fetch(ttsUrl(`sesler?dil=${dil}`)).then((r2) => r2.ok ? r2.json() : []).then((l2) => { setSesListe(l2); setSes(null); }).catch(() => setSesListe([]));
-        yaz(`${DILLER.find((d) => d.kod === dil)?.bayrak} ${Object.values(harita).length} sure hazır ✓`);
+        yaz(`${DILLER.find((d) => d.kod === dil)?.bayrak} ${ttX2610("smSureHazir").replace("{n}", String(Object.values(harita).length))}`);
       } catch {
         setSunucuVar(false);
-        yaz("🔒 Ses sunucusu kapalı — geliştirici notu: python ai-mockup/meal-sunucu.py", "hata");
+        yaz(ttX2610("smSunucuKapali"), "hata");
       }
     })();
   }, [open, dil, yaz]);  // ★ dil değişince meallar yeniden yüklenir
@@ -127,7 +127,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     if (runningRef.current) durdur();
     setDil(kd); setAyetler([]); setSurler([]); setKuyruk([]); setKuyrukSec(0); setSesListe([]); setSes(null);
     setMetin(""); setBg(null); setBolumSayi(0); // ★ sayaç da sıfır — 17-yalan fix
-    yaz(`${DILLER.find((d) => d.kod === kd)?.bayrak} ${DILLER.find((d) => d.kod === kd)?.ad} — meallar hazırlanıyor…`);
+    yaz(`${DILLER.find((d) => d.kod === kd)?.bayrak} ${DILLER.find((d) => d.kod === kd)?.ad} ${ttX2610("smMeallarHazirlaniyor")}`);
   };
   // ★ 21.10 MOD GEÇİŞİ (kullanıcı: "sure ayetten metin yaza geçince hâlâ sure/ayet kısmından ses geliyor"):
   //  kök neden — setMod ham state'ti: sekme değişince (1) çalmakta olan ayet sesi hiç
@@ -154,9 +154,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     setKuyrukSec(Math.min(geri?.sec ?? 0, Math.max(liste.length - 1, 0)));
     setBolumSayi(m === "metin" ? (geri?.bolum || 0) : 0); // sayaç yalnızca metin bölümü sayar
     setBg(null); // seçilen parçaya bağlı özel arka plan — yeni sekmede oto'ya dön
-    yaz(m === "metin"
-      ? "✍ Metin Yaz — bölüm listesi bu sekmeye geçti, ayet sesi durdu"
-      : "📖 Sure/Ayet — bölüm listesi bu sekmeye geçti, metin sesi durdu");
+    yaz(m === "metin" ? ttX2610("smMetinSekme") : ttX2610("smSureSekme"));
   };
   // okut URL'i — dil + seçili ses (ses seçildiyse onu kullan)
   const okutUrl = (m: string) => {
@@ -195,7 +193,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     const metinVardi = kuyruk.some((x) => x.tip === "metin");
     const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), og];
     setKuyruk(yeni); setKuyrukSec(yeni.length - 1);
-    yaz((metinVardi ? "Önizlemedeki metin silindi — " : "") + `Eklendi: ${yeni[yeni.length - 1].etiket} (kuyruk ${yeni.length}) ✓`);
+    yaz((metinVardi ? ttX2610("smMetinSilindi") : "") + ttX2610("smEklendi").replace("{et}", yeni[yeni.length - 1].etiket || "").replace("{n}", String(yeni.length)));
   };
   const sureEkle = () => {
     if (!ekranSure) return;
@@ -207,7 +205,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     const metinVardi = kuyruk.some((x) => x.tip === "metin");
     const yeni = [...kuyruk.filter((x) => x.tip === "ayet"), ...adaylar];
     setKuyruk(yeni); setKuyrukSec(Math.max(yeni.length - adaylar.length, 0));
-    yaz((metinVardi ? "Önizlemedeki metin silindi — " : "") + `${ekranSure.ad} Suresi eklendi (${adaylar.length} ayet, ${ekranSure.kartlar.length - adaylar.length} zaten vardı) ✓`);
+    yaz((metinVardi ? ttX2610("smMetinSilindi") : "") + ttX2610("smSureEklendi").replace("{sure}", ekranSure.ad).replace("{e}", String(adaylar.length)).replace("{v}", String(ekranSure.kartlar.length - adaylar.length)));
   };
   // ★ 16.10 YENİ AKIŞ: metinEkle (eski "Metni Önizlemeye Ekle") KALDIRILDI yerine
   //   BÖLÜM EKLE sistemi geldi — kullanıcının emri:
@@ -228,7 +226,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
    *  BASLANGIÇ sayar; ➕ motor planından itibaren ARTIRIR (divide-down yok).
    *  Yani kıssada ilk basış = motorun 5-part planı, ikinci = 6-part siki vb. */
   const bolumEkle = () => {
-    if (!metin.trim()) { yaz("Önce metin yaz", "hata"); return; }
+    if (!metin.trim()) { yaz(ttX2610("smOnceMetinYaz"), "hata"); return; }
     const kancaPlan = mBol(metin.trim()); // motorun kararı (part sayısı + kancalar)
     if (!kancaPlan.length) return;
     // ★ hedef: motor planının sayısını GEÇMEZ aşşağı inmez — ilk basış motoru planını verir
@@ -250,14 +248,13 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       setKuyruk(yeniKuyruk);
       setKuyrukSec(kes.length - 1);
       setBolumSayi(kes.length); // GENÇLIK ASLA YALAN SAYMAZ — sayaç gerçeğe kilitlendi
-      yaz(`⚠️ Metin bu haliyle en fazla ${kes.length}·bölüm — daha uzun yaz ki daha fazla bölünsün`, "hata");
+      yaz(ttX2610("smBolumSiniri").replace("{n}", String(kes.length)), "hata");
       return;
     }
     const yeniKuyruk = kes.map((p) => ({ tip: "metin" as const, metin: p.m, kat: p.kat }));
     setKuyruk(yeniKuyruk);
     setBolumSayi(n);
-    setKuyrukSec(n - 1);
-    yaz(`🧩 ${n}·bölüm hazır — kanca noktalarında kesildi, kartlara tıkla: dinle / arka plan ayarla`);
+    setKuyrukSec(n - 1);      yaz(ttX2610("smBolumHazir").replace("{n}", String(n)));
   };
 
   /** ★ 20.10 BÖLÜM AZALT (➖) — kullanıcı sorusu: "bölüm azaltma yok mu kanka":
@@ -267,7 +264,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
    *  Tamamını sıfırlamak isteyen kartın ✕'ini kullanır (o kuyruğu boşaltıyor). */
   const bolumCikar = () => {
     if (!metin.trim()) return;
-    if (bolumSayi <= 1) { yaz("Zaten minimum bölümde — sıfırlamak için kartın ✕'ine bas", "hata"); return; }
+    if (bolumSayi <= 1) { yaz(ttX2610("smZatenMinimum"), "hata"); return; }
     const hedefN = bolumSayi - 1;
     const kancaPlan = mBol(metin.trim());
     if (!kancaPlan.length) return;
@@ -278,7 +275,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     setKuyruk(yeniKuyruk);
     setBolumSayi(Math.min(kes.length, hedefN));
     setKuyrukSec(Math.max(kes.length - 1, 0));
-    yaz(`🧩 ${kes.length}·bölüm — azaltıldı, komşu parçalar birleşti ✓`);
+    yaz(ttX2610("smBolumAzaltildi").replace("{n}", String(kes.length)));
   };
 
   /** ★ 18.10 (kullanıcı emri): bölüm/ayet karta tıklandığında O KARTTAN İTİBAREN SIRAYLA
@@ -303,7 +300,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
     }
     runningRef.current = true; seqRef.current++;
-    yaz(`Parça ${i + 1} dinleniyor…`, "okuyor");
+    yaz(ttX2610("smParcaOynuyor").replace("{n}", String(i + 1)), "okuyor");
     const mySeq = seqRef.current;
     runningRef.current = true;
     try {
@@ -326,16 +323,16 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         audio.onerror = () => {
           if (bitti) return;
           bitti = true; seqRef.current++; runningRef.current = false;
-          yaz(`⚠️ Parça ${i + 1} çalınamadı — ${audio.error?.message || "tarayıcı ses kaynağını blokladı (CSP)"}`, "hata");
+          yaz(ttX2610("smParcaHatasi").replace("{n}", String(i + 1)).replace("{hata}", audio.error?.message || ttX2610("smCspBlokladi")), "hata");
           res();
         };
         setTimeout(bit, 120000);
         try { audio.currentTime = 0; } catch { /* autoplay koruması */ }
         audio.play().catch(() => { /* onerror zaten devrede */ });
       });
-      if (mySeq === seqRef.current) yaz(`Parça ${i + 1} bitti ✓ — sıradaki kartı tıkla ya da SESLENDİR ile tümünü`, "bitti");
+      if (mySeq === seqRef.current) yaz(ttX2610("smParcaBitti").replace("{n}", String(i + 1)), "bitti");
     } catch (e: unknown) {
-      yaz("Hata: " + (e instanceof Error ? e.message : String(e)), "hata");
+      yaz(ttX2610("smHataPrefix") + (e instanceof Error ? e.message : String(e)), "hata");
     } finally {
       runningRef.current = false; audioRef.current = null;
     }
@@ -350,7 +347,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     if (kuyruk.length <= 1) {
       // tek part kalırsa: kuyruk boşalt — canlı önizleme metni geri görünsün
       setKuyruk([]); setKuyrukSec(0); setBolumSayi(0);
-      yaz("Kuyruk boş — canlı önizlemeye dönüldü");
+      yaz(ttX2610("smKuyrukBos"));
       return;
     }
     // en kısa komşu (önce sol, yoksa sağ) — içeriğe katılıyor, kaybolMAz
@@ -371,14 +368,14 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     const kelimeSay = cikan.metin.split(/\s+/).length;
     // yaz bilodus: hedefin ekranda görünen numarası (1-tabanlı, silme sonrası)
     const hedefEkrani = (hedef > i ? hedef : hedef) + 1;
-    yaz(`🧹 Bölüm ${i + 1} kaldırıldı — ${kelimeSay} kelime, komşu Bölüm ${hedefEkrani}'e dağıtıldı ✓`);
+    yaz(ttX2610("smBolumDagitildi").replace("{n}", String(i + 1)).replace("{k}", String(kelimeSay)).replace("{m}", String(hedefEkrani)));
   };
   /** silinme sonrası hedefin yeni index'i — silinen i'den BÜYÜKSE 1 azalt */
   const vezirIndex = (hedef: number, silinen: number): number => (hedef > silinen ? hedef - 1 : hedef);
   const atmosAta = (kat: string) => {
     const i = kuyrukSec;
     setKuyruk(kuyruk.map((o, j) => (j === i ? { ...o, kat } : o)));
-    yaz(`Parça ${i + 1} → ${katBilgi(kat).ad} atandı ✓`);
+    yaz(ttX2610("smParcaAtandi").replace("{n}", String(i + 1)).replace("{kat}", katBilgi(kat).ad));
   };
   /** ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor kanka; akıllı AI
    *  butonu koy bari de tıklayalım"): kuyruktaki TÜM parçaların atmosferini
@@ -388,7 +385,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
    *  seçmişse sonrasında •  tekrar elle seçebilir (buton idempotent değil,
    *  bilinçli yenileme). Arka plan da oto'ya döner ki yeni katlar görünür. */
   const akilliAta = () => {
-    if (!kuyruk.length) { yaz("Önce bölüm/ayet ekle — sonra Akıllı AI'a bas", "hata"); return; }
+    if (!kuyruk.length) { yaz(ttX2610("smOnceEkle"), "hata"); return; }
     let degisen = 0;
     const yeni = kuyruk.map((o) => {
       const kat = mSkorla(o.tip === "ayet" ? `${o.baslik || ""} ${o.meal || o.metin} ${o.kaynak || ""}` : o.metin);
@@ -397,7 +394,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     });
     setKuyruk(yeni);
     setBg(null); // oto arka plan → her parçanın yeni kategorisi hemen görünür
-    yaz(degisen ? `🤖 Akıllı AI: ${degisen} parçanın atmosferi zekice güncellendi ✓` : "🤖 Akıllı AI: atmosferler zaten isabetli 👌");
+    yaz(degisen ? ttX2610("smAkliAI").replace("{n}", String(degisen)) : ttX2610("smAkliAIAlready"));
   };
 
   // ── canlı bölme önizlemesi ──
@@ -420,8 +417,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   const seslendir = async (baslangicIdx = 0) => {
     if (runningRef.current || !sunucuVar) return;
     runningRef.current = true; seqRef.current++;
-    const sesAdi = DILLER.find((d) => d.kod === dil);
-    yaz(`${sesAdi?.bayrak || ""} ${sesAdi?.ad || "Ahmet"} okuyor…`, "okuyor");
+    const sesAdi = DILLER.find((d) => d.kod === dil);      yaz(`${sesAdi?.bayrak || ""} ${sesAdi?.ad || "Ahmet"} ${ttX2610("smOkuyor")}`, "okuyor");
     try {
       // ★ 18.10 SIRALI DEVAM (kullanıcı: "hangi ayetleri seçtiysem devam etsin sırayla"):
       //   kuyruk doluysa TÜMÜ okunur — ama başlangıç noktası artık SEÇİLİ kart idx'i:
@@ -435,7 +431,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
           : plan.map((p) => ({ m: p.m, kat: p.kat }));
       const listedenBasla = typeof baslangicIdx === "number" && Number.isFinite(baslangicIdx) ? baslangicIdx : 0;
       const liste = listedenBasla > 0 && listedenBasla < tamListe.length ? tamListe.slice(listedenBasla) : tamListe;
-      if (!liste.length) { yaz("Önce ayet veya metin ekle", "hata"); return; }
+      if (!liste.length) { yaz(ttX2610("smOnceEkleKisa"), "hata"); return; }
 
       const urlAl = async (m2: string) => {
         const r = await okutCek(okutUrl(m2));
@@ -455,7 +451,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         if (!runningRef.current) break;
         const p = liste[i];
         if (kuyruk.length) setKuyrukSec(listedenBasla + i); // ★ 18.10: toplam kuyrukta doğru kart işaretlenir
-        yaz(`Parça ${i + 1}/${liste.length} · ${katBilgi(p.kat).ad} · Ahmet okuyor…`, "okuyor");
+        yaz(ttX2610("smParcaOkur").replace("{n}", String(i + 1)).replace("{m}", String(liste.length)).replace("{kat}", katBilgi(p.kat).ad).replace("{ses}", sesAdi?.ad || "Ahmet"), "okuyor");
         const { audio: a } = await siradaki;
         const my = seqRef.current; // ★ 21.10 SIZINTI FIX: döngü scope'u — break kontrolü buradan okur
         audioRef.current = a;
@@ -480,8 +476,8 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
             bitti = true;
             seqRef.current++;
             runningRef.current = false;
-            const kisaKat = a.error?.message || "tarayıcı ses kaynağını blokladı (CSP) — sayfa yöneticisiye media-src'ye data: eklenecek";
-            yaz(`⚠️ Parça ${i + 1} çalınamadı — ${kisaKat}`, "hata");
+            const kisaKat = a.error?.message || ttX2610("smCspBlokladiDetay");
+            yaz(ttX2610("smParcaHatasi").replace("{n}", String(i + 1)).replace("{hata}", kisaKat), "hata");
             res();
           };
           setTimeout(bit, 120000);
@@ -498,15 +494,15 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
           await new Promise((r) => setTimeout(r, PARCA_ARASI)); // parça arası nefes
         }
       }
-      if (runningRef.current) yaz(`Tamamlandı ✓ (${liste.length} parça)`, "bitti");
+      if (runningRef.current) yaz(ttX2610("smTamamlandi").replace("{n}", String(liste.length)), "bitti");
     } catch (e: unknown) {
-      if (runningRef.current) yaz("Hata: " + (e instanceof Error ? e.message : String(e)), "hata");
+      if (runningRef.current) yaz(ttX2610("smHataPrefix") + (e instanceof Error ? e.message : String(e)), "hata");
     } finally { runningRef.current = false; audioRef.current = null; }
   };
   const durdur = () => {
     seqRef.current++; runningRef.current = false;
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    yaz("⏹ durduruldu");
+    yaz(ttX2610("smDurduruldu"));
   };
   // ★ 21.10 HEPSİNİ TEMİZLE (kullanıcı: "seçilileri komple temizleme olsun" —
   //  seçililer ekranındaki "Temizle" ile aynı davranış): okuma vardsa KES,
@@ -519,7 +515,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     }
     const n = kuyruk.length;
     setKuyruk([]); setKuyrukSec(0); setBolumSayi(0);
-    yaz(`🗑 ${n} bölüm komple temizlendi — canlı önizlemeye dönüldü`);
+    yaz(ttX2610("smTemizlendi").replace("{n}", String(n)));
   };
 
   // ★ 21.10 İNDİR: kuyruk doluyken çalma zincirini DURDUR (sonu okunur bir dosya
@@ -535,7 +531,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       : mod === "ayet" && mevcutAyet
         ? [ayetKuyrukOg(mevcutAyet)]
         : plan.map((p) => ({ metin: p.m, kat: p.kat }));
-    if (!liste.length) { yaz("İndirilecek şey yok — önce ayet seç ya da metin yaz", "hata"); return; }
+    if (!liste.length) { yaz(ttX2610("smIndirilecekYok"), "hata"); return; }
     setIndiriyor(true);
     // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın
     if (runningRef.current) durdur();
@@ -565,7 +561,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
           <div className="flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg text-xs" style={{ background: "rgba(215,170,82,.15)" }}>🎧</div>
-            <h3 className="font-display text-base font-bold" style={{ color: "var(--accent-2)" }}>ttX2610("smBaslik")</h3>
+            <h3 className="font-display text-base font-bold" style={{ color: "var(--accent-2)" }}>{ttX2610("smBaslik")}</h3>
           </div>
           <div className="flex items-center gap-2">
             {/* ★ 5 DİL: meal + TTS sesi seçilen dilde */}
@@ -582,7 +578,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
             </div>
             {/* ★ SES SEÇİCİ — seçilen dilin erkek sesleri; seçilen ses TTS'e gider */}
             {sesListe.length > 0 ? (
-              <select value={ses || sesListe[0]?.id || ""} onChange={(e) => { setSes(e.target.value); yaz(`🎙️ Ses: ${sesListe.find((s) => s.id === e.target.value)?.ad || e.target.value}`); }}
+              <select value={ses || sesListe[0]?.id || ""}                onChange={(e) => { setSes(e.target.value); yaz(ttX2610("smSesGuncel").replace("{ad}", sesListe.find((s) => s.id === e.target.value)?.ad || e.target.value)); }}
                 className="cursor-pointer rounded-xl px-2 py-1.5 text-[10px] font-bold outline-none"
                 style={{ width: 160, background: "rgba(0,0,0,.35)", color: "var(--accent-2)", border: "1px solid rgba(255,255,255,.14)" }}>
                 {sesListe.map((s) => <option key={s.id} value={s.id}>{s.ad}</option>)}
@@ -591,15 +587,15 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
             <button onClick={kapat} aria-label="Kapat" title="Kapat"
               className="rounded-xl px-4 py-2 text-[11px] font-extrabold text-white transition hover:brightness-110"
               style={{ background: "#e04a5a", border: "1px solid #e04a5a" }}>
-              ✕ Kapat
+              {ttX2610("smKapat")}
             </button>
           </div>
         </div>
 
         {sunucuVar === false ? (
           <div className="rounded-xl p-8 text-center text-[11px] text-white/70">
-            🔒 <b className="text-white">ttX2610("smGelistirme")</b> — canlı yayında kapalı.
-            <div className="mt-1 text-[10px] text-white/40">Lokal: <code>python ai-mockup/meal-sunucu.py</code> ttX2610("smAksiyon")</div>
+            🔒 <b className="text-white">{ttX2610("smGelistirme")}</b> — canlı yayında kapalı.
+            <div className="mt-1 text-[10px] text-white/40">Lokal: <code>python ai-mockup/meal-sunucu.py</code> {ttX2610("smAksiyon")}</div>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-[290px_1fr]">

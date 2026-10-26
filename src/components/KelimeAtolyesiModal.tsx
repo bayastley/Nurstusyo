@@ -27,6 +27,7 @@ import {
   type KelimeRecete,
 } from "../data/kelimeAtolyesi";
 import { CATEGORIES, CATEGORY_PALETTE, KATEGORI_TIER, type CatId } from "../clips";
+import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories"; // ★ 26.10: admin kategori adları
 import { sureNoFromSource, type AyetKarti } from "../data/ayetKartlariData";
 // ★ 04.10: öneri çipleri seçili dilde GÖRÜNÜR; tıklamada TR anahtar kutuya yazılır
 import { cipGorunum, cipMetinCevir, receteEtiketGorunum } from "../data/kelimeCipCokDil";
@@ -64,7 +65,7 @@ function ayetNoFromSource(source: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
+const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
 // ★ 04.10: kategori adı seçili dilde
 const catLabelDil = (cat: CatId, l: Lang): string => kategoriAdGorunum(cat, catLabel(cat), l);
 
@@ -225,7 +226,7 @@ export const KelimeAtolyesiModal: React.FC<KelimeAtolyesiModalProps> = ({
                 {aktifRecete.id === "fallback" ? aktifRecete.etiket : tt("kaTemaBaslik").replace("{t}", receteEtiketGorunum(aktifRecete.id, aktifRecete.etiket, lang))}
               </h4>
               {!tamEslesme && (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">ttX2610("yaklasikVurus")</span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">{ttX2610("yaklasikVurus")}</span>
               )}
             </div>
             <p className="text-[10px] leading-relaxed text-white/55">{aktifRecete.aciklama}</p>

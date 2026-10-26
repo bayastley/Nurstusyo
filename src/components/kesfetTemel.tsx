@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // KESFETTEMEL.TSX — Keşfet Modal temel parçaları
 // KesfetModal.tsx'den ayrıldı (SRP adım 4, 30.09)
@@ -92,7 +95,7 @@ export const DuaSesSecici: React.FC<{ notify?: (m: string) => void }> = ({ notif
       window.speechSynthesis?.speak(utt);
       // Cihazda sadece eski SAPI sesi varsa kullanıcıya doğal ses yolunu göster
       if (ses && !/natural|neural|online/i.test(ses.name) && notify) {
-        notify("🔊 Ses seçildi · Daha doğal ses için Microsoft Edge kullan (Emel/Ahmet sesleri)");
+        notify(ttX2610("ksEdgeSes"));
         return;
       }
     } catch { /* yoksay */ }

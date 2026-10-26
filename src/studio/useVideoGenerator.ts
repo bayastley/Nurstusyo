@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { sesKaynakZinciri } from "../reciters";
@@ -120,17 +123,17 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     const misafirGate = user || isMasterSürüm ? { allowed: true, remaining: 0 } : checkGuestGate();
     if (!user && !isMasterSürüm) {
       if (misafirGate.reason === "bekle") {
-        notify(`⏳ Deneme videoları arasında kısa bir mola var · ${misafirGate.retryAfterSec} sn sonra tekrar dene`);
+        notify(ttX2610("vgMola").replace("{x}", String(misafirGate.retryAfterSec)));
         return;
       }
       if (misafirGate.reason === "günlük-sınır") {
-        notify("🌙 Bugünkü deneme hakkın doldu · yarın tekrar gelirsin ya da hemen ücretsiz üye olabilirsin");
+        notify(ttX2610("vgBugunDoldu"));
         setLoginTab("register");
         setModal("login");
         return;
       }
       if (!misafirGate.allowed) {
-        notify("🎁 Ücretsiz deneme hakkın bitti · Google ile 3 saniyede üye ol, +5 üretim hakkı kazan");
+        notify(ttX2610("vgTrialBirlestirme"));
         setLoginTab("register");
         setModal("login");
         return;
@@ -138,11 +141,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     }
     const rl = checkRateLimit("video");
     if (!rl.allowed) {
-      notify(`${rl.message} (${Math.ceil(rl.retryAfterMs / 1000)} sn kaldı)`);
+      notify(`${rl.message}  ${ttX2610("umSnKaldi").replace("{n}", String(Math.ceil(rl.retryAfterMs / 1000)))}`);
       return;
     }
-    if (!selected.length) { notify("Önce en az bir ayet seçin"); return; }
-    if (!window.MediaRecorder) { notify("Tarayıcınız video üretimini desteklemiyor"); return; }
+    if (!selected.length) { notify(ttX2610("sbOnceAyetSec")); return; }
+    if (!window.MediaRecorder) { notify(ttX2610("vgTarayiciDestekmiyor")); return; }
     // ★ TELİF UYARISI — SADECE İLK üretim basışında BİR KERE:
     //   uyarı kabul edilmemişse bayrak konur, uyarı açılır; "Anladım" deyince
     //   üretim otomatik kaldığı yerden DEVAM eder (ikinci tıklama gerekmez).
@@ -155,12 +158,12 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     // ★ Safari / eski tarayıcı: canvas yakalama yoksa net uyarı (iOS Safari 15 altı)
     const canvasEl = canvasRef.current;
     if (!canvasEl || typeof canvasEl.captureStream !== "function") {
-      notify("⚠️ Bu tarayıcı canvas kaydını desteklemiyor · Chrome, Edge veya güncel Safari kullanın");
+      notify(ttX2610("vgCanvasDestekmiyor"));
       return;
     }
     const surahOnlyReciter = Boolean(reciter.surahPattern);
     if (surahOnlyReciter && !isWholeSurahSelected(selected, SURAHS)) {
-      notify(`⚠️ ${reciter.name} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen "Tüm Sure" butonuyla ekleyin`);
+      notify(ttX2610("vgSesSure").replace("{x}", String(reciter.name)));
       return;
     }
     // ★ TELİF RİSK ONAYI (09.10): telif riski %30 ÜZERİ kâriyle üretim —
@@ -174,7 +177,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     //   → bilgilendirilmiş-onay penceresi onlar için de gösterilir (telif dürüstlüğü).
     if (!isMasterSürüm && !riskOnayAdminMi && (accessTier === "pro" || accessTier === "elit" || denemeAktifMi()) && riskYuzde > riskOnayEsigi) {
       const onaylandi = await showRiskOnay(reciter.name, riskYuzde);
-      if (!onaylandi) { notify("Üretim iptal edildi · jeton düşmedi"); return; }
+      if (!onaylandi) { notify(ttX2610("vgIptal")); return; }
     }
     const formatCount = Math.max(batchFormats.length, 1);
     const costPerVideo = videoMaliyeti(mode, accessTier);
@@ -200,14 +203,14 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         //   source==='deneme' → packLeft = kalan hak; deneme bitti (kota/paket).
         if (data.source === "deneme") {
           denemeAyarla(Number(data.packLeft) || 0);
-          notify(`🎁 Lansman denemesi: ${data.packLeft}/${DENEME_TOPLAM} üretim hakkı kaldı`);
+          notify(ttX2610("vgLansman").replace("{n}", String(data.packLeft)).replace("{t}", String(DENEME_TOPLAM)));
         } else {
           denemeAyarla(0); // deneme bitti → PRO/ELİT/V2 kilitleri geri gelir
           if (denemeAktifMi()) denemeAyarla(0);
         }
         bolumKullanimiYaz("video-uret"); // ★ 25.10 analitik: en çok kullanılan bölüm
       } catch {
-        notify("Üretim yetkisi için sunucuya ulaşılamadı");
+        notify(ttX2610("vgYetkiSunucu"));
         return;
       }
     }
@@ -269,7 +272,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       const kendi = kendiSesAktif;
       const kendiUygun = Boolean(kendi && selected.length && selected.every((item) => item.s === kendi.sure) && kendi.segments.length > 0);
       if (kendi && !kendiUygun) {
-        notify(`⚠️ Kendi sesin ${kendi.sure}. suresine ait — seçili ayetlerle uyuşmuyor, hocanın sesiyle üretiliyor`);
+        notify(ttX2610("vgSesSurahUyusmazlik").replace("{x}", String(kendi.sure)));
       }
       if (kendi && kendiUygun) {
         try {
@@ -295,11 +298,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           }
           if (buffers.length) {
             kendiKullandi = true;
-            notify(`🎙️ Video kendi sesinle üretiliyor · ${usedItems.length} ayet`);
+            notify(ttX2610("vgKendiSesUretim").replace("{n}", String(usedItems.length)));
           }
-          if (dustu && buffers.length) notify(`⚠️ ${dustu} ayet kendi sesinle eşleşmedi — o ayetler eklenmedi`);
+          if (dustu && buffers.length) notify(ttX2610("vgSesEslesmedi").replace("{x}", String(dustu)));
         } catch {
-          notify("⚠️ Kendi sesin çözümlenemedi — hocanın sesiyle devam ediliyor");
+          notify(ttX2610("vgSesCozumHatasi"));
         }
       }
       if (!kendiKullandi && surahOnlyReciter) {
@@ -360,7 +363,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       if (!kendiKullandi && !surahOnlyReciter && usedItems.length < selected.length) {
         const dropped = selected.length - usedItems.length;
         const modeLabel = mode === "short" ? "Kısa (59 sn)" : mode === "long" ? "Uzun (600 sn)" : "Tam Sürüm (24:35)";
-        notify(`⚠️ ${modeLabel} süresi aşıldı · son ${dropped} ayet eklenmedi · ${usedItems.length} ayet ile üretiliyor`);
+        notify(ttX2610("vgSureAsildi").replace("{m}", String(modeLabel)).replace("{d}", String(dropped)).replace("{n}", String(usedItems.length)));
       }
       if (!buffers.length) throw new Error("Ses dosyaları alınamadı");
       const total = cursor - .03, offline = new OfflineAudioContext(2, Math.ceil((total + .1) * 48000), 48000);
@@ -486,7 +489,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
-        if (userStopped) { chunks.length = 0; notify("Üretim iptal edildi · jeton düşmedi"); continue; }
+        if (userStopped) { chunks.length = 0; notify(ttX2610("vgIptal")); continue; }
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
         // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
         //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
@@ -548,9 +551,9 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           });
           const refundData = await refundResponse.json().catch(() => null) as { ok?: boolean } | null;
           if (refundResponse.ok && refundData?.ok) {
-            notify("↩️ Teknik hata nedeniyle üretim hakkınız iade edildi");
+            notify(ttX2610("vgIade"));
           } else {
-            notify("⚠️ Teknik hata sonrası hak iadesi tamamlanamadı — destek ile iletişime geçin");
+            notify(ttX2610("vgIadeHatasi"));
           }
         } catch { /* iade servisine ulaşılamadı — kullanıcıya sessiz kal, yukarıda mesaj var */ }
       }

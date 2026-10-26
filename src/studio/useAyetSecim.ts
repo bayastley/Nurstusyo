@@ -5,9 +5,11 @@
 // ════════════════════════════════════════════════════════
 
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { SURAHS } from "../data";
 import { fetchJSON, fetchAyah, fetchSurah, quranUrl, normalizeTurkishMeal } from "./studioHelpers";
-import { MEAL_EDITIONS } from "../i18n";
+import { MEAL_EDITIONS, translate } from "../i18n";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./ayetKategori";
 import { akilliKlipSec } from "./atmosferBag"; // ★ 16.10: Akıllı AI seçimi artık tekrar-düşman DÖNEN TORBA
 import { genDesc, genTitle } from "../data/titleTemplates";
@@ -50,7 +52,7 @@ export function useAyetSecim(params: UseAyetSecimParams) {
   const addAyah = useCallback(async (s: number, a: number, knownTranslation?: string) => {
     // ★ TAM TARAMA (29.09): a=0 guard — "Ayet Ekle" butonu ayet seçilmeden basılınca
     // Number("")=0 geliyordu → "Fâtiha 1:0" placeholder → 001000.mp3 404 → render crash.
-    if (!Number.isInteger(s) || s < 1 || !Number.isInteger(a) || a < 1) { notify("⚠️ Önce sure ve ayet seç"); return; }
+    if (!Number.isInteger(s) || s < 1 || !Number.isInteger(a) || a < 1) { notify(ttX2610("usOnceSureAyet")); return; }
     const id = `${s}:${a}`;
     if (selectedRef.current.some((item) => item.id === id)) return;
     const meta = SURAHS[s - 1];
@@ -127,8 +129,8 @@ export function useAyetSecim(params: UseAyetSecimParams) {
 
   const addWholeSurah = useCallback(async (surahNum?: number | string) => {
     const number = Number(surahNum);
-    if (!number || number < 1) { notify("Önce bir sure seç"); return; }
-    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(`${meta.name} Suresi tamamı eklendi (${rows.length} ayet)`); }
+    if (!number || number < 1) { notify(ttX2610("usOnceSure")); return; }
+    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(ttX2610("usSureEklendi").replace("{x}", String(meta.name)).replace("{n}", String(rows.length))); }
     catch { notify(t("renderServerError")); }
   }, [t, lang, notify, setSelected]);
   // (max 1 parametrenin olması arayüzle uyumlu: addWholeSurah(surah string) — addChilder caller uyumlu)

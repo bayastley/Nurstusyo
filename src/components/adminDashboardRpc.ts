@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // ADMIN DASHBOARD RPC YARDIMCILARI — AdminDashboardModal'dan taşındı
 // (SRP parçalama, 09.10)
@@ -29,7 +32,7 @@ export async function assertAdminAction(
     }
     return true;
   } catch {
-    notify("Admin yetkisi için sunucuya ulaşılamadı");
+    notify(ttX2610("adAdminSunucu"));
     return false;
   }
 }

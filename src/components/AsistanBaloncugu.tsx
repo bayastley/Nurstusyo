@@ -121,7 +121,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
               <span className="text-lg" aria-hidden>🕌</span>
               <div>
                 <p className="text-[12px] font-black text-white">Nûr Asistan</p>
-                <p className="text-[8.5px] font-bold text-emerald-200/70">ttX2610("asUcretsiz")</p>
+                <p className="text-[8.5px] font-bold text-emerald-200/70">{ttX2610("asUcretsiz")}</p>
               </div>
             </div>
             <button type="button" onClick={() => setAcik(false)} className="text-white/50 transition hover:text-white" aria-label="Kapat">✕</button>

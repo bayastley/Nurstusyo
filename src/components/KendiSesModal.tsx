@@ -62,7 +62,7 @@ const fmt = (sn: number) => `${Math.floor(sn / 60)}:${String(Math.floor(sn % 60)
  *  (Sadece TR — uyarı fıkhî metin, çeviriye açılırsa ayrı turda değerlendirilir.) */
 const MAHREM_UYARISI = (
   <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
-    <p className="text-[10px] font-bold text-amber-200">ttX2610("ks2Hanim")</p>
+    <p className="text-[10px] font-bold text-amber-200">{ttX2610("ks2Hanim")}</p>
     <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
       Bazı fıkhı kaynaklara göre hanımın okuyuş sesini yabancı erkeklere duyurması caiz görülmez;
       bu videolar herkese açık platformlara yüklenip namahrem erkeklerce dinlenebilir. Kararı
@@ -113,7 +113,7 @@ export const KendiSesModal: React.FC<Props> = ({
   const elitKapisi = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    notify("👑 Kendi sesinle üretim ELİT üyelere özel — premium sayfasına yönlendiriliyorsun");
+    notify(ttX2610("vpKendiSesElit"));
     openPremium("uyelik");
   };
 
@@ -146,7 +146,7 @@ export const KendiSesModal: React.FC<Props> = ({
     //   (WhatsApp mp4 vakası) — sessizlik yerine net yönlendirme ver.
     a.onloadedmetadata = () => {
       if (Number.isFinite(a.duration) && hedefBas >= a.duration - 0.05) {
-        notify("⚠️ Bu kaydın zamanlamaları eski taramadan kalma ve sesin süresini aşıyor — '🔬 Yeniden analiz et' ile düzelt");
+        notify(ttX2610("ksEskiZamanlama"));
       }
     };
     a.currentTime = hedefBas;
@@ -172,11 +172,11 @@ export const KendiSesModal: React.FC<Props> = ({
         <div className="mb-3 flex items-start gap-2.5">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Mic size={18} /></span>
           <div className="min-w-0">
-            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>ttX2610("ks2Baslik")</h3>
+            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>{ttX2610("ks2Baslik")}</h3>
             <p className="text-[9.5px] leading-relaxed text-white/45">
               {ayetSayisi > 0
-                ? <>{sureAdi} · {ayetSayisi} ayet — okuyuşun ne kadar hızlı/yavaş olursa olsun ayetler ve arka planlar sesine <b className="text-white/70">milisanielik</b> kilitlenir.</>
-                : "Henüz sure seçilmedi — aşağıda 114 sureden uzun ya da kısa istediğini seç."}
+                ? <>{sureAdi} {ttX2610("ks2AyetKilit4").replace("{n}", String(ayetSayisi))}</>
+                : ttX2610("ks2Secilmedi")}
             </p>
           </div>
         </div>
@@ -186,8 +186,8 @@ export const KendiSesModal: React.FC<Props> = ({
           <div className="relative">
             <div className="pointer-events-none select-none opacity-25 blur-[1.5px]">
               <div className="mb-2 flex gap-2">
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">ttX2610("ks2TamSure")</span>
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">ttX2610("ks2AyetBasi")</span>
+                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">{ttX2610("ks2TamSure")}</span>
+                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">{ttX2610("ks2AyetBasi")}</span>
               </div>
               <div className="space-y-1.5">
                 {[0, 1, 2].map((i) => (
@@ -201,12 +201,12 @@ export const KendiSesModal: React.FC<Props> = ({
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 text-center">
               <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40"><Crown size={20} className="text-amber-300" /></span>
-              <p className="text-[11px] font-black text-amber-200">ttX2610("ks2Elit")</p>
-              <p className="max-w-[260px] text-[9.5px] leading-relaxed text-white/55">ttX2610("ks2ElitM")ete ayrı arka plan seç.</p>
+              <p className="text-[11px] font-black text-amber-200">{ttX2610("ks2Elit")}</p>
+              <p className="max-w-[260px] text-[9.5px] leading-relaxed text-white/55">{ttX2610("ks2ElitM")}</p>
               <button onClick={elitKapisi} className="mt-1 rounded-xl px-5 py-2.5 text-[11px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                 👑 ELİT'e Geç
               </button>
-              <button onClick={onClose} className="text-[9px] text-white/35 hover:text-white/70">ttX2610("ks2Kapat")</button>
+              <button onClick={onClose} className="text-[9px] text-white/35 hover:text-white/70">{ttX2610("ks2Kapat")}</button>
             </div>
           </div>
         )}
@@ -228,7 +228,7 @@ export const KendiSesModal: React.FC<Props> = ({
                   }}
                   className="w-full rounded-xl bg-white/[.04] px-3 py-2 text-[10px] font-bold text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60 disabled:opacity-50"
                 >
-                  <option value={0} className="bg-[#141414]">ttX2610("ks2SecSure")</option>
+                  <option value={0} className="bg-[#141414]">{ttX2610("ks2SecSure")}</option>
                   {SURAHS.map((sr) => (
                     <option key={sr.n} value={sr.n} className="bg-[#141414]">{sr.n}. {sr.name} ({sr.count} ayet)</option>
                   ))}
@@ -236,7 +236,7 @@ export const KendiSesModal: React.FC<Props> = ({
               </div>
               {/* ★ 23.10: maks süre (sn) — modun kotası tavandır, yalnız daraltılır */}
               <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[9px] font-bold text-white/50">ttX2610("ks2Maks")</span>
+                <span className="shrink-0 text-[9px] font-bold text-white/50">{ttX2610("ks2Maks")}</span>
                 <input
                   type="number"
                   min={10}
@@ -250,7 +250,7 @@ export const KendiSesModal: React.FC<Props> = ({
                   <button key={v} onClick={() => maksAyarla(v)} className={`rounded-lg px-1.5 py-1 text-[8.5px] font-black transition ${maksSn === v ? "bg-[color:var(--accent)]/20 text-[color:var(--accent-2)]" : "bg-white/[.05] text-white/45 hover:bg-white/10"}`}>{v}</button>
                 ))}
               </div>
-              <p className="text-[8px] leading-relaxed text-white/30">ttX2610("ks2SureNot")lanılmaz.</p>
+              <p className="text-[8px] leading-relaxed text-white/30">{ttX2610("ks2SureNot")}</p>
             </div>
 
             {/* Mod seçimi */}
@@ -259,20 +259,20 @@ export const KendiSesModal: React.FC<Props> = ({
                 🎙️ Tek dosya (tüm okuyuş)<br /><span className="text-[8.5px] font-normal text-white/40">Ayetleri sistem otomatik bulur</span>
               </button>
               <button onClick={() => setMod("ayet")} className={`rounded-xl px-3 py-2.5 text-left text-[10px] font-bold ring-1 transition ${mod === "ayet" ? "bg-[color:var(--accent)]/15 text-white ring-[color:var(--accent)]/60" : "bg-white/[.04] text-white/55 ring-white/10 hover:bg-white/[.07]"}`}>
-                🔢 Ayet başına dosya<br /><span className="text-[8.5px] font-normal text-white/40">Her ayeti ayrı yükle, sırayla birleşir</span>
+                🔢 Ayet başına dosya<br /><span className="text-[8.5px] font-normal text-white/40">{ttX2610("ksmAyetAyri")}</span>
               </button>
             </div>
 
             {/* Aktif ses özeti */}
             {aktifSes && (
               <div className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2 ring-1 ring-emerald-400/30">
-                <p className="text-[10px] font-bold text-emerald-300">✅ Aktif ses hazır · {aktifSes.kaynak === "tum-sure" ? "tek dosya" : "ayet başına"} · {aktifSes.segments.length} bölüm</p>
+                <p className="text-[10px] font-bold text-emerald-300">✅ {ttX2610("ks2AktifHazir").replace("{kaynak}", aktifSes.kaynak === "tum-sure" ? ttX2610("ks2TekDosya") : ttX2610("ks2AyetBasiK"))}</p>
                 {aktifSes.kaynak === "tum-sure" && aktifSes.segments.length !== ayetSayisi && (
-                  <p className="mt-1 text-[9px] font-bold text-amber-300">⚠ {aktifSes.segments.length} bölüm ≠ {ayetSayisi} ayet — geçiş sayısı uyuşmuyor, yeniden analiz öner</p>
+                  <p className="mt-1 text-[9px] font-bold text-amber-300">⚠ {ttX2610("ks2Uyusmazlik").replace("{b}", String(aktifSes.segments.length)).replace("{a}", String(ayetSayisi))}</p>
                 )}
                 <div className="mt-1 flex items-center gap-3">
                   <button onClick={async () => { setTaslaklar(null); setDuzenleIdx(null); await yenidenTara(aktifSes.id, ayetSayisi, maksSn); }} disabled={yukleniyor} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline disabled:opacity-40">🔬 Yeniden analiz et</button>
-                  <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); setTaslaklar(null); }} className="text-[9px] text-white/50 hover:text-white">Kaldır (kayıtlar saklanır)</button>
+                  <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); setTaslaklar(null); }} className="text-[9px] text-white/50 hover:text-white">{ttX2610("ksmKaldir")}</button>
                 </div>
               </div>
             )}
@@ -283,7 +283,7 @@ export const KendiSesModal: React.FC<Props> = ({
               {mod === "tum" ? (
                 <button disabled={yukleniyor} onClick={() => dosyaSec("tum")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[.03] py-4 text-[11px] font-bold text-white/70 transition hover:border-[color:var(--accent)]/50 hover:bg-white/[.06] disabled:opacity-50">
                   {yukleniyor ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
-                  {yukleniyor ? "Ses çözümleniyor…" : `${sureAdi} okuyuşunu yükle (mp3 / m4a / wav)`}
+                  {yukleniyor ? ttX2610("ks2Cozumleniyor") : ttX2610("ks2YukleUyari").replace("{sure}", sureAdi)}
                 </button>
               ) : (
                 <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
@@ -291,7 +291,7 @@ export const KendiSesModal: React.FC<Props> = ({
                     <div key={`${ay.s}:${ay.a}`} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-2.5 py-1.5">
                       <span className="w-14 shrink-0 text-[9.5px] font-bold text-white/70">{sureAdi.slice(0, 8)} {ay.a}</span>
                       <button onClick={() => dosyaSec(ay.a)} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/5 py-1.5 text-[9.5px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white">
-                        <Upload size={11} /> ses yükle
+                        <Upload size={11} /> {ttX2610("ks2SesYukle")}
                       </button>
                       {/* Ayet başına arka plan: "arka plan bizden seçer" */}
                       <button
@@ -300,7 +300,7 @@ export const KendiSesModal: React.FC<Props> = ({
                         title={translate(localStorage.getItem("nur_lang"), "ksKendiSesBg")}
                       >
                         <ImageIcon size={11} />
-                        {ayahBackgrounds[`${ay.s}:${ay.a}`] ? <Check size={10} className="text-emerald-400" /> : "arka plan"}
+                        {ayahBackgrounds[`${ay.s}:${ay.a}`] ? <Check size={10} className="text-emerald-400" /> : ttX2610("ks2ArkaPlan")}
                       </button>
                     </div>
                   ))}
@@ -312,13 +312,13 @@ export const KendiSesModal: React.FC<Props> = ({
             {aktifSes && aktifSes.segments.length > 0 && (
               <div className="mb-3 rounded-xl bg-white/[.03] p-3 ring-1 ring-white/10">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><Scissors size={11} /> Ayet geçişleri (milisanielik)</p>
+                  <p className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><Scissors size={11} /> {ttX2610("ksmGecisler")}</p>
                   {taslaklar === null ? (
-                    <button onClick={() => { setTaslaklar(hamSegmentler(aktifSes.segments, aktifSes.nefes || 0)); setDuzenleIdx(0); }} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline">Düzenle</button>
+                    <button onClick={() => { setTaslaklar(hamSegmentler(aktifSes.segments, aktifSes.nefes || 0)); setDuzenleIdx(0); }} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline">{ttX2610("rmDuzenle")}</button>
                   ) : (
                     <span className="flex items-center gap-2">
-                      <button onClick={async () => { await zamanlamaKaydet(aktifSes.id, taslaklar, aktifSes.nefes || 0); setTaslaklar(null); setDuzenleIdx(null); }} className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-0.5 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30">Kaydet</button>
-                      <button onClick={() => { setTaslaklar(null); setDuzenleIdx(null); }} className="text-[9px] font-bold text-white/50 hover:text-white">Vazgeç</button>
+                      <button onClick={async () => { await zamanlamaKaydet(aktifSes.id, taslaklar, aktifSes.nefes || 0); setTaslaklar(null); setDuzenleIdx(null); }} className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-0.5 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30">{ttX2610("mcbKaydet")}</button>
+                      <button onClick={() => { setTaslaklar(null); setDuzenleIdx(null); }} className="text-[9px] font-bold text-white/50 hover:text-white">{ttX2610("mcbVazgec")}</button>
                     </span>
                   )}
                 </div>
@@ -329,17 +329,17 @@ export const KendiSesModal: React.FC<Props> = ({
                     return (
                       <React.Fragment key={i}>
                         <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[9.5px] ${duzenleIdx === i ? "bg-[color:var(--accent)]/10 ring-1 ring-[color:var(--accent)]/50" : "bg-white/[.04]"}`}>
-                          <button onClick={() => sesCalDurdur(i, taslaklar ? seg.start : undefined)} className="w-5 shrink-0 rounded-full bg-white/10 p-1 text-white/70 hover:bg-white/20" title={i === sesliIdx ? "Durdur" : "Bu ayetin sesini dinle"}>
+                          <button onClick={() => sesCalDurdur(i, taslaklar ? seg.start : undefined)} className="w-5 shrink-0 rounded-full bg-white/10 p-1 text-white/70 hover:bg-white/20" title={i === sesliIdx ? ttX2610("ks2Durdur") : ttX2610("ks2DinleAyin")}>
                             {sesliIdx === i ? "⏸" : "▶"}
                           </button>
-                          <span className="w-16 shrink-0 font-bold text-white/75">{ay ? `Ayet ${ay.a}` : `Bölüm ${i + 1}`}</span>
+                          <span className="w-16 shrink-0 font-bold text-white/75">{ay ? ttX2610("ks2AyetNum").replace("{n}", String(ay.a)) : ttX2610("ks2BolumNum").replace("{n}", String(i + 1))}</span>
                           <span className="w-20 shrink-0 tabular-nums text-white/45">{fmt(seg.start)}</span>
                           <span className="flex-1 h-1.5 rounded-full bg-white/10">
                             <span className="block h-full rounded-full bg-[color:var(--accent)]" style={{ width: `${Math.min(100, (seg.dur / Math.max(gosterilen[gosterilen.length - 1]?.start + gosterilen[gosterilen.length - 1]?.dur || 1, 1)) * 100)}%` }} />
                           </span>
-                          {bgVar && <span title="Ayet arka planı atanmış"><Check size={11} className="shrink-0 text-emerald-400" /></span>}
+                          {bgVar && <span title={ttX2610("ksmArkaPlanTitle")}><Check size={11} className="shrink-0 text-emerald-400" /></span>}
                           {taslaklar === null && duzenleIdx === i && (
-                            <span className="shrink-0 text-[8.5px] text-white/40">→ okuyuşunla hizalı</span>
+                            <span className="shrink-0 text-[8.5px] text-white/40">ttX2610("ksmHizali")</span>
                           )}
                         </div>
                         {taslaklar && duzenleIdx === i && (() => {
@@ -367,27 +367,27 @@ export const KendiSesModal: React.FC<Props> = ({
                 </div>
                 {/* Nefes aralığı */}
                 <div className="mt-2.5 flex items-center gap-2.5">
-                  <span className="text-[9px] font-bold text-white/50">Ayetler arası nefes</span>
+                  <span className="text-[9px] font-bold text-white/50">{ttX2610("ksmNefes")}</span>
                   <input type="range" min={0} max={2} step={0.1} value={nefesDeger} onChange={(e) => setNefesDeger(Number(e.target.value))} className="h-1 flex-1 accent-[color:var(--accent)]" />
                   <span className="w-10 text-right text-[9px] tabular-nums text-white/60">{nefesDeger.toFixed(1)} sn</span>
                   <button
                     onClick={() => zamanlamaKaydet(aktifSes.id, hamSegmentler(aktifSes.segments, aktifSes.nefes || 0), nefesDeger)}
                     className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-1 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30"
-                  >Uygula</button>
+                  >{ttX2610("ks2Uygula")}</button>
                 </div>
-                <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">Bölümler sıraya birebir bağlıdır: i. bölüm = listedeki i. ayet (Fatiha'da besmele = Ayet 1). Hizalama eski kayıttan kaymışsa "🔬 Yeniden analiz et" ile güncel motorle tekrar tara; milimetrik ayar için "Düzenle" sürgüsünü kullan.</p>
+                <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">{ttX2610("ks2BirebirNot")}</p>
               </div>
             )}
 
             {/* Kayıtlar */}
             {kayitlar.length > 0 && (
               <div className="rounded-xl bg-white/[.02] p-3 ring-1 ring-white/5">
-                <p className="mb-1.5 text-[10px] font-black text-white/60">Kayıtlı sesler ({kayitlar.length})</p>
+                <p className="mb-1.5 text-[10px] font-black text-white/60">{ttX2610("ks2KayitliSesler").replace("{n}", String(kayitlar.length))}</p>
                 <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
                   {kayitlar.map((k) => (
                     <div key={k.id} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-2.5 py-1.5 text-[9.5px]">
                       <button onClick={() => { void sec(k.id); setTaslaklar(null); setDuzenleIdx(null); }} className="min-w-0 flex-1 truncate text-left font-bold text-white/75 hover:text-white" title={k.ad}>
-                        {SURAHS[k.sure - 1]?.name ?? k.sure} · {k.kaynak === "tum-sure" ? "tüm sure" : `ayet ${k.konum}`} · {k.ad}
+                        {SURAHS[k.sure - 1]?.name ?? k.sure} · {k.kaynak === "tum-sure" ? ttX2610("ks2TumSure") : ttX2610("ks2AyetNum").replace("{n}", String(k.konum))} · {k.ad}
                       </button>
                       <span className="shrink-0 tabular-nums text-white/35">{fmt(k.sure_sn)}</span>
                       {aktifSes?.id === k.id && <Check size={11} className="shrink-0 text-emerald-400" />}

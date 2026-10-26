@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Upload, X, Check, AlertCircle,
@@ -174,8 +177,8 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
             <Upload size={15} />
           </div>
           <div>
-            <p className="text-[13px] font-bold text-white/90">Medya Yükleme</p>
-            <p className="text-[10px] text-white/40">Video · Resim · Ses — diğer dosyalar reddedilir</p>
+            <p className="text-[13px] font-bold text-white/90">{ttX2610("zxBaslik")}</p>
+            <p className="text-[10px] text-white/40">{ttX2610("zxTurListe")}</p>
           </div>
         </div>
         <button onClick={onClose} aria-label="Kapat" className="rounded-full p-1 text-white/40 hover:bg-white/10 hover:text-white transition">
@@ -204,8 +207,8 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15"><Music size={20} className="text-amber-300" /></span>
           </div>
         )}
-        <p className="text-[12px] font-bold text-white">Dosyaları sürükle ya da tıkla — video, resim, ses</p>
-        <p className="text-[10px] text-white/40">ZIP, PDF, kod vb. reddedilir · en fazla 200 MB</p>
+        <p className="text-[12px] font-bold text-white">{ttX2610("zxSurukle")}</p>
+        <p className="text-[10px] text-white/40">{ttX2610("zxRedKurallar")}</p>
       </div>
 
       {/* RED bildirimi */}
@@ -220,7 +223,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
 
       {/* Liste */}
       {dosyalar.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-[11px] text-white/30">Henüz dosya yok — yukarıdan ekle</div>
+        <div className="flex flex-1 items-center justify-center text-[11px] text-white/30">{ttX2610("zxBos")}</div>
       ) : (
         <div className="grid flex-1 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
           {dosyalar.map((d) => (
@@ -229,11 +232,11 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
               className={`group relative cursor-pointer overflow-hidden rounded-xl border p-2 transition ${secili?.id === d.id ? "border-[color:var(--accent)] bg-white/[.06]" : "border-white/10 bg-white/[.02] hover:border-white/30"}`}>
               {/* ★ EKLENDİ ✓ ONAYLANDI rozeti — önizlemede görünür; kalıcıysa DB rozeti */}
               <span className="absolute right-1.5 top-1.5 z-10 flex items-center gap-1 rounded-full bg-emerald-500/90 px-1.5 py-0.5 text-[7.5px] font-black text-black shadow">
-                <Check size={8} strokeWidth={4} /> Eklendi
+                <Check size={8} strokeWidth={4} /> {ttX2610("zxEklendi")}
               </span>
               {d.kalici && (
-                <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-black/70 px-1.5 py-0.5 text-[7px] font-black text-emerald-300 ring-1 ring-emerald-400/40" title="Cihazında kalıcı saklandı — sayfayı yenilesen de kaybolmaz">
-                  💾 Kalıcı
+                <span className="absolute left-1.5 top-1.5 z-10 rounded-full bg-black/70 px-1.5 py-0.5 text-[7px] font-black text-emerald-300 ring-1 ring-emerald-400/40" title={ttX2610("zxKaliciTitle")}>
+                  💾 {ttX2610("zxKalici")}
                 </span>
               )}
               <div className="flex h-16 items-center justify-center overflow-hidden rounded-lg bg-black/40">
@@ -289,7 +292,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
       {dosyalar.length > 0 && (
         <div className="mt-2 flex items-center justify-between text-[9px] text-white/35">
           <span>{dosyalar.length} dosya · {dosyalar.filter((d) => d.tur === "video").length} video · {dosyalar.filter((d) => d.tur === "resim").length} resim · {dosyalar.filter((d) => d.tur === "ses").length} ses · {dosyalar.filter((d) => d.kalici).length} kalıcı 💾</span>
-          <button onClick={temizle} className="rounded-md bg-white/5 px-2 py-1 font-bold text-white/50 transition hover:bg-red-500/20 hover:text-red-300">Tümünü temizle</button>
+          <button onClick={temizle} className="rounded-md bg-white/5 px-2 py-1 font-bold text-white/50 transition hover:bg-red-500/20 hover:text-red-300">{ttX2610("zxTemizle")}</button>
         </div>
       )}
     </div>

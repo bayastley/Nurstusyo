@@ -3,9 +3,11 @@
 // PremiumModal onCheckout akışındaki DEMObonus uygulama köprüsü.
 // Sadece demo yanıtında tetiklenir; gerçek iyzico akışına dokunulmaz.
 // ════════════════════════════════════════════════════════
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 
 import { secureGet, secureSet } from "../secureStore";
-
 export interface DemoCheckoutContext {
   setTier: (t: "pro" | "elit") => void;
   setCurrentTier: (t: "pro" | "elit") => void;
@@ -26,20 +28,20 @@ export function demoOdemeUygula(result: any, ctx: DemoCheckoutContext): boolean 
     const next = Number(secureGet<number>("nur_jeton", 0)) + bonus;
     secureSet("nur_jeton", next);
     ctx.setJetonCount(next);
-    ctx.notify(`✅ [DEMO] NÛR PRO üyeliğin aktif edildi +${bonus} ⚡`);
+    ctx.notify(ttX2610("odDemoPro").replace("{a}", String(bonus)));
   } else if (product.product?.grantTier === "elit") {
     ctx.setTier("elit"); ctx.setCurrentTier("elit");
     const bonus = 500;
     const next = Number(secureGet<number>("nur_jeton", 0)) + bonus;
     secureSet("nur_jeton", next);
     ctx.setJetonCount(next);
-    ctx.notify(`👑 [DEMO] NÛR ELİT üyeliğin aktif edildi +${bonus} ⚡`);
+    ctx.notify(ttX2610("odDemoElit").replace("{a}", String(bonus)));
   } else if (product.product?.videoCount) {
     const amount = product.product.videoCount;
     const next = Number(secureGet<number>("nur_jeton", 0)) + amount;
     secureSet("nur_jeton", next);
     ctx.setJetonCount(next);
-    ctx.notify(`🎬 [DEMO] ${amount} video hakkı eklendi`);
+    ctx.notify(ttX2610("odDemoHak").replace("{a}", String(amount)));
   }
   ctx.setPremiumOpen(false);
   return true;

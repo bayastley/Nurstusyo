@@ -15,13 +15,17 @@ import type { Lang } from "../i18n";
 
 export const MINI_TUR_KEY = "nur_minitur_gordu";
 
-// ★ 5 DURAK — data-minitur etiketleri DOM'da aranır (bileşen bilmeden)
+// ★ 26.10 YENİ TUR SIRASI — data-minitur etiketleri DOM'da aranır (bileşen bilmeden).
+//   Eski duraklardan kuran-sayfalar/araclar/hafizlik-testi üst barradan kalktı (25.10
+//   yeniden kurulum) — etiketleri DOM'da olmadığından her turda sessizce ATLANIYORDU;
+//   yerlerine canlı üst-bar hedefleri kondu (kullanıcı emri: "araçlar kalktıysa başka
+//   önemli şey ekle"). TUR BİTİNCE Kur'an Öğreniyorum paneli açılır ve orada kalır.
 const DURAKLAR = [
-  "kabe-canli",    // 1) 🕋 Kâbe Canlı — altın maden, en önce
-  "kuran-sayfalar",// 2) 📖 Kur'an Sayfaları (Kur'an ekranındaki yeni buton)
-  "araclar",       // 3) 🤲 Araçlar (dualar, zikirler)
-  "hafizlik-testi",// 4) 🧠 Hafızlık Testi
-  "bugun-hediye",  // 5) 🎁 Bugünün Hediyesi (sol alt buton)
+  "kabe-canli",          // 1) 🕋 Kâbe Canlı — altın maden, en önce
+  "kuran-bolumu",        // 2) 📖 Kur'an Öğreniyorum (üst bar)
+  "islami-ogreniyorum",  // 3) 🧭 İslami Öğreniyorum — hadis/kıssa/sure/dua havuzu
+  "namaz-vakti",         // 4) 🕌 Namaz Vakti sayacı (üst bardaki yeşil buton)
+  "bugun-hediye",        // 5) 🎁 Bugünün Hediyesi (sol alt buton)
 ] as const;
 
 const METINLER: Record<Lang, { baslik: string; atla: string; geri: string; ileri: string; bitir: string; adim: string }> = {
@@ -69,60 +73,54 @@ const METINLER: Record<Lang, { baslik: string; atla: string; geri: string; ileri
 
 // ★ MOBİL YEDEK: dar ekranda (<768px) pill'ler gizlidir (hidden md:flex) — tur
 //   o durakları SOL MENÜ düğmesine çevirir; balon metni zaten "menüdeki ..." der.
+//   ★ 26.10: kuran-bolumu/islami-ogreniyorum da md+:sık gizli — yedek menü düğmesine düşer.
 const MOBIL_YEDEK: Record<string, string> = {
   "kabe-canli": "menu",
-  "kuran-sayfalar": "menu",
-  "araclar": "menu",
-  "hafizlik-testi": "menu",
+  "kuran-bolumu": "menu",
+  "islami-ogreniyorum": "menu",
 };
 
-// ★ 20.10 (kullanıcı emri: "sol paneli açsın, ilgili seçeneği göstersin"):
-//   menünün İÇİNDE yaşayan duraklar — menü kapalıyken DOM'da yoklar, eski tur
-//   bunları sessizce ATLARDı (kullanıcı adımlara hiç ulaşmazdı). Bu adımlara
-//   gelince MiniTur "nur_minitur_menu_ac" event basar; HeaderTopBar menüyü AÇAR;
-//   tur sonra madalyonu menü içi item'a koyar. Kapanması da otomatik: etkisiz.
-const MENU_ICI_DURAKLAR = new Set(["araclar", "hafizlik-testi"]);
-
-// Durak balon metinleri — i18n
+// Durak balon metinleri — i18n (★ 26.10 yeni tur sırası: 5 durak + bitişte Kur'an paneli)
+export interface MiniTurProps { lang: Lang; /** ★ 26.10: tur bitince Kur'an Öğreniyorum panelini açan köprü */ onKuranAc?: () => void }
 const DURAK_METIN: Record<Lang, Array<{ baslik: string; metin: string }>> = {
   tr: [
-    { baslik: "🕋 Kâbe Canlı", metin: "7/24 kesintisiz Mekke yayını — üst bardaki yeşil düğme. YouTube'a gitmeye gerek yok." },
-    { baslik: "📖 Kur'an Sayfaları", metin: "Kur'an ekranındaki SAYFALAR düğmesi: mushaf sayfaları, büyüt/küçült, hatim takibi. Kaldığın yerden devam eder." },
-    { baslik: "🤲 Araçlar", metin: "Dualar, zikirler, tespih — menüdeki Araçlar'da hepsi seni bekliyor." },
-    { baslik: "🧠 Hafızlık Testi", metin: "Hafızan ne kadar güçlü? Menüden Hafızlık Testi'ni aç — ezberini dene, rozet kazan." },
+    { baslik: "🕋 Kâbe Canlı", metin: "Mekke'den 7/24 kesintisiz yayın — üst bardaki yeşil düğme. YouTube'a gitmeye gerek yok." },
+    { baslik: "📖 Kur'an Öğreniyorum", metin: "Kur'an ekranı: sure meali, kelime kelime öğrenme, hafızlık testi ve dinle modu — hepsi tek ekranda." },
+    { baslik: "🧭 İslami Öğreniyorum", metin: "Hadis bankası, kıssa köşesi, sure bilgileri ve dua rehberi — üst bardaki pusula düğmesinden açılır." },
+    { baslik: "🕌 Namaz Vakti", metin: "Üst bardaki yeşil sayaç: sonraki namaza kalan süreyi gösterir — namaz saatleri kaçırmazsın." },
     { baslik: "🎁 Bugünün Hediyesi", metin: "Her gün küçük bir sürpriz: hadis, zikir ya da üretim hakkı. Sol alttaki hediye kutusuna bak!" },
   ],
   en: [
     { baslik: "🕋 Kaaba Live", metin: "24/7 live from Makkah — the green button in the top bar. No need to open YouTube." },
-    { baslik: "📖 Qur'an Pages", metin: "The PAGES button in the Qur'an screen: mushaf pages, zoom, hatim tracking. Resumes where you left off." },
-    { baslik: "🤲 Tools", metin: "Duas, dhikr, tasbih — all waiting in the Tools menu." },
-    { baslik: "🧠 Memorization Test", metin: "How strong is your memory? Open the Memorization Test from the menu — earn badges." },
+    { baslik: "📖 Learn the Qur'an", metin: "The Qur'an screen: surah translation, word-by-word study, memorization test and listen mode — all in one screen." },
+    { baslik: "🧭 Islamic Learning", metin: "Hadith bank, stories corner, surah info and dua guide — open with the compass button in the top bar." },
+    { baslik: "🕌 Prayer Times", metin: "The green counter in the top bar shows the time remaining until the next prayer." },
     { baslik: "🎁 Today's Gift", metin: "A small surprise every day: hadith, dhikr or production credits. Check the gift box at the bottom left!" },
   ],
   ar: [
     { baslik: "🕋 الكعبة مباشر", metin: "بث مباشر من مكة ٢٤/٧ — الزر الأخضر في الشريط العلوي. لا حاجة ليوتيوب." },
-    { baslik: "📖 صفحات القرآن", metin: "زر الصفحات في شاشة القرآن: صفحات المصحف، تكبير/تصغير، متابعة الختم. يكمل من حيث توقفت." },
-    { baslik: "🤲 الأدوات", metin: "الأدعية والأذكار والمسبحة — كلها في قائمة الأدوات." },
-    { baslik: "🧠 اختبار الحفظ", metin: "ما مدى قوة حفظك؟ افتح اختبار الحفظ من القائمة واكسب شارات." },
+    { baslik: "📖 تعلّم القرآن", metin: "شاشة القرآن: ترجمة السور، التعلّم كلمةً كلمة، اختبار الحفظ ووضع الاستماع — كلها في شاشة واحدة." },
+    { baslik: "🧭 التعلّم الإسلامي", metin: "بنك الأحاديث وركن القصص ومعلومات السور ودليل الأدعية — يُفتح بزر البوصلة في الشريط العلوي." },
+    { baslik: "🕌 أوقات الصلاة", metin: "العدّاد الأخضر في الشريط العلوي يبيّن الوقت المتبقي حتى الصلاة القادمة." },
     { baslik: "🎁 هدية اليوم", metin: "مفاجأة صغيرة كل يوم: حديث أو ذكر أو رصيد إنتاج. انظر صندوق الهدية أسفل اليسار!" },
   ],
   id: [
     { baslik: "🕋 Ka'bah Live", metin: "Siaran langsung 24/7 dari Makkah — tombol hijau di bilah atas. Tak perlu buka YouTube." },
-    { baslik: "📖 Halaman Al-Qur'an", metin: "Tombol HALAMAN di layar Al-Qur'an: halaman mushaf, zoom, pencatatan khataman. Lanjut dari tempat terakhir." },
-    { baslik: "🤲 Alat", metin: "Doa, dzikir, tasbih — semuanya menanti di menu Alat." },
-    { baslik: "🧠 Uji Hafalan", metin: "Seberapa kuat hafalanmu? Buka Uji Hafalan dari menu — kumpulkan lencana." },
+    { baslik: "📖 Belajar Al-Qur'an", metin: "Layar Al-Qur'an: terjemah surah, belajar kata per kata, uji hafalan dan mode dengar — semuanya satu layar." },
+    { baslik: "🧭 Belajar Islam", metin: "Bank hadis, cerita, info surah dan panduan doa — buka dengan tombol kompas di bilah atas." },
+    { baslik: "🕌 Waktu Salat", metin: "Penghitung hijau di bilah atas menunjukkan waktu tersisa hingga salat berikutnya." },
     { baslik: "🎁 Hadiah Hari Ini", metin: "Kejutan kecil setiap hari: hadis, dzikir, atau kuota produksi. Lihat kotak hadiah di kiri bawah!" },
   ],
   ur: [
     { baslik: "🕋 کعبہ لائیو", metin: "مکہ سے 24/7 براہ راست نشر — اوپری بار کا سبز بٹن۔ یوٹیوب کھولنے کی ضرورت نہیں۔" },
-    { baslik: "📖 قرآن صفحات", metin: "قرآن اسکرین کا PAGES بٹن: مصحف صفحات، زوم، ختمہ ریکارڈ۔ جہاں چھوڑا وہیں سے دوبارہ۔" },
-    { baslik: "🤲 ٹولز", metin: "دعائیں، اذکار، تسبیح — سب ٹولز مینو میں۔" },
-    { baslik: "🧠 حفظ ٹیسٹ", metin: "آپ کی حفظ کتنی مضبوط ہے؟ مینو سے حفظ ٹیسٹ کھولیں اور بیجز حاصل کریں۔" },
+    { baslik: "📖 قرآن سیکھیں", metin: "قرآن اسکرین: سوروں کا ترجمہ، لفظ بہ لفظ تعلیم، حفظ ٹیسٹ اور سننے کا موڈ — سب ایک ہی اسکرین پر۔" },
+    { baslik: "🧭 اسلامی تعلیم", metin: "احادیث بینک، واقعات، سوروں کی معلومات اور دعاؤں کی گائیڈ — اوپری بار کے قطب نما بٹن سے کھلیں۔" },
+    { baslik: "🕌 نماز کا وقت", metin: "اوپری بار کا سبز کاؤنٹر بتاتا ہے کہ اگلی نماز میں کتنا وقت باقی ہے۔" },
     { baslik: "🎁 آج کا تحفہ", metin: "روز ایک چھوٹا سرپرائز: حدیث، ذکر یا پروڈکشن کریڈٹ۔ نیچے بائیں تحفے کا ڈبہ دیکھیں!" },
   ],
 };
 
-export const MiniTur: React.FC<{ lang: Lang }> = ({ lang }) => {
+export const MiniTur: React.FC<MiniTurProps> = ({ lang, onKuranAc }) => {
   const [adim, setAdim] = useState(0); // 0 = kapalı, 1..5 = durak, 6 = bitti
   const [kutu, setKutu] = useState<{ x: number; y: number; ust: boolean } | null>(null);
   const zamanRef = useRef<number>(0);
@@ -156,22 +154,8 @@ export const MiniTur: React.FC<{ lang: Lang }> = ({ lang }) => {
   useEffect(() => {
     if (adim <= 0 || adim > DURAKLAR.length) { setKutu(null); return; }
     const durakTag = DURAKLAR[adim - 1];
-    // ★ 20.10: menü içi durakta menü KAPALIYSA paneli aç ve bu effect'in tekrar
-    //   koşmasını bekle (menü açık olunca item DOM'a girer, hedef bulunur).
-    let acildi = false;
-    if (MENU_ICI_DURAKLAR.has(durakTag)) {
-      try { window.dispatchEvent(new Event("nur_minitur_menu_ac")); acildi = true; } catch { /* yut */ }
-    }
     const hedef = hedefBul(durakTag);
-    if (!hedef) {
-      // menü açma event'i yollandıysa DOM'un yetişmesini bekle (çifte atlamayı önle)
-      if (acildi) {
-        const bekla = window.setTimeout(() => setAdim((a) => a), 60);
-        return () => window.clearTimeout(bekla);
-      }
-      setAdim((a) => a + 1);
-      return;
-    } // durak yoksa atla
+    if (!hedef) { setAdim((a) => a + 1); return; } // durak yoksa atla
     hedef.scrollIntoView({ behavior: "smooth", block: "center" });
     const konumla = () => {
       const r = hedef.getBoundingClientRect();
@@ -218,13 +202,18 @@ export const MiniTur: React.FC<{ lang: Lang }> = ({ lang }) => {
         <p className="mt-0.5 text-[12px] font-black text-white">{durak.baslik}</p>
         <p className="mt-1 text-[10.5px] leading-relaxed text-white/70">{durak.metin}</p>
         <div className="mt-2.5 flex items-center justify-between">
-          <button onClick={() => setAdim(DURAKLAR.length + 1)} className="text-[9.5px] font-bold text-white/35 transition hover:text-white/70">{m.atla}</button>
+          <button onClick={() => setAdim(DURAKLAR.length + 1)} className="text-[9.5px] font-bold text-white/35 transition hover:text-white/70">{m.atla}</button>{/* ★ Atla = erken çıkış, panel açılmaz */}
           <div className="flex items-center gap-1.5">
             {adim > 1 && (
               <button onClick={() => setAdim((a) => Math.max(1, a - 1))} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[9.5px] font-bold text-white/60 transition hover:bg-white/10">{m.geri}</button>
             )}
             <button
-              onClick={() => setAdim((a) => a + 1)}
+              onClick={() => {
+                // ★ 26.10 (kullanıcı emri): tur SON adımdan çıkınca Kur'an Öğreniyorum
+                //   panelini aç ve orada bırak — son durağı görsünler. Atla'ya yansımaz.
+                if (adim === DURAKLAR.length) onKuranAc?.();
+                setAdim((a) => a + 1);
+              }}
               className="rounded-lg bg-gold px-3 py-1 text-[9.5px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"
             >
               {adim === DURAKLAR.length ? m.bitir : m.ileri + " →"}

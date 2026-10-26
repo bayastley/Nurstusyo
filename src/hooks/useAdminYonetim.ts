@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // USEADMINYONETIM.TS — AdminDashboardModal'dan taşındı (SRP parçalama, 09.10)
 // Kullanıcı yönetimi iş mantığı: tier/jeton değişimi, video hakları, hediye,
@@ -64,7 +67,7 @@ export function useAdminYonetim({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`👑 ${targetUser.email} paketi "${newTier.toUpperCase()}" olarak güncellendi!`);
+      notify(ttX2610("uyPaketGuncel").replace("{a}", targetUser.email).replace("{b}", String(newTier.toUpperCase())));
     }
   }, [users, sysConfig, setSysConfig, serverManageLocal, onUpdateUser, notify]);
 
@@ -85,7 +88,7 @@ export function useAdminYonetim({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(`🪙 ${targetUser.email} bakiyesi güncellendi: ${newTotal} ⚡ Üretim hakkı (${delta > 0 ? "+" + delta : delta})`);
+      notify(ttX2610("uyBakiyeGuncel").replace("{a}", targetUser.email).replace("{b}", String(newTotal)).replace("{c}", delta > 0 ? "+" + delta : String(delta)));
     }
   }, [users, sysConfig, setSysConfig, serverManageLocal, onUpdateUser, notify]);
 
@@ -106,7 +109,7 @@ export function useAdminYonetim({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, targetUser.tier, targetUser.jeton);
-      notify(` ${targetUser.email} bakiyesi ${safeAmount} ⚡ Üretim hakkı yapıldı!`);
+      notify(ttX2610("uyBakiyeYapildi").replace("{a}", targetUser.email).replace("{b}", String(safeAmount)));
     }
   }, [users, sysConfig, setSysConfig, serverManageLocal, onUpdateUser, notify]);
 
@@ -142,7 +145,7 @@ export function useAdminYonetim({
         ? `⚡ ${target} · ${ad} +${safeAmount} hak eklendi · kalan: ${data.remaining}`
         : `⚡ ${target} · ${ad} ${safeAmount} hak olarak tanımlandı · kalan: ${data.remaining}`);
       await refreshVideoRights(target);
-    } catch { notify("❌ Sunucuya ulaşılamadı — hak verilemedi"); }
+    } catch { notify(ttX2610("udHakVerilemedi")); }
   }, [notify, refreshVideoRights]);
 
   // Seçili kullanıcı değişince hak durumunu tazele
@@ -169,7 +172,7 @@ export function useAdminYonetim({
     const targetUser = updatedUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (targetUser) {
       onUpdateUser(targetUser.email, "free", 0);
-      notify(`🗑️ ${targetUser.email} tüm hakları sıfırlandı — krótka/uzun/tam/jeton/abonelik temizlendi!`);
+      notify(ttX2610("uyHaklariSifir").replace("{a}", targetUser.email));
     }
   }, [users, sysConfig, setSysConfig, serverManageLocal, onUpdateUser, notify]);
 
@@ -187,7 +190,7 @@ export function useAdminYonetim({
   const handleUserHistory = useCallback(async (email: string) => {
     const q = sanitizeText(email).trim().toLowerCase().slice(0, 254);
     if (!q || !isValidEmail(q)) {
-      notify("⚠️ Geçerli bir e-posta adresi gir");
+      notify(ttX2610("adGecerliEmail"));
       return;
     }
     setLoadingHistory(true);
@@ -204,13 +207,13 @@ export function useAdminYonetim({
       if (data?.ok) {
         setUserHistory(data);
         if (!data.user) {
-          notify(`ℹ️ "${q}" adresinde kayıtlı kullanıcı bulunamadı`);
+          notify(ttX2610("uyAraniyorYok").replace("{a}", q));
         }
       } else {
         notify(data?.error || "Geçmiş alınamadı");
       }
     } catch {
-      notify("⚠️ Sunucuya ulaşılamadı");
+      notify(ttX2610("udSunucu"));
     } finally {
       setLoadingHistory(false);
     }
@@ -221,12 +224,12 @@ export function useAdminYonetim({
     const q = sanitizeText(emailSearchQuery).trim().toLowerCase().slice(0, 254);
     if (!q) {
       setEmailSearchResult(null);
-      notify("⚠️ Aramak için bir e-posta adresi gir");
+      notify(ttX2610("adEmailGir"));
       return;
     }
     if (!isValidEmail(q)) {
       setEmailSearchResult(null);
-      notify("⚠️ Geçerli bir e-posta adresi gir");
+      notify(ttX2610("adGecerliEmail"));
       return;
     }
     // 1) Önce localStorage'da ara (hızlı)
@@ -235,11 +238,11 @@ export function useAdminYonetim({
       setEmailSearchResult(found);
       setSelectedEmail(found.email);
       const banInfo = found.isBanned ? " ⛔ BANLI" : "";
-      notify(`✅ ${found.email} bulundu — ${found.tier.toUpperCase()} · ${found.jeton} ⚡${banInfo}`);
+      notify(ttX2610("uyBulundu").replace("{a}", found.email).replace("{b}", String(found.tier.toUpperCase())).replace("{c}", String(found.jeton)).replace("{d}", String(banInfo)));
       return;
     }
     // 2) localStorage'da yoksa Supabase'de ara
-    notify("🔍 Supabase'de aranıyor...");
+    notify(ttX2610("adSupabaseAra"));
     try {
       const response = await fetch(`/api/admin/action`, {
         method: "POST",
@@ -266,13 +269,13 @@ export function useAdminYonetim({
           setSelectedEmail(synced.email);
           const finalUser = getSystemConfig().users.find((u) => u.email.toLowerCase() === q);
           const banLabel = finalUser?.isBanned ? " ⛔ BANLI" : "";
-          notify(`✅ ${synced.email} Supabase'de bulundu — ${synced.tier.toUpperCase()} · ${synced.jeton} ⚡${banLabel}`);
+          notify(ttX2610("uySupabaseBulundu").replace("{a}", synced.email).replace("{b}", String(synced.tier.toUpperCase())).replace("{c}", String(synced.jeton)).replace("{d}", String(banLabel)));
           return;
         }
       }
     } catch { /* fallback */ }
     setEmailSearchResult(null);
-    notify(`❌ "${q}" adresiyle kayıtlı kullanıcı yok (Supabase'de de bulunamadı)`);
+    notify(ttX2610("uyKayitYok").replace("{a}", q));
   }, [emailSearchQuery, notify, setSysConfig, setBanLogs, setSelectedEmail]);
 
   // Sunucudan kullanıcı güncel bakiyesini çeker (hediye sonrası doğrulama)
@@ -297,9 +300,9 @@ export function useAdminYonetim({
   // ★ HAK HEDİYE — sunucudan gerçek bakiye + hak durumu + uyarılar döner
   const handleGiftRights = useCallback(async (email: string, amount: number, newTier?: Tier) => {
     const target = email.trim().toLowerCase();
-    if (!isValidEmail(target)) { notify("⚠️ Geçerli bir e-posta adresi gir"); return; }
+    if (!isValidEmail(target)) { notify(ttX2610("adGecerliEmail")); return; }
     const safeAmount = clampNumber(amount, 0, 100000);
-    if (safeAmount <= 0) { notify("⚠️ Hediye miktarı 0'dan büyük olmalı"); return; }
+    if (safeAmount <= 0) { notify(ttX2610("abHediye0")); return; }
     let giftResult: { ok?: boolean; balance?: number; rights?: Record<string, number>; warnings?: string[] } | null = null;
     try {
       const response = await fetch("/api/admin/action", {
@@ -310,27 +313,27 @@ export function useAdminYonetim({
       if (response.status === 503) {
         // sunucu erişilemez → yerel kayıt (offline dev)
         const result = giftRightsToUser(target, safeAmount, newTier);
-        if (!result.ok) { notify(`❌ ${target} bulunamadı`); return; }
+        if (!result.ok) { notify(ttX2610("uyBulunamadi").replace("{a}", String(target))); return; }
         setSysConfig(getSystemConfig());
         onUpdateUser(result.user.email, result.user.tier, result.user.jeton);
         setEmailSearchResult(result.user);
-        notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi (yerel)`);
+        notify(ttX2610("uyHediyeYerel").replace("{a}", String(target)).replace("{b}", String(safeAmount)));
         return;
       }
       if (!response.ok || !data?.ok) {
-        notify(`❌ Hediye tamamlanamadı: ${data?.error || "bilinmeyen hata"}`);
+        notify(ttX2610("uyHediyeHata").replace("{a}", String(data?.error || "bilinmeyen hata")));
         return;
       }
       giftResult = data;
     } catch {
-      notify("❌ Sunucuya ulaşılamadı — hediye tamamlanamadı");
+      notify(ttX2610("udHediyeTamamlanamadi"));
       return;
     }
     const refreshed = await refreshUserFromServer(target);
     const shownTier = (refreshed?.tier ?? newTier ?? "free").toUpperCase();
     const shownBalance = giftResult?.balance ?? refreshed?.jeton ?? 0;
     const warnMsg = giftResult?.warnings?.length ? ` · ⚠️ ${giftResult.warnings.join(" | ")}` : "";
-    notify(`🎁 ${target} · +${safeAmount} ⚡ hediye edildi · tier: ${shownTier} · bakiye: ${shownBalance} ⚡${warnMsg}`);
+    notify(ttX2610("uyHediyeOk").replace("{a}", String(target)).replace("{b}", String(safeAmount)).replace("{c}", String(shownTier)).replace("{d}", String(shownBalance)).replace("{e}", String(warnMsg)));
     if (refreshed) setEmailSearchResult(refreshed);
     if (giftResult?.warnings?.length) console.warn("[gift_rights uyarıları]", giftResult.warnings);
   }, [notify, setSysConfig, onUpdateUser, refreshUserFromServer]);
@@ -341,12 +344,12 @@ export function useAdminYonetim({
     if (tierState === "error") return;
     const updated = setUserTier(target, newTier);
     if (!updated) {
-      notify(`❌ ${target} sistemde kayıtlı değil`);
+      notify(ttX2610("uySistemdeYok").replace("{a}", String(target)));
       return;
     }
     setSysConfig(getSystemConfig());
     onUpdateUser(updated.email, updated.tier, updated.jeton);
-    notify(`👑 ${updated.email} → ${newTier.toUpperCase()} olarak ayarlandı`);
+    notify(ttX2610("uyTierAyarlandi").replace("{a}", updated.email).replace("{b}", String(newTier.toUpperCase())));
     setEmailSearchResult(updated);
   }, [notify, serverManageLocal, setSysConfig, onUpdateUser]);
 

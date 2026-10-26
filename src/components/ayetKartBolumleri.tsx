@@ -6,6 +6,8 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useState } from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
 import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — liste + günün ayeti başlığı dilli
@@ -173,7 +175,7 @@ export const AyetSecimBolumu: React.FC<{
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                 title={akilliElitIzin ? tt("akAkilliSecim") : "Akıllı AI · ELİT üyelik özelliği — tıkla, Elite yüksel"}
               >
-                <Wand2 size={11} /> {tt("akAkilliAI")}{!akilliElitIzin && <span className="rounded bg-black/25 px-1 py-px text-[7px] font-black">ELİT</span>}
+                <Wand2 size={11} /> {tt("akAkilliAI")}{!akilliElitIzin && <span className="rounded bg-black/25 px-1 py-px text-[7px] font-black">{tt("tierElit")}</span>}
               </button>
               <button
                 type="button"

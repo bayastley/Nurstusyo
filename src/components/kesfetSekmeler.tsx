@@ -289,7 +289,7 @@ export function SoruBolumu({
         );
       })}
       <p className="pt-1 text-center text-[8px] text-white/25">{filtreliBesSart.length} mezhepli soru · {filtreliSorular.length} genel soru · detay için karta dokun</p>
-      <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-center text-[9px] text-amber-200/80">ttX2610("ksfUyari") yönlendiririz.</p>
+      <p className="rounded-xl bg-amber-500/10 px-3 py-2 text-center text-[9px] text-amber-200/80">{ttX2610("ksfUyari")} yönlendiririz.</p>
     </div>
   );
 }
@@ -312,8 +312,8 @@ export function KelimeBolumu({
   return (
     <>
       <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
-        <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>ttX2610("ksfGunun")</span>
-        <p className="text-[9px] text-white/40">ttX2610("ksfGununNot")</p>
+        <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{ttX2610("ksfGunun")}</span>
+        <p className="text-[9px] text-white/40">{ttX2610("ksfGununNot")}</p>
       </div>
       <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
         {gununKelimeleri.map((k) => (
@@ -388,7 +388,7 @@ export function SureBolumu({
           </div>
         );
       })}
-      {filtreliSureler.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">ttX2610("ksfSureBulunamadi")umara yaz.</p>}
+      {filtreliSureler.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">{ttX2610("ksfSureBulunamadi")}umara yaz.</p>}
       <p className="pt-1 text-center text-[8px] text-white/25">{filtreliSureler.length} sure · detay için karta dokun</p>
     </div>
   );

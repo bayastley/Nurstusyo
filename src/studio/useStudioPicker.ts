@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // USESTUDIOPICKER.TS — StudioApp parçalama turu (25.10):
 // öneri taslağı motoru + misafir kapısı + pickClip/alıntı atama + altar çızleri.
@@ -78,7 +81,7 @@ export function useStudioPicker(p: UseStudioPickerParam) {
     if (generating) return;
     setSelected([]);
     setReciterId(oneri.reciterId);
-    notify(`✨ Taslak yükleniyor: ${oneri.baslik}`);
+    notify(ttX2610("spTaslak").replace("{x}", String(oneri.baslik)));
     void (async () => {
       for (const a of oneri.ayetler) { await addAyah(a.s, a.a); }
       // Ayet metinleri (ar/tr) gelmeden üretimde boş ekran çıkar — bekle (max ~6 sn)
@@ -176,7 +179,7 @@ export function useStudioPicker(p: UseStudioPickerParam) {
         }
       }
     }
-    notify(`Atmosfer seçildi: ${clip.label}`);
+    notify(ttX2610("spSecildi").replace("{x}", String(clip.label)));
     setModal(null);
     setPickingFor(null);
   };
@@ -194,11 +197,11 @@ export function useStudioPicker(p: UseStudioPickerParam) {
     const used = getGuestUsed();
     const left = Math.max(0, GUEST_FREE_VIDEOS - used);
     if (left <= 0) {
-      notify("🎁 Misafir deneme hakkın doldu · Google ile 3 saniyede ücretsiz üye ol, +5 üretim hakkı kazan");
+      notify(ttX2610("spMisafirDoldu"));
       return;
     }
     setModal(null);
-    notify(`👋 Misafir modundasın · ${left} deneme videosu hakkın var · indirmek için üyelik gerekir`);
+    notify(ttX2610("spMisafirModu").replace("{x}", String(left)));
   }, [notify]);
   return {
     oneriHavuzu, oneriKullanilanlar, oneriKabileleri, oneriUygulaVeUret,

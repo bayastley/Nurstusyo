@@ -152,7 +152,7 @@ export function MarkaImza({
       <span className="flex items-center gap-1 text-[8.5px] font-bold uppercase tracking-wider text-amber-300">
         🛡️ {ttDA("dafMarkaImza")}
         <span className="rounded bg-amber-500/20 px-1 py-0.5 text-[6.5px] font-black text-amber-300">
-          {isMasterSurum ? "ADMİN" : "ELİT"}
+          {isMasterSurum ? ttDA("badgeAdmin") : ttDA("badgeElit")}
         </span>
         {/* ★ WATERMARK AÇ/KAPA — imza metnini silmeden videodan kaldır */}
         <button

@@ -29,8 +29,8 @@ const satir = [];
 for (const [f, b] of Object.entries(sonuc)) {
   top += b.length;
   satir.push(`## ${f} (${b.length})`);
-  b.slice(0, 10).forEach((x) => satir.push(`  L${x.s} [${x.tip}] ${x.t.slice(0, 80)}`));
-  if (b.length > 10) satir.push(`  …+${b.length - 10}`);
+  b.forEach((x) => satir.push(`  L${x.s} [${x.tip}] ${x.t.slice(0, 120)}`));
+  fs.writeFileSync("turkce-tam-2610.json", JSON.stringify(sonuc, null, 1));
 }
 console.log(satir.join("\n"));
 console.log("TOPLAM", top);

@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useEffect, useState } from "react";
 import { isAdminEmail } from "../tier";
 import {
@@ -100,7 +103,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         setFeedbackList(data.feedback || []);
         setFeedbackStats({ turDagilimi: data.turDagilimi || {}, puanDagilimi: data.puanDagilimi || {}, puanOrtalama: data.puanOrtalama || 0, toplam: data.toplam || 0 });
       } else notify(data?.error || "Geri bildirimler alınamadı");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setFeedbackLoading(false); }
   };
 
@@ -120,7 +123,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         setFeedbackYanitMetni("");
         await loadFeedback();
       } else notify(data?.error || "Yanıt gönderilemedi");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setFeedbackYanitYukleniyor(null); }
   };
 
@@ -138,13 +141,13 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
       return;
     }
     if (isAdminEmail(email)) {
-      notify("⛔ Kurucu Admin hesabı banlanamaz!");
+      notify(ttX2610("adKurucuBan"));
       return;
     }
     // ★ Güvenlik: Oturum açık olan admin kendi hesabını (hangi email ile
     //   girmiş olursa olsun) yanlışlıkla banlayıp kendini kilitleyemesin.
     if (email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) {
-      notify("⛔ Kendi oturum hesabınızı banlayamazsınız.");
+      notify(ttX2610("adOturumBan"));
       return;
     }
     const finalReason = sanitizeText(reason).trim().slice(0, 300) || "Yasal ihlal / Sistem güvenlik uyarısı";
@@ -156,11 +159,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     onUpdateUser(email, "free", 0);
     setBanReasonInput("");
     if (banState === "done") {
-      notify(`⛔ ${email} DB'ye işlendi ve süresiz banlandı!`);
+      notify(ttX2610("adBanDb").replace("{a}", email));
     } else if (banState === "fallback") {
-      notify(`⛔ ${email} süresiz banlandı! (yerel kayıt — DB henüz bağlı değil)`);
+      notify(ttX2610("adBanYerken").replace("{a}", email));
     } else {
-      notify(`⛔ ${email} yerel olarak banlandı (sunucu hatası, DB'ye işlenemedi)`);
+      notify(ttX2610("adBanSunucuHata").replace("{a}", email));
     }
   };
 
@@ -205,7 +208,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         setKullanimRows([]);
         notify(data?.error || "Kullanım verisi alınamadı");
       }
-    } catch { setKullanimRows([]); notify("Sunucuya ulaşılamadı"); }
+    } catch { setKullanimRows([]); notify(ttX2610("asSunucu")); }
   };
   useEffect(() => {
     if (activeTab === "kullanim" && kullanimRows.length === 0) void loadKullanim();
@@ -215,7 +218,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   // ★ LİSTEDEN BAN KALDIR — sunucu + yerel + liste yenileme tek akış
   const handleUnbanFromList = async (email: string) => {
     if (!isAdminEmail(currentUserEmail)) {
-      notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
+      notify(ttX2610("adBanKaldirma"));
       return;
     }
     if (!window.confirm(`${email} kullanıcısının banı kaldırılsın mı?\n\nKullanıcı anında siteye girebilir ve video üretebilir.`)) return;
@@ -228,7 +231,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
 
   const handleUnban = async (email: string) => {
     if (!isAdminEmail(currentUserEmail)) {
-      notify("⛔ Sadece Kurucu Admin ban kaldırma yetkisine sahiptir.");
+      notify(ttX2610("adBanKaldirma"));
       return;
     }
     const unbanState = await serverManageLocal("unban_user", { email });
@@ -238,9 +241,9 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     setBanLogs(getBanLogs());
     onUpdateUser(email, "free", 20);
     if (unbanState === "done") {
-      notify(`✅ ${email} banı kaldırıldı ve DB'ye işlendi`);
+      notify(ttX2610("adBanIade").replace("{a}", email));
     } else {
-      notify(`✅ ${email} banı yerel olarak kaldırıldı (DB henüz bağlı değil)`);
+      notify(ttX2610("adBanYerkenIade").replace("{a}", email));
     }
   };
 
@@ -274,7 +277,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
         setErrorStats(data.stats || null);
         setErrorPage(0);
       } else notify(data?.error || "Hata logları alınamadı");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setErrorLoading(false); }
   };
 
@@ -294,7 +297,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     } catch { /* sessiz */ }
     setErrorLogs([]);
     setErrorStats(null);
-    notify("Tüm hata kayıtları silindi");
+    notify(ttX2610("abHataKayitlari"));
   };
 
   // Hata Logları sekmesine ilk geçişte yükle
@@ -340,12 +343,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     const newCfg = { ...sysConfig, modules: updatedMods };
     setSysConfig(newCfg);
     saveSystemConfig(newCfg);
-    notify("✨ Modül durumu güncellendi!");
+    notify(ttX2610("abModulDurum"));
   };
 
   const handleCreateModule = async () => {
     if (!newModTitle.trim()) {
-      notify("Lütfen modül başlığı giriniz.");
+      notify(ttX2610("abModulBaslik"));
       return;
     }
     const newMod: DynamicModule = {
@@ -362,12 +365,12 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
     saveSystemConfig(newCfg);
     setNewModTitle("");
     setNewModDesc("");
-    notify(`🎉 Yeni Modül Ekledi: "${newMod.title}"`);
+    notify(ttX2610("adModulEkle").replace("{a}", String(newMod.title)));
   };
 
   const handlePushGist = async () => {
     if (!ghToken.trim()) {
-      notify("Lütfen GitHub Personal Access Token giriniz.");
+      notify(ttX2610("abGithubToken"));
       return;
     }
     setSyncing(true);

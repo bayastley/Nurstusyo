@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React from "react";
 import { UserCheck, Crown, Ban, CheckCircle, History, Search, Package, Clock, Wallet } from "lucide-react";
 import { isAdminEmail } from "../tier";
@@ -105,17 +108,17 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 onClick={() => handleSetTierViaEmail(emailSearchResult.email, "elit")}
                 className="rounded-lg bg-amber-400/30 px-2 py-1 text-[9px] font-bold text-amber-100 hover:bg-amber-400/40"
               >
-                ELİT YAP
+                {ttX2610("autElitYap")}
               </button>
               <select
                 value={giftTier}
                 onChange={(e) => setGiftTier(e.target.value as Tier)}
                 className="rounded-lg bg-white/10 px-1.5 py-1 text-[9px] font-bold text-white outline-none"
-                title="Hediye ile birlikte verilecek üyelik seviyesi"
+                title={ttX2610("autHediyeTitle")}
               >
                 <option value="free">FREE</option>
                 <option value="pro">PRO</option>
-                <option value="elit">ELİT</option>
+                <option value="elit">{ttX2610("tierElit")}</option>
               </select>
               <input
                 type="number"
@@ -178,11 +181,11 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                     <div className="font-bold text-white uppercase">{userHistory.user.tier}</div>
                   </div>
                   <div className="rounded-lg bg-white/5 p-2">
-                    <div className="text-white/40">Kayıt</div>
+                    <div className="text-white/40">{ttX2610("autKayit")}</div>
                     <div className="font-bold text-white">{userHistory.user.created_at ? new Date(userHistory.user.created_at).toLocaleDateString("tr-TR") : "—"}</div>
                   </div>
                   <div className="rounded-lg bg-white/5 p-2">
-                    <div className="text-white/40">Son Güncelleme</div>
+                    <div className="text-white/40">{ttX2610("autSonGuncelleme")}</div>
                     <div className="font-bold text-white">{userHistory.user.updated_at ? new Date(userHistory.user.updated_at).toLocaleDateString("tr-TR") : "—"}</div>
                   </div>
                 </div>
@@ -192,10 +195,10 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   <div className="mb-2 rounded-lg bg-amber-500/10 border border-amber-500/20 p-2">
                     <div className="mb-1 flex items-center gap-1">
                       <Wallet size={11} className="text-amber-400" />
-                      <span className="text-[10px] font-bold text-amber-300">Cüzdan Durumu</span>
+                      <span className="text-[10px] font-bold text-amber-300">{ttX2610("autCuzdanDurumu")}</span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 text-[9px]">
-                      <div><span className="text-white/50">Kısa:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_kisa || 0}</span></div>
+                      <div><span className="text-white/50">{ttX2610("autKisa")}</span> <span className="font-bold text-white">{userHistory.wallet.purchased_kisa || 0}</span></div>
                       <div><span className="text-white/50">Uzun:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_uzun || 0}</span></div>
                       <div><span className="text-white/50">Tam:</span> <span className="font-bold text-white">{userHistory.wallet.purchased_tam || 0}</span></div>
                     </div>
@@ -257,7 +260,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   <div className="mt-2 rounded-lg bg-blue-500/10 border border-blue-500/20 p-2">
                     <div className="mb-1 flex items-center gap-1">
                       <History size={11} className="text-blue-400" />
-                      <span className="text-[10px] font-bold text-blue-300">Admin İşlemleri (son 10)</span>
+                      <span className="text-[10px] font-bold text-blue-300">ttX2610("autAdminIslemleri")</span>
                     </div>
                     {userHistory.auditLogs.map((log: any, i: number) => (
                       <div key={i} className="flex items-center justify-between text-[9px] text-white/60">
@@ -340,7 +343,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
           )}
 
           <div className="mb-4">
-            <div className="text-[10px] font-black uppercase tracking-wider text-white/40">Seçili Kullanıcı Kartı</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-white/40">{ttX2610("autKart")}</div>
             <h4 className="font-display text-lg font-black text-white mt-0.5">{selectedUser.name || selectedUser.email}</h4>
             <p className="text-[11px] font-mono text-[color:var(--accent-2)]">{selectedUser.email}</p>
           </div>
@@ -357,9 +360,9 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 className="glass-soft w-full rounded-xl px-3 py-2.5 text-[12px] font-bold outline-none cursor-pointer"
                 style={{ color: "var(--accent-2)" }}
               >
-                <option value="free">🌱 Ücretsiz (Free)</option>
-                <option value="pro">💎 Nûr Pro (Tüm videolar & 1080p)</option>
-                <option value="elit">👑 Nûr Elit (%100 Logosuz & Tüm Kâriler)</option>
+                <option value="free">{ttX2610("autUcretsiz")}</option>
+                <option value="pro">{ttX2610("autPro")}</option>
+                <option value="elit">{ttX2610("autSelit")}</option>
               </select>
               <p className="text-[9px] text-white/45 leading-relaxed">
                 Değiştirdiğiniz anda tüm kilitler bu kullanıcı için canlı güncellenir.
@@ -374,7 +377,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
 
               {/* ★ TEK HAK SIFIRLAMA — suçun boyutuna göre kısmi ceza; tümü nükleer, bu cerrahi */}
               <details className="mt-2 rounded-xl border border-white/10 bg-black/30 p-2">
-                <summary className="cursor-pointer text-[10px] font-bold text-white/55 hover:text-white/80">⚖️ Tek Hak Sıfırla (kısmi ceza — üyeliği korur)</summary>
+                <summary className="cursor-pointer text-[10px] font-bold text-white/55 hover:text-white/80">{ttX2610("autHakSifirla")}</summary>
                 <div className="mt-2 space-y-1.5">
                   {(["kisa", "uzun", "tam"] as const).map((kind) => (
                     <div key={kind} className="flex items-center gap-1.5">
@@ -389,7 +392,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                         type="button"
                         onClick={() => { const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm"; if (window.confirm(`${selectedUser.email} kullanıcısının ${ad} hakları sıfırlanacak VE aktif üyeliği iptal edilecek.\n\nEmin misiniz?`)) handleResetSingleRight(selectedUser.email, kind, true); }}
                         className="rounded-lg bg-red-500/10 border border-red-500/25 px-2 py-1.5 text-[9px] font-bold text-red-300 hover:bg-red-500/20 transition"
-                        title="Aynı hak + üyelik iptali"
+                        title={ttX2610("autAyniHakTitle")}
                       >
                         + üyelik iptal
                       </button>
@@ -459,7 +462,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                     key={amt}
                     onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, amt, "gift")}
                     className="flex-1 rounded-lg bg-white/5 py-1 text-[9px] font-bold text-white/60 hover:bg-white/10 hover:text-white transition"
-                    title={`Seçili türe +${amt} hak ekler`}
+                    title={ttX2610("autHakEkleTitle").replace("{x}", String(amt))}
                   >
                     +{amt}
                   </button>
@@ -495,7 +498,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             {selectedUser.isBanned ? (
               <div className="space-y-2">
                 <div className="rounded-xl bg-black/40 p-2.5 text-[10px] leading-relaxed text-red-200 border border-red-500/20">
-                  <b className="text-red-400">Mevcut Ban Gerekçesi:</b> {selectedUser.banReason || "Belirtilmedi"}
+                  <b className="text-red-400">ttX2610("autBanGerekce")</b> {selectedUser.banReason || "Belirtilmedi"}
                   <span className="block text-[8.5px] text-white/40 mt-1">
                     Tarih: {selectedUser.bannedAt ? new Date(selectedUser.bannedAt).toLocaleString("tr-TR") : "-"} · Banned By: {selectedUser.bannedBy || "Admin"}
                   </span>
@@ -518,7 +521,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   <input
                     value={banReasonInput}
                     onChange={(e) => setBanReasonInput(e.target.value)}
-                    placeholder="Örn: Telif ihlali, sahte jeton müdahalesi veya yasal suç..."
+                    placeholder={ttX2610("autBanP")}
                     className="glass-soft w-full rounded-xl px-3 py-2 text-[11px] text-white outline-none focus:border-red-500"
                   />
                 </div>

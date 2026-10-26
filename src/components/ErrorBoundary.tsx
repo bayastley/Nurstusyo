@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="m-2 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center">
           <p className="text-sm font-bold text-red-200">⚠️ {this.props.label ?? "Bu bölüm"} geçici bir sorun yaşadı</p>
-          <p className="mt-1 text-[11px] text-white/50">ttX2610("ebNot")</p>
+          <p className="mt-1 text-[11px] text-white/50">{ttX2610("ebNot")}</p>
           <button
             onClick={() => this.setState({ hata: null })}
             className="mt-2 rounded-lg bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white/80 hover:bg-white/20 transition"

@@ -80,7 +80,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
 
       {mod === "ayet" ? (
         <div className="rounded-2xl border border-white/10 p-3" style={{ background: "rgba(255,255,255,.03)" }}>
-          <div className="mb-2 text-[10px] font-black tracking-wider text-white/50">ttX2610("skKutuphane")</div>
+          <div className="mb-2 text-[10px] font-black tracking-wider text-white/50">{ttX2610("skKutuphane")}</div>
           <div className="flex gap-2">
             <select value={sureIdx} onChange={(e) => { setSureIdx(Number(e.target.value)); setAyetIdx(0); }}
               className="cursor-pointer rounded-xl px-3 py-2.5 text-[12px] outline-none" style={{ flex: 2, background: "rgba(0,0,0,.35)", color: "var(--accent-2)", border: "1px solid rgba(255,255,255,.14)" }}>
@@ -97,7 +97,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           </div>
           <div className="mt-2.5 flex gap-2">
             <button onClick={ayetEkle} className={gold} style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", flex: 1 }}>➕ Ayeti Ekle</button>
-            <button onClick={sureEkle} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}>ttX2610("skSureEkle")</button>
+            <button onClick={sureEkle} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}>{ttX2610("skSureEkle")}</button>
           </div>
         </div>
       ) : (
@@ -106,7 +106,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
            1) Metin kutusuna yaz (tek hamle)
            2) ➕ bölüm ekle döngüsü: her basışta metni oransal parçalara dağıt — kaç +, o kadar bölüm
            3) Bölüm kartına tıkla → o bölüm ayrı ayrı dinle + arka plan/atmosfer paneli açılır
-           4) ttX2610("skSeslendir") tümü, bölüm kartındaki ▶ sadece o bölüm */
+           4) {ttX2610("skSeslendir")} tümü, bölüm kartındaki ▶ sadece o bölüm */
         <div className="rounded-2xl border border-white/10 p-3" style={{ background: "rgba(255,255,255,.03)" }}>
           <textarea value={metin} onChange={(e) => setMetin(e.target.value)}
             placeholder={ttX2610("skPhMetin")}
@@ -175,11 +175,11 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         {/* ★ 20.10 fix: seslendir'e event nesnesi sızmasını engelle — 0 parametres çağır */}
         <button onClick={() => { void seslendir(0); }} disabled={durumTip === "okuyor"}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-50`}
-          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>ttX2610("skSeslendir")</button>
+          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>{ttX2610("skSeslendir")}</button>
         {/* ★ 21.10 İNDİRME (kullanıcı: "indirme butonu yok mu şaka mısın") —
             kuyruğu sunucudan sırayla alıp tarayıcıda TEK dosyaya birleştirir */}
         <button onClick={indir} disabled={indiriyor || !indirHazir}
-          title="Bölümleri (yoksa seçili ayet/meti) tek ses dosyası olarak indir (WAV — tarayıcı birleşimi)"
+          title={ttX2610("skWavTitle")}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-40`}
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", whiteSpace: "nowrap" }}>
           {indiriyor ? "⏬ İndiriliyor…" : "📥 İndir"}
@@ -189,7 +189,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
             koy bari de tıklayalım"): tüm parçaların atmosferini geniş kelime
             indeksi + baskınlık eşiğiyle yeniden seçer — musaf emin olamadığında. */}
         <button onClick={akilliAta} title={ttX2610("skAkilliAI")}
-          className={ghostY} style={{ background: "rgba(215,170,82,.12)", border: "1px solid rgba(215,170,82,.35)", color: "var(--accent)", whiteSpace: "nowrap" }}>ttX2610("skAI")</button>
+          className={ghostY} style={{ background: "rgba(215,170,82,.12)", border: "1px solid rgba(215,170,82,.35)", color: "var(--accent)", whiteSpace: "nowrap" }}>{ttX2610("skAI")}</button>
         <span className={`ml-1 text-[10.5px] font-bold`}
           style={durumTip === "hata" ? { color: "#f87171" } : durumTip === "okuyor" ? { color: "#6ee7b7" } : { color: "var(--accent)" }}>
           {durum}

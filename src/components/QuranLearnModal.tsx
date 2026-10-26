@@ -510,7 +510,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 select-none">
             <span className="animate-pulse text-4xl">🌙</span>
             <p className="text-[13px] font-bold text-white/60">Ekransız Dinleme — {listenSurah}. Sure</p>
-            <p className="text-[10px] text-white/30">ttX2610("qkKilitUyku")</p>
+            <p className="text-[10px] text-white/30">{ttX2610("qkKilitUyku")}</p>
           </div>
           <div className="absolute bottom-5 right-5 flex items-center gap-2">
             <button onClick={() => (paused ? resumeAyah() : pauseAyah())} className="rounded-full bg-white/10 px-4 py-2 text-[11px] font-black text-white/70 backdrop-blur transition hover:bg-white/20">
@@ -550,9 +550,9 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           )}
           {/* ★ KUR'AN SAYFALARI (02.10, kullanıcı emri): mushaf görünümü — ★ 18.10 admin-gizli kilidi (QK_sayfalar) */}
           {QK_sayfalar && (
-          <button onClick={() => setSayfalarAcik(true)} className="flex items-center gap-1.5 rounded-xl border border-[#D7AA41]/40 bg-gradient-to-b from-[#3a2f14] to-[#241c0b] px-3 py-1.5 text-[11px] font-black text-[#f5dda6] transition hover:border-[#D7AA41]/70 hover:brightness-125 active:scale-95" title="Mushaf sayfaları — büyüt/küçült, tam ekran, kaldığın yerden devam + hatim takibi">
+          <button onClick={() => setSayfalarAcik(true)} className="flex items-center gap-1.5 rounded-xl border border-[#D7AA41]/40 bg-gradient-to-b from-[#3a2f14] to-[#241c0b] px-3 py-1.5 text-[11px] font-black text-[#f5dda6] transition hover:border-[#D7AA41]/70 hover:brightness-125 active:scale-95" title={ttX2610("qlmSayfalarTitle")}>
             📖 SAYFALAR
-            <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-0.5 text-[7.5px] font-black text-emerald-300">YENİ</span>
+            <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-0.5 text-[7.5px] font-black text-emerald-300">{ttX2610("qlmYeni")}</span>
           </button>
           )}
           {/* ★ 18.10 (kullanıcı emri): HAFIZLIK TESTİ İÇİNDEKİLER barında — SAYFALAR ile RADYO arası;
@@ -561,7 +561,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
             🧠 {ttQL("menuHafizlikTesti")}
           </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
-          <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title="7/24 kesintisiz Kur'an radyosu — hoca seçenekli canlı tilavet">
+          <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title={ttX2610("qlmRadyoTitle")}>
             📻 {radioOn ? (radioPaused ? ttQL("qrRadyoDurdu") : ttQL("qrRadyoAcik")) : ttQL("qrRadyo")}
           </button>
           {/* ★ 18.10 NÛR ARAÇLARI (kullanıcı emri): Sevap Köşesi kaldırıldı — yerine

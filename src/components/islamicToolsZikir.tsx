@@ -183,7 +183,7 @@ export function Zikirmatik() {
     } catch {}
     // ★ 33'LÜK HALKA kutlaması — her 33 zikirde halka dolar
     if (yeni % 33 === 0) {
-      setHalkaMesaj(`🎉 ${yeni / 33}. halka tamamlandı!`);
+      setHalkaMesaj(tt("itZikirHalka", "🎉 {n}. halka tamamlandı!").replace("{n}", String(yeni / 33)));
       window.setTimeout(() => setHalkaMesaj(""), 2600);
       if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
     }

@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // ADMIN TAB'LARI — AdminDashboardModal'dan ayrıldı (dosya küçültme, 27.09)
 //   • AdminHaftaVideoTab  → Haftanın Videosu onay kuyruğu (madde 17)
@@ -48,7 +51,7 @@ export const AdminHaftaVideoTab: React.FC<{ notify: (msg: string) => void }> = (
       const d = await r.json().catch(() => null) as any;
       if (d?.ok) setVideolar(d.videolar || []);
       else notify(d?.error || "Liste alınamadı");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setYukleniyor(false); }
   }, [notify]);
 
@@ -63,7 +66,7 @@ export const AdminHaftaVideoTab: React.FC<{ notify: (msg: string) => void }> = (
       const d = await r.json().catch(() => null) as any;
       if (d?.ok) { notify(durum === "onayli" ? "✓ Vitrine eklendi" : durum === "reddedildi" ? "Öneri reddedildi" : "Silindi"); yukle(); }
       else notify(d?.error || "İşlem başarısız");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
   };
 
   const durumRozet = (d: string) =>
@@ -75,7 +78,7 @@ export const AdminHaftaVideoTab: React.FC<{ notify: (msg: string) => void }> = (
   return (
     <div className="space-y-3">
       <div className="rounded-2xl border border-fuchsia-500/30 bg-fuchsia-500/[0.08] p-4">
-        <p className="text-[11px] font-black text-fuchsia-200">🎬 Haftanın Videosu — Onay Kuyruğu</p>
+        <p className="text-[11px] font-black text-fuchsia-200">{ttX2610("adtVideoOnay")}</p>
         <p className="mt-1 text-[10px] leading-relaxed text-white/55">
           Üyelerin önerdiği videolar (link + başlık). Onayladığın vitrinde herkese görünür; reddettiğin gerekçesiyle kullanıcıya gösterilir. Sunucuda video saklanmaz.
         </p>
@@ -85,7 +88,7 @@ export const AdminHaftaVideoTab: React.FC<{ notify: (msg: string) => void }> = (
         {yukleniyor ? "Yükleniyor…" : "↻ Yenile"}
       </button>
       {videolar.length === 0 ? (
-        <p className="p-6 text-center text-[10px] text-white/40 italic">Henüz öneri yok.</p>
+        <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtBos")</p>
       ) : (
         <div className="space-y-2">
           {videolar.map((v) => (
@@ -136,7 +139,7 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
       const d = await r.json().catch(() => null) as any;
       if (d?.ok) setRapor(d.rapor);
       else notify(d?.error || "Rapor alınamadı");
-    } catch { notify("Sunucuya ulaşılamadı"); }
+    } catch { notify(ttX2610("asSunucu")); }
     finally { setYukleniyor(false); }
   }, [notify]);
 
@@ -177,14 +180,14 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
     <div className="space-y-3">
       {/* ★ 26: HIZ TESTİ — bu cihazın durumu (yalnız adminin tarayıcısı) */}
       <div className="rounded-2xl border border-sky-400/25 bg-sky-500/[0.07] p-3.5">
-        <p className="text-[10px] font-black text-sky-200">⚡ Hız Testi — bu cihazın performansı</p>
+        <p className="text-[10px] font-black text-sky-200">{ttX2610("adtHizTesti")}</p>
         {!perf ? (
-          <p className="mt-1 text-[9px] text-white/40">Ölçülüyor… (yenile)</p>
+          <p className="mt-1 text-[9px] text-white/40">ttX2610("adtOlculuyor")</p>
         ) : (
           <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
             <div className="rounded-lg bg-white/5 py-1.5">
               <p className={`text-[12px] font-black ${perf.acilisMs < 1500 ? "text-emerald-300" : perf.acilisMs < 3000 ? "text-amber-300" : "text-red-300"}`}>{perf.acilisMs}ms</p>
-              <p className="text-[7px] font-bold uppercase tracking-wider text-white/40">Açılış</p>
+              <p className="text-[7px] font-bold uppercase tracking-wider text-white/40">{ttX2610("adtAcilis")}</p>
             </div>
             {Object.entries(perf.girisimler).slice(0, 3).map(([tur, sure]) => (
               <div key={tur} className="rounded-lg bg-white/5 py-1.5">
@@ -200,8 +203,8 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
       </div>
 
       <div className="rounded-2xl border border-teal-500/30 bg-teal-500/[0.08] p-4">
-        <p className="text-[11px] font-black text-teal-200">📊 Haftalık Rapor — son 7 gün</p>
-        <p className="mt-1 text-[10px] text-white/55">Kullanıcı, gelir, trafik ve topluluk özeti. Lider özellikler = oylama birincileri.</p>
+        <p className="text-[11px] font-black text-teal-200">{ttX2610("adtHaftaRapor")}</p>
+        <p className="mt-1 text-[10px] text-white/55">ttX2610("adtRaporAciklama")</p>
       </div>
       <button onClick={yukle} disabled={yukleniyor}
         className="rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
@@ -233,7 +236,7 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
           </div>
           {Array.isArray(rapor.topluluk?.oyLiderler) && rapor.topluluk.oyLiderler.length > 0 && (
             <div className="rounded-2xl border border-fuchsia-400/25 bg-fuchsia-500/[0.07] p-3.5">
-              <p className="text-[9px] font-black uppercase tracking-widest text-fuchsia-300">👑 Oylama liderleri (haftalık oy dağılımı)</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-fuchsia-300">{ttX2610("adtOyLiderleri")}</p>
               <ol className="mt-1.5 space-y-1">
                 {rapor.topluluk.oyLiderler.map((l: any, i: number) => (
                   <li key={l.ozellik} className="flex items-center gap-2 text-[10px] text-white/75">
@@ -318,14 +321,14 @@ export const AdminKullanimTab: React.FC<{
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-sky-500/30 bg-sky-500/[0.08] p-4">
-        <p className="text-[12px] font-black text-sky-200">📈 Bölüm Kullanım Analizi</p>
+        <p className="text-[12px] font-black text-sky-200">{ttX2610("adtBolumAnalizi")}</p>
         <p className="mt-1 text-[10px] text-white/55">
           {secili ? `${haftaEtiketi(secili.pazar)} haftasında toplam ${tr.format(toplam)} bölüm açılışı kaydedildi.` : "Henüz kayıt yok — kullanıcılar siteyi kullandıkça haftalık satırlar burada birikir."}
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <p className="p-6 text-center text-[10px] text-white/40 italic">Henüz haftalık kayıt oluşmamış. Kullanıcılar bölümleri açtıkça satırlar burada birikir; her hafta ayrı bir tarih etiketiyle listelenir.</p>
+        <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtKayitBos")yle listelenir.</p>
       ) : (
         <>
           {/* Hafta seçici — tarihe göre tıkla */}
@@ -358,7 +361,7 @@ export const AdminKullanimTab: React.FC<{
               </div>
             </div>
           ) : (
-            <p className="p-6 text-center text-[10px] text-white/40 italic">Seçilen haftada kayıt yok.</p>
+            <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtHaftaBos")</p>
           )}
 
           <p className="text-[8.5px] text-white/30">

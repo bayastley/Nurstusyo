@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useState, useCallback } from "react";
 import {
   getCurrentTier, setCurrentTier, tierAtLeast,
@@ -84,15 +87,15 @@ export function useTier({ isMasterSürüm, notify, jetonCount, setJetonCount }: 
       // ★ Kesinti ARTIK GERÇEK: sunucuda düşülür; başarısızsa kilit açılmaz (sahte −1 YOK)
       void sunucuHakDus("kisa").then((dustu) => {
         if (!dustu) {
-          notify(`⚠️ ${featureLabel} açıldı ama hakkın düşülemedi — sayfayı yenile`);
+          notify(ttX2610("utAcildiSorun").replace("{x}", String(featureLabel)));
           return;
         }
         grantMicroUnlock(key);
-        notify(`🔓 ${featureLabel} 24 saatliğine açıldı · −${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton`);
+        notify(ttX2610("utAcildiJeton").replace("{x}", String(featureLabel)).replace("{c}", String(JETON.MIKRO_KILIT_ACMA_UCRETI)));
       });
       return true;
     }
-    notify(`${featureLabel} için ${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton gerekiyor · mevcut: ${jetonCount}`);
+    notify(ttX2610("utJetonGerekli").replace("{x}", String(featureLabel)).replace("{c}", String(JETON.MIKRO_KILIT_ACMA_UCRETI)).replace("{n}", String(jetonCount)));
     openPremium("jeton");
     return false;
   }, [tier, jetonCount, notify, openPremium, isMasterSürüm, sunucuHakDus]);
@@ -105,15 +108,15 @@ export function useTier({ isMasterSürüm, notify, jetonCount, setJetonCount }: 
       // ★ Kesinti ARTIK GERÇEK (yukarıdaki notla aynı)
       void sunucuHakDus("kisa").then((dustu) => {
         if (!dustu) {
-          notify("⚠️ Tam Sürüm açıldı ama hakkın düşülemedi — sayfayı yenile");
+          notify(ttX2610("utTamAcildiSorun"));
           return;
         }
         grantMicroUnlock("full_mode");
-        notify(`✅ Tam Sürüm modu 24 saatliğine açıldı · −${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton`);
+        notify(ttX2610("utTamAcildiJeton").replace("{c}", String(JETON.MIKRO_KILIT_ACMA_UCRETI)));
       });
       return true;
     }
-    notify(`⚠️ Tam Sürüm modunu açmak için ${JETON.MIKRO_KILIT_ACMA_UCRETI} jeton gerekiyor · mevcut: ${jetonCount}`);
+    notify(ttX2610("utTamGerekli").replace("{c}", String(JETON.MIKRO_KILIT_ACMA_UCRETI)).replace("{n}", String(jetonCount)));
     openPremium("jeton");
     return false;
   }, [tier, jetonCount, notify, openPremium, isMasterSürüm, sunucuHakDus]);

@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useCallback, useState } from "react";
 import {
   JETON,
@@ -39,10 +42,10 @@ export function useMicroUnlocks({
       setJetonCount(remaining);
       grantMicroUnlock(key);
       setMicroUnlockTick((n) => n + 1);
-      notify(`🔓 ${featureLabel} 24 saatliğine açıldı`);
+      notify(ttX2610("uxAcildi").replace("{x}", String(featureLabel)));
       return true;
     }
-    notify(`${featureLabel} için geçici açma hakkı gerekiyor · mevcut: ${jetonCount}`);
+    notify(ttX2610("uxHakki").replace("{x}", String(featureLabel)).replace("{n}", String(jetonCount)));
     openPremium("jeton");
     return false;
   }, [isMasterSürüm, jetonCount, notify, openPremium, setJetonCount, tier]);
@@ -58,10 +61,10 @@ export function useMicroUnlocks({
       setJetonCount(remaining);
       grantMicroUnlock(key);
       setMicroUnlockTick((n) => n + 1);
-      notify("✅ Tam Sürüm modu 24 saatliğine açıldı");
+      notify(ttX2610("uxTamAcildi"));
       return true;
     }
-    notify(`⚠️ Tam Sürüm modunu 24 saatliğine açmak için geçici açma hakkı gerekiyor · mevcut: ${jetonCount}`);
+    notify(ttX2610("uxTamGerekli").replace("{n}", String(jetonCount)));
     openPremium("jeton");
     return false;
   }, [isMasterSürüm, jetonCount, notify, openPremium, setJetonCount, tier]);

@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import type { DesignSettingsPanelProps } from "./designSettingsTypes";
 import {
   Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause, Download,
@@ -265,7 +267,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                       {/* ★ 21.10 HOCA SESİ VİDEO İNDİRME — seçili ayet + mevcut atmosfer görseliyle MP4 */}
                       <span
                         role="button"
-                        title="Bu kârinin sesiyle seçili ayeti video (MP4) olarak indir — mevcut atmosfer görseliyle"
+                        title={ttX2610("dspMp4Title")}
                         className={`rounded-full p-1 shrink-0 transition ${hocaIndirBusy === item.id ? "text-black bg-[color:var(--accent)] animate-pulse" : "bg-white/10 text-white/70 opacity-70 group-hover:opacity-100 group-hover:bg-white/20"}`}
                         onClick={(event) => { event.stopPropagation(); if (reciterLocked || !hocaIndir || hocaIndirBusy) return; hocaIndir(item.id); }}
                       >
@@ -349,7 +351,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
           </div>
           <div className="mt-1.5 text-center text-[8px] text-white/30">
             {/* ★ 23.10: düz maliyet metni — her format bir hak (2 format = 2 hak) */}
-            Her ek format bir üretim hakkı: 2 format = 2 hak · 4 format = 4 hak
+            {ttX2610("dspFormatMaliyet")}
           </div>
         </div>
       </div>
@@ -374,7 +376,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               >
                 ⟲ {t("dafTumunuSifirla")}
               </button>
-              {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>ELİT</span>}
+              {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>{t("tierElit")}</span>}
             </div>
           </div>
           {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}

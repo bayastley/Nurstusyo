@@ -378,7 +378,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               className="flex w-full items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-500/[.08] p-3 text-left transition hover:border-amber-400/50">
               <span className="text-xl">⚡</span>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-black text-amber-200">ttX2610("htDevam")</p>
+                <p className="text-[11px] font-black text-amber-200">{ttX2610("htDevam")}</p>
                 <p className="text-[8.5px] text-white/50">
                   {tt("hafizlikSonTur").replace("{seviye}", SEVIYELER.find((s) => s.id === devam.seviye) ? tt(SEVIYELER.find((s) => s.id === devam.seviye)!.adKey) : String(devam.seviye)).replace("{d}", String(devam.dogru)).replace("{t}", String(devam.toplam))}
                   {devam.tarih ? ` · ${new Date(devam.tarih).toLocaleDateString(lang === "tr" ? "tr-TR" : lang === "ar" ? "ar" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "en-US")}` : ""}

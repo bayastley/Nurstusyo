@@ -176,7 +176,7 @@ export function HatimTakibi() {
     kaydet(yeni);
     if (yeni.size === 114 && !okunan.has(n)) {
       // Hatim tamamlandı
-      setTimeout(() => alert("🎉 Tebrikler! Hatim tamamladın. Allah kabul etsin! 🤲"), 100);
+      setTimeout(() => alert(tt("itHatimTebrik") || "🎉 Tebrikler! Hatim tamamladın. Allah kabul etsin! 🤲"), 100);
     }
   };
 

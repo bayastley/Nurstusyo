@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // GOOGLE OAUTH PKCE HELPER + ATMOSPHERE TEASER SABİTLERİ
 // ModalsContainer.tsx'ten çıkarıldı
@@ -33,12 +36,12 @@ export async function handleGoogleAuth(notify: (msg: string) => void, loginHint?
   const clientId = (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_GOOGLE_CLIENT_ID?.trim();
 
   if (!clientId) {
-    notify("⚙️ Google girişi için Client ID tanımlanmalı (.env → VITE_GOOGLE_CLIENT_ID)");
+    notify(ttX2610("abGoogleClientId"));
     return;
   }
 
   if (!crypto?.subtle) {
-    notify("⚠️ Tarayıcınız güvenli Google girişi için gerekli PKCE desteğini sağlamıyor");
+    notify(ttX2610("uaPkce"));
     return;
   }
 

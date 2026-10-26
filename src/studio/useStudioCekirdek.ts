@@ -1,3 +1,5 @@
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // USESTUDIOCEKIRDEK.TS — StudioApp parçalama turu (25.10):
 // state + referanslar + senkron efektleri + türetilmiş değerler.
@@ -519,7 +521,7 @@ export function useStudioCekirdek({ developerMaster }: { developerMaster: boolea
     const nowMs = Date.now();
     if (durationWarnRef.current.key === key || nowMs - durationWarnRef.current.at < 6500) return;
     durationWarnRef.current = { key, at: nowMs };
-    notify(`⚠️ ${modeLabel} süresi seçili ayetlere yetmiyor · ayet yarım kalmasın diye yaklaşık ilk ${fitCount} ayet alınır, sonrası bırakılır`);
+    notify(ttX2610("scSureYetmiyor").replace("{m}", String(modeLabel)).replace("{n}", String(fitCount)));
   }, [selected, mode, notify]);
 
   const ensureImage = useCallback((url: string) => ensureImageYukle(imageCache, url), []);

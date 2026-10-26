@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useState, useEffect, useRef } from "react";
 import { SERVER_BAN_LIVE } from "./studioConstants";
 import { consumeTamperFlag, onTamperDetected, secureGet, secureSet } from "../secureStore";
@@ -38,13 +41,13 @@ export function useBan({ user, isMasterSürüm, notify }: UseBanOptions): UseBan
   useEffect(() => {
     if (!isMasterSürüm) return;
     if (consumeTamperFlag()) {
-      notify("🛡️ ADMIN: Önceki güvenlik kaydı temizlendi · ban uygulanmadı");
+      notify(ttX2610("secAdminTemiz"));
     }
     setLocalBanned(false);
     secureSet("nur_local_user_banned", false);
     secureSet("nur_local_user_ban_reason", "");
     onTamperDetected((key) => {
-      notify(`🛡️ ADMIN UYARI: Güvenlik sinyali yakalandı (${key}) — ban uygulanmadı, sadece bildirildi.`);
+      notify(ttX2610("secSinyal").replace("{x}", String(key)));
     });
   }, [isMasterSürüm, notify]);
 
@@ -74,10 +77,10 @@ export function useBan({ user, isMasterSürüm, notify }: UseBanOptions): UseBan
   useEffect(() => {
     if (isMasterSürüm) return;
     if (consumeTamperFlag()) {
-      notify("🛡️ Güvenlik: Eski veri formatı tespit edildi · veriler otomatik güncellendi");
+      notify(ttX2610("secEskiFormat"));
     }
     onTamperDetected((key) => {
-      notify(`🛡️ Güvenlik uyarısı: ${key} — otomatik ban uygulanmadı`);
+      notify(ttX2610("secGenelUyari").replace("{x}", String(key)));
     });
   }, [notify, isMasterSürüm]);
 

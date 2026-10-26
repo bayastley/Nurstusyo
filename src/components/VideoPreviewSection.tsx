@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
@@ -258,7 +261,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         ) : (
           <button
             type="button"
-            onClick={() => { notify("🎨 Renk Çubuğu PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
+            onClick={() => { notify(ttX2610("vpRenkPro")); openPremium("uyelik"); }}
             className="relative flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[9px] font-bold text-white/60 transition hover:border-white/25 hover:text-white/90"
             style={{ background: "rgba(255,255,255,.04)" }}
           >
@@ -325,7 +328,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         ) : (
           <button
             type="button"
-            onClick={() => { notify("✏️ Özel Yazı PRO üyelere açık — premium sayfası açıldı"); openPremium("uyelik"); }}
+            onClick={() => { notify(ttX2610("vpOzelYaziPro")); openPremium("uyelik"); }}
             className="relative flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/10 py-1.5 text-[9px] font-bold text-white/60 transition hover:border-white/25 hover:text-white/90"
             style={{ background: "rgba(255,255,255,.04)" }}
           >
@@ -448,7 +451,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             if (gecer) return null;
             if (v2Kilitli) return (<span className="rounded bg-slate-400/20 px-1 py-px text-[7px] font-black tracking-wide text-slate-300">V2 · YAKINDA</span>);
             if (kilit === "pro") return (<span className="rounded bg-purple-400/20 px-1 py-px text-[7px] font-black tracking-wide text-purple-200">PRO</span>);
-            return (<span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">ELİT</span>);
+            return (<span className="rounded bg-amber-400/20 px-1 py-px text-[7px] font-black tracking-wide text-amber-200">{ttX2610("tierElit")}</span>);
           })()}
         </button>
       </div>
@@ -483,7 +486,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 try {
                   for (const [idx, output] of outputs.entries()) {
                     const response = await fetch(output.url);
-                    if (!response.ok) throw new Error(`İndirme başarısız (${response.status})`);
+                    if (!response.ok) throw new Error(ttX2610("vpIndirmeHatasi").replace("{n}", String(response.status)));
                     const blob = await response.blob();
                     const a = document.createElement("a");
                     const objectUrl = URL.createObjectURL(blob);
@@ -532,7 +535,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                     <button key={u.ad} type="button" onClick={u.calistir}
                       className="rounded-full border border-white/10 bg-white/[.04] px-2 py-1 text-[8.5px] font-bold text-white/70 transition hover:border-emerald-400/40 hover:text-emerald-300"
                       title={t("vpIlePaylas").replace("{ad}", u.ad)}>
-                      {u.emoji} {u.ad}
+                      {u.emoji} {u.ad === "Daha fazla" ? t("shDahaFazla") : u.ad}
                     </button>
                   ))}
                 </div>
@@ -547,7 +550,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 Elite olmayan kullanıcıda rozet kilitli görünür; tıklayınca Premium/uyelik sayfası açılır. */}
             <span className="rounded-full px-1.5 py-px text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}
               onClick={(e) => { if (!(isMasterSürüm || tierAtLeast(tier, "elit"))) { e.stopPropagation(); openPremium("uyelik"); } }}>
-              {"ELİT"}
+              {ttX2610("badgeElit")}
             </span></p>
           <p className="mb-3 text-[9px] text-white/45">{smartAiEnabled ? t("akilliAiAciklama") : t("akilliAiKapaliAciklama")}</p>
           <button
@@ -559,7 +562,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             //   (tier düşüşü vb.) yeniden kapatılamaz ama toggle da edemez — güvenli sessiz blok.
             onClick={() => {
               if (!(isMasterSürüm || tierAtLeast(tier, "elit"))) {
-                if (!smartAiEnabled) { openPremium("uyelik"); notify("✨ Akıllı AI ELİT özelliğidir — üyelik sayfasından Elite yüksel"); }
+                if (!smartAiEnabled) { openPremium("uyelik"); notify(ttX2610("akElitOzellik")); }
                 else setSmartAiEnabled(false); // zaten açıkken kapanabilir (tier düşüşü durumunda kapansın)
                 return;
               }
@@ -582,11 +585,11 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             yazsın, sonra üyelik almaya yöneltsin". Misafirde görünmez (null). */}
         {!isMasterSürüm && denemeKalan() !== null && (
           denemeAktifMi() ? (
-            <p className="text-center text-[9px] font-bold text-emerald-300/80">🎁 Lansman denemesi: {denemeKalan()}/{DENEME_TOPLAM} üretim hakkı kaldı</p>
+            <p className="text-center text-[9px] font-bold text-emerald-300/80">🎁 {t("vpDenemeKalan").replace("{k}", String(denemeKalan())).replace("{t}", String(DENEME_TOPLAM))}</p>
           ) : (
             <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-amber-300/90">
-              <span>Lansman denemesi bitti</span>
-              <button type="button" onClick={() => openPremium("uyelik")} className="rounded-full px-2 py-0.5 text-black" style={{ background: "linear-gradient(135deg,#fde68a,#d97706)" }}>💎 Üyeliğe geç</button>
+              <span>{t("vpDenemeBitti")}</span>
+              <button type="button" onClick={() => openPremium("uyelik")} className="rounded-full px-2 py-0.5 text-black" style={{ background: "linear-gradient(135deg,#fde68a,#d97706)" }}>💎 {t("vpUyeligeGec")}</button>
             </div>
           )
         )}

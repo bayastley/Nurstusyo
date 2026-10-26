@@ -20,6 +20,11 @@ import {
 } from "../clips";
 import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories";
 import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
+import { atmosKategoriAdGorunum } from "../data/kategoriCokDil"; // ★ 26.10: kategori adı 5 dil
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+const dilX2610 = (): string => typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr";
+const kat2610 = (id: string, label: string): string => atmosKategoriAdGorunum(id, label, dilX2610());
 import { getAdminCatAccess } from "../adminCategoryAccess";
 import { getFeatureLock } from "../services/adminSyncService";
 import { T } from "../i18n";
@@ -120,7 +125,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
               <span className="relative flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold glass-soft text-white/30 cursor-not-allowed"><FolderUp size={12} /> ZIP / Image<LockBadge kind="v3" position="top-right" tooltipText="V3 Güncellemesi Yakında" /></span>
             )}
             <button onClick={() => randomizeBackgrounds(atmosCategory !== "all" ? atmosCategory : undefined)} className="relative flex items-center gap-1.5 rounded-xl px-3 py-2 text-[10px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-              <Shuffle size={11} />{atmosCategory !== "all" ? `${CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ""} Rastgele` : t("randomAll")}
+              <Shuffle size={11} />{atmosCategory !== "all" ? `${CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ""} ${ttX2610("atmRastgele")}` : t("randomAll")}
             </button>
           </div>
 
@@ -138,7 +143,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
               </button>
               <div className="flex min-w-0 flex-1 items-baseline gap-2">
                 <h4 className="truncate text-[12px] font-black tracking-wide text-white">
-                  {CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}{clipKind === "img" ? " · Şablonlar" : ""}
+                  {kat2610(String(atmosCategory), CATEGORIES.find(c => c.id === atmosCategory)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find(c => c.id === atmosCategory)?.label ?? String(atmosCategory))}{clipKind === "img" ? ` ${ttX2610("atmSablonlar")}` : ""}
                 </h4>
                 <span className="shrink-0 text-[9px] font-bold text-white/35">
                   {/* ★ İçerik sayısı yalnızca admin'de */}
@@ -149,7 +154,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
                 onClick={() => { setHeroSpotlight(null); setAtmosCategory("all"); }}
                 className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 px-3 py-1.5 text-[9.5px] font-black text-white/80 hover:bg-white/10 hover:text-white transition active:scale-95"
               >
-                ✕ Seçimi Kaldır
+                ✕ {ttX2610("atmSecimKaldir")}
               </button>
             </div>
           ) : (
@@ -209,7 +214,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
                 const kodV2 = HARD_LOCKED_CATEGORIES.includes(category.id) && !kullaniciYuklemisi;
                 const kodTier = kullaniciYuklemisi ? "free" : (KATEGORI_TIER[category.id as CatId] ?? "free");
                 const kodKilitli = kodV2 || !tierAtLeast(accessTier, kodTier);
-                const lockLevel = panelKilitli ? (panelLock === "v2" ? "V2" : panelLock === "v3" ? "V3" : panelLock === "pro" ? "PRO" : "ELİT") : adminAcc === "v2" ? "V2" : adminAcc === "pro" ? "PRO" : adminAcc === "elit" ? "ELİT" : kodV2 ? "V2" : kodTier === "pro" ? "PRO" : kodTier === "elit" ? "ELİT" : "V2";
+                const lockLevel = panelKilitli ? (panelLock === "v2" ? ttX2610("badgeV2") : panelLock === "v3" ? "V3" : panelLock === "pro" ? ttX2610("badgePro") : ttX2610("badgeElit")) : adminAcc === "v2" ? ttX2610("badgeV2") : adminAcc === "pro" ? ttX2610("badgePro") : adminAcc === "elit" ? ttX2610("badgeElit") : kodV2 ? ttX2610("badgeV2") : kodTier === "pro" ? ttX2610("badgePro") : kodTier === "elit" ? ttX2610("badgeElit") : ttX2610("badgeV2");
                 // ★ ADMIN: isMasterSürüm=true → v2/pro/elit dahil TÜM kilitler açık (görsel + tıklama)
                 const hardLocked = !isMasterSürüm && !ATMOSPHERE_PREVIEW_UNLOCKED && (panelBakimda ? true : panelKilitli ? (panelLock === "v2" || panelLock === "v3" ? true : !tierAtLeast(accessTier, panelLock)) : (adminLocked ? !adminUsable : (isAdminAtmosphere || kodKilitli)));
                 // ★ Arama kutusuna yazınca eşleşen KLASÖR sarı yanar — yerini gösterir
@@ -239,12 +244,12 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
                     >
                       {hardLocked && <span className="absolute right-1 top-1 rounded px-1 py-0.5 text-[6.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{lockLevel}</span>}
                       {CatIcon ? <CatIcon size={15} style={active && !hardLocked ? undefined : { color: hardLocked ? undefined : searchHit ? "#151020" : "var(--accent)" }} /> : null}
-                      <span className="px-1 text-center text-[8px] font-bold leading-tight">{category.label}</span>
-                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : searchHit ? "text-[#151020]/70" : "text-white/25"}`}>{isMasterSürüm ? `${count} içerik` : ""}</span>
+                      <span className="px-1 text-center text-[8px] font-bold leading-tight">{kat2610(category.id, category.label)}</span>
+                      <span className={`text-[7px] ${active && !hardLocked ? "text-black/60" : searchHit ? "text-[#151020]/70" : "text-white/25"}`}>{isMasterSürüm ? `${count} ${ttX2610("atmIcerik")}` : ""}</span>
                     </button>
                     {hardLocked && lockTip === `cat-${category.id}` && (
                       <span className="pointer-events-none absolute -top-6 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[9px] font-black text-black shadow-lg" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                        <Lock size={9} className="mr-1 inline" />{lockLevel} Güncellemesi Yakında
+                        <Lock size={9} className="mr-1 inline" />                        {lockLevel} {ttX2610("atmYakinda")}
                       </span>
                     )}
                   </div>
@@ -258,8 +263,8 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
           {filteredClips.length === 0 && (
             <div className="mb-3 rounded-xl glass-soft px-4 py-3 text-center text-[11px] font-bold text-white/60">
               {atmosCategory !== "all"
-                ? `📁 "${CATEGORIES.find(c => c.id === atmosCategory)?.label ?? atmosCategory}" klasöründe ${clipKind === "img" ? "şablon" : "hareketli video"} yok — üstteki sekmeyi değiştir ya da başka klasör dene`
-                : "Bu sekmede gösterilecek atmosfer yok — sekmeyi değiştir"}
+                ? ttX2610("atmBosKlasor").replace("{ad}", kat2610(String(atmosCategory), CATEGORIES.find(c => c.id === atmosCategory)?.label ?? String(atmosCategory))).replace("{tarz}", clipKind === "img" ? ttX2610("atmTarzImg") : ttX2610("atmTarzVid"))
+                : ttX2610("atmBosSekme")}
             </div>
           )}
 

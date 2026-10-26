@@ -10,6 +10,9 @@
 
 import { secureGet, secureMigrate, secureSet } from "./secureStore";
 import { serverDateISO, serverIsFriday } from "./serverTime";
+// ★ 26.10: featureLockLabel rozeti oturum dilinde döner (badgePro/badgeElit)
+import { translate } from "./i18n";
+const dilX2610 = (): string => typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr";
 // ★ 02.10 latent fix: consumeVideo (satır ~217) videoMaliyeti çağırıyordu ama import yoktu.
 //   tierCompat zaten tier'den import ediyor (döngü var) — videoMaliyeti hoisted function
 //   declaration olduğu için ESM döngüsünde güvenli (çağrı anında modül yüklü).
@@ -409,7 +412,9 @@ export function isFeatureUnlocked(key: FeatureKey, tier: Tier): boolean {
 
 export function featureLockLabel(key: FeatureKey): string {
   const gate = FEATURE_GATES[key];
-  return gate.kind === "tier" ? (gate.tier === "pro" ? "PRO" : "ELİT") : gate.version.toUpperCase();
+  return gate.kind === "tier"
+    ? (gate.tier === "pro" ? translate(dilX2610(), "badgePro") : translate(dilX2610(), "badgeElit"))
+    : gate.version.toUpperCase();
 }
 
 // ★ DÜRÜST KÂRİ LİSTELERİ (08.10, kullanıcı emri) — reciters.ts'deki 45 gerçek id ile birebir

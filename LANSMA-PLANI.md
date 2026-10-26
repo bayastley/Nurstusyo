@@ -1,6 +1,6 @@
 # NÛR STÜDYO — LANSMA PLANI (v1.0 Genel Erişim)
 
-**Tarih:** 22 Ekim 2026, Perşembe
+**Tarih:** 26 Ekim 2026, Pazartesi (takvim bu tarihe göre hizalandı)
 **Kapsam:** Sitenin ilk kamu lansmanı — "kimsenin haberi yok" durumundan çıkıp gerçek bir açılış gününe
 **Durum:** PLAN AŞAMASI. Bu doküman hazırlandığı sırada **hiçbir kod dosyasına, hiçbir veriye, hiçbir ayara dokunulmadı.** Aşağıdaki her şey öneri/plan niteliğindedir; uygulama senin onayınla yapılacak.
 
@@ -123,14 +123,14 @@ Hepsi `https://www.nurstudyo.com` üzerinden gerçek sorgularla ölçüldü.
 
 | Gün | Tarih | Tek iş | Kanal | Hedef |
 |-----|-------|--------|-------|-------|
-| **G0** | 22 Ekim Perş | Duyuru yayınla + 19 kullanıcıya mesaj | Panel + WhatsApp | 19 bildirim |
-| **G1** | 23 Ekim Cuma | 90 sn gerçek ekran videosu | YouTube | 1 video + link |
-| **G2** | 24 Ekim Cumartesi | 3 kısa klip (Reels/TikTok) | TikTok + IG | 3 klip |
-| **G3** | 25 Ekim Pazar | WhatsApp durumu + 5 üreticiye özel hediye | WhatsApp | 5 kişiye 1'e1 |
-| **G4** | 26 Ekim Pazartesi | "Ücretsiz İslamî video aracı" formatında topluluk paylaşımı | Reddit + IG topluluk | 3 paylaşım |
-| **G5** | 27 Ekim Salı | Kâfi / WbW seri içeriği (senin en ayırt edici kozun) | YouTube Shorts | 3 klip |
-| **G6** | 28 Ekim Çarşamba | Geri bildirim turu + ilk ölçüm raporu | E-posta/DM | 10 cevap |
-| **G7** | 29 Ekim Perş | 2. dalga: "ilk 100'e 81 kaldı" geri sayımı | Tüm kanallar | 50 ziyaretçi |
+| **G0** | 26 Ekim Pzt | Duyuru yayınla + 19 kullanıcıya mesaj | Panel + WhatsApp | 19 bildirim |
+| **G1** | 27 Ekim Salı | 90 sn gerçek ekran videosu | YouTube | 1 video + link |
+| **G2** | 28 Ekim Çarş | 3 kısa klip (Reels/TikTok) | TikTok + IG | 3 klip |
+| **G3** | 29 Ekim Perş | WhatsApp durumu + 5 üreticiye özel hediye | WhatsApp | 5 kişiye 1'e1 |
+| **G4** | 30 Ekim Cuma | "Ücretsiz İslamî video aracı" formatında topluluk paylaşımı | Reddit + IG topluluk | 3 paylaşım |
+| **G5** | 31 Ekim Cmt | Kâfi / WbW seri içeriği (senin en ayırt edici kozun) | YouTube Shorts | 3 klip |
+| **G6** | 1 Kasım Paz | Geri bildirim turu + ilk ölçüm raporu | E-posta/DM | 10 cevap |
+| **G7** | 2 Kasım Pzt | 2. dalga: "ilk 100'e 81 kaldı" geri sayımı | Tüm kanallar | 50 ziyaretçi |
 
 ### 7.2 Hazır gönderi metinleri
 
@@ -226,4 +226,4 @@ Bunlar **iptal edilmedi**, lansman sonrasına kaldırıldı. Roadmap oyları gel
 
 ---
 
-*Bu plan 21–22 Ekim 2026 tarihinde canlı site üzerinde yapılan gerçek ölçümlere dayanır. Uygulama için gereken her değişiklik senin onayına bağlıdır.*
+*Bu plan 21–22 Ekim 2026 tarihinde canlı site üzerinde yapılan gerçek ölçümlere dayanır; takvim 26 Ekim 2026'ya hizalanmıştır. Uygulama için gereken her değişiklik senin onayına bağlıdır.*

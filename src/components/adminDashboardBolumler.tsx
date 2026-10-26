@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // ADMINDASHBOARD BOLUMLER — AdminDashboardModal sekme bileşenleri
 // AdminDashboardModal.tsx'den ayrıldı (SRP adım 10, 30.09)
@@ -93,13 +96,13 @@ export function AdminBanLogsTab({
                               onClick={() => onUnban(u.user_email)}
                               disabled={unbanBusy === u.user_email}
                               className="shrink-0 rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-1.5 text-[9.5px] font-black text-emerald-300 transition hover:bg-emerald-500/30 active:scale-95 disabled:opacity-50"
-                              title="Bu kullanıcının aktif banını kaldır — anında siteye girebilir"
+                              title={ttX2610("adbBanKaldirTitle")}
                             >
                               {unbanBusy === u.user_email ? <Loader2 size={11} className="inline animate-spin" /> : "🔓 BANI KALDIR"}
                             </button>
                           </div>
                           <p className="mt-1 text-white/80 leading-relaxed">
-                            <b>Gerekçe:</b> {u.reason || "Belirtilmedi"}
+                            <b>{ttX2610("adbGerekce")}</b> {u.reason || "Belirtilmedi"}
                           </p>
                           <div className="mt-1 flex items-center justify-between border-t border-white/5 pt-1 text-[8.5px] text-white/40">
                             <span>Banlayan: {u.banned_by || "Admin"}</span>
@@ -138,7 +141,7 @@ export function AdminBanLogsTab({
                     <Lightbulb size={18} className="animate-pulse" fill="currentColor" />
                   </span>
                   <div>
-                    <h4 className="text-[12px] font-black text-white">Siber Denetim ve Ban Geçmişi Kayıtları</h4>
+                    <h4 className="text-[12px] font-black text-white">ttX2610("adbSiberKayitlar")</h4>
                     <p className="text-[9.5px] text-white/50 leading-relaxed">
                       Sistem tarafından otomatik tespit edilen güvenlik ihlalleri ve Admin tarafından uygulanan yasal ban işlemleri.
                     </p>
@@ -163,7 +166,7 @@ export function AdminBanLogsTab({
                           </span>
                         </div>
                         <p className="text-white/80 leading-relaxed">
-                          <b>Gerekçe / Yasal Suç:</b> {log.reason}
+                          <b>ttX2610("adbGerekceSuclama")</b> {log.reason}
                         </p>
                         <div className="flex items-center justify-between text-[8.5px] text-white/40 pt-1 border-t border-white/5">
                           <span>Yetkili: {log.bannedBy}</span>
@@ -212,7 +215,7 @@ export function AdminFeedbackTab({
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
                   <p className="text-2xl font-black text-emerald-300">{feedbackStats?.toplam ?? "—"}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">Toplam görüş</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbToplamGorus")</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
                   <p className="text-2xl font-black text-amber-300">{feedbackStats?.puanOrtalama ? `${feedbackStats.puanOrtalama} ⭐` : "—"}</p>
@@ -220,17 +223,17 @@ export function AdminFeedbackTab({
                 </div>
               </div>
 
-              {/* Tür dağılımı */}
+              {/* ttX2610("adbTurDagilimi") */}
               {feedbackStats && (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/45">Tür dağılımı</p>
+                  <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbTurDagilimi")</p>
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-lg bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-300">💡 Öneri: {feedbackStats.turDagilimi.oneri ?? 0}</span>
                     <span className="rounded-lg bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300">✨ Özellik: {feedbackStats.turDagilimi.ozellik ?? 0}</span>
                     <span className="rounded-lg bg-red-500/15 px-2.5 py-1 text-[10px] font-bold text-red-300">😔 Şikayet: {feedbackStats.turDagilimi.sikayet ?? 0}</span>
                     <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/60">✉️ Diğer: {feedbackStats.turDagilimi.diger ?? 0}</span>
                   </div>
-                  <p className="mb-2 mt-3 text-[9px] font-bold uppercase tracking-widest text-white/45">Puan dağılımı</p>
+                  <p className="mb-2 mt-3 text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbPuanDagilimi")</p>
                   {[5, 4, 3, 2, 1].map((n) => {
                     const adet = feedbackStats.puanDagilimi[n] ?? 0;
                     const yuzde = feedbackStats.toplam ? Math.round((adet / feedbackStats.toplam) * 100) : 0;
@@ -280,10 +283,10 @@ export function AdminFeedbackTab({
                       {fb.admin_yanit && !yanitAcik && (
                         <div className="rounded-lg border border-amber-400/25 bg-amber-500/[.06] p-2">
                           <p className="flex items-center justify-between gap-2 text-[8.5px] font-black uppercase tracking-wider text-amber-300">
-                            <span>↩️ Verilen yanıt</span>
+                            <span>ttX2610("adbVerilenYanit")</span>
                             <span className="flex items-center gap-1 font-bold normal-case tracking-normal">
                               {fb.mail_gonderildi
-                                ? <span className="rounded bg-emerald-500/20 px-1.5 py-px text-emerald-300">📧 e-posta gönderildi</span>
+                                ? <span className="rounded bg-emerald-500/20 px-1.5 py-px text-emerald-300">ttX2610("adbMailGitti")</span>
                                 : <span className="rounded bg-red-500/15 px-1.5 py-px text-red-300" title={fb.mail_hata || ""}>📧 gönderilemedi{fb.mail_hata ? `: ${fb.mail_hata}` : ""}</span>}
                             </span>
                           </p>
@@ -299,14 +302,14 @@ export function AdminFeedbackTab({
                             onChange={(e) => setFeedbackYanitMetni(e.target.value)}
                             maxLength={2000}
                             rows={4}
-                            placeholder="Kullanıcıya yanıtını yaz — gönderince e-posta olarak gider…"
+                            placeholder={ttX2610("adbYanitP")}
                             className="w-full resize-none rounded-lg border border-white/10 bg-black/40 p-2 text-[10.5px] text-white/85 outline-none placeholder:text-white/25 focus:border-amber-400/50"
                           />
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-[8px] text-white/30">{feedbackYanitMetni.length}/2000 · {fb.user_email ? `📧 ${fb.user_email}` : "⚠️ misafir — e-posta gönderilemez"}</span>
                             <div className="flex gap-1.5">
                               <button onClick={() => { setFeedbackYanitAcik(null); setFeedbackYanitMetni(""); }}
-                                className="rounded-md bg-white/10 px-2.5 py-1 font-bold text-white/60 transition hover:bg-white/20">İptal</button>
+                                className="rounded-md bg-white/10 px-2.5 py-1 font-bold text-white/60 transition hover:bg-white/20">{ttX2610("rmIptal")}</button>
                               <button
                                 disabled={buYanitYukleniyor || !feedbackYanitMetni.trim()}
                                 onClick={() => void feedbackYanitGonder(fb.id)}
@@ -480,12 +483,12 @@ export function AdminErrorsTab({
                       {sirali.map(([ep, bilgi]) => (
                         <button
                           key={ep}
-                          onClick={() => notify(`🔍 ${ep} — son hata: ${new Date(bilgi.sonZaman).toLocaleString("tr-TR")}`)}
+                          onClick={() => notify(ttX2610("adsEpHata").replace("{a}", ep).replace("{b}", new Date(bilgi.sonZaman).toLocaleString("tr-TR")))}
                           className="group block w-full text-left"
                           title={`${ep} · ${bilgi.adet} hata · son: ${new Date(bilgi.sonZaman).toLocaleString("tr-TR")}`}
                         >
                           <div className="flex items-center gap-2">
-                            <span className="w-20 shrink-0 truncate font-mono text-[9px] font-bold text-white/75 group-hover:text-white">/{ep}{bilgi.adet === enCok && <span title="En çok hata veren endpoint"> 👑</span>}</span>
+                            <span className="w-20 shrink-0 truncate font-mono text-[9px] font-bold text-white/75 group-hover:text-white">/{ep}{bilgi.adet === enCok && <span title={ttX2610("adbEnCokEndpoint")}> 👑</span>}</span>
                             <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-white/[.06]">
                               <span
                                 className="block h-full rounded-full transition-all"
@@ -500,7 +503,7 @@ export function AdminErrorsTab({
                         </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[8px] text-white/35">Çubuk uzunluğu = hata sayısı oranı · en üstte en çok hata veren endpoint · tıkla → son hata zamanını gör</p>
+                    <p className="mt-2 text-[8px] text-white/35">ttX2610("adbCubukInfo")</p>
                   </div>
                 );
               })()}
@@ -571,7 +574,7 @@ export function AdminErrorsTab({
                   onClick={async () => {
                     if (!confirm("30 günden eski hata kayıtları silinsin mi?")) return;
                     await fetch("/api/admin/action", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clear_errors" }) });
-                    notify("Eski kayıtlar temizlendi");
+                    notify(ttX2610("abEskiKayitlar"));
                     loadErrorLogs();
                   }}
                   className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-[10px] font-bold text-red-300 transition hover:bg-red-500/20">
@@ -599,13 +602,13 @@ export function AdminErrorsTab({
                         <span className="flex-1 truncate px-1 font-bold text-amber-300" title={log.message}>{okunurMesaj(log.message)}</span>
                         {/* ★ GRUP SAYACI — aynı hata N kez tekrarladıysa ×N rozeti */}
                         {log.__adet > 1 && (
-                          <span className="shrink-0 rounded-full bg-sky-500/20 px-2 py-0.5 text-[8.5px] font-black text-sky-300" title={`Aynı hata son 500 kayıtta ${log.__adet} kez tekrarladı`}>
+                          <span className="shrink-0 rounded-full bg-sky-500/20 px-2 py-0.5 text-[8.5px] font-black text-sky-300" title={ttX2610("adbAdetTitle").replace("{x}", String(log.__adet))}>
                             ×{log.__adet}
                           </span>
                         )}
                         <span className="flex shrink-0 items-center gap-1">
                           <span className={`rounded px-1.5 py-0.5 text-[8px] font-black ${String(log.source || "").startsWith("server:") ? "bg-red-500/20 text-red-300" : "bg-white/10 text-white/60"}`} title={String(log.source || "").startsWith("server:") ? "Sunucu (Vercel API) hatası" : "Tarayıcı hatası"}>{String(log.source || "").startsWith("server:") ? `🖥️ ${String(log.source).slice(7)}` : log.source}</span>
-                          <button onClick={() => deleteErrorLog(log.id)} title="Bu kaydı sil"
+                          <button onClick={() => deleteErrorLog(log.id)} title={ttX2610("adbSilTitle")}
                             className="rounded px-1 py-0.5 text-[8px] font-black text-white/30 transition hover:bg-red-500/20 hover:text-red-300">✕</button>
                         </span>
                       </div>
@@ -613,12 +616,12 @@ export function AdminErrorsTab({
                       <div className={`flex items-center gap-2 text-[9.5px] font-bold ${log.user_email ? "text-sky-300" : "text-white/35"}`}>
                         {log.user_email ? <><UserCheck size={11} /> {log.user_email}</> : "👻 Misafir kullanıcı (giriş yapmamış)"}
                         {logIp && (
-                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8.5px] font-monospace text-amber-200/80" title="İstek geldiği IP (Vercel x-forwarded-for)">🌐 {logIp}</span>
+                          <span className="rounded bg-white/10 px-1.5 py-0.5 text-[8.5px] font-monospace text-amber-200/80" title={ttX2610("adbIpTitle")}>🌐 {logIp}</span>
                         )}
                       </div>
                       {log.stack && (
                         <details className="text-white/40">
-                          <summary className="cursor-pointer text-[9px] hover:text-white/70">Yığın izi (stack)</summary>
+                          <summary className="cursor-pointer text-[9px] hover:text-white/70">ttX2610("adbStack")</summary>
                           <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-black/60 p-2 text-[8.5px] text-white/50">{log.stack}</pre>
                         </details>
                       )}

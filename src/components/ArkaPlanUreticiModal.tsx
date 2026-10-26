@@ -23,6 +23,7 @@ import {
 import { moodOneriGorunum, moodAdGorunum, moodPlanGorunum, senaryoGorunum, moodMetinCevir } from "../data/arkaplanCokDil";
 import { kategoriAdGorunum } from "../data/kategoriCokDil";
 import { CATEGORIES, CATEGORY_PALETTE, type CatId } from "../clips";
+import { ADMIN_ATMOSPHERE_CATEGORIES } from "../adminAtmosphereCategories"; // ★ 26.10: admin kategori adları
 
 export interface ArkaPlanUreticiModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
@@ -42,7 +43,7 @@ export interface ArkaPlanUreticiModalProps {
   isMasterSurum?: boolean;
 }
 
-const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
+const catLabel = (cat: CatId): string => CATEGORIES.find((c) => c.id === cat)?.label ?? ADMIN_ATMOSPHERE_CATEGORIES.find((c) => c.id === cat)?.label ?? cat;
 // ★ 04.10: kategori adı seçili dilde (çeviri yoksa TR label)
 const catLabelDil = (cat: CatId, l: Lang): string => kategoriAdGorunum(cat, catLabel(cat), l);
 
@@ -179,7 +180,7 @@ export const ArkaPlanUreticiModal: React.FC<ArkaPlanUreticiModalProps> = ({
                 {moodAdGorunum(aktifMood.id, aktifMood.ad, lang)} {tt("auSahneEki")}
               </h4>
               {!tamEslesme && (
-                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">ttX2610("yaklasikVurus")</span>
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[8px] font-bold text-white/50">{ttX2610("yaklasikVurus")}</span>
               )}
             </div>              <p className="text-[10px] leading-relaxed text-white/55">{moodPlanGorunum(aktifMood.id, aktifMood.plan, lang)}</p>
             {/* ★ 23.10: ayet önerisi — mood'a yakışan ayet bilgi olarak gösterilir (emir değil) */}

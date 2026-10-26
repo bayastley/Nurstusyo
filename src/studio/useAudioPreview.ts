@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useState, useEffect, useCallback, useRef } from "react";
 import { RECITERS, sesKaynakZinciri, sesZinciriBagla } from "../reciters";
 import type { SelectedAyah } from "../types";
@@ -104,7 +107,7 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
         if (!destroyed) {
           cleanup();
           setPreviewPlaying(false);
-          notify("⚠️ Bu kârinin tam sure kaydı yüklenemedi · ayet konumu korundu");
+          notify(ttX2610("apTamsureHata"));
         }
       };
     } else {
@@ -126,12 +129,12 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
         if (destroyed) return;
         cleanup();
         if (verseIndex < selected.length - 1) {
-          notify("⚠️ Bu ayetin sesi yüklenemedi · sıradaki ayete geçiliyor");
+          notify(ttX2610("apAyetSesHata"));
           setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400);
         } else {
           setVerseIndex(selected.length - 1);
           setPreviewPlaying(false);
-          notify("⚠️ Son ayetin sesi yüklenemedi · önizleme durduruldu");
+          notify(ttX2610("apSonAyetHata"));
         }
       });
       audio.onstalled = () => { if (!destroyed) audio.play().catch(() => undefined); };
@@ -144,7 +147,7 @@ export function useAudioPreview({ selected, verseIndex, setVerseIndex, reciterId
     //   cleanup + durdurma oluyordu ("1. ayetten sonra dondu"). Süre 20 sn'ye çıktı +
     //   sadece ses BAŞLAMAMISSA (readyState=0) devreye girer; load ediyorsa bekle.
     const safetyTimer = window.setTimeout(() => { if (!destroyed && audio.readyState < 1) { cleanup();
-      if (verseIndex < selected.length - 1) { notify("⏳ Bağlantı yavaş · sıradaki ayete geçiliyor"); setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400); }
+      if (verseIndex < selected.length - 1) { notify(ttX2610("apBaglantiYavas")); setTimeout(() => { if (!destroyed) setVerseIndex((i) => i + 1); }, 400); }
       else setPreviewPlaying(false);
     } }, 20000);
     verseAudioRef.current = audio;

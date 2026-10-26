@@ -1,3 +1,6 @@
+import { translate } from "../i18n";
+// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useState, useEffect, useCallback } from "react";
 import { isAdminEmail, ADMIN_SECRET_PATH, setCurrentTier, denemeyiSunucuyaSenkronla, type Tier } from "../tier";
 import { secureGet, secureSet, secureRemove } from "../secureStore";
@@ -100,7 +103,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
     window.history.replaceState({}, "", window.location.pathname || "/");
 
     if (!storedState || storedState !== state || !verifier) {
-      notify("⚠️ Google giriş oturumu doğrulanamadı. Lütfen tekrar deneyin.");
+      notify(ttX2610("uaOturumDogrulanamadi"));
       return;
     }
 
@@ -160,7 +163,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           const adminTier = (data.user.tier === "pro" || data.user.tier === "elit") ? data.user.tier : "elit";
           setCurrentTier(adminTier);
           tierStateGuncelle(adminTier); // ★ React state köprüsü — üst bar çipi doğru üyeliği göstersin
-          notify(`🛡️ Google doğrulandı · Kurucu Admin · ${adminTier.toUpperCase()} modu`);
+          notify(ttX2610("uaKurucu").replace("{x}", String(adminTier.toUpperCase())));
           return;
         }
 
@@ -178,9 +181,9 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
           } catch { /* storage kapalıysa sunucu otoritesi yeterli */ }
         }
         void denemeyiSunucuyaSenkronla();
-        notify("Google ile giriş başarılı · hoş geldiniz");
+        notify(ttX2610("uaGirisBasarili"));
       } catch {
-        if (!cancelled) notify("Google girişi sırasında bağlantı hatası oluştu");
+        if (!cancelled) notify(ttX2610("uaBaglantiHatasi"));
       }
     })();
 
@@ -283,7 +286,7 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
     } catch { /* ignore */ }
 
     setAdminAuthOpen(true);
-    notify("Admin paneli için doğrulanmış Google admin oturumu gerekli");
+    notify(ttX2610("uaAdminOturumGerekli"));
   }, [isDevMaster, notify]);
 
   return {
