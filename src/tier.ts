@@ -44,34 +44,62 @@ const TRIAL_KEY = "nur_trial_start";
 const TRIAL_DAYS = 7;
 
 // ════════════════════════════════════════════════════════
-// ★ 26.10 7-HAFTA LANS KAMPANYASI (sahibin emri — ömür boyu +1 kardesi ile bitti)
-//   Lansmandan başlayıp tam 7 hafta (49 gün) boyunca HERKES gerçek PRO'dur:
-//   • “Pro etiketler vurulur” → getCurrentTier kampanya boyunca pro döner; üst
-//     bardaki üyelik çipi, kilite UI ve PAYLAŞım rozetleri otomatik NÛR PRO görünür.
-//   • Özellikler açık → tier tabanli kapılar pro'dan geçer.
-//   • Haklar SINIR: üretim hakları/fat kotalar PRO seviyesiyle sınırlı — sınırsız değil.
-//   • Bitiş kamasona kapılır; bitişin ilk 7 günü kullanışamlara bitiş bildirimi
-//     (AnnouncementBar) gösterilir; admin ayrıca duyuru/push'sun alabilir.
-//   Tarihe bağlıdır (kayıt-depolama yok) → süresiz uzatma saldırısı imkânsız.
+// ★ 27.10 KAMPANYA KALDIRILDI (sahibin emri): "bu pro hakkı 500 kişiye kadar
+//   geçerli — 500 kişi olana kadar her giren 1 hafta pro olur, başka yok."
+//   • Eski 7-hafta HERKES-PRO tarih kampanyası ÖLDÜ — getCurrentTier artık
+//     tarih bazlı pro OVERRIDE YAPMAZ (aşağıdaki getCurrentTier'a bak).
+//   • PRO hakkı = 7 günlük (1 haftalık) SUNUCU-tabanlı deneme + İLK-500 kapısı
+//     (api/trial.ts POST /api/auth/me'den bağımsız(server-authoritative)).
+//   • LANS_KAMPANYA_* sabitleri ve yardımcılar eskiden kalan çağrılar için
+//     korunur; artık UI akışlarında rol oynamaz.
 // ════════════════════════════════════════════════════════
 export const LANS_KAMPANYA_BASLANGIC = Date.UTC(2026, 9, 26, 0, 0, 0); // 26.10.2026
-export const LANS_KAMPANYA_BITIS = Date.UTC(2026, 11, 14, 0, 0, 0); // 14.12.2026 = pak 7 hafta sonra
+export const LANS_KAMPANYA_BITIS = Date.UTC(2026, 11, 14, 0, 0, 0); // 14.12.2026 = artık YOK (sahibin emri 27.10: 500-kisi denemesi)
+/** Bitiş göstergeleri gerçek bitişe bağlıdır (26.10'daki geçici test Tarihi kaldırıldı) */
+export const LANS_KAMPANYA_BITIS_TMP = LANS_KAMPANYA_BITIS;
 
+/** ★ 27.10 KAPALI: tarih kampanyası kaldırıldı — her çağıran için artık false döner */
 export function lansKampanyaAktif(): boolean {
-  const n = Date.now();
-  return n >= LANS_KAMPANYA_BASLANGIC && n < LANS_KAMPANYA_BITIS;
+  return false;
 }
 
 /** Kampanya boyunca kalan tam hafta sayısı (bitiş dâhil değil) */
 export function lansKampanyaHaftaKaldi(): number {
-  const remain = LANS_KAMPANYA_BITIS - Date.now();
+  const remain = LANS_KAMPANYA_BITIS_TMP - Date.now();
   return remain > 0 ? Math.max(1, Math.ceil(remain / (7 * 86400 * 1000))) : 0;
 }
 
 /** BİTİŞ BİLDİRİMİ penceresi: bitişten sonraki ilk 7 gün true döner */
 export function lansKampanyaBitti(): boolean {
   const n = Date.now();
-  return n >= LANS_KAMPANYA_BITIS && n < LANS_KAMPANYA_BITIS + 7 * 86400 * 1000;
+  return n >= LANS_KAMPANYA_BITIS_TMP && n < LANS_KAMPANYA_BITIS_TMP + 7 * 86400 * 1000;
+}
+
+// ★ 27.10 KESİN BİTİŞ TARİHİ: "süre başladığında ne zaman biteceği yazmıyor" —
+//   çağıran bitiş tarihini oturum dilinde döndürür (karşılama modal $1 dolgusu).
+const LANS_LOCALE: Record<string, string> = { tr: "tr-TR", en: "en-US", ar: "ar", id: "id-ID", ur: "ur-PK" };
+export function lansKampanyaBitisMetni(dil?: string | null): string {
+  const kod = String(dil || "tr").trim().toLowerCase();
+  const locale = LANS_LOCALE[kod] || "tr-TR";
+  try {
+    return new Date(LANS_KAMPANYA_BITIS_TMP).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return "14.12.2026";
+  }
+}
+
+/** ★ 27.10 DENEME BİTİŞ TARİHİ: kullanıcının KENDİ 7 günlük (1 haftalık) denemesi
+ *  bitince hangi tarih olur (başlangıç: nur_trial_start) — oturum dilinde yazılı. */
+export function denemeBitisTarihiMetni(dil?: string | null): string {
+  const kod = String(dil || "tr").trim().toLowerCase();
+  const locale = LANS_LOCALE[kod] || "tr-TR";
+  const baslangic = typeof window !== "undefined" ? Number(localStorage.getItem(TRIAL_KEY) || 0) : 0;
+  const bitis = (baslangic > 0 ? baslangic : Date.now()) + TRIAL_DAYS * 86400000;
+  try {
+    return new Date(bitis).toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return new Date(bitis).toISOString().slice(0, 10);
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -93,7 +121,13 @@ export async function denemeyiSunucuyaSenkronla(): Promise<void> {
       body: JSON.stringify({ startedAt: yerel ? Number(yerel) : undefined }),
     });
     if (!res.ok) return; // sunucu yoksa/oturum yoksa yerel davranış sürer
-    const j = (await res.json()) as { serverTrial?: boolean; start?: number | null; active?: boolean };
+    const j = (await res.json()) as { serverTrial?: boolean; start?: number | null; active?: boolean; kapili?: boolean };
+    // ★ 27.10 İLK-500 KAPISI (api/trial.ts): kontenjan dolu → sunucu deneme
+    //   açmadı + YEREL anahtarı da temizle (uzatma/sürüklenme kalmasın).
+    if (j.kapili) {
+      if (yerel) localStorage.removeItem(TRIAL_KEY);
+      return;
+    }
     if (!j.serverTrial || typeof j.start !== "number") return; // tablo yok → fallback
     if (!j.active) {
       // Sunucuda süresi dolmuş → yerel uzatma olasılığını da kapat
@@ -135,10 +169,11 @@ export function getCurrentTier(): Tier {
   const value = secureGet<Tier>(CURRENT_TIER_KEY, "free");
   if (value === "elit") return "elit";
   if (value === "pro") return "pro";
-  // ★ 26.10 7-hafta lans kampanyası: kampanya aktifken herkes GERÇEK PRO'dur
-  //   (yukarıdaki LANS_KAMPANYA bloğu). Elit üyeler elit kalır.
-  if (lansKampanyaAktif()) return "pro";
-  // ★ 7 günlük ücretsiz PRO denemesi — yeni üyeler için
+  // ★ 27.10 KAMPANYA OVERRIDE KALDIRILDI (sahibin emri): "500 kişi olana kadar
+  //   her giren 1 hafta pro olur, başka yok." — artık tarih-pencereden HERKES
+  //   PRO olmaz; PRO = 7 günlük sunucu-tabanlı deneme (İLK 500 kayda) veya
+  //   gerçek üyelik.
+  // ★ 7 günlük (1 haftalık) ücretsiz PRO denemesi — İLK 500 kayıta
   if (isTrialActive()) return "pro";
   return "free";
 }

@@ -77,6 +77,8 @@ const SocialSharePanel = React.lazy(() => import("./components/SocialSharePanel"
 const ModalsContainer = React.lazy(() => import("./components/ModalsContainer").then((m) => ({ default: m.ModalsContainer })));
 import { MaintenanceScreen } from "./components/MaintenanceScreen";
 import { AnnouncementBar } from "./components/AnnouncementBar";
+// ★ 26.10 ORTA EKRAN KAMPANYA BİLDİRİMİ — ilk girişte karşılama, bitiş penceresinde bitiş modalı
+import { LansmanKarsilamaModal } from "./components/LansmanKarsilamaModal";
 import { CookieConsent, CookieAyarDugmesi } from "./components/CookieConsent";
 import { setLegalTabAçıcı, type LegalTab } from "./legalTabs";
 import { TelifDisclaimer } from "./components/TelifDisclaimer";
@@ -293,6 +295,11 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
       {/* ★ SEVAP SAYACI KARTI — bu ay okunan harf (madde 4, 02.10): en üstte, kapatılabilir */}
       <SevapSayaciKarti lang={lang} />
+
+      {/* ★ 26.10 ORTA EKRAN KAMPANYA BİLDİRİMİ (sahibin emri): ilk girişte "7 haftalık
+          PRO deneme yüklendi" karşılama modalı, kampanya bitiminin ilk 7 günündeki
+          ilk girişte "ücretsiz devam + üyelikle devam et" bitiş modalı. */}
+      <LansmanKarsilamaModal user={user} openPremium={openPremium} />
 
       {/* HEADER & TOP STRIP */}
       <HeaderTopBar

@@ -9,7 +9,6 @@ import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 import type { User, ModalName } from "../types";
 import { translate } from "../i18n";
 // ★ 26.10 7-HAFTA KAMPANYA ÇİPLERİ — lansman dönemi "herkes PRO" sayacı + bitiş bildirimi
-import { lansKampanyaAktif, lansKampanyaHaftaKaldi, lansKampanyaBitti } from "../tier";
 
 interface AnnouncementBarProps {
   notify: (message: string) => void;
@@ -28,8 +27,9 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
   //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
   const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
-  // ★ SADIK ÜYE SAYAÇ KALDIRILDI (26.10, sahibin emri): ömür boyu +1 kampanyası bitti —
-  //   yerine 7-hafta PRO lansman kampanyası geçti (tier.ts LANS_KAMPANYA bloğu).
+  // ★ 27.10 İLK-500 SAYAÇ GERİ GELDİ (sahibin emri): "7 hafta HERKES PRO" çipi
+  //   kaldırıldı; yerine gerçek kayıt sayacı (config sadikUye.toplamKayitli/500).
+  const [sadikSayac, setSadikSayac] = useState<{ katilan: number; kontenjan: number } | null>(null);
   // ★ KİLİT GÜNCELLEMESİ (19.10): /api/config poll'u v2/v3 kilitlerini veya admin
   //   gizli-reveal'ları (nur_feature_locks) değişik olarak yakalarsa "Güncellemeyi
   //   Al" bildirimi basılır — kullanıcı yenilemeyle yeni modülleri görsün.
@@ -87,8 +87,11 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
           } catch { /* yut */ }
         }
         if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
-          // ★ 26.10: sadık üye çipi kaldırıldı — /api/config alanı sunucuda admin analitiği
-          //   olarak durabilir; kullanıcıya artık yerde görüntü yok.
+          // ★ 27.10 GERİ DÖNDÜ (sahibin emri): "burayı 500 kullanıcı yapmıştık —
+          //   kişi hep 'HERKES PRO' kampanya çipini görmesin." /api/config zaten
+          //   toplam kayıtlıyı veriyor (kontenjan sabit 500); çip kontenjan dolana
+          //   kadar görünür, dolunca kendiliğinden kaybolur.
+          setSadikSayac({ katilan: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan || 500) });
         }
       }
     };
@@ -210,26 +213,20 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               {t("noAnnouncementYet")}
             </span>
           )}
-          {/* ★ 26.10 7-HAFTA PRO KAMPANYASI (sahibin emri): sadık üye sayaç çipinin
-              yerine kampanya sayacı — aktifken kalan haftayı gösterir; bitince
-              7 gün boyunca bitiş bildirimi gösterilir (bildirim/demir atıldı). */}
-          {lansKampanyaAktif() && (
-            <span
-              title={t("lansKampanyaKalanTitle")}
-              className="flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1.5 font-black text-amber-200"
-            >
-              <Sparkles size={12} className="text-amber-300 animate-pulse" />
-              <span data-testid="lans-kampanya-sayac">{t("lansKampanyaKalan").replace("{h}", String(lansKampanyaHaftaKaldi()))}</span>
-            </span>
-          )}
-          {lansKampanyaBitti() && (
+          {/* ★ 27.10 İLK-500 SAYAÇ ÇİPİ (sahibin emri): "pro hakkı 500 kişiye kadar
+              geçerli — 500 kişi olana kadar her giren 1 hafta pro olur." Kampanya
+              tarihi çipleri KALDIRILDI. ★ GÖRÜNÜRLÜK (2. emir: "kişi hep bunu
+              görmesin"): çip yalnız GİRİŞ YAPMAMIŞ ziyaretçiye gösterilir —
+              denemesini almış/kayıtlı kullanıcıya ve PRO'ya nag.atma; kontenjan
+              (X/500) dolunca zaten herkes için kaybolur. Tık → giriş modalı. */}
+          {!user && sadikSayac && sadikSayac.katilan < sadikSayac.kontenjan && (
             <button
               onClick={() => setModalSafe?.("login")}
-              title={t("lansKampanyaBittiTitle")}
-              className="flex items-center gap-1.5 rounded-full border border-rose-300/40 bg-rose-400/10 px-3 py-1.5 font-black text-rose-200 transition hover:bg-rose-400/20"
+              title={t("sadikUyeKontenjanTitle")}
+              className="flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1.5 font-black text-amber-200 transition hover:bg-amber-400/20"
             >
-              <Sparkles size={12} className="text-rose-300" />
-              <span data-testid="lans-kampanya-bitti">{t("lansKampanyaBitti")}</span>
+              <Sparkles size={12} className="text-amber-300 animate-pulse" />
+              <span data-testid="sadik-kontenjan-sayac">{t("sadikUyeKontenjan").replace(/\{katilan\}/g, String(sadikSayac.katilan)).replace(/\{toplam\}/g, String(sadikSayac.kontenjan))}</span>
             </button>
           )}
           {holyDay.type !== "none" && (

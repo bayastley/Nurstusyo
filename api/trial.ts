@@ -147,6 +147,24 @@ function supabaseConfig() {
 
 interface TrialRow { user_id: string; started_at: string; updated_at?: string }
 
+// ★ 27.10 İLK-500 KAPISI (sahibin emri): "bu pro hakkı 500 kişiye kadar geçerli —
+//   500 kişi olana kadar her giren 1 hafta pro olur, başka yok." Yeni deneme
+//   kaydı yalnız ilk 500 kayıt (nur_users.created_at ASC) içine açılır.
+//   Sorgu patlarsa flexible davran: mevcut deneme kayıtları aynen korunur,
+//   yeni kayıtlar da engellenmez — DB kesintisi kullanıcıyı cezalandırmasın.
+async function ilk500IciMi(userId: string): Promise<boolean> {
+  const sb = supabaseConfig();
+  if (!sb) return true;
+  try {
+    const res = await fetch(`${sb.url}/rest/v1/nur_users?select=id&order=created_at.asc&limit=500`, {
+      headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store",
+    });
+    if (!res.ok) return true;
+    const rowlar = (await res.json()) as Array<{ id: string }>;
+    return rowlar.some((r) => r.id === userId);
+  } catch { return true; }
+}
+
 async function trialOku(userId: string): Promise<TrialRow | null> {
   const sb = supabaseConfig();
   if (!sb) return null;
@@ -212,6 +230,11 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<VercelR
     if (req.method === "POST") {
       const mevcut = await trialOku(user.id);
       if (mevcut) { durumDondur(res, mevcut, true); return undefined; }
+      // ★ İLK-500 KAPISI: kontenjan doluysa yeni deneme AÇILMAZ — istemci hem
+      //   sunucu hem YEREL (kapili) işaretle deneme anahtarını temizler.
+      if (!(await ilk500IciMi(user.id))) {
+        return res.status(200).json({ ok: true, serverTrial: false, fallback: "client", kapili: true, sebep: "kontenjan" });
+      }
       // İstemci başlangıcı: yalnız İLK kayıtta kabul edilir (mevcut kullanıcı göçü)
       let istemciBaslangici: number | null = null;
       try {
