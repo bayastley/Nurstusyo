@@ -150,10 +150,27 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
         </div>
       ) : null}
 
+      {/* ★ 26.10 (kullanıcı emri): "Rastgele Ata" dev, "Oto" minik kalmıştı — ikisi de
+          esitlendi (iki butona da flex:1, aynı padding/hizı). Kopya dikkat çekici
+          “Akıllı AI” lisanslı yazıya çevrildi; rastgele buton altın-degrade parıltı aldı. */}
       <div className="mt-3 flex gap-2">
         {/* ★ 16.10: Rastgele Ata artık loremflickr değil — gerçek R2 klip havuzundan */}
-        <button onClick={() => { const k = SES_ARKA_HAVUZ[Math.floor(Math.random() * SES_ARKA_HAVUZ.length)]; const url = k.kind === "vid" ? (k.r2 || k.src) : (k.src || k.r2Poster || ""); setBg({ url, poster: k.r2Poster ?? k.poster, ad: k.label, kat: k.cat }); yaz(`Rastgele: ${k.label} ✓`); }} className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-white/80 transition" style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}>🔀 Rastgele Ata</button>
-        <button onClick={() => setBg(null)} className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-white/80 transition" style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)" }}>↺ Oto</button>
+        <button
+          onClick={() => { const k = SES_ARKA_HAVUZ[Math.floor(Math.random() * SES_ARKA_HAVUZ.length)]; const url = k.kind === "vid" ? (k.r2 || k.src) : (k.src || k.r2Poster || ""); setBg({ url, poster: k.r2Poster ?? k.poster, ad: k.label, kat: k.cat }); yaz(`Rastgele: ${k.label} ✓`); }}
+          title="Akıllı AI klip havuzundan sürpriz bir sahne seçip sahneye anında yerleştirir"
+          className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-black transition hover:brightness-110 active:scale-95"
+          style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", boxShadow: "0 0 0 1px rgba(215,170,82,.45), 0 0 14px rgba(215,170,82,.30)", flex: 1 }}
+        >
+          🎲✨ Akıllı AI'dan Sürpriz Sahneler
+        </button>
+        <button
+          onClick={() => setBg(null)}
+          title="Sahneyi başlangıç/otomatik arka planına geri döndür"
+          className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-white/80 transition hover:bg-white/10 active:scale-95"
+          style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}
+        >
+          🏠↺ Oto · Varsayılan Sahne
+        </button>
       </div>
     </div>
   );
