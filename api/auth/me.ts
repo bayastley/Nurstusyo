@@ -197,6 +197,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     //   Artık aktif abonelik VARSA aboneliğin kendi tier'ı geçerli — PRO ödeyen PRO görür.
     //   Abonelik satırı YOKSA db tier aynen kalır (admin ataması / ömür boyu).
     let etkinTier: "free" | "pro" | "elit" = dbUser?.tier || user.tier || "free";
+    // ★ 27.10 KUL HAKKI (sahibin emri): üyeliği biten kullanıcı sıfıra düşmez —
+    //   haftalık KISA kota 50 tavanıyla devam eder (ELİT dahil). Bayrak istemciye
+    //   user.subExpired ile taşınır; istemci de aynı 50yi gösterir.
+    let subExpired = false;
     if (etkinTier !== "free") {
       try {
         const subs = await supabaseRows<{ ends_at: string; tier: "free" | "pro" | "elit" }>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`);
@@ -204,10 +208,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const endsAt = sub?.ends_at ? Date.parse(sub.ends_at) : NaN;
         if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
           etkinTier = "free"; // kayıt yok veya süresi dolmuş
+          // ★ Bitmiş satır bulunduysa kul hakkı tavanı istemciye bildirilir
+          subExpired = !!(sub && (sub.tier === "pro" || sub.tier === "elit"));
         } else if (sub?.tier === "pro" || sub?.tier === "elit") {
           etkinTier = sub.tier; // ödenen tier neyse o — db kalıntısı ezilir
         }
       } catch { /* abonelik tablosu yoksa/eskiyse duyarlı davranma — mevcut tier kalır */ }
+    } else {
+      // ★ db tier free görünüyorsa bile geçmişte ödenmiş bitmiş satır var mı?
+      //   (google.ts giriş anında nur_users.tier'i free'ye inidirir; yoksa biten
+      //   üyelik tespit edilmezdi.) Satır yoksa/false kalır.
+      try {
+        const bitmis = await supabaseRows<{ ends_at: string; tier: string }>(`nur_subscriptions?user_id=eq.${encodeURIComponent(user.id)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`);
+        const b = bitmis[0];
+        const bEnds = b?.ends_at ? Date.parse(b.ends_at) : NaN;
+        if (b && (b.tier === "pro" || b.tier === "elit") && Number.isFinite(bEnds) && bEnds <= Date.now()) subExpired = true;
+      } catch { /* tablo yoksa kul hakkı kapısı kapalı kalır */ }
     }
 
     // ★ SADIK ÜYE (05.10): ilk 100 kayıta "Sadık Üye" etiketi + ömür boyu günlük
@@ -251,6 +267,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         isAdmin: Boolean(emailEnvOnayli && (user.isAdmin || dbUser?.is_admin)),
         tier: etkinTier,
         sadikUye,
+        subExpired: Boolean(subExpired && etkinTier === "free"),
       },
       wallet: {
         subJeton: wallet.sub_jeton,

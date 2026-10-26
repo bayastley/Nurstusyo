@@ -77,6 +77,10 @@ export async function kuyrukIndir(
   urlAl: (m: string) => Promise<string>,
   yaz: IndirYaz,
   bg: BgKaynak = null, // seçili atmosfer: videosu/posteri varsa arka planda oynar
+  // ★ 26.10 DURDUR-CANLI (kullanıcı: "indirme durdurma dondu kaldı"): modal'dan
+  //  DURDUR'a basılınca bu obje True olur; parça-fetch ve kayıt-bekleme her
+  //  dilimde okur → bekleme 40-90 sn setTimeout zincirinde asılı kalma BİTTİ.
+  iptal?: { iptalEdildi: boolean },
 ): Promise<void> {
   if (typeof MediaRecorder === "undefined") { yaz("Bu tarayıcı video kaydını desteklemiyor — Chrome / Edge / güncel Safari dene", "hata"); return; }
   if (!liste.length) { yaz("İndirilecek bölüm yok — önce ayet seç ya da metin yaz", "hata"); return; }
@@ -88,12 +92,23 @@ export async function kuyrukIndir(
     if (ctx.state === "suspended") await ctx.resume().catch(() => undefined);
 
     // 1) SES: tüm parçaların baytlarını al + çöz
+    // ★ 26.10 503 TAKILMA (kullanıcı: "indirmiyor, İndirme hatası — TTS 503"):
+    //  tek bölümün TTS hatası TÜM indirmeyi öldürüyordu (throw → catch → catch-
+    //  finally durum yazısı kaldı, kayıt bloğu temizlenmiyordu = donma yanılsaması).
+    //  Yeni kural: başarısız bölüm ⚠ uyarıyla ATLANIR, diğer bölümlerle kayıt sürer;
+    //  hiç bölüm alınmazsa net 503 uyarısı — sessiz bekleme YOK.
     const parcalar: AudioBuffer[] = [];
     for (let i = 0; i < liste.length; i++) {
+      if (iptal?.iptalEdildi) { yaz("⏹ İndirme iptal edildi — DURDUR'a basıldı", "hata"); return; }
       yaz(`📥 İndirme — bölüm ${i + 1}/${liste.length} sunucudan alınıyor…`);
-      const url = await urlAl(liste[i].metin);
-      parcalar.push(await ctx.decodeAudioData(await sesBaytları(url)));
+      try {
+        const url = await urlAl(liste[i].metin);
+        parcalar.push(await ctx.decodeAudioData(await sesBaytları(url)));
+      } catch (e) {
+        yaz(`⚠ bölüm ${i + 1} alınamadı (TTS: ${(e as Error)?.message || "hata"}) — diğer bölümle devam`);
+      }
     }
+    if (!parcalar.length) { yaz("⚠ Hiç bölüm alınamadı — TTS sunucusu geçici hata veriyor (503). Birkaç sn sonra tekrar dene", "hata"); return; }
     const toplamSn = parcalar.reduce((a, p) => a + p.duration, 0) + NEFES_SN * (parcalar.length - 1);
 
     // 2) GRAFİK: atmosfer kaynağı — video > poster > düz gradyan
@@ -220,13 +235,19 @@ export async function kuyrukIndir(
 
     // ★ Zamanlama AudioContext saati ile belirlendi — kayıt hemen başlar.
     rec.start(1000);
-    await new Promise<void>((r) => setTimeout(r, (toplamSn + 1.2) * 1000));
+    // ★ 26.10 DİLİMLİ BEKLEME = DURDUR CANLI: düz 40-90sn setTimeout beklemesi butonu
+    //  kilitliydi; artık 250ms'de bir iptal bayrağı okunuyor → buton hemen çözer.
+    for (let artan = (toplamSn + 1.2) * 1000; artan > 0 && !iptal?.iptalEdildi; artan -= 250) {
+      await new Promise<void>((r) => setTimeout(r, Math.min(250, artan)));
+    }
+    const iptalEdildiMi = !!iptal?.iptalEdildi;
     if (döngüId !== null) cancelAnimationFrame(döngüId);
     try { if (rec.state !== "inactive") rec.stop(); } catch { /* güvence */ }
     await durduMu;
     canvasStream.getTracks().forEach((t) => t.stop());
     hedef.stream.getTracks().forEach((t) => t.stop());
     videoEl?.pause();
+    if (iptalEdildiMi) { yaz("⏹ İndirme iptal edildi — dosya kaydedilmedi", "hata"); return; }
 
     const blob = new Blob(kayitlar, { type: mime ? mime.split(";")[0] : "video/webm" });
     const ad = new Date();

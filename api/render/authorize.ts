@@ -179,7 +179,13 @@ function supabaseConfig() {
   return { url, key };
 }
 
-async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+// ★ 27.10 KUL HAKKI TAVANI (sahibin emri): üyeliği biten kullanıcı PRO/ELİT
+//   haklarını sıfıra indirilmez — haftalık KISA üretim hakkı 50'ye sabit bir
+//   tavanda devam eder (>yukarısı olmaz, ELİT dahil). Uzun/tam ücretsiz davranışı
+//   survives (0). Satın alınan paket hakları consumer RPC hلinde zaten geçerlidir.
+const BITIS_UYELIK_KISA_HAFTA = 50;
+
+async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean; subExpired: boolean } | null> {
   const sb = supabaseConfig();
   if (!sb) return null;
   try {
@@ -197,6 +203,7 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
     //   KAYBETMELİ, aksi halde ödemediği günlerin kotasını tüketmiş olur.
     //   (Self-healing: DB'de tier düşürülmez, burada türevsel uygulanır.)
     let tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
+    let subExpired = false;
     if (tier !== "free") {
       try {
         const subRes = await fetch(
@@ -204,16 +211,33 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
           { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
         );
         if (subRes.ok) {
-          const subs = await subRes.json() as Array<{ ends_at?: string }>;
+          const subs = await subRes.json() as Array<{ ends_at?: string; tier?: string }>;
           const endsAt = subs[0]?.ends_at ? Date.parse(subs[0].ends_at) : NaN;
           if (!Number.isFinite(endsAt) || endsAt <= Date.now()) {
             // Abonelik kaydı YOK veya süresi DOLMUŞ → free
             tier = "free";
+            // ★ Bitmiş satır bulunduysa kul hakkı tavanı devreye girer
+            subExpired = !!(subs[0] && (subs[0].tier === "pro" || subs[0].tier === "elit"));
           }
         }
         // subRes hatalıysa (5xx) tier olduğu gibi kalır — DB kesintisinde
         // mevcut ödemli kullanıcıyı cezalandırmamak için fail-open.
       } catch { /* sorgu patlarsa fail-open */ }
+    } else {
+      // ★ db tier free görünüyorsa bile geçmişte ödenmiş üçüz satırı var mı?
+      //   (google.ts oturum açarken nur_users.tier'i ücretsiz'e indirir; bitmiş
+      //   üyelik tespiti yapabilelim.) Abonelik satırı yoksa false kalır.
+      try {
+        const subRes = await fetch(
+          `${sb.url}/rest/v1/nur_subscriptions?user_id=eq.${encodeURIComponent(userId)}&status=eq.active&order=ends_at.desc&limit=1&select=ends_at,tier`,
+          { headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` }, cache: "no-store" }
+        );
+        if (subRes.ok) {
+          const s0 = (await subRes.json() as Array<{ ends_at?: string; tier?: string }>)[0];
+          const endsAt = s0?.ends_at ? Date.parse(s0.ends_at) : NaN;
+          if (s0 && (s0.tier === "pro" || s0.tier === "elit") && Number.isFinite(endsAt) && endsAt <= Date.now()) subExpired = true;
+        }
+      } catch { /* tablo yoksa kul hakkı kapısı kapalı kalır */ }
     }
 
     // ★ BAN KONTROLÜ DÜZELTMESİ (04.10, "banlama çalışmıyor"): eski sorgu yalnız
@@ -250,6 +274,8 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
       tier,
       isAdmin: users[0].is_admin === true,
       banned: bans.length > 0,
+      // ★ Deneme (nur_trials) PRO yapmışsa tavan zaten 56/hafta (>50) — bayrak etkisiz.
+      subExpired: subExpired && tier === "free",
     };
   } catch {
     return null;
@@ -318,7 +344,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const kind = MODE_TO_KIND[mode];
   const tier: Tier = access.isAdmin ? "elit" : access.tier;
-  const quota = QUOTA_HAFTALIK[tier][kind];
+  // ★ Bitmiş üyelik hakkı: KISA'da 50 tavan (uzun/tam free=0'da kalır)
+  const quota = kind === "kisa" && access.subExpired ? BITIS_UYELIK_KISA_HAFTA : QUOTA_HAFTALIK[tier][kind];
 
   // Admin üretimleri sınırsızdır; kota/hak tablolarına dokunulmaz.
   if (access.isAdmin) {

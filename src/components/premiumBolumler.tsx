@@ -161,6 +161,11 @@ export function PremiumSozlesme({
             </button>
           </span>
         </label>
+        {/* ★ 27.10 KUL HAKKI TAVANI — kanunen açık metin: bitişte haklar sıfırlanmaz,
+            haftalık kısa üretim tavanı 50, satın alınan paketler geçerli kalır. */}
+        <p className="mt-2 rounded-lg bg-black/30 px-2 py-1.5 text-[10px] leading-relaxed text-white/45">
+          {t("sozlesmeBitisHakki")}
+        </p>
       </div>
 
       {termsOpen && (

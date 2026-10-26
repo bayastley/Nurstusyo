@@ -139,7 +139,12 @@ const TAM_HAVUZ: [string, string[]][] = (() => {
  *  Kısa keyword (≤3 harf, "su","gul","ari","bul") tam eşleşme; uzunları startsWith.
  *  ★ 21.10 kıssa-fallback parametresi: kıssa bölücüsü önceki part'ın katını verir —
  *     eşik geçmezse mushaf yerine SAHNE AKISI sürer ("mushaf ne alaka" bitti). */
-export function mSkorla(metin: string, fallback = "musaf"): string {
+// ★ 26.10 sira PARAMETRESİ — Akıllı AI tazeleme (sira=1 → 2. aday kategori):
+//   sira=0 ile davranış ESKİSİYLE birebir aynı (1.1× baskınlık eşiği aktif; kıssa
+//   bölücü + stüdyo üretimi bunu kullanıyor, hiç dokunulmadı). sira=1 yalnız
+//   akilliAta'dan gelir: skor aynı kalıyorsa sıralamada İKİNCİ kategori alınır —
+//   butonun "tikladım ama hiçbir şey değişmedi" yanılgısı biter.
+export function mSkorla(metin: string, fallback = "musaf", sira = 0): string {
   const w = metin.toLocaleLowerCase("tr").split(/[^a-zçğıöşü]+/).filter(Boolean);
   const ___trace = globalThis.__SKOR_TRACE ? (kz: Record<string, number>, wz: string[]) => console.log(" [skor]" + wz.join(" "), JSON.stringify(kz)) : null;
   const puan: Record<string, number> = {};
@@ -157,9 +162,11 @@ export function mSkorla(metin: string, fallback = "musaf"): string {
   //   açıkça temalı; eşitlikte önde-sıradaki (admin özelek) kazanır. Üstünlükte
   //   1.2× hafif eşik korundu (eski 1.5 musaf onlarında kaybı yaratiyordu).
   const sirali = Object.keys(puan).sort((a, b) => puan[b] - puan[a] || hit[b] - hit[a]);
-  const birinci = sirali[0] as string | undefined;
+  const birinci = sirali[sira] as string | undefined;
   const ikinciPuani = sirali[1] ? puan[sirali[1]] : 0;
-  const kazandi = !!birinci && puan[birinci] >= 5 && (!sirali[1] || puan[birinci] === ikinciPuani || puan[birinci] >= ikinciPuani * 1.1);
+  // ★ 26.10 (sira=0): eski eşik AYNI — (sira=1): 2. aday yalnız gerçek puanla (≥5) gelir,
+  //   baskınlık eşiği aranmaz; yoksa mushaf fallback'a düşer.
+  const kazandi = !!birinci && puan[birinci] >= 5 && (sira > 0 || !sirali[1] || puan[birinci] === ikinciPuani || puan[birinci] >= ikinciPuani * 1.1);
   if (___trace) ___trace(puan, w);
   return kazandi && birinci ? birinci : fallback;
 }

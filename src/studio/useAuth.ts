@@ -1,3 +1,5 @@
+// ★ 27.10 KUL HAKKI TAVANI — bitmiş üyelik bayrağı istemciye taşınır
+import { setSubExpired } from "../tier";
 import { translate } from "../i18n";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
@@ -252,6 +254,8 @@ export function useAuth({ isMasterSürüm, isDevMaster, notify }: UseAuthOptions
         const dbTier = data.user.tier === "pro" || data.user.tier === "elit" ? data.user.tier : "free";
         setCurrentTier(dbTier);
         tierStateGuncelle(dbTier); // ★ Çip senkronu — oturum geri yüklemesinde de üst bar doğru görünsün
+        // ★ bitmiş üyelik bayrağı (kul hakkı 50/hafta) — sunucu otoritesi her açılışta yazılır
+        setSubExpired(Boolean((data.user as { subExpired?: boolean }).subExpired) && dbTier === "free");
         if (data.user.isAdmin) {
           setAdminGodMode(true);
         } else {

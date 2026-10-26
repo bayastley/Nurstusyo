@@ -263,8 +263,22 @@ export function haftaPazartesiYerel(now: Date = new Date()): string {
   return `${pzt.getFullYear()}-${mm}-${dd}`;
 }
 
-/** Dönem (hafta) toplamı: HAFTALIK_KAT_SAYI × günlük kota */
+/** Dönem (hafta) toplamı: HAFTALIK_KAT_SAYI × günlük kota
+ *  ★ 27.10 KUL HAKKI TAVANI: bitmiş üyelik (subExpired) — KISA'da haftalık toplam
+ *  50'ye sabitlenir (50'den yukarı olmaz, ELİT dahil). Uzun/tam free kotasında kalır. */
+export const BITMIS_UYELIK_KISA_HAFTA = 50;
+const SUB_EXPIRED_KEY = "nur_sub_expired_v1";
+/** /api/auth/me cevabındaki user.subExpired bayrağını yerel güvenli depoya yazar */
+export function setSubExpired(v: boolean): void {
+  if (typeof window === "undefined") return;
+  secureSet(SUB_EXPIRED_KEY, Boolean(v));
+}
+export function isSubExpired(): boolean {
+  if (typeof window === "undefined") return false;
+  return secureGet<boolean>(SUB_EXPIRED_KEY, false) === true;
+}
 function donemToplami(kind: VideoKind, tier: Tier): number {
+  if (tier === "free" && kind === "kisa" && isSubExpired()) return BITMIS_UYELIK_KISA_HAFTA;
   return DAILY_QUOTA[tier][kind] * HAFTALIK_KAT_SAYI;
 }
 

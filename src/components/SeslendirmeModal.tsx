@@ -34,7 +34,9 @@ export interface SeslendirmeModalProps {
  *  hata metni dönmüyor; sunucu zaten 3 girişim yapiyor, burada tavan tekrar katmanı. */
 const okutCek = async (u: string, deneme = 0): Promise<Response> => {
   const r = await fetch(u);
-  if (!r.ok && r.status >= 500 && deneme < 2) {
+  // ★ 26.10 TEKRAR: 429 da zincire girdi — sunucu "Microsoft kotası" sesiyle tek 429'da
+  //  hata yazmıyor artık; bekle+tekrar Edge/Azure cache-miss dalgalanmasını yutuyor.
+  if (!r.ok && (r.status >= 500 || r.status === 429) && deneme < 2) {
     await new Promise((k) => setTimeout(k, deneme === 0 ? 2_500 : 5_000));
     return okutCek(u, deneme + 1);
   }
@@ -60,6 +62,10 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
 
   const runningRef = React.useRef(false);
   const seqRef = React.useRef(0);
+  // ★ 26.10 İNDİRME İPTALİ (kullanıcı: "durdur tuşu indirmede donuyordu"): DURDUR
+  //  bu objeyi true yapar; kuyrukIndir parça-fetch + 250ms dilimli kayıt-beklemede
+  //  canlı okur → kayıt anında kesilir, dosya YAZILMAZ (yarım dosya yok).
+  const indirIptalRef = React.useRef({ iptalEdildi: false });
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
   const PARCA_ARASI = 300;
 
@@ -387,13 +393,20 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   const akilliAta = () => {
     if (!kuyruk.length) { yaz(ttX2610("smOnceEkle"), "hata"); return; }
     let degisen = 0;
+    // ★ 26.10 ZORLA-TAZELE (kullanıcı: "Akıllı AI tıkladığımda yenileri değişmiyor"):
+    //   mSkorla aynı metinden hep AYNI kategoriye düşüyordu → buton etkisiz görünüyordu.
+    //   Yeni kural: yeniden skor sonucu mevcut katı Tutarsa bu parçaya İKİNCİ aday
+    //   kategori verilir (mSkorla sira=1) — her tıklamada görünür tazeleme;
+    //   temayı gerçekten tek kategori taşıyan parça Değişmez yanılgısı yok.
     const yeni = kuyruk.map((o) => {
-      const kat = mSkorla(o.tip === "ayet" ? `${o.baslik || ""} ${o.meal || o.metin} ${o.kaynak || ""}` : o.metin);
+      const metin = o.tip === "ayet" ? `${o.baslik || ""} ${o.meal || o.metin} ${o.kaynak || ""}` : o.metin;
+      const ilk = mSkorla(metin);
+      const kat = ilk !== o.kat ? ilk : mSkorla(metin, ilk, 1);
       if (kat !== o.kat) degisen++;
       return { ...o, kat };
     });
-    setKuyruk(yeni);
     setBg(null); // oto arka plan → her parçanın yeni kategorisi hemen görünür
+    setKuyruk(yeni);
     yaz(degisen ? ttX2610("smAkliAI").replace("{n}", String(degisen)) : ttX2610("smAkliAIAlready"));
   };
 
@@ -446,17 +459,29 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       //   tarayıcının kendi streaming buffer'ı (IIS lstm + blob hızlı). Gecikme 6-20sn
       //   → ~0.3 sn'e indi.
       const audioHazirla = (m2: string) => urlAl(m2).then((url) => ({ audio: new Audio(url) }));
-      let siradaki: Promise<{ audio: HTMLAudioElement }> = audioHazirla(liste[0].m);
+      // ★ 26.10 503 TAKILMA (kullanıcı: "biçim iş düzgün yap, indirmiyor"): tek bölümün
+      //   TTS 503 hatası ZİNCİRİ kırıyordu → zincir sonunda "Tamamlandı ✓" yanılgısı.
+      //   Yeni kural: başarısız bölüm ⚠ uyarıyla atlanır, okuma sıradaki bölümle sürer.
+      const audioHazirlaGüvenli = async (m2: string, n: number): Promise<{ audio: HTMLAudioElement } | null> => {
+        try { return await audioHazirla(m2); } catch (e2: unknown) {
+          if (runningRef.current) yaz(`⚠ bölüm ${n + 1} alınamadı (TTS: ${(e2 as Error)?.message || "hata"}) — atlandı`, "hata");
+          return null;
+        }
+      };
+      let siradaki: Promise<{ audio: HTMLAudioElement } | null> = audioHazirlaGüvenli(liste[0].m, 0);
       for (let i = 0; i < liste.length; i++) {
         if (!runningRef.current) break;
         const p = liste[i];
         if (kuyruk.length) setKuyrukSec(listedenBasla + i); // ★ 18.10: toplam kuyrukta doğru kart işaretlenir
         yaz(ttX2610("smParcaOkur").replace("{n}", String(i + 1)).replace("{m}", String(liste.length)).replace("{kat}", katBilgi(p.kat).ad).replace("{ses}", sesAdi?.ad || "Ahmet"), "okuyor");
-        const { audio: a } = await siradaki;
+        const sonuc = await siradaki;
         const my = seqRef.current; // ★ 21.10 SIZINTI FIX: döngü scope'u — break kontrolü buradan okur
+        // ★ 26.10: bölüm fetch'i başarısız → ATLA (zincir kırılır mı hiç — sıradakiyle sürer)
+        if (!sonuc) continue;
+        const { audio: a } = sonuc;
         audioRef.current = a;
         // mevcut parça çalarken sıradakini hazırla (buffer doluyor — geçiş anında)
-        siradaki = i + 1 < liste.length ? audioHazirla(liste[i + 1].m) : siradaki;
+        siradaki = i + 1 < liste.length ? audioHazirlaGüvenli(liste[i + 1].m, i + 1) : Promise.resolve(null);
         await new Promise<void>((res) => {
           let bitti = false;
           // ★ 21.10 SIZINTI FIX: `bit` koşulsuz resolve eder — kart kesmesi (seq++ +
@@ -502,6 +527,9 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   const durdur = () => {
     seqRef.current++; runningRef.current = false;
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    // ★ 26.10 DURDUR = İNDİRME KESİCİ: indirme sürerken basılan durdur, kuyrukIndir'in
+    //  dilimli bekleme döngüsünde (250ms) yakalanır — kayıt anında biter, dosya yazılmaz.
+    indirIptalRef.current.iptalEdildi = true;
     yaz(ttX2610("smDurduruldu"));
   };
   // ★ 21.10 HEPSİNİ TEMİZLE (kullanıcı: "seçilileri komple temizleme olsun" —
@@ -533,12 +561,16 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
         : plan.map((p) => ({ metin: p.m, kat: p.kat }));
     if (!liste.length) { yaz(ttX2610("smIndirilecekYok"), "hata"); return; }
     setIndiriyor(true);
-    // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın
+    // çalma duruyorsa zinciri kes — indirme sırasında çakışmasın (★ önce bayrak düşürülür:
+    //  durdur() 26.10'dan beri iptal bayrağını true YAPIYOR, sonra temizlenir — kendi
+    //  indirmemizi kendimiz iptal etmemek için sıralama kritik)
     if (runningRef.current) durdur();
+    indirIptalRef.current.iptalEdildi = false;
     try {
       // ★ İNDİRME V2: dosya artık atmosfer görseli + sesi birleştiren TAM VİDEO —
       //   seçili arka plan (bg) kayda verilir; videosu yüklenmezse poster/gradyan dener.
-      await kuyrukIndir(liste, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"), bg);
+      //   ★ 26.10: iptal objesi geçirildi → DURDUR kaydı canlı kesebilir.
+      await kuyrukIndir(liste, indirUrlAl, (t: string) => yaz(t, /✅|⚠/.test(t) ? "hazir" : "okuyor"), bg, indirIptalRef.current);
     } finally { setIndiriyor(false); }
   }, [kuyruk, mod, mevcutAyet, plan, indiriyor, indirUrlAl, durdur, yaz, bg]);
 

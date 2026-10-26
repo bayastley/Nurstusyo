@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { User } from "../types";
-import { getCurrentTier, setCurrentTier, type Tier } from "../tier";
+import { getCurrentTier, setCurrentTier, setSubExpired, type Tier } from "../tier";
 
 interface UsePaymentFlowOptions {
   setUser: (u: User | null) => void;
@@ -38,6 +38,9 @@ export function usePaymentFlow({ setUser, setTier, syncWallet }: UsePaymentFlowO
           const me = await meRes.json().catch(() => null);
           if (me?.user) {
             setUser(me.user);
+            // ★ bitmiş üyelik bayrağı (kul hakkı 50/hafta) — ödeme dönüşünde de senkron
+            const dbTierMe = me.user.tier === "pro" || me.user.tier === "elit" ? me.user.tier : "free";
+            setSubExpired(Boolean(me.user.subExpired) && dbTierMe === "free");
             // Tier'i auth/me'den gelen deger ile guncelle
             const dbTier = me.user.tier;
             if (dbTier && (dbTier === "pro" || dbTier === "elit" || dbTier === "free")) {
