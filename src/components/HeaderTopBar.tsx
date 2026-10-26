@@ -12,7 +12,14 @@ import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, isSadikUye, tierAtLeast, getCurrentTier } from "../tier";
-import { TIER_LABEL } from "./premiumModalHelpers";
+// ★ 26.10 TIER ÇİPİ DİL BAĞI (kullanıcı raporu: "EN seçtim hala Ücretsiz"): eski
+//   TIER_LABEL['Ücretsiz'] hardcoded Türkçe'ydi; 5 dile çevrilmiş tierUcretsiz/
+//   tierPro/tierElit anahtarları sözlükte zaten vardı — artık oturum dilinden okunur.
+const TIER_SOZLUK: Record<string, "tierUcretsiz" | "tierPro" | "tierElit"> = {
+  free: "tierUcretsiz",
+  pro: "tierPro",
+  elit: "tierElit",
+};
 import { getSystemConfig, fetchRemoteConfig, getFeatureLock, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
 
@@ -526,7 +533,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.30)", color: "var(--accent-2)" }}
                 title={t("hbrUyelikTitle")}
               >
-                <Gem size={10} style={{ color: "var(--accent)" }} />{TIER_LABEL[tier || "free"] || "Free"}
+                <Gem size={10} style={{ color: "var(--accent)" }} />{t(TIER_SOZLUK[tier || "free"] || "tierUcretsiz")}
                 {isSadikUye() && <span className="ml-0.5 rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">★</span>}
               </button>
             </div>
@@ -606,7 +613,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
             })()}
             {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
             <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? (TIER_LABEL[tier || "free"] || t("free")) : t("premium")}
+              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? t(TIER_SOZLUK[tier || "free"] || "tierUcretsiz") : t("premium")}
               {user && isSadikUye() && <span title={t("sadikUyeEtiketTitle")} className="rounded bg-emerald-400/20 px-1 py-px text-[8px] font-black text-emerald-300">{t("sadikEtiketUzun")}</span>}
             </button>
             <div className="relative notranslate" translate="no">
