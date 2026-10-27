@@ -89,10 +89,18 @@ export function useWallet(notify: (msg: string) => void, user?: { id?: string } 
     }
   }, [user?.id]);
 
+  // ★ 27.10 SEKME ARKA PLAN DURUR: cüzdan senkronu 30 sn'de bir çağrılıyordu ve
+  //   arka plandaki sekme bile Vercel'e sürekli istek attı — runtime logları saniyede
+  //   birkaç satır[String TRUNCATED] kayıtlarıyla doluyordu. Artık sekme gizliyken
+  //   atlanır; sekmeye dönünce hemen bir kez senkronlanır.
   useEffect(() => {
-    if (user?.id) syncWallet();
-    const iv = setInterval(() => { if (user?.id) syncWallet(); }, 30000);
-    return () => clearInterval(iv);
+    if (!user?.id) return;
+    const senkronla = () => { if (document.visibilityState === "visible") syncWallet(); };
+    senkronla();
+    const iv = setInterval(senkronla, 30000);
+    const görünürlük = () => { if (document.visibilityState === "visible") syncWallet(); };
+    document.addEventListener("visibilitychange", görünürlük);
+    return () => { clearInterval(iv); document.removeEventListener("visibilitychange", görünürlük); };
   }, [syncWallet, user?.id]);
 
   // ★ JETON/PAKET DEĞİŞİMİ BİLDİRİMİ (28.09): rozet ödülü grantPack yazdığında

@@ -206,9 +206,10 @@ export default async function handler(req: any, res: any) {
         const subs = await subRes.json() as any[];
         if (subs?.[0]?.ends_at) subscriptionEndsAt = subs[0].ends_at;
       }
-    } catch { /* ignore */ }
+    } catch { /* ignore */    }
+    // ★ 27.10 LOG SPAM FIX: cüzdan 30 sn polling ile saniyede onlarca log dolduruyordu —
+    //   Vercel runtime log arama yapılırken gerçek hata yutuluyordu. İstek logu KALDIRILDI.
 
-    console.log('[wallet] Kullanıcı:', user.id, 'Kısa:', kisa, 'Uzun:', uzun, 'Tam:', tam, 'Abonelik Bitiş:', subscriptionEndsAt);
 
     return res.status(200).json({
       ok: true,
