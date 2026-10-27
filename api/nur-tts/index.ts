@@ -132,7 +132,11 @@ async function msEdgeOkut(sesId: string, metin: string): Promise<Buffer> {
   const mod = await msEdgeLazy();
   if (!mod) throw new Error("ses motoru yüklenemedi");
   let sonHata: unknown = null;
-  const bekleme = [0, 1_500, 4_000];
+  // ★ 27.10 CANLI TEŞHİS: "Stream closed before the synthesis completed (no turn.end
+  //   received)" — Edge TTS 27.10 akşamında dalgalı hata veriyor (3 canlı denemede
+  //   2×503 / 1×200). Microsoft tarafı geçici olduğundan 4 girişim + daha uzun
+  //   backoff (0/1.5/4/7.5 sn + jitter); worst-case ~55 sn < maxDuration 60.
+  const bekleme = [0, 1_500, 4_000, 7_500];
   for (let i = 0; i < bekleme.length; i++) {
     if (bekleme[i]) { try { await new Promise((r) => setTimeout(r, bekleme[i] + Math.floor(Math.random() * 600))); } catch { /* yoksay */ } }
     try {
