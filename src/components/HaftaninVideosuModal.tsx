@@ -37,6 +37,28 @@ interface BenimVideo {
   created_at: string;
 }
 
+// ★ 27.10 YOUTUBE ID ÇÖZÜCÜ — watch?v=, youtu.be, shorts, embed, live hepsinden 11 haneli ID yakalar.
+const ytId = (url: string): string | null => {
+  try {
+    const u = url.trim();
+    if (!/^https?:\/\//i.test(u)) return null;
+    const desenler = [
+      /[?&]v=([A-Za-z0-9_-]{11})\b/,
+      /youtu\.be\/([A-Za-z0-9_-]{11})\b/,
+      /youtube\.com\/(?:shorts|embed|live)\/([A-Za-z0-9_-]{11})\b/,
+    ];
+    for (const re of desenler) {
+      const m = u.match(re);
+      if (m) return m[1];
+    }
+    return null;
+  } catch { return null; }
+};
+const ytThumb = (url: string): string | null => {
+  const id = ytId(url);
+  return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+};
+
 export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open, onClose, notify }) => {
   const tt = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
   const [vitrin, setVitrin] = useState<VitrinVideo[]>([]);
@@ -75,6 +97,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
     if (gonderiyor) return;
     if (baslik.trim().length < 4) { notify?.(tt("hvBaslikKisa")); return; }
     if (!/^https?:\/\//i.test(link.trim())) { notify?.(tt("hvLinkHata")); return; }
+    if (/youtu(?:be\.com|\.be)/i.test(link) && !ytId(link)) { notify?.(tt("hvLinkHata")); return; } // YouTube linki ama ID çözülemedi → red
     setGonderiyor(true);
     try {
       const r = await fetch("/api/hafta/video", {
@@ -173,6 +196,12 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
               <div className="space-y-2.5">
                 {vitrin.map((v, i) => (
                   <div key={v.id} className={`relative rounded-xl border p-3.5 ${i === 0 ? "border-amber-300/40 bg-gradient-to-r from-amber-400/[0.14] to-emerald-400/[0.06]" : "border-white/10 bg-white/[.03]"}`}>
+                    {/* ★ 27.10 VİTRİN KÜÇÜK RESMİ: link'te YouTube ID varsa thumbnail göster */}
+                    {ytThumb(v.video_link) && (
+                      <a href={v.video_link} target="_blank" rel="noopener noreferrer" className="mb-2 block overflow-hidden rounded-lg">
+                        <img src={ytThumb(v.video_link) as string} alt={v.baslik} loading="lazy" className="h-32 w-full object-cover transition hover:scale-[1.02]" />
+                      </a>
+                    )}
                     {i === 0 && (
                       <span className="absolute -left-2 -top-2 rounded-full bg-gray-950 px-1.5 text-base drop-shadow">🥇</span>
                     )}
@@ -285,6 +314,12 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                     placeholder="https://youtube.com/watch?v=…"
                     className="w-full rounded-xl bg-white/10 px-3 py-2.5 text-[11px] text-white outline-none placeholder:text-white/25 focus:bg-white/15"
                   />
+                  {/* ★ 27.10 CANLI ÖNİZLEME: link'te YouTube ID çözülünce küçük resim burada görünür */}
+                  {ytThumb(link) && (
+                    <div className="mt-1.5 overflow-hidden rounded-lg border border-white/10">
+                      <img src={ytThumb(link) as string} alt="" loading="lazy" className="h-28 w-full object-cover" />
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="mb-1 block text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hvLabelSure")}</label>

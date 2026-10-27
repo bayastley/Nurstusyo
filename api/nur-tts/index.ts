@@ -11,11 +11,14 @@
 //     deseniyle cache'li).
 //   • /sesler  — dil başına ilan edilen Edge ses listesi.
 //   • /okut    — msedge-tts (Edge Read Aloud WSS) ile mp3 üretir,
-//     base64 data-URL döner. Sunucuda dosya cache'i yoktur (FAT coin
-//     değil) — Upstash varsa mp3 cache'i oraya yazılır (EX 30 gün).
+//     base64 data-URL döner. Sunucuda dosya cache'i yoktur — Upstash
+//     varsa mp3 cache'i oraya yazılır (EX 30 gün).
 //
-// GÜVENLİK: yalnız GET; metin长度 sınırlı (600 kr); rate limit ayet
-// listesi/okut ayrı; admin gerekmez (V3 admin kilidi istemcide var).
+// GÜVENLİK: yalnız GET; metin uzunluğu sınırlı; rate limit ayet
+//   listesi/okut ayrı.
+//   ★ 27.10 V3 KİLİT (kullanıcı emri: "seslendirme admin haricinde kapalı"): /okut
+//     artık SUNUCUDA da admin doğrular — nur_session token'ı imzalı + isAdmin=true.
+//     Ayrıca e-posta NUR_ADMIN_EMAILS'te olmalı (me.ts katman-3 deseni).
 // ═══════════════════════════════════════════════════════════════
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 // ★ 19.10 CANLI FIX: msedge-tts import'u top-level'dan LAZY'a taşındı.
@@ -28,6 +31,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 
 
 declare const process: { env: Record<string, string | undefined> };
+import crypto from "crypto";
 
 /** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
  *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
@@ -170,7 +174,9 @@ function limitAsildi(req: VercelRequest, maks: number): boolean {
   return false;
 }
 
-// ── TR kütüphanesi (★ 20.10 TUR-6: TS VERİ MODÜLÜ) ──
+// ── § ADMIN KAPISI (27.10 V3) — nur_session token'ını gömülü doğrula.
+//   NOT: _shared/auth import'u Vercel paketlemede sorun çıkardı (marketing/
+//   feedback.ts'teki gömme deseni birebir); bu yüzden burada inline check.
 //   TÜM canlı 500/503 zincirinin KÖK ÇÖZÜMÜ: JSON-import attribute sorunu
 //   (ERR_IMPORT_ATTRIBUTE_MISSING), fs'ile includeFiles yapılandırma derdi ve
 //   esm-tarama dunder yasak hepsi BİRDEN biter — 611 ayet düz TS dizi modülü
@@ -212,6 +218,46 @@ async function mealliAyetler(dil: string): Promise<Array<{ title: string; source
   } catch { return null; }
 }
 
+// ── ═26.10 V3 ADMIN KAPISI (27.10 kullanıcı emri) ═══
+//   İstemci butonu 26.10'dan beri admin-only — ama API adresini bilen bir üye
+//   /okut'u direkt çağırabiliyordu. _shared/auth import'u Vercel paketlemede
+//   sorun çıkardığı için (marketing/feedback.ts'teki gömme deseni birebir)
+//   burada inline doğrulama: nur_session token'ı imzalı + exp'li + isAdmin=true
+//   OLMALI; ayrıca e-posta NUR_ADMIN_EMAILS listesinde olmalı (me.ts katman-3).
+function parseTtsCookies(req: VercelRequest): Record<string, string> {
+  const header = req.headers.cookie || "";
+  return header.split(";").reduce<Record<string, string>>((acc, part) => {
+    const [key, ...rest] = part.trim().split("=");
+    if (!key) return acc;
+    try { acc[key] = decodeURIComponent(rest.join("=")); } catch { acc[key] = rest.join("="); }
+    return acc;
+  }, {});
+}
+function base64UrlDecode(input: string): Buffer {
+  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+  return Buffer.from(normalized + pad, "base64");
+}
+function ttsAdminSession(req: VercelRequest): { email: string } | null {
+  const token = parseTtsCookies(req)["nur_session"];
+  if (!token || !token.includes(".")) return null;
+  const secret = process.env.NUR_SESSION_SECRET || "";
+  if (secret.length < 20) return null;
+  const [payload, sig] = token.split(".");
+  if (!payload || !sig) return null;
+  try {
+    const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    const sigBuf = Buffer.from(sig);
+    const expectedBuf = Buffer.from(expected);
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
+    const u = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { email?: string; isAdmin?: boolean; exp?: number };
+    if (!u.exp || u.exp < Math.floor(Date.now() / 1000) || u.isAdmin !== true || !u.email) return null;
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (!adminEmails.includes(u.email.toLowerCase())) return null;
+    return { email: u.email };
+  } catch { return null; }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
@@ -236,6 +282,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── /okut?metin=…&ses=…&dil=tr ──
   if (yol === "okut") {
+    // ★ 26.10 V3 ADMIN KİLİTİ (kullanıcı emri: "seslendirme admin haricinde kapalı"):
+    //   oturum yok / admin değil / e-posta listede değil → 403. TTS maliyetli olduğu,
+    //   özellik de kısci tutulduğu için API katmanında sert kilit.
+    if (!ttsAdminSession(req)) return res.status(403).json({ ok: false, error: "Seslendirme (V3) yalnız admin hesabına açık" });
     if (limitAsildi(req, DİL_RATE_OKUT)) return res.status(429).json({ ok: false, error: "Ses üretimi çok hızlı — biraz bekle" });
     let metin = (url.searchParams.get("metin") || "").trim();
     const ses = url.searchParams.get("ses") || DIL_SESLER[dil in DIL_SESLER ? dil : "tr"][0][0];

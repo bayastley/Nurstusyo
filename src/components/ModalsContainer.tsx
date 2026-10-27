@@ -294,6 +294,15 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       setModal("login");
       return;
     }
+    // ★ 27.10 V3 GRİ KİLİT (kullanıcı emri: "seslendirme bölümüne V3 kilidi koy, admin hariç olsun"):
+    //   admin panelde modül v2/v3/off yapılınca modal hiç açılmaz — kullanıcı 'yakında'
+    //   bildirimi alır. admin/master zaten üstte bypass etti; sıradan üye/misafir burada kalır.
+    if (kilitDegeri === "v2" || kilitDegeri === "v3" || kilitDegeri === "off") {
+      setModal(null);
+      const ad = String(V2_KILITLI[modal as V2ModalId] ?? (modal === "seslendirme" ? "Sesli Meal" : modal));
+      notify(ttX2610("mcYakindaGeliyor").replace("{a}", ad));
+      return;
+    }
     if (!tierAtLeast(tier, gereken)) {
       setModal(null);
       // ★ 22.10: hedef seviye geçilir — panelin içindeki GEREKEN plan kartı vurgulanır

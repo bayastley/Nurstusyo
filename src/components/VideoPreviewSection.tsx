@@ -526,6 +526,22 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title={t("vpKaydetTitle")}><Download size={12} />{t("download")}</a>
                 <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("vpPaylasTitle")}><Share2 size={12} />{t("share")}</button>
               </div>
+              {/* ★ KUTLAMA ANI TEKLİFİ (27.10, kullanıcının emri): İndir/Paylaş kartında
+                  öneri çipi — kutlama anında elite/pro gidiş teklifi. admin/master gizli. */}
+              {!isMasterSürüm && (
+                <div className="mt-2 flex items-center justify-between gap-1.5 rounded-full border border-amber-400/20 bg-amber-400/[.06] py-1 pl-2.5 pr-1">
+                  <span className="min-w-0 truncate text-[8.5px] font-bold text-amber-200/85"
+                    title={tierAtLeast(tier, "pro") ? t("vpElitOneri") : t("vpProOneri")}>
+                    💎 {tierAtLeast(tier, "pro") ? t("vpElitOneri") : t("vpProOneri")}
+                  </span>
+                  <button type="button" onClick={() => openPremium("uyelik")}
+                    className="shrink-0 rounded-full px-2.5 py-1 text-[8.5px] font-black text-black transition hover:brightness-110"
+                    style={{ background: "linear-gradient(135deg,#fde68a,#d97706)" }}
+                    title={tierAtLeast(tier, "pro") ? t("vpElitOneri") : t("vpProOneri")}>
+                    {t("vpUyeligeGec")}
+                  </button>
+                </div>
+              )}
               {/* ★ CİHAZ UYGULAMA ÇİPLERİ (02.10): Paylaş → cihazına göre uygulama kısayolları;
                   tıklayınca uygulama açılır + video arka planda cihaza iner (kolay paylaşım) */}
               {paylasCihazi(activeOutput).length > 0 && (
