@@ -1753,6 +1753,7 @@
   "vgCanvasDestekmiyor": "⚠️ Peramban ini tidak mendukung perekaman canvas · pakai Chrome, Edge, atau Safari terkini",
   "vgSesSure": "⚠️ Suara {x} hanya berlaku untuk satu surah penuh · tambahkan lewat tombol \"Seluruh Surah\"",
   "vgIptal": "Produksi dibatalkan · jeton tidak terpotong",
+  "vgYarimVideo": "⚠️ Video berakhir lebih cepat dari seharusnya — mungkin belum lengkap. Coba buat lagi.",
   "vgLansman": "🎁 Uji peluncuran: {n}/{t} kuota produksi tersisa",
   "vgYetkiSunucu": "Tidak bisa menjangkau server untuk izin produksi",
   "vgSesSurahUyusmazlik": "⚠️ Suaramu milik surah {x} — tidak cocok dengan ayat terpilih, diproduksi dengan suara qari",

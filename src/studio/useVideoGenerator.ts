@@ -366,6 +366,15 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         notify(ttX2610("vgSureAsildi").replace("{m}", String(modeLabel)).replace("{d}", String(dropped)).replace("{n}", String(usedItems.length)));
       }
       if (!buffers.length) throw new Error("Ses dosyaları alınamadı");
+      // ★ YARIM İNME KÖK ÇÖZÜMÜ (27.10, kullanıcı bildirimi: "ayet başlamadan video iniyor"):
+      //   Kayıt 250ms player'dan SONRA başlıyor — timeline'ın ilk 250ms'i kayda GİRMİYOR,
+      //   ilk ayetin ilk heceleri kesik duyuluyordu. Artık timeline'ın başına 0.4 sn
+      //   SESSİZ bant koyulur: recorder'ın ön-başı sessizliğe denk gelir — ne ilk hece
+      //   kaybolur ne son hece kesilir (onended flush payı ayrıca var).
+      const SES_BASLAMA_REZERV = 0.4;
+      for (let i = 0; i < audioOffsets.length; i += 1) audioOffsets[i] += SES_BASLAMA_REZERV;
+      for (const sureSüresi of ayetSüreleri) sureSüresi.start += SES_BASLAMA_REZERV;
+      cursor += SES_BASLAMA_REZERV;
       const total = cursor - .03, offline = new OfflineAudioContext(2, Math.ceil((total + .1) * 48000), 48000);
       buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index], end = start + buffer.duration; const fadeIn = Math.min(.06, buffer.duration * .1), fadeOut = Math.min(.15, buffer.duration * .1); gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.92, start + fadeIn); gain.gain.setValueAtTime(.92, Math.max(start + fadeIn, end - fadeOut)); gain.gain.linearRampToValueAtTime(0.001, end); source.connect(gain).connect(offline.destination); source.start(start); });
       setProgress(28); const rendered = await offline.startRendering(), canvas = canvasRef.current; if (!canvas) throw new Error("Önizleme bulunamadı");
@@ -472,11 +481,21 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             }
           }
         }, 200);
-        const finishRecording = () => { if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer); try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop(); };
+        const finishRecording = () => {
+          if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer);
+          // ★ 27.10 DÜRÜST UYARI: kayıt hedef sürenin erken kesilirse (tarayıcı motoru
+          //   MediaRecorder'ı düşürdüğünde / çöktüğünde) kullanıcıya "yarım inmiş olabilir"
+          //   uyarısı ver — sessizce yarım dosya teslim EDİLMEZ.
+          const kayitSure = (performance.now() - startedAt) / 1000;
+          if (!userStopped && total > 6 && kayitSure < total - Math.min(1.5, total * 0.08)) notify(ttX2610("vgYarimVideo"));
+          try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop();
+        };
         const userStop = () => { userStopped = true; finishRecording(); };
         stopGenerationRef.current = userStop;
-        safetyTimer = window.setTimeout(finishRecording, total * 1000 + 750);
-        player.onended = finishRecording;
+        safetyTimer = window.setTimeout(finishRecording, total * 1000 + 1200);
+        // ★ 27.10 SON HECE FIX: onended'dan HEMEN recorder.stop etmek son ses bloğunu
+        //   kesiyordu ("son cümle yarım duyuluyor" şikâyeti) — 450ms flush payı konur.
+        player.onended = () => window.setTimeout(finishRecording, 450);
         // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
         // ★ 04.10 MOBİL: recorder.start'tan ~250ms ÖNCE player başlar + küçük tolerate.
         //   Mobil tarayıcıda MediaRecorder, MediaStream'e sonradan katılan ses kanalını

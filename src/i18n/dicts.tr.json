@@ -1753,6 +1753,7 @@
   "vgCanvasDestekmiyor": "⚠️ Bu tarayıcı canvas kaydını desteklemiyor · Chrome, Edge veya güncel Safari kullanın",
   "vgSesSure": "⚠️ {x} hocanın sesi yalnızca tüm surede uygulanabilir · lütfen \"Tüm Sure\" butonuyla ekleyin",
   "vgIptal": "Üretim iptal edildi · jeton düşmedi",
+  "vgYarimVideo": "⚠️ Video beklenenden erken bitti — yarım inmiş olabilir. Tekrar üretmeyi dene.",
   "vgLansman": "🎁 Lansman denemesi: {n}/{t} üretim hakkı kaldı",
   "vgYetkiSunucu": "Üretim yetkisi için sunucuya ulaşılamadı",
   "vgSesSurahUyusmazlik": "⚠️ Kendi sesin {x}. suresine ait — seçili ayetlerle uyuşmuyor, hocanın sesiyle üretiliyor",
