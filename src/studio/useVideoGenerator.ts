@@ -554,122 +554,145 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         verseIndexRef.current = 0;
         setVerseIndex(0);
         await new Promise((resolve) => window.setTimeout(resolve, 240));
+        // ★ 29.10 UZUN KAYIT IMZA TAZELEME ("tam sürüm 1 sn'de donuyor / yarım iniyor" kök fix):
+        //   signed R2 URL cache 540 sn (9 dk) geçerli — 9 dakikadan uzun kayıtlarda
+        //   (ör. "Tam Sürüm" 24 dk + birden fazla format) imzalar expire olup video
+        //   elementleri tanımsız URL'e düşer → sonraki formatın kaydı SESLIŞ DONUK
+        //   iner. Her format başında tüm klips imzalarını paralel tazele.
+        await Promise.all(renderClips.map(async (c) => {
+          if (c.kind !== "vid") return;
+          try { await getVideoUrl(c); } catch { /* eskisi cache'te kalır */ }
+        }));
         // ★ Cihaza göre adaptif FPS/bitrate: kötü cihazlarda donma/kasma azaltılır
-        const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
-        // ★ Bazı Chrome/VLC/WebM kombinasyonlarında canvas capture sadece ilk frame'i yazıyor.
-        //   requestFrame destekleniyorsa kayıt boyunca manuel frame pompalıyoruz.
-        const canvasTrack = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
-        const framePump = window.setInterval(() => {
-          try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ }
-        }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
-        const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]), mime = pickMime();
-        const pxCount = width * height;
-        const baseBitrate = pxCount >= 1920 * 1080 ? 24_000_000 : pxCount >= 1080 * 1350 ? 20_000_000 : 16_000_000;
-        const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
-        const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
-        const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
-        // ★ 29.10 SESSİZ ÖLÜM FİX (kullanıcı: "yine indirdim, yarım kaldı"): MediaRecorder
-        //   kodlayıcısı kayıt ortasında hata fırlatırsa onstop yine tetiklenir — akış
-        //   sıradan devam eder, dosyada ~1sn veri kalır ve kullanıcıya HABER VERİLMEDEN
-        //   yarım video teslim edilirdi (vgYarimVideo uyarısı da hiç çalışmazdı çünkü
-        //   finishRecording çağrılmıyordu). Artık onError → dürüst kapanış + uyarı.
+        // ★★★ 29.10 KAYIT MOTORU + OTO-RETRY ★★★
+        //   Yarı/bozuk çıkan kayıt (MediaRecorder çöktü, dosya hedefin %35 altı) —
+        //   kullanıcının "yine indirdim video ama yarım kaldı" geri bildirimi üzerine
+        //   motoru KODLUYLA 2. KEZ çalıştır: alternatif mime (mp4↔webm) ile tekrar.
+        //   İyi çıktı alınırsa kullanıcıya ayrıca haber verilmez, sadece [kayıt] satırı.
+        let kayitDeneme = 0;
+        let birinciMime = pickMime();
         let yarimUyarildi = false;
         const yarimUyar = () => { if (!yarimUyarildi) { yarimUyarildi = true; notify(ttX2610("vgYarimVideo")); } };
-        recorder.onerror = (event) => {
-          console.error("[kayıt] MediaRecorder hatası:", (event as unknown as { error?: unknown })?.error);
-          if (!finished) yarimUyar();
-          finishRecording();
-        };
-        const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
-        let lastVisualIndex = 0;
-        let lastProgress = -1;
-        // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
-        //   canvas draw'u bloke edip video donmasına yol açıyordu.
-        const syncTimer = window.setInterval(() => {
-          const elapsed = (performance.now() - startedAt) / 1000;
-          const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
-          const nextProgress = 30 + Math.round(currentProgress * 67);
-          if (nextProgress !== lastProgress) {
-            lastProgress = nextProgress;
-            setProgress(nextProgress);
-          }
-          let idx = 0;
-          for (let i = 0; i < ayetSüreleri.length; i += 1) {
-            if (elapsed >= ayetSüreleri[i].start) idx = i;
-          }
-          if (idx !== lastVisualIndex) {
-            lastVisualIndex = idx;
-            // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
-            //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
-            verseIndexRef.current = idx;
-            const activeClip = renderClips[idx];
-            if (activeClip?.kind === "vid") {
-              try {
-                const activeVideo = ensureVideo(getVideoUrlSync(activeClip), isR2Media(activeClip) ? undefined : activeClip.src);
-                const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
-                if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
-                  const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));
-                  if (Math.abs(activeVideo.currentTime - nextTime) > 0.75) activeVideo.currentTime = nextTime;
-                }
-                activeVideo.play().catch(() => undefined);
-              } catch { /* ignore */ }
+        let kayitSonuc: { blob: Blob; mime: string | null; recordedMs: number } | null = null;
+        while (kayitDeneme < 2) {
+          const alternatifMime = kayitDeneme === 0 ? birinciMime : (birinciMime || "").includes("mp4") ? "video/webm;codecs=vp8,opus" : "video/mp4;codecs=avc1.42E01E,mp4a.40.2";
+          const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
+          // ★ Bazı Chrome/VLC/WebM kombinasyonlarında canvas capture sadece ilk frame'i yazıyor.
+          //   requestFrame destekleniyorsa kayıt boyunca manuel frame pompalıyoruz.
+          const canvasTrack = stream.getVideoTracks()[0] as MediaStreamTrack & { requestFrame?: () => void };
+          const framePump = window.setInterval(() => {
+            try { canvasTrack?.requestFrame?.(); } catch { /* ignore */ }
+          }, Math.max(33, Math.floor(1000 / Math.max(12, renderQuality.renderFps))));
+          const combined = new MediaStream([...stream.getVideoTracks(), ...destination.stream.getAudioTracks()]), mime = alternatifMime;
+          const pxCount = width * height;
+          const baseBitrate = pxCount >= 1920 * 1080 ? 24_000_000 : pxCount >= 1080 * 1350 ? 20_000_000 : 16_000_000;
+          const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
+          const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
+          const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+          // ★ 29.10 SESSİZ ÖLÜM FİX (kullanıcı: "yine indirdim, yarım kaldı"): MediaRecorder
+          //   kodlayıcısı kayıt ortasında hata fırlatırsa onstop yine tetiklenir — akış
+          //   sıradan devam eder, dosyada ~1sn veri kalır ve kullanıcıya HABER VERİLMEDEN
+          //   yarım video teslim edilirdi. Artık onError → dürüst kapanış + uyarı + retry.
+          recorder.onerror = (event) => {
+            console.error("[kayıt] MediaRecorder hatası:", (event as unknown as { error?: unknown })?.error);
+            yarimUyar();
+            finishRecording();
+          };
+          const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
+          let lastVisualIndex = 0;
+          let lastProgress = -1;
+          // ★ syncTimer 50ms → 200ms: çok sık setProgress/setVerseIndex çağrısı
+          //   canvas draw'u bloke edip video donmasına yol açıyordu.
+          const syncTimer = window.setInterval(() => {
+            const elapsed = (performance.now() - startedAt) / 1000;
+            const currentProgress = (formatIndex + Math.min(elapsed / total, 1)) / formats.length;
+            const nextProgress = 30 + Math.round(currentProgress * 67);
+            if (nextProgress !== lastProgress) {
+              lastProgress = nextProgress;
+              setProgress(nextProgress);
             }
+            let idx = 0;
+            for (let i = 0; i < ayetSüreleri.length; i += 1) {
+              if (elapsed >= ayetSüreleri[i].start) idx = i;
+            }
+            if (idx !== lastVisualIndex) {
+              lastVisualIndex = idx;
+              // ★ Render sırasında React state güncellemesi canvas'ı dondurabiliyor.
+              //   Kayıtta sadece ref yeterli; UI state'i en sona bırakıyoruz.
+              verseIndexRef.current = idx;
+              const activeClip = renderClips[idx];
+              if (activeClip?.kind === "vid") {
+                try {
+                  const aktivUrl = getVideoUrlSync(activeClip) || activeClip.src || "";
+                  const activeVideo = ensureVideo(aktivUrl, isR2Media(activeClip) ? activeClip.src : undefined);
+                  const localTime = Math.max(0, elapsed - (ayetSüreleri[idx]?.start ?? 0));
+                  if (Number.isFinite(activeVideo.duration) && activeVideo.duration > 0.4) {
+                    const nextTime = (localTime % Math.max(0.5, activeVideo.duration - 0.1));
+                    if (Math.abs(activeVideo.currentTime - nextTime) > 0.75) activeVideo.currentTime = nextTime;
+                  }
+                  activeVideo.play().catch(() => undefined);
+                } catch { /* ignore */ }
+              }
+            }
+          }, 200);
+          const finishRecording = () => {
+            if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer);
+            // ★ 27.10 DÜRÜST UYARI: kayıt hedef sürenin erken kesilirse (tarayıcı motoru
+            //   MediaRecorder'ı düşürdüğünde / çöktüğünde) kullanıcıya "yarım inmiş olabilir"
+            //   uyarısı ver — sessizce yarım dosya teslim EDİLMEZ.
+            const kayitSure = (performance.now() - startedAt) / 1000;
+            if (!userStopped && total > 6 && kayitSure < total - Math.min(1.5, total * 0.08)) yarimUyar();
+            try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop();
+          };
+          const userStop = () => { userStopped = true; finishRecording(); };
+          stopGenerationRef.current = userStop;
+          safetyTimer = window.setTimeout(finishRecording, total * 1000 + 1200);
+          // ★ 27.10 SON HECE FIX: onended'dan HEMEN recorder.stop etmek son ses bloğunu
+          //   kesiyordu ("son cümle yarım duyuluyor" şikâyeti) — flush payı konur.
+          player.onended = () => window.setTimeout(finishRecording, 900); // ★ 29.10: 450→900 flush payı, son hece kayıt altında kaçmasın
+          // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
+          // ★ 04.10 MOBİL: recorder.start'tan ~250ms ÖNCE player başlar + küçük tolerate.
+          //   Mobil tarayıcıda MediaRecorder, MediaStream'e sonradan katılan ses kanalını
+          //   bazı sürümlerde tam almıyordu → ilk ayet sesi + donuk kare. Önce player,
+          //   250ms sonra recorder — ses kanalı kayıt başladığında AKTİF oluyor.
+          player.start();
+          await new Promise((resolve) => window.setTimeout(resolve, 250));
+          // ★ 29.10 1-SANİYE KESİLME FİX (kullanıcı: "seçtiğim ayet 1 saniyede kapanıyor"):
+          //   Chrome'un MediaRecorder MP4 muxer'ında start(timeslice) kombinasyonunda
+          //   bilinen hata: yalnızca İLK 1s'lik parça düzgünlü yazılıyor — dosya 51sn
+          //   görünüyor ama içerik 1sn'de kesiliyor. WebM'de timeslice sorun çıkarmıyor.
+          //   MP4 modunda timeslice'sız başlat; WebM'de 1s parçalar korunuyor.
+          if (mime && mime.includes("mp4")) {
+            recorder.start();
+          } else {
+            recorder.start(1000);
           }
-        }, 200);
-        const finishRecording = () => {
-          if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer);
-          // ★ 27.10 DÜRÜST UYARI: kayıt hedef sürenin erken kesilirse (tarayıcı motoru
-          //   MediaRecorder'ı düşürdüğünde / çöktüğünde) kullanıcıya "yarım inmiş olabilir"
-          //   uyarısı ver — sessizce yarım dosya teslim EDİLMEZ.
-          const kayitSure = (performance.now() - startedAt) / 1000;
-          if (!userStopped && total > 6 && kayitSure < total - Math.min(1.5, total * 0.08)) yarimUyar();
-          try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop();
-        };
-        const userStop = () => { userStopped = true; finishRecording(); };
-        stopGenerationRef.current = userStop;
-        safetyTimer = window.setTimeout(finishRecording, total * 1000 + 1200);
-        // ★ 27.10 SON HECE FIX: onended'dan HEMEN recorder.stop etmek son ses bloğunu
-        //   kesiyordu ("son cümle yarım duyuluyor" şikâyeti) — 450ms flush payı konur.
-        player.onended = () => window.setTimeout(finishRecording, 450);
-        // ★ 1 saniyelik parçalar halinde data al: uzun WebM buffer'ı donuk video üretebiliyor.
-        // ★ 04.10 MOBİL: recorder.start'tan ~250ms ÖNCE player başlar + küçük tolerate.
-        //   Mobil tarayıcıda MediaRecorder, MediaStream'e sonradan katılan ses kanalını
-        //   bazı sürümlerde tam almıyordu → ilk ayet sesi + donuk kare. Önce player,
-        //   250ms sonra recorder — ses kanalı kayıt başladığında AKTİF oluyor.
-        player.start();
-        await new Promise((resolve) => window.setTimeout(resolve, 250));
-        // ★ 29.10 1-SANİYE KESİLME FİX (kullanıcı: "seçtiğim ayet 1 saniyede kapanıyor"):
-        //   Chrome'un MediaRecorder MP4 muxer'ında start(timeslice) kombinasyonunda
-        //   bilinen hata: yalnızca İLK 1s'lik parça düzgünlü yazılıyor — dosya 51sn
-        //   görünüyor ama içerik 1sn'de kesiliyor. WebM'de timeslice sorun çıkarmıyor.
-        //   MP4 modunda timeslice'sız başlat; WebM'de 1s parçalar korunuyor.
-        if (mime && mime.includes("mp4")) {
-          recorder.start();
-        } else {
-          recorder.start(1000);
-        }
-        await stopped;
-        window.clearInterval(framePump);
-        stream.getTracks().forEach((track) => track.stop());
-        destination.stream.getTracks().forEach((track) => track.stop());
-        if (userStopped) { chunks.length = 0; notify(ttX2610("vgIptal")); continue; }
-        let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
-        // ★ 29.10 BOŞ/BOYUT DOĞRULAMASI: kodlayıcı öldüyse 0 dosya bile gelebilir.
-        if (blob.size < 1024) { yarimUyar(); continue; }
-        // ★ 29.10 YARIM KAYIT TESTİ (kullanıcı: "indirdim ama 1 saniyede duruyor"):
-        //   Kodlayıcı öldüğünde header'daki süre yine tam süreyi gösterir ("51sn görünen
-        //   ama 1sn'de donan" dosya). Header'e güvenme: hedef bitrate × süre ile
-        //   fiilen yazılan byte karşılaştırılır — büyük kıtlıkta kullanıcıya dürüst
-        //   uyarı verilir, sessizce yarım dosya teslim edilmez.
-        const hedefByte = ((targetBitrate + (renderQuality.audioBitrate || 128_000)) / 8) * total;
-        const dolulukOrani = hedefByte > 0 ? blob.size / hedefByte : 1;
-        if (!userStopped && total > 6 && dolulukOrani < 0.35) {
-          console.warn("[kayıt] beklenenden kısa:", blob.size, "byte / beklenen", Math.round(hedefByte), "· oran", dolulukOrani.toFixed(2));
+          await stopped;
+          window.clearInterval(framePump);
+          stream.getTracks().forEach((track) => track.stop());
+          destination.stream.getTracks().forEach((track) => track.stop());
+          if (userStopped) { notify(ttX2610("vgIptal")); break; }
+          let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
+          // ★ 29.10 BOŞ/BOYUT DOĞRULAMASI + OTO-RETRY: kodlayıcı öldüyse 0 dosya bile gelebilir.
+          const hedefByte = ((targetBitrate + (renderQuality.audioBitrate || 128_000)) / 8) * total;
+          const dolulukOrani = hedefByte > 0 ? blob.size / hedefByte : 1;
+          const kayitSureFinal = (performance.now() - startedAt) / 1000;
+          const erkenDurmus = total > 6 && kayitSureFinal < total * 0.92;
+          const bozuk = blob.size < 1024 || erkenDurmus || (!userStopped && total > 6 && dolulukOrani < 0.35);
+          if (!bozuk) { kayitSonuc = { blob, mime, recordedMs: Math.max(1000, Math.round(kayitSureFinal * 1000)) }; break; }
+          kayitDeneme += 1;
+          if (kayitDeneme < 2) {
+            console.warn("[kayıt] bozuk çıktı — alternatif mime ile tekrar:", blob.size, "byte · oran", dolulukOrani.toFixed(2), erkenDurmus ? "(erken kesildi)" : "");
+            continue;
+          }
           yarimUyar();
         }
-        // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
-        //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
-        const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
+        if (userStopped) { notify(ttX2610("vgIptal")); continue; }
+        if (!kayitSonuc) continue;
+        let blob = kayitSonuc.blob;
+        const recordedMs = kayitSonuc.recordedMs;
+
+
         if (blob.type.includes("webm")) {
           blob = await new Promise<Blob>((resolve) => {
             let settled = false;
