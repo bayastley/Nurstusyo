@@ -99,7 +99,13 @@ export const HARD_LOCKED_CATEGORIES: CatId[] = [
   "cehennem", "hurma", "ari", "karinca",
 ];
 
-export const FREE_VIDEOS_PER_CATEGORY = 10;
+// ★ 29.10 SUNUCU UYUMU: /api/video/sign canAccessClip'te FREE_VIDEOS_PER_CATEGORY = 5 —
+//   her kategoride ilk 5 klips kategori seviyesine açık, r6+ bir üst tier ister.
+//   İstemci 10 diyor, sunucu 5 diyor; üretim motoru 5'ten sonraki klipse denk
+//   gelince imza servisi 404/403 yağdırıyordu (konsol kanıtı: musaf-r15 → 403).
+//   Artık aynı kapı her yanda: 5.
+export const FREE_VIDEOS_PER_CATEGORY = 5;
+export const SUNUCU_FREE_VIDEO_LIMITI = 5;
 
 // ═══════════════════════════════════════════════════════
 // ★ 29.10 İSTEMCİ ERİŞİM KAPISI — sunucu /api/video/sign yetkisinin birebir
@@ -111,6 +117,16 @@ export const FREE_VIDEOS_PER_CATEGORY = 10;
 // ═══════════════════════════════════════════════════════
 const TIER_RANK_K = { free: 0, pro: 1, elit: 2 } as const;
 
+// ★ 29.10 INDEX KURALI: /api/video/sign yalnız kategori kilidine değil klips
+//   SIRASINA da bakar (clipIndexFromId): "cat-rN" ve "cat-N" id biçemleri —
+//   server'da `${cat}-r(\d+)` regex'i var; N bir yerde index-1'dir.
+//   sunucuda clipIndex >= 5 olan her klips bir üst tier ister:
+//   free kategori → pro, pro kategori → elit (elit kullanıcıya kayma yok).
+function klipsIndexFromId(id: string): number {
+  const match = id.match(/-r?(\d+)$/);
+  return match ? Math.max(0, Number(match[1]) - 1) : 0;
+}
+
 export function klipsErisildiMi(tier: "free" | "pro" | "elit", clip: Clip, isAdmin = false): boolean {
   if (isAdmin) return true;
   if (clip.cat === "yuklenenler") return true; // kullanıcı medyası — yerel blob, imza yok
@@ -118,8 +134,15 @@ export function klipsErisildiMi(tier: "free" | "pro" | "elit", clip: Clip, isAdm
   const katTier = KATEGORI_TIER[clip.cat];
   if (!katTier) return false;
   if (katTier === "elit") return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.elit;
-  if (katTier === "pro") return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.pro;
-  return true; // free kategori
+  if (katTier === "pro") {
+    if (!(denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.pro)) return false;
+    // r6+ pro kategori → elit gerekir (sunucu canAccessClip ile birebir)
+    if (klipsIndexFromId(clip.id) >= SUNUCU_FREE_VIDEO_LIMITI) return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.elit;
+    return true;
+  }
+  // free kategori — r6+ pro ister (sunucu ile birebir)
+  if (klipsIndexFromId(clip.id) >= SUNUCU_FREE_VIDEO_LIMITI) return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.pro;
+  return true;
 }
 
 const YEDEK_KATEGORILER: CatId[] = ["namaz", "cami", "gunbatimi", "orman", "deniz", "musaf", "bulut", "desen", "gol"];
