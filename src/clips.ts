@@ -12,6 +12,8 @@ import {
 } from "./clips-data";
 import { FIL_LINKS } from "./filVideos";
 import { ADMIN_MOTION_CLIPS, ADMIN_TEMPLATE_CLIPS } from "./adminMediaManifest";
+// ★ 29.10 ERİŞİM KAPISI eşleniği için deneme durumu (deneme.ts bağımsız — döngü yok)
+import { denemeAktifMi } from "./studio/deneme";
 
 export type CatId =
   | "yuklenenler" | "namaz"  | "musaf"    | "cicekler"
@@ -98,6 +100,40 @@ export const HARD_LOCKED_CATEGORIES: CatId[] = [
 ];
 
 export const FREE_VIDEOS_PER_CATEGORY = 10;
+
+// ═══════════════════════════════════════════════════════
+// ★ 29.10 İSTEMCİ ERİŞİM KAPISI — sunucu /api/video/sign yetkisinin birebir
+//   eşleniği. Sunucu üyelik seviyesine göre klipsleri reddediyordu ama üretim
+//   motoru seçili klipsi SORGULAMADAN kullanıyordu; kilitli klips imzalanamayınca
+//   arka plan yüklenmiyor ve video bozuk iniyordu (kullanıcı: "video yine aynı
+//   çıktı"). Artık üretim öncesi bu kapı sorgulanır; kapalı klips yerine
+//   ERİŞİLEBİLİR yedek atmosfer konur — üretim sağlam çıkar.
+// ═══════════════════════════════════════════════════════
+const TIER_RANK_K = { free: 0, pro: 1, elit: 2 } as const;
+
+export function klipsErisildiMi(tier: "free" | "pro" | "elit", clip: Clip, isAdmin = false): boolean {
+  if (isAdmin) return true;
+  if (clip.cat === "yuklenenler") return true; // kullanıcı medyası — yerel blob, imza yok
+  if (clip.cat.startsWith("admin_")) return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.elit;
+  const katTier = KATEGORI_TIER[clip.cat];
+  if (!katTier) return false;
+  if (katTier === "elit") return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.elit;
+  if (katTier === "pro") return denemeAktifMi() || TIER_RANK_K[tier] >= TIER_RANK_K.pro;
+  return true; // free kategori
+}
+
+const YEDEK_KATEGORILER: CatId[] = ["namaz", "cami", "gunbatimi", "orman", "deniz", "musaf", "bulut", "desen", "gol"];
+
+/** Kapalı klipsin yerine geçen, KESİN erişilebilir yedek atmosfer (deterministik). */
+export function yedekAtmosfer(tier: "free" | "pro" | "elit", isAdmin = false, onerilen = 0): Clip {
+  for (const kat of YEDEK_KATEGORILER) {
+    const adaylar = MOTION_CLIPS.filter((c) => c.cat === kat && c.kind === "vid");
+    if (!adaylar.length) continue;
+    const aday = adaylar[onerilen % adaylar.length];
+    if (klipsErisildiMi(tier, aday, isAdmin)) return aday;
+  }
+  return MOTION_CLIPS[0];
+}
 
 export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: string; glow: string; bg: string; bg2: string }> = {
   namaz:     { primary: "#d7aa52", secondary: "#f5dda6", glow: "#ffcf6b", bg: "#1a0e05", bg2: "#3a2410" },

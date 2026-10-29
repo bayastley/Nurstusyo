@@ -32,7 +32,7 @@ import { JETON, videoMaliyeti, yerelKullanimIlerle, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
-import { toHiRes, type Clip } from "../clips";
+import { klipsErisildiMi, yedekAtmosfer, toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
 import type { KendiSesAktif } from "./useKendiSes";
 import { storeVideo } from "./videoStore";
@@ -429,7 +429,23 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index], end = start + buffer.duration; const fadeIn = Math.min(.06, buffer.duration * .1), fadeOut = Math.min(.15, buffer.duration * .1); gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.92, start + fadeIn); gain.gain.setValueAtTime(.92, Math.max(start + fadeIn, end - fadeOut)); gain.gain.linearRampToValueAtTime(0.001, end); source.connect(gain).connect(offline.destination); source.start(start); });
       setProgress(28); const rendered = await offline.startRendering(), canvas = canvasRef.current; if (!canvas) throw new Error("Önizleme bulunamadı");
 
-      const renderClips = usedItems.map((item) => ayahBackgroundsRef.current[item.id] || backgroundRef.current);
+      // ★ 29.10 KİLİTLİ KLİPS KORUMASI (kullanıcı: "video yine aynı çıktı"): üretim
+      //   motoru seçili klipsin üyelik seviyesini SORGULAMADAN kullanıyordu — kilitli
+      //   klips imzalanamayınca (403) arka plan yüklenmiyor, video bozuk iniyordu.
+      //   Artık erişilemeyen klips yerine ERİŞİLEBİLİR yedek atmosfer konur; üretim
+      //   sağlam çıkar ve kullanıcıya dürüst bilgi verilir.
+      let yedekKlipsSayisi = 0;
+      const yedekEmrini = isMasterSürüm || user?.isAdmin === true;
+      const renderClips = usedItems.map((item, ayetIdx) => {
+        const org = ayahBackgroundsRef.current[item.id] || backgroundRef.current;
+        if (org.cat === "yuklenenler" || klipsErisildiMi(accessTier, org, yedekEmrini)) return org;
+        yedekKlipsSayisi += 1;
+        return yedekAtmosfer(accessTier, yedekEmrini, ayetIdx);
+      });
+      if (yedekKlipsSayisi > 0) {
+        console.warn("[klips] üyelik seviyesi dışı atmosferler yedekle değiştirildi:", yedekKlipsSayisi);
+        notify(ttX2610("vgKlipsYedek").replace("{x}", String(yedekKlipsSayisi)));
+      }
       const uniqueRenderClips = Array.from(new Map(renderClips.map((clip) => [clip.id, clip])).values());
       await Promise.all(uniqueRenderClips.map((clip) => new Promise<void>((resolve) => {
         if (clip.kind === "img") {

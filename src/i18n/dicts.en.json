@@ -1774,6 +1774,7 @@
   "vgSesSure": "⚠️ {x}'s voice applies only to a whole surah · please add via the \"Whole Surah\" button",
   "vgIptal": "Rendering cancelled · no tokens charged",
   "vgYarimVideo": "⚠️ The video ended earlier than expected — it may be incomplete. Try generating again.",
+  "vgKlipsYedek": "🎨 {x} background(s) were above your membership level — an accessible fallback was used; the video renders correctly.",
   "vgLansman": "🎁 Launch trial: {n}/{t} production credits left",
   "vgYetkiSunucu": "Couldn't reach the server for render authorization",
   "vgSesSurahUyusmazlik": "⚠️ Your own voice belongs to surah {x} — it doesn't match the selected verses, rendering with the reciter's voice",

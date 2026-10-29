@@ -34,7 +34,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
 type Tier = "free" | "pro" | "elit";
 type CatId = typeof CATEGORY_IDS[number];
 const CATEGORY_IDS = [
-  "namaz", "musaf", "cicekler", "yildizlar", "deniz", "daglar", "gunbatimi", "gece", "selale", "orman", "col", "kar", "sehir", "cami", "desen", "gol", "bulut", "cennet", "ates", "cehennem", "hurma", "ari", "karinca",
+  "namaz", "musaf", "cicekler", "yildizlar", "deniz", "daglar", "gunbatimi", "gece", "selale", "orman", "col", "kar", "sehir", "cami", "desen", "gol", "bulut", "cennet", "ates", "cehennem", "hurma", "ari", "karinca", "fil",
 ] as const;
 const TIER_RANK: Record<Tier, number> = { free: 0, pro: 1, elit: 2 };
 const FREE_VIDEOS_PER_CATEGORY = 5;
@@ -45,6 +45,9 @@ const CATEGORY_TIER: Record<CatId, Tier> = {
   selale: "pro", daglar: "pro", kar: "pro", sehir: "pro",
   cennet: "elit", col: "elit", ates: "elit",
   cehennem: "elit", hurma: "elit", ari: "elit", karinca: "elit",
+  // ★ 29.10: fil kategorisi istemcinin ELİT listesindeydi ama sunucunun izin
+  //   listesinde YOKTU — imza isteği reddediliyor, arka plan yüklenmiyordu.
+  fil: "elit",
 };
 const ALLOWED_ORIGINS = new Set(["http://localhost:5173", "http://localhost:5174", "http://localhost:5199", "https://nurstudyo.com", "https://www.nurstudyo.com"]);
 
