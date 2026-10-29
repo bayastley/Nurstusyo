@@ -471,24 +471,10 @@ export function useStudioCekirdek({ developerMaster }: { developerMaster: boolea
     if (window.location.pathname === ADMIN_SECRET_PATH) setAdminAuthOpen(true);
   }, []);
 
-  // ★ Ücretsiz ziyaretçi analitiği — tek seferlik, gizlilik dostu (IP hash'lenir)
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem("nur_pageview_sent")) return;
-      sessionStorage.setItem("nur_pageview_sent", "1");
-      const payload = JSON.stringify({
-        path: window.location.pathname || "/",
-        referrer: document.referrer || "",
-        screen: `${window.screen.width}x${window.screen.height}`,
-        lang: navigator.language || "",
-      });
-      if (typeof navigator.sendBeacon === "function") {
-        navigator.sendBeacon("/api/analytics/track", new Blob([payload], { type: "application/json" }));
-      } else {
-        fetch("/api/analytics/track", { method: "POST", headers: { "Content-Type": "application/json" }, body: payload, keepalive: true }).catch(() => undefined);
-      }
-    } catch { /* analitik asla uygulamayı bozmaz */ }
-  }, []);
+  // ★ Ücretsiz ziyaretçi analitiği — (29.10 DoD 4) KALDIRILDI: bu eski blok çerez
+  //   rızasına bakmadan sendBeacon atıyordu; StudioApp zaten useAnalytics'i
+  //   (KVKK opt-in + oturum dedupe) çalıştırıyor. İki gönderici = her ziyaret
+  //   2 satır çift sayım. Tek kanınıcık: src/studio/useAnalytics.ts.
 
   useEffect(() => {
     if (selected.length === 0) { if (verseIndex !== 0) setVerseIndex(0); return; }
