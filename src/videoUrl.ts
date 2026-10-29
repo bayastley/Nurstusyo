@@ -13,6 +13,23 @@ interface VideoClip {
 type SignedMedia = { url: string; expiresAt: number };
 const signedCache = new Map<string, SignedMedia>();
 
+// ★ 29.10 NEGATİF ÖNBELLEK (kullanıcı: "üretirken bu çıktı" — 403 spam): sunucu
+//   "bu klips üyelik seviyenin altında" (401/403) dediyse aynı klips için TEKRAR
+//   istek ATMA — 60 sn hatırla ve hızlı düş. Üretim esnasındaki 8-9'luk
+//   403 yağmuru sanki her çekirdek çerçevesinde aynı istek gitmişti.
+const engelCache = new Map<string, number>();
+const ENGEL_TTL = 60_000;
+
+function engellendiMi(cacheKey: string): boolean {
+  const until = engelCache.get(cacheKey);
+  return Boolean(until && until > Date.now());
+}
+function engelKaydet(cacheKey: string): void {
+  engelCache.set(cacheKey, Date.now() + ENGEL_TTL);
+}
+
+export function clearVideoUrlCache(): void { signedCache.clear(); engelCache.clear(); }
+
 // ★ İMZA SIRA KUYRUĞU + 429 GERİ ÇEKİLMESİ: galeri açılınca 15+ video aynı anda
 //   imza isteyince sunucu limitine çarpıyordu. İstekler sıraya girer, 429 gelirse
 //   bekleyip tekrar dener — kullanıcıya hata göstermeden herkes sırayla imzalanır.
@@ -58,6 +75,8 @@ async function sign(clip: VideoClip, media: "video" | "poster", priority = false
   const cacheKey = `${media}:${key}`;
   const cached = signedCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now() + 30_000) return cached.url;
+  // ★ 29.10: yakın zamanda 403 aldık → sunucuya tekrar sorma
+  if (engellendiMi(cacheKey)) throw new Error("Bu klips üyelik seviyenizin altında");
   return enqueueSign(async () => {
     // Çift kontrol: kuyrukta beklerken başka istek aynı anahtarı imzalamış olabilir
     const again = signedCache.get(cacheKey);
@@ -72,6 +91,8 @@ async function sign(clip: VideoClip, media: "video" | "poster", priority = false
       const data = await response.json().catch(() => null) as { ok?: boolean; url?: string; posterUrl?: string; expiresAt?: number } | null;
       const url = media === "video" ? data?.url : data?.posterUrl;
       if (response.status === 429) { await sleep(4000 * (attempt + 1)); continue; }
+      // ★ 29.10: üyelik/oturum reddi → 60 sn istegi kes (403 spam'ı burada biter)
+      if (response.status === 401 || response.status === 403) engelKaydet(cacheKey);
       if (!response.ok || !data?.ok || !url) throw new Error("İmzalı R2 bağlantısı alınamadı");
       signedCache.set(cacheKey, { url, expiresAt: data.expiresAt || Date.now() + 540_000 });
       return url;
@@ -117,8 +138,6 @@ export function getPosterUrlSync(clip: VideoClip): string | undefined {
   const key = mediaKey(clip);
   return key ? signedCache.get(`poster:${key}`)?.url : undefined;
 }
-
-export function clearVideoUrlCache(): void { signedCache.clear(); }
 
 export function getVideoUrlStatus(): { live: boolean; cachedCount: number; inFlightCount: number } {
   return { live: signedCache.size > 0, cachedCount: signedCache.size, inFlightCount: 0 };
