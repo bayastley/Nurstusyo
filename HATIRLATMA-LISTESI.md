@@ -89,3 +89,14 @@ commit'lemez, push'lamaz.*
    Ayrıca: HafizlikTestiModal'da i18n turundan kalan eksik `translate` import'u bu turda yakalanıp
    düzeltildi (0d66c02) — V2 açılınca ReferenceError patlıyordu.
    ★ KURAL (sahibin emri): her işlemden sonra build + LOCAL test zorunlu, asla atlanmaz.
+
+9. **📕 SAHİBİN KALICI EMİRLERİ (27.10.2026 — HAFIZADAN ASLA SİLMEZ):**
+   1) **Satır ekonomisi:** 10 satırlık iş 10 satırla yapılır; gereksiz/kalabalık kod YAZILMAZ,
+      fazlalıklar her zaman temizlenir.
+   2) **Build 0 hata zorunlu:** küçük işlerde hızlı `tsc`, önemli işlerde tam `npm run build` —
+      0 hata olmadan iş bitmiş sayılmaz.
+   3) **Tahmin yok, soru var:** emin olunmayan her yerde TAHMİN YOK, soru sorulur.
+   4) **Dokunma sınırı:** sadece söylenen şeye dokunulur; ama görülen hata DÜZELTİLİR
+      (düzeltilirken başka şeylerin yeri/yerleşimi DEĞİŞTİRİLMEZ).
+   5) **Hafıza:** sahibin emirleri Buffy'nin hafızasından ASLA silinmez.
+   6) **Türkçe konuşma zorunlu:** Buffy her zaman Türkçe konuşur.

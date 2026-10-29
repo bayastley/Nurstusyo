@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { translate } from "../i18n";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
-import { ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Download, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
 import { randomClip, type Clip, type CatId } from "../clips";
@@ -99,6 +99,17 @@ function lowPowerDevice(): boolean {
   );
 }
 
+// ★ 28.10 AÇILIR-KAPANIR PANELLER (sahibin emri): alt paneller yer kaplamasın —
+//     başlık her zaman görünür, içerik tıklayınca açılır. Şablon yok, saf CSS.
+const KatlanilabilirUst: React.FC<{ acik: boolean; onClick: () => void; children: React.ReactNode }> = ({ acik, onClick, children }) => (
+  <button type="button" onClick={onClick} className="w-full">
+    <span className="flex items-center justify-between gap-2">
+      {children}
+      <ChevronDown size={13} className={`shrink-0 text-white/40 transition-transform ${acik ? "" : "-rotate-90"}`} />
+    </span>
+  </button>
+);
+
 export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) => {
   const {
     canvasRef, previewWidth, previewMaximized, setPreviewMaximized, showArapca, setShowArapca,
@@ -118,6 +129,9 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
   //   butonlarının olduğu kutu birkaç kez yumuşakça parlar. Saf DOM animasyonu:
   //   kütüphane yok, React state'i bozmaz, düşük donanımda bile hafif.
   const [kutlama, setKutlama] = useState(false);
+  // ★ 28.10 AÇILIR-KAPANIR (sahibin emri): alt paneller varsayılan KAPALI (Akıllı AI hariç — hep açık)
+  const [klasorAcik, setKlasorAcik] = useState(false);
+  const [hazirAcik, setHazirAcik] = useState(false);
   const sonCiktiIdRef = useRef<string | null>(null);
   useEffect(() => {
     const yeni = activeOutput?.id ?? null;
@@ -459,9 +473,15 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       {/* İNDİRME KLASÖRÜ — üç satır görünür, aşağı kaydırınca diğer çıktılar açılır */}
       {outputs.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
-          <div className="mb-1.5 flex items-center justify-between">
-            <p className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />{t("indirmeKlasoru")} <span className="rounded-full bg-white/[.07] px-1.5 py-px text-[8px] font-black text-white/50">{outputs.length}</span></p>
-          </div>
+          <KatlanilabilirUst acik={klasorAcik} onClick={() => setKlasorAcik((v) => !v)}>
+            <span className="flex items-center gap-1.5 text-[10px] font-black"><Video size={12} />{t("indirmeKlasoru")} <span className="rounded-full bg-white/[.07] px-1.5 py-px text-[8px] font-black text-white/50">{outputs.length}</span></span>
+          </KatlanilabilirUst>
+          {/* ★ KAPALI KENAR ÖZETİ (sahibin emri): panel kapalıyken yer kaplamasın —
+              sadece SON İŞLEM'in tek satırlık kısa bilgisi görünür. */}
+          {!klasorAcik && outputs[0] && (
+            <p className="mt-1.5 truncate text-[8px] text-white/45">▶ {outputs[0].label} · {fmtDuration(outputs[0].duration)} · {fmtSize(outputs[0].size)}</p>
+          )}
+          {klasorAcik && (<>
           <div className="scrollbar-thin grid max-h-[132px] gap-1 overflow-y-auto pr-0.5">
             {outputs.map((output, idx) => (
               <div key={output.id} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition ${output.id === activeOutput?.id ? "border-white/15 bg-white/[.06]" : "border-transparent hover:bg-white/[.03]"}`}>
@@ -509,6 +529,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <Download size={10} />{t("vpTopluIndir").replace("{n}", String(outputs.length))}
             </button>
           )}
+          </>) }
         </div>
       )}
 
@@ -519,7 +540,13 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
         >
           {activeOutput ? (
             <>
-              <p className="mb-2 flex items-center gap-2 text-[10px] font-black"><Video size={13} />{t("ready")}{kutlama && <span className="animate-bounce text-[11px]" aria-hidden>🎉</span>}</p>
+              <KatlanilabilirUst acik={hazirAcik} onClick={() => setHazirAcik((v) => !v)}>
+                <span className="mb-2 flex items-center gap-2 text-[10px] font-black"><Video size={13} />{t("ready")}{kutlama && <span className="animate-bounce text-[11px]" aria-hidden>🎉</span>}</span>
+              </KatlanilabilirUst>
+              {!hazirAcik && (
+                <p className="truncate text-[8px] text-white/45">▶ {activeOutput.label} · {fmtDuration(activeOutput.duration)} · {fmtSize(activeOutput.size)}</p>
+              )}
+              {hazirAcik && (<>
               <p className="truncate text-[9px] text-white/60">{activeOutput.label}</p>
               <p className="mb-3 text-[8px] text-white/40">{fmtDuration(activeOutput.duration)} · {fmtSize(activeOutput.size)}</p>
               <div className="grid grid-cols-2 gap-1.5">
@@ -556,6 +583,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                   ))}
                 </div>
               )}
+              </>) }
             </>
           ) : <p className="py-6 text-center text-[9px] text-white/30">{t("vpCiktiBos")}</p>}
         </div>
