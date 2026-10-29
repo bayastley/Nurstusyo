@@ -89,10 +89,10 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
 // ★ YETKİ ÖNBELLEĞİ: her imza isteğinde 2 Supabase sorgusu atmak önizlemeyi
 //   300-600ms geciktiriyordu. Sonuç 60 sn önbelleğe alınır; ban anında uygulanır
 //   (en fazla 60 sn gecikmeyle), tier değişimi de en geç 60 sn'de yansır.
-const ACCESS_CACHE = new Map<string, { data: { tier: Tier; isAdmin: boolean; banned: boolean }; at: number }>();
+const ACCESS_CACHE = new Map<string, { data: { tier: Tier; isAdmin: boolean; banned: boolean; denemeElit: boolean }; at: number }>();
 const ACCESS_TTL_MS = 60_000;
 
-async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean } | null> {
+async function loadServerAccess(userId: string, userEmail?: string): Promise<{ tier: Tier; isAdmin: boolean; banned: boolean; denemeElit: boolean } | null> {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^['"]+|['"]+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return null;
@@ -112,11 +112,43 @@ async function loadServerAccess(userId: string, userEmail?: string): Promise<{ t
     const banResponse = await fetch(`${url}/rest/v1/nur_ban_logs?${banQuery}&unbanned=eq.false&select=id&limit=1`, { headers, cache: "no-store" });
     if (!banResponse.ok) return null;
     const bans = await banResponse.json() as Array<{ id: string }>;
-    const tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
-    const data: { tier: Tier; isAdmin: boolean; banned: boolean } = {
+    let tier: Tier = users[0].tier === "pro" || users[0].tier === "elit" ? users[0].tier : "free";
+    // ★ 29.10 DENEME HARMONİZASYONU (kullanıcı: "PRO hediyem bitti, video yine bozuk
+    //   çıktı — üretirken /api/video/sign 403 yağmuru"): imza servisi SADECE
+    //   nur_users.tier'a bakarken üretim yetkisi (api/render/authorize +
+    //   nur_consume_video) 1) aktif 7 günlük PRO denemesini (nur_trials) ve
+    //   2) LANSMAN DENEME hakkını (nur_deneme_hakki remaining>0) hesaba katıyordu.
+    //   İstemci üretimi "PRO/ELİT klipslerle" planlayıp imza servisi "free'sin"
+    //   deyince arka planlar yüklenmiyor ve video bozuk iniyordu. Artık imza da
+    //   aynı kapılara bakar — istemci ile sunucu TEK otorite olur:
+    //   1) 7 günlük PRO hediyesi aktifse PRO klipsler açılır (authorize ile birebir).
+    //   2) Deneme hakkı kalıyorsa ELİT kapıları açılır (istemci tierAtLeast'i
+    //      deneme varken pro/elit hepsini geçiriyor; admin_* kapısı da elit'tir).
+    //   Deneme kontrolü tablodan OKUMADIR — nur_deneme_kalan gibi AUTO-GRANT
+    //   yapan RPC ÇAĞRILMAZ, hiçbir yanda boşuna 5 hak verilmez.
+    if (tier === "free") {
+      try {
+        const trialRes = await fetch(`${url}/rest/v1/nur_trials?user_id=eq.${encodeURIComponent(userId)}&select=started_at&limit=1`, { headers, cache: "no-store" });
+        if (trialRes.ok) {
+          const trialRows = await trialRes.json() as Array<{ started_at?: string }>;
+          const startedAt = trialRows[0]?.started_at ? Date.parse(trialRows[0].started_at) : NaN;
+          if (Number.isFinite(startedAt) && Date.now() - startedAt < 7 * 24 * 60 * 60 * 1000) tier = "pro";
+        }
+      } catch { /* deneme tablosu yoksa free davranışı sürer */ }
+    }
+    let denemeElit = false;
+    try {
+      const denemeRes = await fetch(`${url}/rest/v1/nur_deneme_hakki?user_id=eq.${encodeURIComponent(userId)}&select=remaining&limit=1`, { headers, cache: "no-store" });
+      if (denemeRes.ok) {
+        const denemeRows = await denemeRes.json() as Array<{ remaining?: number }>;
+        denemeElit = Number(denemeRows[0]?.remaining ?? 0) > 0;
+      }
+    } catch { /* şema eskiyse deneme yetkisi kapıyı AÇMAZ (fail-closed) */ }
+    const data: { tier: Tier; isAdmin: boolean; banned: boolean; denemeElit: boolean } = {
       tier,
       isAdmin: users[0].is_admin === true,
       banned: bans.length > 0,
+      denemeElit,
     };
     ACCESS_CACHE.set(userId, { data, at: Date.now() });
     return data;
@@ -267,7 +299,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const normalizedClipId = isSafeClipId(clipId) ? clipId : null;
     const normalizedClipFile = isSafeClipFile(clipFile) ? clipFile : null;
     if (normalizedPexelsId === null && !normalizedClipId && !normalizedClipFile) return res.status(400).json({ ok: false, error: "Geçersiz video kimliği" });
-    const userTier: Tier = access.isAdmin ? "elit" : access.tier;
+    // ★ 29.10: deneme hakkı kalıyorsa ELİT kapıları da açılır (istemciyle birebir)
+    const userTier: Tier = access.isAdmin || access.denemeElit ? "elit" : access.tier;
     if (!access.isAdmin && typeof cat === "string" && cat.startsWith("admin_") && userTier !== "elit") {
       return res.status(403).json({ ok: false, error: "Bu içerik yalnızca Elit üyeler içindir" });
     }

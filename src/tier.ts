@@ -299,6 +299,20 @@ function writeUsage(usage: DailyUsage): void {
   secureSet(DAILY_USAGE_KEY, usage);
 }
 
+/** ★ 29.10 GÖSTERGE SENKRONU (kullanıcı: "kendi kullanım hakkını da kullanmıyor"):
+ *  Üretim yetkisi sunucuda ATOMİK düşüyor (/api/render/authorize) ama kalan-hak
+ *  göstergesi yerel sayacı okuyordu — sunucu düşümünü öğrenmediği için
+ *  üretim yapsa da göstergesi sabit kalıyor, "hakkını kullanmıyor" görüntüsü
+ *  veriyordu. authorize cevabı kota/paket kaynağından düşüm yaptıysa çağıran
+ *  bu fonksiyonla yerel sayacı da ilerletir; görüntü gerçeği izler. */
+export function yerelKullanimIlerle(kind: VideoKind, adet = 1): void {
+  const sayi = Math.max(1, Math.floor(adet || 1));
+  if (typeof window === "undefined") return;
+  const usage = readUsage();
+  usage.used[kind] = (usage.used[kind] || 0) + sayi;
+  writeUsage(usage);
+}
+
 /** Bugün bu türden kaç tane kullanıldı */
 export function getUsedToday(kind: VideoKind): number {
   return Math.max(0, Math.floor(readUsage().used[kind] || 0));

@@ -28,7 +28,7 @@ import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { sesKaynakZinciri } from "../reciters";
 import { checkRateLimit } from "../rateLimiter";
-import { JETON, videoMaliyeti, type Tier } from "../tier";
+import { JETON, videoMaliyeti, yerelKullanimIlerle, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
@@ -230,6 +230,13 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         } else {
           denemeAyarla(0); // deneme bitti → PRO/ELİT/V2 kilitleri geri gelir
           if (denemeAktifMi()) denemeAyarla(0);
+          // ★ 29.10 GÖSTERGE SENKRONU (kullanıcı: "kendi kullanım hakkını da kullanmıyor"):
+          //   authorize kota/paket'ten DÜŞTÜ — yerel kalan-hak göstergesini de ilerlet,
+          //   üstü gösterge gerçeği izsin (sunucu tek doğruluk kaynağı, bu yalnız GÖRÜNÜM).
+          try {
+            const yerelKind = mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam";
+            yerelKullanimIlerle(yerelKind, Math.max(1, batchFormats.length ? batchFormats.length : 1));
+          } catch { /* göstergesi — üretimi ASLA etkilemesin */ }
         }
         bolumKullanimiYaz("video-uret"); // ★ 25.10 analitik: en çok kullanılan bölüm
       } catch {
