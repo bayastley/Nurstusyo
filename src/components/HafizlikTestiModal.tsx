@@ -268,7 +268,11 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     } catch {
       // ★ 429 (rate limit) ise uzun bekleme: 1sn'lik kısa tekrarlar API'yi döver,
       //   sürekli "soru hazırlanamadı" döngüsüne girer. 6 sn bekle → limit nefes alır.
-      notify?.(tt("hafizlikSoruUyari"));
+      // ★ TİTREME FİXİ (29.10): sessiz otomatik tekrar artık toast da tetiklemez —
+      //   6 sn'de bir "soru hazırlanamadı" toast'unun üst üste binmesi (antanil
+      //   bildirim animasyonu) ekranda titreme/dalgalanma görünüyordu. Yalnız
+      //   Kullanıcı başkentaçan ilk denemede (sessiz=false) uyarı gösterilir.
+      if (!sessiz) notify?.(tt("hafizlikSoruUyari"));
       // ★ OTOMATİK TEKRAR: sınırsız modda takılma olmasın — 6 sn sonra sessizce yeniden dener
       if (yenidenDeneRef.current < 5) {
         yenidenDeneRef.current += 1;

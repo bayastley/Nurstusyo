@@ -2,6 +2,10 @@ import React from "react";
 import { LibraryBig, Search, Loader2, Check, Plus, BookOpen, X } from "lucide-react";
 import { SectionTitle } from "./UIElements";
 import { SURAHS } from "../data";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): sure adları seçili dile döner
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
+import type { Lang } from "../i18n";
+const sureDiliX2910 = (): Lang => ((typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr") as Lang);
 import { T } from "../i18n";
 import type { SelectedAyah, SearchHit, ModalName } from "../types";
 import type { Clip } from "../clips";
@@ -128,7 +132,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
             className="glass-soft rounded-xl px-2 py-2 text-[10px] outline-none"
           >
             {SURAHS.map((item) => (
-              <option key={item.n} value={item.n}>{`${item.n}. ${item.name} (${item.count})`}</option>
+              <option key={item.n} value={item.n}>{`${item.n}. ${sureAdX2910(item.n, item.name, sureDiliX2910())} (${item.count})`}</option>
             ))}
           </select>
           <select
@@ -165,7 +169,7 @@ export const AyahLibraryPanel: React.FC<AyahLibraryPanelProps> = ({
                 } hover:bg-white/5 hover:text-white`}
               >
                 <span>
-                  <b className="font-semibold">{SURAHS[Number(surah) - 1].name} {surah}:{number}</b>
+                  <b className="font-semibold">{sureAdX2910(Number(surah), SURAHS[Number(surah) - 1].name, sureDiliX2910())} {surah}:{number}</b>
                   <span className="block text-[9px] text-white/30">{isSelected ? t("mealCikar") : t("mealEkle")}</span>
                 </span>
                 {isSelected ? <Check size={11} className="text-red-400" /> : <Plus size={11} className="opacity-40 group-hover:opacity-100" />}

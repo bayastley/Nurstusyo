@@ -8,6 +8,9 @@
 import React from "react";
 import { Search, Loader2, RotateCcw, Play, Pause } from "lucide-react";
 import { SURAHS_DATA, MEALS, RECITERS, TafsirBox } from "./quranLearnVeri";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): seçiciler seçili dile döner
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
+const qreSureDiliX2910 = (): "tr" | "en" | "ar" | "id" | "ur" => (typeof localStorage !== "undefined" ? ((localStorage.getItem("nur_lang") || "tr") as "tr" | "en" | "ar" | "id" | "ur") : "tr");
 import { getSurahHadith } from "../data/surahHadith";
 import { getFeatureLock } from "../services/adminSyncService";
 
@@ -108,7 +111,7 @@ export function OgrenModu(p: OgrenProps) {
               )}
             </div>
             <select value={p.surahNo} onChange={(e) => p.setSurahNo(Number(e.target.value))} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50" style={{ flex: "1 1 150px", minWidth: 150, maxWidth: 210 }}>
-              {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name}</option>)}
+              {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {sureAdX2910(s.n, s.name, qreSureDiliX2910())}</option>)}
             </select>
             <select value={p.ayahNo} onChange={(e) => { p.setAyahNo(Number(e.target.value)); p.setActiveWord(null); }} className="h-8 rounded-xl border border-white/10 bg-[#1E293B] px-2 text-[11px] font-semibold outline-none focus:border-gold/50" style={{ flex: "0 1 110px", minWidth: 100, maxWidth: 150 }}>
               {Array.from({ length: surah.ayahs }, (_, i) => <option key={i + 1} value={i + 1}>Ayet {i + 1}</option>)}
@@ -471,7 +474,7 @@ export function DinleModu(p: DinleProps) {
                     2-3. ayetten başlıyordu (canlı testte kanıtlandı) */}
                 <span className="flex gap-1.5">
                   <select value={p.listenSurah} onChange={(e) => { p.setListenSurah(Number(e.target.value)); p.setListenAyahIdx(0); p.besmeleCalindiRef.current = 0; p.stopListening(); }} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1E293B] px-3 py-2.5 text-[12px] font-semibold outline-none focus:border-gold/50">
-                    {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name} ({s.ayahs} {p.ttQL("qrAyet")})</option>)}
+                    {SURAHS_DATA.map(s => <option key={s.n} value={s.n}>{s.n}. {sureAdX2910(s.n, s.name, qreSureDiliX2910())} ({s.ayahs} {p.ttQL("qrAyet")})</option>)}
                   </select>
                   {/* ★ BAŞINDAN BAŞLA (29.09, kullanıcı isteği): besmele hakkını sıfırla →
                       kullanıcı isterse TEKRAR besmeleyle başlasın. */}
@@ -479,7 +482,7 @@ export function DinleModu(p: DinleProps) {
                     type="button"
                     onClick={() => { p.setListenAyahIdx(0); p.besmeleCalindiRef.current = 0; p.stopListening(); }}
                     className="shrink-0 rounded-xl border border-gold/40 bg-gold/10 px-2.5 py-2.5 text-[10px] font-black text-gold transition hover:bg-gold/20 active:scale-95"
-                    title={p.ttQL("qoBasindanTitle").replace("{ad}", SURAHS_DATA.find(s => s.n === p.listenSurah)?.name ?? "")}
+                    title={p.ttQL("qoBasindanTitle").replace("{ad}", (SURAHS_DATA.find(s => s.n === p.listenSurah) && sureAdX2910(p.listenSurah, SURAHS_DATA.find(s => s.n === p.listenSurah)!.name, qreSureDiliX2910())) ?? "")}
                   >
                     {p.ttQL("qoBasindan")}
                   </button>

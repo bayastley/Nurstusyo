@@ -482,9 +482,13 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
             <p className="mt-1.5 truncate text-[8px] text-white/45">▶ {outputs[0].label} · {fmtDuration(outputs[0].duration)} · {fmtSize(outputs[0].size)}</p>
           )}
           {klasorAcik && (<>
-          <div className="scrollbar-thin grid max-h-[132px] gap-1 overflow-y-auto pr-0.5">
+          {/* ★ 29.10 GENİŞLİK FİX (kullanıcı: "ismi uzun, indirme butonu gözükmüyor"):
+              grid item'ın min-width:auto değeri uzun video adında sütunu ekran dışına
+              itiyordu → truncate devreye girmiyor, 📥 ikonu kökdışı kalıyordu.
+              min-w-0 sütunu panele kilitler, ad kırpılır. */}
+          <div className="scrollbar-thin grid w-full min-w-0 max-h-[132px] gap-1 overflow-y-auto pr-0.5">
             {outputs.map((output, idx) => (
-              <div key={output.id} className={`flex items-center gap-2 rounded-xl border px-2 py-1.5 transition ${output.id === activeOutput?.id ? "border-white/15 bg-white/[.06]" : "border-transparent hover:bg-white/[.03]"}`}>
+              <div key={output.id} className={`flex min-w-0 items-center gap-2 rounded-xl border px-2 py-1.5 transition ${output.id === activeOutput?.id ? "border-white/15 bg-white/[.06]" : "border-transparent hover:bg-white/[.03]"}`}>
                 <button onClick={() => setActiveOutputId(output.id)} className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[8px] font-black" style={{ background: idx === 0 ? "linear-gradient(135deg,var(--accent-2),var(--accent))" : "rgba(255,255,255,.05)", color: idx === 0 ? "black" : "rgba(255,255,255,.5)" }}>
                   {idx + 1}
                 </button>
@@ -623,7 +627,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       <div className="min-h-[74px] space-y-2">
         <button onClick={handleGenerate} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-[14px] font-black tracking-[.16em]" style={{ background: generating ? "#b91c1c" : "linear-gradient(135deg,var(--accent-2),var(--accent))", color: generating ? "white" : "black" }}>
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
-          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
+          {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : denemeAktifMi() ? `${t("generate")} 🎁` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
         </button>
         {/* ★ 25.10 LANSMAN DENEMESİ — sahibin emri: "hakkın kaç kaldığı altında da
             yazsın, sonra üyelik almaya yöneltsin". Misafirde görünmez (null). */}

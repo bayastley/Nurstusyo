@@ -626,7 +626,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
 
         {sunucuVar === false ? (
           <div className="rounded-xl p-8 text-center text-[11px] text-white/70">
-            🔒 <b className="text-white">{ttX2610("smGelistirme")}</b> — canlı yayında kapalı.
+            🔒 <b className="text-white">{ttX2610("smGelistirme")}</b> — {ttX2610("smCanliKapali")}.
             <div className="mt-1 text-[10px] text-white/40">Lokal: <code>python ai-mockup/meal-sunucu.py</code> {ttX2610("smAksiyon")}</div>
           </div>
         ) : (

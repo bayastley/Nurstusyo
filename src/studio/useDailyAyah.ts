@@ -3,6 +3,8 @@ import { DAILY_AYAHS, genDesc, genTitle, SURAHS } from "../data";
 import { RECITERS } from "../reciters";
 import { MEAL_EDITIONS } from "../i18n";
 import { fetchAyah } from "./studioHelpers";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): günlük ayet şeridindeki ref seçili dile döner
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import type { DailyAyah, SelectedAyah } from "../types";
 import type { Lang } from "../i18n/base";
 
@@ -47,7 +49,7 @@ export function useDailyAyah({ lang }: UseDailyAyahOptions): UseDailyAyahReturn 
           const items = await Promise.all(
             chunk.map(([s, a]) =>
               fetchAyah(s, a, MEAL_EDITIONS[lang])
-                .then(({ ar, tr }) => ({ ar, tr, ref: `${SURAHS[s - 1].name} ${s}:${a}`, s, a }))
+                .then(({ ar, tr }) => ({ ar, tr, ref: `${sureAdX2910(s, SURAHS[s - 1].name, lang)} ${s}:${a}`, s, a }))
                 .catch(() => null)
             )
           );

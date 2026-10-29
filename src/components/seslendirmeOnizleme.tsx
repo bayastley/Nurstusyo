@@ -104,7 +104,7 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
       {kuyrukSayi > 0 ? (
         <div className="mt-3 rounded-2xl border p-3" style={{ background: "rgba(215,170,82,.06)", borderColor: "rgba(215,170,82,.22)" }}>
           <div className="mb-2 text-[10px] font-black tracking-wider" style={{ color: "var(--accent-2)" }}>
-            🎨 ATMOSFER SEÇ — <span style={{ color: "var(--accent)" }}>parça {kuyrukSec + 1}/{kuyrukSayi}</span>
+            🎨 {ttX2610("ozAtmosSec")} — <span style={{ color: "var(--accent)" }}>{ttX2610("ozParca").replace("{i}", String(kuyrukSec + 1)).replace("{t}", String(kuyrukSayi))}</span>
           </div>
           <div className="grid max-h-64 grid-cols-3 gap-1.5 overflow-y-auto pr-1 scrollbar-thin">
             {SES_ATMOSFERLER.map((kat) => {
@@ -145,7 +145,7 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
             })}
           </div>
           <div className="mt-1.5 text-[7.5px] text-white/30">
-            🔒 PRO/ELİT rozetli kartlar ana stüdyo kilitlerine tabidir — tıklayınca üyelik ekranına yönelirsiniz (aynı sistem).
+            🔒 {ttX2610("ozProNot")}
           </div>
         </div>
       ) : null}
@@ -157,19 +157,19 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
         {/* ★ 16.10: Rastgele Ata artık loremflickr değil — gerçek R2 klip havuzundan */}
         <button
           onClick={() => { const k = SES_ARKA_HAVUZ[Math.floor(Math.random() * SES_ARKA_HAVUZ.length)]; const url = k.kind === "vid" ? (k.r2 || k.src) : (k.src || k.r2Poster || ""); setBg({ url, poster: k.r2Poster ?? k.poster, ad: k.label, kat: k.cat }); yaz(`Rastgele: ${k.label} ✓`); }}
-          title="Akıllı AI klip havuzundan sürpriz bir sahne seçip sahneye anında yerleştirir"
+          title={ttX2610("ozSurprizTitle")}
           className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-black transition hover:brightness-110 active:scale-95"
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", boxShadow: "0 0 0 1px rgba(215,170,82,.45), 0 0 14px rgba(215,170,82,.30)", flex: 1 }}
         >
-          🎲✨ Akıllı AI'dan Sürpriz Sahneler
+          {ttX2610("ozSurpriz")}
         </button>
         <button
           onClick={() => setBg(null)}
-          title="Sahneyi başlangıç/otomatik arka planına geri döndür"
+          title={ttX2610("ozOtoTitle")}
           className="cursor-pointer rounded-xl px-4 py-2.5 text-[11px] font-extrabold text-white/80 transition hover:bg-white/10 active:scale-95"
           style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)", flex: 1 }}
         >
-          🏠↺ Oto · Varsayılan Sahne
+          {ttX2610("ozOtoVarsayilan")}
         </button>
       </div>
     </div>

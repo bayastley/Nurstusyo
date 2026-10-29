@@ -13,6 +13,8 @@ import { NotebookPen, Trash2, Search, Lock } from "lucide-react";
 import { Modal } from "./UIElements";
 import { secureGet, secureSet } from "../secureStore";
 import { SURAHS } from "../data/surahs";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): sure adları seçili dile döner
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 
 const NOT_KEY = "nur_ayet_notlari_v1"; // secureStore ile şifreli
 
@@ -99,7 +101,7 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
         </p>
         <div className="mb-2 flex gap-1.5">
           <select value={yeniSure} onChange={(e) => { const n = Number(e.target.value); setYeniSure(n); setYeniAyet(1); }} className="flex-1 rounded-lg bg-white/5 px-2 py-2 text-[10px] font-bold text-white/80 outline-none">
-            {SURAHS.map(s => <option key={s.n} value={s.n}>{s.n}. {s.name}</option>)}
+            {SURAHS.map(s => <option key={s.n} value={s.n}>{s.n}. {sureAdX2910(s.n, s.name, lang)}</option>)}
           </select>
           <select value={yeniAyet} onChange={(e) => setYeniAyet(Number(e.target.value))} className="w-24 rounded-lg bg-white/5 px-2 py-2 text-[10px] font-bold text-white/80 outline-none">
             {Array.from({ length: maxAyet }, (_, i) => <option key={i + 1} value={i + 1}>{tt("anAyetSecenek").replace("{n}", String(i + 1))}</option>)}
@@ -127,7 +129,7 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
       <div className="space-y-2">
         {filtreli.map((n) => {
           const [s, a] = n.k.split(":").map(Number);
-          const ad = SURAHS[s - 1]?.name ?? s;
+          const ad = sureAdX2910(s, SURAHS[s - 1]?.name ?? String(s), lang);
           return (
             <div key={n.k} className="rounded-xl border border-white/10 bg-white/[.02] p-3">
               <div className="flex items-center justify-between">

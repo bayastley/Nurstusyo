@@ -15,6 +15,8 @@ import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURAHS } from "../data/surahs";
 import { SURE_ARAPCA } from "../data/sureArapca";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): sure bilgi kartlarında ad seçili dile döner
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { kelimeOku, bilinenKelimeIsaretle } from "./kesfetTemel";
 
 // ── KELİME KARTI — KesfetModal'dan taşındı (birebir) ──────────
@@ -366,7 +368,7 @@ export function SureBolumu({
               className="flex w-full items-center gap-2 p-3 text-left"
             >
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{s.n}</span>
-              <h4 className="text-[12px] font-black text-white/90">Sure {s.ad}</h4>
+              <h4 className="text-[12px] font-black text-white/90">{sureAdX2910(s.n, s.ad, (typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr") as Parameters<typeof sureAdX2910>[2])}</h4>
               {/* ★ 03.10: Arapça ad kartta görünsün — akıllı aramaya ipucu */}
               {SURE_ARAPCA[s.n] && <span dir="rtl" className="font-arabic text-[11px] text-white/40">{SURE_ARAPCA[s.n]}</span>}
               {ayetSayisi != null && <span className="text-[8.5px] font-bold text-white/35">{ayetSayisi} ayet</span>}

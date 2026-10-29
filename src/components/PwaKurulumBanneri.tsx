@@ -49,6 +49,10 @@ export const PwaKurulumBanneri: React.FC = () => {
   //   BIP henüz gelmemiş olabilir — 5 sn dinler, gelir gelmez kurulum penceresi
   //   kendiliğinden açılır; gelmezse manuel talimata düşer.
   const [kurBeklers, setKurBeklers] = useState(false);
+  // ★ 29.10 ÖLÜ TIK FİX (kullanıcı: "tıklıyorum hiçbir bildirim yok"): uygulama zaten
+  //   kurulu/standalone iken menü tıklaması SESSİZCE yutuluyordu. Artık 4.5 sn'lik
+  //   "✓ zaten kurulu" kabarcığı basılır — tıklama her zaman geri bildirim verir.
+  const [zatenKurulu, setZatenKurulu] = useState(false);
   // Katman 1: gerçekten bekleyen (waiting) SW varsa "Yenile" bandı
   const [guncellemeVar, setGuncellemeVar] = useState(false);
   // Katman 2: yeni sürüm aktive olduktan sonra 1 kez gösterilen bilgi (6 sn'de kaybolur)
@@ -148,7 +152,16 @@ export const PwaKurulumBanneri: React.FC = () => {
   //   sessiz geçilir — kurulu cihazda anlatım gereksiz.
   useEffect(() => {
     const ac = () => {
-      try { if (localStorage.getItem(KURULUM_KEY) === "1") return; } catch { /* yut */ }
+      let kurulu = false;
+      try { kurulu = localStorage.getItem(KURULUM_KEY) === "1"; } catch { /* yut */ }
+      if (!kurulu) kurulu = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+      if (kurulu) {
+        // ★ 29.10: kurulu cihazda anlatım gereksiz — ama tık artık SAĞIR DEĞİL:
+        //   kısa "zaten kurulu" kabarcığı göster, banner açma.
+        setZatenKurulu(true);
+        window.setTimeout(() => setZatenKurulu(false), 4500);
+        return;
+      }
       setManuelTalimat(false);
       setKucuk(false);
       setGorunur(true);
@@ -230,7 +243,20 @@ export const PwaKurulumBanneri: React.FC = () => {
     window.addEventListener("beforeinstallprompt", sunucuAc, { once: true });
   };
 
-  if (!gorunur && !kucuk && !guncellemeVar && !guncellendi) return null;
+  if (!gorunur && !kucuk && !guncellemeVar && !guncellendi && !zatenKurulu) return null;
+
+  // ★ 29.10 ZATEN KURULU kabarcığı — kurulum tamamsaartık ölü tık yok, kısa bilgi
+
+  if (zatenKurulu && !gorunur) {
+    return (
+      <div className="fixed bottom-4 right-4 z-[88]">
+        <div className="glass modal-in flex items-center gap-2 rounded-2xl px-3.5 py-2.5 shadow-2xl" style={{ border: "1px solid rgba(52,211,153,.4)" }}>
+          <span className="text-sm" aria-hidden>✅</span>
+          <p className="text-[10.5px] font-black text-white">{tt("pwaZatenKurulu")}</p>
+        </div>
+      </div>
+    );
+  }
 
   // ★ 18.10 KABARCIK: banner küçültülmüşse köşede yalnız bu yuvarlak kısayol kalır
   if (!gorunur && kucuk && !guncellemeVar && !guncellendi) {

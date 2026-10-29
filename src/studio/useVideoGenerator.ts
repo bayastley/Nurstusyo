@@ -1,6 +1,29 @@
 import { translate } from "../i18n";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
+
+// ★ 29.10 GERÇEK SÜRE ÖLÇÜMÜ: kayıtlı blob'un oynatılabilir süresini ölçer.
+//   MediaRecorder kodlayıcısı ortada ölünce dosya hedef süreden kısa çıkar;
+//   çıkış listesi artık GERÇEGİ değil ölçülen süreyi gösterir (0/infinity → hedef)
+async function kayitSuresiniOlc(blob: Blob): Promise<number> {
+  return new Promise((resolve) => {
+    try {
+      const eleman = document.createElement("video");
+      eleman.preload = "metadata";
+      eleman.muted = true;
+      const url = URL.createObjectURL(blob);
+      const bitir = (sure: number) => { try { URL.revokeObjectURL(url); } catch { /* yoksay */ } try { eleman.removeAttribute("src"); } catch { /* yoksay */ } resolve(sure); };
+      const zamanlayici = window.setTimeout(() => bitir(0), 6000);
+      eleman.onloadedmetadata = () => {
+        window.clearTimeout(zamanlayici);
+        const d = eleman.duration;
+        bitir(Number.isFinite(d) ? d : 0);
+      };
+      eleman.onerror = () => { window.clearTimeout(zamanlayici); bitir(0); };
+      eleman.src = url;
+    } catch { resolve(0); }
+  });
+}
 import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { sesKaynakZinciri } from "../reciters";
@@ -337,7 +360,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         //   6(parallel)/domain sınırână düşürür — bablandırma yok.
         //   Yerleşim SIRASI kWh kıcsaları korunur — ayet sırası forward Order kaydolur.
         setProgress(6);
-        const sesSonucları = await Promise.all(selected.map(async (item) => {
+        const sesAyetiGetir = async (item: SelectedAyah): Promise<{ item: typeof item; buffer: AudioBuffer } | null> => {
           // ★ YEDEK SES ZİNCİRİ (02.10): everyayah → varsa islamic.network —
           //    birincil kaynak kapalıyken üretim ölmesin, ilk sağlıklı kaynak kullanılır.
           for (const sesKaynagi of sesKaynakZinciri(reciter.path, item.s, item.a)) {
@@ -349,7 +372,21 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             } catch { /* sıradaki ses kaynağı */ }
           }
           return null;
-        }));
+        };
+        const sesSonucları = await Promise.all(selected.map(sesAyetiGetir));
+        // ★ 29.10 İKİNCİ ŞANS (kullanıcı: "yine 1 saniyede bitiyor"): ağ dalgalanmasında
+        //   birkaç ayet sesi sessizce null'a düşüyordu ve üretim EKSİK sesle devam
+        //   ediyordu — "bismil diyor duruyor" tam buydu (yalnız 1. ayet inmiş).
+        //   Eksiklere bir kez daha deniyoruz; hâlâ eksik varsa aşağıda dürüst İPTAL.
+        const eksikIndex = sesSonucları
+          .map((sonuc, i) => (sonuc ? -1 : i))
+          .filter((i) => i >= 0);
+        if (eksikIndex.length) {
+          console.warn("[ses] ilk denemede inemeyen ayetler:", eksikIndex.map((i) => selected[i].a).join(","));
+          const ikinciDeneme = await Promise.all(eksikIndex.map((i) => sesAyetiGetir(selected[i])));
+          eksikIndex.forEach((i, k) => { sesSonucları[i] = ikinciDeneme[k]; });
+        }
+        const sesIndelmedi = sesSonucları.filter((sonuc) => !sonuc).length;
         for (const sonuc of sesSonucları) {
           if (!sonuc) continue;
           const { item, buffer } = sonuc;
@@ -357,6 +394,12 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
           ayetSüreleri.push({ start: cursor, dur: buffer.duration });
           cursor += buffer.duration + .03;
+        }
+        // ★ 29.10 DÜRÜST İPTAL: ayet sesin bir kısmı İNEMEDİYSE üretimi ZORLA bitirmeden
+        //   durdur — ithal yarım video teslim ETMEK yerine jeton/hak iade akışı çalışır.
+        //   (Csv eskiden sessizce "1 ayet sesi + 1sn video" üretiliyordu.)
+        if (sesIndelmedi > 0) {
+          throw new Error(`Ses dosyaları alınamadı (${sesIndelmedi} ayet 2 denemede inemedi)`);
         }
         setProgress(26);
       }
@@ -445,6 +488,18 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const targetBitrate = Math.round(baseBitrate * renderQuality.bitrateScale);
         const recorder = mime ? new MediaRecorder(combined, { mimeType: mime, videoBitsPerSecond: targetBitrate, audioBitsPerSecond: renderQuality.audioBitrate }) : new MediaRecorder(combined);
         const chunks: Blob[] = []; recorder.ondataavailable = (event) => { if (event.data.size) chunks.push(event.data); };
+        // ★ 29.10 SESSİZ ÖLÜM FİX (kullanıcı: "yine indirdim, yarım kaldı"): MediaRecorder
+        //   kodlayıcısı kayıt ortasında hata fırlatırsa onstop yine tetiklenir — akış
+        //   sıradan devam eder, dosyada ~1sn veri kalır ve kullanıcıya HABER VERİLMEDEN
+        //   yarım video teslim edilirdi (vgYarimVideo uyarısı da hiç çalışmazdı çünkü
+        //   finishRecording çağrılmıyordu). Artık onError → dürüst kapanış + uyarı.
+        let yarimUyarildi = false;
+        const yarimUyar = () => { if (!yarimUyarildi) { yarimUyarildi = true; notify(ttX2610("vgYarimVideo")); } };
+        recorder.onerror = (event) => {
+          console.error("[kayıt] MediaRecorder hatası:", (event as unknown as { error?: unknown })?.error);
+          if (!finished) yarimUyar();
+          finishRecording();
+        };
         const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve(); }); const startedAt = performance.now(); let finished = false; let safetyTimer = 0;
         let lastVisualIndex = 0;
         let lastProgress = -1;
@@ -487,7 +542,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           //   MediaRecorder'ı düşürdüğünde / çöktüğünde) kullanıcıya "yarım inmiş olabilir"
           //   uyarısı ver — sessizce yarım dosya teslim EDİLMEZ.
           const kayitSure = (performance.now() - startedAt) / 1000;
-          if (!userStopped && total > 6 && kayitSure < total - Math.min(1.5, total * 0.08)) notify(ttX2610("vgYarimVideo"));
+          if (!userStopped && total > 6 && kayitSure < total - Math.min(1.5, total * 0.08)) yarimUyar();
           try { player.stop(); } catch { } if (recorder.state !== "inactive") recorder.stop();
         };
         const userStop = () => { userStopped = true; finishRecording(); };
@@ -503,13 +558,35 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         //   250ms sonra recorder — ses kanalı kayıt başladığında AKTİF oluyor.
         player.start();
         await new Promise((resolve) => window.setTimeout(resolve, 250));
-        recorder.start(1000);
+        // ★ 29.10 1-SANİYE KESİLME FİX (kullanıcı: "seçtiğim ayet 1 saniyede kapanıyor"):
+        //   Chrome'un MediaRecorder MP4 muxer'ında start(timeslice) kombinasyonunda
+        //   bilinen hata: yalnızca İLK 1s'lik parça düzgünlü yazılıyor — dosya 51sn
+        //   görünüyor ama içerik 1sn'de kesiliyor. WebM'de timeslice sorun çıkarmıyor.
+        //   MP4 modunda timeslice'sız başlat; WebM'de 1s parçalar korunuyor.
+        if (mime && mime.includes("mp4")) {
+          recorder.start();
+        } else {
+          recorder.start(1000);
+        }
         await stopped;
         window.clearInterval(framePump);
         stream.getTracks().forEach((track) => track.stop());
         destination.stream.getTracks().forEach((track) => track.stop());
         if (userStopped) { chunks.length = 0; notify(ttX2610("vgIptal")); continue; }
         let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
+        // ★ 29.10 BOŞ/BOYUT DOĞRULAMASI: kodlayıcı öldüyse 0 dosya bile gelebilir.
+        if (blob.size < 1024) { yarimUyar(); continue; }
+        // ★ 29.10 YARIM KAYIT TESTİ (kullanıcı: "indirdim ama 1 saniyede duruyor"):
+        //   Kodlayıcı öldüğünde header'daki süre yine tam süreyi gösterir ("51sn görünen
+        //   ama 1sn'de donan" dosya). Header'e güvenme: hedef bitrate × süre ile
+        //   fiilen yazılan byte karşılaştırılır — büyük kıtlıkta kullanıcıya dürüst
+        //   uyarı verilir, sessizce yarım dosya teslim edilmez.
+        const hedefByte = ((targetBitrate + (renderQuality.audioBitrate || 128_000)) / 8) * total;
+        const dolulukOrani = hedefByte > 0 ? blob.size / hedefByte : 1;
+        if (!userStopped && total > 6 && dolulukOrani < 0.35) {
+          console.warn("[kayıt] beklenenden kısa:", blob.size, "byte / beklenen", Math.round(hedefByte), "· oran", dolulukOrani.toFixed(2));
+          yarimUyar();
+        }
         // ★ Gerçek kayıt süresi (ms) — hedef süre değil, fiilen kaydedilen süre.
         //   Android galeri / TikTok bu değeri okuduğu için birebir doğru olmalı.
         const recordedMs = Math.max(1000, Math.round(performance.now() - startedAt));
@@ -535,7 +612,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             }
           });
         }
-        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: total, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${kendiKullandi ? "🎙️ Kendi sesin" : reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
+        // ★ 29.10 DÜRÜST SÜRE: çıkış listesi / galeri HİLE yapmasın — dosyadan ölçülen
+        //   gerçek oynatma süresi yazılır (ölçüm başarısızsa hedef süreye düşer).
+        const olculenSure = await kayitSuresiniOlc(blob);
+        const kayitSureDurst = olculenSure > 0.5 ? olculenSure : total;
+        const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: kayitSureDurst, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${kendiKullandi ? "🎙️ Kendi sesin" : reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
         setOutputs((current) => [output, ...current].slice(0, 5)); setActiveOutputId(output.id);
         // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
         //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).

@@ -25,6 +25,8 @@ import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
 import { KANAL_REHBERI } from "../data/kanalData";
 import { TECVID_KURALLARI } from "../data/tecvidData";
 import { SURAHS } from "../data/surahs";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri)
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
 import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
@@ -496,7 +498,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   const [s, a] = k.split(":").map(Number);
                   return (
                     <div key={k} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/[.02] px-3 py-1.5 text-[10px]">
-                      <span className="font-bold text-white/80">{SURAHS[s - 1]?.name ?? s} · {tt("ktAyetSonek").replace("{a}", String(a))}</span>
+                      <span className="font-bold text-white/80">{sureAdX2910(s, SURAHS[s - 1]?.name ?? String(s), lang)} · {tt("ktAyetSonek").replace("{a}", String(a))}</span>
                       <span className="text-[8.5px] text-white/35">{k}</span>
                     </div>
                   );
@@ -515,7 +517,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                   const [s, a] = n.k.split(":").map(Number);
                   return (
                     <div key={n.k} className="rounded-lg border border-white/10 bg-white/[.02] px-3 py-2">
-                      <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{SURAHS[s - 1]?.name ?? s} {n.k}</p>
+                      <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{sureAdX2910(s, SURAHS[s - 1]?.name ?? String(s), lang)} {n.k}</p>
                       <p className="mt-0.5 line-clamp-2 text-[9.5px] text-white/60">{n.metin}</p>
                     </div>
                   );

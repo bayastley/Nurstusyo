@@ -8,6 +8,8 @@ import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction 
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { SURAHS } from "../data";
+// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri)
+import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { fetchJSON, fetchAyah, fetchSurah, quranUrl, normalizeTurkishMeal } from "./studioHelpers";
 import { MEAL_EDITIONS, translate } from "../i18n";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./ayetKategori";
@@ -130,7 +132,7 @@ export function useAyetSecim(params: UseAyetSecimParams) {
   const addWholeSurah = useCallback(async (surahNum?: number | string) => {
     const number = Number(surahNum);
     if (!number || number < 1) { notify(ttX2610("usOnceSure")); return; }
-    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: meta.name, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(ttX2610("usSureEklendi").replace("{x}", String(meta.name)).replace("{n}", String(rows.length))); }
+    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const sureAdiX2910 = sureAdX2910(number, meta.name, lang); const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: sureAdiX2910, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(ttX2610("usSureEklendi").replace("{x}", sureAdiX2910).replace("{n}", String(rows.length))); }
     catch { notify(t("renderServerError")); }
   }, [t, lang, notify, setSelected]);
   // (max 1 parametrenin olması arayüzle uyumlu: addWholeSurah(surah string) — addChilder caller uyumlu)

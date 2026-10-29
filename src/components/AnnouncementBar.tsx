@@ -107,6 +107,43 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     return () => { alive = false; window.clearInterval(interval); document.removeEventListener("visibilitychange", onVisible); };
   }, []);
 
+  // ★ 29.10 DUYURU OTOMATİK ÇEVİRİ (kullanıcı emri: "ben türkçe yazayım, adamın
+  //   dili hangisine çevirmişse ona çevrilsin"): seçili dil tr değilse duyuru
+  //   /api/ai/duyuru-cevir ile çevrilir; localStorage'da id+updated_at
+  //   anahtarına cache'lenir (cihaz başına duyuru sürümü başına 1 istek).
+  //   Çeviri yok/başarısız → TR metin aynen gösterilir (fail-safe).
+  const [ceviri, setCeviri] = useState<Record<string, { title?: string; message?: string; detail?: string }> | null>(null);
+  useEffect(() => {
+    if (!announcement) { setCeviri(null); return; }
+    const dil = (localStorage.getItem("nur_lang") || "tr").slice(0, 5);
+    if (dil === "tr") { setCeviri(null); return; }
+    const cacheKey = `nur_duyuru_ceviri:${announcement.id}:${announcement.updatedAt || ""}`;
+    const cacheOku = (): Record<string, { title?: string; message?: string; detail?: string }> | null => {
+      try { const ham = localStorage.getItem(cacheKey); return ham ? JSON.parse(ham) : null; } catch { return null; }
+    };
+    const cache = cacheOku();
+    if (cache) { setCeviri(cache); return; }
+    let canli = true;
+    fetch("/api/ai/duyuru-cevir", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: announcement.title, message: announcement.message, detail: announcement.detail || "" }),
+    })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (!canli || !d?.ok || !d.ceviri || Object.keys(d.ceviri).length === 0) return;
+        try { localStorage.setItem(cacheKey, JSON.stringify(d.ceviri)); } catch { /* standbağa yut */ }
+        setCeviri(d.ceviri);
+      })
+      .catch(() => { /* sessiz — TR metin kalır */ });
+    return () => { canli = false; };
+  }, [announcement?.id, announcement?.updatedAt, announcement?.title, announcement?.message]);
+  const duyuruG = announcement ? {
+    ...announcement,
+    title: ceviri?.[localStorage.getItem("nur_lang") || "tr"]?.title || announcement.title,
+    message: ceviri?.[localStorage.getItem("nur_lang") || "tr"]?.message || announcement.message,
+    detail: ceviri?.[localStorage.getItem("nur_lang") || "tr"]?.detail || announcement.detail,
+  } : null;
   // ★ YEREL DUYURU DİNLEYİCİ (02.10; 05.10 CANLI TEST DÜZELTMESİ): admin yayını
   //   saveAnnouncement artık ÖZEL "nur_duyuru_guncel" event'i fırlatır. Eskiden
   //   burada genel nur_config_updated dinleniyordu — ama her /api/config poll'u da
@@ -171,12 +208,12 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
     <>
       <div className={`relative z-50 border-b px-3 py-2 text-[11px] ${announcement ? "border-emerald-400/35 bg-emerald-950/35 text-emerald-100" : "border-white/10 bg-[#111014] text-white/45"}`}>
         <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-center gap-2">
-          {announcement && (
-            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-emerald-300/45 bg-emerald-400/15 px-3 py-1.5 font-black transition-opacity duration-700 ${announcement.blinking && unread ? "animate-pulse" : "opacity-90"}`}>
+          {duyuruG && (
+            <button onClick={openAnnouncement} className={`flex items-center gap-2 rounded-full border border-emerald-300/45 bg-emerald-400/15 px-3 py-1.5 font-black transition-opacity duration-700 ${duyuruG.blinking && unread ? "animate-pulse" : "opacity-90"}`}>
               <Bell size={12} className={`text-emerald-300 transition-opacity duration-700 ${unread ? "" : "opacity-50"}`} />
               {unread && <span className="h-1.5 w-1.5 animate-ping rounded-full bg-emerald-300 transition-opacity duration-700" />}
-              <span>{announcement.title}</span>
-              <span className="max-w-[42vw] truncate font-medium text-white/60">{announcement.message}</span>
+              <span>{duyuruG.title}</span>
+              <span className="max-w-[42vw] truncate font-medium text-white/60">{duyuruG.message}</span>
             </button>
           )}
           {announcement && unread && (
@@ -268,15 +305,15 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
         </div>
       </div>
 
-      {detailOpen && announcement && (
+      {detailOpen && duyuruG && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md" onMouseDown={() => setDetailOpen(false)}>
           <article className="glass relative w-full max-w-lg rounded-3xl border border-amber-400/30 p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
-            {!announcement.requireAck && <button onClick={() => setDetailOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>}
-            <span className="mb-3 inline-flex rounded-full bg-amber-400/15 px-3 py-1 text-[9px] font-black uppercase text-amber-300">{announcement.kind}</span>
-            <h3 className="font-display text-xl font-black text-white">{announcement.title}</h3>
-            <p className="mt-2 text-sm font-semibold text-amber-100/80">{announcement.message}</p>
-            {announcement.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{announcement.detail}</p>}
-            {announcement.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">{t("announcementAck")}</button>}
+            {!duyuruG.requireAck && <button onClick={() => setDetailOpen(false)} className="absolute right-4 top-4 text-white/50"><X size={17} /></button>}
+            <span className="mb-3 inline-flex rounded-full bg-amber-400/15 px-3 py-1 text-[9px] font-black uppercase text-amber-300">{duyuruG.kind}</span>
+            <h3 className="font-display text-xl font-black text-white">{duyuruG.title}</h3>
+            <p className="mt-2 text-sm font-semibold text-amber-100/80">{duyuruG.message}</p>
+            {duyuruG.detail && <p className="mt-4 whitespace-pre-wrap text-xs leading-relaxed text-white/60">{duyuruG.detail}</p>}
+            {duyuruG.requireAck && <button onClick={() => { openAnnouncement(); setDetailOpen(false); }} className="mt-5 w-full rounded-xl bg-amber-300 py-3 text-xs font-black text-black">{t("announcementAck")}</button>}
           </article>
         </div>
       )}

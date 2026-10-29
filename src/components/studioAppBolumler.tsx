@@ -12,6 +12,7 @@ import React from "react";
 import { X, AlertTriangle, Ban, Zap, ShieldAlert } from "lucide-react";
 import type { DebugGuideMessage } from "../debugGuide";
 import { ModalsContainer } from "./ModalsContainer";
+import { denemeKalan, denemeAktifMi, DENEME_TOPLAM } from "../studio/deneme";
 
 interface GenConfirmData { mode: string; formatCount: number; cost: number; remaining: number }
 
@@ -86,6 +87,11 @@ export function TelifRiskOnayBalonu({
 }
 
 // ── ★ ÜRETİM ONAY BALONU — free/pro maliyet uyarısı ──
+// ★ 29.10 DÜRÜST KAYNAK GÖSTERİMİ (kullanıcı: "2. yazandan düşmedi, 1. yazandan düştü"):
+//   balon HER DURUMDA jeton projeksiyonunu yazıyordu — lansman bedava hakkı (deneme)
+//   aktifken bile "jeton 150→149" diyordu, oysa sunucu (nur_consume_video RPC) üretimi
+//   ÖNCE deneme hakkından (5 bedava) düşer, jetona dokunmaz. Artık deneme aktifse
+//   balon açıkça bedava kaynağı gösterir; jeton satırı yalnız gerçek jeton kapısında.
 export function UretimOnayBalonu({
   genConfirmData,
   handleGenConfirm,
@@ -93,6 +99,7 @@ export function UretimOnayBalonu({
   genConfirmData: GenConfirmData;
   handleGenConfirm: (ok: boolean) => void;
 }) {
+  const denemeHakkiAktif = denemeAktifMi() && (denemeKalan() ?? 0) > 0;
   return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => handleGenConfirm(false)}>
           <div className="glass modal-in max-w-sm w-[90%] rounded-3xl border border-white/10 p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -113,26 +120,42 @@ export function UretimOnayBalonu({
               </div>
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-white/50">{ttX2610("rsFormat")}</span>
-                <span className="font-bold text-white">{genConfirmData.formatCount} adet</span>
+                <span className="font-bold text-white">{genConfirmData.formatCount} {ttX2610("rsAdet")}</span>
               </div>
               <div className="my-2 h-px bg-white/10" />
-              <div className="flex items-center justify-between text-[12px]">
-                <span className="font-bold text-white/70">Harcanacak jeton</span>
-                <span className="font-black" style={{ color: "var(--accent)" }}>{genConfirmData.cost} ⚡</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">Kalan jetonun</span>
-                <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
-              </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/50">{ttX2610("rsSonra")}</span>
-                <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
-                  {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
-                </span>
-              </div>
+              {denemeHakkiAktif ? (
+                <>
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="font-bold text-white/70">{ttX2610("rsKaynak")}</span>
+                    <span className="font-black" style={{ color: "var(--accent-2)" }}>🎁 {ttX2610("rsDenemeKaynak")}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-white/50">{ttX2610("rsKalanLansman")}</span>
+                    <span className="font-bold text-white">{denemeKalan()} / {DENEME_TOPLAM}</span>
+                  </div>
+                  <p className="rounded-xl bg-emerald-400/10 px-3 py-1.5 text-[9px] font-bold text-emerald-300/90 text-center">✓ {ttX2610("rsDenemeNot")}</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="font-bold text-white/70">{ttX2610("rsJetonHarca")}</span>
+                    <span className="font-black" style={{ color: "var(--accent)" }}>{genConfirmData.cost} ⚡</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-white/50">{ttX2610("rsJetonKalan")}</span>
+                    <span className="font-bold text-white">{genConfirmData.remaining} ⚡</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-white/50">{ttX2610("rsSonra")}</span>
+                    <span className="font-bold" style={{ color: genConfirmData.remaining - genConfirmData.cost <= 0 ? "#ef4444" : "var(--accent-2)" }}>
+                      {Math.max(0, genConfirmData.remaining - genConfirmData.cost)} ⚡
+                    </span>
+                  </div>
+                </>
+              )}
             </div>
 
-            {genConfirmData.remaining - genConfirmData.cost <= 0 && (
+            {!denemeHakkiAktif && genConfirmData.remaining - genConfirmData.cost <= 0 && (
               <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
                 ⚠️ Jetonun yetersiz! {ttX2610("rsSonra")} bakiyen 0 olacak.
               </div>
@@ -150,7 +173,7 @@ export function UretimOnayBalonu({
                 className="flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black text-white transition shadow-lg"
                 style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
               >
-                Üret ⚡ {genConfirmData.cost}
+                {denemeHakkiAktif ? `Üret · ${ttX2610("rsBedava")}` : `Üret ⚡ ${genConfirmData.cost}`}
               </button>
             </div>
           </div>

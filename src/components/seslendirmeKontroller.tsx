@@ -117,7 +117,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
             style={{ background: "rgba(0,0,0,.35)", color: "var(--text)", border: "1px solid rgba(255,255,255,.14)" }} />
           {metin.trim() ? (
             <div className="mt-2 rounded-xl px-3 py-2 text-[10px] font-extrabold" style={{ background: "rgba(215,170,82,.08)", border: "1px solid rgba(215,170,82,.2)", color: "var(--accent)" }}>
-              🧩 {bolumSayi}·{bolumSayi === 1 ? "bölüm" : "bölüm"} hazır · kartlara tıkla → dinle / arka plan ayarla
+              🧩 {bolumSayi}·{ttX2610("skBolumHazir")}
             </div>
           ) : null}
           {/* ★ ➕/➖ BÖLÜM SAYISI — ➕ kesimi artırır, ➖ azaltır (min 1) */}
@@ -125,7 +125,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
             <button onClick={bolumEkle}
               className={`${gold} flex-1`}
               style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>
-              ➕ Bölüm Ekle{bolumSayi > 1 ? ` — şu an ${bolumSayi} bölüm` : ""} (metni otomatik böler)
+              ➕ {ttX2610("skBolumEkle").replace("{n}", String(bolumSayi))}
             </button>
             <button onClick={bolumCikar} disabled={bolumSayi <= 1}
               title={ttX2610("skAzalt")}
@@ -142,7 +142,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
       {kuyruk.length > 0 ? (
         <div className="rounded-xl border border-white/10 p-2" style={{ background: "rgba(0,0,0,.35)" }}>
           <div className="mb-1 flex items-center justify-between gap-2">
-            <span className="text-[8.5px] font-black tracking-wider text-white/50">📋 BÖLÜMLER — {kuyruk.length} · tıkla: dinle · ✕: çıkar</span>
+            <span className="text-[8.5px] font-black tracking-wider text-white/50">📋 {ttX2610("skBolumler").replace("{n}", String(kuyruk.length))}</span>
             {/* ★ 21.10 HEPSİNİ TEMİZLE (kullanıcı: "seçilileri komple temizleme olsun") —
                 seçililer ekranındaki "Temizle" ile aynı davranış: tek basışta komple boşalt */}
             <button onClick={kuyrukTemizle}
@@ -161,7 +161,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
                   style={i === kuyrukSec
                     ? { background: "rgba(215,170,82,.35)", borderColor: "rgba(215,170,82,.5)", color: "#fff" }
                     : { background: "rgba(255,255,255,.06)", borderColor: "rgba(255,255,255,.1)", color: "rgba(255,255,255,.7)" }}>
-                  ▶ {ikon} {o.tip === "ayet" ? o.etiket : `bölüm ${i + 1}`}
+                  ▶ {ikon} {o.tip === "ayet" ? o.etiket : ttX2610("skBolumN").replace("{n}", String(i + 1))}
                   <b onClick={(e) => { e.stopPropagation(); ogCikar(i); }} style={{ cursor: "pointer", marginLeft: 3, color: "#ff8a8a" }}>✕</b>
                 </span>
               );
@@ -182,7 +182,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
           title={ttX2610("skWavTitle")}
           className={`${gold} disabled:cursor-not-allowed disabled:opacity-40`}
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)", whiteSpace: "nowrap" }}>
-          {indiriyor ? "⏬ İndiriliyor…" : "📥 İndir"}
+          {indiriyor ? ttX2610("skIndiriliyor") : ttX2610("skIndir")}
         </button>
         <button onClick={durdur} className={ghostY} style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.1)" }}>⏹ DURDUR</button>
         {/* ★ 21.10 AKILLI AI BUTONU (kullanıcı: "sürekli deniz koyuyor; akıllı AI butonu
@@ -196,7 +196,7 @@ export const SeslendirmeKontroller: React.FC<SeslendirmeKontrollerProps> = ({
         </span>
       </div>
       <div className="text-[9px] leading-relaxed text-white/30">
-        Ahmet okur · 15 atmosfer otomatik · parçalar arası nefes · noktalı/noktasız destekli · Rahmaan telaffuz düzeltmesi sunucuda
+        {ttX2610("skMimari")}
       </div>
     </div>
   );

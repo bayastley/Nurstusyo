@@ -63,13 +63,16 @@
   white-space: nowrap;
   text-overflow: clip;
 }
+/* ★ 29.10 TİTREME FİX: metin hiç durmadan ileri-geri kaydığı için "titriyor"
+   gibiydi (kullanıcı foto5 şikâyeti). Artık uçlarda %30'ar durakla + pürüzsüz
+   ease-in-out: okunaklı, göz yormayan marquee. */
 .nur-marquee-kayar {
-  animation: nurMarqueeKaydir 7s linear infinite alternate;
+  animation: nurMarqueeKaydir 6.5s ease-in-out infinite alternate;
   will-change: transform;
 }
 @keyframes nurMarqueeKaydir {
-  from { transform: translateX(0); }
-  to   { transform: translateX(var(--nur-marquee-fazla, -100px)); }
+  0%, 32% { transform: translateX(0); }
+  68%, 100% { transform: translateX(var(--nur-marquee-fazla, -100px)); }
 }
 
 .font-display {

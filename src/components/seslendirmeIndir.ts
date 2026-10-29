@@ -234,7 +234,10 @@ export async function kuyrukIndir(
     ciz();
 
     // ★ Zamanlama AudioContext saati ile belirlendi — kayıt hemen başlar.
-    rec.start(1000);
+    // ★ 29.10 MP4 timeslice fix (asıl üreticidekiyle aynı): mp4 modunda start(1000)
+    //   yalnız ilk 1s'lik parçayı düzgün yazıyordu — çoğu tarayıcı webm döndürdüğünden
+    //   bu dal yalnız mp4 seçiminde devrede; webm parçalama korunur.
+    if (mime && mime.includes("mp4")) rec.start(); else rec.start(1000);
     // ★ 26.10 DİLİMLİ BEKLEME = DURDUR CANLI: düz 40-90sn setTimeout beklemesi butonu
     //  kilitliydi; artık 250ms'de bir iptal bayrağı okunuyor → buton hemen çözer.
     for (let artan = (toplamSn + 1.2) * 1000; artan > 0 && !iptal?.iptalEdildi; artan -= 250) {
