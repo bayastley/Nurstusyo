@@ -11,7 +11,7 @@ import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
-import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, tierAtLeast, getCurrentTier } from "../tier";
+import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, tierAtLeast, getCurrentTier, getQuotaLeft, type Tier } from "../tier";
 // ★ 26.10 TIER ÇİPİ DİL BAĞI (kullanıcı raporu: "EN seçtim hala Ücretsiz"): eski
 //   TIER_LABEL['Ücretsiz'] hardcoded Türkçe'ydi; 5 dile çevrilmiş tierUcretsiz/
 //   tierPro/tierElit anahtarları sözlükte zaten vardı — artık oturum dilinden okunur.
@@ -58,6 +58,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   misafirKalanHak,
 }) => {
   const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
+  // ★ 29.10 ÜST BAR HAK GÖSTERGESİ (kullanıcı: "168 hakkım var 150 yazıyor"):
+  //   jetonCount YALNIZ satın alınan paket haklarını içeriyordu (50×3=150);
+  //   üyelik haftalık kotası (Tür bazlı getQuotaLeft) hiç katılmıyordu.
+  //   Artık rozet = paket hakları + üyelik kotası (PremiumModal'ın 68/50/50
+  //   gösterisiyle AYNI matematiği) → 150 + 18 = 168 gibi gerçek totol görünür.
+  const aktifTier = ((tier || "free") as Tier) || ("free" as Tier);
+  const uyelikKotaToplami = getQuotaLeft("kisa", aktifTier) + getQuotaLeft("uzun", aktifTier) + getQuotaLeft("tam", aktifTier);
+  const toplamHak = jetonCount + uyelikKotaToplami;
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
   const [toolsOpen, setToolsOpen] = React.useState(false);
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
@@ -515,7 +523,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                   <Coins size={8} className="text-black" strokeWidth={3} />
                 </span>
-                {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "∞" : jetonCount}
+                {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? "∞" : toplamHak}
               </button>
               <button
                 onClick={() => openPremium("uyelik")}
@@ -593,7 +601,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                     <Coins size={9} className="text-black" strokeWidth={3} />
                   </span>
                   <span className="transition-all group-hover:text-white">
-                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? t("hbrSinirsiz") : jetonCount}
+                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? t("hbrSinirsiz") : toplamHak}
                   </span>
                   {!(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) && (
                     <span className="hidden text-[9px] font-bold tracking-wide text-white/50 sm:inline">{t("hbrUretimHakki")}</span>
