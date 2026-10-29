@@ -124,15 +124,48 @@ export function klipsErisildiMi(tier: "free" | "pro" | "elit", clip: Clip, isAdm
 
 const YEDEK_KATEGORILER: CatId[] = ["namaz", "cami", "gunbatimi", "orman", "deniz", "musaf", "bulut", "desen", "gol"];
 
-/** Kapalı klipsin yerine geçen, KESİN erişilebilir yedek atmosfer (deterministik). */
+// ★★★ 29.10 DOSYA SAĞLIĞI (kullanıcı: "YİNE AYNI — video yine bozuk") ★★★
+//   29.10 gündüz sadece ÜYELİK kapısını sorguluyorduk (klipsErisildiMi); R2'de
+//   poster/video OLAYDI ama 404'ün altında ALTTAN gelen Pexels'a düşüyordu. Konsol
+//   kanıtı: images.pexels.com/videos/27132027/... 404 — yani hem R2'de poster
+//   yok hem Pexels'ta bu ID'den dosya silinmiş. Üretim motoru bu "ölü" klipsi
+//   ALGILAMIYORDU — boş kareyle kayıt yapıyor, video yarım/siyah iniyordu.
+//
+//   ÇÖZÜM: Modül-düzeyi "sağlıksız klips" seti. Ne zaman bir klipsin videosu
+//   yükleme hatası/içerik bozukluğu ya da posteri 404 verirse ID buraya yazılır.
+//   yedekAtmosfer() ve klipsErisildiMi() adayları bu setten filtreler — ölü
+//   klips bir daha üretimin göbeğine giremez, yerine SAĞLIKLI yedek konur.
+const SAGLIKSIZ_KLIPS_SETI = new Set<string>();
+
+/** Uludağ kaydetme: bir klipsin dosyaları inmediyse (R2 yok / Pexels 404) id'yi yaz. */
+export function klipsSagliksizIsaretle(clipId: string): void {
+  if (clipId && typeof clipId === "string") SAGLIKSIZ_KLIPS_SETI.add(clipId);
+}
+
+/** Bu klips dosyası daha önce yüklenemedi mi? (ölü = üretimde kullanılMAZ) */
+export function klipsSaglikliMi(clip: Clip | null | undefined): boolean {
+  if (!clip) return false;
+  return !SAGLIKSIZ_KLIPS_SETI.has(clip.id);
+}
+
+/** Kapalı klipsin yerine geçen, KESİN erişilebilir yedek atmosfer (deterministik).
+ *  ★ 29.10 DOSYA SAĞLIĞI: SADECE dosyaları henüz 404 vermemiş adaylar arasında tur atar. */
 export function yedekAtmosfer(tier: "free" | "pro" | "elit", isAdmin = false, onerilen = 0): Clip {
   for (const kat of YEDEK_KATEGORILER) {
-    const adaylar = MOTION_CLIPS.filter((c) => c.cat === kat && c.kind === "vid");
+    const adaylar = MOTION_CLIPS.filter((c) => c.cat === kat && c.kind === "vid" && klipsSaglikliMi(c));
     if (!adaylar.length) continue;
-    const aday = adaylar[onerilen % adaylar.length];
-    if (klipsErisildiMi(tier, aday, isAdmin)) return aday;
+    let aday = adaylar[onerilen % adaylar.length];
+    if (!klipsErisildiMi(tier, aday, isAdmin)) {
+      // kapalı aday yerine aynı kategoriden erişilebilir ve SAĞLIKLI bir klips dene
+      const acikAday = adaylar.find((c) => c.id !== aday.id && klipsErisildiMi(tier, c, isAdmin));
+      if (!acikAday) continue;
+      aday = acikAday;
+    }
+    return aday;
   }
-  return MOTION_CLIPS[0];
+  // yedek kategorilerin hepsi sağlıksızsa — tüm sağlıklı videolar arasında son şans
+  const sonSans = MOTION_CLIPS.find((c) => c.kind === "vid" && klipsErisildiMi(tier, c, isAdmin) && klipsSaglikliMi(c));
+  return sonSans || MOTION_CLIPS[0];
 }
 
 export const CATEGORY_PALETTE: Record<CatId, { primary: string; secondary: string; glow: string; bg: string; bg2: string }> = {

@@ -1775,6 +1775,7 @@
   "vgIptal": "Produksi dibatalkan · jeton tidak terpotong",
   "vgYarimVideo": "⚠️ Video berakhir lebih cepat dari seharusnya — mungkin belum lengkap. Coba buat lagi.",
   "vgKlipsYedek": "🎨 {x} latar belakang di atas tingkat keanggotaanmu — fallback yang dapat diakses digunakan; video ditampilkan dengan benar.",
+  "vgKlipsDosyaYedek": "📤 {x} berkas latar belakang tidak ditemukan di server (404) — produksi berlanjut dengan latar belakang cadangan yang sehat.",
   "vgLansman": "🎁 Uji peluncuran: {n}/{t} kuota produksi tersisa",
   "vgYetkiSunucu": "Tidak bisa menjangkau server untuk izin produksi",
   "vgSesSurahUyusmazlik": "⚠️ Suaramu milik surah {x} — tidak cocok dengan ayat terpilih, diproduksi dengan suara qari",

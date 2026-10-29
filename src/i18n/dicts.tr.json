@@ -1775,6 +1775,7 @@
   "vgIptal": "Üretim iptal edildi · jeton düşmedi",
   "vgYarimVideo": "⚠️ Video beklenenden erken bitti — yarım inmiş olabilir. Tekrar üretmeyi dene.",
   "vgKlipsYedek": "🎨 {x} atmosfer üyelik seviyenin dışındaydı — erişilebilir yedek kullanıldı; video sağlam iner.",
+  "vgKlipsDosyaYedek": "📤 {x} atmosferin dosyası sunucuda bulunamadı (404) — sağlıklı yedek atmosferle üretim devam etti.",
   "vgLansman": "🎁 Lansman denemesi: {n}/{t} üretim hakkı kaldı",
   "vgYetkiSunucu": "Üretim yetkisi için sunucuya ulaşılamadı",
   "vgSesSurahUyusmazlik": "⚠️ Kendi sesin {x}. suresine ait — seçili ayetlerle uyuşmuyor, hocanın sesiyle üretiliyor",

@@ -32,7 +32,7 @@ import { JETON, videoMaliyeti, yerelKullanimIlerle, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
-import { klipsErisildiMi, yedekAtmosfer, toHiRes, type Clip } from "../clips";
+import { klipsErisildiMi, klipsSagliksizIsaretle, klipsSaglikliMi, yedekAtmosfer, toHiRes, type Clip } from "../clips";
 import { dimensions, isWholeSurahSelected, pickMime, uid } from "./studioHelpers";
 import type { KendiSesAktif } from "./useKendiSes";
 import { storeVideo } from "./videoStore";
@@ -438,48 +438,105 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       const yedekEmrini = isMasterSürüm || user?.isAdmin === true;
       const renderClips = usedItems.map((item, ayetIdx) => {
         const org = ayahBackgroundsRef.current[item.id] || backgroundRef.current;
-        if (org.cat === "yuklenenler" || klipsErisildiMi(accessTier, org, yedekEmrini)) return org;
-        yedekKlipsSayisi += 1;
-        return yedekAtmosfer(accessTier, yedekEmrini, ayetIdx);
+        if (org.cat === "yuklenenler" || !klipsSaglikliMi(org) || klipsErisildiMi(accessTier, org, yedekEmrini)) {
+          if (org.cat !== "yuklenenler" && !klipsSaglikliMi(org)) yedekKlipsSayisi += 1; // ölü dosya → yedekle
+          else if (org.cat !== "yuklenenler" && !klipsErisildiMi(accessTier, org, yedekEmrini)) yedekKlipsSayisi += 1; // kilitli → yedekle
+        }
+        if (org.cat === "yuklenenler") return org;
+        if (!klipsSaglikliMi(org) || !klipsErisildiMi(accessTier, org, yedekEmrini)) return yedekAtmosfer(accessTier, yedekEmrini, ayetIdx);
+        return org;
       });
       if (yedekKlipsSayisi > 0) {
         console.warn("[klips] üyelik seviyesi dışı atmosferler yedekle değiştirildi:", yedekKlipsSayisi);
         notify(ttX2610("vgKlipsYedek").replace("{x}", String(yedekKlipsSayisi)));
-      }
-      const uniqueRenderClips = Array.from(new Map(renderClips.map((clip) => [clip.id, clip])).values());
-      await Promise.all(uniqueRenderClips.map((clip) => new Promise<void>((resolve) => {
-        if (clip.kind === "img") {
-          // ★ Render için 1080p sürümü önceden yükle (keskin çıktı)
-          const image = ensureImage(toHiRes(clip.src));
-          ensureImage(clip.src); // yedek thumbnail
-          if (image.complete && image.naturalWidth > 0) { resolve(); return; }
-          const done = () => resolve();
-          image.addEventListener("load", done, { once: true });
-          image.addEventListener("error", done, { once: true });
-          window.setTimeout(done, 6000);
-          return;
-        }
-        getVideoUrl(clip).then((primaryUrl) => {
-          const video = ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
-          if (video.readyState >= 2 && video.videoWidth > 0) {
-            try { video.currentTime = 0.05; } catch { /* ignore */ }
-            video.play().catch(() => undefined);
-            resolve();
+      }      // ★★★ 29.10 DOSYA SAĞLIĞI — ÖLÜ KLİPS TÜKETEN PİYONU ★★★
+      //   getPosterUrl/getVideoUrl Pexels'a düştüğünde 404 alıyordu; yani klips dosyaları
+      //   R2'de yok, Pexels'ta da silinmiş. Bunu yakalayıp "ölüm klips" listesine yazıyoruz,
+      //   sonra bu klipsleri yedek atmosferle değiştirip TEKRAR yüküyoruz. Hiçbir klips
+      //   sağlıksızsa hiç üretim yapmıyoruz.
+      const yukleyici = (clip: Clip): Promise<boolean> =>
+        new Promise<boolean>((resolve) => {
+          if (clip.kind === "img") {
+            // ★ Render için 1080p sürümü önceden yükle (keskin çıktı)
+            const image = ensureImage(toHiRes(clip.src));
+            ensureImage(clip.src); // yedek thumbnail
+            if (image.complete && image.naturalWidth > 0) { resolve(true); return; }
+            const done = (ok: boolean) => resolve(ok);
+            image.addEventListener("load", () => done(true), { once: true });
+            image.addEventListener("error", () => done(false), { once: true });
+            window.setTimeout(() => done(image.complete && image.naturalWidth > 0), 6000);
             return;
           }
-          const done = () => {
-            try { video.currentTime = 0.05; } catch { /* ignore */ }
-            video.play().catch(() => undefined);
-            resolve();
-          };
-          video.addEventListener("loadeddata", done, { once: true });
-          video.addEventListener("canplay", done, { once: true });
-          video.addEventListener("error", done, { once: true });
-          video.load();
-          window.setTimeout(done, 7000);
-          void getPosterUrl(clip).catch(() => undefined);
-        }).catch(() => { resolve(); });
+          getVideoUrl(clip).then((primaryUrl) => {
+            const video = ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
+            if (video.readyState >= 2 && video.videoWidth > 0) {
+              try { video.currentTime = 0.05; } catch { /* ignore */ }
+              video.play().catch(() => undefined);
+              resolve(true);
+              return;
+            }
+            const done = (ok: boolean) => {
+              if (ok) {
+                try { video.currentTime = 0.05; } catch { /* ignore */ }
+                video.play().catch(() => undefined);
+              }
+              resolve(ok);
+            };
+            video.addEventListener("loadeddata", () => done(true), { once: true });
+            video.addEventListener("canplay", () => done(true), { once: true });
+            video.addEventListener("error", () => done(false), { once: true });
+            video.load();
+            window.setTimeout(() => done(video.readyState >= 2 && video.videoWidth > 0), 7000);
+            void getPosterUrl(clip).catch(() => undefined);
+          }).catch(() => { resolve(false); });
+        });
+
+      let uniqueRenderClips = Array.from(new Map(renderClips.map((c) => [c.id, c])).values());
+      // ★ 1. tur: mevcut seçimleri yükle, hataları ölüm listesine yaz
+      const birinciSonuclar = await Promise.all(uniqueRenderClips.map(async (clip) => ({
+        clip, ok: await yukleyici(clip),
       })));
+      const olu1 = birinciSonuclar.filter((r) => !r.ok).map((r) => r.clip.id);
+      olu1.forEach((id) => { klipsSagliksizIsaretle(id); console.warn("[klips] dosya yükleme hatası — yedeklenecek:", id); });
+
+      // ★ 2. tur: ölü klipsleri yedek atmosferle değiştir ve yeniden dene (2 deneme hakkı).
+      //   Yedek atmosfer klipsSaglikliMi filtresinden geçtiği için SAĞLIKLI klip seçilir.
+      let oluSayisi = olu1.length;
+      let denemeler = 0;
+      while (oluSayisi > 0 && denemeler < 2) {
+        denemeler += 1;
+        // Ayet sırasına göre DEĞİŞTİR (ayetIdx sırayı koruyor — deterministik yedek)
+        for (let idx = 0; idx < renderClips.length; idx += 1) {
+          const mau = renderClips[idx];
+          if (olu1.includes(mau.id) || !klipsSaglikliMi(mau)) {
+            const yeni = yedekAtmosfer(accessTier, yedekEmrini, idx + denemeler);
+            if (yeni.id !== mau.id) renderClips[idx] = yeni;
+          }
+        }
+        uniqueRenderClips = Array.from(new Map(renderClips.map((c) => [c.id, c])).values());
+        const ikinciSonuclar = await Promise.all(uniqueRenderClips.map(async (clip) => ({
+          clip, ok: klipsSaglikliMi(clip) ? await yukleyici(clip) : false,
+        })));
+        const olu2 = ikinciSonuclar.filter((r) => !r.ok).map((r) => r.clip.id);
+        olu2.forEach((id) => { klipsSagliksizIsaretle(id); console.warn("[klips] yedek atmosfer de sağlıksız — tekrar yedeklenacak:", id); });
+        oluSayisi = olu2.length;
+      }
+      // ★ 3. tur: HÂLÂ ölü varsa son kez yedekle (yedekAtmosfer kendi filtresiyle SAĞLIKLI seçer).
+      if (oluSayisi > 0) {
+        for (let idx = 0; idx < renderClips.length; idx += 1) {
+          if (!klipsSaglikliMi(renderClips[idx])) renderClips[idx] = yedekAtmosfer(accessTier, yedekEmrini, idx);
+        }
+      }
+      if (olu1.length > 0) {
+        console.warn("[klips] " + olu1.length + " klips dosyası yüklenemedi (Pexels/R2 404) — yedek atmosferle değiştirildi");
+        const uyarKey = typeof ttX2610("vgKlipsDosyaYedek") === "string" && ttX2610("vgKlipsDosyaYedek") !== "vgKlipsDosyaYedek"
+            ? ttX2610("vgKlipsDosyaYedek")
+            : "📤 {x} atmosfer dosyası bulunamadı — sağlıklı yedek atmosferle devam ediliyor";
+        notify(uyarKey.replace("{x}", String(olu1.length)));
+      } else {
+        console.log("[klips] tüm atmosferler sağlıklı — dosya yedekleme gerekmedi");
+      }
+
       // ★ Render öncesi tüm seçili videolara ısınma payı ver.
       // R2/CDN ilk frame'i geç getirirse ilk ayetler donuk kaydoluyordu.
       // ★ 04.10: mobilde ısınma 1200ms → 2500ms — telefon tarayıcıları video
