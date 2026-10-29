@@ -27,9 +27,7 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
   //   düşer — /api/config poll'unu (45sn CDN cache) BEKLEMEDEN baloncuk belirir.
   //   Ardından poll gelen sunucu duyurusuyla ezilir (ikisi de aynı kaynağı gösterir).
   const [announcement, setAnnouncement] = useState<Announcement | null>(() => getActiveAnnouncement());
-  // ★ 27.10 İLK-500 SAYAÇ GERİ GELDİ (sahibin emri): "7 hafta HERKES PRO" çipi
-  //   kaldırıldı; yerine gerçek kayıt sayacı (config sadikUye.toplamKayitli/500).
-  const [sadikSayac, setSadikSayac] = useState<{ katilan: number; kontenjan: number } | null>(null);
+  // ★ 29.10 SADIK ÜYE SAYACI SÖKÜLDÜ (sahibin emri): kampanya çipi tamamen kalktı.
   // ★ KİLİT GÜNCELLEMESİ (19.10): /api/config poll'u v2/v3 kilitlerini veya admin
   //   gizli-reveal'ları (nur_feature_locks) değişik olarak yakalarsa "Güncellemeyi
   //   Al" bildirimi basılır — kullanıcı yenilemeyle yeni modülleri görsün.
@@ -86,13 +84,8 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
             sessionStorage.setItem("nur_locks_fp", fp);
           } catch { /* yut */ }
         }
-        if (data?.sadikUye && typeof data.sadikUye === "object" && Number.isFinite(Number(data.sadikUye.toplamKayitli))) {
-          // ★ 27.10 GERİ DÖNDÜ (sahibin emri): "burayı 500 kullanıcı yapmıştık —
-          //   kişi hep 'HERKES PRO' kampanya çipini görmesin." /api/config zaten
-          //   toplam kayıtlıyı veriyor (kontenjan sabit 500); çip kontenjan dolana
-          //   kadar görünür, dolunca kendiliğinden kaybolur.
-          setSadikSayac({ katilan: Number(data.sadikUye.toplamKayitli), kontenjan: Number(data.sadikUye.kontenjan || 500) });
-        }
+        // ★ 29.10: sadikUye sayaç verisi artık istemcide HİÇ kullanılmıyor —
+        //   kampanya çipi tamamen kalktı; /api/config alanı ölü veri (sunucuya dokunulmadı).
       }
     };
     void refresh();
@@ -250,22 +243,9 @@ export const AnnouncementBar: React.FC<AnnouncementBarProps> = ({ notify, user, 
               {t("noAnnouncementYet")}
             </span>
           )}
-          {/* ★ 27.10 İLK-500 SAYAÇ ÇİPİ (sahibin emri): "pro hakkı 500 kişiye kadar
-              geçerli — 500 kişi olana kadar her giren 1 hafta pro olur." Kampanya
-              tarihi çipleri KALDIRILDI. ★ GÖRÜNÜRLÜK (2. emir: "kişi hep bunu
-              görmesin"): çip yalnız GİRİŞ YAPMAMIŞ ziyaretçiye gösterilir —
-              denemesini almış/kayıtlı kullanıcıya ve PRO'ya nag.atma; kontenjan
-              (X/500) dolunca zaten herkes için kaybolur. Tık → giriş modalı. */}
-          {!user && sadikSayac && sadikSayac.katilan < sadikSayac.kontenjan && (
-            <button
-              onClick={() => setModalSafe?.("login")}
-              title={t("sadikUyeKontenjanTitle")}
-              className="flex items-center gap-1.5 rounded-full border border-amber-300/40 bg-amber-400/10 px-3 py-1.5 font-black text-amber-200 transition hover:bg-amber-400/20"
-            >
-              <Sparkles size={12} className="text-amber-300 animate-pulse" />
-              <span data-testid="sadik-kontenjan-sayac">{t("sadikUyeKontenjan").replace(/\{katilan\}/g, String(sadikSayac.katilan)).replace(/\{toplam\}/g, String(sadikSayac.kontenjan))}</span>
-            </button>
-          )}
+          {/* ★ 29.10 SADIK ÜYE SAYAÇ ÇİPİ KOMPLE KALDIRILDI (sahibin emri):
+              çip canlıda kapatılmıştı ama kod hâlâ istemcide basabiliyordu —
+              artık SIFIR çip: state + poll bağlantısı söküldü. */}
           {holyDay.type !== "none" && (
             <div className="flex items-center gap-2">
               <Sparkles size={12} className="text-amber-300" />
