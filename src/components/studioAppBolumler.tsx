@@ -14,7 +14,10 @@ import type { DebugGuideMessage } from "../debugGuide";
 import { ModalsContainer } from "./ModalsContainer";
 import { denemeKalan, denemeAktifMi, DENEME_TOPLAM } from "../studio/deneme";
 
-interface GenConfirmData { mode: string; formatCount: number; cost: number; remaining: number }
+// ★ 29.10 TÜR BAZLI HAK: hak (kind/quotaLeft/packLeft) /api/render/authorize
+//   cevabından taşınır — balon ÜRETTİĞİN MODE'UN kalan hakkını gösterir
+//   (sunucu kota/paketten düşümü authorize anında yapar; burada "kalan" iziisir).
+interface GenConfirmData { mode: string; formatCount: number; cost: number; remaining: number; hak: { kind: string; quotaLeft: number; packLeft: number } | null }
 
 // ── ★ TELİF RİSK ONAYI — high-risk kâri bilgilendirilmiş onayı (09.10) ──
 // Pro/Elit üye, telif riski %30 ÜZERİ bir kâriyle üretim yapmadan ÖNCE
@@ -135,6 +138,24 @@ export function UretimOnayBalonu({
                   </div>
                   <p className="rounded-xl bg-emerald-400/10 px-3 py-1.5 text-[9px] font-bold text-emerald-300/90 text-center">✓ {ttX2610("rsDenemeNot")}</p>
                 </>
+              ) : genConfirmData.hak ? (
+                <>
+                  {/* ★ 29.10 TÜR BAZLI HAK GÖSTERİMİ — jeton cüzdanı satırı KALDIRILDI.
+                      Artık ÜRETTİĞİN MODE'UN kendi kalan hakkı (sunucu doğruluğu, düşüm
+                      SONRASI) gösterilir; "150→149" gibi ortak jeton yanılgısı kalktı. */}
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="font-bold text-white/70">{ttX2610("rsHakKalan").replace("{k}", genConfirmData.mode === "short" ? ttX2610("rsKisa") : genConfirmData.mode === "long" ? ttX2610("rsUzun") : ttX2610("rsTam"))}</span>
+                    <span className="font-black" style={{ color: "var(--accent)" }}>
+                      {genConfirmData.hak.quotaLeft + genConfirmData.hak.packLeft}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-white/50">{ttX2610("rsUyelikPaketDetay").replace("{u}", String(genConfirmData.hak.quotaLeft)).replace("{p}", String(genConfirmData.hak.packLeft))}</span>
+                  </div>
+                  <p className="rounded-xl bg-white/5 px-3 py-1.5 text-[9px] font-bold text-white/65 text-center">
+                    ✓ {ttX2610("rsSunucuDusum").replace("{n}", String(genConfirmData.formatCount))}
+                  </p>
+                </>
               ) : (
                 <>
                   <div className="flex items-center justify-between text-[12px]">
@@ -155,9 +176,9 @@ export function UretimOnayBalonu({
               )}
             </div>
 
-            {!denemeHakkiAktif && genConfirmData.remaining - genConfirmData.cost <= 0 && (
+            {!denemeHakkiAktif && (!genConfirmData.hak || genConfirmData.hak.quotaLeft + genConfirmData.hak.packLeft <= 0) && (
               <div className="mb-3 rounded-xl bg-red-500/10 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-300 text-center">
-                ⚠️ Jetonun yetersiz! {ttX2610("rsSonra")} bakiyen 0 olacak.
+                ⚠️ {genConfirmData.mode === "short" ? ttX2610("rsKisa") : genConfirmData.mode === "long" ? ttX2610("rsUzun") : ttX2610("rsTam")} videonun hakkın kalmadı! Paket alarak devam edebilirsin.
               </div>
             )}
 
@@ -173,7 +194,7 @@ export function UretimOnayBalonu({
                 className="flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black text-white transition shadow-lg"
                 style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}
               >
-                {denemeHakkiAktif ? `Üret · ${ttX2610("rsBedava")}` : `Üret ⚡ ${genConfirmData.cost}`}
+                {denemeHakkiAktif ? `Üret · ${ttX2610("rsBedava")}` : `Üret · ${genConfirmData.formatCount}×`}
               </button>
             </div>
           </div>

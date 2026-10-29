@@ -14,8 +14,13 @@
 
 import { useCallback, useRef, useState } from "react";
 
-type GenConfirmData = { cost: number; remaining: number; formatCount: number; mode: string };
+type GenConfirmData = { cost: number; remaining: number; formatCount: number; mode: string; hak: { kind: string; quotaLeft: number; packLeft: number } | null };
 type RiskOnayData = { reciterName: string; riskPercent: number };
+// ★ 29.10 TÜR BAZLI HAK GÖSTERİMİ (kullanıcı: "KISA üretiyorum HEPSİNİ gösteriyor — ayarla"):
+//   balon eskiden yalnız jeton cüzdanını (tüm modlara ortak ⚡) gösteriyordu.
+//   Artık sunucunun /api/render/authorize cevabındaki TÜR BAZLI kalan hak da taşınır:
+//   authorize kota/paketten düşüm YAPMIŞ halde döner — "kalan" o muhteviyattır.
+type HakData = { kind: string; quotaLeft: number; packLeft: number }
 
 export function useOnayPencereleri() {
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
@@ -23,9 +28,9 @@ export function useOnayPencereleri() {
   const [genConfirmData, setGenConfirmData] = useState<GenConfirmData | null>(null);
   const genConfirmResolveRef = useRef<((ok: boolean) => void) | null>(null);
 
-  const showGenerateConfirm = useCallback((cost: number, remaining: number, formatCount: number, mode: string): Promise<boolean> => {
+  const showGenerateConfirm = useCallback((cost: number, remaining: number, formatCount: number, mode: string, hak: HakData | null = null): Promise<boolean> => {
     return new Promise((resolve) => {
-      setGenConfirmData({ cost, remaining, formatCount, mode });
+      setGenConfirmData({ cost, remaining, formatCount, mode, hak });
       setGenConfirmOpen(true);
       genConfirmResolveRef.current = resolve;
     });

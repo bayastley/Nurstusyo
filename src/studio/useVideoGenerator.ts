@@ -71,7 +71,7 @@ interface UseVideoGeneratorParams {
   //   telifKabulOnDevamRef artık kullanılmıyor — TelifDisclaimer
   //   "Anladım" akışındaki otomatik-devam, bekleyen-devam bayrağı ile taşınır.
   // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet onayı
-  showGenerateConfirm: (cost: number, remaining: number, formatCount: number, mode: string) => Promise<boolean>;
+  showGenerateConfirm: (cost: number, remaining: number, formatCount: number, mode: string, hak?: { kind: string; quotaLeft: number; packLeft: number } | null) => Promise<boolean>;
   // ★ TELİF RİSK ONAYI (09.10): riski %30 üzeri kâriyle üretimde bilgilendirilmiş onay.
   //   Pro/Elit ücretli kullanıcılar için açılır; kabul edilirse kâri cihazda işaretlenir.
   showRiskOnay: (reciterName: string, riskPercent: number) => Promise<boolean>;
@@ -208,6 +208,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     // God Mode ve misafir deneme videolarında jeton harcanmaz
     const isAdmin = riskOnayAdminMi;
     const totalCost = isMasterSürüm || isGuest || isAdmin ? 0 : costPerVideo * formatCount;
+    // ★ 29.10 TÜR BAZLI HAK SUNUCUYDAN (kullanıcı: "KISA üretiyorum HEPSİNİ gösteriyor"):
+    //   /api/render/authorize cevabındaki kind/quotaLeft/packLeft burada yakalanır —
+    //   onay balonu jeton cüzdanı yerine ÜRETTİĞİ MODE'UN kalan hakkını gösterecek.
+    let yetkiHak: { kind: string; quotaLeft: number; packLeft: number } | null = null;
     if (!isMasterSürüm && !isGuest) {
       try {
         const response = await fetch("/api/render/authorize", {
@@ -215,7 +219,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ mode, formats: batchFormats.length ? batchFormats : [aspect] }),
         });
-        const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number; source?: string; packLeft?: number } | null;
+        const data = await response.json().catch(() => null) as { ok?: boolean; error?: string; cost?: number; source?: string; packLeft?: number; kind?: string; quotaLeft?: number | null } | null;
         if (!response.ok || !data?.ok) {
           notify(data?.error || "Üretim yetkisi doğrulanamadı");
           return;
@@ -228,6 +232,11 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           denemeAyarla(Number(data.packLeft) || 0);
           notify(ttX2610("vgLansman").replace("{n}", String(data.packLeft)).replace("{t}", String(DENEME_TOPLAM)));
         } else {
+          yetkiHak = {
+            kind: String(data.kind || (mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam")),
+            quotaLeft: Number(data.quotaLeft ?? 0),
+            packLeft: Number(data.packLeft ?? 0),
+          };
           denemeAyarla(0); // deneme bitti → PRO/ELİT/V2 kilitleri geri gelir
           if (denemeAktifMi()) denemeAyarla(0);
           // ★ 29.10 GÖSTERGE SENKRONU (kullanıcı: "kendi kullanım hakkını da kullanmıyor"):
@@ -253,8 +262,25 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
     //   yanlış kapı burada OLAMAZ — kaldırıldı.
     // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
     if (!isMasterSürüm && !isGuest && totalCost > 0 && (accessTier === "free" || accessTier === "pro")) {
-      const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode);
-      if (!confirmed) return;
+      const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode, yetkiHak);
+      if (!confirmed) {
+        // ★ 29.10 İPTAL İADESİ: authorize onay balonundan ÖNCE hakları düşer —
+        //   kullanıcı "İptal" deyince hakkı kaybetmesin. Teknik hata iadesiyle
+        //   aynı RPC (wallet-refund, 24 saatte 10 iade freni sunucuda).
+        if (!isAdmin && yetkiHak && formatCount > 0) {
+          try {
+            const refundCevap = await fetch("/api/payments/wallet-refund", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ kind: yetkiHak.kind, amount: formatCount }),
+            });
+            const refundVeri = await refundCevap.json().catch(() => null) as { ok?: boolean } | null;
+            if (refundCevap.ok && refundVeri?.ok) notify(ttX2610("vgIade"));
+          } catch { /* iade servisine ulaşılamadı — sessiz geç */ }
+        }
+        notify(ttX2610("vgIptal"));
+        return;
+      }
     }
     let jetonCharged = false;
     let userStopped = false;
