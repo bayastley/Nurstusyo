@@ -15,6 +15,8 @@ import { BLOK9_TESETTUR_EDEP } from "./blok9-tesettur-edep";
 import { BLOK10_MELEKLER_KADER } from "./blok10-melekler-kader";
 import { BLOK11_SAHABE_SEVGI } from "./blok11-sahabe-sevgi";
 import { BLOK12_RAMAZAN_BAYRAM } from "./blok12-ramazan-bayram";
+import { BLOK13_AHIRET } from "./blok13-ahiret-cennet";
+import { BLOK14_DUA_ZIKIR } from "./blok14-dua-zikir";
 
 export type { SoruKart } from "./tip";
 export { soruGorunum } from "./tip";
@@ -33,4 +35,6 @@ export const SORU_BANKASI: SoruKart[] = [
   ...BLOK10_MELEKLER_KADER,
   ...BLOK11_SAHABE_SEVGI,
   ...BLOK12_RAMAZAN_BAYRAM,
+  ...BLOK13_AHIRET,
+  ...BLOK14_DUA_ZIKIR,
 ];
