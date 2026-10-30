@@ -271,29 +271,50 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   if (!open) return null;
 
   return (
-    <Modal title={tt("v2KesfetTitle")} sub={tt("v2KesfetSub")} onClose={onClose} wide>
-      {/* Sekmeler */}
-      <div className="mb-3 flex flex-wrap gap-1.5">
-        {SEKMELER.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
-            className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
-            style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
-          >
-            {s.emoji} {sekmeAdi(s.id)}
-          </button>
-        ))}
-      </div>
+    // ★ 30.10 (kullanıcı emri): "küçük panel yapma, büyüt" — tam panel boyutu (huge):
+    //   genişlik ~95vw / yükseklik 90vh; kategoriler SOL MENÜDE dikey durur, tıklayınca
+    //   sağdaki arayüz değişir. Mobilde sol menü gizlenir, eski yatay çipler döner (kuplu).
+    <Modal title={tt("v2KesfetTitle")} sub={tt("v2KesfetSub")} onClose={onClose} wide huge>
+      <div className="flex items-start gap-3">
+        {/* ── SOL MENÜ (md+): kategoriler dikey ── */}
+        <aside className="sticky top-0 hidden w-[190px] shrink-0 self-start flex-col gap-1 border-r border-white/10 pr-2 md:flex">
+          {SEKMELER.map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+              className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[11px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
+              style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+            >
+              <span className="text-[13px]">{s.emoji}</span> {sekmeAdi(s.id)}
+            </button>
+          ))}
+        </aside>
 
-      {/* Arama (kelime kartları hariç — kendi akışı var) */}
-      {sekme !== "kelime" && (
-        <div className="relative mb-3">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-          <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
-        </div>
-      )}
+        {/* ── SAĞ İÇERİK ALANI ── */}
+        <div className="min-w-0 flex-1">
+          {/* Mobilde sol menü yok — yatay çipler (eski davranış korunur) */}
+          <div className="mb-3 flex flex-wrap gap-1.5 md:hidden">
+            {SEKMELER.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+                className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
+                style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+              >
+                {s.emoji} {sekmeAdi(s.id)}
+              </button>
+            ))}
+          </div>
+
+          {/* Arama (kelime kartları hariç — kendi akışı var) */}
+          {sekme !== "kelime" && (
+            <div className="relative mb-3">
+              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+              <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
+            </div>
+          )}
 
       {/* ── 18: HADİS BANKASI — SRP adım 9 (09.10 2. tur): kesfetSekmeler.tsx ── */}
       {sekme === "hadis" && (
@@ -565,6 +586,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           </div>
         </div>
       )}
+        </div>
+      </div>
     </Modal>
   );
 };

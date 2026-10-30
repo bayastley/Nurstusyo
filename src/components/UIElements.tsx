@@ -120,6 +120,9 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
+  /** ★ 30.10 (kullanıcı emri): "küçük panel yapma, büyüt" — sol menülü tam panel boyutu:
+   *  genişlik ~96vw / yükseklik 90vh sabit; iç gövde kendi kayar (scrollbar-thin). */
+  huge?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -128,6 +131,7 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   wide = false,
+  huge = false,
 }) => {
   return (
     <div
@@ -135,8 +139,10 @@ export const Modal: React.FC<ModalProps> = ({
       onMouseDown={onClose}
     >
       <div
-        className={`glass modal-in relative w-full max-h-[90vh] mx-2 sm:mx-auto flex flex-col rounded-2xl p-4 sm:p-5 shadow-2xl ${
-          wide ? "max-w-4xl" : "max-w-lg"
+        className={`glass modal-in relative w-full mx-2 sm:mx-auto flex flex-col rounded-2xl p-4 sm:p-5 shadow-2xl ${
+          huge
+            ? "h-[90vh] max-w-[min(1400px,95vw)]"
+            : `max-h-[90vh] ${wide ? "max-w-4xl" : "max-w-lg"}`
         }`}
         onMouseDown={(e) => e.stopPropagation()}
       >
