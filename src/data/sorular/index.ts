@@ -13,6 +13,8 @@ import { BLOK7_AILE_MIRAS } from "./blok7-aile-miras";
 import { BLOK8_GUNDLUK_HAYAT } from "./blok8-gunluk-hayat";
 import { BLOK9_TESETTUR_EDEP } from "./blok9-tesettur-edep";
 import { BLOK10_MELEKLER_KADER } from "./blok10-melekler-kader";
+import { BLOK11_SAHABE_SEVGI } from "./blok11-sahabe-sevgi";
+import { BLOK12_RAMAZAN_BAYRAM } from "./blok12-ramazan-bayram";
 
 export type { SoruKart } from "./tip";
 export { soruGorunum } from "./tip";
@@ -29,4 +31,6 @@ export const SORU_BANKASI: SoruKart[] = [
   ...BLOK8_GUNDLUK_HAYAT,
   ...BLOK9_TESETTUR_EDEP,
   ...BLOK10_MELEKLER_KADER,
+  ...BLOK11_SAHABE_SEVGI,
+  ...BLOK12_RAMAZAN_BAYRAM,
 ];
