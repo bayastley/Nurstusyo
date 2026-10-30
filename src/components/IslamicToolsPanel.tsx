@@ -6,7 +6,7 @@ import { SURE_LISTESI, CUZ_SURELER, DAILY_DUAS, CITY_OPTIONS, sehirEtiketindenAd
 // ★ 26.10 YENİLEME (kullanıcı emri): panel KABUĞU 5 dile çevrildi — tr/en/ar/id/ur.
 import { translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { duaDilSec } from "../data/duaCokDil";
-import { QiblaCompass, KazaTracker, IslamicCalendar } from "./islamicToolsBolumler";
+import { KazaTracker, IslamicCalendar } from "./islamicToolsBolumler";
 // ★ SRP adım 9 (30.09): veri blokları islamicToolsVeri.ts'e, kıble/kaza/takvim bileşenleri islamicToolsBolumler.tsx'e taşındı
 
 // ═══════════════════════════════════════════════════════════
@@ -25,7 +25,8 @@ interface IslamicToolsPanelProps {
   prayerTimings: Record<string, string> | null;
 }
 
-type ToolTab = "prayer" | "qibla" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "salah";
+// ★ 30.10 KIBLA çıktı (kullanıcı emri): artık üst barda ayrı bir KIBLE butonuna taşındı.
+type ToolTab = "prayer" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "salah";
 
 // ★ SRP (01.10): araç bileşenleri islamicToolsVucut.tsx’e taşındı —
 //   Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim,
@@ -66,7 +67,6 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
     { id: "prayer", icon: "🕌", label: t("itTabPrayer") },
     { id: "salah", icon: "✅", label: t("itTabSalah") },
     { id: "hatim", icon: "📖", label: t("itTabHatim") },
-    { id: "qibla", icon: "🧭", label: t("itTabQibla") },
     { id: "zikir", icon: "📿", label: t("itTabZikir") },
     { id: "kaza", icon: "📋", label: t("itTabKaza") },
     { id: "calendar", icon: "📅", label: t("itTabCalendar") },
@@ -163,8 +163,6 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 <TopluHatim />
               </div>
             )}
-
-            {activeTab === "qibla" && <QiblaCompass />}
 
             {activeTab === "salah" && <SalahTracker />}
 

@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
+// ★ 30.10 KIBLE ÜST BARA TAŞINDI (kullanıcı emri): Nur Araçlar'daki QiblaCompass
+//   artık üst barda KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM arasındaki butondan
+//   açılır; Nur Araçlar sekmesi kaldırıldı (kaynağın var yeri burası).
+import { QiblaCompass } from "./islamicToolsBolumler";
 import { LANGS, T, translate, vakitAdi, sureceCevir, type Lang } from "../i18n";
 import { LockBadge } from "./LockBadge";
 import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDaysLeft, tierAtLeast, getCurrentTier, getQuotaLeft, type Tier } from "../tier";
@@ -68,6 +72,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const toplamHak = jetonCount + uyelikKotaToplami;
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
   const [toolsOpen, setToolsOpen] = React.useState(false);
+  const [kibleAcik, setKibleAcik] = React.useState(false);
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
   //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
   React.useEffect(() => {
@@ -658,6 +663,27 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}                              title={t("v2KuranOgrenTitle")}>
               📖 <span ref={kuranMarqueeRef} className="nur-marquee notranslate whitespace-nowrap font-display tracking-[.08em] bg-gradient-to-r from-amber-200 via-[color:var(--accent-2)] to-amber-200 bg-clip-text text-transparent drop-shadow-[0_0_7px_rgba(215,170,82,.45)]">{t("v2KuranOgrenEtiket")}</span>
             </button>
+            {/* ★ 30.10 KIBLE (kullanıcı emri): Nur Araçlar'dan çıkarıldı, üst barda
+                KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM ARASINA kendi butonuyla kondu. */}
+            <button data-minitur="kible" onClick={() => setKibleAcik(true)}
+              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
+              title={t("itTabQibla")}>
+              🧭 {t("itTabQibla")}
+            </button>
+            {kibleAcik && (
+              <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onMouseDown={() => setKibleAcik(false)}>
+                <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black p-4 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <h3 className="text-sm font-black text-white">🧭 {t("itTabQibla")}</h3>
+                    <button onClick={() => setKibleAcik(false)} className="p-1.5 rounded-full hover:bg-white/10 transition">
+                      <X size={16} className="text-white/50" />
+                    </button>
+                  </div>
+                  <QiblaCompass />
+                </div>
+              </div>
+            )}
             {/* ★ 25.10 İSLÂMÎ ÖĞRENİYORUM (kullanıcı emri) — eski "Keşfet" üst barda,
                 Kur'an ↔ İçindekiler ARASINA kondu; sol menüden kaldırıldı. Etiket panele
                 sığmazsa sola doğru kayar (marquee) — kelime tamamlanır. */}

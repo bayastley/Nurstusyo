@@ -260,7 +260,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           <button onClick={onClose} aria-label="Kapat" className="flex items-center gap-1 rounded-xl border border-red-900/30 bg-red-950/40 px-2.5 py-1.5 text-[10px] font-bold text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttX2610("qsSayfalarKapat")}>
             <X size={13} /> KAPAT
           </button>
-          <span className="text-[11px] font-black tracking-wider text-gold">📖 KUR'AN SAYFALARI</span>
+          <span className="text-[11px] font-black tracking-wider text-gold">📖 MUSHAF · KUR'AN-I KERİM</span>
 
           {/* ★ KAYNAK BUTONLARI (03.10): Arapça = Diyanet beyaz mushaf · Meal = Diyanet mealı */}
           <div className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-[#1E293B] p-0.5" role="group" aria-label={ttX2610("qsKaynakAria")}>
@@ -416,6 +416,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                   width: gorselG ? `${gorselG}px` : "auto",
                   maxWidth: "none",
                   background: rasterMi ? "#ffffff" : undefined,
+                  // ★ 30.10 (kullanıcı emri "içi sarı olsun"): mushaf sayfası sıcak kağıt tonu
+                  filter: rasterMi ? "sepia(.28) saturate(1.08) brightness(1.01)" : undefined,
                 }}
               />
             ) : (

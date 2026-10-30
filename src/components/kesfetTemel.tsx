@@ -169,7 +169,7 @@ export const KARILER = [
 export const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
 
-export type SekmeId = "hadis" | "kissa" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
+export type SekmeId = "hadis" | "kissa" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
 
 export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "hadis", label: "Hadis Bankası", emoji: "📚" },
@@ -179,6 +179,8 @@ export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "sure", label: "Sure Bilgileri", emoji: "📖" },
   { id: "namaz", label: "Namaz Öğretici", emoji: "🧎" },
   { id: "dua", label: "Dua Rehberi", emoji: "🤲" },
+  { id: "adab", label: "Adab-ı Muaşeret", emoji: "🤝" },
+  { id: "sunnet", label: "Sünnetler", emoji: "🌟" },
   { id: "hoca", label: "Hoca Karşılaştır", emoji: "🎧" },
   { id: "cami", label: "Cami Bulucu", emoji: "📍" },
   { id: "rehber", label: "Kanal Rehberi", emoji: "🚀" },

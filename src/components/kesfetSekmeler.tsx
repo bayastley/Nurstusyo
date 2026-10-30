@@ -210,6 +210,8 @@ export function KissaBolumu({
 }
 
 // ── 20: SORU-CEVAP — akordeon (28.09 mezhepli + genel arşiv) ──
+// ★ 30.10 (kullanıcı emri "şıkları sola koy alt alta tıklayınca renk değişsin geniş olsun"):
+//   Görüşler 1 sütun, sola dayalı, tam genişlik; seçince renk vurgulanır.
 export function SoruBolumu({
   tt, filtreliBesSart, filtreliSorular,
   acikSoru, setAcikSoru, acikGenelSoru, setAcikGenelSoru,
@@ -222,6 +224,7 @@ export function SoruBolumu({
   acikGenelSoru: number | null;
   setAcikGenelSoru: (v: number | null) => void;
 }) {
+  const [secilen, setSecilen] = React.useState<string | null>(null);
   return (
     <div className="space-y-1.5">
       {/* ★ İSLAM'IN 5 ŞARTI — MEZHEPLERE GÖRE FIKHİ SORU-CEVAP (28.09, kullanıcı kararı) */}
@@ -248,13 +251,23 @@ export function SoruBolumu({
             )}
             {acik && (
               <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
-                <div className="grid gap-1.5 sm:grid-cols-2">
-                  {b.cevaplar.map((c) => (
-                    <div key={c.mezhep} className="rounded-lg border border-white/10 bg-white/[.03] p-2.5">
-                      <p className="text-[9px] font-black" style={{ color: "var(--accent-2)" }}>{c.mezhep}</p>
-                      <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{c.metin}</p>
-                    </div>
-                  ))}
+                {/* ★ 30.10: cevaplar TEK sütun — sola dayalı, tam genişlik; seçince renk vurgulanır */}
+                <div className="flex flex-col items-stretch gap-1.5">
+                  {b.cevaplar.map((c) => {
+                    const k = `bs-${bi}-${c.mezhep}`;
+                    const sec = secilen === k;
+                    return (
+                      <button
+                        key={c.mezhep}
+                        type="button"
+                        onClick={() => setSecilen(sec ? null : k)}
+                        className={`w-full rounded-lg border p-2.5 text-left transition ${sec ? "border-emerald-400/40 bg-emerald-500/[.08]" : "border-white/10 bg-white/[.03] hover:bg-white/[.06]"}`}
+                      >
+                        <p className="text-[9px] font-black" style={{ color: sec ? "#6ee7b7" : "var(--accent-2)" }}>{sec ? "✓ " : ""}{c.mezhep}</p>
+                        <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{c.metin}</p>
+                      </button>
+                    );
+                  })}
                 </div>
                 <p className="mt-1.5 text-[8.5px] text-white/40">📌 Kaynak: {b.kaynak}</p>
               </div>

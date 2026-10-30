@@ -551,7 +551,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           {/* ★ KUR'AN SAYFALARI (02.10, kullanıcı emri): mushaf görünümü — ★ 18.10 admin-gizli kilidi (QK_sayfalar) */}
           {QK_sayfalar && (
           <button onClick={() => setSayfalarAcik(true)} className="flex items-center gap-1.5 rounded-xl border border-[#D7AA41]/40 bg-gradient-to-b from-[#3a2f14] to-[#241c0b] px-3 py-1.5 text-[11px] font-black text-[#f5dda6] transition hover:border-[#D7AA41]/70 hover:brightness-125 active:scale-95" title={ttX2610("qlmSayfalarTitle")}>
-            📖 SAYFALAR
+            📖 MUSHAF
             <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-1.5 py-0.5 text-[7.5px] font-black text-emerald-300">{ttX2610("qlmYeni")}</span>
           </button>
           )}

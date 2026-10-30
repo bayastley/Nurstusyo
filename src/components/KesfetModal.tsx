@@ -20,6 +20,8 @@ import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURE_BİLGİLERİ } from "../data/sureData";
 import { NAMAZ_REHBERİ } from "../data/namazData";
 import { DUA_REHBERİ } from "../data/duaData";
+import { ADABI_MUASERET } from "../data/adabiMuaseret";
+import { SÜNNETLER } from "../data/sunnetler";
 import { HOCA_KARSILASTIRMA_AYETLER } from "../data/hocaData";
 import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
 import { KANAL_REHBERI } from "../data/kanalData";
@@ -66,7 +68,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   // ★ 04.10 TUR 2: sekme/hadis teması/derece adları 5 dilde — TR veri anahtarları sabit kalır
   const SEKME_KEY: Record<string, string> = {
     hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
-    sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", hoca: "ksHocaKarsilastir",
+    sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
+    sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
   };
   const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
@@ -456,6 +459,36 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               <p className="mt-1 text-[9.5px] leading-relaxed text-white/60">{k.metin}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* ── 20c: ADAB-I MUAŞERET REHBERİ (30.10, +100 sahih kaynaklı) ── */}
+      {sekme === "adab" && (
+        <div className="space-y-2">
+          <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktAdabMetin")}</p>
+          {ADABI_MUASERET.filter((m) => !q || m.ad.toLocaleLowerCase("tr").includes(q) || m.metin.toLocaleLowerCase("tr").includes(q)).map((m, i) => (
+            <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+              <p className="text-[11px] font-black text-white/90">{i + 1}. {m.ad}</p>
+              <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{m.metin}</p>
+              <p className="mt-1.5 text-[8.5px] font-bold" style={{ color: "var(--accent)" }}>📚 {m.kaynak}</p>
+            </div>
+          ))}
+          <p className="pt-1 text-center text-[8px] text-white/25">{ADABI_MUASERET.length} madde · sahih kaynaklı</p>
+        </div>
+      )}
+
+      {/* ── 20d: SÜNNETLER REHBERİ (30.10, +100 sahih kaynaklı) ── */}
+      {sekme === "sunnet" && (
+        <div className="space-y-2">
+          <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktSunnetMetin")}</p>
+          {SÜNNETLER.filter((m) => !q || m.ad.toLocaleLowerCase("tr").includes(q) || m.metin.toLocaleLowerCase("tr").includes(q)).map((m, i) => (
+            <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+              <p className="text-[11px] font-black text-white/90">{i + 1}. {m.ad}</p>
+              <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{m.metin}</p>
+              <p className="mt-1.5 text-[8.5px] font-bold" style={{ color: "var(--accent)" }}>📚 {m.kaynak}</p>
+            </div>
+          ))}
+          <p className="pt-1 text-center text-[8px] text-white/25">{SÜNNETLER.length} madde · sahih kaynaklı</p>
         </div>
       )}
 

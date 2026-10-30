@@ -21,6 +21,15 @@ export const TECVID_KURALLARI: TecvidKurali[] = [
   { baslik: "Kalkale", tanim: "Vakıfta ق ط ب ج د harfleri sâkin kalırsa ses, boğazda hafif zıplamayla (kalkale) vurgulanır — büyük/küçük kalkale.", ornek: "أَقْرَبْ (ak-rab) · وَتَبَّ (ve teb-bet)", seviye: "ileri" },
   { baslik: "Lâm-ı Şemsî ve Kamrî", tanim: "Şemsî harflerde (14 adet) elifteki LÂM okunmaz, sonraki harf şeddeli; kamrîde LÂM açık okunur.", ornek: "Şemsî: اَلرَّحْمَن (er-rahmân) · Kamrî: اَلْقَمَر (el-kamer)", seviye: "temel" },
   { baslik: "Lâm ve Râ'nın Okunuş Özellikleri", tanim: "Lâm kalın (talık) veya ince okunabilir; Râ önceki harekete göre kalın/ince olur — tilavetin tadı buradadır.", ornek: "اللَّهُ (kalın) · بِسْمِ الرَّبِّ (ince)", seviye: "ileri" },
+  // ── +10 KURAL (30.10, kullanıcı emri: "tecvidi çoğalt") ─
+  { baslik: "Vakf-ı Tam", tanim: "Kelimeyi sükûn ile tamamlayıp nefesten rahat devam etmek (mim ৠ işareti): قَمْ ৠ.", ornek: "مِنْ (min-) — derin nefesle devam", seviye: "temel" },
+  { baslik: "Vakf-ı Kâfî", tanim: "Kelimenin tamamı söylenebilir ama tavsiye edilen yere kadar durmak; geçmek mümkün (kâf işareti) ᗧ.", ornek: "هدى للناس ڎ — vakıf mümkün", seviye: "orta" },
+  { baslik: "Vakf-ı Hasen", tanim: "Vakıf mümkün, devam etmek daha güzel (ha işareti) — ikisinden biri tercih edilir.", ornek: "الصَّلَاةَ — daha güzel devam", seviye: "orta" },
+  { baslik: "Hemze-i Vasl", tanim: "Kelime başındaki elif — okunuşta hafif vurgulanır; fasih okuma işareti.", ornek: "وَمَا أَوْحَيْنَا (vé mâ evhaynâ)", seviye: "orta" },
+  { baslik: "Kalkale: Küçük ve Büyük", tanim: "Kısa-kez uzatıldığında zıplama hafif (küçük); uzatıldığında belirgin (büyük) kalkale.", ornek: "أَقْرَبْ (küçük) · وُتَبَّ (büyük)", seviye: "ileri" },
+  { baslik: "Med-i Lezim Kelîmî", tanim: "Aynı kelimede harf-i medden sonra şedde — 6 vakit zorunlu uzatma.", ornek: "الضَّالِّينَ (6 vakit)", seviye: "orta" },
+  { baslik: "Med-i Linn", tanim: "İvfâsal '' — en kısa med sınırı; vakıfla kısa uzatılır.", ornek: "خَوْفٍ (kısa uzatma)", seviye: "ileri" },
+  { baslik: "Med-i Mufassal (Vakıfta)", tanim: "Vakıf yapınca mufassal med, lâzım med gibi 6 vakit okunabilir.", ornek: "بَنُوا vakıf: ba-nıyya", seviye: "ileri" },
 ];
 
 export const TECVID_SEVIYE_ETIKETI: Record<string, { label: string; renk: string }> = {
