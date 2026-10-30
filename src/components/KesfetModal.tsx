@@ -16,6 +16,8 @@ import { KISSA_LISTESI } from "../data/kissaData";
 import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
 import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
 import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
+// ★ 31.10 SORU BANKASI GENİŞLETME: 8 konu bloğu (iman/günah/abdest/namaz/oruç-zekât/hac/aile/gündelik) — akıllı arama + dil görünümü
+import { SORU_BANKASI, soruGorunum } from "../data/sorular";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURE_BİLGİLERİ } from "../data/sureData";
 import { NAMAZ_REHBERİ } from "../data/namazData";
@@ -227,7 +229,19 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   // ★ KISSA ÇOKDİL (06.10): önce dile çevir, sonra arama çevrilmiş ad/özet üzerinden koşsun
   // ★ 25.10 GENİŞLETME: çeviri hizası 19 referansta korunur; 12 yeni kıssa (KISSA_EK) çevirisiz eklenir — TR görünür
   const filtreliKissalar = useMemo(() => [...kissaCevir(lang, KISSA_LISTESI), ...KISSA_EK].filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q, lang]);
-  const filtreliSorular = useMemo(() => SORU_CEVAP_ARŞIVI.filter((s) => !q || s.soru.toLocaleLowerCase("tr").includes(q) || s.cevap.toLocaleLowerCase("tr").includes(q)), [q]);
+  // ★ 31.10: genel arşiv + 8 konu bloğu BİRAKTA — dil görünümü soruGorunum üzerinden (en kartları İngilizce gösterir)
+  const filtreliSorular = useMemo(() => {
+    const listeGenel = SORU_CEVAP_ARŞIVI.map((s) => ({ ...s, _banka: false }));
+    const listeBanka = SORU_BANKASI.map((s) => { const g = soruGorunum(s, lang); return { ...g, _banka: true }; });
+    const hepsi = [...listeBanka, ...listeGenel];
+    if (!q) return hepsi;
+    const ham = q.split(/\s+/).filter(Boolean).map((k) => metniHazirla(k) || k).filter(Boolean);
+    const kelimeler = ham.length ? ham : [q];
+    return hepsi.filter((s) => {
+      const metin = metniHazirla(`${s.soru} ${s.cevap} ${s.kaynak}`);
+      return kelimeler.every((w) => kelimeUyar(metin, w));
+    });
+  }, [q, lang]);
   // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
   const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ 03.10 AKILLI SURE ARAMASI: ad + ARAPÇA AD + numara + konu/açıklama;
