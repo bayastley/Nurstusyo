@@ -5,6 +5,16 @@ const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefi
 // ★ 29.10 GERÇEK SÜRE ÖLÇÜMÜ: kayıtlı blob'un oynatılabilir süresini ölçer.
 //   MediaRecorder kodlayıcısı ortada ölünce dosya hedef süreden kısa çıkar;
 //   çıkış listesi artık GERÇEGİ değil ölçülen süreyi gösterir (0/infinity → hedef)
+// ★ 30.10 KAYIT GÜNLÜK ÜSTİ: kayıt motoru durumunu tek standart biçemde yazar
+//   (eskiden üç ayrı yerde farklı etiketle console.warn dağıtılmıştı, konsol kanıtında
+//   karışık duruyordu; doluluk/yanlış-pozitif analiz daha kolay olsun diye ortaklandı).
+function logKayit(durum: string, boyut: number, oran: string, detay: string): void {
+  const parcalar = [`${boyut} byte`];
+  if (oran) parcalar.push(`oran ${oran}`);
+  if (detay) parcalar.push(detay);
+  console.warn(`[kayıt] ${durum}:`, ...parcalar);
+}
+
 async function kayitSuresiniOlc(blob: Blob): Promise<number> {
   return new Promise((resolve) => {
     try {
@@ -600,6 +610,10 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         let yarimUyarildi = false;
         const yarimUyar = () => { if (!yarimUyarildi) { yarimUyarildi = true; notify(ttX2610("vgYarimVideo")); } };
         let kayitSonuc: { blob: Blob; mime: string | null; recordedMs: number } | null = null;
+        // ★ 30.10 DÜRÜST TESLİM: "bozuk" sanılan kayıtların en iyisi burada tutulur —
+        //   tüm denemeler şüpheliyken ÇIKTI HAVA BOŞ OLMAZ (eskiden kayitSonuc null
+        //   kalıp çıktı hiç verilmiyor, üretim hakkı yakılıyordu).
+        let sonUretim: { blob: Blob; mime: string | null; recordedMs: number } | null = null;
         while (kayitDeneme < 2) {
           const alternatifMime = kayitDeneme === 0 ? birinciMime : (birinciMime || "").includes("mp4") ? "video/webm;codecs=vp8,opus" : "video/mp4;codecs=avc1.42E01E,mp4a.40.2";
           const stream = canvas.captureStream(renderQuality.renderFps), destination = audioContext.createMediaStreamDestination(), player = audioContext.createBufferSource(); player.buffer = rendered; player.connect(destination);
@@ -700,20 +714,48 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           if (userStopped) { notify(ttX2610("vgIptal")); break; }
           let blob = new Blob(chunks, { type: (mime || "video/webm").split(";")[0] });
           // ★ 29.10 BOŞ/BOYUT DOĞRULAMASI + OTO-RETRY: kodlayıcı öldüyse 0 dosya bile gelebilir.
-          const hedefByte = ((targetBitrate + (renderQuality.audioBitrate || 128_000)) / 8) * total;
-          const dolulukOrani = hedefByte > 0 ? blob.size / hedefByte : 1;
+          //   ★★★ 30.10 DOLULUK FİX ("4-5 ayet aşırı uzun sürüyor · çıktı bozuk iniyor") ★★★
+          //   Eski "hedef bitrate'in %35'i → bozuk" ölçütü YALNIŞTI: videoBitsPerSecond bir
+          //   TAVANDIR, MediaRecorder o bit oranını tüketmek ZORUNDA DEĞİLDİR. Karanlık/az
+          //   hareketli atmosferler tavanın %10-15'ine kadar SAHİH kodlanır (konsol kanıtı:
+          //   üç ayrı üretimde oran 0.11/0.12 — dosyalar sağlamdı). Sahih kaydı bozuk sanıp
+          //   motoru 2. turda tam süre boyunca yeniden çalıştırmak: 1) her üretimi 2 tam
+          //   gerçek-zamanlı kayda çevirir → "aşırı uzun sürüyor", 2) ikinci turda da düşük
+          //   oran görünce çıktı hiç verilmiyor → "video inmiyor".
+          //   Bozukluk artık ölçülür kanıtlarla: erkenDurmus (kayıt süreden fazla erken
+          //   bitti) ve ölüVideo (dosya boyutu salt-ses akışının bile 2.5 katının altında
+          //   → video kanalı hiç yazılmamış, siyah/donuk kare).
           const kayitSureFinal = (performance.now() - startedAt) / 1000;
           const erkenDurmus = total > 6 && kayitSureFinal < total * 0.92;
-          const bozuk = blob.size < 1024 || erkenDurmus || (!userStopped && total > 6 && dolulukOrani < 0.35);
-          if (!bozuk) { kayitSonuc = { blob, mime, recordedMs: Math.max(1000, Math.round(kayitSureFinal * 1000)) }; break; }
+          const hedefByte = ((targetBitrate + (renderQuality.audioBitrate || 128_000)) / 8) * total;
+          const sesAltInbyte = ((renderQuality.audioBitrate || 128_000) / 8) * Math.max(kayitSureFinal, 0.5);
+          const olVideo = blob.size < Math.max(1024, sesAltInbyte * 2.5);
+          const oranLog = hedefByte > 0 ? (blob.size / hedefByte).toFixed(2) : "1";
+          const neden = [blob.size < 1024 && "bos-dosya", erkenDurmus && "erken-kesildi", olVideo && "video-kanali-olu"].filter(Boolean).join(",") || "sağlıklı";
+          if (!userStopped) {
+            sonUretim = sonUretim && sonUretim.blob.size >= blob.size ? sonUretim : { blob, mime, recordedMs: Math.max(1000, Math.round(kayitSureFinal * 1000)) };
+          }
+          if (!olVideo && !erkenDurmus) {
+            kayitSonuc = { blob, mime, recordedMs: Math.max(1000, Math.round(kayitSureFinal * 1000)) };
+            logKayit("sağlıklı", blob.size, oranLog, neden);
+            break;
+          }
           kayitDeneme += 1;
           if (kayitDeneme < 2) {
-            console.warn("[kayıt] bozuk çıktı — alternatif mime ile tekrar:", blob.size, "byte · oran", dolulukOrani.toFixed(2), erkenDurmus ? "(erken kesildi)" : "");
+            logKayit("bozuk — alternatif mime ile tekrar", blob.size, oranLog, neden);
             continue;
           }
           yarimUyar();
         }
         if (userStopped) { notify(ttX2610("vgIptal")); continue; }
+        // ★ 30.10 DÜRÜST TESLİM: hiçbir deneme sağlıklı görünmediyse bile son kaydı
+        //   "yarım/şüpheli olabilir" uyarısıyla ver — eski kodda kayitSonuc null kalınca
+        //   çıktı VERİLMİYORDU ve üretim hakkı yakılıyordu.
+        if (!kayitSonuc && sonUretim && sonUretim.blob.size >= 1024 && !userStopped) {
+          logKayit("şüpheli çıktı — en iyi kayıt teslim ediliyor", sonUretim.blob.size, "", String(sonUretim.recordedMs));
+          yarimUyar();
+          kayitSonuc = sonUretim;
+        }
         if (!kayitSonuc) continue;
         let blob = kayitSonuc.blob;
         const recordedMs = kayitSonuc.recordedMs;

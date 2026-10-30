@@ -51,8 +51,14 @@ function openDb(): Promise<IDBDatabase | null> {
   });
 }
 
-/** Üretilen videoyu depoya yazar; kapasite aşımında eski kayıtları siler. */
+/** Üretilen videoyu depoya yazar; kapasite aşımında eski kayıtları siler.
+ *  ★ 30.10 BOŞ KAYIT YASAĞI: 0 baytlık / geçersiz kayıt YAZMAZ — eskiden bozuk
+ *  kayıt turunun 0 dosyalık çıktısı bile IndexedDB'ye yazılıyordu → İndirme
+ *  Klasöründe "0 KB" satırları, İndir'e tıklanınca hiçbir şey inmüyordu
+ *  (kullanıcı: "İndir butonu çalışmıyor" — çünkü dosya YOKTU).
+ *  < 1 KB yasak: sağlıklı bir video dosyası en azından 1 KB'lık kayda sahiptir. */
 export async function storeVideo(output: Omit<StoredOutput, "createdAt">): Promise<void> {
+  if ((output.blob?.size ?? 0) < 1024) return;
   const db = await openDb();
   if (!db) return;
   try {
@@ -80,7 +86,10 @@ async function pruneOldVideos(db: IDBDatabase): Promise<void> {
       request.onerror = () => resolve([]);
     });
     if (!all.length) return;
-    const sorted = all.sort((a, b) => b.createdAt - a.createdAt);
+    // ★ 30.10 ESKİ KİR KAYITLARI TEMİZLE: 0 KB kayıtlar (bozuk kayıt dönemi
+    //   arşivi) ilk fırsatta silinir — İndirme Klasörü çöp satırlardan arınır.
+    const kirililer = all.filter((item) => (item.blob?.size ?? 0) < 1024).map((item) => item.id);
+    const sorted = all.filter((item) => (item.blob?.size ?? 0) >= 1024).sort((a, b) => b.createdAt - a.createdAt);
     const keep: StoredOutput[] = [];
     let total = 0;
     for (const item of sorted) {
@@ -90,7 +99,9 @@ async function pruneOldVideos(db: IDBDatabase): Promise<void> {
       }
     }
     const keepIds = new Set(keep.map((item) => item.id));
-    const deleteIds = all.filter((item) => !keepIds.has(item.id)).map((item) => item.id);
+    const deleteIds = all
+      .filter((item) => !keepIds.has(item.id) || kirililer.includes(item.id))
+      .map((item) => item.id);
     if (!deleteIds.length) return;
     await new Promise<void>((resolve) => {
       const tx = db.transaction(STORE, "readwrite");
@@ -116,7 +127,12 @@ export async function loadStoredVideos(): Promise<StoredOutput[]> {
       request.onsuccess = () => resolve((request.result ?? []) as StoredOutput[]);
       request.onerror = () => resolve([]);
     });
-    return all.sort((a, b) => b.createdAt - a.createdAt);
+    return all
+      // ★ 30.10 BOŞ KAYIT FİLTRESİ: eski kodun 0 KB yazdığı kayıtlar listeye
+      //   girmez — kullanıcı "İndir çalışmıyor" tuzağına düşmez. Bir sonraki
+      //   storeVideo çağrısında pruneOldVideos eski 0 KB satırları da siler.
+      .filter((item) => (item.blob?.size ?? 0) >= 1024)
+      .sort((a, b) => b.createdAt - a.createdAt);
   } catch {
     return [];
   }
