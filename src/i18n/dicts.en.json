@@ -2073,6 +2073,7 @@
   "ks2AyetBasiK": "Per-verse",
   "ks2Uyusmazlik": "⚠ Detected sections ({b}) don't match verse count ({a}) — check the difference",
   "ks2Cozumleniyor": "Analyzing…",
+  "ks2YukleUyari": "Upload the recitation of {sure} as a single file",
   "ks2SesYukle": "Load audio",
   "ks2ArkaPlan": "BG",
   "mcbKaydet": "Save",
