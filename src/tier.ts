@@ -313,6 +313,19 @@ export function yerelKullanimIlerle(kind: VideoKind, adet = 1): void {
   writeUsage(usage);
 }
 
+/** ★ 31.10 İADE GÖSTERGesi (kullanıcı: "üretim iptal ettim ama haklarım kesildi"):
+ *  Üretim authorize anında sunucuda düşüyor; iptal/durakma/teknik hatada
+ *  sunucu hakkı geri verir (wallet-refund) fakat yerel hafta-kullanım sayacı
+ *  bayat kalıyordu → göstergesi iadeyi hiç öğrenmiyordu. Bu fonksiyon iade
+ *  başarılı olunca yerel sayacı da geri çeker; görüntü gerçeği izler. */
+export function yerelKullanimGeri(kind: VideoKind, adet = 1): void {
+  const sayi = Math.max(1, Math.floor(adet || 1));
+  if (typeof window === "undefined") return;
+  const usage = readUsage();
+  usage.used[kind] = Math.max(0, (usage.used[kind] || 0) - sayi);
+  writeUsage(usage);
+}
+
 /** Bugün bu türden kaç tane kullanıldı */
 export function getUsedToday(kind: VideoKind): number {
   return Math.max(0, Math.floor(readUsage().used[kind] || 0));

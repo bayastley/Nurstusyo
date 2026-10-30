@@ -38,7 +38,7 @@ import { useCallback, type MutableRefObject } from "react";
 import fixWebmDuration from "fix-webm-duration";
 import { sesKaynakZinciri } from "../reciters";
 import { checkRateLimit } from "../rateLimiter";
-import { JETON, videoMaliyeti, yerelKullanimIlerle, type Tier } from "../tier";
+import { JETON, videoMaliyeti, yerelKullanimIlerle, yerelKullanimGeri, type Tier } from "../tier";
 import { reportRenderError } from "../debugGuide";
 import { SURAHS } from "../data";
 import { getPosterUrl, getVideoUrl, getVideoUrlSync, isR2Media } from "../videoUrl";
@@ -262,43 +262,59 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         notify(ttX2610("vgYetkiSunucu"));
         return;
       }
-    }
-    // ★ YANLIŞ KAPI FIX (30.09, kullanıcı bildirimi): jetonCount kontrolü SADECE satın
+    }    // ★ YANLIŞ KAPI FIX (30.09, kullanıcı bildirimi): jetonCount kontrolü SADECE satın
     //   alınan paket haklarını sayıyordu — günlük kota hakkı (free: 3/gün) hesaba
     //   katılmadığı için hakkı olan kullanıcı satın alma modalına atılıyordu.
     //   Ücretlendirme TEK DOĞRULUK KAYNAĞI olarak sunucuda yapılır: /api/render/authorize
     //   atomik RPC ile kotayı+paketi doğru hesaplar, hakkı yoksa 402 + dürüst mesaj döner
     //   (yukarıdaki authorize bloğu zaten bu cevabı notify ile gösterir). İkinci bir
     //   yanlış kapı burada OLAMAZ — kaldırıldı.
+    // ★ 31.10 İPTAL = İADE (kullanıcı: "üretim iptal ettim ama haklarım kesildi"):
+    //   authorize hakları üretimden ÖNCE düşüyor. Düşen ama TESLİM EDİLMEDEN
+    //   biten üretim her kolda iade edilir — onay penceresinde İptal, kayıt
+    //   sırasında "Üretimi İptal Et" (userStopped) ve teknik hata dahil.
+    //   Eski "userStopped iade edilmez" kuralı authorize-düşüm döneminde hakkı
+    //   yakan bir boşluktu — kaldırıldı. Teslim edilen format düşümün kendisi
+    //   kalır, geri kalan adet iade olur. (RPC 24 saatte 10 iade freni sunucuda)
+    const authorizeKind = mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam";
+    const authorizeFormats = (batchFormats.length ? batchFormats : [aspect]).length;
+    let teslimEdilen = 0; // bu oturumda teslim edilen video sayısı (başarılı output push)
+    const hakIadeEt = async (adet: number) => {
+      if (isMasterSürüm || isGuest || isAdmin || adet <= 0) return;
+      try {
+        const refundCevap = await fetch("/api/payments/wallet-refund", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind: authorizeKind, amount: adet }),
+        });
+        const refundVeri = await refundCevap.json().catch(() => null) as { ok?: boolean } | null;
+        if (refundCevap.ok && refundVeri?.ok) {
+          notify(ttX2610("vgIade"));
+          // Göstergesi iadeyi öğdensin — yerel hafta kullanım sayacı da geri çekilir
+          try { yerelKullanimGeri(authorizeKind, adet); } catch { /* göstergesi — üretimi ASLA etkilemesin */ }
+        } else {
+          notify(ttX2610("vgIadeHatasi"));
+        }
+      } catch { /* iade servisine ulaşılamadı — sessiz geç */ }
+    };
     // ★ Üretim Onay Balonu — free/pro kullanıcılar için maliyet uyarısı
     if (!isMasterSürüm && !isGuest && totalCost > 0 && (accessTier === "free" || accessTier === "pro")) {
       const confirmed = await showGenerateConfirm(totalCost, jetonCount, formatCount, mode, yetkiHak);
       if (!confirmed) {
-        // ★ 29.10 İPTAL İADESİ: authorize onay balonundan ÖNCE hakları düşer —
-        //   kullanıcı "İptal" deyince hakkı kaybetmesin. Teknik hata iadesiyle
-        //   aynı RPC (wallet-refund, 24 saatte 10 iade freni sunucuda).
-        if (!isAdmin && yetkiHak && formatCount > 0) {
-          try {
-            const refundCevap = await fetch("/api/payments/wallet-refund", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ kind: yetkiHak.kind, amount: formatCount }),
-            });
-            const refundVeri = await refundCevap.json().catch(() => null) as { ok?: boolean } | null;
-            if (refundCevap.ok && refundVeri?.ok) notify(ttX2610("vgIade"));
-          } catch { /* iade servisine ulaşılamadı — sessiz geç */ }
-        }
+        // ★ 31.10 İPTAL İADESİ: authorize onay balonundan ÖNCE hakları düşer —
+        //   kullanıcı "İptal" deyince (veya pencereyi arkadan kapatınca) hakkı
+        //   kaybetmesin. Tek iniş sıraların birlikte iadesi (hakIadeEt) kullanır.
+        await hakIadeEt(formatCount);
         notify(ttX2610("vgIptal"));
         return;
       }
     }
     let jetonCharged = false;
     let userStopped = false;
-    // ★ HAK İADESİ (09.10): /api/render/authorize üretimden ÖNCE hak düşer;
-    //   teknik hatada hakkı geri vermek için üretim modu ve format sayısı
-    //   burada sabitlenir.Misafir/god-mode tarafında düşüm zaten yok.
-    const authorizeKind = mode === "short" ? "kisa" : mode === "long" ? "uzun" : "tam";
-    const authorizeFormats = (batchFormats.length ? batchFormats : [aspect]).length;
+    // ★ HAK İADESİ (09.10): üretim modu ve format sayısı yukarıda
+    //   authorizeKind/authorizeFormats + teslimEdilen olarak sabitlendi;
+    //   iade hepsi ortak hakIadeEt üzerinden çalışıyor. Misafir/god-mode
+    //   tarafında düşüm zaten yok.
     silenceAllAudio();
 
     // ★ BELLEK OPTİMİZASYONU: Eski/Düşük RAM'li cihazlar için preloaded video ve resimleri temizle
@@ -789,6 +805,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const kayitSureDurst = olculenSure > 0.5 ? olculenSure : total;
         const output: Output = { id: uid(), url: URL.createObjectURL(blob), mime: blob.type, size: blob.size, duration: kayitSureDurst, label: `${usedItems[0].sName} ${usedItems[0].s}:${usedItems[0].a}${usedItems.length > 1 ? ` +${usedItems.length - 1}` : ""} • ${kendiKullandi ? "🎙️ Kendi sesin" : reciter.name} • ${outputAspect}`, ext: blob.type.includes("mp4") ? "mp4" : "webm" };
         setOutputs((current) => [output, ...current].slice(0, 5)); setActiveOutputId(output.id);
+        teslimEdilen += 1; // ★ 31.10: teslim edilen format iade kapsamından çıkar
         // ★ IndexedDB'ye sakla: sayfa yenilense (ör. misafir üye girişi sonrası) video kaybolmaz,
         //   açılışta otomatik geri yüklenir. İndirme yetkisi buradan yönetilmez (user kontrolü ayrı).
         void storeVideo({ id: output.id, label: output.label, mime: output.mime, ext: output.ext, size: output.size, duration: output.duration, blob });
@@ -804,30 +821,24 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         jetonCharged = true;
         // Authenticated production rights are consumed atomically by /api/render/authorize.
       }
-      if (userStopped) { audioContext.close().catch(() => undefined); return; }
+      if (userStopped) {
+        audioContext.close().catch(() => undefined);
+        // ★ 31.10 DURDURULAN ÜRETİM DE İADE EDİLİR (kullanıcı: "üretim iptal ettim
+        //   ama haklarım kesildi"): authorize üretimden ÖNCE hak düşer; kayıt
+        //   durdurulduğunda teslim edilmeyen formatlar için hak geri verilir.
+        //   Teslim EDİLEN formatlar düşümün kendisine sayılır — çift iade olmaz.
+        await hakIadeEt(Math.max(0, authorizeFormats - teslimEdilen));
+        return;
+      }
       audioContext.close().catch(() => undefined); setProgress(100);
       notify(t("successVideoReady"));
     } catch (error) {
       console.error(error);
       reportRenderError(error);
       // ★ HAK İADESİ (09.10): teknik hatada düşen üretim hakkını GERİ VER.
-      //   userStopped (kullanıcı kendi durdurursa) iade kapsamı dışıdır —
-      //   o durumda jeton/hak düşümünü sunucu erken yapmadı, kayıp yok.
-      if (!userStopped && !isMasterSürüm && !isGuest && !isAdmin && authorizeFormats > 0) {
-        try {
-          const refundResponse = await fetch("/api/payments/wallet-refund", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ kind: authorizeKind, amount: authorizeFormats }),
-          });
-          const refundData = await refundResponse.json().catch(() => null) as { ok?: boolean } | null;
-          if (refundResponse.ok && refundData?.ok) {
-            notify(ttX2610("vgIade"));
-          } else {
-            notify(ttX2610("vgIadeHatasi"));
-          }
-        } catch { /* iade servisine ulaşılamadı — kullanıcıya sessiz kal, yukarıda mesaj var */ }
-      }
+      //   ★ 31.10: userStopped artık istisna değil — userStop iadesi yukarıda
+      //   zaten çalıştı, buradaki adet mantığı çift iadeyi önler (teslimEdilen).
+      await hakIadeEt(Math.max(0, authorizeFormats - teslimEdilen));
       // ★ TAM TARAMA (29.09): "Ses dosyaları alınamadı" artık anlaşılır Türkçe mesaj veriyor
       if (!userStopped) notify(error instanceof Error && error.message.includes("Ses dosyaları alınamadı")
         ? "⚠️ Hoca sesleri indirilemedi — internet bağlantını kontrol edip tekrar dene"
