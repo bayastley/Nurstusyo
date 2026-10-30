@@ -413,6 +413,41 @@ export function useQuranSes({
     setIsPlaying(false);
   }, [stopAudio, setIsPlaying]);
 
+  // ★ 31.10 HOCA CANLI GEÇİŞ (kullanıcı: "hoca değişince hemen geçsin — dondurup
+  //   tekrar başlatmak zorunda kalıyorum"): çalarken hoca değişirse AYNI ayet
+  //   yeni hocanın sesiyle kesintisiz devam eder.
+  //   • Çalmıyorken/durmuşken hiçbir şey yapılmaz — sadece hoca değişir; ▶ ile
+  //     başlatınca zaten yeni hoca gelir (pause durumuna dokunulmaz).
+  //   • Tam sure modunda yeni dosyaya geçip KONUMU korur (loadedmetadata ile).
+  //   • Karışık hoca modunda seçim sure bazlı atamalıdır — dokunulmaz.
+  //   • setState async: onClick'teki startListening ESKİ hocayı başlatırdı —
+  //     geçiş bu yüzden effect'te yapılır (render sonrası, YENİ playAt/URL'lerle).
+  const hocaOncekiRef = useRef(listenReciter);
+  useEffect(() => {
+    if (hocaOncekiRef.current === listenReciter) return;
+    hocaOncekiRef.current = listenReciter;
+    if (mode !== "listen" || karisikHoca) return;
+    const a = audioRef.current;
+    if (!a || a.paused || a.ended || besmeleRef.current) return;
+    const sNow = wholeQuran ? wholeIdx.s : listenSurah;
+    const aNow = wholeQuran ? wholeIdx.a - 1 : listenAyahIdxRef.current;
+    if (fullSurahMode) {
+      const yeni = fullSurahUrl(sNow);
+      if (!yeni || a.src === yeni) { playAt(sNow, 0); return; }
+      const pozisyon = Number.isFinite(a.currentTime) ? a.currentTime : 0;
+      a.src = yeni;
+      a.load();
+      const devam = () => {
+        a.removeEventListener("loadedmetadata", devam);
+        try { a.currentTime = Math.min(pozisyon, (a.duration || Infinity) - 0.2); } catch { /* metadata henüz yok — baştan */ }
+        a.play().catch(() => setIsPlaying(false));
+      };
+      a.addEventListener("loadedmetadata", devam);
+      return;
+    }
+    playAt(sNow, aNow);
+  }, [listenReciter, mode, karisikHoca, wholeQuran, wholeIdx.s, wholeIdx.a, listenSurah, fullSurahMode, playAt, fullSurahUrl, setIsPlaying, audioRef]);
+
   const pauseAyah = useCallback(() => {
     const a = audioRef.current; if (!a) return;
     a.pause(); setPaused(true);

@@ -489,9 +489,20 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               <div className={`mb-3 rounded-xl border p-4 text-center ${tabir.bg}`}>
                 <p className="text-[9px] font-black uppercase tracking-widest text-white/45">{tt("hafizlikTurOzeti")}</p>
                 <p className={`mt-1 font-display text-[22px] font-black ${tabir.renk}`}>{tabir.emoji} {tabir.ad}</p>
-                <p className="mt-0.5 text-[13px] font-black text-white">{tt("hafizlikSkor").replace("{d}", String(puan.dogru)).replace("{y}", String(yanlis)).replace("{t}", String(puan.toplam)).replace("{p}", String(yuzde))}</p>
+                <p className="mt-0.5 text-[13px] font-black text-white">{tt("hafizlikSkor").replace(/\{d\}/g, String(puan.dogru)).replace(/\{y\}/g, String(yanlis)).replace(/\{t\}/g, String(puan.toplam)).replace(/\{p\}/g, String(yuzde))}</p>
                 <p className="mt-1.5 text-[10px] leading-relaxed text-white/70">{tabir.mesaj}</p>
-                {yuzde >= 80 && <p className="mt-1 text-[9px] font-bold text-emerald-300/80">{tt("hafizlikHediyeIpucu")}</p>}
+                {/* ★ 31.10 (kullanıcı: "hani buton yok ki"): ipucu artık ÇALIŞAN buton —
+                    dokun → BugünHediye kutusu doğrudan açılır (nur-hediye-ac olayı).
+                    ana ekranda buton var/yok bilgisi modal'a erişilemez; buton yerine
+                    direkt aksiyon — tüm ekranlarda, her dilde çalışır. */}
+                {yuzde >= 80 && (
+                  <button type="button"
+                    onClick={() => window.dispatchEvent(new CustomEvent("nur-hediye-ac"))}
+                    className="mt-1.5 inline-block rounded-lg bg-emerald-500/15 px-3 py-1.5 text-[9.5px] font-black text-emerald-200 transition hover:bg-emerald-500/25 active:scale-95"
+                  >
+                    🎁 {tt("hafizlikHediyeIpucu")}
+                  </button>
+                )}
                 {yanlislar.length > 0 && <p className="mt-1 text-[9px] text-amber-200/70">{tt("hafizlikUygun")}</p>}
               </div>
 

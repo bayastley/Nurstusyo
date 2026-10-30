@@ -28,6 +28,8 @@ import { HOCA_KARSILASTIRMA_AYETLER } from "../data/hocaData";
 import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
 import { KANAL_REHBERI } from "../data/kanalData";
 import { TECVID_KURALLARI } from "../data/tecvidData";
+// ★ 31.10 PEYGAMBERLER HAYATI: Kur'ân'da adı geçen 25 peygamber — kıssa + olaylar + ders + kaynak
+import { PEYGAMBERLER } from "../data/peygamberler";
 import { SURAHS } from "../data/surahs";
 // ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri)
 import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
@@ -71,7 +73,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const SEKME_KEY: Record<string, string> = {
     hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
-    sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir",
+    sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
   };
   const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
@@ -97,6 +99,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   //   kapalı kartta soru + tek satır cevap özeti, açık kartta mezhep bazlı cevaplar/kaynak
   const [acikSoru, setAcikSoru] = useState<number | null>(null);
   const [acikGenelSoru, setAcikGenelSoru] = useState<number | null>(null);
+  // ★ PEYGAMBER AKORDEONU (31.10): kıssa kartı tıkla-aç — kapalı satır özet, açık kartta olaylar+ ders kaynağı
+  const [acikPeygamber, setAcikPeygamber] = useState<number | null>(null);
   // ★ KELİME YENİLE (01.10): sahih havuzdan her seferinde rastgele 15 keşif kartı — günün 5'i hariç (03.10)
   const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
   // ★ GÜNÜN KELİMELERİ (03.10): deterministik — oturum boyunca sabit, gün değişince yenilenir
@@ -242,6 +246,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       return kelimeler.every((w) => kelimeUyar(metin, w));
     });
   }, [q, lang]);
+  // ★ 31.10 PEYGAMBERLER: ad + arapça ad + özet üzerinden akıllı arama
+  const filtreliPeygamberler = useMemo(() => {
+    if (!q) return PEYGAMBERLER;
+    const ham = q.split(/\s+/).filter(Boolean).map((k) => metniHazirla(k) || arapcaHazirla(k)).filter(Boolean);
+    if (!ham.length) return PEYGAMBERLER;
+    return PEYGAMBERLER.filter((p) =>
+      ham.every((w) => kelimeUyar(metniHazirla(`${p.ad} ${p.ozet} ${p.ders} ${p.kaynak}`), w) || kelimeUyar(arapcaHazirla(p.adAr), w)),
+    );
+  }, [q]);
   // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
   const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
   // ★ 03.10 AKILLI SURE ARAMASI: ad + ARAPÇA AD + numara + konu/açıklama;
@@ -343,6 +356,52 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 19: KISSA KÖŞESİ — SRP adım 9: kesfetSekmeler.tsx ── */}
       {sekme === "kissa" && (
         <KissaBolumu tt={tt} filtreliKissalar={filtreliKissalar} acikKissa={acikKissa} setAcikKissa={setAcikKissa} />
+      )}
+
+      {/* ── 19b: PEYGAMBERLER HAYATI (31.10): Kur'ân'da adı geçen 25 peygamber ── */}
+      {sekme === "peygamber" && (
+        <div className="space-y-2">
+          <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktPeygamberMetin")}</p>
+          {filtreliPeygamberler.map((p, i) => (
+            <div key={p.ad} className="overflow-hidden rounded-xl border border-white/10 bg-white/[.03]">
+              {/* kapalı satır: ad + arapça yazım + kısa özet; tıkla-aç akordeon */}
+              <button
+                type="button"
+                onClick={() => setAcikPeygamber(acikPeygamber === i ? null : i)}
+                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-white/[.04]"
+              >
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{i + 1}</span>
+                  <span className="truncate text-[11px] font-black text-white/90">{p.ad}</span>
+                  <span dir="rtl" className="font-arabic text-[13px]" style={{ color: "var(--accent-2)" }}>{p.adAr}</span>
+                  {!q && <span className="hidden truncate text-[9px] text-white/40 sm:inline">{p.ozet}</span>}
+                </span>
+                <ChevronDown size={12} className={`shrink-0 text-white/40 transition ${acikPeygamber === i ? "rotate-180" : ""}`} />
+              </button>
+              {acikPeygamber === i && (
+                <div className="border-t border-white/10 px-3 pb-3 pt-2">
+                  <p className="text-[9.5px] leading-relaxed text-white/70">{p.ozet}</p>
+                  <p className="mt-2 text-[8.5px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{tt("ktPeyOlaylar")}</p>
+                  <ul className="mt-1 space-y-1">
+                    {p.olaylar.map((o, j) => (
+                      <li key={j} className="flex items-start gap-1.5 text-[9.5px] leading-relaxed text-white/60">
+                        <span className="mt-1 h-1 w-1 shrink-0 rounded-full" style={{ background: "var(--accent-2)" }} />
+                        <span>{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-[8.5px] font-black uppercase tracking-wider" style={{ color: "var(--accent)" }}>{tt("ktPeyDers")}</p>
+                  <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{p.ders}</p>
+                  <p className="mt-2 text-[8.5px] font-bold" style={{ color: "var(--accent)" }}>📖 {tt("ktPeyKaynak")}: {p.kaynak}</p>
+                </div>
+              )}
+            </div>
+          ))}
+          {filtreliPeygamberler.length === 0 && (
+            <p className="rounded-xl bg-white/[.03] px-3 py-3 text-center text-[9.5px] text-white/45">{tt("ksAraBos")}</p>
+          )}
+          <p className="pt-1 text-center text-[8px] text-white/25">{tt("ktPeyFooter")}</p>
+        </div>
       )}
 
       {/* ── 20: SORU-CEVAP — SRP adım 9: kesfetSekmeler.tsx ── */}

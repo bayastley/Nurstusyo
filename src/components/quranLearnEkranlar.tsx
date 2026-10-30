@@ -506,7 +506,11 @@ export function DinleModu(p: DinleProps) {
                     const locked = lock === "maintenance" || lock === "off" || lock === "v2" || lock === "v3";
                     const lockLabel = lock === "maintenance" || lock === "off" ? p.ttQL("kilitBakimda") : locked ? p.ttQL("kilitGuncelleme") : "";
                     return (
-                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; p.setListenReciter(r.id); p.besmeleCalindiRef.current = 0; p.stopListening(); }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : p.reciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? p.ttQL("kilitKariUyari") : undefined}>
+                    // ★ 31.10 HOCA CANLI GEÇİŞ (kullanıcı: "hoca değişince hemen geçsin"):
+                    //   stopListening KALDIRILDI — çalarken hoca değişince aynı ayet
+                    //   yeni hocayla kesintisiz devam eder (useQuranSes'deki geçiş efekti).
+                    //   Çalmıyorken yalnız hoca değişir; ▶ yeni hoca ile başlar.
+                    <button key={r.id} disabled={locked} onClick={() => { if (locked) return; p.setListenReciter(r.id); p.besmeleCalindiRef.current = 0; }} className={`flex w-full items-center justify-between gap-2 border-b border-white/5 px-3 py-2 text-left text-[11px] transition last:border-0 ${locked ? "cursor-not-allowed opacity-45" : p.reciter === r.id ? "bg-gold/15 text-gold hover:bg-white/[.05]" : "text-[#b8b093] hover:bg-white/[.05]"}`} title={locked ? p.ttQL("kilitKariUyari") : undefined}>
                       <span className="truncate font-semibold">{r.name}{locked && <span className="ml-1.5 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/70">{lockLabel}</span>}</span>
                       {p.reciter === r.id && !locked && <span className="text-[9px] font-black">✓ {p.ttQL("kilitSecili")}</span>}
                     </button>

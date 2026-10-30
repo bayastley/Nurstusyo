@@ -18,6 +18,8 @@ import { SURE_ARAPCA } from "../data/sureArapca";
 // ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): sure bilgi kartlarında ad seçili dile döner
 import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { kelimeOku, bilinenKelimeIsaretle } from "./kesfetTemel";
+// ★ 31.10 ESMAÜ'L-HÜSNÂ (kullanıcı emri): 99 isim — Tirmizî listesi, âyet/hadis kaynaklı
+import { ESMA_HUSNA, ESMA_KAYNAK_NOTU, type Esma } from "../data/esmaHusna";
 
 // ── KELİME KARTI — KesfetModal'dan taşındı (birebir) ──────────
 // Kelime kartı — günün kelimelerinde altın çerçeve; keşif kartlarında varsayılan kenar
@@ -354,6 +356,49 @@ export function KelimeBolumu({
         ))}
       </div>
       <p className="mt-3 text-center text-[8px] text-white/25">{tt("ksHavuzNot").replace("{toplam}", String(KELIME_KARTLARI.length)).replace("{bugun}", String(gununKelimeleri.length)).replace("{kesif}", String(kelimeKartlari.length))}</p>
+      {/* ★ 31.10 (kullanıcı emri): Esmaü'l-Hüsnâ bölümü — Kelime Kartları sekmesinin sonunda */}
+      <EsmaBolumu dil={lang} />
+    </>
+  );
+}
+
+// ── 21b: ESMAÜ'L-HÜSNÂ (31.10, kullanıcı emri: "sahih gerçek olsun — anlam ve kaynak") ──
+// ✨ başlığı altında Horde; isim olarak Kur'ân'da geçmeyenler "Hadis" işaretlidir.
+function EsmaKarti({ e, cevrildi, cevir }: { e: Esma; cevrildi: boolean; cevir: () => void }) {
+  return (
+    <button type="button" aria-expanded={cevrildi} onClick={cevir}
+      className={`flex h-20 w-full flex-col items-center justify-center rounded-xl border p-1.5 text-center transition ${cevrildi ? "border-[color:var(--accent)] bg-amber-500/10" : "border-white/10 bg-white/[.03] hover:border-white/25"}`}>
+      {cevrildi ? (
+        <>
+          <p className="text-[9.5px] font-black leading-tight text-amber-200">{e.tr}</p>
+          <p className="mt-0.5 px-1 text-[8.5px] leading-tight text-white/60 line-clamp-2">{e.anlam}</p>
+          <p className="mt-0.5 px-1 text-[7.5px] leading-tight text-emerald-300/80 line-clamp-2">📚 {e.kaynak}</p>
+        </>
+      ) : (
+        <>
+          <p dir="rtl" className="font-arabic text-base leading-tight text-white/90">{e.ar}</p>
+          <p className="mt-1 text-[8px] font-bold text-white/45">{e.tr}</p>
+        </>
+      )}
+    </button>
+  );
+}
+
+export function EsmaBolumu({ dil = "tr" }: { dil?: string }) {
+  const [cevrilmis, setCevrilmis] = React.useState<string | null>(null);
+  const ktt = (key: string): string => translate(dil, key);
+  return (
+    <>
+      <div className="mb-2 mt-5 flex flex-wrap items-center justify-center gap-2">
+        <span className="rounded-lg px-2 py-0.5 text-[8px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{ktt("ksfEsmaBaslik")}</span>
+        <p className="text-[9px] text-white/40">{ktt("ksfEsmaAlt")}</p>
+      </div>
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        {ESMA_HUSNA.map((e) => (
+          <EsmaKarti key={e.tr} e={e} cevrildi={cevrilmis === e.tr} cevir={() => setCevrilmis(cevrilmis === e.tr ? null : e.tr)} />
+        ))}
+      </div>
+      <p className="mt-3 text-center text-[8px] text-white/25">{ktt("ksfEsmaNot")} · {ESMA_KAYNAK_NOTU}</p>
     </>
   );
 }

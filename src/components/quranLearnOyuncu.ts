@@ -222,6 +222,23 @@ export function useQuranOyuncu(p: QklOyuncuParam) {
 
   const replayAyah = () => playAyahAudio();
 
+  // ★ 31.10 HOCA CANLI GEÇİŞ (öğren modu, kullanıcı: "hoca değişince hemen geçsin —
+  //   dondurup tekrar başlatmak zorunda kalıyorum"): akış/oto-oku çalarken hoca
+  //   değişirse AYNI ayet yeni hocanın sesiyle hemen yeniden başlar.
+  //   • Ayet sesi gerçekten çalıyorsa devreye girer; durmuş/kelime sesinde dokunulmaz.
+  //   • playAyahAudio hem src'i YENİ hocayla kurar hem akış (flow/autoRead) onended'ini
+  //     taze kurar → sure akışı kesintisiz yeni hocayla sürer.
+  const hocaOncekiRef = useRef(reciter);
+  useEffect(() => {
+    if (hocaOncekiRef.current === reciter) return;
+    hocaOncekiRef.current = reciter;
+    if (!open || mode !== "learn") return;
+    const a = audioRef.current;
+    if (!a || a.paused || a.ended) return;
+    if (audioModeRef.current !== "ayah") return; // kelime kelime seslerine karışmaz
+    playAyahAudio();
+  }, [reciter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ★ AYET/SURE DEĞİŞİNCE: eski sesi HEMEN kes, ekranla ses aynı ayete gelsin
   //   (otomatik oku modundaysa aşağıdaki efekt yeni ayeti zaten başlatacak)
   useEffect(() => {

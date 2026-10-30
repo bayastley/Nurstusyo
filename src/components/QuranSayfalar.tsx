@@ -330,7 +330,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           onDoubleClick={() => setZoom((z) => (z >= 1.9 ? 1 : 2))}
           onMouseEnter={() => setOkGorunur(true)}
           onMouseLeave={() => setOkGorunur(false)}
-          className="absolute inset-0 overflow-auto bg-[#b8912a] p-3 scrollbar-thin"
+          className="absolute inset-0 overflow-auto bg-[#1b150c] p-3 scrollbar-thin"
           title={ttX2610("qsZoomTitle")}
         >
           <div className="flex min-h-full min-w-full items-center justify-center">

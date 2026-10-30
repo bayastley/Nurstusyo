@@ -102,6 +102,19 @@ export const BugunHediye: React.FC<BugunHediyeProps> = ({ notify, onHakDegisti, 
     setAlindi(hediye);
   }, [hediye, notify, lang]);
 
+  // ★ 31.10 (kullanıcı: "hani buton yok ki"): hafizlık testi özetindeki ipucu artık
+  //   ÇALIŞAN buton — 'nur-hediye-ac' olayını burada yakalayıp hediye kutusunu açar.
+  //   Kural: bugün alındıysa "yarın gel" mesajı; girişsizse üye oku; yoksa hiç değil.
+  useEffect(() => {
+    const hediyeAc = () => {
+      if (hediye && userEmail) setAcik(true);
+      else if (!hediye) notify(ttH("bhYarin"));
+      else notify(ttH("bhGirisGerekli"));
+    };
+    window.addEventListener("nur-hediye-ac", hediyeAc);
+    return () => window.removeEventListener("nur-hediye-ac", hediyeAc);
+  }, [hediye, userEmail, notify, lang]);
+
   if (!hediye || !userEmail || (!acik && (() => { try { return localStorage.getItem(HEDIYE_GUN_KEY) === bugunStr(); } catch { return false; } })()) && !alindi) {
     // Bugün alındıysa (onay ekranı kapalıysa) veya kullanıcı girişsizse hiçbir şey gösterme
     return null;
