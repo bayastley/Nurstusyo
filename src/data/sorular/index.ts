@@ -11,6 +11,8 @@ import { BLOK5_ORUC_ZEKAT } from "./blok5-oruc-zekat";
 import { BLOK6_HAC_UMRE } from "./blok6-hac-umre";
 import { BLOK7_AILE_MIRAS } from "./blok7-aile-miras";
 import { BLOK8_GUNDLUK_HAYAT } from "./blok8-gunluk-hayat";
+import { BLOK9_TESETTUR_EDEP } from "./blok9-tesettur-edep";
+import { BLOK10_MELEKLER_KADER } from "./blok10-melekler-kader";
 
 export type { SoruKart } from "./tip";
 export { soruGorunum } from "./tip";
@@ -25,4 +27,6 @@ export const SORU_BANKASI: SoruKart[] = [
   ...BLOK6_HAC_UMRE,
   ...BLOK7_AILE_MIRAS,
   ...BLOK8_GUNDLUK_HAYAT,
+  ...BLOK9_TESETTUR_EDEP,
+  ...BLOK10_MELEKLER_KADER,
 ];
