@@ -6,6 +6,19 @@
 // derece: "sahih" = Buhari/Müslim (şartsız sahih), "hasan" = kabul edilir,
 //         "zayif" = kullanılabilir ama derecesi zayıf — ETİKETİYLE gösterilir (dürüstlük ilkesi)
 export interface HadisKaydi { tema: string; metin: string; kaynak: string; derece?: "sahih" | "hasan" | "zayif" }
+// ★ 31.10 5-DİL GÖRÜNÜM (Kullanıcı emri): hadisGenis.ts'teki çokdil kayıtlar
+//   dile göre birleştirilir; çevirisi olmayan eski kayıtlar TR fallback kalır.
+import { HADIS_GENIS } from "./hadisGenis";
+import type { Lang } from "../i18n/base";
+
+const _LANG_IDX: Record<string, 0 | 1 | 2 | 3 | 4> = { tr: 0, en: 1, ar: 2, id: 3, ur: 4 };
+export const hadisBankasiGorunum = (lang?: Lang | string | null): HadisKaydi[] => {
+  const idx = _LANG_IDX[String(lang ?? "tr").toLowerCase()] ?? 0;
+  const ekstra: HadisKaydi[] = HADIS_GENIS.map((g) => ({ tema: g.t, metin: g.m[idx] ?? g.m[0], kaynak: g.k, derece: g.d }));
+  // Çeviri boş gelirse TR metne düş (dürüst gösterim)
+  const duzelt = ekstra.map((h, i) => (!h.metin ? { ...h, metin: HADIS_GENIS[i].m[0] } : h));
+  return [...HADIS_BANKASI, ...duzelt];
+};
 export const HADIS_BANKASI: HadisKaydi[] = [
   // Sabır
   { tema: "sabir", metin: "Mümine işlerin hepsi hayırdır; bu yalnız mümine mahsustur. İsabete şükreder, musibete sabreder; ikisinde de hayır onundur.", kaynak: "Müslim, Zikir, 64", derece: "sahih" },

@@ -11,7 +11,7 @@ import React, { useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
-import { HADIS_BANKASI, HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
+import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, hadisBankasiGorunum } from "../data/hadisData";
 import { KISSA_LISTESI } from "../data/kissaData";
 import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
 import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
@@ -212,8 +212,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   }, [hocaOzelAday]);
   const hocaAktifAyet = hocaAyet === -1 && hocaOzel ? hocaOzel : HOCA_KARSILASTIRMA_AYETLER[hocaAyet] ?? null;
 
+  // ★ 31.10 5-DİL: banka dile göre derlenmesin (hadisGenis çevirileri de karışır); arama çevirisiz metin üzerinden
+  const hadisBanka = React.useMemo(() => hadisBankasiGorunum(lang), [lang]);
   const filtreliHadisler = useMemo(
-    () => HADIS_BANKASI.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
+    () => hadisBanka.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
     [hadisTema, q],
   );
   // ★ KÜLLİYAT ARAMASI (28.09): yerel bankada sonuç yoksa Buhârî+Müslim külliyatı
