@@ -81,6 +81,14 @@ export function atolyeKelimeOner(d: KelimeKart): string {
   return d.tr.split(/[,(]/)[0].trim() || d.tr;
 }
 
+// ★ RENK KODU YARDIMCISI (01.11, kullanıcı emri): derece rozetleri her yerde
+//   aynı renktedir — sahih=yeşil, hasan=mavi, zayıf=amber.
+const dereceSinif = (d?: string): string =>
+  d === "sahih" ? "bg-emerald-500/20 text-emerald-300" :
+  d === "hasan" ? "bg-sky-500/20 text-sky-300" :
+  d === "zayif" ? "bg-amber-500/20 text-amber-300" :
+  "bg-white/[.06] text-white/50";
+
 // ── 18: HADİS BANKASI ────────────────────────────────────────
 export function HadisBolumu({
   tt, hadisTema, setHadisTema, hadisTemaAdi, filtreliHadisler,
@@ -97,6 +105,15 @@ export function HadisBolumu({
 }) {
   return (
     <>
+      {/* ★ RENK LEJANDI (01.11, kullanıcı emri): rozetlerin anlamı üstte daima görünsün — 5 dilde. */}
+      <div className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded-lg border border-white/10 bg-white/[.02] px-2 py-1.5">
+        <span className="text-[8.5px] font-bold uppercase tracking-wide text-white/40">{tt("ksDereceLejand")}</span>
+        {(["sahih", "hasan", "zayif"] as const).map((d) => (
+          <span key={d} title={HADIS_DERECE_ETIKETI[d]?.aciklama} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(d)}`}>
+            {dereceAdi(d)}
+          </span>
+        ))}
+      </div>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {HADIS_TEMALARI.map((t) => (
           <button key={t.id} type="button" onClick={() => setHadisTema(t.id)}
@@ -114,15 +131,13 @@ export function HadisBolumu({
             <p className="text-[11px] leading-relaxed text-white/85">"{h.metin}"</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <p className="text-[9px] font-bold" style={{ color: "var(--accent)" }}>— {h.kaynak}</p>
-              {dr && (
-                <span
-                  title={dr.aciklama}
-                  className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${
-                    h.derece === "sahih" ? "bg-emerald-500/20 text-emerald-300" :
-                    h.derece === "hasan" ? "bg-sky-500/20 text-sky-300" :
-                    "bg-amber-500/20 text-amber-300"}`}
-                >
+              {dr ? (
+                <span title={dr.aciklama} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>
                   {dereceAdi(h.derece)}
+                </span>
+              ) : (
+                <span title={tt("ksDereceKaynak")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/50">
+                  {tt("ksDereceKaynak")}
                 </span>
               )}
             </div>
@@ -148,7 +163,7 @@ export function HadisBolumu({
               <p className={`text-[10.5px] leading-relaxed ${h.dil === "ar" ? "text-right font-arabic text-[13px]" : "text-white/80"}`} dir={h.dil === "ar" ? "rtl" : undefined}>
                 {h.metin}
               </p>
-              <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[8px] font-black text-emerald-300">                      {dereceAdi(h.derece) || ""}
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>                      {dereceAdi(h.derece) || ""}
               </span>
             </div>
             <p className="mt-1.5 text-[8.5px] text-white/40">— {h.kaynak}</p>
