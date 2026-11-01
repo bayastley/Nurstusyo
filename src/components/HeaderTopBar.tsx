@@ -73,6 +73,27 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const [updatesOpen, setUpdatesOpen] = React.useState(false);
   const [toolsOpen, setToolsOpen] = React.useState(false);
   const [kibleAcik, setKibleAcik] = React.useState(false);
+  // ★ 01.11 ŞERİT SÜRÜKLEME (kullanıcı emri: "sürüklensin, logo hariç"): pill şeridi
+  //   fareyle sürüklenince yatay kayar (dokunmatikte kaydırma zaten native). Sürükleme
+  //   sonrası yanlış buton tıklanmasın diye 5px eşiği aşılınca tık yakalanıp yutulur.
+  const serumRef = React.useRef<HTMLDivElement>(null);
+  const serumDurum = React.useRef({ basili: false, basX: 0, baslangic: 0, suruklendi: false });
+  const serumPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
+    const d = serumDurum.current;
+    d.basili = true; d.basX = e.clientX; d.baslangic = serumRef.current?.scrollLeft ?? 0; d.suruklendi = false;
+  };
+  const serumPointerMove = (e: React.PointerEvent) => {
+    const d = serumDurum.current;
+    if (!d.basili) return;
+    const dx = e.clientX - d.basX;
+    if (Math.abs(dx) > 5) d.suruklendi = true;
+    if (serumRef.current) serumRef.current.scrollLeft = d.baslangic - dx;
+  };
+  const serumPointerUp = () => { serumDurum.current.basili = false; };
+  const serumClickYakala = (e: React.MouseEvent) => {
+    if (serumDurum.current.suruklendi) { e.stopPropagation(); e.preventDefault(); serumDurum.current.suruklendi = false; }
+  };
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
   //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
   React.useEffect(() => {
@@ -562,7 +583,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           {/* ★ overflow-hidden YOK (02.10 fix): dil dropdown'u bu konteynerin ALTINA
               taşar; overflow-hidden onu klipleyip "buton açıyor ama menü görünmüyor"
               yapışıyordu. Taşma riski yok — pill'ler zaten sm:flex/hidden ile kısalıyor. */}
-          <div className="ml-auto flex min-w-0 items-center gap-2 max-md:overflow-x-auto max-md:overflow-y-clip max-md:no-scrollbar max-md:[&>*]:shrink-0">
+          <div ref={serumRef} onPointerDown={serumPointerDown} onPointerMove={serumPointerMove} onPointerUp={serumPointerUp} onPointerLeave={serumPointerUp} onClickCapture={serumClickYakala} className="ml-auto flex min-w-0 cursor-grab items-center gap-2 active:cursor-grabbing max-md:overflow-x-auto max-md:overflow-y-clip max-md:no-scrollbar max-md:[&>*]:shrink-0">
             {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
                 kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
                 admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
@@ -645,7 +666,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 değil ayrıydı; şimdi Kâbe + İçindekiler komşu.) */}
             {/* ★ KÂBE CANLI (08.10, kullanıcı emri): üst barda tek tık,
                 kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105 md:flex" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
+            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
               🕋 {t("menuKabeCanli")}
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
@@ -659,14 +680,14 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 "KUR'AN ÖĞRENİYORUM" oldu — display font + altın degrade + yumuşak parıltı.
                 Panele sığmazsa İSLÂMÎ ÖĞRENİYORUM gibi sola doğrı kayar (nur-marquee). */}
             <button data-minitur="kuran-bolumu" onClick={() => setModal("quranLearn")}
-              className="glass-soft hidden max-w-[215px] items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              className="glass-soft flex max-w-[215px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}                              title={t("v2KuranOgrenTitle")}>
               📖 <span ref={kuranMarqueeRef} className="nur-marquee notranslate whitespace-nowrap font-display tracking-[.08em] bg-gradient-to-r from-amber-200 via-[color:var(--accent-2)] to-amber-200 bg-clip-text text-transparent drop-shadow-[0_0_7px_rgba(215,170,82,.45)]">{t("v2KuranOgrenEtiket")}</span>
             </button>
             {/* ★ 30.10 KIBLE (kullanıcı emri): Nur Araçlar'dan çıkarıldı, üst barda
                 KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM ARASINA kendi butonuyla kondu. */}
             <button data-minitur="kible" onClick={() => setKibleAcik(true)}
-              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("itTabQibla")}>
               🧭 {t("itTabQibla")}
@@ -688,7 +709,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 Kur'an ↔ İçindekiler ARASINA kondu; sol menüden kaldırıldı. Etiket panele
                 sığmazsa sola doğru kayar (marquee) — kelime tamamlanır. */}
             <button data-minitur="islami-ogreniyorum" onClick={() => setModal("kesfet")}
-              className="glass-soft hidden max-w-[190px] items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              className="glass-soft flex max-w-[190px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("v2KesfetTitle")}>
               🧭 <span ref={kesfetMarqueeRef} className="nur-marquee whitespace-nowrap">{t("menuKesfet")}</span>
@@ -697,7 +718,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                 ★ 18.10 (kullanıcı emri): Hafızlık Testi butonu Kâbe-İçindekiler arasına kondu.
                 Modal içeriğine TANITIM bölümü eklendi (R2'den video, SiteHakkindaModal'da). */}
             <button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
-              className="glass-soft hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105 md:flex"
+              className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("v2SiteHakkindaTitle")}>
               📑 {t("icindekilerEtiket")}

@@ -486,3 +486,11 @@ body.nur-rtl .uppercase {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+/* Tailwind varyantı (max-md:no-scrollbar) farklı sınıf adı ürettiği için onu da gizliyoruz */
+.max-md\:no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.max-md\:no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
