@@ -476,3 +476,13 @@ body.nur-rtl .tracking-\[\.15em\] *,
 body.nur-rtl .uppercase {
   letter-spacing: normal !important;
 }
+
+/* NO-SCROLLBAR (01.11, kullanıcı emri): kaydırılabilir mobil üst bar buton
+   şeridinde kaydırma çubuğu çizilmesin. HeaderTopBar'da max-md:no-scrollbar ile eşleşir. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
