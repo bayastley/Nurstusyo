@@ -586,7 +586,11 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           {/* ★ overflow-hidden YOK (02.10 fix): dil dropdown'u bu konteynerin ALTINA
               taşar; overflow-hidden onu klipleyip "buton açıyor ama menü görünmüyor"
               yapışıyordu. Taşma riski yok — pill'ler zaten sm:flex/hidden ile kısalıyor. */}
-          <div ref={serumRef} onPointerDown={serumPointerDown} onPointerMove={serumPointerMove} onPointerUp={serumPointerUp} onPointerLeave={serumPointerUp} onClickCapture={serumClickYakala} className="ml-auto flex min-w-0 cursor-grab items-center gap-2 active:cursor-grabbing max-md:overflow-x-auto max-md:overflow-y-clip max-md:no-scrollbar max-md:[&>*]:shrink-0">
+          {/* ★ 02.11 İPUCU SARMALAYICI (kullanıcı emri: "hafif görünür yap ki mobilden
+              farketsin"): şerit olayınca altına 2px'lik uçuk çizgi — butonsuz, kaplamasız
+              hafif kaydırılabilirlik sinyali; masaüstünde gizli. */}
+          <div className="relative ml-auto flex min-w-0 flex-1 flex-col max-md:pb-1">
+            <div ref={serumRef} onPointerDown={serumPointerDown} onPointerMove={serumPointerMove} onPointerUp={serumPointerUp} onPointerLeave={serumPointerUp} onClickCapture={serumClickYakala} className="flex w-full min-w-0 cursor-grab items-center gap-2 active:cursor-grabbing max-md:overflow-x-auto max-md:overflow-y-clip max-md:no-scrollbar max-md:[&>*]:shrink-0">
             {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
                 kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
                 admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
@@ -759,6 +763,8 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               <Moon size={11} />
               <span className="hidden sm:inline">{nextPrayer ? `${vakitAdi(lang, nextPrayer.name)} ${sureceCevir(lang, formatRemaining(nextPrayer.diff))}` : prayerCity}</span>
             </button>
+          </div>
+            <div className="pointer-events-none absolute bottom-0 right-1 h-0.5 w-10 rounded-full bg-white/25 md:hidden" />
           </div>
         </div>
       </header>
