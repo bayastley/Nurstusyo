@@ -566,14 +566,17 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
                büyüyünce gizlenir (masaüstünde giriş modalı zaten hakkı anlatır) */
             <button
               onClick={() => setModal("login")}
-              className="flex items-center gap-1 rounded-full px-2 py-1 text-[9.5px] font-bold sm:hidden"
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[9px] font-bold sm:hidden"
               style={{ background: "rgba(215,170,82,.10)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)", color: "var(--accent-2)" }}
               title={misafirKalanHak !== undefined && misafirKalanHak <= 0 ? t("hbrDenemeBittiTitle") : t("hbrDenemeTitle")}
             >
               <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
                 <Coins size={8} className="text-black" strokeWidth={3} />
               </span>
-              {misafirKalanHak !== undefined && misafirKalanHak <= 0 ? t("hbrUyeOl") : t("hbrDenemeKalan").replace("{n}", String(misafirKalanHak ?? 2))}
+              {/* ★ 01.11 KOMPAKT ROZET (kullanıcı: "şu aşırı büyüyor, ölçünleri görmüyorum"):
+                  tam metin yerine sadece ikon + sayı — "2 trials left" uzun yazısı
+                  mobilde iki satıra bölüp şeridi ezıyordu. Açıklama tooltip'te duruyor. */}
+              {misafirKalanHak !== undefined && misafirKalanHak <= 0 ? t("hbrUyeOl") : String(misafirKalanHak ?? 2)}
             </button>
           )}
 
