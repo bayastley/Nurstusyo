@@ -94,71 +94,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const serumClickYakala = (e: React.MouseEvent) => {
     if (serumDurum.current.suruklendi) { e.stopPropagation(); e.preventDefault(); serumDurum.current.suruklendi = false; }
   };
-  // ★ 03.11 ÜST BAR İNCE KAYDIRMA RAYI (kullanıcı emri "şurayı da yap" — İmsakiye çizgisinin
-  //   kardeşi): pill şeridine yatay ince kaydırma rayı — ◀/▶ mini oklar (basılı tutunca
-  //   akar), ortadaki başparmak sürüklenince şerit istenilezyer dek gider. Masaüstünde
-  //   gizli (md:hidden); şerit taşmıyorsa ray kendisini susturur (görünmez + tık yok).
-  const cubIzRef = React.useRef<HTMLDivElement | null>(null);
-  const cubTacRef = React.useRef<HTMLDivElement | null>(null);
-  const cubZaman = React.useRef<number | null>(null);
-  const cubRafRef = React.useRef<number | null>(null);
-  const cubKaydir = (y: number) => { const el = serumRef.current; if (!el) return; el.scrollBy({ left: y, behavior: "auto" }); };
-  const cubDur = () => { if (cubZaman.current !== null) { window.clearInterval(cubZaman.current); cubZaman.current = null; } };
-  const cubBasla = (y: number) => { cubDur(); cubKaydir(y); cubZaman.current = window.setInterval(() => cubKaydir(y), 200); };
-  const cubYurut = React.useCallback(() => {
-    const el = serumRef.current; const iz = cubIzRef.current; const tac = cubTacRef.current;
-    if (!el || !iz || !tac) return;
-    const azami = el.scrollWidth - el.clientWidth;
-    const izGen = iz.clientWidth;
-    if (izGen < 4) return;
-    const tacGen = Math.max(30, (el.clientWidth / el.scrollWidth) * izGen);
-    const oran = azami > 2 ? Math.min(1, Math.max(0, el.scrollLeft / azami)) : 0;
-    tac.style.width = tacGen.toFixed(1) + "px";
-    tac.style.left = (oran * (izGen - tacGen)).toFixed(1) + "px";
-    const gorunur = azami > 2;
-    tac.style.opacity = gorunur ? "1" : "0";
-    iz.style.pointerEvents = gorunur ? "auto" : "none";
-  }, []);
-  const cubRafYagit = () => {
-    if (cubRafRef.current !== null) return;
-    cubRafRef.current = window.requestAnimationFrame(() => { cubRafRef.current = null; cubYurut(); });
-  };
-  const cubSurukle = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = serumRef.current; const iz = cubIzRef.current;
-    if (!el || !iz) return;
-    if (el.scrollWidth - el.clientWidth < 3) return;
-    e.preventDefault();
-    try { iz.setPointerCapture(e.pointerId); } catch { /* yadırganmaz */ }
-    const izGen = iz.clientWidth;
-    const tacGen = Math.max(30, (el.clientWidth / el.scrollWidth) * izGen);
-    const azami = el.scrollWidth - el.clientWidth;
-    const carpan = azami / Math.max(1, izGen - tacGen);
-    const basX = e.clientX; const basIler = el.scrollLeft;
-    const oynat = (ev: PointerEvent) => {
-      el.scrollLeft = Math.min(azami, Math.max(0, basIler + (ev.clientX - basX) * carpan));
-    };
-    const bitir = () => {
-      iz.removeEventListener("pointermove", oynat);
-      iz.removeEventListener("pointerup", bitir);
-      iz.removeEventListener("pointercancel", bitir);
-    };
-    iz.addEventListener("pointermove", oynat);
-    iz.addEventListener("pointerup", bitir);
-    iz.addEventListener("pointercancel", bitir);
-  };
-  React.useEffect(() => {
-    const el = serumRef.current;
-    const duzenli = window.setInterval(cubYurut, 500);
-    cubYurut();
-    el?.addEventListener("scroll", cubRafYagit, { passive: true });
-    return () => {
-      window.clearInterval(duzenli);
-      if (cubRafRef.current !== null) { window.cancelAnimationFrame(cubRafRef.current); cubRafRef.current = null; }
-      el?.removeEventListener("scroll", cubRafYagit);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  React.useEffect(() => () => cubDur(), []);
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
   //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
   React.useEffect(() => {
@@ -824,32 +759,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
               <Moon size={11} />
               <span className="hidden sm:inline">{nextPrayer ? `${vakitAdi(lang, nextPrayer.name)} ${sureceCevir(lang, formatRemaining(nextPrayer.diff))}` : prayerCity}</span>
             </button>
-          </div>
-          {/* ★ 03.11 ÜST BAR İNCE KAYDIRMA RAYI — pill şeridinin altında, mobil only (md:hidden) */}
-          <div className="pointer-events-none mt-0.5 flex w-full items-center gap-1 px-1 pb-0.5 md:hidden">
-            <button
-              type="button"
-              aria-label={ttX2610("cubBasaKaydir")}
-              onPointerDown={() => cubBasla(-240)}
-              onPointerUp={cubDur}
-              onPointerCancel={cubDur}
-              className="pointer-events-auto flex h-4 w-6 items-center justify-center text-[9px] font-black text-white/60 transition active:text-amber-300"
-            >◀</button>
-            <div
-              ref={cubIzRef}
-              onPointerDown={cubSurukle}
-              className="pointer-events-auto relative h-1.5 min-w-0 flex-1 touch-none overflow-hidden rounded-full bg-white/10"
-            >
-              <div ref={cubTacRef} className="absolute inset-y-0 left-0 rounded-full bg-amber-300/70" />
-            </div>
-            <button
-              type="button"
-              aria-label={ttX2610("cubSonaKaydir")}
-              onPointerDown={() => cubBasla(240)}
-              onPointerUp={cubDur}
-              onPointerCancel={cubDur}
-              className="pointer-events-auto flex h-4 w-6 items-center justify-center text-[9px] font-black text-white/60 transition active:text-amber-300"
-            >▶</button>
           </div>
         </div>
       </header>
