@@ -169,9 +169,10 @@ export const KARILER = [
 export const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
 
-export type SekmeId = "hadis" | "kissa" | "siyer" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid" | "peygamber";
+export type SekmeId = "imsakiye" | "hadis" | "kissa" | "siyer" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid" | "peygamber";
 
 export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
+  { id: "imsakiye", label: "Ramazan İmsakiyesi", emoji: "🌙" },
   { id: "hadis", label: "Hadis Bankası", emoji: "📚" },
   { id: "kissa", label: "Kıssa Köşesi", emoji: "🕌" },
   { id: "siyer", label: "Siyer-i Nebi", emoji: "🕋" },

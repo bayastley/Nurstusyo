@@ -42,6 +42,7 @@ import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
 import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
+import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
 
 // ★ AKILLI SURE ARAMASI — yardımcılar kesfetArama.ts'e taşındı (09.10 parçalama); import en üstte
@@ -74,7 +75,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: sekme/hadis teması/derece adları 5 dilde — TR veri anahtarları sabit kalır
   const SEKME_KEY: Record<string, string> = {
-    hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
+    imsakiye: "ksTabImsakiye", hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
     sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
@@ -90,7 +91,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const DERECE_KEY: Record<string, string> = { sahih: "ksDereceSahih", hasan: "ksDereceHasan", zayif: "ksDereceZayif", kulliyat: "ksDereceKulliyat" };
   const dereceAdi = (d?: string): string => (d && DERECE_KEY[d] ? tt(DERECE_KEY[d]) : (d && HADIS_DERECE_ETIKETI[d]?.label) || "");
 
-  const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
+  // ★ 01.11 RAMAZAN İMSAKİYESİ (kullanıcı emri): İslami Öğreniyorum açılışında ilk sekme
+  const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "imsakiye");
   const [arama, setArama] = useState("");
   const [hadisTema, setHadisTema] = useState("tumu");
   const [kartCevrildi, setKartCevrildi] = useState<string | null>(null); // ★ 03.10: index yerine kelime anahtarı — sıralama değişse de çevrilen kart kaymaz
@@ -358,6 +360,11 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
             </div>
           )}
+
+      {/* ── 112: RAMAZAN İMSAKİYESİ (01.11) — kesfetImsakiye.tsx: en üst sekme ── */}
+      {sekme === "imsakiye" && (
+        <KesfetImsakiye tt={tt} lang={String(lang)} />
+      )}
 
       {/* ── 18: HADİS BANKASI — SRP adım 9 (09.10 2. tur): kesfetSekmeler.tsx ── */}
       {sekme === "hadis" && (
