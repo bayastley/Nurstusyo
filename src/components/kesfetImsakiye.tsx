@@ -89,8 +89,35 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
   const secilenHadis = secilenGun ? gununHadisi(secilenGun.tarih) : null;
   const locale = LOCALE[lang] || "tr-TR";
 
+  // Mobil kaydırma kumandası (02.11, kullanıcı emri: "imsakiyeye değil ana ekrana kaydırma"):
+  // ▲/▼ modalin ANA ekran kaydırmasını yürütür — hedef = en yakın overflow-y:auto atası
+  // (modal kök div). Basılı tutunca sürekli kayar.
+  const kokRef = React.useRef<HTMLDivElement | null>(null);
+  const kaydirZaman = React.useRef<number | null>(null);
+  const kaydirAta = (): HTMLElement | null => {
+    let el = (kokRef.current?.parentElement ?? null) as HTMLElement | null;
+    while (el && el !== document.body) {
+      const st = getComputedStyle(el);
+      if ((st.overflowY === "auto" || st.overflowY === "scroll") && el.scrollHeight > el.clientHeight + 2) return el;
+      el = el.parentElement;
+    }
+    return null;
+  };
+  const kaydir = (y: number, duzgun: boolean) => {
+    const el = kaydirAta(); if (!el) return;
+    el.scrollBy({ top: y, behavior: duzgun ? "smooth" : "auto" });
+  };
+  const kaydirDur = () => {
+    if (kaydirZaman.current !== null) { window.clearInterval(kaydirZaman.current); kaydirZaman.current = null; }
+  };
+  const kaydirBasla = (y: number) => {
+    kaydirDur(); kaydir(y, true);
+    kaydirZaman.current = window.setInterval(() => kaydir(y, false), 200);
+  };
+  React.useEffect(() => () => kaydirDur(), []);
+
   return (
-    <div className="space-y-3">
+    <div ref={kokRef} className="space-y-3">
       {/* ── ÜST AÇIKLAMA ── */}
       <p className="text-center text-[9px] text-white/40">{tt("ksImsMetin")}</p>
 
@@ -165,6 +192,27 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
           </table>
         </div>
       )}
+      {/* ── ANA EKRAN (modal) KAYDIRMA KUMANDASI — dibe yapışan ▲/▼, mobile only ── */}
+      <div className="pointer-events-none sticky bottom-2 z-30 -mt-1 flex justify-end gap-1.5 pr-1 md:hidden">
+        <button
+          type="button"
+          aria-label={tt("ksImsYukari")}
+          onPointerDown={() => kaydirBasla(-240)}
+          onPointerUp={kaydirDur}
+          onPointerLeave={kaydirDur}
+          onPointerCancel={kaydirDur}
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/75 text-[13px] font-black text-white/85 shadow-lg ring-1 ring-white/15 backdrop-blur-sm transition active:bg-amber-400/30"
+        >▲</button>
+        <button
+          type="button"
+          aria-label={tt("ksImsAsagi")}
+          onPointerDown={() => kaydirBasla(240)}
+          onPointerUp={kaydirDur}
+          onPointerLeave={kaydirDur}
+          onPointerCancel={kaydirDur}
+          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/75 text-[13px] font-black text-white/85 shadow-lg ring-1 ring-white/15 backdrop-blur-sm transition active:bg-amber-400/30"
+        >▼</button>
+      </div>
     </div>
   );
 };
