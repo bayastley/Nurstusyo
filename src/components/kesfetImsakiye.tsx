@@ -90,8 +90,7 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
   const locale = LOCALE[lang] || "tr-TR";
 
   // Mobil kaydırma kumandası (02.11, kullanıcı emri: "imsakiyeye değil ana ekrana kaydırma"):
-  // ▲/▼ modalin ANA ekran kaydırmasını yürütür — hedef = en yakın overflow-y:auto atası
-  // (modal kök div). Basılı tutunca sürekli kayar.
+  // hedef = en yakın overflow-y:auto atası (modal kök div) — tarifte ana ekran kaydırılır.
   const kokRef = React.useRef<HTMLDivElement | null>(null);
   const kaydirZaman = React.useRef<number | null>(null);
   const kaydirAta = (): HTMLElement | null => {
@@ -111,10 +110,70 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
     if (kaydirZaman.current !== null) { window.clearInterval(kaydirZaman.current); kaydirZaman.current = null; }
   };
   const kaydirBasla = (y: number) => {
-    kaydirDur(); kaydir(y, true);
+    kaydirDur(); kaydir(y, false);
     kaydirZaman.current = window.setInterval(() => kaydir(y, false), 200);
   };
   React.useEffect(() => () => kaydirDur(), []);
+
+  // İNCE KAYDIRMA RAYI (03.11, kullanıcı emri: "tam ekranda gözükmesin, mobilden girince
+  // ince bir çizgi gözüksün"): sağ kenarda ince dikey çizgi; başparmağı sürükleyince ana
+  // ekran istenilen yere dek gider, ▲/▼ minik başlıklar basılı-tutunca-akarı korur.
+  const rayIzRef = React.useRef<HTMLDivElement | null>(null);
+  const rayTaciRef = React.useRef<HTMLDivElement | null>(null);
+  const rayRafRef = React.useRef<number | null>(null);
+  const rayYurut = React.useCallback(() => {
+    const el = kaydirAta(); const iz = rayIzRef.current; const tac = rayTaciRef.current;
+    if (!el || !iz || !tac) return;
+    const azami = el.scrollHeight - el.clientHeight;
+    const izYuk = iz.clientHeight;
+    if (izYuk < 4) return;
+    const tacYuk = Math.max(30, (el.clientHeight / el.scrollHeight) * izYuk);
+    const oran = azami > 2 ? Math.min(1, Math.max(0, el.scrollTop / azami)) : 0;
+    tac.style.height = tacYuk.toFixed(1) + "px";
+    tac.style.top = (oran * (izYuk - tacYuk)).toFixed(1) + "px";
+    const gorunur = azami > 2;
+    tac.style.opacity = gorunur ? "1" : "0";
+    iz.style.pointerEvents = gorunur ? "auto" : "none";
+  }, []);
+  const rayRafYagit = () => {
+    if (rayRafRef.current !== null) return;
+    rayRafRef.current = window.requestAnimationFrame(() => { rayRafRef.current = null; rayYurut(); });
+  };
+  const raySurukle = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = kaydirAta(); const iz = rayIzRef.current;
+    if (!el || !iz) return;
+    if (el.scrollHeight - el.clientHeight < 3) return;
+    e.preventDefault();
+    try { iz.setPointerCapture(e.pointerId); } catch { /* yadırganmaz */ }
+    const izYuk = iz.clientHeight;
+    const tacYuk = Math.max(30, (el.clientHeight / el.scrollHeight) * izYuk);
+    const azami = el.scrollHeight - el.clientHeight;
+    const carpan = azami / Math.max(1, izYuk - tacYuk);
+    const basY = e.clientY; const basIler = el.scrollTop;
+    const oynat = (ev: PointerEvent) => {
+      el.scrollTop = Math.min(azami, Math.max(0, basIler + (ev.clientY - basY) * carpan));
+    };
+    const bitir = () => {
+      iz.removeEventListener("pointermove", oynat);
+      iz.removeEventListener("pointerup", bitir);
+      iz.removeEventListener("pointercancel", bitir);
+    };
+    iz.addEventListener("pointermove", oynat);
+    iz.addEventListener("pointerup", bitir);
+    iz.addEventListener("pointercancel", bitir);
+  };
+  React.useEffect(() => {
+    const el = kaydirAta();
+    const duzenli = window.setInterval(rayYurut, 500);
+    rayYurut();
+    el?.addEventListener("scroll", rayRafYagit, { passive: true });
+    return () => {
+      window.clearInterval(duzenli);
+      if (rayRafRef.current !== null) { window.cancelAnimationFrame(rayRafRef.current); rayRafRef.current = null; }
+      el?.removeEventListener("scroll", rayRafYagit);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div ref={kokRef} className="space-y-3">
@@ -192,26 +251,33 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
           </table>
         </div>
       )}
-      {/* ── ANA EKRAN (modal) KAYDIRMA KUMANDASI — dibe yapışan ▲/▼, mobile only ── */}
-      <div className="pointer-events-none sticky bottom-2 z-30 -mt-1 flex justify-end gap-1.5 pr-1 md:hidden">
-        <button
-          type="button"
-          aria-label={tt("ksImsYukari")}
-          onPointerDown={() => kaydirBasla(-240)}
-          onPointerUp={kaydirDur}
-          onPointerLeave={kaydirDur}
-          onPointerCancel={kaydirDur}
-          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/75 text-[13px] font-black text-white/85 shadow-lg ring-1 ring-white/15 backdrop-blur-sm transition active:bg-amber-400/30"
-        >▲</button>
-        <button
-          type="button"
-          aria-label={tt("ksImsAsagi")}
-          onPointerDown={() => kaydirBasla(240)}
-          onPointerUp={kaydirDur}
-          onPointerLeave={kaydirDur}
-          onPointerCancel={kaydirDur}
-          className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-black/75 text-[13px] font-black text-white/85 shadow-lg ring-1 ring-white/15 backdrop-blur-sm transition active:bg-amber-400/30"
-        >▼</button>
+      {/* ── ANA EKRAN (modal) İNCE KAYDIRMA RAYI — dibe yapışık, sürüklenebilir, mobile only ── */}
+      <div className="pointer-events-none sticky bottom-3 z-30 -mt-1 flex justify-end pr-1 md:hidden">
+        <div className="pointer-events-auto flex h-44 w-5 select-none flex-col items-center rounded-full bg-black/55 px-0.5 py-1 shadow-lg ring-1 ring-white/10 backdrop-blur-sm">
+          <button
+            type="button"
+            aria-label={tt("ksImsYukari")}
+            onPointerDown={() => kaydirBasla(-240)}
+            onPointerUp={kaydirDur}
+            onPointerCancel={kaydirDur}
+            className="flex h-5 w-full items-center justify-center text-[9px] font-black text-white/70 transition active:text-amber-300"
+          >▲</button>
+          <div
+            ref={rayIzRef}
+            onPointerDown={raySurukle}
+            className="relative my-1 w-1.5 flex-1 touch-none overflow-hidden rounded-full bg-white/10"
+          >
+            <div ref={rayTaciRef} className="absolute inset-x-0 top-0 rounded-full bg-amber-300/70" />
+          </div>
+          <button
+            type="button"
+            aria-label={tt("ksImsAsagi")}
+            onPointerDown={() => kaydirBasla(240)}
+            onPointerUp={kaydirDur}
+            onPointerCancel={kaydirDur}
+            className="flex h-5 w-full items-center justify-center text-[9px] font-black text-white/70 transition active:text-amber-300"
+          >▼</button>
+        </div>
       </div>
     </div>
   );
