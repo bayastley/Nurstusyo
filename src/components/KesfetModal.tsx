@@ -12,6 +12,7 @@ import { translate, type Lang } from "../i18n";
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, hadisBankasiGorunum } from "../data/hadisData";
+import { MenkibelerBolumu } from "./kesfetMenkibeler";
 import { KISSA_LISTESI } from "../data/kissaData";
 import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
 import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
@@ -77,7 +78,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const SEKME_KEY: Record<string, string> = {
     imsakiye: "ksTabImsakiye", hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
-    sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
+    menkibeler: "ksMenkibeler", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
   };
   const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
@@ -382,6 +383,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       )}
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
+      {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
+
       {sekme === "siyer" && (
         <div className="space-y-2">
           <p className="mb-1 text-center text-[9px] text-white/40">{tt("knSiyerMetin")}</p>
