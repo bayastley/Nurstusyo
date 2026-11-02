@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import type { DesignSettingsPanelProps } from "./designSettingsTypes";
 import {
-  Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause, Download,
+  Sparkles, Shuffle, FolderUp, Zap, ChevronDown, Clock, Smartphone, Palette, Wand2, Play, Pause,
 } from "lucide-react";
 import { SectionTitle, Segmented } from "./UIElements";
 import { LockBadge, LockedOverlay } from "./LockBadge";
@@ -32,8 +32,6 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   openPremium,
   previewReciterId,
   playReciterPreview,
-  hocaIndir,
-  hocaIndirBusy,
   mode,
   setMode,
   tierAtLeast,
@@ -263,15 +261,6 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                         onClick={(event) => { event.stopPropagation(); if (reciterLocked) openPremium("uyelik"); else playReciterPreview(item.id); }}
                       >
                         {previewReciterId === item.id ? <Pause size={8} /> : <Play size={8} />}
-                      </span>
-                      {/* ★ 21.10 HOCA SESİ VİDEO İNDİRME — seçili ayet + mevcut atmosfer görseliyle MP4 */}
-                      <span
-                        role="button"
-                        title={ttX2610("dspMp4Title")}
-                        className={`rounded-full p-1 shrink-0 transition ${hocaIndirBusy === item.id ? "text-black bg-[color:var(--accent)] animate-pulse" : "bg-white/10 text-white/70 opacity-70 group-hover:opacity-100 group-hover:bg-white/20"}`}
-                        onClick={(event) => { event.stopPropagation(); if (reciterLocked || !hocaIndir || hocaIndirBusy) return; hocaIndir(item.id); }}
-                      >
-                        <Download size={8} />
                       </span>
                     </button>
                   );

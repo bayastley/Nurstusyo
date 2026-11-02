@@ -20,8 +20,6 @@ export interface DesignSettingsPanelProps {
   previewReciterId: string | null;
   playReciterPreview: (id: string) => void;
   /** ★ 21.10 HOCA SESİ VİDEO İNDİRME — kâri kartındaki 📥 düğmesi */
-  hocaIndir: (id: string) => void;
-  hocaIndirBusy: string | null;
   mode: Mode;
   setMode: (m: Mode) => void;
   tierAtLeast: (have: Tier, need: Tier) => boolean;

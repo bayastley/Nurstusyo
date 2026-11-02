@@ -218,7 +218,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   });
   const {
     reassignBackgroundsForKind, useFromLibrary, libraryFiltered, isClipAccessible,
-    randomizeBackgrounds, applySmartBackgrounds, playReciterPreview, hocaIndir, hocaIndirBusy,
+    randomizeBackgrounds, applySmartBackgrounds, playReciterPreview,
     kendiSesSureEkle, addAyah, toggleAyah, addWholeSurah,
   } = stArka;
 
@@ -498,8 +498,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           openPremium={openPremium}
           previewReciterId={previewReciterId}
           playReciterPreview={playReciterPreview}
-          hocaIndir={hocaIndir}
-          hocaIndirBusy={hocaIndirBusy}
           mode={mode}
           setMode={setMode}
           tierAtLeast={tierAtLeast}
