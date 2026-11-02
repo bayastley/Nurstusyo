@@ -17,7 +17,7 @@ import { SURAHS } from "../data/surahs";
 import type { Tier } from "../tier";
 import { BACKGROUNDS, catLabel, akilliBgSec, drawCard, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "./ayetKartMotoru";
 import { RUH_HALLERI, ruhHaliEsle, ruhHaliAd, MOOD_KART_AYARLARI, type RuhHali } from "../data/ruhHalleri";
-import { translate, type Lang } from "../i18n";
+import { translate, MEAL_EDITIONS, type Lang } from "../i18n";
 import { AyetSecimBolumu, KartOnizlemeBolumu, ArkaPlanGalerisi } from "./ayetKartBolumleri";
 // ★ 04.10 TUR 4: kart mealı/kaynağı site diline göre (kullanıcı talebi)
 import { gorunenMeal, gorunenKart, kartKaynagi, mealleriTasi } from "../data/ayetMealCokDil";
@@ -25,7 +25,7 @@ import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başl�
 // ★ 25.10 KÜTÜPHANE KURALI (sahibin emri): sınırsız değil — jetonla 24 saat / 1 hafta,
 //   açıkken günde N indirme; ELİT üyelik boyunca açık. admin/master muaf.
 import { akErisim, akKutuphaneAc, akIndirmeKullan, type AkErisim } from "../studio/ayetKutuphaneKurali";
-import { fetchAyah } from "../studio/studioHelpers";
+import { fetchAyah, fetchSurah, fetchJSON, quranUrl } from "../studio/studioHelpers";
 
 interface AyetKartlariModalProps {
   open: boolean;
@@ -112,6 +112,106 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       notify?.(tt("akTumKuranHata"));
     } finally { setTkYukleniyor(false); }
   }, [tkSure, tkAyet, tkYukleniyor, notify]);
+
+  // 🌐 02.11 TAM KUR'AN LİSTEDE (kullanıcı emri: "600 ayet değil, bütün Kuran olsun"):
+  //   • Sure seçince o surenin TÜM ayetleri listeye dolar (fetchSurah — kayma-korumalı + cache'li).
+  //   • Arama yazınca meal tüm Kur'an'da (6236) taranır (/v1/search — same-origin proxy).
+  //   Küratörlü 611 duygusal filtre gibi çalışmaya devam eder; dynamic sonuçlar dedupe edilir.
+  const [sureTamListe, setSureTamListe] = useState<Record<number, AyetKarti[]>>({});
+  const sureTamRef = useRef<Set<number>>(new Set()); // çift-istek kapısı (state updater'da side-effect yok)
+  const [sureTamYuk, setSureTamYuk] = useState(false);
+  const [wqSonuclar, setWqSonuclar] = useState<AyetKarti[]>([]);
+  const [wqYuk, setWqYuk] = useState(false);
+
+  // Küratörlü kartların "sure-ayet" çift kümesi (merge dedupe)
+  const curatedCift = useMemo(() => {
+    const st = new Set<string>();
+    for (const a of AYET_KARTILARI) {
+      const s = sureNoFromSource(a.source);
+      const m = /•\s*(\d+)/.exec(a.source);
+      if (s && m) st.add(`${s}-${m[1]}`);
+    }
+    return st;
+  }, []);
+
+  const ciftAnahtar = (a: AyetKarti): string => {
+    const s = sureNoFromSource(a.source);
+    const m = /•\s*(\d+)/.exec(a.source);
+    return s && m ? `${s}-${m[1]}` : a.id;
+  };
+
+  /** Sure numarası → o surenin tamamı (Arapça + meal) — sureCache sayesinde tekrar istek yok */
+  const sureTamla = useCallback(async (s: number) => {
+    if (sureTamRef.current.has(s)) return;
+    sureTamRef.current.add(s);
+    setSureTamYuk(true);
+    try {
+      const d = await fetchSurah(s, "tr.yazir");
+      const ad = SURE_ADLARI[s - 1] ?? String(s);
+      const kartlar: AyetKarti[] = d.map((x, i) => ({
+        id: `kuran-${s}-${i + 1}`,
+        mood: "huzur",
+        title: `${ad} ${i + 1}`,
+        ar: x.ar,
+        tr: x.tr,
+        source: `${ad} Suresi • ${i + 1}. Ayet`,
+      }));
+      setSureTamListe((m) => ({ ...m, [s]: kartlar }));
+    } catch {
+      sureTamRef.current.delete(s); // başarısızsa yeniden denenebilir
+      notify?.(tt("akTumKuranHata"));
+    } finally { setSureTamYuk(false); }
+  }, [notify, lang]);
+
+  // Sure filtresi seçilince tam sureyi getir
+  useEffect(() => {
+    if (sureFiltre === "tumu") return;
+    void sureTamla(sureFiltre);
+  }, [sureFiltre, sureTamla]);
+
+  // Arama tüm Kur'an'da: mealleri 6236'dan tara (same-origin proxy → alquran /v1/search)
+  const qSorgu = ayetSearch.trim();
+  useEffect(() => {
+    if (sureFiltre !== "tumu" || qSorgu.length < 2) { setWqSonuclar([]); setWqYuk(false); return; }
+    let canli = true;
+    setWqYuk(true);
+    const z = window.setTimeout(() => {
+      fetchJSON(quranUrl(`v1/search/${encodeURIComponent(qSorgu)}/all/${MEAL_EDITIONS[lang] ?? "tr.yazir"}`))
+        .then(async (json) => {
+          if (!canli) return;
+          const esler = ((json.data?.matches ?? []) as Array<{ surah: { number: number }; numberInSurah: number; text: string }>).slice(0, 40);
+          const ad = (n: number): string => SURE_ADLARI[n - 1] ?? String(n);
+          const ham: AyetKarti[] = esler.map((e) => ({
+            id: `kuran-${e.surah.number}-${e.numberInSurah}`,
+            mood: "huzur" as const,
+            title: `${ad(e.surah.number)} ${e.numberInSurah}`,
+            ar: "",
+            tr: String(e.text ?? ""),
+            source: `${ad(e.surah.number)} Suresi • ${e.numberInSurah}. Ayet`,
+          }));
+          // Arapçaları per-sure cache'ten (fetchSurah) doldur — satırda Quran yazısı görünür
+          const sureler = [...new Set(esler.map((e) => e.surah.number))].slice(0, 8);
+          for (const s of sureler) {
+            try {
+              const d = await fetchSurah(s, "tr.yazir");
+              for (const k of ham) {
+                if (!k.id.startsWith(`kuran-${s}-`)) continue;
+                const no = Number(k.id.split("-")[2]);
+                k.ar = d[no - 1]?.ar ?? "";
+                if (lang === "tr") k.tr = d[no - 1]?.tr || k.tr;
+              }
+            } catch { /* sessiz — ar boş kalır, meal yine görünür */ }
+          }
+          if (canli) setWqSonuclar(ham);
+        })
+        .catch(() => { if (canli) setWqSonuclar([]); })
+        .finally(() => { if (canli) setWqYuk(false); });
+    }, 420);
+    return () => { canli = false; window.clearTimeout(z); };
+  }, [qSorgu, sureFiltre, lang]);
+
+  // Yeni mod/ağ değişince sayfalama başa dönsün
+  useEffect(() => { setAyetVisibleCount(40); }, [sureFiltre, qSorgu]);
   //   Dinamik kurulan ayet: listede olmaz — ayet() lookup dinamikKart'ı önce dener.
   const [dinamikKart, setDinamikKart] = useState<AyetKarti | null>(null);
   const [kendiFoto, setKendiFoto] = useState<HTMLImageElement | null>(null);
@@ -139,20 +239,33 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const filteredAyets = useMemo(() => {
     const q = ayetSearch.trim().toLocaleLowerCase("tr");
     // ★ 06.10 (başlık çok dil): arama çevrilmiş başlık + çevrilmiş meal üzerinden de koşar
-    return AYET_KARTILARI.filter((a) => {
+    const temel = AYET_KARTILARI.filter((a) => {
       if (sadeceGunun && a.id !== gununAyetiObj.id) return false;
       if (mood !== "tumu" && a.mood !== mood) return false;
       if (sureFiltre !== "tumu" && sureNoFromSource(a.source) !== sureFiltre) return false;
       if (!q) return true;
       const gorunen = gorunenKart(a, lang);
-      return (
+    return (
         gorunen.title.toLocaleLowerCase("tr").includes(q) ||
         a.title.toLocaleLowerCase("tr").includes(q) ||
         a.tr.toLocaleLowerCase("tr").includes(q) ||
         a.source.toLocaleLowerCase("tr").includes(q)
       );
     });
-  }, [ayetSearch, mood, sureFiltre, sadeceGunun, gununAyetiObj.id, lang]);
+    // ★ 02.11 TAM KUR'AN MERGE: sure modunda surenin tamamı, arama modunda
+    //   6236'lık tüm-Kur'an sonuçları — küratörlü listeyle cift-dedup eklenir.
+    //   Duygu çipleri küratörlü veriye uygulanır; dynamic satırlar hep görünür.
+    const dinamik = (sureFiltre !== "tumu"
+      ? (sureTamListe[sureFiltre] ?? [])
+      : (q ? wqSonuclar : [])
+    ).filter((a) => {
+      const k = ciftAnahtar(a);
+      if (curatedCift.has(k)) return false; // zaten küratörlü listede
+      if (!q) return true;
+      return a.tr.toLocaleLowerCase("tr").includes(q) || a.title.toLocaleLowerCase("tr").includes(q) || a.ar.includes(q);
+    });
+    return [...temel, ...dinamik];
+  }, [ayetSearch, mood, sureFiltre, sadeceGunun, gununAyetiObj.id, lang, sureTamListe, wqSonuclar, curatedCift]);
 
   const filteredBgs = useMemo(() => {
     const q = bgSearch.trim().toLocaleLowerCase("tr");
@@ -163,7 +276,17 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     });
   }, [bgSearch, bgCat]);
 
-  const ayet = useMemo(() => dinamikKart && ayetId === dinamikKart.id ? dinamikKart : (AYET_KARTILARI.find((a) => a.id === ayetId) ?? AYET_KARTILARI[0]), [ayetId, dinamikKart]);
+  // ★ 02.11: seçim lookup dört katman — dinamik kart → küratörlü → tam sure listeleri → tüm-Kur'an arama
+  const ayet = useMemo(() => {
+    if (dinamikKart && ayetId === dinamikKart.id) return dinamikKart;
+    const kur = AYET_KARTILARI.find((a) => a.id === ayetId);
+    if (kur) return kur;
+    for (const dizi of Object.values(sureTamListe)) {
+      const hit = dizi.find((a) => a.id === ayetId);
+      if (hit) return hit;
+    }
+    return wqSonuclar.find((a) => a.id === ayetId) ?? AYET_KARTILARI[0];
+  }, [ayetId, dinamikKart, sureTamListe, wqSonuclar]);
   // ★ TUR 4: seçili dil TR değilse görünür kartların meallerini seçili dilde getir
   //   (sure-bazlı cache; gelen cevap listeyi mealTick ile tazeler; hata → TR kalır)
   useEffect(() => {
@@ -452,6 +575,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           setTkAyet={setTkAyet}
           tkSureAyetSayisi={tkSureAyetSayisi}
           tkYukleniyor={tkYukleniyor}
+          tamKuranYuk={sureTamYuk || wqYuk}
           tkAktar={tkAktar}
           lang={lang}
           mealCevir={(k) => gorunenMeal(k, lang)}

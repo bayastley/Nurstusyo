@@ -60,8 +60,10 @@ export const AyetSecimBolumu: React.FC<{
   setTkAyet?: (v: number) => void;
   tkSureAyetSayisi?: number;
   tkYukleniyor?: boolean;
+  /** ★ 02.11 TAM KUR'AN: sure tam listesi / tüm-Kur'an arama yükleme göstergesi */
+  tamKuranYuk?: boolean;
   tkAktar?: () => void;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar }) => {
+}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -244,9 +246,13 @@ export const AyetSecimBolumu: React.FC<{
 
           {/* Ayet listesi */}
           <div className="scrollbar-thin max-h-[300px] space-y-1.5 overflow-y-auto pr-1">
+            {tamKuranYuk && (
+              <p className="border border-[color:var(--accent)]/25 rounded-xl bg-white/[.03] py-2 text-center text-[10px] font-bold" style={{ color: "var(--accent-2)" }}>🌐 {tt("akTumKuranYuk")}</p>
+            )}
             {filteredAyets.slice(0, ayetVisibleCount).map((a) => {
               const active = a.id === ayetId;
               const mc = MOOD_COLORS[a.mood];
+              const dyn = /^kuran-(\d+)-(\d+)$/.exec(a.id); // ★ 02.11 dinamik tamamı-Kur'an satırı
               return (
                 <button
                   key={a.id}
@@ -255,9 +261,13 @@ export const AyetSecimBolumu: React.FC<{
                   className={`block w-full rounded-xl border p-3 text-left transition ${active ? "border-[color:var(--accent)] bg-white/[.06] ring-1 ring-[color:var(--accent)]" : "border-white/10 bg-white/[.02] hover:border-white/25 hover:bg-white/[.04]"}`}
                 >
                   <div className="mb-1 flex items-center gap-2">
-                    <span className="rounded-full px-1.5 py-0.5 text-[7.5px] font-black tracking-wide" style={{ background: `${mc}22`, color: mc, border: `1px solid ${mc}44` }}>
-                      {AYET_MOODS.find((m) => m.id === a.mood) ? moodEtiketi(a.mood) : ""}
-                    </span>
+                    {dyn ? (
+                      <span className="rounded-full px-1.5 py-0.5 text-[7.5px] font-black tabular-nums" style={{ background: "rgba(215,170,82,.12)", color: "var(--accent-2)", border: "1px solid rgba(215,170,82,.4)" }}>🌐 {dyn[1]}:{dyn[2]}</span>
+                    ) : (
+                      <span className="rounded-full px-1.5 py-0.5 text-[7.5px] font-black tracking-wide" style={{ background: `${mc}22`, color: mc, border: `1px solid ${mc}44` }}>
+                        {AYET_MOODS.find((m) => m.id === a.mood) ? moodEtiketi(a.mood) : ""}
+                      </span>
+                    )}
                     <span className="text-[10px] font-bold text-white/85">{ayetBasligi(lang, a.title)}</span>
                     <span className="ml-auto text-[8.5px] font-semibold text-white/40">{kaynakGorunum(a)}</span>
                     {active && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent)] text-black"><Check size={10} strokeWidth={3} /></span>}
