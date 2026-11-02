@@ -1,3 +1,4 @@
+import KISLAR from "./menkibeler/liste";
 // ════════════════════════════════════════════════════════
 // MENKIBELER.TS (02.11, kullanıcı emri: "İslami menkıbeler olsun; butona
 // tıklayınca uzunca bir İslami hikâye açılsın; kaynak varsa ver, önemli
@@ -19,6 +20,7 @@ export interface Menkibe {
 }
 
 export const MENKIBELER: Menkibe[] = [
+  ...KISLAR,
   {
     id: "mk-01", kategori: "Ölüm & Kabir", baslik: "Üç Dostun Son Muhasebesi",
     hikaye:
