@@ -7,7 +7,7 @@
 // ════════════════════════════════════════════════════════
 
 import React, { useCallback, useState } from "react";
-import { Brain, Check, X } from "lucide-react";
+import { Brain, Check, X, Volume2 } from "lucide-react";
 import { Modal } from "./UIElements";
 import { translate, type Lang } from "../i18n";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
@@ -20,8 +20,24 @@ export interface KelimeQuiziModalProps {
   notify?: (msg: string) => void;
 }
 
-const TUR_BOYU = 10;
+const TUR_SECENEKLERI = [10, 30, 50] as const;
 const QUIZ_IST_KEY = "nur_kelime_quiz_ist_v1";
+
+/** Kelimeyi sesli oku: Arapça ses modeli varsa Arapça kelimeyi, yoksa latin okunuşu söyler (tarayıcı TTS). */
+const kelimeyiSeslendir = (kart: KelimeKart): void => {
+  try {
+    const syn = window.speechSynthesis;
+    if (!syn) return;
+    syn.cancel();
+    const sese = new SpeechSynthesisUtterance(kart.ar);
+    const sesler = syn.getVoices();
+    const arapca = sesler.filter((v) => (v.lang || "").toLowerCase().startsWith("ar"));
+    if (arapca.length > 0) { sese.voice = arapca[0]; sese.lang = "ar-SA"; }
+    else { sese.text = kart.okunus || kart.ar; sese.lang = "tr-TR"; }
+    sese.rate = 0.8;
+    syn.speak(sese);
+  } catch { /* sessiz geç */ }
+};
 
 interface Soru {
   kart: KelimeKart;
@@ -43,9 +59,9 @@ const karistirKartlar = (dizi: KelimeKart[]): KelimeKart[] => karistirCekirdek(d
 const karistirMetinler = (dizi: string[]): string[] => karistirCekirdek(dizi) as string[];
 
 /** 10 soruluk tur üret: her soruda doğru anlam + 3 çeldirici (aynı listeden) */
-const turUret = (): Soru[] => {
+const turUret = (boyu: number): Soru[] => {
   const havuz = karistirKartlar(KELIME_KARTLARI);
-  const secilen = havuz.slice(0, Math.min(TUR_BOYU, havuz.length));
+  const secilen = havuz.slice(0, Math.min(boyu, havuz.length));
   return secilen.map((kart) => {
     const diger = karistirKartlar(havuz.filter((h) => h.tr !== kart.tr)).slice(0, 3);
     const siklar = karistirMetinler([...diger.map((d) => d.tr), kart.tr]);
@@ -71,15 +87,16 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
   const [yanlislar, setYanlislar] = useState<KelimeKart[]>([]);
   const [asama, setAsama] = useState<"baslangic" | "soru" | "sonuc">("baslangic");
   const [enIyi, setEnIyi] = useState(() => enIyiOku());
+  const [turBoyu, setTurBoyu] = useState<number>(10); // ★ 02.11: kişi kendi tur boyunu seçer (10/30/50)
 
   const turBaslat = useCallback(() => {
-    setSoruPaket(turUret());
+    setSoruPaket(turUret(turBoyu));
     setSoruI(0);
     setSecim(null);
     setSkor({ dogru: 0, toplam: 0 });
     setYanlislar([]);
     setAsama("soru");
-  }, []);
+  }, [turBoyu]); // ★ turBoyu'yı taze oku (kullanıcı tur boyunu değiştirirse geçerli olsun)
 
   /** Şık tıklanır: doğru/yanlış işaretlenir, 850ms sonra sonraki soru (son ise özet). */
   const cevapla = useCallback((idx: number) => {
@@ -116,6 +133,22 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
           {enIyi > 0 && (
             <p className="text-[11px] font-semibold" style={{ color: "var(--accent-2)" }}>{tt("qzEnIyi").replace("{n}", String(enIyi))}</p>
           )}
+          {/* ★ 02.11: TUR BOYU SEÇİMİ — kişi kendisi belirler (10/30/50 soru) */}
+          <div className="flex items-center gap-2" data-minitur="kelime-quizi-boy">
+            <span className="text-[11px] font-bold text-white/60">{tt("qzTurBoy")}</span>
+            {TUR_SECENEKLERI.map((b) => (
+              <button
+                key={b}
+                type="button"
+                data-minitur={`kelime-quizi-boy-${b}`}
+                onClick={() => setTurBoyu(b)}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-black transition ${turBoyu === b ? "text-black shadow" : "text-white/70 border border-white/15 bg-white/5 hover:bg-white/10"}`}
+                style={turBoyu === b ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+              >
+                {b}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             data-minitur="kelime-quizi-basla"
@@ -134,8 +167,19 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
             <span>{tt("qzSoruN").replace("{n}", String(soruI + 1)).replace("{t}", String(soruPaket.length))}</span>
             <span className="font-bold text-white/80">{tt("qzSkor").replace("{d}", String(skor.dogru)).replace("{t}", String(skor.toplam))}</span>
           </div>
-          <div className="rounded-xl bg-white/5 p-4 text-center" dir="rtl">
+          <div className="relative rounded-xl bg-white/5 p-4 text-center" dir="rtl">
             <p className="text-2xl leading-relaxed text-white" style={{ fontFamily: "'Amiri Quran','Traditional Arabic',serif" }}>{soru.kart.ar}</p>
+            {/* ★ 02.11 (kullanıcı istedi): her sorunun yanında DİNLE düğmesi — kelimeyi sesli okur */}
+            <button
+              type="button"
+              data-minitur="kelime-quizi-dinle"
+              aria-label={tt("qzDinle")}
+              title={tt("qzDinle")}
+              onClick={() => kelimeyiSeslendir(soru.kart)}
+              className="absolute left-2 top-2 rounded-full border border-white/10 bg-white/10 p-1.5 text-white/80 transition hover:bg-white/20 hover:text-white active:scale-90"
+            >
+              <Volume2 size={13} />
+            </button>
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {soru.siklar.map((sik, i) => {

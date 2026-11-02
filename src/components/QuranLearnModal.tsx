@@ -43,6 +43,7 @@ import { useQuranRadyo } from "../hooks/useQuranRadyo"; // ★ SRP (09.10): rady
 import { OgrenModu, DinleModu } from "./quranLearnEkranlar";
 // ★ 18.10 (kullanıcı emri): Hafızlık Testi 3. sekme — menü girişi kaldırıldı, bu modalın içine göçürüldü
 import { HafizlikTestiModal } from "./HafizlikTestiModal";
+import { KelimeQuiziModal } from "./KelimeQuiziModal"; // ★ 02.11: üst bardaki kelime quizi düğmesi
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; lang?: Lang; user?: { email?: string } | null; tier?: string; tierAtLeast?: (a: any, b: any) => boolean; isMasterSurum?: boolean; }
 
@@ -153,6 +154,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
   useEffect(() => { modeRef.current = mode; }, [mode]);
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı (gövde KabeCanliModal'da — SRP 01.10)
   const [sayfalarAcik, setSayfalarAcik] = useState(false); // ★ Kur'an Sayfaları (mushaf) — gövde QuranSayfalar.tsx
+  const [kelimeQuiziAcik, setKelimeQuiziAcik] = useState(false); // ★ 02.11: kelime quizi (üst bar düğmesi)
   // ★ HEADER KÖPRÜSÜ (02.10): üst bardaki 🕋 Kâbe pill'i ve menü öğesi bu modalın state'ine
   //   doğrudan dokunamaz — window event ile açar. Bileşen kapalıyken de mount'ta kalır
   //   (ModalsContainer hep render eder) → dinleyici uygulama açılışından beri yaşar;
@@ -560,6 +562,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           <button onClick={() => { if (mode === "learn" || mode === "listen") setSonQuranMod(mode); stopAudio(); setMode("test"); }} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${mode === "test" ? "border-gold/50 bg-gold/15 text-gold" : "border-white/10 bg-white/[.04] text-[#f5dda6] hover:brightness-125"}`} title={ttX2610("qkDevamTitle")}>
             🧠 {ttQL("menuHafizlikTesti")}
           </button>
+          {/* ★ 02.11 (kullanıcı istedi): KELİME QUIZİ üst barda — Hafızlık Testi ile Radyo arası */}
+          <button onClick={() => { setKelimeQuiziAcik(true); }} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${kelimeQuiziAcik ? "border-gold/50 bg-gold/15 text-gold" : "border-violet-400/30 bg-violet-950/40 text-violet-200 hover:brightness-125"}`} title={ttX2610("menuKelimeQuizi")}>
+            🧠 {ttX2610("menuKelimeQuizi")}
+          </button>
           {/* ★ 📻 KUR'AN RADYOSU: üst barda — 7/24 kesintisiz tilavet radyosu */}
           <button onClick={toggleRadio} className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-black transition active:scale-95 ${radioOn ? "border-sky-400/60 bg-gradient-to-b from-sky-700/60 to-sky-950/60 text-sky-100 shadow-[0_0_14px_rgba(56,189,248,.3)]" : "border-sky-800/40 bg-sky-950/40 text-sky-300 hover:brightness-125"}`} title={ttX2610("qlmRadyoTitle")}>
             📻 {radioOn ? (radioPaused ? ttQL("qrRadyoDurdu") : ttQL("qrRadyoAcik")) : ttQL("qrRadyo")}
@@ -696,6 +702,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
       )}
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
       <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} onVideoEl={(el) => { kabeVideoRef.current = el; }} />
+      <KelimeQuiziModal open={kelimeQuiziAcik} onClose={() => setKelimeQuiziAcik(false)} lang={lang} />
       {/* ══════════ KUR'AN SAYFALARI — 02.10: mushaf okuma + hatim takibi */}
       <QuranSayfalar open={sayfalarAcik} onClose={() => setSayfalarAcik(false)} />
     </div>
