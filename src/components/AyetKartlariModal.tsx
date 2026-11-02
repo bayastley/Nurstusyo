@@ -540,7 +540,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   return (
     <Modal
       title={tt("v2AyetKartlariTitle")}
-      sub={tt("v2AyetKartlariSub").replace("{n}", String(AYET_KARTILARI.length))}
+      sub={tt("v2AyetKartlariSub")
+        .replace("{n}", String(AYET_KARTILARI.length))
+        // ★ 02.11: "arka plan" sayısı sabit yazıdan çıkarıldı ("2.000+"), gerçek havuz
+        //   sayısına bağlandı — admin kategorileri arttıkça metin otomatik güncellenir.
+        .replace("{bg}", BACKGROUNDS.length.toLocaleString(
+          lang === "tr" ? "tr-TR" : lang === "en" ? "en-US" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "ar",
+        ))}
       onClose={onClose}
       wide
     >
