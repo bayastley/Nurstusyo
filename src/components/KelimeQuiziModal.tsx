@@ -136,7 +136,6 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
           </div>
           <div className="rounded-xl bg-white/5 p-4 text-center" dir="rtl">
             <p className="text-2xl leading-relaxed text-white" style={{ fontFamily: "'Amiri Quran','Traditional Arabic',serif" }}>{soru.kart.ar}</p>
-            {soru.kart.okunus && <p className="mt-1 text-[11px] text-white/45" dir="ltr">{soru.kart.okunus}</p>}
           </div>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {soru.siklar.map((sik, i) => {
@@ -176,6 +175,7 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
               {yanlislar.map((y) => (
                 <div key={y.ar} className="flex items-center gap-2 border-b border-white/5 px-1 py-1.5 text-[11.5px] last:border-b-0">
                   <span dir="rtl" className="shrink-0 text-white/80">{y.ar}</span>
+                  {y.okunus && <span className="shrink-0 text-white/35" dir="ltr">{y.okunus}</span>}
                   <span className="text-white/40">→</span>
                   <span className="truncate text-white/70">{y.tr}</span>
                 </div>
