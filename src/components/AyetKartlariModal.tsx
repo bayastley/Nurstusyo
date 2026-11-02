@@ -25,6 +25,10 @@ import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başl�
 // ★ 25.10 KÜTÜPHANE KURALI (sahibin emri): sınırsız değil — jetonla 24 saat / 1 hafta,
 //   açıkken günde N indirme; ELİT üyelik boyunca açık. admin/master muaf.
 import { akErisim, akKutuphaneAc, akIndirmeKullan, type AkErisim } from "../studio/ayetKutuphaneKurali";
+
+// ★ 02.11: Kütüphane alt notundaki ayet sayısı — tüm Kur'an (6.236). Seçki (~611) bu
+//   ayetlerin içinden öne çıkanlardır; arama tüm Kur'an'ı tarar (alquran /v1/search).
+const KURAN_AYET_SAYISI = 6236;
 import { fetchAyah, fetchSurah, fetchJSON, quranUrl } from "../studio/studioHelpers";
 
 interface AyetKartlariModalProps {
@@ -541,9 +545,13 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     <Modal
       title={tt("v2AyetKartlariTitle")}
       sub={tt("v2AyetKartlariSub")
-        .replace("{n}", String(AYET_KARTILARI.length))
+        // ★ 02.11: {n} artık seçki sayısı değil, tüm Kur'an (6.236) — arama tüm
+        //   Kur'an'ı tarar, sure filtresi 114 sureyi getirir; seçki bunun alt kümesidir.
         // ★ 02.11: "arka plan" sayısı sabit yazıdan çıkarıldı ("2.000+"), gerçek havuz
         //   sayısına bağlandı — admin kategorileri arttıkça metin otomatik güncellenir.
+        .replace("{n}", KURAN_AYET_SAYISI.toLocaleString(
+          lang === "tr" ? "tr-TR" : lang === "en" ? "en-US" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "ar",
+        ))
         .replace("{bg}", BACKGROUNDS.length.toLocaleString(
           lang === "tr" ? "tr-TR" : lang === "en" ? "en-US" : lang === "id" ? "id-ID" : lang === "ur" ? "ur-PK" : "ar",
         ))}
