@@ -103,6 +103,19 @@ async function cacheSet(key: string, val: string): Promise<void> {
 
 const xmlKac = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
+// ★ 02.11 TELAFFÜZ DÜZELTMESİ (kullanıcı: "Rahman ve Rahim diyeceği yerde Rahmın ve
+//   Rahım diyor — düzelt"): Türkçe meal üslubu uzun sesleri şapkalı yazar (Rahmân,
+//   Rahîm, Kur'ân, Yâsîn, İbrâhîm, Âlemler...). AhmetNeural şapkalı harfleri bozuk
+//   çözüyor: "Rahmân" → "rahmın", "Rahîm" → "rahım". Çözüm: TTS'e gönderilmeden
+//   önce şapkaları düz yazıya indirmek (â→a, î→i, û→u ve büyükler) — bu, metnin
+//   standart Türkçe düz yazılışıdır ve ses motoru doğru okur (Rahman / Rahim).
+//   Yalnız tr seslerinde uygulanır; diğer dillerin meal metinleri etikilenmez.
+const TELAFFUZ_SAPKA: Record<string, string> = { "â": "a", "Â": "A", "î": "i", "Î": "İ", "û": "u", "Û": "U", "ô": "o", "Ô": "O", "é": "e" };
+function telaffuzDuzelt(metin: string, sesId: string): string {
+  if (!/^tr-/i.test(sesId)) return metin;
+  return metin.replace(/[âÂîÎûÛôÔé]/g, (k) => TELAFFUZ_SAPKA[k] || k);
+}
+
 /** ★ RESMİ AZURE SPEECH REST — AZURE_SPEECH_KEY + AZURE_SPEECH_REGION env varsa
  *  ilk kolu devreye girer; yoksa null döner (msedge yoluna düş).
  *  Ücretsiz kademede 500K karakter/ay — binlerce kullanıcının başına taşınır.
@@ -292,6 +305,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!metin) return res.status(400).json({ ok: false, error: "metin yok" });
     if (metin.length > 1200) metin = metin.slice(0, 1200); // güvenlik: part zaten ≤45 kelime
     const sesId = (DIL_SESLER[dil] || DIL_SESLER.tr).some(([id]) => id === ses) ? ses : (DIL_SESLER[dil] || DIL_SESLER.tr)[0][0];
+    // ★ 02.11: şapkalı harfler TTS'e gitmeden düz yazıya iner (Rahmân→Rahman).
+    //   Düzeltme cache anahtarından ÖNCE uygulanır — hem cache isabeti doğru
+    //   seslenmiş kopyayı tutar hem de tekrar düzeltme çift uygulanmaz (fonksiyon
+//   şapkayı ikinci turda bulamaz, idempotent).
+    metin = telaffuzDuzelt(metin, sesId);
     const anahtar = "nur-tts:" + Buffer.from(sesId + "|" + metin).toString("base64url").slice(0, 120);
     const cached = await cacheGet(anahtar);
     if (cached) {
