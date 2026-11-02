@@ -18,6 +18,7 @@ import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
 } from "../hafizlikIstatistik";
+import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: hafızlık turu bitince günün serisi dolsun
 // ★ SRP adım 2 (30.09): sure havuzları + seviyeler + tur boyutları hafizlikVeri.ts'e
 //   taşınmıştı; i18n turunda (72c0265) bilinçsizce inline kopya geri girmişti (yetim
 //   parça vurgusu — bağlantı raporu ⚠). Tek kaynak yeniden: hafizlikVeri.ts.
@@ -328,6 +329,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const turOzetiGoster = () => {
     if (soru && secim !== null) hafizlikDevamKaydet(seviye, puan.dogru, puan.toplam);
     setOzetAcik(true);
+    seriOkundu(); // ★ tur bitti = bugün okuma yapıldı kabul
   };
   // Yeni tur: sayaçlar sıfır, özet kapanır, ilk soru gelir.
   // ★ FIX (28.09): soruHazirla çağrılmıyordu — useEffect bağımlılıkları (open, seviyeSecili)

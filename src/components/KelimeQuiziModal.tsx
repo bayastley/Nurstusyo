@@ -11,6 +11,7 @@ import { Brain, Check, X } from "lucide-react";
 import { Modal } from "./UIElements";
 import { translate, type Lang } from "../i18n";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
+import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: quiz turu bitince günün serisi dolsun (okuma şartına yeni yol)
 
 export interface KelimeQuiziModalProps {
   open: boolean;
@@ -95,6 +96,7 @@ export const KelimeQuiziModal: React.FC<KelimeQuiziModalProps> = ({ open, onClos
         setEnIyi(enIyiOku());
         setSecim(null);
         setAsama("sonuc");
+        seriOkundu(); // ★ tur bitti = bugün okuma yapıldı kabul
       } else {
         setSoruI((i) => i + 1);
         setSecim(null);
