@@ -2142,5 +2142,16 @@
   "ksfEsmaAlt": "Allah's 99 beautiful names — tap: meaning and Qur'an/hadith source",
   "ksfEsmaNot": "99 names · with sources · tap to open/close",
   "seriRozet": "Day {n} 🔥",
-  "seriTitle": "Come back every day to grow your streak — miss a day and it resets! Your best: {best}"
+  "seriTitle": "Read a verse daily to grow your streak — one missed day per week is forgiven! Best: {best}",
+  "menuKelimeQuizi": "Word Quiz",
+  "qzSub": "How well do you know the most frequent Quranic words? 10 questions a round.",
+  "qzBasla": "Start",
+  "qzTekrar": "Play Again",
+  "qzSoruN": "Question {n}/{t}",
+  "qzSkor": "Score: {d}/{t}",
+  "qzSonuc": "Round complete!",
+  "qzEnIyi": "Best: {n}",
+  "akKartlarim": "My Cards ({n})",
+  "akKartFavoriEkle": "Add to album",
+  "akKartFavoriCikar": "Remove from album"
 }

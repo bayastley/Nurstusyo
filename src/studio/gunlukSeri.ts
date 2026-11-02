@@ -1,65 +1,139 @@
-// ════════════════════════════════════════════════════════
-// GÜNLÜK SERİ (STREAK) — 02.11
-// Kullanıcı her gün uygulamayı açarsa seri büyür; bir gün kaçırırsa sıfırlanır.
-// Cihazda saklanır (localStorage), sunucuya hiç gitmez — Zikirmatik/Today's Gift
-// ile aynı ruh. JETON VERMEZ (şimdilik): sayısal takip motivasyonu.
-// Tarih cihazın YEREL saatiyle hesaplanır (UTC değil) — akşam/gece kullanımı adaletli.
-// ════════════════════════════════════════════════════════
+// =====================================================
+// GUNLUK SERI (STREAK) v2 — 02.11 "OKUMA ŞARTLI SÜRÜM"
+// Açmak yetmez: günü sayılması için bugün 1 AYET OKUMAK gerekir
+// (addAyah / addWholeSurah başarısı → seriOkundu()). Açılışta
+// seriAcilisDengele() yalnız durumu düzeltir, seri artırmaz.
+// HAFTADA 1 GÜN AFFI: atlanan tek gün, son af 7 gün eskideyse
+// seriyi bozmaz (streak freeze). Kayıt cihazda (localStorage),
+// sunucuya gitmez. JETON YOK — motivasyon rozeti.
+// Yazılanlar, rozete "nur_seri_degisti" pencere olayıyla canlı sızar.
+// =====================================================
 
 const SERI_KEY = "nur_gunluk_seri_v1";
 
 export interface SeriBilgi {
-  /** Bugün dahil üst üste gelinen gün sayısı (bugün ilk gelişse 1) */
+  /** Üst üste okunan gün sayısı (bugün okunduysa dahil) */
   seri: number;
   /** Tüm zamanların en iyi serisi */
   enIyi: number;
-  /** Bu ziyaret bugün seriyi ARTIRDI mı (aynı gün tekrar açış: false) */
-  bugunArttirdi: boolean;
+  /** Bugün ayet okundu mu (okuma şartı: rozet bugün büyüdü mü?) */
+  bugunOkundu: boolean;
+  /** Bu hafta affı hâlâ kullanılabilir mi (1/hafta) */
+  afMevcut: boolean;
 }
 
 /** Cihaz yerel tarih anahtarı: "YYYY-MM-DD" */
 export const gunAnahtari = (d: Date = new Date()): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-interface Kayit { son: string; seri: number; enIyi: number }
+interface Kayit { son: string; seri: number; enIyi: number; afSon: string }
+
+const BOS: Kayit = { son: "", seri: 0, enIyi: 0, afSon: "" };
 
 const kayitOku = (): Kayit => {
   try {
     const ham = localStorage.getItem(SERI_KEY);
-    if (!ham) return { son: "", seri: 0, enIyi: 0 };
+    if (!ham) return BOS;
     const d = JSON.parse(ham) as Partial<Kayit>;
     return {
       son: d.son || "",
       seri: Math.max(0, Number(d.seri) || 0),
       enIyi: Math.max(0, Number(d.enIyi) || 0),
+      afSon: d.afSon || "",
     };
-  } catch { return { son: "", seri: 0, enIyi: 0 }; }
+  } catch { return BOS; }
 };
 
 const kayitYaz = (k: Kayit): void => {
   try { localStorage.setItem(SERI_KEY, JSON.stringify(k)); } catch { /* localStorage kapalıysa yut */ }
 };
 
-/** Seriyi ilerlet: bugün zaten geldiyse dokunmaz; dünden geldiyse +1; gün atlandıysa 1'e döner. */
-export const seriIlerlet = (): SeriBilgi => {
-  const kayit = kayitOku();
-  const bugun = gunAnahtari();
-  if (kayit.son === bugun) {
-    return { seri: Math.max(1, kayit.seri), enIyi: Math.max(kayit.enIyi, kayit.seri), bugunArttirdi: false };
+/** İki yerel tarih anahtarı arasındaki KAÇ GÜN ATLANDI (0 = bitişik gün / aynı gün) */
+const atlananGun = (son: string, bugun: string): number => {
+  if (!son || !bugun) return 999;
+  const gun = (g: string): number => {
+    const p = g.split("-").map(Number);
+    return Date.UTC(p[0], (p[1] || 1) - 1, p[2] || 1);
+  };
+  return Math.max(0, Math.round((gun(bugun) - gun(son)) / 86_400_000) - 1);
+};
+
+/** Affı tekrar kullanılabilir mi? Son af en az 7 gün önce kullanıldıysa evet (1/hafta). */
+const afEskiMi = (afSon: string, bugun: string): boolean => !afSon || atlananGun(afSon, bugun) >= 6;
+
+/** Pencere olayı: rozet anında tazelesin */
+const seriDegistiHaber = (): void => {
+  try { window.dispatchEvent(new Event("nur_seri_degisti")); } catch { /* yut */ }
+};
+
+/**
+ * ★ OKUMA OLAYI (v2): kullanıcı bugün bir ayet okuyunca çağrılır.
+ * dünden geldi +1; atlanan 1 gün & af müsait → af (seri korunur, af işaretlenir);
+ * daha uzak boşluk veya af yok → 1'e döner. Hata hâlinde sessiz yut.
+ */
+export const seriOkundu = (): SeriBilgi => {
+  try {
+    const kayit = kayitOku();
+    const bugun = gunAnahtari();
+    if (kayit.son === bugun) {
+      const seri = Math.max(1, kayit.seri);
+      return { seri, enIyi: Math.max(kayit.enIyi, seri), bugunOkundu: true, afMevcut: afEskiMi(kayit.afSon, bugun) };
+    }
+    const atlanan = atlananGun(kayit.son, bugun);
+    let seri = kayit.seri;
+    let afKullandi = false;
+    if (atlanan === 0) {
+      seri = seri + 1; // dün okundu, bugün de okundu
+    } else if (atlanan === 1 && afEskiMi(kayit.afSon, bugun)) {
+      afKullandi = true; // bu hafta affı: atlanan gün bozmaz, gün sayılmaz
+      seri = Math.max(1, seri);
+    } else {
+      seri = 1; // boşluk affedilmedi → yeni seri
+    }
+    const enIyi = Math.max(kayit.enIyi, seri);
+    kayitYaz({ son: bugun, seri, enIyi, afSon: afKullandi ? bugun : kayit.afSon });
+    seriDegistiHaber();
+    return { seri, enIyi, bugunOkundu: true, afMevcut: afEskiMi(kayit.afSon, bugun) };
+  } catch {
+    return { seri: 0, enIyi: 0, bugunOkundu: false, afMevcut: false };
   }
-  const dun = gunAnahtari(new Date(Date.now() - 86_400_000));
-  const seri = kayit.son === dun ? kayit.seri + 1 : 1;
-  const enIyi = Math.max(kayit.enIyi, seri);
-  kayitYaz({ son: bugun, seri, enIyi });
-  return { seri, enIyi, bugunArttirdi: true };
 };
 
-/** Sadece okur — seri ilerlemez (rozetteki "en iyi" göstergesi vb. için) */
-export const seriOku = (): { seri: number; enIyi: number } => {
+/**
+ * ★ AÇILIŞ DENGELEME (v2): uygulamayı açmak seriyi ARTIRMAZ;
+ * yalnız süresi geçen seriyi düşürür. son=dün veya bugün → dokunma;
+ * atlanan 1 gün & af müsait → rozet şimdilik ayakta (affın hakkı);
+ * aksi hâlde seri=0 (rozet gizlenir), okumayla yeniden doğar.
+ */
+export const seriAcilisDengele = (): SeriBilgi => {
+  try {
+    const kayit = kayitOku();
+    const bugun = gunAnahtari();
+    const atlanan = atlananGun(kayit.son, bugun);
+    const afVar = afEskiMi(kayit.afSon, bugun);
+    const okundu = kayit.son === bugun;
+    if (kayit.son === bugun || atlanan === 0 || (atlanan === 1 && afVar)) {
+      const seri = Math.max(0, kayit.seri);
+      return { seri, enIyi: Math.max(kayit.enIyi, seri), bugunOkundu: okundu, afMevcut: afVar };
+    }
+    // serinin süresi doldu: sıfırla (enIyi korunur)
+    kayitYaz({ son: kayit.son, seri: 0, enIyi: kayit.enIyi, afSon: kayit.afSon });
+    return { seri: 0, enIyi: kayit.enIyi, bugunOkundu: false, afMevcut: afVar };
+  } catch {
+    return { seri: 0, enIyi: 0, bugunOkundu: false, afMevcut: false };
+  }
+};
+
+/** Sadece okur — hiçbir şey yazmaz (rozetteki yenileme React durumu için) */
+export const seriOku = (): { seri: number; enIyi: number; bugunOkundu: boolean; afMevcut: boolean } => {
   const k = kayitOku();
-  return { seri: k.seri, enIyi: Math.max(k.enIyi, k.seri) };
+  const bugun = gunAnahtari();
+  return { seri: k.seri, enIyi: Math.max(k.enIyi, k.seri), bugunOkundu: k.son === bugun, afMevcut: afEskiMi(k.afSon, bugun) };
 };
 
-/** Ince ayarda canlı test için: kaydı elle zerzetin (gün anahtarı "YYYY-MM-DD") */
+/** Ince ayar canlı test için: kaydı elle yaz (gün anahtarı "YYYY-MM-DD", afSon opsiyonel) */
 export const seriKayitYaz = (k: Partial<Kayit>): void =>
-  kayitYaz({ son: k.son ?? "", seri: Number(k.seri) || 0, enIyi: Number(k.enIyi) || 0 });
+  kayitYaz({ son: k.son ?? "", seri: Number(k.seri) || 0, enIyi: Number(k.enIyi) || 0, afSon: k.afSon ?? "" });
+
+/** v1 uyumluluğu: eski çağrılar okuma olayına yönlendirilir */
+export const seriIlerlet = seriOkundu;

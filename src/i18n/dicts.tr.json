@@ -2142,5 +2142,16 @@
   "ksfEsmaAlt": "Allah'ın 99 güzel ismi — tıkla: anlamı ve âyet/hadis kaynağı",
   "ksfEsmaNot": "99 isim · kaynağıyla birlikte · tıkla aç-kapa",
   "seriRozet": "{n}. gün 🔥",
-  "seriTitle": "Her gün uğra — serin büyür, bir gün kaçarsan sıfırlanır! En iyi serin: {best}"
+  "seriTitle": "Her gün 1 ayet oku — serin büyüsün! Haftada 1 gün af. En iyi serin: {best}",
+  "menuKelimeQuizi": "Kelime Quizi",
+  "qzSub": "Kur'anda en sık geçen kelimeleri ne kadar iyi biliyorsun? 10 soruluk tur.",
+  "qzBasla": "Başla",
+  "qzTekrar": "Tekrar Oyna",
+  "qzSoruN": "Soru {n}/{t}",
+  "qzSkor": "Skor: {d}/{t}",
+  "qzSonuc": "Tur bitti!",
+  "qzEnIyi": "En iyi: {n}",
+  "akKartlarim": "Kartlarım ({n})",
+  "akKartFavoriEkle": "Albüme ekle",
+  "akKartFavoriCikar": "Albümden çıkar"
 }

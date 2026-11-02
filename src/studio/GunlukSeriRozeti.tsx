@@ -1,15 +1,15 @@
-// ════════════════════════════════════════════════════════
-// GÜNLÜK SERİ ROZETİ — 02.11
-// "Day {n} 🔥" rozeti: her gün gelince büyür, gün kaçırınca sıfırlanır.
-// Açılışta SERİ İLERLETİLİR (nur_gunluk_seri_v1); bugün zaten açıldıysa
-// aynı sayıyı gösterir. JETON YOK — yerel motivasyon rozeti.
-// Rozet alt-sağ köşede; BugunHediye (alt-sol) ile simetrik konum.
-// ════════════════════════════════════════════════════════
+// =====================================================
+// GÜNLÜK SERİ ROZETİ v2 — 02.11 "OKUMA ŞARTLI"
+// Açılışta seriAcilisDengele() (artırmez, süresi geçeni düşürür);
+// kullanıcı bugün ayet okuyunca "nur_seri_degisti" olayı rozeti
+// canlı büyütür. Rozet seri<1 ise gizlidir. JETON YOK.
+// Konum: alt-sağ, BugunHediye (alt-sol) ile simetrik.
+// =====================================================
 
 import React, { useEffect, useState } from "react";
 import { Flame } from "lucide-react";
 import { translate, type Lang } from "../i18n";
-import { seriIlerlet } from "./gunlukSeri";
+import { seriAcilisDengele } from "./gunlukSeri";
 
 export interface GunlukSeriRozetiProps { lang?: Lang }
 
@@ -17,17 +17,24 @@ export const GunlukSeriRozeti: React.FC<GunlukSeriRozetiProps> = ({ lang = "tr" 
   const [seri, setSeri] = useState(0);
   const [enIyi, setEnIyi] = useState(0);
 
-  // ★ ACILIŞTA İLERLET (01.11): açılış gün damgası — günde yalnız 1 kez artar.
-  //   Yerel depoda; localStorage kapalıysa rozet 0 kalır ve hiç gösterilmez.
+  // ★ v2 AÇILIŞ: seriyi dengele (artırmaz) + "nur_seri_degisti" olayını dinle —
+  //   ayet okununca rozet sayfa yenilemeden canlı büyür.
   useEffect(() => {
+    const senkronla = () => {
+      try {
+        const s = seriAcilisDengele();
+        setSeri(s.seri);
+        setEnIyi(s.enIyi);
+      } catch { /* yut */ }
+    };
+    senkronla();
     try {
-      const s = seriIlerlet();
-      setSeri(s.seri);
-      setEnIyi(s.enIyi);
+      window.addEventListener("nur_seri_degisti", senkronla);
+      return () => window.removeEventListener("nur_seri_degisti", senkronla);
     } catch { /* yut */ }
   }, []);
 
-  // 0 = localStorage kapalı ya da hesaplanamadı → rozet gösterme
+  // 0 = localStorage kapalı / seri süresi doldu / bugün henüz okunmadı → rozet gizli
   if (seri < 1) return null;
   const tt = (k: string): string =>
     translate(lang, k).replace("{n}", String(seri)).replace("{best}", String(Math.max(1, enIyi)));

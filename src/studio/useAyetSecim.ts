@@ -12,6 +12,8 @@ import { SURAHS } from "../data";
 import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { fetchJSON, fetchAyah, fetchSurah, quranUrl, normalizeTurkishMeal } from "./studioHelpers";
 import { MEAL_EDITIONS, translate } from "../i18n";
+// ★ 02.11 GÜNLÜK SERİ v2: ayet okuma başarısı seriyi büyütür (rokette canlı görünür)
+import { seriOkundu } from "./gunlukSeri";
 import { ayetKategorisiBul, adminAyetKategorisiBul } from "./ayetKategori";
 import { akilliKlipSec } from "./atmosferBag"; // ★ 16.10: Akıllı AI seçimi artık tekrar-düşman DÖNEN TORBA
 import { genDesc, genTitle } from "../data/titleTemplates";
@@ -109,7 +111,7 @@ export function useAyetSecim(params: UseAyetSecimParams) {
           if (secilen) setAyahBackgrounds((current) => ({ ...current, [id]: secilen }));
         }
       }
-      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciterName, lang)); notify(t("ssAyetEklendi").replace("{name}", meta.name).replace("{s}", String(s)).replace("{a}", String(a)));
+      setVerseIndex(selectedRef.current.length); setShareTitle(genTitle(meta.name, s, a, lang, tr)); setShareDescription(genDesc(meta.name, s, a, reciterName, lang)); seriOkundu(); notify(t("ssAyetEklendi").replace("{name}", meta.name).replace("{s}", String(s)).replace("{a}", String(a)));
     } catch (e) {
       console.error("[addAyah] fetch hatası:", e);
       // ★ HATA: Placeholder'ı listeden çıkar
@@ -132,7 +134,7 @@ export function useAyetSecim(params: UseAyetSecimParams) {
   const addWholeSurah = useCallback(async (surahNum?: number | string) => {
     const number = Number(surahNum);
     if (!number || number < 1) { notify(ttX2610("usOnceSure")); return; }
-    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const sureAdiX2910 = sureAdX2910(number, meta.name, lang); const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: sureAdiX2910, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); notify(ttX2610("usSureEklendi").replace("{x}", sureAdiX2910).replace("{n}", String(rows.length))); }
+    try { const rows = await fetchSurah(number, MEAL_EDITIONS[lang]), meta = SURAHS[number - 1]; const sureAdiX2910 = sureAdX2910(number, meta.name, lang); const all = rows.map((row, index) => ({ id: `${number}:${index + 1}`, s: number, a: index + 1, sName: sureAdiX2910, ar: row.ar, tr: row.tr })); setSelected((current) => { const ids = new Set(current.map((item) => item.id)); return [...current, ...all.filter((item) => !ids.has(item.id))]; }); seriOkundu(); notify(ttX2610("usSureEklendi").replace("{x}", sureAdiX2910).replace("{n}", String(rows.length))); }
     catch { notify(t("renderServerError")); }
   }, [t, lang, notify, setSelected]);
   // (max 1 parametrenin olması arayüzle uyumlu: addWholeSurah(surah string) — addChilder caller uyumlu)

@@ -143,6 +143,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     { icon: Wand2, label: t("menuArkaPlanUretici"), target: "arkaPlanUretici" as ModalName, hedef: "elit" },
     // ★ 25.10 (kullanıcı emri): "İSLÂMÎ ÖĞRENİYORUM" (eski Keşfet Merkezi) sol menüden
     //   KALDIRILDI — üst barda Kur'an ↔ İçindekiler arasına taşındı (aşağıda, marquee'li).
+    { icon: Brain, label: t("menuKelimeQuizi"), target: "kelimeQuizi" as ModalName, hedef: "free" },
     { icon: Brain, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName, hedef: "free" },
     { icon: Film, label: t("menuHaftaninVideosu"), target: "haftaninVideosu" as ModalName, hedef: "free" },
     { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName, hedef: "free" },

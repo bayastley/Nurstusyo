@@ -28,6 +28,7 @@ const KesfetModal = React.lazy(() => import("./KesfetModal").then((m) => ({ defa
 const HafizlikTestiModal = React.lazy(() => import("./HafizlikTestiModal").then((m) => ({ default: m.HafizlikTestiModal })));
 const AyetNotlariModal = React.lazy(() => import("./AyetNotlariModal").then((m) => ({ default: m.AyetNotlariModal })));
 const KelimeAtolyesiModal = React.lazy(() => import("./KelimeAtolyesiModal").then((m) => ({ default: m.KelimeAtolyesiModal })));
+const KelimeQuiziModal = React.lazy(() => import("./KelimeQuiziModal").then((m) => ({ default: m.KelimeQuiziModal })));
 const ArkaPlanUreticiModal = React.lazy(() => import("./ArkaPlanUreticiModal").then((m) => ({ default: m.ArkaPlanUreticiModal })));
 const DavetModal = React.lazy(() => import("./DavetModal").then((m) => ({ default: m.DavetModal })));
 const HaftaninVideosuModal = React.lazy(() => import("./HaftaninVideosuModal").then((m) => ({ default: m.HaftaninVideosuModal })));
@@ -625,6 +626,13 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {acildiMi("ayetNotlari") && (
       <React.Suspense fallback={null}>
       <AyetNotlariModal open={v2Acik("ayetNotlari")} onClose={() => setModal(null)} notify={notify} lang={lang} />
+      </React.Suspense>
+      )}
+
+      {/* ★ KELİME QUIZİ — Kur'anda sık geçen kelimelerden 10 soruluk tur (02.11, kullanıcı) */}
+      {acildiMi("kelimeQuizi") && (
+      <React.Suspense fallback={null}>
+      <KelimeQuiziModal open={modal === "kelimeQuizi"} onClose={() => setModal(null)} lang={lang} notify={notify} />
       </React.Suspense>
       )}
 

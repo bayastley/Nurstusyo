@@ -2142,5 +2142,16 @@
   "ksfEsmaAlt": "99 nama Allah — ketuk: makna dan sumber (Al-Qur'an/hadits)",
   "ksfEsmaNot": "99 nama · dengan sumber · ketuk untuk buka/tutup",
   "seriRozet": "Hari ke-{n} 🔥",
-  "seriTitle": "Datang setiap hari untuk menumbuhkan rentetanmu — lewat sehari maka nol lagi! Terbaikmu: {best}"
+  "seriTitle": "Baca satu ayat tiap hari agar rentetanmu tumbuh — lewat 1 hari seminggu dimaafkan! Terbaikmu: {best}",
+  "menuKelimeQuizi": "Kuis Kata",
+  "qzSub": "Seberapa paham kata-kata Al-Qur'an yang sering muncul? 10 soal per ronde.",
+  "qzBasla": "Mulai",
+  "qzTekrar": "Main Lagi",
+  "qzSoruN": "Soal {n}/{t}",
+  "qzSkor": "Skor: {d}/{t}",
+  "qzSonuc": "Ronde selesai!",
+  "qzEnIyi": "Terbaik: {n}",
+  "akKartlarim": "Kartku ({n})",
+  "akKartFavoriEkle": "Tambah ke album",
+  "akKartFavoriCikar": "Hapus dari album"
 }

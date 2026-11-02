@@ -85,6 +85,7 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
   kesfet: "Keşfet",
   hafizlikTesti: "Hafızlık Testi",
   ayetNotlari: "Ayet Notlarım",
+  kelimeQuizi: "Kelime Quizi",
   kelimeAtolyesi: "Kelime Atölyesi",
   arkaPlanUretici: "Arka Plan Üretici",
   davet: "Arkadaşını Davet",

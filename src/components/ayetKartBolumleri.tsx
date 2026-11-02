@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
-import { Brain, Check, Download, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
+import { Brain, Check, Download, Heart, Search, Sparkles, Image as ImageIcon, Moon, Type, Wand2, ArrowUpDown, AlignLeft, AlignCenter, AlignRight, ChevronsDown, Upload, Shuffle, Palette, PenLine, Sparkles as IsiltiIcon } from "lucide-react";
 import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../data/ayetKartlariData";
 import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — liste + günün ayeti başlığı dilli
 import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, ruhHaliAd, type RuhSayac } from "../data/ruhHalleri";
@@ -63,7 +63,12 @@ export const AyetSecimBolumu: React.FC<{
   /** ★ 02.11 TAM KUR'AN: sure tam listesi / tüm-Kur'an arama yükleme göstergesi */
   tamKuranYuk?: boolean;
   tkAktar?: () => void;
-}> = ({ filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
+  /** ★ 02.11 KARTLARIM ALBÜMÜ: favori filtre çipi + satır kalp düğmesi */
+  sadeceFavori?: boolean;
+  setSadeceFavori?: (v: boolean) => void;
+  favoriIds?: Set<string>;
+  onFavoriTak?: (id: string) => void;
+}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -220,6 +225,17 @@ export const AyetSecimBolumu: React.FC<{
             ))}
           </div>
 
+                      {setSadeceFavori && (
+              <button
+                type="button"
+                data-minitur="kart-favori-filtre"
+                onClick={() => { setSadeceFavori(!sadeceFavori); setSadeceGunun(false); }}
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-bold transition ${sadeceFavori ? "text-rose-200 border border-rose-400/50 bg-rose-400/15" : "glass-soft text-white/55 hover:text-white"}`}
+              >
+                <Heart size={10} fill={sadeceFavori ? "currentColor" : "none"} /> {tt("akKartlarim").replace("{n}", String(favoriIds?.size ?? 0))}
+              </button>
+            )}
+
           {/* Sure filtresi + arama satırı */}
           <div className="mb-2 flex gap-2">
             <select
@@ -270,6 +286,17 @@ export const AyetSecimBolumu: React.FC<{
                     )}
                     <span className="text-[10px] font-bold text-white/85">{ayetBasligi(lang, a.title)}</span>
                     <span className="ml-auto text-[8.5px] font-semibold text-white/40">{kaynakGorunum(a)}</span>
+                    {onFavoriTak && (
+                      <span
+                        role="button"
+                        data-minitur="kart-favori"
+                        title={favoriIds?.has(a.id) ? tt("akKartFavoriCikar") : tt("akKartFavoriEkle")}
+                        onClick={(e) => { e.stopPropagation(); onFavoriTak(a.id); }}
+                        className={`flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full transition ${favoriIds?.has(a.id) ? "text-rose-400" : "text-white/30 hover:text-rose-300"}`}
+                      >
+                        <Heart size={11} fill={favoriIds?.has(a.id) ? "currentColor" : "none"} />
+                      </span>
+                    )}
                     {active && <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[color:var(--accent)] text-black"><Check size={10} strokeWidth={3} /></span>}
                   </div>
                   <p className="text-right font-arabic text-[15px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.ar.split("\n")[0]}{a.ar.includes("\n") ? " …" : ""}</p>

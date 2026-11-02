@@ -25,6 +25,8 @@ import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başl�
 // ★ 25.10 KÜTÜPHANE KURALI (sahibin emri): sınırsız değil — jetonla 24 saat / 1 hafta,
 //   açıkken günde N indirme; ELİT üyelik boyunca açık. admin/master muaf.
 import { akErisim, akKutuphaneAc, akIndirmeKullan, type AkErisim } from "../studio/ayetKutuphaneKurali";
+// ★ 02.11 KARTLARIM ALBÜMÜ: favori kart listesini cihazda (localStorage) taşır
+import { kartAlbumuOku, kartFavoriTak } from "../studio/kartAlbumu";
 
 // ★ 02.11: Kütüphane alt notundaki ayet sayısı — tüm Kur'an (6.236). Seçki (~611) bu
 //   ayetlerin içinden öne çıkanlardır; arama tüm Kur'an'ı tarar (alquran /v1/search).
@@ -59,6 +61,9 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   const [mood, setMood] = useState<AyetKarti["mood"] | "tumu">("tumu");
   const [sureFiltre, setSureFiltre] = useState<number | "tumu">("tumu");
   const [sadeceGunun, setSadeceGunun] = useState(false);
+  // ★ 02.11 KARTLARIM ALBÜMÜ: kalp işaretli kart ids + "sadece favoriler" filtresi
+  const [favoriIds, setFavoriIds] = useState<Set<string>>(() => new Set(kartAlbumuOku()));
+  const [sadeceFavori, setSadeceFavori] = useState(false);
   const [ayetSearch, setAyetSearch] = useState("");
   const [bgSearch, setBgSearch] = useState("");
   const [bgCat, setBgCat] = useState<string>("all");
@@ -245,6 +250,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     // ★ 06.10 (başlık çok dil): arama çevrilmiş başlık + çevrilmiş meal üzerinden de koşar
     const temel = AYET_KARTILARI.filter((a) => {
       if (sadeceGunun && a.id !== gununAyetiObj.id) return false;
+      if (sadeceFavori && !favoriIds.has(a.id)) return false; // ★ 02.11 KARTLARIM
       if (mood !== "tumu" && a.mood !== mood) return false;
       if (sureFiltre !== "tumu" && sureNoFromSource(a.source) !== sureFiltre) return false;
       if (!q) return true;
@@ -263,13 +269,14 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
       ? (sureTamListe[sureFiltre] ?? [])
       : (q ? wqSonuclar : [])
     ).filter((a) => {
+      if (sadeceFavori && !favoriIds.has(a.id)) return false; // ★ 02.11 KARTLARIM
       const k = ciftAnahtar(a);
       if (curatedCift.has(k)) return false; // zaten küratörlü listede
       if (!q) return true;
       return a.tr.toLocaleLowerCase("tr").includes(q) || a.title.toLocaleLowerCase("tr").includes(q) || a.ar.includes(q);
     });
     return [...temel, ...dinamik];
-  }, [ayetSearch, mood, sureFiltre, sadeceGunun, gununAyetiObj.id, lang, sureTamListe, wqSonuclar, curatedCift]);
+  }, [ayetSearch, mood, sureFiltre, sadeceGunun, sadeceFavori, favoriIds, gununAyetiObj.id, lang, sureTamListe, wqSonuclar, curatedCift]);
 
   const filteredBgs = useMemo(() => {
     const q = bgSearch.trim().toLocaleLowerCase("tr");
@@ -592,6 +599,11 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           tamKuranYuk={sureTamYuk || wqYuk}
           tkAktar={tkAktar}
           lang={lang}
+          // ★ 02.11 KARTLARIM ALBÜMÜ: kalp + albüm çipi
+          sadeceFavori={sadeceFavori}
+          setSadeceFavori={setSadeceFavori}
+          favoriIds={favoriIds}
+          onFavoriTak={(id) => { const yeni = kartFavoriTak(id); setFavoriIds(new Set(yeni)); if (sadeceFavori) setSadeceFavori(yeni.length > 0); }}
           mealCevir={(k) => gorunenMeal(k, lang)}
           kaynakCevir={(k) => kartKaynagi(lang, k.source)}
         />
