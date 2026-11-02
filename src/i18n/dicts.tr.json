@@ -2140,5 +2140,7 @@
   "pwaZatenKurulu": "Uygulama zaten cihazında kurulu ✓",
   "ksfEsmaBaslik": "✨ ESMAÜ'L-HÜSNÂ",
   "ksfEsmaAlt": "Allah'ın 99 güzel ismi — tıkla: anlamı ve âyet/hadis kaynağı",
-  "ksfEsmaNot": "99 isim · kaynağıyla birlikte · tıkla aç-kapa"
+  "ksfEsmaNot": "99 isim · kaynağıyla birlikte · tıkla aç-kapa",
+  "seriRozet": "{n}. gün 🔥",
+  "seriTitle": "Her gün uğra — serin büyür, bir gün kaçarsan sıfırlanır! En iyi serin: {best}"
 }

@@ -85,6 +85,8 @@ import { TelifDisclaimer } from "./components/TelifDisclaimer";
 import { telifUyarisiGerekli } from "./telifUyari";
 import { uretimIstYaz } from "./components/islamicToolsVucut";
 import { BugunHediye } from "./components/BugunHediye";
+// ★ 02.11 GÜNLÜK SERİ (streak) rozeti — her gün uğra, seri artar; jeton yok (ince ayar sonra)
+import { GunlukSeriRozeti } from "./studio/GunlukSeriRozeti";
 import { MiniTur } from "./components/MiniTur"; // ★ madde 3: ilk girişte 5 duraklı tur
 import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4: dürüst aylık harf sayacı
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
@@ -655,6 +657,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
       />
 
       {/* ★ BUGÜNÜN HEDİYESİ — günlük giriş sürprizi (yol haritası madde 14) — YALNIZ girişli kullanıcılara; içerik seçili dilde */}
+      {/* ★ 02.11 GÜNLÜK SERİ ROZETİ — sağ alt; BugunHediye (sol) ile simetrik */}
+      <GunlukSeriRozeti lang={lang} />
+
       <BugunHediye notify={notify} onHakDegisti={syncWallet} userEmail={user?.email || null} lang={lang} />
 
       {/* ★ MINI TUR — ilk girişte 5 duraklı gezdirme (madde 3, 02.10) — ★ 26.10: bitince Kur'an Öğreniyorum paneli AÇILIR ve orada kalır (kullanıcı emri) */}

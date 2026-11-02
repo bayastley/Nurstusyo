@@ -2140,5 +2140,7 @@
   "pwaZatenKurulu": "The app is already installed on this device ✓",
   "ksfEsmaBaslik": "✨ ESMAÜ'L-HÜSNÂ",
   "ksfEsmaAlt": "Allah's 99 beautiful names — tap: meaning and Qur'an/hadith source",
-  "ksfEsmaNot": "99 names · with sources · tap to open/close"
+  "ksfEsmaNot": "99 names · with sources · tap to open/close",
+  "seriRozet": "Day {n} 🔥",
+  "seriTitle": "Come back every day to grow your streak — miss a day and it resets! Your best: {best}"
 }
