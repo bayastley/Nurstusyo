@@ -39,7 +39,7 @@ import { SURAHS } from "../data/surahs";
 // ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri)
 import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { SURE_ARAPCA } from "../data/sureArapca"; // ★ AKILLI SURE ARAMASI (03.10): Arapça adla arama
-import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot } from "./kesfetTemel";
+import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KARILER, everyAyetUrl, SEKMELER, type SekmeId, type KitaplikNot, DuaSesSecici } from "./kesfetTemel";
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
@@ -570,8 +570,13 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 35: BEBEK DUASI — KALDIRILDI (kullanıcı kararı 28.09: doğum köşesi sitede olmayacak) ── */}
 
-      {/* ── 61: DUA REHBERİ — SRP adım 4b: kesfetDuaBolumu ── */}
-      {sekme === "dua" && <DuaRehberBolumu filtreliDuaRehber={filtreliDuaRehber} duaOkunduTick={duaOkunduTick} duaOkunduArttir={() => setDuaOkunduTick((v) => v + 1)} />}
+      {/* ── 61: DUA REHBERİ — SRP adım 4b: kesfetDuaBolumu; ★ 03.10 ses seçici başlarında */}
+      {sekme === "dua" && (
+        <>
+          <DuaSesSecici notify={notify} />
+          <DuaRehberBolumu filtreliDuaRehber={filtreliDuaRehber} duaOkunduTick={duaOkunduTick} duaOkunduArttir={() => setDuaOkunduTick((v) => v + 1)} />
+        </>
+      )}
 
       {/* ── 41: HOCA KARŞILAŞTIRMA ── */}
       {sekme === "hoca" && (
