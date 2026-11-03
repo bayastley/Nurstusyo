@@ -12,6 +12,7 @@ import type { Tier } from "../types";
 import { AdminBroadcastPanel } from "./AdminBroadcastPanel";
 import { sanitizeText } from "../security/sanitize";
 import { AdminUsersTab } from "./AdminUsersTab";
+import { MenkibelerYonetimTab } from "./adminDashboardMenkibeler";
 import { AdminModulesSyncTab } from "./AdminModulesSyncTab";
 // ★ 10.10 (Öncelik-1 GİZLE/BAKIM PLANI): admin-gizli özellikler sekmesi
 import { AdminGizliFeaturesTab } from "./AdminGizliFeatures";
@@ -41,7 +42,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
   onUpdateUser,
   notify,
 }) => {
-  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim" | "menkibeler">("users");
   // ★ 06.10 SAĞLIK ROZETİ: mount'ta salt-okunur action ping'leri → kabukta 🩺 rozet + sekme noktaları
   const panelSaglik = usePanelSaglik();
   const [sysConfig, setSysConfig] = useState<SystemConfig>(() => getSystemConfig());
@@ -460,6 +461,7 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             handlePushGist={handlePushGist}
           />
           {activeTab === "broadcast" && <AdminBroadcastPanel notify={notify} />}
+          {activeTab === "menkibeler" && <MenkibelerYonetimTab notify={notify} />}
 
           {/* ★ TAB: GİZLİ ÖZELLİKLER — 6 madde + atmosfer kategorileri (10.10) */}
           {activeTab === "gizliFeatures" && <AdminGizliFeaturesTab notify={notify} />}

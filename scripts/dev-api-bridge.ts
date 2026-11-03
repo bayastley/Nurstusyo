@@ -79,9 +79,12 @@ function loadHandler(apiFile: string): AnyHandler | null {
   const cached = API_CACHE.get(apiFile);
   if (cached !== undefined) return cached;
   // api/ altında dosya adı → handler yolu (api/video/sign.ts → Nurstusyo/api/video/sign.ts)
+  // ★ 02.11 klasör-index desteği: api/kissalar/index.ts → route "/api/kissalar"
   const absTs = path.resolve(process.cwd(), "api", `${apiFile}.ts`);
   const absTsx = path.resolve(process.cwd(), "api", `${apiFile}.tsx`);
-  const abs = fs.existsSync(absTs) ? absTs : fs.existsSync(absTsx) ? absTsx : null;
+  const absIdxTs = path.resolve(process.cwd(), "api", apiFile, "index.ts");
+  const absIdxTsx = path.resolve(process.cwd(), "api", apiFile, "index.tsx");
+  const abs = fs.existsSync(absTs) ? absTs : fs.existsSync(absIdxTs) ? absIdxTs : fs.existsSync(absTsx) ? absTsx : fs.existsSync(absIdxTsx) ? absIdxTsx : null;
   if (!abs) { API_CACHE.set(apiFile, null); return null; }
   // Vite dev'de TS dosyaları tsconfig rootDir ile build edilebilir, ama
   // dev-api-bridge TEK tek ts-node şartı yok — Vite handler'ları mı destekler?
@@ -147,11 +150,20 @@ export function devApiBridge(options: DevApiBridgeOptions = {}) {
 
       // ★ ssrLoadModule cache — handler'ları TEK SEFER DERLE, sonra yeniden çalıştır
       const loaded = new Map<string, Promise<AnyHandler | null>>();
+      // ★ 02.11 klasör-index: api/kissalar/index.ts → "/api/kissalar" (Vercel yapısıyla aynı)
+      const modulYolu = (apiFile: string): string => {
+        const kok = path.resolve(process.cwd(), "api");
+        if (fs.existsSync(path.join(kok, `${apiFile}.ts`))) return `/api/${apiFile}.ts`;
+        if (fs.existsSync(path.join(kok, apiFile, "index.ts"))) return `/api/${apiFile}/index.ts`;
+        if (fs.existsSync(path.join(kok, `${apiFile}.tsx`))) return `/api/${apiFile}.tsx`;
+        if (fs.existsSync(path.join(kok, apiFile, "index.tsx"))) return `/api/${apiFile}/index.tsx`;
+        return `/api/${apiFile}.ts`;
+      };
       const getHandler = (apiFile: string): Promise<AnyHandler | null> => {
         const cached = loaded.get(apiFile);
         if (cached) return cached;
         // ssrLoadModule Vite'ın TS-to-JS transpiler'ını kullanır (esbuild)
-        const entry = server.ssrLoadModule(`/api/${apiFile}.ts`).then((mod) => {
+        const entry = server.ssrLoadModule(modulYolu(apiFile)).then((mod) => {
           const h = (mod.default ?? mod.handler) as AnyHandler | undefined;
           return typeof h === "function" ? h : null;
         }).catch((err) => {

@@ -15,7 +15,7 @@ import type { BanLog } from "../services/adminSyncService";
 //   (usePanelSaglik.ts) — hangi sekme çalışmıyorsa rozet + sekme noktası gösterir.
 import type { PanelSaglik, SaglikTab } from "./usePanelSaglik";
 
-export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim";
+export type AdminTab = "users" | "broadcast" | "banLogs" | "errors" | "feedback" | "modules" | "sync" | "haftaVideo" | "rapor" | "gizliFeatures" | "kullanim" | "menkibeler";
 
 /** Sağlık tooltip'i için kısa sekme adları (panel TR hardcoded — i18n kullanmaz, 06.10) */
 const SEKME_ETIKETLERI: Record<SaglikTab, string> = {
@@ -26,6 +26,7 @@ const SEKME_ETIKETLERI: Record<SaglikTab, string> = {
   haftaVideo: "Haftanın Videosu",
   rapor: "Haftalık Rapor",
   feedback: "Geri Bildirim",
+  menkibeler: "Menkıbeler",
 };
 
 /** Header'daki küçük 🩺 rozet: test→ gri nabız · ok→ yeşil 7/7 · hata→ kırmızı + hatalı sekme adları */
@@ -188,6 +189,16 @@ export const AdminPanelKabuk: React.FC<{
           >
             🎭
             <span>{ttX2610("adkGizliOzellikler")}</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("menkibeler")}
+            className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 px-2 text-[10.5px] font-bold transition whitespace-nowrap ${
+              activeTab === "menkibeler" ? "text-black font-black" : "text-sky-300 hover:text-white"
+            }`}
+            style={activeTab === "menkibeler" ? { background: "linear-gradient(135deg,#38bdf8,#0284c7)" } : { background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.3)" }}
+          >
+            📖
+            <span>Menkıbeler</span>
           </button>
           <button
             onClick={() => setActiveTab("rapor")}
