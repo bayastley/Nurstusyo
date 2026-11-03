@@ -11,17 +11,18 @@ import React, { useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
-import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, hadisBankasiGorunum } from "../data/hadisData";
+import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, hadisBankasiGorunum, RIVAYETCILER, rivayetciUyar } from "../data/hadisData";
 import { MenkibelerBolumu } from "./kesfetMenkibeler";
 import { KISSA_LISTESI } from "../data/kissaData";
 import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
+import { MezheplerBolumu } from "./kesfetSekmeler";
 import { kissaCevir } from "../data/kissaCokDil"; // ★ KISSA ÇOKDİL (06.10): 19 kıssa 5 dilde — TR asıl, çeviri yoksa fallback
 import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
 // ★ 31.10 SORU BANKASI GENİŞLETME: 8 konu bloğu (iman/günah/abdest/namaz/oruç-zekât/hac/aile/gündelik) — akıllı arama + dil görünümü
 import { SORU_BANKASI, soruGorunum } from "../data/sorular";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURE_BİLGİLERİ } from "../data/sureData";
-import { NAMAZ_REHBERİ } from "../data/namazData";
+import { NAMAZ_REHBERİ, NAMAZ_CESITLERİ, NAMAZ_FAZILETLERİ } from "../data/namazData";
 import { DUA_REHBERİ } from "../data/duaData";
 import { ADABI_MUASERET } from "../data/adabiMuaseret";
 import { SÜNNETLER } from "../data/sunnetler";
@@ -76,10 +77,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: sekme/hadis teması/derece adları 5 dilde — TR veri anahtarları sabit kalır
   const SEKME_KEY: Record<string, string> = {
-    imsakiye: "ksTabImsakiye", hadis: "ksHadisBankasi", kissa: "ksKissaKosesi", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
+    imsakiye: "ksTabImsakiye", hadis: "ksHadisBankasi", kissa: "ksKuranKissalari", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
     menkibeler: "ksMenkibeler", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
-    cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim",
+    cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
   };
   const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
   const TEMA_KEY: Record<string, string> = {
@@ -92,10 +93,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const DERECE_KEY: Record<string, string> = { sahih: "ksDereceSahih", hasan: "ksDereceHasan", zayif: "ksDereceZayif", kulliyat: "ksDereceKulliyat" };
   const dereceAdi = (d?: string): string => (d && DERECE_KEY[d] ? tt(DERECE_KEY[d]) : (d && HADIS_DERECE_ETIKETI[d]?.label) || "");
 
-  // ★ 01.11 RAMAZAN İMSAKİYESİ (kullanıcı emri): İslami Öğreniyorum açılışında ilk sekme
-  const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "imsakiye");
+  // ★ 02.11 (kullanıcı emri): İslâmi Öğreniyorum ilk tıklamada Hadis Bankası açılsın
+  const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
   const [arama, setArama] = useState("");
   const [hadisTema, setHadisTema] = useState("tumu");
+  // ★ 02.11 RİVAYET EDENLER (kullanıcı emri): derece kısmına Buhâri/Tirmizî gibi
+  //   sahih kabul edilen_rnn kişiler buton olarak girer; tıklayınca yalnız ondan
+  //   rivâyet edilen hadisler listelenir.
+  const [rivayetci, setRivayetci] = useState("tumu");
   const [kartCevrildi, setKartCevrildi] = useState<string | null>(null); // ★ 03.10: index yerine kelime anahtarı — sıralama değişse de çevrilen kart kaymaz
   // ★ SURE AKORDEONU (01.10): tıkla-aç/kapa — liste yer kaplamasın, uzun açıklama sadece açık karta girsin
   const [acikSure, setAcikSure] = useState<number | null>(null);
@@ -105,6 +110,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   //   kapalı kartta soru + tek satır cevap özeti, açık kartta mezhep bazlı cevaplar/kaynak
   const [acikSoru, setAcikSoru] = useState<number | null>(null);
   const [acikGenelSoru, setAcikGenelSoru] = useState<number | null>(null);
+  // ★ 02.11 NAMAZ PANEL SEÇİMİ (kullanıcı emri): üst üç buton — çeşitler/fazilet/kilinis
+  const [namazPanel, setNamazPanel] = useState<string | null>(null);
   // ★ PEYGAMBER AKORDEONU (31.10): kıssa kartı tıkla-aç — kapalı satır özet, açık kartta olaylar+ ders kaynağı
   const [acikPeygamber, setAcikPeygamber] = useState<number | null>(null);
   // ★ 31.10 SİYER: açık kategori idx — akordeon
@@ -217,9 +224,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
   // ★ 31.10 5-DİL: banka dile göre derlenmesin (hadisGenis çevirileri de karışır); arama çevirisiz metin üzerinden
   const hadisBanka = React.useMemo(() => hadisBankasiGorunum(lang), [lang]);
+  const rivayetciSayilari = React.useMemo(() => Object.fromEntries(RIVAYETCILER.map((r) => [r.id, hadisBanka.filter((h) => rivayetciUyar(h.kaynak, r.id)).length])), [hadisBanka]);
   const filtreliHadisler = useMemo(
-    () => hadisBanka.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
-    [hadisTema, q],
+    () => hadisBanka.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (rivayetci === "tumu" || rivayetciUyar(h.kaynak, rivayetci)) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
+    [hadisTema, q, rivayetci],
   );
   // ★ KÜLLİYAT ARAMASI (28.09): yerel bankada sonuç yoksa Buhârî+Müslim külliyatı
   //   /api/hadis/ara'dan çekilir (dorar.net + opsiyonel sunnah.com). "aile" gibi
@@ -374,6 +382,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           hadisTemaAdi={hadisTemaAdi} filtreliHadisler={filtreliHadisler}
           kuliyatYukleniyor={kuliyatYukleniyor} kuliyatSonuc={kuliyatSonuc}
           dereceAdi={dereceAdi}
+          rivayetci={rivayetci} setRivayetci={setRivayetci} rivayetciSayilari={rivayetciSayilari}
         />
       )}
 
@@ -381,6 +390,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {sekme === "kissa" && (
         <KissaBolumu tt={tt} filtreliKissalar={filtreliKissalar} acikKissa={acikKissa} setAcikKissa={setAcikKissa} />
       )}
+
+      {/* ── 19b: MEZHEPLER — 02.11 kullanıcı emri: üstte 4 hak mezhep ── */}
+      {sekme === "mezhepler" && <MezheplerBolumu tt={tt} />}
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
       {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
@@ -499,22 +511,60 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         <SureBolumu filtreliSureler={filtreliSureler} acikSure={acikSure} setAcikSure={setAcikSure} q={q} />
       )}
 
-      {/* ── 28: NAMAZ ÖĞRETİCİ ── */}
+      {/* ── 28: NAMAZ ÖĞRETİCİ — 02.11 (kullanıcı emri): üstte üç buton;
+          Namaz Çeşitleri · Faziletleri · Nasıl Kılınır; iç içe açılır ── */}
       {sekme === "namaz" && (
-        <div className="space-y-1.5">
-          {NAMAZ_REHBERİ.map((a, i) => (
-            <div key={i} className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[.03] p-3">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{i + 1}</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10.5px] font-black text-white/90">{a.adim}</p>
-                <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/60">{a.yazi}</p>
-                {a.arapca && <p className="mt-1 text-right font-arabic text-[13px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.arapca}</p>}
-                {/* ★ 25.10 (kullanıcı emri): sahih kaynak satırı — her adımın altında */}
-                {a.kaynak && <p className="mt-1 text-[8px] font-bold" style={{ color: "var(--accent)" }}>📚 {a.kaynak}</p>}
-              </div>
+        <div className="space-y-2.5">
+          <p className="text-center text-[9px] leading-relaxed text-white/40">{tt("ksNamazAlt")}</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(["cesitler", "fazilet", "kilinis"] as const).map((h) => (
+              <button key={h} type="button" data-minitur={`namaz-${h}`}
+                onClick={() => setNamazPanel(namazPanel === h ? null : h)}
+                className={`rounded-xl border p-2.5 text-center transition ${namazPanel === h ? "border-white/25 bg-white/[.07] text-white" : "border-white/10 bg-white/[.03] text-white/60 hover:bg-white/[.05]"}`}>
+                <p className="text-[10px] font-black leading-tight">
+                  {h === "cesitler" ? tt("ksNamazCesitleri") : h === "fazilet" ? tt("ksNamazFaziletleri") : tt("ksNasilKilinur")}
+                </p>
+              </button>
+            ))}
+          </div>
+          {namazPanel === "cesitler" && (
+            <div className="space-y-1.5" data-minitur="namaz-cesit-liste">
+              {NAMAZ_CESITLERİ.map((c) => (
+                <div key={c.ad} className="rounded-xl border border-white/10 bg-white/[.03] p-2.5">
+                  <p className="text-[10.5px] font-black text-white/90">{c.ad} <span className="ml-1 text-[8px] font-bold" style={{ color: "var(--accent)" }}>{c.hukum}</span></p>
+                  <p className="mt-1 text-[9.5px] text-white/65">Rekat: {c.rekat} · Vakti: {c.vakti}</p>
+                  <p className="mt-0.5 text-[9px] leading-relaxed text-white/50">{c.fazilet}</p>
+                  <p className="mt-0.5 text-[8px] font-bold" style={{ color: "var(--accent-2)" }}>📚 {c.kaynak}</p>
+                </div>
+              ))}
             </div>
-          ))}
-          <p className="pt-1 text-center text-[8px] text-white/25">{tt("ktNamazRekat")}</p>
+          )}
+          {namazPanel === "fazilet" && (
+            <div className="space-y-1.5" data-minitur="namaz-fazilet-liste">
+              {NAMAZ_FAZILETLERİ.map((f) => (
+                <div key={f.ad} className="rounded-xl border border-white/10 bg-white/[.03] p-2.5">
+                  <p className="text-[10.5px] font-black text-white/90">{f.ad}</p>
+                  <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/65">{f.fazilet}</p>
+                  <p className="mt-0.5 text-[8px] font-bold" style={{ color: "var(--accent-2)" }}>📚 {f.kaynak}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {namazPanel === "kilinis" && (
+            <div className="space-y-1.5" data-minitur="namaz-kilinis-liste">
+              {NAMAZ_REHBERİ.map((a, i) => (
+                <div key={i} className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/[.03] p-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10.5px] font-black text-white/90">{a.adim}</p>
+                    <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/60">{a.yazi}</p>
+                    {a.arapca && <p className="mt-1 text-right font-arabic text-[13px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.arapca}</p>}
+                  {a.kaynak && <p className="mt-1 text-[8px] font-bold" style={{ color: "var(--accent)" }}>📚 {a.kaynak}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

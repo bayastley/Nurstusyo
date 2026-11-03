@@ -2162,5 +2162,18 @@
   "mkGeri": "العودة إلى القائمة",
   "mkHikmet": "العبرة من القصة:",
   "mkKaynak": "المصدر",
-  "ksMenkibeler": "مناقب إسلامية"
+  "ksMenkibeler": "مناقب إسلامية",
+  "ksKuranKissalari": "قصص القرآن",
+  "ksMezhepler": "المذهب",
+  "ksMezhepAlt": "المذاهب السنية الأربعة — انقر على إمامٍ لترى سيرته وأصوله وفقهه كاملاً.",
+  "ksRivayetciler": "الرواة",
+  "ksRivayetAlt": "المصادر الثابتة — انقر واحداً لترى الأحاديث المروية عنه فقط.",
+  "ksKulliyatToplam": "حديث في المصدر",
+  "ksBankadaN": "في البنك",
+  "ksRivayetAra": "⟶ ابحث في أحاديث هذا الرواية",
+  "ksNamazCesitleri": "أنواع الصلاة",
+  "ksNamazFaziletleri": "فضائل الصلاة",
+  "ksNasilKilinur": "كيف تُصلَّى؟",
+  "ksNamazAlt": "اختر أولاً — دخل إلى نوع أو فضل أو كيفية الأداء.",
+  "ksRekat": "ركعة"
 }

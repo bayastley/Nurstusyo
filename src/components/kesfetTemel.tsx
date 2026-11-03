@@ -169,13 +169,14 @@ export const KARILER = [
 export const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
 
-export type SekmeId = "siyer" | "menkibeler" | "hadis" | "kissa" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
+export type SekmeId = "hadis" | "menkibeler" | "siyer" | "kissa" | "mezhepler" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
 
 export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
-  { id: "siyer", label: "Siyer-i Nebi", emoji: "🕋" },
-  { id: "menkibeler", label: "İslâmi Menkıbeler", emoji: "📜" },
   { id: "hadis", label: "Hadis Bankası", emoji: "📚" },
-  { id: "kissa", label: "Kıssa Köşesi", emoji: "🕌" },
+  { id: "menkibeler", label: "İslâmi Menkıbeler", emoji: "📜" },
+  { id: "siyer", label: "Siyer-i Nebi", emoji: "🕋" },
+  { id: "kissa", label: "Kur'an Kıssaları", emoji: "🕌" },
+  { id: "mezhepler", label: "Mezhepler", emoji: "🏛️" },
   { id: "peygamber", label: "Peygamberler Hayatı", emoji: "🌙" },
   { id: "soru", label: "Soru-Cevap", emoji: "❓" },
   { id: "kelime", label: "Kelime Kartları", emoji: "🔤" },

@@ -34,6 +34,38 @@ function degistemDili(): string {
   } catch { return "tr"; }
 }
 
+// ★ 02.11 (kullanıcı emri "tıkladığımda hemen açılsın, en alta gitmesin"):
+//   detay artık konu butonunun hemen altında (col-span-2), ayrı bileşen olarak
+type DilMetinFn = (m: UzakKissa | undefined, alan: "baslik" | "hikaye" | "hikmet") => string;
+function MenkibeDetay({ tt, secili, setSeciliId, dilMetin }: { tt: TT; secili: UzakKissa; setSeciliId: (v: string | null) => void; dilMetin: DilMetinFn }) {
+  return (
+    <div data-minitur="menkibeler-detay" className="mt-1 rounded-2xl border border-white/15 bg-white/[.05] p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <button type="button" data-minitur="menkibeler-geri" onClick={() => setSeciliId(null)} className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]">
+          <ChevronLeft className="h-3 w-3" />
+          {tt("mkGeri")}
+        </button>
+        <button type="button" data-minitur="menkibeler-x" onClick={() => setSeciliId(null)} className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white">
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{secili.kategori}</span>
+      <h3 className="mt-1 text-[15px] font-black text-white">{dilMetin(secili, "baslik")}</h3>
+      <p className="mt-3 text-[11.5px] leading-[1.7] text-white/80 whitespace-pre-line">{dilMetin(secili, "hikaye")}</p>
+      <div className="mt-4 rounded-xl bg-emerald-500/10 p-3">
+        <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-emerald-200">
+          <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span><span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}</span>
+        </p>
+      </div>
+      <p className="mt-3 flex items-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
+        <Library className="h-3 w-3 shrink-0" />
+        <span>{tt("mkKaynak")}: {secili.kaynak}</span>
+      </p>
+    </div>
+  );
+}
+
 export function MenkibelerBolumu({ tt }: { tt: TT }) {
   const [tumGoster, setTumGoster] = React.useState(false);
   const [seciliId, setSeciliId] = React.useState<string | null>(null);
@@ -86,8 +118,8 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
       {/* KONU BUTONLARI — en fazla 5 görünür; "tümünü göster" içerde açar */}
       <div className="grid grid-cols-2 gap-2">
         {gorunen.map((m) => (
+          <React.Fragment key={m.id}>
           <button
-            key={m.id}
             type="button"
             data-minitur={`menkibeler-konu-${m.id}`}
             onClick={() => setSeciliId(m.id)}
@@ -105,6 +137,12 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
               {dilMetin(m, "baslik")}
             </span>
           </button>
+          {seciliId === m.id && (
+            <div className="col-span-2">
+              <MenkibeDetay tt={tt} secili={m} setSeciliId={setSeciliId} dilMetin={dilMetin} />
+            </div>
+          )}
+          </React.Fragment>
         ))}
       </div>
 
@@ -121,57 +159,6 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
         </button>
       )}
 
-      {/* HİKÂYE SAYFASI — listenin altında, aşağı doğru açılır */}
-      {secili && (
-        <div
-          data-minitur="menkibeler-detay"
-          className="rounded-2xl border border-white/15 bg-white/[.05] p-4"
-        >
-          {/* üst çubuk: geri + kapat */}
-          <div className="mb-3 flex items-center justify-between">
-            <button
-              type="button"
-              data-minitur="menkibeler-geri"
-              onClick={() => setSeciliId(null)}
-              className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]"
-            >
-              <ChevronLeft className="h-3 w-3" />
-              {tt("mkGeri")}
-            </button>
-            <button
-              type="button"
-              data-minitur="menkibeler-x"
-              onClick={() => setSeciliId(null)}
-              className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>
-            {secili.kategori}
-          </span>
-          <h3 className="mt-1 text-[15px] font-black text-white">{dilMetin(secili, "baslik")}</h3>
-
-          <p className="mt-3 text-[11.5px] leading-[1.7] text-white/80 whitespace-pre-line">{dilMetin(secili, "hikaye")}</p>
-
-          {/* kıssadan hisse */}
-          <div className="mt-4 rounded-xl bg-emerald-500/10 p-3">
-            <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-emerald-200">
-              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span>
-                <span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}
-              </span>
-            </p>
-          </div>
-
-          {/* kaynak */}
-          <p className="mt-3 flex items-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
-            <Library className="h-3 w-3 shrink-0" />
-            <span>{tt("mkKaynak")}: {secili.kaynak}</span>
-          </p>
-        </div>
-      )}
     </div>
   );
 }

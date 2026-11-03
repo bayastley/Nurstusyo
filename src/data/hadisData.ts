@@ -8,7 +8,7 @@
 export interface HadisKaydi { tema: string; metin: string; kaynak: string; derece?: "sahih" | "hasan" | "zayif" }
 // ★ 31.10 5-DİL GÖRÜNÜM (Kullanıcı emri): hadisGenis.ts'teki çokdil kayıtlar
 //   dile göre birleştirilir; çevirisi olmayan eski kayıtlar TR fallback kalır.
-import { HADIS_GENIS } from "./hadisGenis";
+import { HADIS_GENIS, HADIS_ESKI_CEVRIM } from "./hadisGenis";
 import type { Lang } from "../i18n/base";
 
 const _LANG_IDX: Record<string, 0 | 1 | 2 | 3 | 4> = { tr: 0, en: 1, ar: 2, id: 3, ur: 4 };
@@ -16,8 +16,14 @@ export const hadisBankasiGorunum = (lang?: Lang | string | null): HadisKaydi[] =
   const idx = _LANG_IDX[String(lang ?? "tr").toLowerCase()] ?? 0;
   const ekstra: HadisKaydi[] = HADIS_GENIS.map((g) => ({ tema: g.t, metin: g.m[idx] ?? g.m[0], kaynak: g.k, derece: g.d }));
   // Çeviri boş gelirse TR metne düş (dürüst gösterim)
+  // ★ 31.10 Eski banka Komşuluk satırlarının 5-dil çevirisi (çevirisi olmayan satır TR kalır)
+  const eski: HadisKaydi[] = HADIS_BANKASI.map((h) => {
+    if (idx === 0) return h;
+    const c = HADIS_ESKI_CEVRIM[h.metin];
+    return c && c[idx] ? { ...h, metin: c[idx] } : h;
+  });
   const duzelt = ekstra.map((h, i) => (!h.metin ? { ...h, metin: HADIS_GENIS[i].m[0] } : h));
-  return [...HADIS_BANKASI, ...duzelt];
+  return [...eski, ...duzelt];
 };
 export const HADIS_BANKASI: HadisKaydi[] = [
   // Sabır
@@ -224,4 +230,62 @@ export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string;
   sahih: { label: "Sahih", renk: "emerald", aciklama: "Rivayet zinciri sahih — Buhari/Müslim standardı" },
   hasan: { label: "Hasan", renk: "sky", aciklama: "Kabul edilmiş, iyi dereceli rivayet" },
   zayif: { label: "Zayıf", renk: "amber", aciklama: "Zayıf rivayet — amelde kullanılabilir, isnadı zayıf" },
+};
+
+// ═══ 02.11 RİVAYET EDENLER (Kullanıcı emri: "Hasan ne demek ayıp — oraya rivayet eden
+// sahih kabul edilen kişileri koy: Buhâri, Tirmizî gibi; her birinde buton olsun, hadis
+// bankasında o rivâyettekilerden seçebilsin; her birine arama da kalsın; kaynak sayısı
+// açık yazılsın ki kişi kitaba tıklayınca kaynak sormasın") ═══
+export interface RivayetciKaydi { id: string; ad: string; emoji: string; kulliyat: string }
+/** Sahih kabul edilen hadis kitapları (Kütüb-i Sitte + Müsned + Sünen-i Kübrâ) —
+ *  kulliyat: hadisçilerin genel kabulüyle kitaptaki rivâyet sayısı (çevrimli değil, bilgi rozeti). */
+export const RIVAYETCILER: RivayetciKaydi[] = [
+  { id: "buhari", ad: "Buhârî", emoji: "📗", kulliyat: "≈7.082" },
+  { id: "muslim", ad: "Müslim", emoji: "📘", kulliyat: "≈3.033" },
+  { id: "tirmizi", ad: "Tirmizî", emoji: "📙", kulliyat: "≈3.895" },
+  { id: "ebudavud", ad: "Ebû Dâvûd", emoji: "📕", kulliyat: "≈4.590" },
+  { id: "nesai", ad: "Nesâî", emoji: "📒", kulliyat: "≈5.758" },
+  { id: "ibnmace", ad: "İbn Mâce", emoji: "📓", kulliyat: "≈4.341" },
+  { id: "ahmed", ad: "Ahmed b. Hanbel", emoji: "📗", kulliyat: "≈26.363 (Müsned)" },
+  { id: "beyhaki", ad: "Beyhakî", emoji: "📜", kulliyat: "≈23.000 (Sünen-i Kübrâ)" },
+];
+
+/** Kaynak metninden rivayetçi adı çıkarır: "Buhari, Edeb, 30" → "Buhârî"
+ *  Kartta derece rozetinin yerine KİŞİ ADI gösterilir; derece bilgisi
+ *  rozetin renk + ipucu metninde korunur. */
+export const kaynaktanRivayetci = (kaynak: string): string => {
+  const ilkin = (kaynak || "").split("/")[0].trim();
+  const birinci = ilkin.split(",")[0].trim();
+  const harita: Array<[RegExp, string]> = [
+    [/^buhar/i, "Buhârî"],
+    [/^m[üu]slim/i, "Müslim"],
+    [/^tirmiz/i, "Tirmizî"],
+    [/^eb[ûu] d[âa]v/i, "Ebû Dâvûd"],
+    [/^nesa/i, "Nesâî"],
+    [/^i[bn\. ]*m[âa]ce/i, "İbn Mâce"],
+    [/^ahmed/i, "Ahmed b. Hanbel"],
+    [/^beyhak/i, "Beyhakî"],
+    [/^taberan/i, "Taberânî"],
+  ];
+  for (const [p, ad] of harita) if (p.test(birinci)) return ad;
+  // Ayet kaynaklıysa "Kur'an" göster
+  if (/\d+:\d+|Sure/i.test(ilkin) && !birinci.includes(",")) return "Kur'an";
+  return birinci.slice(0, 24) || "—";
+};
+
+/** Rivayetçi filtresi: kaynak metni verilen kitaba ait mi diye bakar */
+export const rivayetciUyar = (kaynak: string, kitapId: string): boolean => {
+  const ravi = kaynaktanRivayetci(kaynak);
+  const anahtar: Record<string, RegExp> = {
+    buhari: /buhar/i,
+    muslim: /m[üu]slim/i,
+    tirmizi: /tirmiz/i,
+    ebudavud: /eb[ûu] d[âa]v/i,
+    nesai: /nesa/i,
+    ibnmace: /i[bn\. ]*m[âa]ce/i,
+    ahmed: /ahmed/i,
+    beyhaki: /beyhak/i,
+  };
+  const p = anahtar[kitapId];
+  return p ? p.test(ravi) : false;
 };

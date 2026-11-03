@@ -2162,5 +2162,18 @@
   "mkGeri": "Back to list",
   "mkHikmet": "Lesson of the story:",
   "mkKaynak": "Source",
-  "ksMenkibeler": "Islamic Legends"
+  "ksMenkibeler": "Islamic Legends",
+  "ksKuranKissalari": "Qur'an Stories",
+  "ksMezhepler": "Madhhabs",
+  "ksMezhepAlt": "The four Sunni madhhabs — tap an imam for his school, usul and fiqh views in full.",
+  "ksRivayetciler": "Narrators",
+  "ksRivayetAlt": "Accepted narrating sources — tap one to see only the hadith narrated by that source.",
+  "ksKulliyatToplam": "total hadith in that source",
+  "ksBankadaN": "in this bank",
+  "ksRivayetAra": "⟶ now search hadith in that narration",
+  "ksNamazCesitleri": "Prayer Types",
+  "ksNamazFaziletleri": "Prayer Virtues",
+  "ksNasilKilinur": "How to Perform?",
+  "ksNamazAlt": "Choose first — dive into a type, a virtue or a how-to guide.",
+  "ksRekat": "Rak'ah"
 }

@@ -11,7 +11,7 @@ const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefi
 import React from "react";
 import { translate } from "../i18n";
 import { ChevronDown } from "lucide-react";
-import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI } from "../data/hadisData";
+import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, RIVAYETCILER, kaynaktanRivayetci } from "../data/hadisData";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURAHS } from "../data/surahs";
 import { SURE_ARAPCA } from "../data/sureArapca";
@@ -20,6 +20,10 @@ import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 import { kelimeOku, bilinenKelimeIsaretle } from "./kesfetTemel";
 // ★ 31.10 ESMAÜ'L-HÜSNÂ (kullanıcı emri): 99 isim — Tirmizî listesi, âyet/hadis kaynaklı
 import { ESMA_HUSNA, ESMA_KAYNAK_NOTU, type Esma } from "../data/esmaHusna";
+// ★ 02.11 UZUN KISSA METNİ (kullanıcı emri "kıssaları uzun yaz"): KISSA_UZUN
+import { KISSA_UZUN } from "../data/kissaUzun";
+// ★ 02.11 MEZHEPLER (kullanıcı emri: üstte 4 hak mezhep)
+import { MEZHEPLER, type MezhepKaydi } from "../data/mezheplerData";
 
 // ── KELİME KARTI — KesfetModal'dan taşındı (birebir) ──────────
 // Kelime kartı — günün kelimelerinde altın çerçeve; keşif kartlarında varsayılan kenar
@@ -93,6 +97,7 @@ const dereceSinif = (d?: string): string =>
 export function HadisBolumu({
   tt, hadisTema, setHadisTema, hadisTemaAdi, filtreliHadisler,
   kuliyatYukleniyor, kuliyatSonuc, dereceAdi,
+  rivayetci, setRivayetci, rivayetciSayilari,
 }: {
   tt: (k: string) => string;
   hadisTema: string;
@@ -102,10 +107,38 @@ export function HadisBolumu({
   kuliyatYukleniyor: boolean;
   kuliyatSonuc: Array<{ metin: string; kaynak: string; derece: string; dil: string }>;
   dereceAdi: (d?: string) => string;
+  rivayetci: string;
+  setRivayetci: (id: string) => void;
+  rivayetciSayilari: Record<string, number>;
 }) {
   return (
     <>
-      {/* ★ RENK LEJANDI (01.11, kullanıcı emri): rozetlerin anlamı üstte daima görünsün — 5 dilde. */}
+      {/* ★ 02.11 RİVAYET EDENLER (kullanıcı emri): derece kısmında artık Buhâri/Müslim/Tirmizî
+          gibi sahih kabul edilen kaynaklar buton olarak durur; tıklayınca yalnız ondan
+          rivâyet edilen hadisler listelenir; külliyat toplamı + bankadaki sayı açık yazar. */}
+      <div className="mb-2.5 rounded-lg border border-white/10 bg-white/[.02] px-2 py-1.5">
+        <p className="text-[8.5px] font-bold uppercase tracking-wide text-white/40">{tt("ksRivayetciler")}</p>
+        <p className="mt-0.5 text-[8px] leading-snug text-white/35">{tt("ksRivayetAlt")}</p>
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          <button type="button" data-hadis-rivayetci="tumu"
+            onClick={() => setRivayetci("tumu")}
+            className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${rivayetci === "tumu" ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+            style={rivayetci === "tumu" ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
+            ✦ {tt("ksTemaTumu")}
+          </button>
+          {RIVAYETCILER.map((r) => (
+            <button key={r.id} type="button" data-hadis-rivayetci={r.id}
+              title={`${r.ad} — ${tt("ksKulliyatToplam")}: ${r.kulliyat}`}
+              onClick={() => setRivayetci(r.id)}
+              className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${rivayetci === r.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+              style={rivayetci === r.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
+              {r.emoji} {r.ad} · {tt("ksBankadaN")} {rivayetciSayilari[r.id] ?? 0}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-[7.5px] text-white/30">{tt("ksKulliyatToplam")}: {RIVAYETCILER.map((r) => `${r.ad} ${r.kulliyat}`).join(" · ")}</p>
+      </div>
+      {/* derece renk lejandı — isimleriyle birlikte küçük tutuldu */}
       <div className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded-lg border border-white/10 bg-white/[.02] px-2 py-1.5">
         <span className="text-[8.5px] font-bold uppercase tracking-wide text-white/40">{tt("ksDereceLejand")}</span>
         {(["sahih", "hasan", "zayif"] as const).map((d) => (
@@ -132,8 +165,8 @@ export function HadisBolumu({
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
               <p className="text-[9px] font-bold" style={{ color: "var(--accent)" }}>— {h.kaynak}</p>
               {dr ? (
-                <span title={dr.aciklama} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>
-                  {dereceAdi(h.derece)}
+                <span title={`${kaynaktanRivayetci(h.kaynak)} — ${dr.aciklama}`} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>
+                  {kaynaktanRivayetci(h.kaynak)}
                 </span>
               ) : (
                 <span title={tt("ksDereceKaynak")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/50">
@@ -163,7 +196,8 @@ export function HadisBolumu({
               <p className={`text-[10.5px] leading-relaxed ${h.dil === "ar" ? "text-right font-arabic text-[13px]" : "text-white/80"}`} dir={h.dil === "ar" ? "rtl" : undefined}>
                 {h.metin}
               </p>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>                      {dereceAdi(h.derece) || ""}
+              <span title={dereceAdi(h.derece) || ""} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>
+                {kaynaktanRivayetci(h.kaynak) || ""}
               </span>
             </div>
             <p className="mt-1.5 text-[8.5px] text-white/40">— {h.kaynak}</p>
@@ -171,6 +205,48 @@ export function HadisBolumu({
         ))}
       </div>
     </>
+  );
+}
+
+// ── 19a: MEZHEPLER — üst 4 buton + alt detay (02.11 kullanıcı emri) ──
+export function MezheplerBolumu({ tt }: { tt: (k: string) => string }) {
+  const [secili, setSecili] = React.useState<string | null>(null);
+  const m: MezhepKaydi | undefined = MEZHEPLER.find((x) => x.id === secili);
+  return (
+    <div className="space-y-2.5">
+      <p className="text-center text-[9px] leading-relaxed text-white/40">{tt("ksMezhepAlt")}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {MEZHEPLER.map((x) => (
+          <button key={x.id} type="button" data-minitur={`mezhep-${x.id}`}
+            onClick={() => setSecili(secili === x.id ? null : x.id)}
+            className={`rounded-xl border p-3 text-left transition ${secili === x.id ? "border-white/25 bg-white/[.07]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
+            <p className="text-[11.5px] font-black text-white/90">{x.ad}</p>
+            <p className="mt-0.5 text-[8.5px] text-white/45">{x.imam}</p>
+          </button>
+        ))}
+      </div>
+      {m && (
+        <div data-minitur="mezhep-detay" className="rounded-2xl border border-white/15 bg-white/[.05] p-4">
+          <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{m.ad}</span>
+          <h3 className="mt-1 text-[14px] font-black text-white">{m.imam}</h3>
+          <p className="mt-2 text-[10.5px] leading-relaxed text-white/70">{m.imamKisa}</p>
+          <div className="mt-3">
+            <p className="text-[9px] font-black uppercase tracking-wider text-white/40">Usûlu'l-fıkh</p>
+            <ul className="mt-1 space-y-1.5">
+              {m.usul.map((u, i) => <li key={i} className="text-[10px] leading-relaxed text-white/75">{i + 1}. {u}</li>)}
+            </ul>
+          </div>
+          <div className="mt-3">
+            <p className="text-[9px] font-black uppercase tracking-wider text-white/40">Fıkhihtâ özellikleri</p>
+            <ul className="mt-1 space-y-1.5">
+              {m.ozellikler.map((o, i) => <li key={i} className="text-[10px] leading-relaxed text-white/75">{o}</li>)}
+            </ul>
+          </div>
+          <p className="mt-3 text-[9.5px] font-bold" style={{ color: "var(--accent-2)" }}>📕 Temel kitaplar: {m.temelKitaplar}</p>
+          <p className="mt-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>📚 Kaynaklar: {m.kaynaklar}</p>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -202,12 +278,12 @@ export function KissaBolumu({
             </button>
             {!acik && (
               <button type="button" onClick={() => setAcikKissa(k.ad)} title={tt("ksGenislet")} className="block w-full cursor-pointer truncate px-3 pb-3 text-left text-[10px] leading-relaxed text-white/50 transition-colors hover:text-white/80">
-                {k.ozet}
+                {(KISSA_UZUN[k.ad] ?? k.ozet).replace(/\n+/g, " ")}
               </button>
             )}
             {acik && (
               <div className="border-t border-white/10 px-3.5 pb-3.5 pt-2.5">
-                <p className="text-[10.5px] leading-relaxed text-white/70">{k.ozet}</p>
+                <p className="whitespace-pre-line text-[10.5px] leading-relaxed text-white/70">{KISSA_UZUN[k.ad] ?? k.ozet}</p>
                 <p className="mt-2 rounded-lg bg-emerald-500/10 px-2.5 py-1.5 text-[9.5px] leading-relaxed text-emerald-200">💡 {k.ders}</p>
                 {/* ★ KISSANIN DUASI (28.09) — kıssanın sonunda, kıssanın ruhuyla ilgili okunacak dua */}
                 <p className="mt-2 rounded-lg px-2.5 py-1.5 text-[9.5px] leading-relaxed" style={{ background: "rgba(215,170,82,.08)", color: "var(--accent-2)" }}>

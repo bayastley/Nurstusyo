@@ -2162,5 +2162,18 @@
   "mkGeri": "Listeye dön",
   "mkHikmet": "Kıssadan hisse:",
   "mkKaynak": "Kaynak",
-  "ksMenkibeler": "İslâmi Menkıbeler"
+  "ksMenkibeler": "İslâmi Menkıbeler",
+  "ksKuranKissalari": "Kur'an Kıssaları",
+  "ksMezhepler": "Mezhepler",
+  "ksMezhepAlt": "İslâm'ın dört hak mezhebi — imamlarına, usulüne ve fikih görüşlerine tıkla, eksiksiz gör.",
+  "ksRivayetciler": "Rivâyet edenler",
+  "ksRivayetAlt": "Hadisi rivâyet eden, sahih kabul edilen kaynaklar — birine tıkla, yalnız ondan rivâyet edilen hadisler gelsin.",
+  "ksKulliyatToplam": "kaynağında toplam hadis",
+  "ksBankadaN": "bankada",
+  "ksRivayetAra": "⟶ Bu rivâyetteki hadisleri aramak için üst arama kutusunu kullan",
+  "ksNamazCesitleri": "Namaz Çeşitleri",
+  "ksNamazFaziletleri": "Namazların Faziletleri",
+  "ksNasilKilinur": "Nasıl Kılınır?",
+  "ksNamazAlt": "Önce bir seç — çeşidine, fazilete ya da kilınış tarifine in.",
+  "ksRekat": "Rekat"
 }
