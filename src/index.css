@@ -9,6 +9,11 @@
 }
 
 @layer base {
+  /* ★ KULLANICI İSTEĞİ: yazılar ve ölçüler %15 büyük (rem tabanlı ölçek) */
+  html {
+    font-size: 115%;
+  }
+
   :root {
     --accent: #d7aa52;
     --accent-2: #f5dda6;

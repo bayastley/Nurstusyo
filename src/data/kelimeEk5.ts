@@ -1,0 +1,30 @@
+// KELIMEEK5.TS — Kelime havuzu büyütme, parti 5 (25 kelime)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK5: KelimeKart[] = [
+  { ar: "دعوة", tr: "Davet, düâ", okunus: "devet", ornek: "دعوة الله" },
+  { ar: "بشرى", tr: "Müjde", okunus: "buşrâ", ornek: "بشرى لله" },
+  { ar: "كنز", tr: "Hazine", okunus: "kenz", ornek: "من كنوز" },
+  { ar: "عمرة", tr: "Umre", okunus: "umret", ornek: "بحج وعمرة" },
+  { ar: "جماعة", tr: "Cemaat, topluluk", okunus: "cemâat", ornek: "مع جماعة" },
+  { ar: "تربية", tr: "Terbiye, eğitme", okunus: "terbiye", ornek: "تربية النفس" },
+  { ar: "مصحف", tr: "Mushaf", okunus: "mus'af", ornek: "أمام المصحف" },
+  { ar: "مسجد", tr: "Mescid, cami", okunus: "mescid", ornek: "في مسجد" },
+  { ar: "مدرسة", tr: "Mektep, okul", okunus: "mecdun", ornek: "في مدرسة" },
+  { ar: "أستاذ", tr: "Üstad, hoca", okunus: "üstâz", ornek: "من أستاذ" },
+  { ar: "طالب", tr: "Tâlib, öğrenci", okunus: "tâlib", ornek: "طلاب العلم" },
+  { ar: "صاحب", tr: "Sahib, dost", okunus: "sâhib", ornek: "صاحب الخيم" },
+  { ar: "جار", tr: "Komşu", okunus: "câr", ornek: "من جارة" },
+  { ar: "كلمة", tr: "Kelime", okunus: "kelime", ornek: "كلمة طيبة" },
+  { ar: "كلام", tr: "Söz, kelam", okunus: "kelâm", ornek: "يغيرون بين كلامه" },
+  { ar: "خطبة", tr: "Hutbe", okunus: "hutbe", ornek: "بحجة النساء" },
+  { ar: "معنى", tr: "Ma'na, anlam", okunus: "ma'nâ", ornek: "بنفس المعنى" },
+  { ar: "فعل", tr: "Fiil, iş", okunus: "fi'l", ornek: "من فعله" },
+  { ar: "صلح", tr: "Sulh, barış", okunus: "sulh", ornek: "حكم الصلح" },
+  { ar: "حرب", tr: "Savaş", okunus: "harb", ornek: "من حرب" },
+  { ar: "عدو", tr: "Düşman", okunus: "aduvv", ornek: "عدو الله" },
+  { ar: "صديق", tr: "Siddik, dost", okunus: "sıddîk", ornek: "من صديق" },
+  { ar: "وحدة", tr: "Vahdet, birlik", okunus: "vahde", ornek: "في وحدة" },
+  { ar: "طمأنينة", tr: "Tumânine, hâfiflik", okunus: "tumânîne", ornek: "طمأنينة القلب" },
+  { ar: "عبرات", tr: "İbret, gözyaşı", okunus: "ibret", ornek: "عبرة للمأخذين" },
+];

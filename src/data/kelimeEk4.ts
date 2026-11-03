@@ -1,0 +1,30 @@
+// KELIMEEK4.TS — Kelime havuzu büyütme, parti 4 (25 kelime)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK4: KelimeKart[] = [
+  { ar: "فجر", tr: "Fecir, şafak", okunus: "fecr", ornek: "في الفجر" },
+  { ar: "ظل", tr: "Gölge", okunus: "zıll", ornek: "في ظله" },
+  { ar: "صباح", tr: "Sabah", okunus: "sabâh", ornek: "أصبحوا" },
+  { ar: "مساء", tr: "Akşam", okunus: "mesâ", ornek: "أمسوا" },
+  { ar: "معرفة", tr: "Marifet, bilgi", okunus: "ma'rifet", ornek: "معرفة الله" },
+  { ar: "جهل", tr: "Cahillik", okunus: "cehl", ornek: "من جهله" },
+  { ar: "فضل", tr: "Fazl, lütuf", okunus: "fazl", ornek: "فضل الله" },
+  { ar: "كرم", tr: "Cömertlik", okunus: "kerm", ornek: "أكرموا" },
+  { ar: "قوة", tr: "Kuvvet, güç", okunus: "kuvvet", ornek: "بقوة" },
+  { ar: "ضعف", tr: "Zayıflık", okunus: "zı'f", ornek: "لضعفه" },
+  { ar: "مرض", tr: "Hastalık", okunus: "meraz", ornek: "في مرضه" },
+  { ar: "شفا", tr: "Şifa", okunus: "şifâ", ornek: "شفا وضياء" },
+  { ar: "دواء", tr: "İlaç, deva", okunus: "devâ", ornek: "لا دواء لكم" },
+  { ar: "صحة", tr: "Sağlık, sıhhat", okunus: "sıhha", ornek: "بصحة" },
+  { ar: "فرح", tr: "Sevinç", okunus: "ferah", ornek: "فرحا شهيدا" },
+  { ar: "حزن", tr: "Üzüntü, hüzün", okunus: "huzn", ornek: "لا تحزنوا" },
+  { ar: "خوف", tr: "Korku, havf", okunus: "havf", ornek: "خوفا من الله" },
+  { ar: "أمان", tr: "Güvenlik, emniyet", okunus: "âmân", ornek: "أمنا من" },
+  { ar: "فوز", tr: "Fevz, kurtuluş", okunus: "fevz", ornek: "الفوز العظيم" },
+  { ar: "خسارة", tr: "Zarar, hasara", okunus: "hisâre", ornek: "خسارة في" },
+  { ar: "روح", tr: "Ruh", okunus: "ruh", ornek: "من روحه" },
+  { ar: "بدن", tr: "Beden", okunus: "beden", ornek: "في الأبدان" },
+  { ar: "صورة", tr: "Suret, biçim", okunus: "sûret", ornek: "كصورة" },
+  { ar: "مثل", tr: "Misal, örnek", okunus: "misâl", ornek: "كما في الأمثال" },
+  { ar: "جمال", tr: "Güzellik, cemal", okunus: "cemâl", ornek: "جمال ربنا" },
+];

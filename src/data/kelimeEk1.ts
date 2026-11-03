@@ -1,0 +1,31 @@
+// KELIMEEK1.TS — Kelime havuzu büyütme, parti 1 (25 kelime, harakatsız sade Arapça)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK1: KelimeKart[] = [
+  { ar: "نفس", tr: "Nefis, can", okunus: "nefs", ornek: "من نفسه" },
+  { ar: "أرض", tr: "Yer, arz", okunus: "arz", ornek: "في الأرض" },
+  { ar: "سماء", tr: "Gök, semâ", okunus: "semâ", ornek: "في السماء" },
+  { ar: "ماء", tr: "Su", okunus: "mâ", ornek: "من الماء" },
+  { ar: "طريق", tr: "Yol", okunus: "tarîk", ornek: "على طريق" },
+  { ar: "خير", tr: "İyilik, hayır", okunus: "hayr", ornek: "والخير" },
+  { ar: "شر", tr: "Kötülük, şer", okunus: "şerr", ornek: "من شرّ" },
+  { ar: "أخ", tr: "Kardeş", okunus: "ah", ornek: "أخاه" },
+  { ar: "ملك", tr: "Hükümdar, mülk", okunus: "melik", ornek: "ملك الملوك" },
+  { ar: "ولد", tr: "Çocuk, evlat", okunus: "veled", ornek: "ولدا" },
+  { ar: "باب", tr: "Kapı", okunus: "bâb", ornek: "باب المدينة" },
+  { ar: "اسم", tr: "İsim", okunus: "ism", ornek: "اسمعه" },
+  { ar: "قوم", tr: "Kavim, millet", okunus: "kavm", ornek: "قومه" },
+  { ar: "سر", tr: "Sır, gizli", okunus: "sırr", ornek: "سرّكم" },
+  { ar: "بر", tr: "Karada, toprak", okunus: "berr", ornek: "من برّ" },
+  { ar: "بحر", tr: "Deniz", okunus: "behr", ornek: "بحر من غل" },
+  { ar: "جبل", tr: "Dağ", okunus: "cebel", ornek: "من الجبال" },
+  { ar: "شمس", tr: "Güneş", okunus: "şems", ornek: "والشمس" },
+  { ar: "قمر", tr: "Ay", okunus: "kamer", ornek: "والقمر" },
+  { ar: "نجم", tr: "Yıldız", okunus: "necm", ornek: "النجم" },
+  { ar: "ليل", tr: "Gece", okunus: "leyle", ornek: "بالليل" },
+  { ar: "نهار", tr: "Gündüz", okunus: "nehâr", ornek: "والنهار" },
+  { ar: "بيت", tr: "Ev", okunus: "beyt", ornek: "بيت العنكبوت" },
+  { ar: "مدينة", tr: "Şehir", okunus: "medine", ornek: "المدينة" },
+  { ar: "عين", tr: "Göz, kaynak", okunus: "ayn", ornek: "بأعينهم" },
+  { ar: "رأس", tr: "Baş", okunus: "ra's", ornek: "على رأس" },
+];

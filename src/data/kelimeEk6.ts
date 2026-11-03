@@ -1,0 +1,30 @@
+// KELIMEEK6.TS — Kelime havuzu büyütme, parti 6 (25 kelime)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK6: KelimeKart[] = [
+  { ar: "شهر", tr: "Ay (takvim)", okunus: "şehr", ornek: "شهر رمضان" },
+  { ar: "وقت", tr: "Vakit, zaman", okunus: "vakt", ornek: "في وقته" },
+  { ar: "ساعة", tr: "Saat, an", okunus: "sâat", ornek: "ساعة واحد" },
+  { ar: "عدد", tr: "Sayı", okunus: "aded", ornek: "من باب اضاف اليه" },
+  { ar: "كثير", tr: "Çok", okunus: "kesîr", ornek: "في كثير" },
+  { ar: "قليل", tr: "Az, kalil", okunus: "kalîl", ornek: "قليل من" },
+  { ar: "كبير", tr: "Büyük", okunus: "kebîr", ornek: "من باب اضاف اليه2" },
+  { ar: "صغير", tr: "Küçük", okunus: "sagîr", ornek: "صغير كبير" },
+  { ar: "طويل", tr: "Uzun, muhtevi", okunus: "tavîl", ornek: "طويل من" },
+  { ar: "قريب", tr: "Yakın", okunus: "karîb", ornek: "من قريب" },
+  { ar: "بعيد", tr: "Uzak", okunus: "baîd", ornek: "من بعيد" },
+  { ar: "قوي", tr: "Kuvvetli", okunus: "kavî", ornek: "أقوى وفي" },
+  { ar: "إخلاص", tr: "İhlas, samimiyet", okunus: "ihlâs", ornek: "إخلاص عباده" },
+  { ar: "نية", tr: "Niyet", okunus: "niyye", ornek: "من نية" },
+  { ar: "سلام", tr: "Selâm, barış", okunus: "selâm", ornek: "سلام عليكم" },
+  { ar: "خشوع", tr: "Huşû, alçak gönüllülük", okunus: "huşû", ornek: "خشوع وذلة" },
+  { ar: "خشية", tr: "Haşyet, saygılı korku", okunus: "haşiye", ornek: "خشية الله" },
+  { ar: "عفو", tr: "Af", okunus: "afv", ornek: "عفو الله" },
+  { ar: "مغفرة", tr: "Mağfiret, bağış", okunus: "mağfiret", ornek: "مغفرة من" },
+  { ar: "حساب", tr: "Hesap", okunus: "hisâb", ornek: "يوم الحساب" },
+  { ar: "أصل", tr: "Asıl, kök", okunus: "asl", ornek: "مجد الأصل" },
+  { ar: "فصل", tr: "Fasıl, bölüm", okunus: "fasl", ornek: "فصل وافتر" },
+  { ar: "عمر", tr: "Ömür, yaş", okunus: "umr", ornek: "عمراً من" },
+  { ar: "رجاء", tr: "Recâ, ümit", okunus: "recâ", ornek: "رجاء ربهم" },
+  { ar: "ظرْف", tr: "Zarfü, durum", okunus: "zarf", ornek: "من ظرفه" },
+];

@@ -1,0 +1,30 @@
+// KELIMEEK3.TS — Kelime havuzu büyütme, parti 3 (25 kelime)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK3: KelimeKart[] = [
+  { ar: "حياة", tr: "Hayat, yaşam", okunus: "hayât", ornek: "الحياة الدنيا" },
+  { ar: "موت", tr: "Ölüm", okunus: "mevt", ornek: "مسائل الموت" },
+  { ar: "قبر", tr: "Kabir", okunus: "kabr", ornek: "في قبره" },
+  { ar: "غضب", tr: "Gazap, öfke", okunus: "Ğabz", ornek: "غضب الله" },
+  { ar: "حميد", tr: "Övülen, hamid", okunus: "hamîd", ornek: "محمد رسول الله" },
+  { ar: "سورة", tr: "Sure, bölüm", okunus: "sûre", ornek: "سورة الفاتحة" },
+  { ar: "رمضان", tr: "Ramazan", okunus: "Ramazân", ornek: "شهر رمضان" },
+  { ar: "خبر", tr: "Haber", okunus: "haber", ornek: "من خبره" },
+  { ar: "مطر", tr: "Yağmur", okunus: "metar", ornek: "نزل مطر" },
+  { ar: "ثمر", tr: "Meyve, ürün", okunus: "temr", ornek: "من ثمره" },
+  { ar: "شجرة", tr: "Ağaç", okunus: "şecere", ornek: "شجرة مباركة" },
+  { ar: "حجر", tr: "Taş", okunus: "hicr", ornek: "حجر أول" },
+  { ar: "حديد", tr: "Demir", okunus: "hadîd", ornek: "بالحديد" },
+  { ar: "ذهب", tr: "Altın", okunus: "zeheb", ornek: "ذهب أسود" },
+  { ar: "ورقة", tr: "Yaprak, evrak", okunus: "veraka", ornek: "أوراق الشجر" },
+  { ar: "ضوء", tr: "Işık, ayız", okunus: "azv", ornek: "نزه الضوء" },
+  { ar: "ظلمة", tr: "Karanlık", okunus: "zulmet", ornek: "في الظلمات" },
+  { ar: "زوج", tr: "Eş, zevce", okunus: "zevc", ornek: "زوجتكم" },
+  { ar: "جدار", tr: "Duvar", okunus: "cidâr", ornek: "جدار من" },
+  { ar: "طعام", tr: "Yemek", okunus: "taâm", ornek: "طعام آخر" },
+  { ar: "شراب", tr: "İçecek", okunus: "şerâb", ornek: "شراب مأزوق" },
+  { ar: "ابن", tr: "Oğul, evlat", okunus: "ibn", ornek: "ابن أبي الحسن" },
+  { ar: "بنت", tr: "Kız, evlat", okunus: "bint", ornek: "بنت نوفل" },
+  { ar: "حلم", tr: "Rüya, hilm", okunus: "hulm", ornek: "الحلم القوي" },
+  { ar: "نوم", tr: "Uyku", okunus: "nevme", ornek: "سند النوم" },
+];

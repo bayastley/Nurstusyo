@@ -2,9 +2,23 @@
 // KELIMEDATA.TS — Keşfet > Kelime Kartları (madde 21) — 100 kelime, ayet ifadesi + meal, TTS uyumlu okunuş
 // kesfetData.ts'den ayrıldı (SRP, 03.10) — içerik değişmedi, bayt-duyarlı taşıma
 // ════════════════════════════════════════════════════════
+// ★ HAVUZ BÜYÜTME — kelimeEk1..6 partileri (sade harakatsız Arapça + Türkçe okunuş); her parti 25 kelime
+import { KELIME_EK1 } from "./kelimeEk1";
+import { KELIME_EK2 } from "./kelimeEk2";
+import { KELIME_EK3 } from "./kelimeEk3";
+import { KELIME_EK4 } from "./kelimeEk4";
+import { KELIME_EK5 } from "./kelimeEk5";
+import { KELIME_EK6 } from "./kelimeEk6";
+
 // ── 21: KELİME KARTLARI ("Kur'an'da 80 sık kelime" — ilk 40) ──
 export interface KelimeKart { ar: string; tr: string; okunus: string; ornek: string; meal?: string }
 export const KELIME_KARTLARI: KelimeKart[] = [
+  ...KELIME_EK1,
+  ...KELIME_EK2,
+  ...KELIME_EK3,
+  ...KELIME_EK4,
+  ...KELIME_EK5,
+  ...KELIME_EK6,
   { ar: "اللَّه", tr: "Allah", okunus: "Allâh", ornek: "Bismillâh…" },
   { ar: "رَبّ", tr: "Rab (sahip, terbiye eden)", okunus: "Rabb", ornek: "Rabbü'l-âlemîn" },
   { ar: "رَحْمَة", tr: "Rahmet, merhamet", okunus: "rahmet", ornek: "er-Rahmân" },

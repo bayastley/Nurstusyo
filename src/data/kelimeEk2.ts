@@ -1,0 +1,30 @@
+// KELIMEEK2.TS — Kelime havuzu büyütme, parti 2 (25 kelime)
+import type { KelimeKart } from "./kelimeData";
+
+export const KELIME_EK2: KelimeKart[] = [
+  { ar: "مؤمن", tr: "Mümin", okunus: "mü'min", ornek: "من المؤمنين" },
+  { ar: "ظالم", tr: "Zâlim, zulmeden", okunus: "zâlim", ornek: "ظالما" },
+  { ar: "رجل", tr: "Erkek, adam", okunus: "racul", ornek: "رجل من" },
+  { ar: "امرأة", tr: "Kadın", okunus: "imrae", ornek: "امرأة من" },
+  { ar: "طفل", tr: "Çocuk, bebek", okunus: "tifl", ornek: "طفلا" },
+  { ar: "معروف", tr: "Ma'rûf, iyilik", okunus: "ma'rûf", ornek: "أمروا بالمعروف" },
+  { ar: "منكر", tr: "Münker, kötülük", okunus: "münker", ornek: "أنهوا عن المنكر" },
+  { ar: "نصر", tr: "Zafer, yardım", okunus: "nasr", ornek: "نصر الله" },
+  { ar: "هدي", tr: "Hidâyet, yol gösterme", okunus: "hedâ", ornek: "هدي الله" },
+  { ar: "ضرر", tr: "Zarar", okunus: "darar", ornek: "ضرر ولا" },
+  { ar: "نفع", tr: "Fayda", okunus: "nef", ornek: "نفعا" },
+  { ar: "رزق", tr: "Rızık, nasip", okunus: "rızık", ornek: "رزقنا من" },
+  { ar: "نعم", tr: "Nimet", okunus: "ni'met", ornek: "بنعمة" },
+  { ar: "فقر", tr: "Fakirlik", okunus: "fakr", ornek: "من الفقر" },
+  { ar: "غنى", tr: "Zenginlik, zengin", okunus: "ğanî", ornek: "الغني من" },
+  { ar: "عذاب", tr: "Azap, ceza", okunus: "azâb", ornek: "عذاب نار" },
+  { ar: "لسان", tr: "Dil, lisan", okunus: "lisan", ornek: "بلسان عربي" },
+  { ar: "أعمال", tr: "Ameller, işler", okunus: "a'mâl", ornek: "أعمالهم" },
+  { ar: "أثر", tr: "İz, eser, etki", okunus: "eser", ornek: "أثره" },
+  { ar: "عيب", tr: "Kusur", okunus: "ayb", ornek: "ذي عيب" },
+  { ar: "ثواب", tr: "Sevap, mükâfat", okunus: "sevâb", ornek: "ثوابه" },
+  { ar: "محبة", tr: "Sevgi, muhabbet", okunus: "mahabbe", ornek: "محبة الله" },
+  { ar: "ميزان", tr: "Terâzî, ölçü", okunus: "mîzân", ornek: "يوم الميزان" },
+  { ar: "افطار", tr: "İftâr, açmak", okunus: "iftâr", ornek: "حين افطار" },
+  { ar: "سنة", tr: "Yıl, sünnet", okunus: "sene", ornek: "في سنة واحدة" },
+];
