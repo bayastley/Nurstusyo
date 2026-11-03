@@ -9,12 +9,14 @@ export interface HadisKaydi { tema: string; metin: string; kaynak: string; derec
 // ★ 31.10 5-DİL GÖRÜNÜM (Kullanıcı emri): hadisGenis.ts'teki çokdil kayıtlar
 //   dile göre birleştirilir; çevirisi olmayan eski kayıtlar TR fallback kalır.
 import { HADIS_GENIS, HADIS_ESKI_CEVRIM } from "./hadisGenis";
+// ★ 02.11 genişleme (kullanıcı emri: "hadisleri çoğalt"): hadisGenisEk.ts 52 kayıtlık ek 5-dil havuz
+import { HADIS_GENIS_EK } from "./hadisGenisEk";
 import type { Lang } from "../i18n/base";
 
 const _LANG_IDX: Record<string, 0 | 1 | 2 | 3 | 4> = { tr: 0, en: 1, ar: 2, id: 3, ur: 4 };
 export const hadisBankasiGorunum = (lang?: Lang | string | null): HadisKaydi[] => {
   const idx = _LANG_IDX[String(lang ?? "tr").toLowerCase()] ?? 0;
-  const ekstra: HadisKaydi[] = HADIS_GENIS.map((g) => ({ tema: g.t, metin: g.m[idx] ?? g.m[0], kaynak: g.k, derece: g.d }));
+  const ekstra: HadisKaydi[] = [...HADIS_GENIS, ...HADIS_GENIS_EK].map((g) => ({ tema: g.t, metin: g.m[idx] ?? g.m[0], kaynak: g.k, derece: g.d }));
   // Çeviri boş gelirse TR metne düş (dürüst gösterim)
   // ★ 31.10 Eski banka Komşuluk satırlarının 5-dil çevirisi (çevirisi olmayan satır TR kalır)
   const eski: HadisKaydi[] = HADIS_BANKASI.map((h) => {

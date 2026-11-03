@@ -257,7 +257,7 @@ export const AdminPanelKabuk: React.FC<{
 
         {/* Footer */}
         <div className="border-t border-white/10 bg-black/50 px-5 py-3 flex items-center justify-between text-[10px] text-white/40 shrink-0">
-          <span>ttX2610("adkGuvenlik")</span>
+          <span>{ttX2610("adkGuvenlik")}</span>
           <button
             onClick={onClose}
             className="rounded-xl bg-white/10 px-4 py-1.5 text-[10px] font-bold text-white hover:bg-white/20 transition"

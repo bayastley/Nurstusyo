@@ -22,7 +22,7 @@ import { SORU_CEVAP_ARŞIVI, BES_SART_SORULARI } from "../data/soruData";
 import { SORU_BANKASI, soruGorunum } from "../data/sorular";
 import { KELIME_KARTLARI, type KelimeKart } from "../data/kelimeData";
 import { SURE_BİLGİLERİ } from "../data/sureData";
-import { NAMAZ_REHBERİ, NAMAZ_CESITLERİ, NAMAZ_FAZILETLERİ } from "../data/namazData";
+import { NAMAZ_REHBERİ, NAMAZ_CESITLERİ, NAMAZ_FAZILETLERİ, NAMAZ_DUALARI } from "../data/namazData";
 import { DUA_REHBERİ } from "../data/duaData";
 import { ADABI_MUASERET } from "../data/adabiMuaseret";
 import { SÜNNETLER } from "../data/sunnetler";
@@ -111,7 +111,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [acikSoru, setAcikSoru] = useState<number | null>(null);
   const [acikGenelSoru, setAcikGenelSoru] = useState<number | null>(null);
   // ★ 02.11 NAMAZ PANEL SEÇİMİ (kullanıcı emri): üst üç buton — çeşitler/fazilet/kilinis
-  const [namazPanel, setNamazPanel] = useState<string | null>(null);
+  // ★ 03.11 (kullanıcı emri): Namaz Öğretici açılınca ilk buton (Namaz Çeşitleri) OTOMATİK açık gelsin
+  const [namazPanel, setNamazPanel] = useState<"cesitler" | "fazilet" | "kilinis" | "dualar">("cesitler");
+  // ★ 5-dil içerik indeksi (tr,en,ar,id,ur) — Namazda Okunan Dualar anlam dizisi için
+  const dilIdx: number = ({ tr: 0, en: 1, ar: 2, id: 3, ur: 4 } as Record<string, number>)[String(lang ?? "tr")] ?? 0;
   // ★ PEYGAMBER AKORDEONU (31.10): kıssa kartı tıkla-aç — kapalı satır özet, açık kartta olaylar+ ders kaynağı
   const [acikPeygamber, setAcikPeygamber] = useState<number | null>(null);
   // ★ 31.10 SİYER: açık kategori idx — akordeon
@@ -516,13 +519,13 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {sekme === "namaz" && (
         <div className="space-y-2.5">
           <p className="text-center text-[9px] leading-relaxed text-white/40">{tt("ksNamazAlt")}</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["cesitler", "fazilet", "kilinis"] as const).map((h) => (
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {(["cesitler", "fazilet", "kilinis", "dualar"] as const).map((h) => (
               <button key={h} type="button" data-minitur={`namaz-${h}`}
-                onClick={() => setNamazPanel(namazPanel === h ? null : h)}
+                onClick={() => setNamazPanel(h)}
                 className={`rounded-xl border p-2.5 text-center transition ${namazPanel === h ? "border-white/25 bg-white/[.07] text-white" : "border-white/10 bg-white/[.03] text-white/60 hover:bg-white/[.05]"}`}>
                 <p className="text-[10px] font-black leading-tight">
-                  {h === "cesitler" ? tt("ksNamazCesitleri") : h === "fazilet" ? tt("ksNamazFaziletleri") : tt("ksNasilKilinur")}
+                  {h === "cesitler" ? tt("ksNamazCesitleri") : h === "fazilet" ? tt("ksNamazFaziletleri") : h === "kilinis" ? tt("ksNasilKilinur") : tt("ksNamazDualari")}
                 </p>
               </button>
             ))}
@@ -561,6 +564,19 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                     {a.arapca && <p className="mt-1 text-right font-arabic text-[13px] leading-relaxed" style={{ color: "var(--accent-2)" }}>{a.arapca}</p>}
                   {a.kaynak && <p className="mt-1 text-[8px] font-bold" style={{ color: "var(--accent)" }}>📚 {a.kaynak}</p>}
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* ── 03.11 (kullanıcı emri): NAMAZDA OKUNAN DUALAR — 4. panel ── */}
+          {namazPanel === "dualar" && (
+            <div className="space-y-1.5" data-minitur="namaz-dualar-liste">
+              {NAMAZ_DUALARI.map((d) => (
+                <div key={d.ad} className="rounded-xl border border-white/10 bg-white/[.03] p-2.5">
+                  <p className="text-[10.5px] font-black text-white/90">{d.ad} <span className="ml-1 text-[8px] font-bold text-white/45">{d.hane}</span></p>
+                  <p className="mt-1.5 text-right font-arabic text-[14px] leading-loose" style={{ color: "var(--accent-2)" }}>{d.arapca}</p>
+                  <p className="mt-1 text-[9px] italic text-white/55">{d.latin}</p>
+                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/70">{d.anlam[dilIdx] ?? d.anlam[0]}</p>
                 </div>
               ))}
             </div>
