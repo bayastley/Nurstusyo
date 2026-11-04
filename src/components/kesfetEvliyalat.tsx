@@ -115,7 +115,7 @@ export function EvliyalatBolumu({ tt, onGeri }: { tt: TT; onGeri: () => void }) 
       <p className="text-center text-[9.5px] leading-relaxed text-white/40">{tt("evIntro")}</p>
       <div className="grid grid-cols-2 gap-2">
         {EVLIYALAT.map((e) => (
-          <button key={e.id} type="button" data-minitur={`evliyalat-kitap-${e.id}`} onClick={() => setEvSecili(e.id)} className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-left transition hover:bg-white/[.05]">
+          <button key={e.id} type="button" data-minitur={`evliyalat-kitap-${e.id}`} onClick={() => setEvSecili(evSecili === e.id ? null : e.id)} className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-left transition hover:bg-white/[.05]">
             <span className="block text-[11.5px] font-black leading-snug text-white/90">{e.ad}</span>
             <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{e.unvan}</span>
             <span className="mt-1 block text-[9px] font-bold text-white/35">{e.donem}</span>

@@ -167,7 +167,7 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
           <button
             type="button"
             data-minitur={`menkibeler-konu-${m.id}`}
-            onClick={() => setSeciliId(m.id)}
+            onClick={() => setSeciliId(seciliId === m.id ? null : m.id)}
             className={`rounded-xl border p-2.5 text-left transition ${
               seciliId === m.id
                 ? "border-white/25 bg-white/[.07]"
