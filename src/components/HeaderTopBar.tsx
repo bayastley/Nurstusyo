@@ -8,6 +8,9 @@ import {
   Image as ImageIcon, Info, Package, CalendarDays, Compass, Brain, NotebookPen, Type, Wand2, Gift, Film, Radio,
 } from "lucide-react";
 import { getBanLogs } from "../services/adminSyncService";
+import { HeaderMenuCekmece } from "./headerMenuCekmece";
+import { HeaderSeritPillBar } from "./headerSeritPillBar";
+import { TIER_SOZLUK } from "./headerTierSozluk";
 import { IslamicToolsPanel } from "./IslamicToolsPanel";
 // ★ 30.10 KIBLE ÜST BARA TAŞINDI (kullanıcı emri): Nur Araçlar'daki QiblaCompass
 //   artık üst barda KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM arasındaki butondan
@@ -19,12 +22,6 @@ import { isAdminEmail, getJetonVault, getPackRights, isTrialActive, getTrialDays
 // ★ 26.10 TIER ÇİPİ DİL BAĞI (kullanıcı raporu: "EN seçtim hala Ücretsiz"): eski
 //   TIER_LABEL['Ücretsiz'] hardcoded Türkçe'ydi; 5 dile çevrilmiş tierUcretsiz/
 //   tierPro/tierElit anahtarları sözlükte zaten vardı — artık oturum dilinden okunur.
-const TIER_SOZLUK: Record<string, "tierUcretsiz" | "tierPro" | "tierElit"> = {
-  free: "tierUcretsiz",
-  pro: "tierPro",
-  elit: "tierElit",
-};
-import { getSystemConfig, fetchRemoteConfig, getFeatureLock, type DynamicModule } from "../services/adminSyncService";
 import type { DailyAyah, User, ModalName } from "../types";
 
 export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
@@ -61,7 +58,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   setRoadmapOpen,
   misafirKalanHak,
 }) => {
-  const [dynamicModules, setDynamicModules] = React.useState<DynamicModule[]>(() => getSystemConfig().modules);
   // ★ 29.10 ÜST BAR HAK GÖSTERGESİ (kullanıcı: "168 hakkım var 150 yazıyor"):
   //   jetonCount YALNIZ satın alınan paket haklarını içeriyordu (50×3=150);
   //   üyelik haftalık kotası (Tür bazlı getQuotaLeft) hiç katılmıyordu.
@@ -70,30 +66,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const aktifTier = ((tier || "free") as Tier) || ("free" as Tier);
   const uyelikKotaToplami = getQuotaLeft("kisa", aktifTier) + getQuotaLeft("uzun", aktifTier) + getQuotaLeft("tam", aktifTier);
   const toplamHak = jetonCount + uyelikKotaToplami;
-  const [updatesOpen, setUpdatesOpen] = React.useState(false);
   const [toolsOpen, setToolsOpen] = React.useState(false);
-  const [kibleAcik, setKibleAcik] = React.useState(false);
-  // ★ 01.11 ŞERİT SÜRÜKLEME (kullanıcı emri: "sürüklensin, logo hariç"): pill şeridi
-  //   fareyle sürüklenince yatay kayar (dokunmatikte kaydırma zaten native). Sürükleme
-  //   sonrası yanlış buton tıklanmasın diye 5px eşiği aşılınca tık yakalanıp yutulur.
-  const serumRef = React.useRef<HTMLDivElement>(null);
-  const serumDurum = React.useRef({ basili: false, basX: 0, baslangic: 0, suruklendi: false });
-  const serumPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
-    const d = serumDurum.current;
-    d.basili = true; d.basX = e.clientX; d.baslangic = serumRef.current?.scrollLeft ?? 0; d.suruklendi = false;
-  };
-  const serumPointerMove = (e: React.PointerEvent) => {
-    const d = serumDurum.current;
-    if (!d.basili) return;
-    const dx = e.clientX - d.basX;
-    if (Math.abs(dx) > 5) d.suruklendi = true;
-    if (serumRef.current) serumRef.current.scrollLeft = d.baslangic - dx;
-  };
-  const serumPointerUp = () => { serumDurum.current.basili = false; };
-  const serumClickYakala = (e: React.MouseEvent) => {
-    if (serumDurum.current.suruklendi) { e.stopPropagation(); e.preventDefault(); serumDurum.current.suruklendi = false; }
-  };
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
   //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
   React.useEffect(() => {
@@ -102,62 +75,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     return () => window.removeEventListener("nur_araclar_ac", ac);
   }, []);
 
-  // ★ 25.10 MARQUEE ÖLÇÜMÜ — İSLÂMÎ ÖĞRENİYORUM etiketi haber pill'ine sığmazsa
-  //   sola doğru kayar (kelime tamamen görünür). scrollWidth − clientWidth > 2px
-  //   ise .nur-marquee-kayar sınıfı + --nur-marquee-fazla CSS değişkeni yazılır.
-  const kesfetMarqueeRef = React.useRef<HTMLSpanElement | null>(null);
-  const kuranMarqueeRef = React.useRef<HTMLSpanElement | null>(null);
-  React.useEffect(() => {
-    const olc = (el: HTMLSpanElement | null) => {
-      if (!el) return;
-      const fazla = el.scrollWidth - el.clientWidth;
-      if (fazla > 2) {
-        el.style.setProperty("--nur-marquee-fazla", `${fazla}px`);
-        el.classList.add("nur-marquee-kayar");
-      } else {
-        el.classList.remove("nur-marquee-kayar");
-      }
-    };
-    const tumu = () => { olc(kesfetMarqueeRef.current); olc(kuranMarqueeRef.current); };
-    tumu();
-    window.addEventListener("resize", tumu);
-    return () => window.removeEventListener("resize", tumu);
-  }, []);
 
-  // ★ 23.10 TAM MODÜL MENÜSÜ + ÜYELİK DAĞITIMI (kullanıcı emri):
-  //   "bütün özellikler sol üç çizgide gözüksün, aç; üyeliklere dağıt".
-  //   • Her özellik menüde GÖRÜNÜR ve SATIR AÇIK — artık tıklanamaz 🔒 V2 satırı yok.
-  //   • Üyelik dağıtımı (hedef alanı): free satır herkese açılır; pro/elit satırı
-  //     kullanıcının tier'ı yetersizse PremiumModal'ı hedef kartla açar (satır kilitli değil).
-  //   • Admin/master'da her satır serbest (KALICI EMİR: adminte her kilit açık).
-  //   • Görsel dağılım artık demokratik: Roads RoadmapModal'dan bağımsız.
-  type MenuPozisyon = { icon: React.ElementType; label: string; target: ModalName; hedef: "free" | "pro" | "elit"; kabe?: boolean };
-  const MENU_OZELLIKLER: MenuPozisyon[] = [
-    { icon: ImageIcon, label: t("menuAyetKartlari"), target: "ayetKartlari" as ModalName, hedef: "pro" },
-    { icon: Package, label: t("menuAyetPaketleri"), target: "ayetPaketleri" as ModalName, hedef: "pro" },
-    { icon: Palette, label: t("menuThemes"), target: "themes" as ModalName, hedef: "free" },
-    { icon: Type, label: t("menuKelimeAtolyesi"), target: "kelimeAtolyesi" as ModalName, hedef: "pro" },
-    // ★ 25.10 KALICI EMİR: Ayet Notlarım HERKESE ÜCRETSİZ — menüde PRO/ELİT rozet yok,
-    //   v2KilitliMi muafiyetiyle modüle de asla v2 kilidi vurulamaz (modalsContainerV2.ts).
-    { icon: NotebookPen, label: t("menuAyetNotlari"), target: "ayetNotlari" as ModalName, hedef: "free" },
-    { icon: Wand2, label: t("menuArkaPlanUretici"), target: "arkaPlanUretici" as ModalName, hedef: "elit" },
-    // ★ 25.10 (kullanıcı emri): "İSLÂMÎ ÖĞRENİYORUM" (eski Keşfet Merkezi) sol menüden
-    //   KALDIRILDI — üst barda Kur'an ↔ İçindekiler arasına taşındı (aşağıda, marquee'li).
-    { icon: Brain, label: t("menuKelimeQuizi"), target: "kelimeQuizi" as ModalName, hedef: "free" },
-    { icon: Brain, label: t("menuHafizlikTesti"), target: "hafizlikTesti" as ModalName, hedef: "free" },
-    { icon: Film, label: t("menuHaftaninVideosu"), target: "haftaninVideosu" as ModalName, hedef: "free" },
-    { icon: CalendarDays, label: t("menuOzelGunTakvimi"), target: "ozelGunTakvimi" as ModalName, hedef: "free" },
-    { icon: Moon, label: t("menuRamazan"), target: "ramazan" as ModalName, hedef: "free" },
-    // ★ 23.10 (kullanıcı emri): Kâbe Canlı ve İçindekiler kaldırıldı — ikisi de
-    //   zaten üst barda ayrı buton olarak duruyor (yeşil 🕋 + info), menüde
-    //   tekrar etmek gereksiz yer kaplıyordu.
-    { icon: Heart, label: t("menuDavetOdu"), target: "davet" as ModalName, hedef: "free" },
-    { icon: Sparkles, label: t("menuKendiSesinleUret"), target: "kendiSes" as ModalName, hedef: "elit" },
-    // ★ 26.10 KALICI EMİR: sesli meal/seslendirme SADECE ADİMENE — üyeler ve normal
-    //   kullanıcılar menüde görmesin bile (elit dahil). Menü listesi array içinde
-    //   admin kapısıyla koşullu kurulur.
-    ...((((user != null && isAdminEmail(user.email || "")) || isMasterSürüm) ? [{ icon: Headphones, label: t("menuSesliMeal"), target: "seslendirme" as ModalName, hedef: "elit" as const }] : [])),
-  ];
 
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
   const [banCount, setBanCount] = React.useState<number>(() => getBanLogs().length);
@@ -166,15 +84,6 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
     return () => window.clearInterval(iv);
   }, []);
 
-  React.useEffect(() => {
-    fetchRemoteConfig().then((cfg) => {
-      if (cfg?.modules) setDynamicModules(cfg.modules);
-    });
-  }, [menuOpen]);
-
-  React.useEffect(() => {
-    if (!menuOpen) setUpdatesOpen(false);
-  }, [menuOpen]);
 
   // ★ 17.10 KAPANIŞ TAMAMLAMA (kullanıcı isteği): panel açıkken başka yere
   //   tıklayınca kapansın — sırf backdrop değil, sayfanın HER yerinde.
@@ -234,294 +143,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
       <header className="glass sticky top-0 z-[80] border-x-0 border-t-0">
         <div className="relative mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5">
           <div className="flex items-center gap-3" data-sidebar-trigger="true">
-            <div className="relative">
-              <button data-minitur="menu" className="glass-soft rounded-lg p-2 text-white/70 hover:text-white" onClick={() => setMenuOpen((value) => !value)}>
-                {menuOpen ? <X size={17} /> : <Menu size={17} />}
-              </button>
-              {menuOpen && (
-                <>
-                  <button className="fixed inset-0 z-40 cursor-default" aria-label={t("hbrMenuKapat")} onClick={() => setMenuOpen(false)} />
-                  <div
-                    data-sidebar-panel="true"
-                    className="modal-in absolute left-0 top-12 z-50 w-60 max-h-[calc(100dvh-72px)] overflow-y-auto rounded-xl py-1.5 shadow-2xl"
-                    style={{
-                      background: "#101219",
-                      border: "1px solid rgba(255,255,255,.10)",
-                      boxShadow: "0 24px 60px rgba(0,0,0,.75)",
-                    }}
-                  >
-                    <button onClick={() => { setModal("login"); setMenuOpen(false); }} className="flex w-full items-center gap-3 px-4 py-3 text-left text-[11px] font-bold text-white transition hover:bg-white/5 border-b border-white/5">
-                      {user ? (
-                        <>
-                          <LogIn size={14} style={{ color: "var(--accent)" }} />
-                          <span className="flex-1 truncate" title={t("hbrHesapDegistir")}>{user.name}</span>
-                          {/* ★ 26.10 SADIK ÜYE İSİM ROZETİ KALDIRILDI (sahibin emri:
-                              ömür boyu +1 kampanzası bitmıştır — 7 hafta PRO kampanyası yerini aldı). */}
-                          <button onClick={(e) => { e.stopPropagation(); handleLogout({ sunucuOturumuKapat: true }); }} className="text-[9px] text-red-400 hover:text-red-300" title={t("hbrCikisTitle")}>{t("hbrCikis")}</button>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={14} style={{ color: "var(--accent)" }} />
-                          <span>{t("hbrKayitGiris")}</span>
-                        </>
-                      )}
-                    </button>
-                    {/* ★ GÜNCELLEMELER EN ÜSTTE (kullanıcı kararı 27.09) — yenilikler ilk bakışta görünsün */}
-                    <div
-                      // ★ 25.10 (kullanıcı emri): güncellemeler paneli artık HOVER ile DEĞİL,
-                      //   SADECE TIKLAMA ile açılır/kapanır (buton onClick toggle);
-                      //   kapanış: yeniden tık / menü kapanışı / dışarı tık.
-                      >
-                      <button
-                        type="button"
-                        onClick={() => setUpdatesOpen((v) => !v)}
-                        className={`flex w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] transition hover:bg-white/5 ${updatesOpen ? "bg-white/5 text-white" : "text-white/65 hover:text-white"}`}
-                      >
-                        <Sparkles size={14} style={{ color: "var(--accent)" }} />
-                        <span className="flex-1">{t("hbrGuncellemeler")}</span>
-                        <span className="flex items-center gap-1">
-                          <span className="rounded-full bg-amber-500/20 border border-amber-400/40 px-1.5 py-0.5 text-[7.5px] font-black text-amber-300">
-                            {dynamicModules.filter((m) => m.active && m.lock !== "free").length + 1 + 6}
-                          </span>
-                          <ChevronDown size={11} className="-rotate-90 opacity-60" />
-                        </span>
-                      </button>
-
-                      {updatesOpen && (
-                        <div
-                          data-sidebar-flyout="true"
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          className="modal-in absolute left-[calc(100%+8px)] top-0 z-[70] w-60 overflow-hidden rounded-xl py-1.5 shadow-2xl"
-                          style={{
-                            background: "#101219",
-                            border: "1px solid rgba(215,170,82,.35)",
-                            boxShadow: "0 24px 60px rgba(0,0,0,.8)",
-                          }}
-                        >
-                          {/* ★ SADELEŞTİRME — rozet sayacı artık sadece Yol Haritası'na işaret eder */}
-                          <div className="border-b border-white/5 px-3 pb-2 pt-1">
-                            <p className="text-[9.5px] font-black uppercase tracking-widest" style={{ color: "var(--accent-2)" }}>
-                              {t("hbrYakindaModuller")}
-                            </p>
-                            <p className="mt-0.5 text-[8.5px] text-white/35">{t("hbrV2V3Takvim")}</p>
-                          </div>
-
-                          {/* ★ 25.10 OYLAMA KALDIRILDI (sahibin emri): Yol Haritası artık
-                              YALNIZCA admin'e görünür; normal kullanıcı oy/kilitleme
-                              vitrinini görmez. Kilidi kapalı modüller (v2/v3/off)
-                              menüde 'Yakında' rozetli kalır, tık anında net bildirim verir. */}
-                          {(user && (isAdminEmail(user.email || "") || isMasterSürüm)) && (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => { setRoadmapOpen?.(true); setUpdatesOpen(false); setMenuOpen(false); }}
-                              className="flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-[10.5px] font-bold text-white/85 transition hover:bg-white/5"
-                            >
-                              <span className="text-base">🚀</span>
-                              <span className="min-w-0 flex-1 truncate">{t("hbrYolHaritasi")}</span>
-                              <span className="px-1.5 py-0.5 rounded text-[7px] font-black bg-amber-500/20 text-amber-300 animate-pulse">ADMIN</span>
-                            </button>
-                          </div>
-                          )}
-
-                          {/* ★ SADELEŞTİRME: V2/V3 rozetli maddeler (Ayet & Dua Kütüphanesi, Kur'an Hikayeleri,
-                              Kıssalar, Hadisler, Dualar & Zikirler, Kurumsal) menüden kaldırıldı —
-                              hepsi Yol Haritası'nda oylamada. Menüde tek giriş: 🚀 Güncelleme Yol Haritası. */}
-
-                          {/* ★ 26.10 LANSIŞ USHÖTÜ (kullanıcı emri): Kendi Sesinle Üret + Mobil Dönüş
-                              ihtişamlı lavta kartları — elily davri. */}
-                          <div className="space-y-1 px-1.5 py-1">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setMenuOpen(false); setUpdatesOpen(false);
-                                const adminGecis = (user != null && isAdminEmail(user.email || "")) || isMasterSürüm;
-                                const yeterli = adminGecis || tierAtLeast(tier || getCurrentTier(), "elit");
-                                if (yeterli) setModal?.("kendiSes" as ModalName);
-                                else openPremium?.("uyelik", "elit");
-                              }}
-                              className="w-full rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2.5 text-left transition hover:bg-fuchsia-500/15"
-                            >
-                              <p className="flex items-center gap-1.5 text-[10px] font-black text-fuchsia-300">
-                                <span>🎙️</span> {t("hbrKendiSesBaslik")}
-                                <span className="ml-auto rounded-full border border-fuchsia-400/40 bg-fuchsia-500/15 px-1.5 py-0.5 text-[7px] font-black">{t("tierElit")}</span>
-                              </p>
-                              <p className="mt-0.5 text-[8.5px] leading-snug text-white/50">{t("hbrKendiSesMetin")}</p>
-                              <p className="mt-1 text-[8px] font-bold text-fuchsia-300/80">{t("hbrKendiSesBtn")}</p>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { window.dispatchEvent(new Event("nur_pwa_banner_ac")); setMenuOpen(false); setUpdatesOpen(false); }}
-                              className="w-full rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-2.5 text-left transition hover:bg-emerald-500/15"
-                            >
-                              <p className="flex items-center gap-1.5 text-[10px] font-black text-emerald-300">
-                                <span>📱</span> {t("hbrMobilDonBaslik")}
-                              </p>
-                              <p className="mt-0.5 text-[8.5px] leading-snug text-white/50">{t("hbrMobilDonMetin")}</p>
-                              <p className="mt-1 text-[8px] font-bold text-emerald-300/80">{t("hbrMobilDonBtn")}</p>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* ★ 26.10 ARAÇLAR MENÜ GİRİŞİ KALDIRILDI (kullanıcı emri):
-                        Araçlar Kur'an Öğreniyorum ekranında da var — çift giriş
-                        kalabalık oldu, tek giriş Kur'an ekranında kaldı. Panel
-                        yine event ile açılır (sevap köşesi köprüsü, 57. satır). */}
-
-                    {/* ★ 10.10 (GERİ EKLEME, kullanıcı emri): Kur'an Öğren + Dinle butonu
-                        sol-üst üç-nokta menüde.
-                        ★ 18.10 (kullanıcı emri): "GERİ GELDİ" rozeti KALDIRILDI. */}
-                    <button onClick={() => { setModal?.("quranLearn"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                      <span className="text-base">📖</span>
-                      <span>{t("menuKuranOgrenDinle")}</span>
-                    </button>
-
-                    {/* ★ 18.10 HAFIZLIK menü girişi buradaydı — QuranLearnModal 3. sekmesine
-                        göçürüldü (aynı dosyada alttaki Kur'an girişinin yorumu). */}
-
-                    {/* ★ 18.10 (kullanıcı bildirimi): PWA KURULUM BANNERI bulanamıyordu —
-                        menüye kalıcı giriş eklendi; tıklayınca banner İSTİDİĞİ AN acılır */}
-                    <button onClick={() => { window.dispatchEvent(new Event("nur_pwa_banner_ac")); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                      <span className="text-base">📲</span>
-                      <span className="flex-1 truncate">{t("menuPwaAnaEkran")}</span>
-                      <span className="ml-auto shrink-0 rounded-full bg-sky-500/20 border border-sky-400/30 px-1.5 py-0.5 text-[7px] font-black text-sky-300">PWA</span>
-                    </button>
-
-                    {/* ★ MODÜL LİSTESİ — Güncellemeler+Araçlar'ın ALTINA taşındı (kullanıcı kararı 27.09)
-                        ★ 08.10 TRIM (kullanıcı emri): Hafızlık Testi, Kur'an, Kâbe Canlı, Haftanın
-                        Videosu, Ramazan/Kandil, Keşfet (Hadis&Kıssa&Rehber) kaldırıldı. Kalanlar:
-                        Ayet Kütüphanesi, Ayet Notları, Kelime Atölyesi, Arka Plan Üretici, Davet,
-                        Ayet Paketleri, Tema Galerisi, Site Hakkında. */}
-                    {/* ★ 16.10 GERİ EKLEME (kullanıcı emri): TRIM'de kaldırılan 4 modül menüye geri geldi
-                        — Hafızlık Testi, Keşfet Merkezi, Haftanın Videosu, Özel Gün Takvimi.
-                        Modal bileşenleri hep duruyordu; yalnız menü girişleri çıkarılmıştı. */}
-                    <div className="my-1 border-t border-white/5" />
-                    {/* ★ 17.10 V2 KİLİT ÇİPLERİ (kullanıcı emri): oylamaya konan modüller
-                        menüde görünsün ama yanında 🔒 V2 rozeti taşı — kullanıcı neden
-                        kilitli olduğunu anlar; tıklayınca ModalsContainer v2Gate yol
-                        haritasına atar. Admin/master rozet görmez (开关 açık). */}
-                    {
-                      /* ★ 18.10 (kullanıcı emri): Ayet & Dua Kütüphanesi menüye GERİ EKLENDİ —
-                          kodda ADMIN_HARD_KILITLI (modalsContainerV2.ts) onu
-                          admin-godmode/Master haricinde HERKESE (misafir dahil) kapalı tutar;
-                          ModalsContainer'daki merkezî v2 geçidi kilitliyken modalı bir an
-                          bile açmaz, yol haritasına atar. */
-                    }
-                    {MENU_OZELLIKLER.map((item) => {
-                      // ★ 23.10 ÜYELİK DAĞITIMI: satır herkes için GÖRÜNÜR ve TIKLANABİLİR.
-                      //   Kullanıcı tier'ı satırın hedefi yerine düşükse PremiumModal hedef
-                      //   kartla açılır ("üyelik" sekmesi, pro/elit odak); yeterliyse modal
-                      //   doğrudan açılır. Admin/master her satırda serbest (KALICI EMİR).
-                      const adminGecis = (user != null && isAdminEmail(user.email || "")) || isMasterSürüm;    const mevcutTier: "free" | "pro" | "elit" = adminGecis ? "elit" : (tier || getCurrentTier());
-      // ★ 25.10 TİET KİLİDİ (kullanıcı emri: "elit seçince sadece elit mi alabiliyor"): admin
-                      //   panelde modülün kilit seviyesi "Pro üyelere"/"Elit üyelere" seçilirse satırın
-                      //   gerçek hedefi O seviye olur — menüde PRO/ELİT rozet, tıklayında o seviyenin
-                      //   üyelik kapısı (müşterinin dışı hiçbir yerden örtülmez).
-                      const kilitDegeri = getFeatureLock(item.target as string, "free");
-                      const efektifHedef: "free" | "pro" | "elit" = (kilitDegeri === "pro" || kilitDegeri === "elit") ? kilitDegeri : item.hedef;
-                      const yetersiz = !adminGecis && efektifHedef !== "free" && !tierAtLeast(mevcutTier, efektifHedef);
-                      // ★ 25.10 V2 GRİ KİLİT: admin panelde modül "v2"/"v3"'e alındığında menüde GRİ rozet.
-                      const v2Kilitli = !adminGecis && (kilitDegeri === "v2" || kilitDegeri === "v3" || kilitDegeri === "off");
-                      return (
-                      <button
-                        key={item.target}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          if (item.kabe) window.dispatchEvent(new Event("nur_kabe_ac"));
-                          // ★ 25.10 OYLAMA KAPISI KALDIRILDI: v2 kilitli modüller artık
-                          //   oylamaya HİÇ devretmez — kullanıcıya net 'yakında' bildirimi.
-                          if (v2Kilitli) { notify?.(`🔒 ${item.label} ${t("v2YakindaBildirim")}`); return; }
-                          if (yetersiz) openPremium("uyelik", efektifHedef === "elit" ? "elit" : "pro");
-                          else setModal(item.target);
-                        }}
-                        className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white"
-                      >
-                        <item.icon size={14} style={{ color: "var(--accent)" }} />
-                        <span className="flex-1 truncate">{item.label}</span>
-                        {v2Kilitli && (
-                          <span className="ml-auto shrink-0 rounded-full border border-slate-400/40 bg-slate-500/15 px-1.5 py-0.5 text-[7px] font-black tracking-wide text-slate-300"                            title={t("v2KilitTitle")}>
-                            🔒 V2
-                          </span>
-                        )}
-                        {efektifHedef !== "free" && !adminGecis && !v2Kilitli && (
-                          <span
-                            className={`ml-auto shrink-0 rounded-full border px-1.5 py-0.5 text-[7px] font-black tracking-wide ${
-                              efektifHedef === "elit"
-                                ? "border-fuchsia-400/40 bg-fuchsia-500/15 text-fuchsia-300"
-                                : "border-amber-400/40 bg-amber-500/15 text-amber-300"
-                            }`}
-                            title={efektifHedef === "elit" ? t("kilitElitUyelik") : t("kilitProUyelik")}
-                          >
-                            {efektifHedef === "elit" ? t("tierElit") : "PRO"}
-                          </span>
-                        )}
-                      </button>
-                      );
-                    })}
-
-                    <button onClick={() => { setModal("contact"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white">
-                      <HelpCircle size={14} style={{ color: "var(--accent)" }} />
-                      {t("menuSuggest")} / {t("menuComplaint")}
-                    </button>
-                    {/* ★ ADMIN BÖLÜMÜ (kullanıcı emri 28.09): üst bar temizlendi,
-                        admin kontrolleri buraya taşındı — yalnız admin görünür.
-                        ★ KALICI EMİR: ADMINE HER KİLİT AÇIK — isMasterSürüm tüm
-                        tier/v2/pro/elit/atmosfer kilitlerini geçer. BU DAVRANIŞ
-                        ASLA DEĞİŞTİRİLMEZ; yeni kilit eklenirken isMasterSürüm
-                        (adminGodMode) kontrolünden geçirilmek ZORUNDADIR. */}
-                    {user && (isAdminEmail(user.email) || isMasterSürüm) && (
-                      <div className="mt-1 border-t border-amber-400/20 px-2 py-1.5">
-                        <button
-                          data-admin-ana-btn="true"
-                          onClick={() => { openAdminDashboard().then(() => setModal("adminDashboard")); setMenuOpen(false); }}
-                          className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[11px] font-black text-amber-300 transition hover:bg-amber-500/10"
-                        >
-                          <Shield size={14} className="text-amber-400" />
-                          <span className="flex-1">{t("hbrAdminPanel")}</span>
-                          {banCount > 0 && (
-                            <span className="flex h-5 min-w-5 items-center justify-center gap-0.5 rounded-full bg-red-500/20 border border-red-500/40 px-1 text-[8.5px] font-black text-red-300">
-                              <Lightbulb size={9} className="animate-pulse text-amber-300" fill="currentColor" />
-                              {banCount}
-                            </span>
-                          )}
-                        </button>
-                        {isMasterSürüm && (
-                          <button
-                            onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify(t("hbrAdminCikisNot")); setMenuOpen(false); }}
-                            className="flex min-h-[42px] w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left text-[10.5px] font-bold text-emerald-300/90 transition hover:bg-emerald-500/10"
-                            title={t("hbrAdminKapatTitle")}
-                          >
-                            <ShieldOff size={14} className="text-emerald-400" />
-                            <span className="flex-1">{t("hbrAdminKapat")}</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                    <div className="mt-1 border-t border-white/5 px-4 py-2.5">
-                      <button
-                        onClick={() => { openPremium("uyelik"); setMenuOpen(false); }}
-                        className="flex min-h-[42px] w-full items-center gap-2 rounded-xl py-2 px-1 text-left text-[11px] font-bold text-[color:var(--accent-2)] transition hover:bg-white/5 hover:text-white"
-                      >
-                        <Gem size={14} style={{ color: "var(--accent)" }} />
-                        <span>{t("premium")}</span>
-                      </button>
-                    </div>
-                    {/* ★ HEDİYE KODU — en altta (02.10, kullanıcı emri: üst bardan buraya taşındı).
-                        Şimdilik bildirim verir; kod sistemi geldiğinde buraya input bağlanır. */}
-                    <button
-                      onClick={() => { notify(t("hbrHediyeKodNot")); setMenuOpen(false); }}
-                      className="flex min-h-[42px] w-full items-center gap-3 border-t border-white/5 px-4 py-2.5 text-left text-[11px] text-white/45 transition hover:bg-white/5 hover:text-white"
-                    >
-                      <Gift size={14} className="opacity-60" style={{ color: "var(--accent)" }} />
-                      <span>{t("menuHediyeKodu")}</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+<HeaderMenuCekmece menuOpen={menuOpen} setMenuOpen={setMenuOpen} setModal={setModal} openAdminDashboard={openAdminDashboard} openPremium={openPremium} setRoadmapOpen={setRoadmapOpen} setAdminGodMode={setAdminGodMode} setSmartAiEnabled={setSmartAiEnabled} setBatchFormats={setBatchFormats} notify={notify} handleLogout={handleLogout} user={user} tier={tier} isMasterSürüm={isMasterSürüm} banCount={banCount} t={t} />
           </div>
 
           {/* ★ HEADER ÇAKIŞMA FIX (30.09, kullanıcı bildirimi): logo eski haliyle
@@ -590,183 +212,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
           {/* ★ 02.11 İPUCU SARMALAYICI (kullanıcı emri: "hafif görünür yap ki mobilden
               farketsin"): şerit olayınca altına 2px'lik uçuk çizgi — butonsuz, kaplamasız
               hafif kaydırılabilirlik sinyali; masaüstünde gizli. */}
-          <div className="relative ml-auto flex min-w-0 flex-1 flex-col max-md:pb-1">
-            <div ref={serumRef} onPointerDown={serumPointerDown} onPointerMove={serumPointerMove} onPointerUp={serumPointerUp} onPointerLeave={serumPointerUp} onClickCapture={serumClickYakala} className="flex w-full min-w-0 cursor-grab items-center gap-2 active:cursor-grabbing max-md:overflow-x-auto max-md:overflow-y-clip max-md:no-scrollbar max-md:[&>*]:shrink-0">
-            {/* ★ ADMIN PILL (30.09, kullanıcı emri): admin kontrolleri yalnız mobil menüde
-                kalmıştı — masaüstünde admin panele UI'dan ulaşamıyordu. Üst bara gizli
-                admin pill'i eklendi: yalnız admin e-postası (env) veya master sürüm görür.
-                Normal kullanıcıya ASLA görünmez — sunucu zaten 3 katman koruyor. */}
-            {user && (isAdminEmail(user.email) || isMasterSürüm) && (
-              <div className="hidden items-center gap-1 sm:flex">
-                <button
-                  onClick={() => { void openAdminDashboard().then(() => setModal("adminDashboard")); }}
-                  className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-                  style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-                  title={`${t("hbrAdminPillTitle")} — ${user.email || ""}`}
-                >
-                  <Shield size={11} className="text-amber-400" />
-                  ADMIN
-                  {banCount > 0 && (
-                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500/25 border border-red-500/40 px-1 text-[8px] font-black text-red-300">{banCount}</span>
-                  )}
-                </button>
-                {isMasterSürüm && (
-                  <button
-                    onClick={() => { setAdminGodMode(false); setSmartAiEnabled(false); setBatchFormats(["9:16"]); notify(t("hbrAdminCikisNot")); }}
-                    className="glass-soft rounded-full p-1.5 text-emerald-300/80 transition hover:scale-105 hover:text-emerald-300"
-                    title={t("hbrAdminKapatTitle")}
-                  >
-                    <ShieldOff size={11} />
-                  </button>
-                )}
-              </div>
-            )}
-            {/* ★ JETON SAYACI — Dual Vault (Süresiz Satın Alınan + Günlük) — SADECE GİRİŞ YAPMIŞ */}
-            {user && (() => {
-              const vault = getJetonVault();
-              return (
-                <button
-                  onClick={() => openPremium("jeton")}
-                  className="glass-soft group relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black tabular-nums transition hover:scale-105 sm:flex cursor-pointer"
-                  style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.3)" }}
-                  title={(isMasterSürüm || isAdminEmail(user?.email || "")) ? `${t("hbrSinirsizAdmin")} (${user?.email || ""})` : t("hbrHakOzet").replace("{k}", String(getPackRights().kisa)).replace("{u}", String(getPackRights().uzun)).replace("{t}", String(getPackRights().tam))}
-                >
-                  <span className="flex h-4 w-4 items-center justify-center rounded-full" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                    <Coins size={9} className="text-black" strokeWidth={3} />
-                  </span>
-                  <span className="transition-all group-hover:text-white">
-                    {(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) ? t("hbrSinirsiz") : toplamHak}
-                  </span>
-                  {!(isMasterSürüm || isAdminEmail(user?.email || "") || jetonCount >= 999999) && (
-                    <span className="hidden text-[9px] font-bold tracking-wide text-white/50 sm:inline">{t("hbrUretimHakki")}</span>
-                  )}
-                </button>
-              );
-            })()}
-            {/* ★ ÜYELİK DURUMU — Mevcut tier adını göster */}
-            <button className="glass-soft relative hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold sm:flex transition hover:scale-105" style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.25)" }} onClick={() => openPremium("uyelik")}>
-              <Gem size={11} style={{ color: "var(--accent)" }} />{user ? t(TIER_SOZLUK[tier || "free"] || "tierUcretsiz") : t("premium")}
-              {/* ★ 26.10: kullanıcı-yanı '★ SADIK ÜYE' uzun rozeti kaldırıldı (sahibin emri) */}
-            </button>
-            <div className="relative notranslate" translate="no">
-              {/* ★ 04.10: dil seçici — sade kodlar (TR/EN/AR/ID/UR) + notranslate.
-                  dilAdi() isimlerini Google Translate bozuyordu ("di!TR", "şeyretme"…);
-                  kullanıcı emri: sadece kodlar, hiçbir dilde çevrilmesin. */}
-              <button className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-bold text-white/70" onClick={() => setLangOpen((value) => !value)}>                  <span className="font-black tracking-wide">{(lang || "tr").toUpperCase()}</span><ChevronDown size={10} />
-              </button>
-              {langOpen ? (
-                <div className="glass modal-in absolute right-0 top-10 z-50 w-24 rounded-xl p-1.5 shadow-2xl">
-                  {LANGS.map((item) => (
-                    <button key={item.code} onClick={() => { setLang(item.code); setLangOpen(false); }} className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[10px] text-white/65 hover:bg-white/5">
-                      <span className="flex-1 font-black tracking-wide">{item.code.toUpperCase()}</span>
-                      {item.code === lang ? <Check size={11} style={{ color: "var(--accent)" }} /> : null}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-            {/* ★ HEDİYE KODU ÜST BARDAN KALDIRILDI (02.10, kullanıcı emri) —
-                sol menünün en altındaki "Hediye Kodu" öğesine taşındı */}
-            {/* ★ AYET KÜTÜPHANESİ + KUR'AN üst bardan KALDIRILDI (08.10, kullanıcı emri):
-                ikisi de sol üç nokta menüsünde zaten var — üst bar kalabalık olmasın. */}
-            {/* ★ 18.10 SIRA DEĞİŞİMİ (kullanıcı emri): KÂBE CANLI ile İÇİNDEKİLER artık YAN YANA —
-                Kâbe Canlı → İçindekiler → Seslendirme. (Önceki: İçindekiler Kâbe'yle arada
-                değil ayrıydı; şimdi Kâbe + İçindekiler komşu.) */}
-            {/* ★ KÂBE CANLI (08.10, kullanıcı emri): üst barda tek tık,
-                kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
-              🕋 {t("menuKabeCanli")}
-              <span className="relative flex h-2 w-2">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
-                <span className="relative h-2 w-2 rounded-full bg-red-500" />
-              </span>
-            </button>
-            {/* ★ 18.10 (kullanıcı emri): "Kur'an" bölümü ana ekran üst barda — Hafızlık Testi'nin
-                yerine. Tek tık Kur'an ekranını açar (İçindeki öğrenme/test modülleri orada).
-                Hafızlık Testi silinmedi — Kur'an ekranına gömülü, oradan da erişilir. */}
-            {/* ★ 25.10 İHTİŞAMLI BAŞLIK (kullanıcı emri): kısa "Kur'an" etiketi
-                "KUR'AN ÖĞRENİYORUM" oldu — display font + altın degrade + yumuşak parıltı.
-                Panele sığmazsa İSLÂMÎ ÖĞRENİYORUM gibi sola doğrı kayar (nur-marquee). */}
-            <button data-minitur="kuran-bolumu" onClick={() => setModal("quranLearn")}
-              className="glass-soft flex max-w-[215px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}                              title={t("v2KuranOgrenTitle")}>
-              📖 <span ref={kuranMarqueeRef} className="nur-marquee notranslate whitespace-nowrap font-display tracking-[.08em] bg-gradient-to-r from-amber-200 via-[color:var(--accent-2)] to-amber-200 bg-clip-text text-transparent drop-shadow-[0_0_7px_rgba(215,170,82,.45)]">{t("v2KuranOgrenEtiket")}</span>
-            </button>
-            {/* ★ 30.10 KIBLE (kullanıcı emri): Nur Araçlar'dan çıkarıldı, üst barda
-                KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM ARASINA kendi butonuyla kondu. */}
-            <button data-minitur="kible" onClick={() => setKibleAcik(true)}
-              className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-              title={t("itTabQibla")}>
-              🧭 {t("itTabQibla")}
-            </button>
-            {kibleAcik && (
-              <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onMouseDown={() => setKibleAcik(false)}>
-                <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black p-4 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-sm font-black text-white">🧭 {t("itTabQibla")}</h3>
-                    <button onClick={() => setKibleAcik(false)} className="p-1.5 rounded-full hover:bg-white/10 transition">
-                      <X size={16} className="text-white/50" />
-                    </button>
-                  </div>
-                  <QiblaCompass />
-                </div>
-              </div>
-            )}
-            {/* ★ 25.10 İSLÂMÎ ÖĞRENİYORUM (kullanıcı emri) — eski "Keşfet" üst barda,
-                Kur'an ↔ İçindekiler ARASINA kondu; sol menüden kaldırıldı. Etiket panele
-                sığmazsa sola doğru kayar (marquee) — kelime tamamlanır. */}
-            <button data-minitur="islami-ogreniyorum" onClick={() => setModal("kesfet")}
-              className="glass-soft flex max-w-[190px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-              title={t("v2KesfetTitle")}>
-              🧭 <span ref={kesfetMarqueeRef} className="nur-marquee whitespace-nowrap">{t("menuKesfet")}</span>
-            </button>
-            {/* ★ 16.10 İÇİNDEKİLER — sol menüdeki aynı "siteHakkinda" modalını açan üst-bar butonu.
-                ★ 18.10 (kullanıcı emri): Hafızlık Testi butonu Kâbe-İçindekiler arasına kondu.
-                Modal içeriğine TANITIM bölümü eklendi (R2'den video, SiteHakkindaModal'da). */}
-            <button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
-              className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-              style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-              title={t("v2SiteHakkindaTitle")}>
-              📑 {t("icindekilerEtiket")}
-            </button>
-            {/* ★ SESLENDİRME (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlenmiş modül:
-                üst barda tek tık → Sesli Meal ekranı. Kırmızı X + dış-tık + Esc ile kapanır.
-                ★ 20.10 GİZLE (YARIN-planı Ö1 deseni, kullanıcı emri): ADMIN hariç herkesten
-                BUTON TAMAMEN KALDIRILDI — kilitli görünmez, "yok". Canlı TTS API (nur-tts)
-                500 fix'i (lazy-load bb328a3) deploy olup doğrulanana kadar halka açık
-                bozuk buton göstermek istemiyoruz; admin kendi hesabında test etmeye devam eder.
-                ★ 20.10 MOBİL DÜZELTME (kullanıcı canlı raporu: "admin mobilde de görmüyor"):
-                eski sınıf "hidden md:flex" butonu <768px'te TAMAMEN gizliyordu — admin
-                mobilde de bakıp boş görüyordu. Artık her boyutta görünür.
-                ★ 20.10 ELİT KAPISI (kullanıcı emri: "seslendirme elit üyelere açılacak,
-                herkese kilitli olsun, olurda açarsam gizlilik elitlere uygun"):
-                admin/master KALICI muaf (KALICI EMİR: adminde her kilit açık); elit üye
-                da görür/tıklar; diğer herkes buton YOK. Render kapısı + ModalsContainer
-                mount kapısı ikisi birden devrede.
-                ★ 26.10 GÜNCEL EMİR (kullanıcı): "sesli meal seslendirme admine açık —
-                bütün üyeler ve kullanıcılara kapalı" → ELİT erişimi KALDIRILDI; artık
-                yalnız admin/master butonu görür (menü öğesi + bu buton + mount kapısı). */}
-            {((isAdminEmail(user?.email || "") || isMasterSürüm)) && (
-              <button data-minitur="seslendirme" onClick={() => setModal("seslendirme")}
-                className="glass-soft flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
-                style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
-                title={t("menuSesliMeal")}>
-                🔊 {t("menuSesliMeal")}
-              </button>
-            )}
-            <button data-minitur="namaz-vakti" onClick={() => setModal("prayer")} className="glass-soft flex items-center gap-2 rounded-full px-3 py-1.5 text-[10px] font-bold text-emerald-300">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-50" />
-                <span className="relative h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              <Moon size={11} />
-              <span className="hidden sm:inline">{nextPrayer ? `${vakitAdi(lang, nextPrayer.name)} ${sureceCevir(lang, formatRemaining(nextPrayer.diff))}` : prayerCity}</span>
-            </button>
-          </div>
-            <div className="pointer-events-none absolute bottom-0 right-1 h-0.5 w-10 rounded-full bg-white/25 md:hidden" />
-          </div>
+<HeaderSeritPillBar user={user} isMasterSürüm={isMasterSürüm} jetonCount={jetonCount} tier={tier} toplamHak={toplamHak} banCount={banCount} openPremium={openPremium} openAdminDashboard={openAdminDashboard} setModal={setModal} notify={notify} t={t} lang={lang} setLang={setLang} langOpen={langOpen} setLangOpen={setLangOpen} setAdminGodMode={setAdminGodMode} setSmartAiEnabled={setSmartAiEnabled} setBatchFormats={setBatchFormats} misafirKalanHak={misafirKalanHak} nextPrayer={nextPrayer} prayerCity={prayerCity} formatRemaining={formatRemaining} />
         </div>
       </header>
       {/* ★ ARAÇLAR PANELİ */}
