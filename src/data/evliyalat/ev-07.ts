@@ -21,4 +21,11 @@ Derler ki bu hizmet onun kalbini sakladı. Yûnus, hocasından hacdir dervişSiz
 
 Yaratım ışı: "Yûnus olma, heykeli."`,
   ],
+  onemliAnlar: [
+    "~1240 Anadolu'da doğum.",
+    "Tapduk Emre dergâhında uzun hizmet.",
+    "Türkçe şiir ve aşk dili.",
+    "1307'de Risaletü'n-Nushiyye.",
+    "1991 UNESCO Yûnus Emre Yılı.",
+  ],
 };

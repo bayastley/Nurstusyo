@@ -25,4 +25,11 @@ Mevlânâ'ya semâ kolaylaştı; kalbi tanıdı.`,
 
 Derler ki Şems'in memleketi insanın kalbidir.`,
   ],
+  onemliAnlar: [
+    "Tebrîz'de doğum; gezgin âlim olarak yol.",
+    "1244'te Konya'da Mevlânâ ile buluşma.",
+    "40 günlük halvet ve kalbin uyanışı.",
+    "Konyalıların hasedinden sonra ortadan kayboluş.",
+    "Dîvân-ı Şems — aşk dilinin şiirleri.",
+  ],
 };

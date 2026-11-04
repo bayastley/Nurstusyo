@@ -13,6 +13,7 @@ import { Search, ChevronLeft, ChevronDown } from "lucide-react";
 import { Modal } from "./UIElements";
 import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, hadisBankasiGorunum, RIVAYETCILER, rivayetciUyar } from "../data/hadisData";
 import { MenkibelerBolumu } from "./kesfetMenkibeler";
+import { EvliyalatBolumu } from "./kesfetEvliyalat";
 import { KISSA_LISTESI } from "../data/kissaData";
 import { KISSA_EK } from "../data/kissaEk"; // ★ 25.10 GENİŞLETME: +12 kıssa (sahih kaynaklı, çevirisiz)
 import { MezheplerBolumu } from "./kesfetSekmeler";
@@ -79,7 +80,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const SEKME_KEY: Record<string, string> = {
     imsakiye: "ksTabImsakiye", hadis: "ksHadisBankasi", kissa: "ksKuranKissalari", siyer: "ksSiyerNebi", soru: "ksSoruCevap", kelime: "ksKelimeKartlari",
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
-    menkibeler: "ksMenkibeler", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
+    menkibeler: "ksMenkibeler", evliyalar: "ksEvliyalar", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
   };
   const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
@@ -397,6 +398,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
       {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
+      {sekme === "evliyalar" && <EvliyalatBolumu tt={tt} onGeri={() => setSekme("menkibeler")} />}
 
       {sekme === "siyer" && (
         <div className="space-y-2">

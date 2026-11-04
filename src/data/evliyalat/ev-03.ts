@@ -25,4 +25,11 @@ Diger eserleri: Fîhi mâ fîh, Mecalisi Sab'a, Divani Kebir.`,
 
 Mevlevilik, semâ ve sohbetlerini bütün dünyaya taşıdı.`,
   ],
+  onemliAnlar: [
+    "1207 Belh'te doğum; Moğol korkusu ile yollara düşme.",
+    "Nişâpür'de Attâr'ın müjdesi; 1228'de Konya'ya yerleşme.",
+    "1244'te Şems-i Tebrîzî ile tanışma.",
+    "Mesnevi — 6 cilt, 26.000 beyit.",
+    "1273 Şeb-i Arûs — vefat ve Mevlevilik.",
+  ],
 };

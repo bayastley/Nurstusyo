@@ -25,4 +25,11 @@ Rivâyette anlatılır ki bu eser defterlerinde Kâbe'ye hizmetin eseri olarak k
 
 Eserleri yüzlerle sayılır; tasavvuf dâhil bütün âlem onu okur.`,
   ],
+  onemliAnlar: [
+    "1165 Mürsiye'de doğum.",
+    "İbn Rüşd ile görüşme kıssası.",
+    "1201'de Fütûhât-ı Mekkiyye'ye başlama.",
+    "Fusûsu'l-Hikem'in yazımı.",
+    "1240 Şam'da vefat — Şeyhü'l-Ekber.",
+  ],
 };

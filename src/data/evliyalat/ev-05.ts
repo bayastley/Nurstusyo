@@ -25,4 +25,11 @@ Devlet kuruluşunda, ona saygıyla hareket etti.`,
 
 Yüzyıllar sonra Bektaşîlik onun adını korudu; Anadolu'da kalpler onu az  taşıdı.`,
   ],
+  onemliAnlar: [
+    "Horasan'dan Anadolu'ya göç.",
+    "Sulucakarahöyük'te dergâh kurma.",
+    "Makâlât eseri ve insan sevgisi.",
+    "Osman Gazi'ye duası ile kılıç kuşanması.",
+    "1271'de vefat — Bektaşîlik'in piri.",
+  ],
 };

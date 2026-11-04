@@ -29,4 +29,11 @@ Günün birinde çöl kenarında bir gölge buldu, orada uyudu. Uyandığında k
 
 1166'da Bağdat'ta vefat etti. Devrinin büyük isimleri ona "Gavsü'l-Âzam" dediler. Eserleri: "el-Gunya", "el-Fethü'r-Rabbânî", "Sirrü'l-Esrâr", "Fetûhu'l-Gayb". Arkasında Kâdiriyye tarikatı; halifeleriyle Irak'tan Anadolu'ya, Orta Asya'dan Hind'e kadar yayıldı. Meşhur sözü: "İnsanların kalbine bak; ihlâs sahibini cömert, günah işleyeni bile merhametli gör."`,
   ],
+  onemliAnlar: [
+    "1077 — Gilân'da Nef köyünde doğum.",
+    "18 yaşında annesinden izin alıp Bağdat'a ilim yolculuğu.",
+    "25 yıl çölde rızâ çilesi.",
+    "1127'de Bağdat'ta ribât ve vaaz meclisi.",
+    "1166'da vefat — Gavsü'l-Âzam adı kalpler kaldı.",
+  ],
 };

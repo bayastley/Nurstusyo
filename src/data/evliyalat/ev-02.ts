@@ -25,4 +25,11 @@ Derler ki bu çile, İslâm'ın Türk coğrafyasına ruh verdi.`,
 
 Timur 1397'de Yesi'deki türbeyi yaptırdı; bugün de binlerce insan ziyaret eder.`,
   ],
+  onemliAnlar: [
+    "Yesi'de doğum, Arıslan Baba'nın himâyesinde yetişme.",
+    "Buhârâ'da ilim; Hâce Yusuf-i Hemedânî'nin halifesi.",
+    "Yesi'ye dönüş — Pîr-i Türkistan.",
+    "63 yaşında Toprak Altı Çilehanesi.",
+    "Divân-ı Hikmet; 1397'de Timur'un yaptırdığı türbe.",
+  ],
 };

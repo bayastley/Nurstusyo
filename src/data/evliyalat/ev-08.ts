@@ -25,4 +25,11 @@ Bu beyt, Birleşmiş Milletler'in kapısına asılır.`,
 
 Eserleri yüzyıllardır okunur; hem İslâm âleminde, hem Batı'da.`,
   ],
+  onemliAnlar: [
+    "~1210 Şirâz'da doğum.",
+    "Bağdat Nezâmiyye'de ilim.",
+    "30 yıl yolculuk ve esaret kıssası.",
+    "Gülistân (1258) ve Bostân (1257).",
+    "1291'de vefat — dünya edebiyâtına Sâdî.",
+  ],
 };

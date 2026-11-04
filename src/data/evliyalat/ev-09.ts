@@ -25,4 +25,11 @@ Bu kitaplar tasavvuf edebiyâtı temelidir.`,
 
 Nişâpûr'da türbesi ziyaretgâhtır.`,
   ],
+  onemliAnlar: [
+    "~1145 Nişâpûr'da doğum; misk dükkânı.",
+    "Derviş kıssası ile kalbin değişişi.",
+    "Mantıku't-Tayr — kuşların Simurg yolculuğu.",
+    "Tazkiretü'l-Evliyâ ile menkıbe katdağı.",
+    "1221'de Moğol istilâsında vefat.",
+  ],
 };

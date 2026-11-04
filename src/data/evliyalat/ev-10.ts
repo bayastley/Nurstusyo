@@ -25,4 +25,11 @@ Rivâyette anlatılır ki kırk gün halvéte girdi; kalbinden söz edildi.`,
 
 Horasan'da bir magcısı: Bu dergâhın kapısı Müslüman bir kapısıdır.`,
   ],
+  onemliAnlar: [
+    "967 Mâydihâne'de doğum.",
+    "Devrinin mürşidlerinden ders alması.",
+    "Semânân'da hanegâh kurması.",
+    "Semâ âyînini şekillendirmesi.",
+    "1049'da vefat — Hanegâh'ın piri.",
+  ],
 };

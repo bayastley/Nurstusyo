@@ -80,6 +80,21 @@ function EvliyaKitap({ tt, ev, onGeri }: { tt: TT; ev: Evliya; onGeri: () => voi
         <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
       </div>
 
+      {/* ★ 04.11 (kullanıcı emri): Önemli Anlar — her evliyanın hayatında bilinen değerli meşhur vâkıalar */}
+      {ev.onemliAnlar && ev.onemliAnlar.length > 0 && (
+        <div data-minitur="evliyalat-onemli" className="rounded-2xl border border-white/12 bg-white/[.04] p-3">
+          <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{tt("evOnemli")}</p>
+          <ul className="space-y-1">
+            {ev.onemliAnlar.map((a, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-white/75">
+                <span className="mt-[3px] h-1 w-1 shrink-0 rounded-full" style={{ background: "var(--accent-2)" }} />
+                <span>{a}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="flex items-center justify-center gap-2">
         <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
       </div>

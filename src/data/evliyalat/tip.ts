@@ -5,5 +5,6 @@ export interface Evliya {
   unvan: string;      // kitap kapağındaki alt başlık
   donem: string;      // yıl + şehir çizgisi
   sayfalar: string[]; // 5 kitap sayfası; \n\n paragrafı kırar
+  onemliAnlar: string[]; // ★ 04.11: kitap sayfasının altında gösterilen maddeler
   kaynak: string;     // kitap altındaki kaynak satırı
 }
