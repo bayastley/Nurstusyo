@@ -2159,6 +2159,7 @@
   "mkIntro": "Take a lesson from every story; tap a topic and the tale opens below.",
   "mkSayaci": "{n} stories waiting for you",
   "mkTumu": "+{n} more stories",
+  "mkSayfa": "Page {p} / {t} · {n} stories",
   "mkGeri": "Back to list",
   "mkHikmet": "Lesson of the story:",
   "mkKaynak": "Source",

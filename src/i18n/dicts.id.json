@@ -2159,6 +2159,7 @@
   "mkIntro": "Ambil hikmah dari setiap kisah; ketuk topik, kisah terbuka di bawah.",
   "mkSayaci": "{n} kisah menantimu",
   "mkTumu": "+{n} kisah lainnya",
+  "mkSayfa": "Halaman {p} / {t} · {n} kisah",
   "mkGeri": "Kembali ke daftar",
   "mkHikmet": "Hikmah kisah:",
   "mkKaynak": "Sumber",

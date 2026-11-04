@@ -2159,6 +2159,7 @@
   "mkIntro": "Her kıssadan bir hisse al; bir konuya tıkla, hikâye aşağıda açılsın.",
   "mkSayaci": "{n} kıssa seni bekliyor",
   "mkTumu": "Daha +{n} kıssa",
+  "mkSayfa": "Sayfa {p} / {t} · {n} kıssa",
   "mkGeri": "Listeye dön",
   "mkHikmet": "Kıssadan hisse:",
   "mkKaynak": "Kaynak",

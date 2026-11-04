@@ -10,6 +10,9 @@
 //   · ★ 02.11: /api/kissalar ucuyla admin'in yayınladığı kıssalar da
 //     HERKESE gösterilir; seçili dil (en/ar/id/ur) için çeviri alanı
 //     varsa o dilin metni gösterilir, yoksa Türkçe gösterilir.
+//   · ★ 04.11 (kullanıcı emri): 10'ar sayfalama — ilk sayfada 10 kıssa; ◀▶ ile
+//     diğer sayfaya geçilir; KUMANDA üstte + altta; alttan geçişte liste anında
+//     başa (ilk sıraya) döner
 // ════════════════════════════════════════════════════════
 import React from "react";
 import { X, ChevronLeft, BookOpen, Lightbulb, Library } from "lucide-react";
@@ -66,9 +69,30 @@ function MenkibeDetay({ tt, secili, setSeciliId, dilMetin }: { tt: TT; secili: U
   );
 }
 
+/** ★ 10'ar sayfalama boyutu (04.11, kullanıcı emri: "ilk 10 göster, sonra diğer sayfaya geç;
+ *   kumanda hem altta hem üstte; alttaki butonla geçişte hemen yukarı, ilk sıraya dön") */
+const SAYFA_BOYUTU = 10;
+
+/** Sayfa kumandası — üstte ve altta aynı görünüm; ◀▶ ile sayfalar arası gez.*
+ *  Etiket: mkSayfa ("Sayfa {p} / {t} · {n} kıssa"). */
+function MenkibeKumanda({ tt, sayfa, toplam, nToplam, degistir }: { tt: TT; sayfa: number; toplam: number; nToplam: number; degistir: (yeni: number) => void }) {
+  const okCls = "flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/[.04] text-[10px] font-black text-white/70 transition hover:bg-white/[.08] disabled:cursor-not-allowed disabled:opacity-30";
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <button type="button" data-minitur="menkibeler-sayfa-geri" className={okCls} onClick={() => degistir(sayfa - 1)} disabled={sayfa <= 0}>◀</button>
+      <span className="min-w-24 text-center text-[9.5px] font-black tracking-wide text-white/55" data-minitur="menkibeler-sayfa-bilgi">
+        {tt("mkSayfa").replace("{p}", String(sayfa + 1)).replace("{t}", String(toplam)).replace("{n}", String(nToplam))}
+      </span>
+      <button type="button" data-minitur="menkibeler-sayfa-ileri" className={okCls} onClick={() => degistir(sayfa + 1)} disabled={sayfa >= toplam - 1}>▶</button>
+    </div>
+  );
+}
+
 export function MenkibelerBolumu({ tt }: { tt: TT }) {
-  const [tumGoster, setTumGoster] = React.useState(false);
   const [seciliId, setSeciliId] = React.useState<string | null>(null);
+  // ★ 04.11: sayfa durumu + başa dönme çapası (üst kumandanın kendisi)
+  const [sayfaNo, setSayfaNo] = React.useState(0);
+  const listeUst = React.useRef<HTMLDivElement | null>(null);
   const [uzakKissalar, setUzakKissalar] = React.useState<UzakKissa[]>([]);
   /** ★ dil seçimi sabit tutulur — bileşen boyunca yeniden örnekleme gerekmez */
   const dilRef = React.useRef<string>(degistemDili());
@@ -104,8 +128,21 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
     return (m[alan] as string) || "";
   };
 
-  const gorunen = tumGoster ? tamKasa : tamKasa.slice(0, 5);
-  const kalanSayisi = Math.max(0, tamKasa.length - 5);
+  const tamSayfa = Math.max(1, Math.ceil(tamKasa.length / SAYFA_BOYUTU));
+  const guvenliSayfa = Math.min(sayfaNo, tamSayfa - 1);
+  const gorunen = tamKasa.slice(guvenliSayfa * SAYFA_BOYUTU, guvenliSayfa * SAYFA_BOYUTU + SAYFA_BOYUTU);
+
+  /** Sayfa değişimi (04.11): açık detayı kapat + listeyi hemen ilk sıraya döndür.
+   *  scrollIntoView rAF içinde — yeni sayfanın kartları boyanmadan ölçmesin. */
+  const sayfayaGec = (hedef: number) => {
+    const yeni = Math.min(Math.max(0, hedef), tamSayfa - 1);
+    if (yeni === guvenliSayfa) return;
+    setSayfaNo(yeni);
+    setSeciliId(null);
+    requestAnimationFrame(() => {
+      listeUst.current?.scrollIntoView({ behavior: "auto", block: "start" });
+    });
+  };
 
   return (
     <div className="space-y-3" data-minitur="menkibeler-bolumu">
@@ -115,7 +152,12 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
         {tt("mkSayaci").replace("{n}", String(tamKasa.length))}
       </p>
 
-      {/* KONU BUTONLARI — en fazla 5 görünür; "tümünü göster" içerde açar */}
+      {/* ★ 10'ar sayfalama — kumanda ÜSTTE + başa dönme çapası */}
+      <div ref={listeUst} className="pt-1">
+        <MenkibeKumanda tt={tt} sayfa={guvenliSayfa} toplam={tamSayfa} nToplam={tamKasa.length} degistir={sayfayaGec} />
+      </div>
+
+      {/* KONU BUTONLARI — sayfadaki 10 kıssa; detay konunun ALTINDA açılır */}
       <div className="grid grid-cols-2 gap-2">
         {gorunen.map((m) => (
           <React.Fragment key={m.id}>
@@ -146,18 +188,8 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
         ))}
       </div>
 
-      {/* "kalanı içinde göster" düğmesi — kasa büyüdükçe otomatik görünür */}
-      {!tumGoster && kalanSayisi > 0 && (
-        <button
-          type="button"
-          data-minitur="menkibeler-tum"
-          onClick={() => setTumGoster(true)}
-          className="mx-auto flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[.04] px-4 py-1.5 text-[10px] font-black text-white/70 transition hover:bg-white/[.08]"
-        >
-          <Library className="h-3 w-3" />
-          {tt("mkTumu").replace("{n}", String(kalanSayisi))}
-        </button>
-      )}
+      {/* kumanda ALTTA — alttan geçişte liste anında başa (ilk sıraya) döner */}
+      <MenkibeKumanda tt={tt} sayfa={guvenliSayfa} toplam={tamSayfa} nToplam={tamKasa.length} degistir={sayfayaGec} />
 
     </div>
   );
