@@ -17,6 +17,7 @@
 import React from "react";
 import { X, ChevronLeft, BookOpen, Lightbulb, Library } from "lucide-react";
 import { MENKIBELER, type Menkibe } from "../data/menkibeler";
+import { EvliyalatBolumu } from "./kesfetEvliyalat";
 
 type TT = (k: string) => string;
 
@@ -94,6 +95,8 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
   const [sayfaNo, setSayfaNo] = React.useState(0);
   const listeUst = React.useRef<HTMLDivElement | null>(null);
   const [uzakKissalar, setUzakKissalar] = React.useState<UzakKissa[]>([]);
+  // ★ 04.11: Evliyalat kapak listesi — menkıbelerin altındaki buton
+  const [evGoster, setEvGoster] = React.useState(false);
   /** ★ dil seçimi sabit tutulur — bileşen boyunca yeniden örnekleme gerekmez */
   const dilRef = React.useRef<string>(degistemDili());
 
@@ -190,6 +193,26 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
 
       {/* kumanda ALTTA — alttan geçişte liste anında başa (ilk sıraya) döner */}
       <MenkibeKumanda tt={tt} sayfa={guvenliSayfa} toplam={tamSayfa} nToplam={tamKasa.length} degistir={sayfayaGec} />
+
+      {/* ★ 04.11 (kullanıcı emri): Evliyalat — menkıbelerin altındaki buton */}
+      <div className="flex items-center gap-2 pt-1">
+        <div className="h-px flex-1 bg-white/10" />
+        <button
+          type="button"
+          data-minitur="evliyalat-ac"
+          onClick={() => setEvGoster((v) => !v)}
+          className="rounded-full px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-black transition"
+          style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
+        >
+          ✦ {tt("evBaslik")}
+        </button>
+        <div className="h-px flex-1 bg-white/10" />
+      </div>
+      {evGoster && (
+        <div className="pt-1">
+          <EvliyalatBolumu tt={tt} onGeri={() => setEvGoster(false)} />
+        </div>
+      )}
 
     </div>
   );
