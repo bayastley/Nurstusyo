@@ -66,3 +66,13 @@ instagram-auto-poster/queue-state.json
 # ★ 16.10 E2E test kanıtları — ekran görüntüleri / kanıt JSON'ları commite girmez
 scripts/_*.png
 scripts/_*.json
+
+# Geçici/kök çöp desenleri (commit öncesi hijyen)
+.tmp-*
+!/.tmp-keep
+ayni-*-2910.json
+eksik-*.json
+eksikler-*.json
+tmp_en.txt
+turkce-string-*.txt
+/*.png
