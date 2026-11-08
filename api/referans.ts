@@ -13,6 +13,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { assertOrigin } from "./_shared/origin.js";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -88,16 +89,7 @@ async function rateLimit(req: VercelRequest, res: VercelResponse, bucket: string
   return true;
 }
 
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"]);
-  if (!origin && !referer) return true;
-  if (origin && allowed.has(origin)) return true;
-  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 // ─── Supabase ─────────────────────────────────────────────
 function supabaseConfig() {
@@ -123,7 +115,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   if (!(await rateLimit(req, res, "referans", 20, 60_000))) return;
 
   const user = getSessionUser(req);

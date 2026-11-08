@@ -3,19 +3,9 @@
 // POST → kullanıcının çektiği zikirleri topluluğa ekler (rate limitli)
 // Not: tablolar Supabase'e seed edilince sayaç canlanır (roadmap-guncelleme-2509.sql'e eklenecek).
 
-// ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
-async function logServerError(req: { url?: string; headers: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
-  try {
-    const __url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/\/$/, "");
-    const __key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!__url || !__key) return;
-    await fetch(`${__url}/rest/v1/nur_server_errors`, {
-      method: "POST",
-      headers: { apikey: __key, Authorization: `Bearer ${__key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ endpoint, message: error instanceof Error ? error.message.slice(0, 500) : String(error).slice(0, 500), url: req.url || "", created_at: new Date().toISOString() }),
-    });
-  } catch { /* log yazımı siteyi ASLA bozmaz */ }
-}
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin } from "../_shared/origin.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -133,20 +123,9 @@ async function zikirGetGovdesi(): Promise<{ body: ZikirGetBody; saglikli: boolea
 
 const GET_CACHE = "public, max-age=10, s-maxage=30, stale-while-revalidate=60";
 
-const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-function requireAllowedOrigin(req: any, res: any): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
-
 export default async function handler(req: any, res: any) {
   res.setHeader("Cache-Control", "no-store");
-  if (req.method === "POST" && !requireAllowedOrigin(req, res)) return;
+  if (req.method === "POST" && !assertOrigin(req, res)) return;
   const cfg = supabaseConfig();
   if (!cfg) {
     // Tablo/env yoksa sessiz 0 — zikirmatik local sayaçla yaşamaya devam eder

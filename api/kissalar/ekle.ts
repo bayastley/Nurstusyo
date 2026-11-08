@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { adminFromCookie } from "../admin/actionYardimcilar.js";
 import { logAdminAction } from "../_shared/supabase.js";
+import { assertOrigin } from "../_shared/origin.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 
 // ═══════════════════════════════════════════════════════════════
 // ★ 02.11 KISSA KASASI — EKLE / ÇIKAR (ADMIN)
@@ -30,20 +32,11 @@ function güvenli(v: unknown, max: number): string {
   return s.slice(0, max);
 }
 
-const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") { res.status(405).json({ ok: false, error: "POST only" }); return; }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   if (!SUPA_URL || !SUPA_KEY) { res.status(500).json({ ok: false, error: "Supabase sunucu ayarları eksik" }); return; }
 
   const admin = await adminFromCookie(req);
@@ -112,6 +105,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await logAdminAction({ adminId: admin.id, adminEmail: admin.email, action: "kissa_ekle", target: id, metadata: { baslik } }).catch(() => undefined);
     res.status(200).json({ ok: true, id });
   } catch (e) {
+    await logServerError(req, e, "api/kissalar/ekle");
     res.status(500).json({ ok: false, error: (e as Error)?.message || "kissa ekleme hatası" });
   }
 }

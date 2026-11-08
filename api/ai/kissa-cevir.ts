@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { adminFromCookie } from "../admin/actionYardimcilar.js";
+import { assertOrigin } from "../_shared/origin.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 
 // ═══════════════════════════════════════════════════════════════
 // ★ 04.11 KISSA ÇEVİRİ (ADMIN) — 5 DİL: ÖNCE GPT (anahtar varsa),
@@ -63,20 +65,9 @@ async function myMemoryCevir(metin: string, hedefDil: string): Promise<string> {
   return parcalar.join("\n\n");
 }
 
-const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") { res.status(405).json({ ok: false, error: "POST only" }); return; }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   const admin = await adminFromCookie(req);
   if (!admin) { res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" }); return; }
 
@@ -156,6 +147,6 @@ HİKMET: ${hikmet}`;
     } catch (e) { sonHata = sonHata || ((e as Error)?.message || "mymemory hatası"); }
   }
 
-  if (!ceviri) { res.status(502).json({ ok: false, error: "Çeviri üretilemedi (GPT + MyMemory başarısız)", detay: sonHata.slice(0, 200) }); return; }
+  if (!ceviri) { await logServerError(req, new Error(sonHata || "kissa-cevir failed"), "api/ai/kissa-cevir"); res.status(502).json({ ok: false, error: "Çeviri üretilemedi (GPT + MyMemory başarısız)", detay: sonHata.slice(0, 200) }); return; }
   res.status(200).json({ ok: true, ceviri });
 }

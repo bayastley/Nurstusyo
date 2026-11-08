@@ -23,6 +23,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { adminFromCookie } from "../admin/actionYardimcilar.js";
 import { AYET_KUTUPHANE, type AyetKayit } from "./ayetVeri.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 import type { MsEdgeTTS as MsEdgeTTSClass, OUTPUT_FORMAT as OutputFormatConst } from "msedge-tts";
 
 declare const process: { env: Record<string, string | undefined> };

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { assertOrigin } from "../_shared/origin.js";
 
 // ════════════════════════════════════════════════════════
 // CUSTOMER DENEME — LANSMAN DENEMESİ OKUMA UÇ BİLGİSİ (25.10)
@@ -39,16 +40,7 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
   } catch { return null; }
 }
 
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-  if (!origin && !referer) return true;
-  if (origin && allowed.has(origin)) return true;
-  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 function supabaseConfig() {
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^["']+|["']+$/g, "").replace(/\/rest\/v1\/?$/i, "").replace(/\/+$/, "");
@@ -60,7 +52,7 @@ function supabaseConfig() {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
 
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });

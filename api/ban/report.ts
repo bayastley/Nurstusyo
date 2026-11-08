@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
+import { assertOrigin } from "../_shared/origin.js";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -151,31 +152,13 @@ function supabaseConfig() {
   return { url, key };
 }
 
-const ALLOWED_ORIGINS = new Set([
-  "https://nurstudyo.com",
-  "https://www.nurstudyo.com",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5199",
-]);
-
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   // ★ Merkezi rate limit — ban rapor flood'u DB'yi şişirmeden engellenir
   if (!(await rateLimit(req, res, "ban:report", 30, 60_000))) return;
 

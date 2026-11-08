@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin, originAllowed } from "../_shared/origin.js";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -93,11 +94,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
   const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
   const requestOrigin = typeof req.headers.origin === "string" ? req.headers.origin.replace(/\/$/, "") : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  let refererOrigin = "";
-  if (referer) { try { refererOrigin = new URL(referer).origin; } catch { /* ignore */ } }
-  const originOk = (requestOrigin && (ALLOWED_ORIGINS.has(requestOrigin) || (configuredOrigin && requestOrigin === configuredOrigin)))
-    || (refererOrigin && ALLOWED_ORIGINS.has(refererOrigin));
   if (requestOrigin && (ALLOWED_ORIGINS.has(requestOrigin) || (configuredOrigin && requestOrigin === configuredOrigin))) {
     res.setHeader("Access-Control-Allow-Origin", requestOrigin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -107,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    if (!originOk) { res.status(403).end(); return; }
+    if (!originAllowed(req)) { res.status(403).end(); return; }
     res.status(204).end();
     return;
   }
@@ -116,8 +112,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Sadece POST istekleri kabul edilir" });
     return;
   }
-  if (!originOk) return res.status(403).json({ ok: false, error: "Forbidden" });
-
+  if (!assertOrigin(req, res)) return;
   const user = requireAuth(req, res);
   if (!user) return;
 

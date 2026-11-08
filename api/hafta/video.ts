@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import crypto from "crypto"; // ★ 27.09 FIX: require("crypto") ESM'de patlıyordu (type:module) — oturum okunamıyordu
+import crypto from "crypto";
+import { assertOrigin } from "../_shared/origin.js";
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
 async function logServerError(req: { url?: string; headers?: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
@@ -75,17 +76,7 @@ async function rateLimit(req: { headers: Record<string, string | string[] | unde
 
 declare const process: { env: Record<string, string | undefined> };
 
-// ★ CSRF KORUMASI — yalnızca sitemizden gelen istekler kabul edilir (referans.ts ile aynı desen)
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"]);
-  if (!origin && !referer) return true; // same-origin fetch bazı tarayıcılarda boş gönderebilir
-  if (origin && allowed.has(origin)) return true;
-  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 // ════════════════════════════════════════════════════════
 // HAFTANIN VİDEOSU — yol haritası madde 17
@@ -187,7 +178,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ─── POST: öneri ekle | begeni ───
     if (req.method === "POST") {
-      if (!requireAllowedOrigin(req, res)) return;
+      if (!assertOrigin(req, res)) return;
       if (!(await rateLimit(req, res, "hafta-video", 12, 60_000))) return;
       const session = getSession(req);
       if (!session) return res.status(401).json({ ok: false, error: "Bu özellik için giriş yapmalısın" });

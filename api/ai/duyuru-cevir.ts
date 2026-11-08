@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { adminFromCookie } from "../admin/actionYardimcilar.js";
+import { assertOrigin } from "../_shared/origin.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 
 // ═══════════════════════════════════════════════════════════════
 // ★ 29.10 DUYURU OTOMATİK ÇEVİRİ (kullanıcı emri):
@@ -22,16 +24,7 @@ function rateLimitOk(ip: string): boolean {
   return arr.length <= 8; // 8 çağrı/dk — normal akışta 1 duyunun 1 çevirlisi var
 }
 
-const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 type Metin = { title?: string; message?: string; detail?: string };
 
@@ -39,7 +32,7 @@ const HEDEF_DILLER = ["en", "ar", "id", "ur"] as const;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   const admin = await adminFromCookie(req);
   if (!admin) { res.status(403).json({ error: "Admin yetkisi gerekli" }); return; }
   const xff = req.headers["x-forwarded-for"];
@@ -105,6 +98,7 @@ DUYURU MESAJ: ${message}${detailParca}`;
     }
     res.status(200).json({ ok: true, ceviri: temiz });
   } catch (e) {
+    await logServerError(req, e, "api/ai/duyuru-cevir");
     res.status(500).json({ error: (e as Error)?.message || "çeviri hatası" });
   }
 }

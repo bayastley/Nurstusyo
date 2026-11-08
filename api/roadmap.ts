@@ -1,5 +1,6 @@
-import crypto from "crypto"; // ★ 27.09 FIX: require() ESM'de patlıyor — statik import
+import crypto from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin } from "./_shared/origin.js";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -167,28 +168,12 @@ const sanitize = (s: unknown, max: number) => (typeof s === "string" ? s.trim().
 const RM_TTL_MS = 20_000;
 let rmCache: { at: number; features: any[]; counts: Record<string, number>; totalVotes: number } | null = null;
 
-const ALLOWED_ORIGINS = new Set([
-  "https://nurstudyo.com",
-  "https://www.nurstudyo.com",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5199",
-]);
 
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  if (!origin && !referer) return true;
-  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
-  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET" && req.method !== "POST" && req.method !== "DELETE") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (req.method !== "GET" && !requireAllowedOrigin(req, res)) return;
+  if (req.method !== "GET" && !assertOrigin(req, res)) return;
   const cfg = supabaseConfig();
   if (!cfg) return res.status(503).json({ ok: false, error: "Veritabanı yapılandırması eksik" });
 

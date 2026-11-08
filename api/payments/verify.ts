@@ -1,34 +1,9 @@
 import crypto from 'crypto';
+import { assertOrigin } from '../_shared/origin.js';
+import { logServerError } from '../_shared/serverErrorLog.js';
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
-async function logServerError(req: { url?: string; headers: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
-  try {
-    const __url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/\/$/, "");
-    const __key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!__url || !__key) return;
-    const __msg = error instanceof Error ? error.message : String(error || "Bilinmeyen sunucu hatası");
-    if (!__msg) return;
-    const __stack = error instanceof Error ? (error.stack || "") : "";
-    const __path = String(req.url || endpoint).slice(0, 200);
-    const __fingerprint = crypto.createHash("sha256").update(__msg + "|" + __path).digest("hex").slice(0, 16);
-    await fetch(__url + "/rest/v1/nur_error_logs", {
-      method: "POST",
-      headers: { apikey: __key, Authorization: "Bearer " + __key, "Content-Type": "application/json", Prefer: "return=minimal" },
-      body: JSON.stringify({
-        message: __msg.slice(0, 500),
-        stack: __stack.slice(0, 4000),
-        path: __path,
-        source: ("server:" + endpoint).slice(0, 40),
-        user_agent: String(req.headers["user-agent"] || "server").slice(0, 300),
-        fingerprint: __fingerprint,
-        kind: "genel",
-        user_email: "",
-      }),
-    });
-  } catch { /* log yazımı siteyi ASLA bozmaz */ }
-}
-
 const COOKIE_NAME = 'nur_session';
 
 function parseCookies(req: any): Record<string, string> {
@@ -116,7 +91,7 @@ async function sbPatch(path: string, body: any, req?: { url?: string; headers: R
       body: JSON.stringify(body),
     });
   } catch (e) {
-    if (req) await logServerError(req, e, "api/payments/verify"); console.error('[payments/verify] Supabase PATCH hatası:', (e as Error).message); }
+    if (req) await logServerError(req as any, e, "api/payments/verify"); console.error('[payments/verify] Supabase PATCH hatası:', (e as Error).message); }
 }
 
 async function claimProcessingOrder(orderId: string): Promise<boolean> {
@@ -325,28 +300,11 @@ async function allowRequest(req: any, res: any): Promise<boolean> {
 // ═══════════════════════════════════════════════════════════════
 // ANA HANDLER — Kullanıcı sayfaya döndüğünde çağrılır
 // ═══════════════════════════════════════════════════════════════
-const ALLOWED_ORIGINS = new Set([
-  'https://nurstudyo.com',
-  'https://www.nurstudyo.com',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5199',
-]);
-function requireAllowedOrigin(req: any, res: any): boolean {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
-  const referer = typeof req.headers.referer === 'string' ? req.headers.referer : '';
-  let refererOrigin = '';
-  if (referer) { try { refererOrigin = new URL(referer).origin; } catch { /* ignore */ } }
-  if (ALLOWED_ORIGINS.has(origin) || ALLOWED_ORIGINS.has(refererOrigin)) return true;
-  res.status(403).json({ ok: false, error: 'İzin verilmeyen istek kaynağı' });
-  return false;
-}
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'POST only' });
   }
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
 
   if (!(await allowRequest(req, res))) return;
 

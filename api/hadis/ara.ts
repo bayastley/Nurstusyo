@@ -13,21 +13,9 @@
 // limit; girdi temizlenir; dış adresler sabit (SSRF yok). Cache'li.
 // ════════════════════════════════════════════════════════════════
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin } from "../_shared/origin.js";
 
-// ─── GÖMÜLÜ GÜVENLİK/RATE LIMIT — _shared importları Vercel'de
-//     paketlenmediği için (FUNCTION_INVOCATION_FAILED) buraya gömüldü.
-//     Diğer API dosyalarıyla aynı desen (feedback.ts, referans.ts). ───
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const envOrigins = (process.env.NUR_ALLOWED_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", ...envOrigins]);
-  if (!origin && !referer) return true;
-  if (origin && allowed.has(origin)) return true;
-  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* bozuk referer */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 const __RL_MAP = new Map<string, number[]>();
 const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
@@ -133,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
   if (!(await rateLimit(req, res, "hadis-ara", 30, 60_000))) return;
 
   const q = temizle(String(req.query.q ?? ""));

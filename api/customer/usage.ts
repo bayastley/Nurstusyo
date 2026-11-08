@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin } from "../_shared/origin.js";
 
 // ════════════════════════════════════════════════════════
 // CUSTOMER USAGE — BÖLÜM KULLANIM KAYDI (25.10, sahibin emri)
@@ -22,16 +23,7 @@ function rlOk(key: string, max: number, windowMs: number): boolean {
   return true;
 }
 
-function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
-  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
-  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
-  const allowed = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
-  if (!origin && !referer) return true;
-  if (origin && allowed.has(origin)) return true;
-  if (referer) { try { if (allowed.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
-  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
-  return false;
-}
+
 
 function ipKey(req: VercelRequest): string {
   const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
@@ -48,7 +40,7 @@ function supabaseConfig() {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!requireAllowedOrigin(req, res)) return;
+  if (!assertOrigin(req, res)) return;
 
   const body = req.body as { section?: string } | undefined;
   const section = String(body?.section || "").toLowerCase().trim();
