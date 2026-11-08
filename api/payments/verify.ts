@@ -66,11 +66,14 @@ function getUser(req: any): any | null {
     if (!token || !token.includes('.')) return null;
     const [payload, sig] = token.split('.');
     if (!payload || !sig) return null;
+    const secret = sessionSecret();
+    if (!secret || secret.length < 20) return null;
     const expected = signPayload(payload);
     const sigBuf = Buffer.from(sig);
     const expectedBuf = Buffer.from(expected);
     if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
     const user = JSON.parse(fromBase64Url(payload).toString('utf8'));
+    if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return user;
   } catch { return null; }
@@ -322,10 +325,28 @@ async function allowRequest(req: any, res: any): Promise<boolean> {
 // ═══════════════════════════════════════════════════════════════
 // ANA HANDLER — Kullanıcı sayfaya döndüğünde çağrılır
 // ═══════════════════════════════════════════════════════════════
+const ALLOWED_ORIGINS = new Set([
+  'https://nurstudyo.com',
+  'https://www.nurstudyo.com',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5199',
+]);
+function requireAllowedOrigin(req: any, res: any): boolean {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
+  const referer = typeof req.headers.referer === 'string' ? req.headers.referer : '';
+  let refererOrigin = '';
+  if (referer) { try { refererOrigin = new URL(referer).origin; } catch { /* ignore */ } }
+  if (ALLOWED_ORIGINS.has(origin) || ALLOWED_ORIGINS.has(refererOrigin)) return true;
+  res.status(403).json({ ok: false, error: 'İzin verilmeyen istek kaynağı' });
+  return false;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'POST only' });
   }
+  if (!requireAllowedOrigin(req, res)) return;
 
   if (!(await allowRequest(req, res))) return;
 

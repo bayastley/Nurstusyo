@@ -342,13 +342,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ ok: false, error: "Bilinmeyen video formatı" });
   }
 
+  // ★ ADMIN: 3 katman (DB is_admin + token iddiası uyumu loadServerAccess'ta; + ENV whitelist fail-closed)
+  const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const emailEnvOnayli = adminEmails.length > 0 && adminEmails.includes(String(user.email || "").toLowerCase());
+  const isAdminStrict = access.isAdmin === true && emailEnvOnayli;
+
   const kind = MODE_TO_KIND[mode];
-  const tier: Tier = access.isAdmin ? "elit" : access.tier;
+  const tier: Tier = isAdminStrict ? "elit" : access.tier;
   // ★ Bitmiş üyelik hakkı: KISA'da 50 tavan (uzun/tam free=0'da kalır)
   const quota = kind === "kisa" && access.subExpired ? BITIS_UYELIK_KISA_HAFTA : QUOTA_HAFTALIK[tier][kind];
 
   // Admin üretimleri sınırsızdır; kota/hak tablolarına dokunulmaz.
-  if (access.isAdmin) {
+  if (isAdminStrict) {
     return res.status(200).json({
       ok: true, unlimited: true, userId: user.id, kind, mode,
       formats: uniqueFormats, source: "admin", quotaLeft: null, packLeft: null,

@@ -128,7 +128,11 @@ export async function adminFromCookie(req: VercelRequest): Promise<AdminSession 
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
     const pad = normalized.length % 4 ? "=".repeat(4 - normalized.length % 4) : "";
     const admin = JSON.parse(Buffer.from(normalized + pad, "base64").toString("utf8")) as AdminSession;
+    // ★ 3 KATMAN: token (imza+exp+verified+isAdmin) + ENV whitelist (fail-closed) + DB is_admin
+    if (!admin.id || !admin.email) return null;
     if (!admin.isAdmin || !admin.verified || admin.exp < Math.floor(Date.now() / 1000)) return null;
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.length === 0 || !adminEmails.includes(String(admin.email || "").toLowerCase())) return null;
     const { url, key } = config();
     const response = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(admin.id)}&select=is_admin,tier`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },

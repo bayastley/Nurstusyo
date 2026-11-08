@@ -130,7 +130,8 @@ function getSession(req: VercelRequest): SessionInfo | null {
   const expectedBuf = Buffer.from(expected);
   if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
   try {
-    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; exp?: number };
+    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; verified?: boolean; exp?: number };
+    if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return { id: user.id, email: user.email };
   } catch { return null; }
@@ -166,8 +167,28 @@ const sanitize = (s: unknown, max: number) => (typeof s === "string" ? s.trim().
 const RM_TTL_MS = 20_000;
 let rmCache: { at: number; features: any[]; counts: Record<string, number>; totalVotes: number } | null = null;
 
+const ALLOWED_ORIGINS = new Set([
+  "https://nurstudyo.com",
+  "https://www.nurstudyo.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5199",
+]);
+
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  if (!origin && !referer) return true;
+  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
+  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
+  if (req.method !== "GET" && req.method !== "POST" && req.method !== "DELETE") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (req.method !== "GET" && !requireAllowedOrigin(req, res)) return;
   const cfg = supabaseConfig();
   if (!cfg) return res.status(503).json({ ok: false, error: "Veritabanı yapılandırması eksik" });
 
@@ -204,7 +225,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       //   açıklaması admin harici cevapta YOK SAYILIR — oylamada isim + oy
       //   kalır, detay devtools'tan bile okunamaz. Cache'ten gelen satırlar
       //   MUTASYON DEĞİL kopyayla maskelemir (instance ortak cache korunur).
-      const adminEmailsRead = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
+      const adminEmailsRead = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
       const adminSess = Boolean(session && adminEmailsRead.length && adminEmailsRead.includes(session.email.toLowerCase()));
       const maskeAdminMaddeleri = (f: any) =>
         String(f.id || "").startsWith("adm-") ? (adminSess ? f : { ...f, description: "", desc: "" }) : f;
@@ -271,8 +292,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       //   burada ADMIN_EMAILS okunduğu için gerçek admin bile 403 alıyordu —
       //   roadmap Ekle/Sil/Düzenle/Sıfırla canlıda hiç çalışmıyordu.
       //   auth/google.ts + kill-session.ts ile aynı anahtar okunur.
-      const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
-      if (!adminEmails.length || !adminEmails.includes(session.email.toLowerCase())) {
+  const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").toLowerCase().split(",").map((e) => e.trim()).filter(Boolean);
+  if (!adminEmails.length || !adminEmails.includes(session.email.toLowerCase())) {
         return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
       }
       const body = (req.body || {}) as Record<string, unknown>;

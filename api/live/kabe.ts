@@ -30,8 +30,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "live/kabe"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* log yazımı siteyi ASLA bozmaz */ }
 }
 
 const UPSTREAMS: Record<string, string> = {

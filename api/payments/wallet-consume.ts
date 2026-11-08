@@ -124,14 +124,29 @@ export default async function handler(req: any, res: any) {
   try { bodySafe = req.body || {}; } catch { bodySafe = {}; }
   const kind = String(bodySafe?.kind || "");
   if (!["kisa", "uzun", "tam"].includes(kind)) return res.status(400).json({ ok: false, error: "Geçersiz video türü" });
-  // ★ ADMIN: tüm üretim hakları sınırsız — kota RPC'sine hiç gitmeden onay
-  if (user.isAdmin) {
-    return res.status(200).json({ ok: true, quota_left: 9999, pack_left: 9999, admin: true });
-  }
-
   const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return res.status(503).json({ ok: false, error: "Kota servisi kullanılamıyor" });
+
+  // ★ ADMIN: sınırsız hak — 3 katman (token iddiası + ENV whitelist fail-closed + DB is_admin)
+  if (user.isAdmin) {
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.length > 0) {
+      try {
+        const adminResp = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(user.id)}&select=is_admin,email`, {
+          headers: { apikey: key, Authorization: `Bearer ${key}` },
+          cache: "no-store",
+        });
+        if (adminResp.ok) {
+          const rows = (await adminResp.json()) as Array<{ is_admin?: boolean; email?: string }>;
+          const dbEmail = String(rows[0]?.email || "").toLowerCase();
+          if (rows[0]?.is_admin === true && adminEmails.includes(dbEmail)) {
+            return res.status(200).json({ ok: true, quota_left: 9999, pack_left: 9999, admin: true });
+          }
+        }
+      } catch { /* DB teyidi başarısızsa sınırsız hak verme */ }
+    }
+  }
 
   // ★ Atomic RPC — paralel isteklerde çift harcama imkânsız.
   // ★ HAFTALIK KOTA (07.10): istemcinin haftalık dönemiyle uyum — 7× çarpan.

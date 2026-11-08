@@ -169,7 +169,14 @@ export const SocialSharePanel: React.FC<SocialSharePanelProps> = ({
                       lang: dil,
                     }),
                   });
-                  const data = await res.json();
+                  const data = await res.json().catch(() => null);
+                  if (res.status === 401 && data && (data as { code?: string }).code === "RELOGIN") {
+                    try { void fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }); } catch { /* beklenen */ }
+                    try { localStorage.removeItem("nur_admin_session"); localStorage.removeItem("nur_user"); localStorage.removeItem("nur_token"); sessionStorage.clear(); } catch { /* beklenen */ }
+                    window.location.assign("/?giris=1");
+                    return;
+                  }
+                  if (!res.ok) throw new Error((data as { error?: string } | null)?.error || "Başlık üretilemedi");
                   if (data && data.success && data.title) {
                     setShareTitle(data.title);
                     lastTitleRef.current = data.title;

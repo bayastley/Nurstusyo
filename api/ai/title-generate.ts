@@ -33,21 +33,21 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
 // Self-contained oturum doğrulama — _shared importları Vercel'de paketlenmediği için gömüldü
 function requireAuth(req: VercelRequest, res: VercelResponse): { id: string; email: string; name: string } | null {
   const cookie = String(req.headers.cookie || "").split(";").map((p) => p.trim()).find((p) => p.startsWith("nur_session="));
-  if (!cookie) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
+  if (!cookie) { res.status(401).json({ ok: false, error: "Oturum gerekli", code: "RELOGIN" }); return null; }
   const token = decodeURIComponent(cookie.slice("nur_session=".length));
   const [payload, signature] = token.split(".");
   const secret = process.env.NUR_SESSION_SECRET || "";
-  if (!payload || !signature || secret.length < 20) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
+  if (!payload || !signature || secret.length < 20) { res.status(401).json({ ok: false, error: "Oturum gerekli", code: "RELOGIN" }); return null; }
   const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
   const sigBuf = Buffer.from(signature);
   const expBuf = Buffer.from(expected);
-  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) { res.status(401).json({ ok: false, error: "Oturum gerekli", code: "RELOGIN" }); return null; }
   try {
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const user = JSON.parse(Buffer.from(normalized + (normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : ""), "base64").toString("utf8")) as { id: string; email: string; name: string; exp?: number; verified?: boolean };
-    if (!user.id || !user.email || user.verified !== true || !user.exp || user.exp < Math.floor(Date.now() / 1000)) { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
+    const user = JSON.parse(Buffer.from(normalized + (normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : ""), "base64").toString("utf8")) as { id: string; sub?: string; email: string; name: string; exp?: number; verified?: boolean };
+    if (!user.id || !user.sub || !user.email || user.verified !== true || !user.exp || user.exp < Math.floor(Date.now() / 1000)) { res.status(401).json({ ok: false, error: "Oturum gerekli", code: "RELOGIN" }); return null; }
     return { id: user.id, email: user.email, name: user.name };
-  } catch { res.status(401).json({ ok: false, error: "Oturum gerekli" }); return null; }
+  } catch { res.status(401).json({ ok: false, error: "Oturum gerekli", code: "RELOGIN" }); return null; } // beklenen: bozuk token
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -90,10 +90,16 @@ async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs:
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
   const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
-  const requestOrigin = String(req.headers.origin || "").replace(/\/$/, "");
-  if (requestOrigin && configuredOrigin && requestOrigin === configuredOrigin) {
-    res.setHeader("Access-Control-Allow-Origin", configuredOrigin);
+  const requestOrigin = typeof req.headers.origin === "string" ? req.headers.origin.replace(/\/$/, "") : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  let refererOrigin = "";
+  if (referer) { try { refererOrigin = new URL(referer).origin; } catch { /* ignore */ } }
+  const originOk = (requestOrigin && (ALLOWED_ORIGINS.has(requestOrigin) || (configuredOrigin && requestOrigin === configuredOrigin)))
+    || (refererOrigin && ALLOWED_ORIGINS.has(refererOrigin));
+  if (requestOrigin && (ALLOWED_ORIGINS.has(requestOrigin) || (configuredOrigin && requestOrigin === configuredOrigin))) {
+    res.setHeader("Access-Control-Allow-Origin", requestOrigin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
     res.setHeader("Vary", "Origin");
   }
@@ -101,10 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    if (requestOrigin && requestOrigin !== configuredOrigin) {
-      res.status(403).end();
-      return;
-    }
+    if (!originOk) { res.status(403).end(); return; }
     res.status(204).end();
     return;
   }
@@ -113,6 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Sadece POST istekleri kabul edilir" });
     return;
   }
+  if (!originOk) return res.status(403).json({ ok: false, error: "Forbidden" });
 
   const user = requireAuth(req, res);
   if (!user) return;

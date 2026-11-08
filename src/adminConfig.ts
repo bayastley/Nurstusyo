@@ -7,7 +7,7 @@
 // ════════════════════════════════════════════════════════
 
 export const ADMIN_SECRET_PATH = "/admin";
-export const ALLOWED_ADMIN_EMAILS = ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_NUR_ADMIN_EMAIL ?? "")
+export const ALLOWED_ADMIN_EMAILS = ((import.meta as unknown as { env?: Record<string, string> }).env?.VITE_NUR_ADMIN_EMAILS ?? (import.meta as unknown as { env?: Record<string, string> }).env?.VITE_NUR_ADMIN_EMAIL ?? "")
   .split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
 
 export function isAdminEmail(email: string): boolean {

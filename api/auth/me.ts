@@ -174,10 +174,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!user) return res.status(401).json({ ok: false, error: "Oturum bulunamadı" });
 
     // ★ isAdmin ENV-GATED (fail-closed): oturumdaki isAdmin bayrağı TEK BAŞINA
-    //   yetmez — e-posta NUR_ADMIN_EMAILS listesinde de olmalı (katman 3).
+    //   yetmez — e-posta NUR_ADMIN_EMAILS/NUR_ADMIN_EMAIL/VITE_NUR_ADMIN_EMAIL listesinde de olmalı (katman 3).
     //   Liste boşsa isAdmin ASLA true dönmez; DB is_admin yalnız env
     //   onaylıyorsa geçerli sayılır.
-    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
     const emailEnvOnayli = adminEmails.length > 0 && adminEmails.includes(user.email.toLowerCase());
 
     const [users, wallets] = await Promise.all([

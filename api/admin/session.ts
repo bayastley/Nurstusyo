@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
-
+import { adminFromCookie, rateLimit } from "./actionYardimcilar.js";
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
 async function logServerError(req: { url?: string; headers: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
@@ -27,124 +27,22 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "admin/session"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* log yazımı siteyi ASLA bozmaz */ }
 }
 
-interface SessionAdmin {
-  id: string;
-  email: string;
-  name: string;
-  verified: boolean;
-  isAdmin: boolean;
-  exp: number;
-}
-
-
-function fromBase64Url(input: string): Buffer {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
-  return Buffer.from(normalized + pad, "base64");
-}
-
-function base64Url(input: Buffer): string {
-  return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
-async function getAdmin(req: VercelRequest): Promise<SessionAdmin | null> {
-  const rawCookie = String(req.headers.cookie || "");
-  const cookie = rawCookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
-  if (!cookie) return null;
-
-  const token = decodeURIComponent(cookie.slice("nur_session=".length));
-  const [payload, signature] = token.split(".");
-  const secret = process.env.NUR_SESSION_SECRET || "";
-  if (!payload || !signature || secret.length < 20) return null;
-
-  const expected = base64Url(crypto.createHmac("sha256", secret).update(payload).digest());
-  const actualBuffer = Buffer.from(signature);
-  const expectedBuffer = Buffer.from(expected);
-  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
-
+function sessionNameFromCookie(req: VercelRequest): string {
   try {
-    const admin = JSON.parse(fromBase64Url(payload).toString("utf8")) as SessionAdmin;
-    if (!admin.id || !admin.email || !admin.verified || !admin.isAdmin || admin.exp < Math.floor(Date.now() / 1000)) return null;
-    // ★ KATMAN 3 — ENV WHITELIST (fail-closed): oturumda isAdmin bayrağı + DB
-    //   is_admin olsa bile e-posta NUR_ADMIN_EMAILS listesinde OLMALI. Liste
-    //   boş/eksikse kimse admin olamaz (26.09 canlı dersi: env yalnız
-    //   VITE_NUR_ADMIN_EMAIL'teyken herkes admin sanılmıştı).
-    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    if (adminEmails.length === 0 || !adminEmails.includes(admin.email.toLowerCase())) return null;
-    const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-    if (!url || !key) return null;
-    const response = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(admin.id)}&select=is_admin`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}` },
-      cache: "no-store",
-    });
-    if (!response.ok) return null;
-    const rows = await response.json() as Array<{ is_admin?: boolean }>;
-    return rows[0]?.is_admin === true ? admin : null;
-  } catch {
-    return null;
-  }
-}
-
-
-// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
-//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
-const __RL_MAP = new Map<string, number[]>();
-const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
-const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
-const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
-function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
-  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
-  return forwarded || req.socket?.remoteAddress || "unknown";
-}
-function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
-  const now = Date.now();
-  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
-  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
-  active.push(now);
-  __RL_MAP.set(bucketKey, active);
-  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
-  return true;
-}
-async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
-  if (!__RL_SHARED) return null;
-  try {
-    const res = await fetch(`${__RL_URL}/pipeline`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as Array<{ result: unknown }>;
-    return Number(json[0]?.result ?? 1);
-  } catch { return null; }
-}
-async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const bucketKey = `${key}:${__rlIp(req)}`;
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) {
-    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
-    return true;
-  }
-  const ok = __rlMem(bucketKey, maxRequests, windowMs);
-  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
-  return ok;
-}
-async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const bucketKey = `${key}:${__rlIp(req)}`;
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) return hits <= maxRequests;
-  return __rlMem(bucketKey, maxRequests, windowMs);
-}
-async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) return hits <= maxRequests;
-  return __rlMem(bucketKey, maxRequests, windowMs);
+    const rawCookie = String(req.headers.cookie || "");
+    const cookie = rawCookie.split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
+    if (!cookie) return "";
+    const token = decodeURIComponent(cookie.slice("nur_session=".length));
+    const [payload] = token.split(".");
+    if (!payload) return "";
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
+    const data = JSON.parse(Buffer.from(normalized + pad, "base64").toString("utf8")) as { name?: string };
+    return typeof data.name === "string" ? data.name : "";
+  } catch { return ""; }
 }
 
 async function allowRequest(req: VercelRequest, res: VercelResponse): Promise<boolean> {
@@ -156,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   if (!(await allowRequest(req, res))) return;
 
-  const admin = await getAdmin(req);
+  const admin = await adminFromCookie(req);
   if (!admin) {
     // ★ DENETİM: admin paneli giriş kapısına yapılan her yetkisiz deneme kayda geçer
     //   (UI "Yetkisiz denemeler kaydedilir" diyordu ama kayıt yazmıyordu — 30.09 düzeltmesi).
@@ -201,6 +99,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return res.status(200).json({
     ok: true,
-    admin: { id: admin.id, email: admin.email, name: admin.name, verified: admin.verified },
+    admin: { id: admin.id, email: admin.email, name: sessionNameFromCookie(req), verified: admin.verified },
   });
 }

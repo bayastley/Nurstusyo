@@ -107,7 +107,7 @@ function base64Url(input: Buffer): string {
   return input.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function adminFromCookie(req: VercelRequest): { email: string; isAdmin: boolean } | null {
+function adminFromCookie(req: VercelRequest): { id?: string; email: string; isAdmin: boolean } | null {
   const cookie = String(req.headers.cookie || "").split(";").map((p) => p.trim()).find((p) => p.startsWith("nur_session="));
   if (!cookie) return null;
   const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
@@ -119,18 +119,25 @@ function adminFromCookie(req: VercelRequest): { email: string; isAdmin: boolean 
     const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
     const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
     const admin = JSON.parse(Buffer.from(normalized + pad, "base64").toString("utf8"));
-    return admin.isAdmin && admin.verified && admin.exp >= Math.floor(Date.now() / 1000) ? admin : null;
+    if (!(admin.isAdmin && admin.verified && admin.exp >= Math.floor(Date.now() / 1000) && admin.email)) return null;
+    // ★ 3 KATMAN: ENV whitelist (fail-closed) + token + DB (aşağıda)
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.length === 0 || !adminEmails.includes(String(admin.email).toLowerCase())) return null;
+    return { id: admin.id, email: admin.email, isAdmin: true };
   } catch {
     return null;
   }
 }
 
 // ★ Admin DB TEYİDİ: JWT iddiası yetmez — yetkisi alınan adminin eski
-//   token'ı 7 gün geçerli kalmasın.
-async function verifyAdminInDb(email: string): Promise<boolean> {
+//   token'ı 7 gün geçerli kalmasın. id varsa id ile, yoksa email ile kontrol.
+async function verifyAdminInDb(admin: { id?: string; email: string }): Promise<boolean> {
   try {
     const { url, key } = supabaseConfig();
-    const response = await fetch(`${url}/rest/v1/nur_users?email=eq.${encodeURIComponent(email)}&select=is_admin`, {
+    const filter = admin.id
+      ? `id=eq.${encodeURIComponent(admin.id)}`
+      : `email=eq.${encodeURIComponent(admin.email)}`;
+    const response = await fetch(`${url}/rest/v1/nur_users?${filter}&select=is_admin`, {
       headers: { apikey: key, Authorization: `Bearer ${key}` },
       cache: "no-store",
     });
@@ -165,14 +172,33 @@ function sanitize(input: unknown, max: number): string {
   return input.trim().slice(0, max);
 }
 
+const ALLOWED_ORIGINS = new Set([
+  "https://nurstudyo.com",
+  "https://www.nurstudyo.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5199",
+]);
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  const hasOrigin = Boolean(origin || referer);
+  if (!hasOrigin) { res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" }); return false; }
+  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
+  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (!requireAllowedOrigin(req, res)) return;
   // ★ Merkezi rate limit — admin ucu ama Resend kota tüketimini de sınırlar (dakikada 5)
   if (!(await rateLimit(req, res, "campaign", 5, 60_000))) return;
 
   const admin = adminFromCookie(req);
-  if (!admin || !(await verifyAdminInDb(admin.email))) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
+  if (!admin || !(await verifyAdminInDb(admin))) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
 
   const resendKey = process.env.RESEND_API_KEY || "";
   if (!resendKey) {

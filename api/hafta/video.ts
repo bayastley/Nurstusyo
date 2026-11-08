@@ -127,7 +127,8 @@ function getSession(req: VercelRequest): SessionInfo | null {
   const expectedBuf = Buffer.from(expected);
   if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
   try {
-    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; name?: string; exp?: number };
+    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; name?: string; verified?: boolean; exp?: number };
+    if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return { id: user.id, email: user.email, name: user.name };
   } catch { return null; }

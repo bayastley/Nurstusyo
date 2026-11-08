@@ -1,5 +1,5 @@
 import crypto from "crypto";
-
+import { adminFromCookie, rateLimit } from "./actionYardimcilar.js";
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
 async function logServerError(req: { url?: string; headers: Record<string, string | string[] | undefined> }, error: unknown, endpoint: string): Promise<void> {
@@ -29,64 +29,6 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
   } catch { /* log yazımı siteyi ASLA bozmaz */ }
 }
 
-// Self-contained rate limit — _shared importları Vercel'de paketlenmediği için gömüldü
-// ★ PAYLAŞIMLI RATE LIMIT (Açık 2) — Upstash Redis varsa instance'lar arası
-//   ortak sayaç (UPSTASH_REDIS_REST_URL/TOKEN env), yoksa in-memory fallback.
-const __RL_MAP = new Map<string, number[]>();
-const __RL_URL = (process.env.UPSTASH_REDIS_REST_URL || "").replace(/\/+$/, "");
-const __RL_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || "";
-const __RL_SHARED = __RL_URL.length > 0 && __RL_TOKEN.length > 0;
-function __rlIp(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }): string {
-  const forwarded = String(req.headers["cf-connecting-ip"] || req.headers["x-real-ip"] || String(req.headers["x-forwarded-for"] || "").split(",")[0] || "").trim();
-  return forwarded || req.socket?.remoteAddress || "unknown";
-}
-function __rlMem(bucketKey: string, max: number, windowMs: number): boolean {
-  const now = Date.now();
-  const active = (__RL_MAP.get(bucketKey) || []).filter((h) => h >= now - windowMs);
-  if (active.length >= max) { __RL_MAP.set(bucketKey, active); return false; }
-  active.push(now);
-  __RL_MAP.set(bucketKey, active);
-  if (__RL_MAP.size > 5000) { for (const k of __RL_MAP.keys()) { __RL_MAP.delete(k); if (__RL_MAP.size <= 2500) break; } }
-  return true;
-}
-async function __rlShared(bucketKey: string, windowMs: number): Promise<number | null> {
-  if (!__RL_SHARED) return null;
-  try {
-    const res = await fetch(`${__RL_URL}/pipeline`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${__RL_TOKEN}`, "Content-Type": "application/json" },
-      body: JSON.stringify([["INCR", `rl:${bucketKey}`], ["EXPIRE", `rl:${bucketKey}`, String(Math.ceil(windowMs / 1000)), "NX"]]),
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const json = (await res.json()) as Array<{ result: unknown }>;
-    return Number(json[0]?.result ?? 1);
-  } catch { return null; }
-}
-async function rateLimit(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, res: { setHeader: (k: string, v: string) => void; status: (n: number) => { json: (o: unknown) => void } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const bucketKey = `${key}:${__rlIp(req)}`;
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) {
-    if (hits > maxRequests) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); return false; }
-    return true;
-  }
-  const ok = __rlMem(bucketKey, maxRequests, windowMs);
-  if (!ok) { res.setHeader("Retry-After", "60"); res.setHeader("Cache-Control", "no-store"); res.status(429).json({ ok: false, error: "İstek işlenemedi" }); }
-  return ok;
-}
-async function rateLimitSilent(req: { headers: Record<string, string | string[] | undefined>; socket?: { remoteAddress?: string | null } }, key: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const bucketKey = `${key}:${__rlIp(req)}`;
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) return hits <= maxRequests;
-  return __rlMem(bucketKey, maxRequests, windowMs);
-}
-async function rateLimitBucket(bucketKey: string, maxRequests: number, windowMs: number): Promise<boolean> {
-  const hits = await __rlShared(bucketKey, windowMs);
-  if (hits !== null) return hits <= maxRequests;
-  return __rlMem(bucketKey, maxRequests, windowMs);
-}
-
-
 // ═══════════════════════════════════════════════════════════════
 // ★ /api/admin/kill-session — Banlı Kullanıcı Oturum Öldürme
 //
@@ -109,50 +51,6 @@ function getSupabase() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
   if (!url || !key) return null;
   return { url, key };
-}
-
-function getVerifiedAdminEmail(req: { headers: Record<string, string | string[] | undefined> }): string | null {
-  const cookieHeader = String(req.headers.cookie || "");
-  const cookie = cookieHeader.split(";").map((part) => part.trim()).find((part) => part.startsWith("nur_session="));
-  if (!cookie) return null;
-
-  const [payload, signature] = decodeURIComponent(cookie.slice("nur_session=".length)).split(".");
-  const secret = process.env.NUR_SESSION_SECRET || "";
-  if (!payload || !signature || secret.length < 20) return null;
-
-  const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64")
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-  const actualBuffer = Buffer.from(signature);
-  const expectedBuffer = Buffer.from(expected);
-  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
-
-  try {
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const padding = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
-    const session = JSON.parse(Buffer.from(normalized + padding, "base64").toString("utf8")) as { email?: string; verified?: boolean; isAdmin?: boolean; exp?: number };
-    if (!session.email || session.verified !== true || session.isAdmin !== true || !session.exp || session.exp < Math.floor(Date.now() / 1000)) return null;
-    return session.email.toLowerCase();
-  } catch {
-    return null;
-  }
-}
-
-// ★ Admin DB TEYİDİ: JWT iddiası yetmez — yetkisi alınan adminin eski
-//   token'ı 7 gün geçerli kalmasın. Supabase'den canlı is_admin kontrolü.
-async function verifyAdminInDb(email: string): Promise<boolean> {
-  const sb = getSupabase();
-  if (!sb) return false;
-  try {
-    const res = await fetch(`${sb.url}/rest/v1/nur_users?email=eq.${encodeURIComponent(email)}&select=is_admin`, {
-      headers: { apikey: sb.key, Authorization: `Bearer ${sb.key}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return false;
-    const rows = (await res.json()) as Array<{ is_admin?: boolean }>;
-    return rows[0]?.is_admin === true;
-  } catch {
-    return false;
-  }
 }
 
 // ─── SUPABASE AUTH SESSION REVOKE ──────────────────────────
@@ -304,7 +202,7 @@ async function banUser(
 // ★ ANA HANDLER
 // ═══════════════════════════════════════════════════════════════
 export default async function handler(req: any, res: any) {
-  // CORS
+  // CORS — yapılandırılmış origin ile eşleşirse izin ver (cookie/credential akışı korunur)
   const configuredOrigin = String(process.env.SITE_URL || process.env.VITE_SITE_URL || "").replace(/\/$/, "");
   const requestOrigin = String(req.headers.origin || "").replace(/\/$/, "");
   if (requestOrigin && configuredOrigin && requestOrigin === configuredOrigin) {
@@ -316,7 +214,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    if (requestOrigin && requestOrigin !== configuredOrigin) {
+    if (requestOrigin && configuredOrigin && requestOrigin !== configuredOrigin) {
       res.status(403).end();
       return;
     }
@@ -331,14 +229,9 @@ export default async function handler(req: any, res: any) {
   // ★ Merkezi rate limit — oturum öldürme ucu taramaya karşı (dakikada 30)
   if (!(await rateLimit(req, res, "kill-session", 30, 60_000))) return;
 
-  // Admin yetki kontrolü — JWT + env listesi + DB teyidi (üçlü kontrol)
-  const adminEmail = getVerifiedAdminEmail(req);
-  const allowedAdmins = (process.env.NUR_ADMIN_EMAILS || "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-
-  if (!adminEmail || !allowedAdmins.includes(adminEmail) || !(await verifyAdminInDb(adminEmail))) {
+  // Admin yetki kontrolü — 3 katman: token + NUR_ADMIN_EMAILS whitelist (fail-closed) + DB is_admin
+  const admin = await adminFromCookie(req);
+  if (!admin) {
     res.status(403).json({ error: "Admin yetkisi yok" });
     return;
   }
@@ -352,7 +245,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // Admin kendi hesabını banlayamaz
-    if (targetEmail.toLowerCase() === adminEmail.toLowerCase()) {
+    if (targetEmail.toLowerCase() === admin.email.toLowerCase()) {
       res.status(400).json({ error: "Kendi hesabınızı banlayamazsınız" });
       return;
     }
@@ -387,7 +280,7 @@ export default async function handler(req: any, res: any) {
     }
 
     // 3. Ban kaydı oluştur
-    const banned = await banUser(targetEmail, adminEmail, reason);
+    const banned = await banUser(targetEmail, admin.email, reason);
 
     // ★ Açık 8: ölü sessionKillToken kaldırıldı — kimse tüketmiyordu;
     //   ban + oturum iptali zaten sunucu tarafında tamamlandığı için gereksizdi.

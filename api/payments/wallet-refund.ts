@@ -100,7 +100,7 @@ function parseCookies(header: string): Record<string, string> {
   }, {});
 }
 
-function userFromSession(req: { headers: Record<string, string | string[] | undefined> }): { id: string; isAdmin: boolean } | null {
+function userFromSession(req: { headers: Record<string, string | string[] | undefined> }): { id: string; email: string; isAdmin: boolean } | null {
   try {
     const token = parseCookies(String(req.headers.cookie || ""))[COOKIE_NAME] || "";
     if (!token.includes(".")) return null;
@@ -114,7 +114,7 @@ function userFromSession(req: { headers: Record<string, string | string[] | unde
     const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as SessionUser;
     if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
-    return { id: user.id, isAdmin: user.isAdmin === true };
+    return { id: user.id, email: user.email, isAdmin: user.isAdmin === true };
   } catch {
     return null;
   }
@@ -129,7 +129,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!user) return res.status(401).json({ ok: false, error: "Giriş yapın" });
 
     // Admin kullanıcılarda zaten kota/hak düşmüyor — iade edilecek bir şey yok.
-    if (user.isAdmin) return res.status(200).json({ ok: true, skipped: "admin" });
+    // Token isAdmin tek başına yetmez; ENV whitelist + DB is_admin teyidi gerekir.
+    let userIsAdmin = false;
+    if (user.isAdmin) {
+      const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+      if (adminEmails.includes(user.email.toLowerCase())) {
+        try {
+          const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
+          const key = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+          if (url && key) {
+            const r = await fetch(`${url}/rest/v1/nur_users?id=eq.${encodeURIComponent(user.id)}&select=is_admin`, {
+              headers: { apikey: key, Authorization: `Bearer ${key}` },
+              cache: "no-store",
+            });
+            if (r.ok) {
+              const rows = (await r.json()) as Array<{ is_admin?: boolean }>;
+              userIsAdmin = rows[0]?.is_admin === true;
+            }
+          }
+        } catch { /* DB teyidi okunamazsa admin kısa devresi uygulanmaz */ }
+      }
+    }
+    if (userIsAdmin) return res.status(200).json({ ok: true, skipped: "admin" });
 
     const kind = String(req.body?.kind || "");
     const amount = Math.floor(Number(req.body?.amount || 0));

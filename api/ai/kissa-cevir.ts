@@ -63,8 +63,20 @@ async function myMemoryCevir(metin: string, hedefDil: string): Promise<string> {
   return parcalar.join("\n\n");
 }
 
+const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  if (!origin && !referer) return true;
+  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
+  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") { res.status(405).json({ ok: false, error: "POST only" }); return; }
+  if (!requireAllowedOrigin(req, res)) return;
   const admin = await adminFromCookie(req);
   if (!admin) { res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" }); return; }
 

@@ -27,8 +27,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "push/subscribe"); /* log yazımı siteyi ASLA bozmaz */ }
+  } catch { /* log yazımı siteyi ASLA bozmaz */ }
 }
 
 declare const process: { env: Record<string, string | undefined> };
@@ -110,6 +109,17 @@ function sanitize(input: unknown, max: number): string {
   return input.trim().slice(0, max).replace(/[<>"';]/g, "");
 }
 
+const ALLOWED_ORIGINS = new Set(["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174", "http://localhost:5199"]);
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  if (!origin && !referer) return true;
+  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
+  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -118,6 +128,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const publicKey = process.env.VAPID_PUBLIC_KEY || "";
     if (!publicKey) return res.status(503).json({ ok: false, error: "Push sunucuda yapılandırılmamış" });
     return res.status(200).json({ ok: true, publicKey });
+  }
+
+  if (req.method === "POST" || req.method === "DELETE") {
+    if (!requireAllowedOrigin(req, res)) return;
+  } else {
+    return res.status(405).json({ ok: false, error: "Method Not Allowed" });
   }
 
   if (!(await rateLimit(req, res, "push:subscribe", 20, 60_000))) return;

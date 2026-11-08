@@ -110,23 +110,10 @@ function parseCookies(req: VercelRequest): Record<string, string> {
   }, {});
 }
 
-function sessionSecret(): string {
-  return process.env.NUR_SESSION_SECRET || "";
-}
-
-function base64Url(input: Buffer | string): string {
-  const raw = Buffer.isBuffer(input) ? input : Buffer.from(input, "utf8");
-  return raw.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-}
-
 function fromBase64Url(input: string): Buffer {
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
   return Buffer.from(normalized + pad, "base64");
-}
-
-function signPayload(payload: string): string {
-  return base64Url(crypto.createHmac("sha256", sessionSecret()).update(payload).digest());
 }
 
 function getSessionUser(req: VercelRequest): { id: string; email: string; name: string } | null {
@@ -134,14 +121,16 @@ function getSessionUser(req: VercelRequest): { id: string; email: string; name: 
   if (!token || !token.includes(".")) return null;
   const [payload, sig] = token.split(".");
   if (!payload || !sig) return null;
-  const expected = signPayload(payload);
+  const secret = process.env.NUR_SESSION_SECRET || "";
+  if (secret.length < 20) return null;
+  const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64url");
   const sigBuf = Buffer.from(sig);
   const expectedBuf = Buffer.from(expected);
   if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
   try {
     const user = JSON.parse(fromBase64Url(payload).toString("utf8"));
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
-    if (!user.email || !user.id) return null;
+    if (!user.email || !user.id || user.verified !== true) return null;
     return user;
   } catch {
     return null;

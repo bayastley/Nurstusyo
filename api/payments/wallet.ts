@@ -124,11 +124,14 @@ function getUser(req: any): any | null {
     if (!token || !token.includes('.')) return null;
     const [payload, sig] = token.split('.');
     if (!payload || !sig) return null;
+    const secret = sessionSecret();
+    if (!secret || secret.length < 20) return null;
     const expected = signPayload(payload);
     const sigBuf = Buffer.from(sig);
     const expectedBuf = Buffer.from(expected);
     if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
     const user = JSON.parse(fromBase64Url(payload).toString('utf8'));
+    if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return user;
   } catch { return null; }

@@ -3,6 +3,7 @@
 // Veriler pricingData.ts'ten import ediliyor (parçalama)
 // ════════════════════════════════════════════════════════
 
+import { safeFetch } from "../utils/safeFetch";
 import {
   PRODUCTS,
   SUBSCRIPTION_CODES,
@@ -183,26 +184,20 @@ export async function startCheckout(req: CheckoutRequest): Promise<CheckoutRespo
   const check = validateCheckout(req);
   if (!check.ok) return { ok: false, error: (check as any).error };
 
-  try {
-    const res = await fetch("/api/payments/create", {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        productCode: req.productCode,
-        returnUrl: req.returnUrl ?? window.location.origin + "/odeme-sonuc",
-        buyer: req.buyer || {},
-      }),
-    });
-    const json = await res.json().catch(() => null);
-    if (!res.ok) {
-      const msg = json?.error || json?.message || `Ödeme servisi hatası (${res.status})`;
-      console.error("[startCheckout] Sunucu hatası:", res.status, msg, json);
-      return { ok: false, error: msg };
-    }
-    return (json || {}) as CheckoutResponse;
-  } catch (err: any) {
-    console.error("[startCheckout] Bağlantı hatası:", err?.message);
-    return { ok: false, error: `Ödeme servisine ulaşılamadı: ${err?.message || ""}` };
+  // ★ POST + RELOGIN: safeFetch kullan (POST varsayılan retries=0, 401+RELOGIN tek noktada yakalanır)
+  const r = await safeFetch<CheckoutResponse>("/api/payments/create", {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      productCode: req.productCode,
+      returnUrl: req.returnUrl ?? window.location.origin + "/odeme-sonuc",
+      buyer: req.buyer || {},
+    }),
+  });
+  if (!r.ok) {
+    console.error("[startCheckout] Sunucu hatası:", r.status, r.error);
+    return { ok: false, error: r.error || "Ödeme servisine ulaşılamadı" };
   }
+  return (r.data || {}) as CheckoutResponse;
 }

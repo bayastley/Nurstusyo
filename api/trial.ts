@@ -26,8 +26,7 @@ async function logServerError(req: { url?: string; headers: Record<string, strin
         user_email: "",
       }),
     });
-  } catch (error) {
-    await logServerError(req, error, "trial"); /* log yazımı siteyi ASLA bozmaz */
+  } catch { /* log yazımı siteyi ASLA bozmaz */
   }
 }
 
@@ -224,7 +223,12 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<VercelR
 
   const user = getSessionUser(req);
   if (!user) return res.status(401).json({ ok: false, error: "Oturum gerekli" });
-  if (user.isAdmin) return res.status(200).json({ ok: true, serverTrial: true, start: null, active: false, daysLeft: 0, admin: true });
+  if (user.isAdmin) {
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.includes(user.email.toLowerCase())) {
+      return res.status(200).json({ ok: true, serverTrial: true, start: null, active: false, daysLeft: 0, admin: true });
+    }
+  }
 
   try {
     if (req.method === "POST") {
@@ -250,7 +254,7 @@ async function handler(req: VercelRequest, res: VercelResponse): Promise<VercelR
     durumDondur(res, row, Boolean(row));
     return undefined;
   } catch (error) {
-    await logServerError(req, error, "trial");
+    console.error("[trial]", error);
     // Site bozulmasın: istemci yerel davranışla devam eder
     return res.status(200).json({ ok: true, serverTrial: false, fallback: "client" });
   }
@@ -260,7 +264,7 @@ export default async function (req: VercelRequest, res: VercelResponse) {
   try {
     return await handler(req, res);
   } catch (error) {
-    await logServerError(req, error, "trial");
+    console.error("[trial]", error);
     return res.status(200).json({ ok: true, serverTrial: false, fallback: "client" });
   }
 }

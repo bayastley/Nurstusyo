@@ -21,28 +21,22 @@
 //     Ayrıca e-posta NUR_ADMIN_EMAILS'te olmalı (me.ts katman-3 deseni).
 // ═══════════════════════════════════════════════════════════════
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-// ★ 19.10 CANLI FIX: msedge-tts import'u top-level'dan LAZY'a taşındı.
-//   Top-level import, Vercel serverless bundle'ında modül yükleme anında
-//   crash ediyordu → /ayetler '/sesler' DAHİL tüm yollar attacker yok
-//   FUNCTION_INVOCATION_FAILED (500) veriyordu: kullanıcı 5 dil çipi
-//   görüp "çeviri yok" şikayeti bırakıyordu. Dynamic import ile
-//   /ayetler + /sesler bu bağımlılıktan kopar; /okut yalnız ses üretirken
-//   yüklemeyi dener, patlarsa değilse %100 yolu yaşıyor.
-
+import { adminFromCookie } from "../admin/actionYardimcilar.js";
+import { AYET_KUTUPHANE, type AyetKayit } from "./ayetVeri.js";
+import type { MsEdgeTTS as MsEdgeTTSClass, OUTPUT_FORMAT as OutputFormatConst } from "msedge-tts";
 
 declare const process: { env: Record<string, string | undefined> };
-import crypto from "crypto";
 
 /** ★ msedge-tts'i LAZY yükle: /ayetler + /sesler bu modüle bakmasın.
  *   Top-level import Vercel bundle'ında yükleme anında crash ediyordu —
  *   tüm yollar (diller dahil) 500 FUNCTION_INVOCATION_FAILED veriyordu. */
-let __MsEdgeMod: { MsEdgeTTS: new () => import("msedge-tts").MsEdgeTTS; OUTPUT_FORMAT: typeof import("msedge-tts").OUTPUT_FORMAT } | null = null;
+let __MsEdgeMod: { MsEdgeTTS: typeof MsEdgeTTSClass; OUTPUT_FORMAT: typeof OutputFormatConst } | null = null;
 async function msEdgeLazy(): Promise<typeof __MsEdgeMod> {
   if (__MsEdgeMod) return __MsEdgeMod;
   try {
     __MsEdgeMod = (await import("msedge-tts")) as unknown as typeof __MsEdgeMod;
     return __MsEdgeMod;
-  } catch { return null; }
+  } catch { return null; } // beklenen: modül yüklenemezse /okut hata döner
 }
 
 // ── DİLLER (meal-sunucu.py ile birebir; edition + önerilen ses) ──
@@ -187,16 +181,6 @@ function limitAsildi(req: VercelRequest, maks: number): boolean {
   return false;
 }
 
-// ── § ADMIN KAPISI (27.10 V3) — nur_session token'ını gömülü doğrula.
-//   NOT: _shared/auth import'u Vercel paketlemede sorun çıkardı (marketing/
-//   feedback.ts'teki gömme deseni birebir); bu yüzden burada inline check.
-//   TÜM canlı 500/503 zincirinin KÖK ÇÖZÜMÜ: JSON-import attribute sorunu
-//   (ERR_IMPORT_ATTRIBUTE_MISSING), fs'ile includeFiles yapılandırma derdi ve
-//   esm-tarama dunder yasak hepsi BİRDEN biter — 611 ayet düz TS dizi modülü
-//   (ayetVeri.ts) esbuild'le sorunsuz bundle olur. Top-level import geri
-//   geldi AMA artık JS değil TS-veri; Vercel @vercel/node bunu sorunsuz taşır.
-import { AYET_KUTUPHANE, type AyetKayit } from "./ayetVeri.js";
-
 interface ServerSure { number: number; name: string; englishName: string; ayahs: Array<{ numberInSurah: number; text: string }> }
 const DİL_RATE_AYETLER = 30;     // /ayetler için dakika limiti
 const DİL_RATE_OKUT = 60;        // /okut için dakika limiti (kullanıcı başına)
@@ -231,45 +215,7 @@ async function mealliAyetler(dil: string): Promise<Array<{ title: string; source
   } catch { return null; }
 }
 
-// ── ═26.10 V3 ADMIN KAPISI (27.10 kullanıcı emri) ═══
-//   İstemci butonu 26.10'dan beri admin-only — ama API adresini bilen bir üye
-//   /okut'u direkt çağırabiliyordu. _shared/auth import'u Vercel paketlemede
-//   sorun çıkardığı için (marketing/feedback.ts'teki gömme deseni birebir)
-//   burada inline doğrulama: nur_session token'ı imzalı + exp'li + isAdmin=true
-//   OLMALI; ayrıca e-posta NUR_ADMIN_EMAILS listesinde olmalı (me.ts katman-3).
-function parseTtsCookies(req: VercelRequest): Record<string, string> {
-  const header = req.headers.cookie || "";
-  return header.split(";").reduce<Record<string, string>>((acc, part) => {
-    const [key, ...rest] = part.trim().split("=");
-    if (!key) return acc;
-    try { acc[key] = decodeURIComponent(rest.join("=")); } catch { acc[key] = rest.join("="); }
-    return acc;
-  }, {});
-}
-function base64UrlDecode(input: string): Buffer {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = normalized.length % 4 ? "=".repeat(4 - (normalized.length % 4)) : "";
-  return Buffer.from(normalized + pad, "base64");
-}
-function ttsAdminSession(req: VercelRequest): { email: string } | null {
-  const token = parseTtsCookies(req)["nur_session"];
-  if (!token || !token.includes(".")) return null;
-  const secret = process.env.NUR_SESSION_SECRET || "";
-  if (secret.length < 20) return null;
-  const [payload, sig] = token.split(".");
-  if (!payload || !sig) return null;
-  try {
-    const expected = crypto.createHmac("sha256", secret).update(payload).digest().toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-    const sigBuf = Buffer.from(sig);
-    const expectedBuf = Buffer.from(expected);
-    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
-    const u = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { email?: string; isAdmin?: boolean; exp?: number };
-    if (!u.exp || u.exp < Math.floor(Date.now() / 1000) || u.isAdmin !== true || !u.email) return null;
-    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-    if (!adminEmails.includes(u.email.toLowerCase())) return null;
-    return { email: u.email };
-  } catch { return null; }
-}
+// (kaldırıldı: inline ttsAdminSession — /okut adminFromCookie ile 3 katman doğrulanır)
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -295,10 +241,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // ── /okut?metin=…&ses=…&dil=tr ──
   if (yol === "okut") {
-    // ★ 26.10 V3 ADMIN KİLİTİ (kullanıcı emri: "seslendirme admin haricinde kapalı"):
-    //   oturum yok / admin değil / e-posta listede değil → 403. TTS maliyetli olduğu,
-    //   özellik de kısci tutulduğu için API katmanında sert kilit.
-    if (!ttsAdminSession(req)) return res.status(403).json({ ok: false, error: "Seslendirme (V3) yalnız admin hesabına açık" });
+    // ★ ADMIN KİLİTİ (3 katman): token + NUR_ADMIN_EMAILS/NUR_ADMIN_EMAIL/VITE_NUR_ADMIN_EMAIL whitelist (fail-closed) + DB is_admin
+    const admin = await adminFromCookie(req);
+    if (!admin) return res.status(403).json({ ok: false, error: "Seslendirme (V3) yalnız admin hesabına açık" });
     if (limitAsildi(req, DİL_RATE_OKUT)) return res.status(429).json({ ok: false, error: "Ses üretimi çok hızlı — biraz bekle" });
     let metin = (url.searchParams.get("metin") || "").trim();
     const ses = url.searchParams.get("ses") || DIL_SESLER[dil in DIL_SESLER ? dil : "tr"][0][0];

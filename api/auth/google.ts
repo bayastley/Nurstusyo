@@ -293,7 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const verified = await verifyIdToken(finalIdToken, clientId);
     if (!verified.ok) return res.status(401).json({ ok: false, error: (verified as any).error });
 
-    const adminEmails = (process.env.NUR_ADMIN_EMAILS || "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
+    const adminEmails = (process.env.NUR_ADMIN_EMAILS || process.env.NUR_ADMIN_EMAIL || process.env.VITE_NUR_ADMIN_EMAIL || "").split(",").map((email) => email.trim().toLowerCase()).filter(Boolean);
     const email = String(verified.info.email || "").trim().toLowerCase();
     const isAdmin = adminEmails.includes(email);
     const user: {

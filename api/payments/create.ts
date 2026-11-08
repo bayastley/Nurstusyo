@@ -46,7 +46,7 @@ function getSessionUser(req: VercelRequest): SessionUser | null {
   try {
     const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
     const user = JSON.parse(Buffer.from(normalized + (normalized.length % 4 ? '='.repeat(4 - (normalized.length % 4)) : ''), 'base64').toString('utf8')) as SessionUser;
-    if (!user.id || !user.email || user.verified !== true || !user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
+    if (!user.id || !user.email || !user.sub || user.verified !== true || !user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return user;
   } catch { return null; }
 }
@@ -284,7 +284,7 @@ export default async function handler(req: any, res: any) {
     const sessionUser = getSessionUser(req);
     if (!sessionUser) {
       console.error('[payments/create] Oturum bulunamadı');
-      res.status(401).json({ error: 'Giriş yapmalısınız' });
+      res.status(401).json({ error: 'Giriş yapmalısınız', code: 'RELOGIN' });
       return;
     }
     const userId = sessionUser.id;

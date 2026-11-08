@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { assertOrigin } from "../_shared/origin.js";
 
 
 // ─── Server error logger (gömülü — _shared Vercel'de paketlenmiyor) ───
@@ -119,13 +120,16 @@ function userFromSession(req: VercelRequest): { id: string } | null {
     if (!payload || !signature || secret.length < 20) return null;
     const expected = crypto.createHmac("sha256", secret).update(payload).digest("base64url");
     if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
-    const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { id?: string; exp?: number };
-    return user.id && (user.exp || 0) >= Math.floor(Date.now() / 1000) ? { id: user.id } : null;
-  } catch { return null; }
+    const user = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as { id?: string; email?: string; verified?: boolean; exp?: number };
+    if (!user.id || !user.email || user.verified !== true || (user.exp || 0) < Math.floor(Date.now() / 1000)) return null;
+    return { id: user.id };
+  } catch { return null; } // beklenen: bozuk/süresi dolmuş oturum
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  // ★ ORIGIN KAPISI — _shared/origin.js (canary). fail-closed.
+  if (!assertOrigin(req, res)) return;
   // ★ Merkezi rate limit — hediye claim flood'u Supabase RPC'yi yormasın (dakikada 20)
   if (!(await rateLimit(req, res, "rewards:claim", 20, 60_000))) return;
   const user = userFromSession(req);

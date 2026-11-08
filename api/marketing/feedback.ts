@@ -129,7 +129,8 @@ function getSession(req: VercelRequest): SessionInfo | null {
   const expectedBuf = Buffer.from(expected);
   if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) return null;
   try {
-    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; name: string; isAdmin?: boolean; exp?: number };
+    const user = JSON.parse(base64UrlDecode(payload).toString("utf8")) as { id: string; email: string; name: string; isAdmin?: boolean; verified?: boolean; exp?: number };
+    if (!user.id || !user.email || user.verified !== true) return null;
     if (!user.exp || user.exp < Math.floor(Date.now() / 1000)) return null;
     return { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin === true };
   } catch { return null; }
@@ -149,9 +150,28 @@ function supabaseConfig() {
 
 const GECERLI_TURLER = new Set(["oneri", "sikayet", "ozellik", "diger"]);
 
+const ALLOWED_ORIGINS = new Set([
+  "https://nurstudyo.com",
+  "https://www.nurstudyo.com",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5199",
+]);
+
+function requireAllowedOrigin(req: VercelRequest, res: VercelResponse): boolean {
+  const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
+  const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
+  if (!origin && !referer) return true;
+  if (origin && ALLOWED_ORIGINS.has(origin)) return true;
+  if (referer) { try { if (ALLOWED_ORIGINS.has(new URL(referer).origin)) return true; } catch { /* ignore */ } }
+  res.status(403).json({ ok: false, error: "İzin verilmeyen istek kaynağı" });
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (!requireAllowedOrigin(req, res)) return;
   // Saatte 5 mesaj / IP — kutu spam'ine karşı
   if (!(await rateLimit(req, res, "feedback", 5, 60 * 60_000))) return;
 

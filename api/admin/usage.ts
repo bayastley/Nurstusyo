@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { adminFromCookie, db } from "./actionYardimcilar.js";
+import { assertOrigin } from "../_shared/origin.js";
+import { logServerError } from "../_shared/serverErrorLog.js";
 
 // ════════════════════════════════════════════════════════
 // ADMIN USAGE — BÖLÜM KULLANIM RAPORU (25.10, sahibin emri)
@@ -14,6 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
   if (req.method !== "GET" && req.method !== "POST") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
+  if (req.method !== "GET" && !assertOrigin(req, res)) return;
 
   const admin = await adminFromCookie(req);
   if (!admin) return res.status(403).json({ ok: false, error: "Admin yetkisi gerekli" });
@@ -52,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     return res.status(200).json({ ok: true, haftalar });
   } catch (error) {
-    void error;
+    await logServerError(req, error, "admin/usage");
     return res.status(200).json({ ok: false, error: "Rapor okunamadı" });
   }
 }
