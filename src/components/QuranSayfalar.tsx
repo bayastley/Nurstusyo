@@ -23,6 +23,7 @@ import {
 } from "../data/quranSayfaVeri";
 import { sevapEkle, kelimeSayisi } from "../data/sevapSayaci"; // ★ madde 4: dürüst harf sayacı
 import { SURAHS_DATA } from "./quranLearnVeri";
+import { sanitizeHTML } from "../security/sanitize";
 
 const Z_MIN = 0.5;
 const Z_MAX = 3;
@@ -369,7 +370,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                           {(i === 0 || mealVeri.ayatlar[i - 1].sureId !== a.sureId) && (
                             <div className="mb-3 text-center">
                               <div className="text-[13px] font-black text-[#8a6d1f]">— {a.sureAdi} Suresi —</div>
-                              {a.sureInfo && <p className="mx-auto mt-1 max-w-[520px] text-[10.5px] italic leading-relaxed text-[#7c6f4e]" dangerouslySetInnerHTML={{ __html: a.sureInfo }} />}
+                              {a.sureInfo && <p className="mx-auto mt-1 max-w-[520px] text-[10.5px] italic leading-relaxed text-[#7c6f4e]" dangerouslySetInnerHTML={{ __html: sanitizeHTML(a.sureInfo) }} />}
                             </div>
                           )}
                           <p className="flex gap-2.5 leading-[1.9]" style={{ fontSize: `${Math.max(11, Math.round(14.5 * zoom))}px` }}>

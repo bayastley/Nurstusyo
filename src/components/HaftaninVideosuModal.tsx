@@ -9,6 +9,7 @@ import React, { useEffect, useState } from "react";
 import { X, ThumbsUp, Film, Send, Sparkles, ExternalLink, Loader2 } from "lucide-react";
 // ★ 04.10 TUR 6: notify/placeholder kalıntıları LS bazlı çeviri (kullanıcı ekranı)
 import { translate } from "../i18n";
+import { sanitizeHTML } from "../security/sanitize";
 
 interface HaftaninVideosuModalProps {
   open: boolean;
@@ -256,7 +257,7 @@ export const HaftaninVideosuModal: React.FC<HaftaninVideosuModalProps> = ({ open
                   <p className="flex items-center gap-1.5 text-[10.5px] font-bold text-sky-200">
                     <Sparkles size={11} /> {tt("hvNasil")}
                   </p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-white/55" dangerouslySetInnerHTML={{ __html: tt("hvNasilAciklamaHtml") }} />
+                  <p className="mt-1 text-[10px] leading-relaxed text-white/55" dangerouslySetInnerHTML={{ __html: sanitizeHTML(tt("hvNasilAciklamaHtml")) }} />
                 </div>
 
                 {/* ★ MAHREM UYARISI (01.10) — hanım kardeşlerin okuyuş sesi ile üretilen videolar

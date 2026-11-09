@@ -9,8 +9,26 @@ import { ChevronLeft, X, Library } from "lucide-react";
 import { EVLIYALAT, type Evliya } from "../data/evliyalat";
 
 type TT = (k: string) => string;
+type Dil = "tr" | "en" | "ar" | "id" | "ur";
 
 const okCls = "flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/[.04] text-[10px] font-black text-white/70 transition hover:bg-white/[.08] disabled:cursor-not-allowed disabled:opacity-30";
+
+function loc(ev: Evliya, dil: Dil) {
+  const r = ev as unknown as Record<string, unknown>;
+  const pick = (k: string) => (dil === "tr" ? r[k] : r[`${k}_${dil}`]) || r[k];
+  const pickArr = (k: string) => {
+    const v = dil === "tr" ? r[k] : r[`${k}_${dil}`];
+    return Array.isArray(v) && v.length ? (v as string[]) : ((r[k] as string[]) || []);
+  };
+  return {
+    ad: String(pick("ad") || ev.ad),
+    unvan: String(pick("unvan") || ev.unvan),
+    donem: String(pick("donem") || ev.donem),
+    kaynak: String(pick("kaynak") || ev.kaynak),
+    sayfalar: pickArr("sayfalar"),
+    onemliAnlar: pickArr("onemliAnlar"),
+  };
+}
 
 /** Sayfa kumandası — üstte ve altta aynı görünüm. */
 function KitapKumanda({ tt, sayfa, toplam, degistir }: { tt: TT; sayfa: number; toplam: number; degistir: (yeni: number) => void }) {
@@ -26,10 +44,11 @@ function KitapKumanda({ tt, sayfa, toplam, degistir }: { tt: TT; sayfa: number; 
 }
 
 /** Kitap sayfası — gerçek kitap gibi: parchment arka plan, serif, sayfa kumandası. */
-function EvliyaKitap({ tt, ev, onGeri }: { tt: TT; ev: Evliya; onGeri: () => void }) {
+function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () => void; dil: Dil }) {
+  const L = loc(ev, dil || "tr");
   const [sayfaNo, setSayfaNo] = React.useState(0);
   const kitapUst = React.useRef<HTMLDivElement | null>(null);
-  const toplam = ev.sayfalar.length;
+  const toplam = L.sayfalar.length;
 
   // açılışta kitabın başına bak
   React.useEffect(() => {
@@ -50,7 +69,7 @@ function EvliyaKitap({ tt, ev, onGeri }: { tt: TT; ev: Evliya; onGeri: () => voi
       <div className="flex items-center justify-between">
         <button type="button" data-minitur="evliyalat-kitap-geri" onClick={onGeri} className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]">
           <ChevronLeft className="h-3 w-3" />
-          {tt("evGeri")}
+          {({"tr":"Geri","en":"Back","ar":"رجوع","id":"Kembali","ur":"واپس"} as Record<string,string>)[dil] || "Geri"}
         </button>
         <button type="button" data-minitur="evliyalat-kitap-x" onClick={onGeri} className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white">
           <X className="h-3.5 w-3.5" />
@@ -69,23 +88,23 @@ function EvliyaKitap({ tt, ev, onGeri }: { tt: TT; ev: Evliya; onGeri: () => voi
         }}
       >
         <div className="flex items-baseline justify-between gap-2">
-          <span className="text-[13px] font-black">{ev.ad}</span>
-          <span className="text-[9px] font-bold opacity-70">{ev.donem}</span>
+          <span className="text-[13px] font-black">{L.ad}</span>
+          <span className="text-[9px] font-bold opacity-70">{L.donem}</span>
         </div>
-        <span className="block text-[9.5px] font-bold uppercase tracking-widest opacity-60">{ev.unvan}</span>
+        <span className="block text-[9.5px] font-bold uppercase tracking-widest opacity-60">{L.unvan}</span>
         <div className="my-2 h-px" style={{ background: "rgba(140,100,40,.35)" }} />
         <p data-minitur="evliyalat-kitap-sayfa" className="whitespace-pre-line text-justify text-[12px] leading-[1.9]">
-          {ev.sayfalar[sayfaNo]}
+          {L.sayfalar[sayfaNo] || ""}
         </p>
         <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
       </div>
 
       {/* ★ 04.11 (kullanıcı emri): Önemli Anlar — her evliyanın hayatında bilinen değerli meşhur vâkıalar */}
-      {ev.onemliAnlar && ev.onemliAnlar.length > 0 && (
+      {L.onemliAnlar && L.onemliAnlar.length > 0 && (
         <div data-minitur="evliyalat-onemli" className="rounded-2xl border border-white/12 bg-white/[.04] p-3">
           <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{tt("evOnemli")}</p>
           <ul className="space-y-1">
-            {ev.onemliAnlar.map((a, i) => (
+            {L.onemliAnlar.map((a, i) => (
               <li key={i} className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-white/75">
                 <span className="mt-[3px] h-1 w-1 shrink-0 rounded-full" style={{ background: "var(--accent-2)" }} />
                 <span>{a}</span>
@@ -100,20 +119,21 @@ function EvliyaKitap({ tt, ev, onGeri }: { tt: TT; ev: Evliya; onGeri: () => voi
       </div>
       <p className="flex items-center justify-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
         <Library className="h-3 w-3 shrink-0" />
-        {ev.kaynak}
+        {L.kaynak}
       </p>
     </div>
   );
 }
 
 /** Evliyalat bölümü — kapak listesi. Menkıbeler bölümünün altından açılır. */
-export function EvliyalatBolumu({ tt, onGeri }: { tt: TT; onGeri: () => void }) {
+export function EvliyalatBolumu({ tt, onGeri, lang = "tr" }: { tt: TT; onGeri: () => void; lang?: Dil | string }) {
   const [evSecili, setEvSecili] = React.useState<string | null>(null);
   const listeUst = React.useRef<HTMLDivElement | null>(null);
+  const dil = (lang || "tr") as Dil;
   const secili = evSecili ? EVLIYALAT.find((e) => e.id === evSecili) : undefined;
 
   if (secili) {
-    return <EvliyaKitap tt={tt} ev={secili} onGeri={() => { setEvSecili(null); requestAnimationFrame(() => listeUst.current?.scrollIntoView({ behavior: "auto", block: "start" })); }} />;
+    return <EvliyaKitap tt={tt} ev={secili} dil={dil} onGeri={() => { setEvSecili(null); requestAnimationFrame(() => listeUst.current?.scrollIntoView({ behavior: "auto", block: "start" })); }} />;
   }
 
   return (
@@ -121,7 +141,7 @@ export function EvliyalatBolumu({ tt, onGeri }: { tt: TT; onGeri: () => void }) 
       <div ref={listeUst} className="flex items-center justify-between">
         <button type="button" data-minitur="evliyalat-geri" onClick={onGeri} className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]">
           <ChevronLeft className="h-3 w-3" />
-          {tt("evGeri")}
+          {({"tr":"Geri","en":"Back","ar":"رجوع","id":"Kembali","ur":"واپس"} as Record<string,string>)[dil] || "Geri"}
         </button>
         <button type="button" data-minitur="evliyalat-x" onClick={onGeri} className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white">
           <X className="h-3.5 w-3.5" />
@@ -129,14 +149,14 @@ export function EvliyalatBolumu({ tt, onGeri }: { tt: TT; onGeri: () => void }) 
       </div>
       <p className="text-center text-[9.5px] leading-relaxed text-white/40">{tt("evIntro")}</p>
       <div className="grid grid-cols-2 gap-2">
-        {EVLIYALAT.map((e) => (
+        {EVLIYALAT.map((e) => { const Lc = loc(e, dil || "tr"); return (
           <button key={e.id} type="button" data-minitur={`evliyalat-kitap-${e.id}`} onClick={() => setEvSecili(evSecili === e.id ? null : e.id)} className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-left transition hover:bg-white/[.05]">
-            <span className="block text-[11.5px] font-black leading-snug text-white/90">{e.ad}</span>
-            <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{e.unvan}</span>
-            <span className="mt-1 block text-[9px] font-bold text-white/35">{e.donem}</span>
-            <span className="mt-1.5 inline-block rounded-full bg-white/[.06] px-2 py-0.5 text-[8.5px] font-black text-white/50">{e.sayfalar.length} sayfa · kitap</span>
+            <span className="block text-[11.5px] font-black leading-snug text-white/90">{Lc.ad}</span>
+            <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{Lc.unvan}</span>
+            <span className="mt-1 block text-[9px] font-bold text-white/35">{Lc.donem}</span>
+            <span className="mt-1.5 inline-block rounded-full bg-white/[.06] px-2 py-0.5 text-[8.5px] font-black text-white/50">{Lc.sayfalar.length} {tt("evSayfaKisa") || "sayfa"}</span>
           </button>
-        ))}
+        ); })}
       </div>
     </div>
   );

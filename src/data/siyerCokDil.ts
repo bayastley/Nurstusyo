@@ -98,6 +98,54 @@ export const SIYER_COKDIL: SiyerCokDil = {
     id: { ad: "Haji Wada dan Khutbah Wada", donem: "Madinah" },
     ur: { ad: "حج وداع اور خطبہ وداع", donem: "مدینہ" },
   },
+  aile: {
+    en: { ad: "Marriage and Family Life", donem: "Mecca/Medina" },
+    ar: { ad: "الزواج والحياة الأسرية", donem: "مكة/المدينة" },
+    id: { ad: "Pernikahan dan Kehidupan Keluarga", donem: "Makkah/Madinah" },
+    ur: { ad: "نکاح اور خاندانی زندگی", donem: "مکہ/مدینہ" },
+  },
+  fetre: {
+    en: { ad: "Pause of Revelation and Early Call", donem: "Mecca" },
+    ar: { ad: "فترة الوحي وبدايات الدعوة", donem: "مكة" },
+    id: { ad: "Jeda Wahyu dan Awal Dakwah", donem: "Makkah" },
+    ur: { ad: "وقفۂ وحی اور ابتدائی دعوت", donem: "مکہ" },
+  },
+  boykot: {
+    en: { ad: "Boycott and Years of Hardship", donem: "Mecca" },
+    ar: { ad: "الحصار وسنوات الشدة", donem: "مكة" },
+    id: { ad: "Pemboikotan dan Tahun-Tahun Sulit", donem: "Makkah" },
+    ur: { ad: "محاصرہ اور سختیاں", donem: "مکہ" },
+  },
+  ibadet: {
+    en: { ad: "Acts of Worship in Madinah", donem: "Medina" },
+    ar: { ad: "العبادات في المدينة", donem: "المدينة" },
+    id: { ad: "Ibadah di Madinah", donem: "Madinah" },
+    ur: { ad: "مدینہ میں عبادات", donem: "مدینہ" },
+  },
+  hayber: {
+    en: { ad: "Khaybar, Umrat al-Qada and Mu'tah", donem: "Medina" },
+    ar: { ad: "خيبر وعمرة القضاء ومؤتة", donem: "المدينة" },
+    id: { ad: "Khaibar, Umrah Qada, dan Mu'tah", donem: "Madinah" },
+    ur: { ad: "خیبر، عمرۃ القضاء اور مؤتہ", donem: "مدینہ" },
+  },
+  huneyn: {
+    en: { ad: "Hunayn, Ta'if and Tabuk", donem: "Medina" },
+    ar: { ad: "حنين والطائف وتبوك", donem: "المدينة" },
+    id: { ad: "Hunain, Thaif, dan Tabuk", donem: "Madinah" },
+    ur: { ad: "حنین، طائف اور تبوک", donem: "مدینہ" },
+  },
+  elciler: {
+    en: { ad: "Delegations and the Spread of Islam", donem: "Medina" },
+    ar: { ad: "الوفود وانتشار الإسلام", donem: "المدينة" },
+    id: { ad: "Utusan dan Penyebaran Islam", donem: "Madinah" },
+    ur: { ad: "وفود اور اسلام کی اشاعت", donem: "مدینہ" },
+  },
+  vefat: {
+    en: { ad: "Final Illness and Passing", donem: "Medina" },
+    ar: { ad: "المرض الأخير والوفاة", donem: "المدينة" },
+    id: { ad: "Sakit Terakhir dan Wafat", donem: "Madinah" },
+    ur: { ad: "آخری بیماری اور وفات", donem: "مدینہ" },
+  }
 };
 
 /** Bir kategori için dil uyarınca çeviri; TR her zaman siyer.ts'den gelir. */

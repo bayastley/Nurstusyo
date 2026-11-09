@@ -20,31 +20,34 @@ export const NAMAZ_REHBERİ: NamazAdim[] = [
 // ── 02.11 (kullanıcı emri): NAMAZ ÇEŞİTLERİ — farz/vacip/sünnet/nafile hepsi
 export interface NamazCesit { ad: string; hukum: string; rekat: string; vakti: string; fazilet: string; kaynak: string }
 export const NAMAZ_CESITLERİ: NamazCesit[] = [
-  { ad: "Beş Vakit Farz", hukum: "Farz-ı Ayn", rekat: "Sabah 2 · Öğle 4 · İkindi 4 · Akşam 3 · Yatsı 4", vakti: "Vakitleri girişte ezanla akar", fazilet: "Cemaatle namaz, tek başına kılanın 27 katı faziletlidir.", kaynak: "Buhârî, Ezan, 30; Müslim, Salât, 73" },
-  { ad: "Vitir", hukum: "Vâcip (Hanefî) / Sünn-i Müekked (diğerleri)", rekat: "3", vakti: "Yatsı namazından sonra, sabahın elősceğik", fazilet: "Günün son namazı; geceleşmeden önce kılınan vitir korun.", kaynak: "Ebû Dâvûd, Vitr, 1; Buhârî, Teheccüd, 2" },
-  { ad: "Cuma", hukum: "Farz-ı Ayn", rekat: "2 farz + 4 sünnet (önce) + 2 sünnet (sonra)", vakti: "Cuma vaktinde, hutbede", fazilet: "Cumada gusül ve sabah erken gitme müjdesi.", kaynak: "Buhârî, Cuma, 4; Müslim, Cuma, 26" },
-  { ad: "Bayram", hukum: "Vâcip (Hanefî)", rekat: "2 rekat; ilk rekatta 7 kıraat tekrar, ikincisinde 5", vakti: "Bayram sabahı, güneş doğduktan sonra", fazilet: "Cemaatle ziyâret; tekbir anlarında Allah largeriya.", kaynak: "Buhârî, Îdeyn, 3; Müslim, Îdeyn, 5" },
-  { ad: "Teheccüd (Gece Namazı)", hukum: "Nafile (Sünnet-i Müekked)", rekat: "2 veya 2'nin katı; son oturuşta vitr eklenir", vakti: "Gece yarısından sonra, sabah önünde", fazilet: "En faziletli nafile; gece duâları zirvede.", kaynak: "Buhârî, Teheccüd, 18; Müslim, Salâtü'l-Müsâfirîn, 173" },
-  { ad: "Teravih", hukum: "Sünnet-i Müekked", rekat: "20 rekat; 4'erli 5 pazarlık", vakti: "Yatsı'dan sonra, vitir'den önce", fazilet: "Ramazan gecesi; cemaatle kılınması ilk Halifelbir güçlü.", kaynak: "Ebû Dâvûd, Salâti'l-**ramaz**, 3; Muvatta, Salâtu'l-Cemâ'at, 12" },
-  { ad: "Kuşluk (Duhâ)", hukum: "Nafile", rekat: "2, 4, 6, 8 veya 12 rekat", vakti: "Öğleden sonra, sabahın son alanı", fazilet: "Kuşluk namazı; akrabı faziletlik.", kaynak: "Ebû Dâvûd, Nafile, 2; Müslim, Mutța'a" },
-  { ad: "Sefer (Kasr)", hukum: "Farz sicher kısaltması", rekat: "4 → 2 kılınca kasr", vakti: "Yolculukta", fazilet: "Yolcu farz; sefer namazının clearInterval.", kaynak: "Buhârî, Kassu's-Salât, 2; Müslim, Salâtu'l-Kassre, 3" },
-  { ad: "Tahiyye-tül Mes.cid", hukum: "Nafile (muvâdap)", rekat: "2 rekat", vakti: "Câmiye girilince oturmadan", fazilet: "Mescide hürmet için ilk iki rekat.", kaynak: "Buhârî, Salât, 63; Müslim, Hac, 466" },
-  { ad: "İstihare", hukum: "Nafile", rekat: "2 rekat", vakti: "Gecede/öğle/sabahemu", fazilet: "Rabbimizden hayr için duası; Seneye getirmek.", kaynak: "Buhârî, Tahâcüd, 36; Tırımzi, Daavât, 101" },
-  { ad: "Teşrik", hukum: "Nafile (Zev müekked)", rekat: "2 rekat", vakti: "Arefe, Kurban ve tediye günleri", fazilet: "Teşrik namazi cevaben; akşade vazife.", kaynak: "Musned-i Ali; Ebû Dâvûd, Salâti'l-Kasfiyyı", },
-  { ad: "Hacet", hukum: "Nafile", rekat: "2 rekat; sonra duâ", vakti: "İhtiyaç anında", fazilet: "İhtiyacı görüşda procession.", kaynak: "Tîrmizî, Salâti'l-**Vîtri" },
+  { ad: "Beş Vakit Farz", hukum: "Farz-ı Ayn", rekat: "Sabah 2 · Öğle 4 · İkindi 4 · Akşam 3 · Yatsı 4", vakti: "Her namaz kendi vaktinde kılınır", fazilet: "Cemaatle kılınan namaz, tek başına kılınandan yirmi yedi derece üstündür.", kaynak: "Buhârî, Ezan 30; Müslim, Mesâcid 249" },
+  { ad: "Cuma Namazı", hukum: "Farz-ı Ayn (şartları taşıyan erkek)", rekat: "Önce 4 sünnet, 2 farz, sonra 4 (veya 6) sünnet", vakti: "Cuma günü öğle vaktinde, hutbe ile", fazilet: "Cuma, Müslümanlar için büyük bir gündür; gusül, erken gitmek, hutbeyi dinlemek ve sükûnet tavsiye edilir.", kaynak: "Buhârî, Cuma 9; Müslim, Cuma 857" },
+  { ad: "Teravih", hukum: "Sünnet-i Müekkede (cemaatle)", rekat: "20 rekat (4+4 uygulaması yaygın) veya 8+3 uygulamaları vardır", vakti: "Ramazan’da yatsıdan sonra, vitirden önce", fazilet: "Kim Ramazan gecelerini iman ve sevap umuduyla ihya ederse geçmiş günahları bağışlanır (genel Ramazan gecesi müjdesi).", kaynak: "Buhârî, Îmân 37; Müslim, Müsâfirîn 759; Tirmizî, Salât 808 (teravih uygulaması rivayetleri)" },
+  { ad: "Vitir", hukum: "Vâcip (Hanefî) / Sünnet-i Müekkede (çoğunluk)", rekat: "1, 3 veya daha fazla tek rekat uygulamaları", vakti: "Yatsıdan sonra, fecre kadar", fazilet: "Vitir, gece namazının sonudur; Nebi (s.a.v.) vitri ihmal etmezdi.", kaynak: "Buhârî, Vitr 2; Ebû Dâvûd, Vitr 1416" },
+  { ad: "Teheccüd (Gece Namazı)", hukum: "Nafile / Sünnet-i Müekkede", rekat: "İkişer rekat; vitirle bitirilebilir", vakti: "Yatsıdan sonra uyuyup kalkınca, özellikle gecenin son kısmında", fazilet: "Farz namazlardan sonra en faziletli namaz gece namazıdır.", kaynak: "Müslim, Siyâm 1163; Buhârî, Teheccüd 6" },
+  { ad: "Kuşluk (Duhâ)", hukum: "Nafile", rekat: "2, 4 veya daha fazla (uygulamalar farklıdır)", vakti: "Güneş iyice yükseldikten sonra öğleye yakın zamana kadar", fazilet: "Kuşluk namazı, günün sadakası ve şükür ifadesi olarak anlatılır.", kaynak: "Müslim, Salâtü’l-Müsâfirîn 748; Ebû Dâvûd, Tatavvu‘ 1289" },
+  { ad: "Bayram Namazı", hukum: "Vâcip (Hanefî) / Sünnet-i Müekkede (çoğunluk)", rekat: "2 rekat; ek tekbirlerle kılınır", vakti: "Bayram sabahı güneş yükseldikten sonra", fazilet: "Bayram namazı, Müslümanların toplu sevincini ve şükrünü gösterir.", kaynak: "Buhârî, Îdeyn 9; Müslim, Salâtü’l-Îdeyn 889" },
+  { ad: "Cenaze Namazı", hukum: "Farz-ı Kifâye", rekat: "Rükû ve secdesiz; tekbirler ve dualarla kılınır", vakti: "Ölen Müslüman için hazırlanıp definden önce", fazilet: "Müslümanın cenaze namazını kılıp defnine katılmak büyük sevap ve sorumluluktur.", kaynak: "Buhârî, Cenâiz 56; Müslim, Cenâiz 945" },
+  { ad: "İstihâre Namazı", hukum: "Nafile", rekat: "2 rekat; ardından istihâre duası", vakti: "Kerâhet vakitleri dışında uygun bir zamanda", fazilet: "Kişinin bir konuda hayırlıyı Allah’tan dilemesi için öğretilmiş bir ibadettir.", kaynak: "Buhârî, Daavât 1162 (bab başlıkları/rivayet çerçevesi); Tirmizî, Salât 480 (istihâre duası)" },
+  { ad: "Tahiyyetü’l-Mescid", hukum: "Nafile (edepten sayılır)", rekat: "2 rekat", vakti: "Mescide girince oturmadan önce", fazilet: "Mescide giren kişi oturmadan önce iki rekat kılsın öğüdü vardır.", kaynak: "Buhârî, Cuma 60; Müslim, Salâtü’l-Müsâfirîn 714" },
+  { ad: "Evvâbîn / Nafile", hukum: "Nafile", rekat: "2’nin katları şeklinde", vakti: "Akşamdan sonra veya uygun nafile vakitlerde", fazilet: "Nafile namazlar farzları tamamlar ve kalbi diri tutar; kişi Allah’a secde ettikçe yakınlaşır.", kaynak: "Müslim, Salât 482 (secde ve yakınlık)" },
+  { ad: "Yolculukta Kasr", hukum: "Farzın kısaltılması (şartlarına göre)", rekat: "Dört rekatlı farzlar iki rekata kısaltılabilir", vakti: "Yolculuk süresince", fazilet: "Kasr, Allah’ın kullarına verdiği bir kolaylıktır.", kaynak: "Buhârî, Taksîru’s-Salât 2; Müslim, Salâtü’l-Müsâfirîn 686" }
 ];
 
 // ── 02.11: NAMAZLARIN FAZİLETLERİ (kullanıcı emri "ikindi güç — diğer")
 export interface NamazFazilet { ad: string; fazilet: string; kaynak: string }
 export const NAMAZ_FAZILETLERİ: NamazFazilet[] = [
-  { ad: "İkindi Namazı", fazilet: "İkindi namazı, güç ve kasvet anıdır; 'İkindi namazını sunmek zor.', hadisi.", kaynak: "Buhârî, |Cihâd|, 88" },
-  { ad: "Sabah Namazı", fazilet: "Sabah namazında melekler ölçük şâhid eder.", kaynak: "Buhârî, Ezan, 14" },
-  { ad: "Vitir Namazı", fazilet: "Yatmadan önce kılınan vitir korun.", kaynak: "Ebû Dâvûd, Vitr, 1" },
-  { ad: "Cemaat Namazı", fazilet: "Tek kılanın 27 katı faziletli.", kaynak: "Buhârî, Ezan, 30" },
-  { ad: "Cuma Namazı", fazilet: "Cumada yanlız aynı boyutkaya.", kaynak: "Müslim, Cuma, 26" },
-  { ad: "Gece Namazı", fazilet: "Gece namazı; iki kelimsi gece kadar.", kaynak: "Müslim, Mutța'a, 1168" },
+  { ad: "Beş Vakit Namaz", fazilet: "Namaz, dinin direğidir ve vakitleri içinde kılınması Allah katında sevimli amellerdendir. Beş vakit namaz, kulun gününü arındıran bir ibadet olarak anlatılır.", kaynak: "Buhârî, Mevâkîtü’s-Salât 527; Müslim, Îmân 233 (namazın önemi/temizlik benzetmesi rivayet çerçevesi)" },
+  { ad: "Sabah Namazı", fazilet: "Sabah ve ikindi namazlarında gece ile gündüz melekleri nöbetleşe bulunur; bu vakitlere dikkat etmek mümin için önemlidir.", kaynak: "Buhârî, Mevâkîtü’s-Salât 555; Müslim, Mesâcid 632" },
+  { ad: "İkindi Namazı (Asr)", fazilet: "İkindi namazını terk etmekten sakındıran rivayetler, bu vaktin korunmasının önemini gösterir. Güneş batmadan önce ikindiye yetişmek kıymetlidir.", kaynak: "Buhârî, Mevâkîtü’s-Salât 553; Müslim, Mesâcid 626" },
+  { ad: "Cemaatle Namaz", fazilet: "Cemaatle kılınan namaz, tek başına kılınandan yirmi yedi derece daha faziletlidir.", kaynak: "Buhârî, Ezan 645; Müslim, Mesâcid 650" },
+  { ad: "Cuma Namazı", fazilet: "Cuma günü gusül etmek, erken gitmek, hutbeyi dinlemek ve Müslümanlara eziyet vermemek tavsiye edilir. Cuma, haftalık bir buluşma ve hatırlatma günüdür.", kaynak: "Buhârî, Cuma 877; Müslim, Cuma 857" },
+  { ad: "Gece Namazı (Teheccüd/Kıyam)", fazilet: "Farz namazlardan sonra en faziletli namaz gece namazıdır. Gecenin sonu, dua ve istiğfar için değerli bir vakittir.", kaynak: "Müslim, Siyâm 1163; Buhârî, Teheccüd 1145 (gecenin sonu)" },
+  { ad: "Vitir Namazı", fazilet: "Vitir, gecenin sonunda kılınan tek rekata dayalı bir ibadettir; Nebi (s.a.v.) gece ibadetini vitirle tamamlamıştır.", kaynak: "Buhârî, Vitr 990; Müslim, Salâtü’l-Müsâfirîn 749" },
+  { ad: "Mescide Yürümek", fazilet: "Namaza yürürken atılan her adım, kulun derecesini yükseltir ve günahlarına kefaret sebebi olabilir; bu, namaz için gayretin değerini gösterir.", kaynak: "Müslim, Mesâcid 666; Buhârî, Ezan 647 (mescide gitmenin fazileti)" },
+  { ad: "Abdest ve Namaza Hazırlık", fazilet: "Güzel abdest almak ve namaza huşû ile hazırlanmak, namazın kalpteki etkisini artırır. Temizlik ve vakit bilinci ibadetin edebi içindedir.", kaynak: "Müslim, Tahâret 223 (abdest ve günahların dökülmesi benzetmesi); Buhârî, Vudû 159" },
+  { ad: "Sünnet/Nafile Namazlar", fazilet: "Nafile ibadetler, farzları tamamlamaya ve kulun Allah’a yakınlaşmasına vesile olur. Secde, kulun Rabbine en yakın olduğu hâllerden biridir.", kaynak: "Müslim, Salât 482; Buhârî, Rikâk 6502 (yakınlık/sevap çerçevesi)" }
 ];
-
 // ── 02.11 (kullanıcı emri): NAMAZDA OKUNAN DUALAR — 4. panel; anlam[0]=TR · [1]=EN · [2]=AR · [3]=ID · [4]=UR
 export interface NamazDua { ad: string; hane: string; arapca: string; latin: string; anlam: string[] }
 export const NAMAZ_DUALARI: NamazDua[] = [

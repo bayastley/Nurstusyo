@@ -285,7 +285,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     );
   }, [q]);
   // ★ 03.10: mezhepli soru-cevap filtresi ayrı değişkene alındı (akordeon + sayaç için)
-  const filtreliBesSart = useMemo(() => BES_SART_SORULARI.filter((b) => !q || b.soru.toLocaleLowerCase("tr").includes(q) || b.cevaplar.some((c) => c.metin.toLocaleLowerCase("tr").includes(q)) || b.sart.toLocaleLowerCase("tr").includes(q)), [q]);
+  const filtreliBesSart = useMemo(() => {
+    if (!q) return BES_SART_SORULARI;
+    const ham = q.split(/\s+/).filter(Boolean).map((k) => metniHazirla(k) || k).filter(Boolean);
+    const kelimeler = ham.length ? ham : [q];
+    return BES_SART_SORULARI.filter((b) => {
+      const metin = metniHazirla(`${b.soru} ${b.sart} ${b.cevaplar.map((c) => `${c.mezhep} ${c.metin}`).join(" ")} ${b.kaynak}`);
+      return kelimeler.every((w) => kelimeUyar(metin, w));
+    });
+  }, [q]);
   // ★ 03.10 AKILLI SURE ARAMASI: ad + ARAPÇA AD + numara + konu/açıklama;
   //   kelime bazlı (sıra serbest), "sure" dolgu kelimesi yoksayılır.
   //   Örn: "fatiah"→Fâtiha · "bakra"→Bakara · "sure mulk"→Mülk · "36"→Yâsîn · "الرحمن"→Rahmân
@@ -398,7 +406,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
       {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
-      {sekme === "evliyalar" && <EvliyalatBolumu tt={tt} onGeri={() => setSekme("menkibeler")} />}
+      {sekme === "evliyalar" && <EvliyalatBolumu tt={tt} onGeri={() => setSekme("menkibeler")} lang={lang} />}
 
       {sekme === "siyer" && (
         <div className="space-y-2">
@@ -425,12 +433,14 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                 {acikSiyer === i && (
                   <div className="border-t border-white/10 px-3 pb-3 pt-2">
                     <ul className="space-y-2">
-                      {k.olaylar.map((o, j) => (
+                      {k.olaylar.map((o, j) => {
+                        const dm = lang !== "tr" ? ((o as any)[`metin_${lang}`] as string | undefined) : undefined;
+                        return (
                         <li key={j} className="text-[9.5px] leading-relaxed">
-                          <p className="text-white/70">{o.metin}</p>
+                          <p className="text-white/70">{dm || o.metin}</p>
                           <p className="mt-0.5 text-[8.5px] font-bold" style={{ color: "var(--accent-2)" }}>📖 {tt("knSiyerKaynak")}: {o.kaynak}</p>
                         </li>
-                      ))}
+                      ); })}
                     </ul>
                   </div>
                 )}
@@ -511,7 +521,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 22: SURE BİLGİLERİ — SRP adım 9: kesfetSekmeler.tsx ── */}
       {sekme === "sure" && (
-        <SureBolumu filtreliSureler={filtreliSureler} acikSure={acikSure} setAcikSure={setAcikSure} q={q} />
+        <SureBolumu filtreliSureler={filtreliSureler} acikSure={acikSure} setAcikSure={setAcikSure} q={q} lang={String(lang||"tr")} />
       )}
 
       {/* ── 28: NAMAZ ÖĞRETİCİ — SRP ayrıldı: kesfetNamazBolumu.tsx (bağlamlar prop korundu); ilk buton (Namaz Çeşitleri) otomatik açık ── */}
