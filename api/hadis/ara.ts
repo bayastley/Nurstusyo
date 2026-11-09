@@ -115,13 +115,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const izinli = ["https://nurstudyo.com", "https://www.nurstudyo.com", "http://localhost:5173", "http://localhost:5174"];
   if (origin && izinli.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Vary", "Origin");
+    res.setHeader("Vary", "Origin, Referer");
   }
   res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300");
 
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "GET") return res.status(405).json({ ok: false, error: "Method Not Allowed" });
-  if (!assertOrigin(req, res)) return;
+  if (!assertOrigin(req, res, { allowMissing: true })) return;
   if (!(await rateLimit(req, res, "hadis-ara", 30, 60_000))) return;
 
   const q = temizle(String(req.query.q ?? ""));
