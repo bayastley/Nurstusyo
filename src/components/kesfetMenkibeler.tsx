@@ -37,14 +37,26 @@ function degistemDili(): string {
   } catch { return "tr"; }
 }
 
-// Kitap açılışı: tıklayınca önce kapak/ad, sonra dalga/çevirme ile içerik
+// Kitap açılışı: kapak tıklanınca açılır, içeriği gerçek kitap sayfası gibi gösterir.
 type DilMetinFn = (m: UzakKissa | undefined, alan: "baslik" | "hikaye" | "hikmet") => string;
-function MenkibeDetay({ tt, secili, setSeciliId, dilMetin }: { tt: TT; secili: UzakKissa; setSeciliId: (v: string | null) => void; dilMetin: DilMetinFn }) {
+function MenkibeDetay({
+  tt,
+  secili,
+  setSeciliId,
+  dilMetin,
+  onceki,
+  sonraki,
+}: {
+  tt: TT;
+  secili: UzakKissa;
+  setSeciliId: (v: string | null) => void;
+  dilMetin: DilMetinFn;
+  onceki: (() => void) | null;
+  sonraki: (() => void) | null;
+}) {
   const [acik, setAcik] = React.useState(false);
   React.useEffect(() => {
     setAcik(false);
-    const t = window.setTimeout(() => setAcik(true), 650);
-    return () => window.clearTimeout(t);
   }, [secili.id]);
 
   const baslik = dilMetin(secili, "baslik");
@@ -52,44 +64,53 @@ function MenkibeDetay({ tt, secili, setSeciliId, dilMetin }: { tt: TT; secili: U
   return (
     <div data-minitur="menkibeler-detay" className="mt-1 nur-book-perspective">
       {!acik ? (
-        <button
-          type="button"
-          onClick={() => setAcik(true)}
-          className="nur-book-cover nur-page-turn-next relative w-full overflow-hidden rounded-2xl px-5 py-8 text-center"
-        >
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-black/20" />
-          <div className="pointer-events-none absolute inset-y-3 left-3 w-px bg-amber-200/30" />
-          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200/70">{secili.kategori}</p>
-          <h3 className="mt-3 text-[18px] font-black leading-snug text-amber-50">{baslik}</h3>
-          <p className="mt-5 text-[9.5px] text-amber-100/55">Kitap açılıyor…</p>
-        </button>
+        <div className="nur-book-shell">
+          <button
+            type="button"
+            onClick={() => setAcik(true)}
+            className="nur-book-cover relative w-full overflow-hidden px-6 py-10 text-center"
+            style={{ minHeight: 260 }}
+          >
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-200/70">{secili.kategori}</p>
+            <div className="mx-auto mt-4 mb-3 h-px w-20 bg-amber-200/30" />
+            <h3 className="text-[20px] font-black leading-snug text-amber-50">{baslik}</h3>
+            <p className="mt-8 text-[10px] font-bold text-amber-100/60">Açmak için kapağa dokun</p>
+          </button>
+        </div>
       ) : (
-        <div
-          className="nur-book-open rounded-2xl border border-white/15 bg-white/[.05] p-4"
-          style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,.03), 0 10px 24px rgba(0,0,0,.18)" }}
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <button type="button" data-minitur="menkibeler-geri" onClick={() => setSeciliId(null)} className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]">
-              <ChevronLeft className="h-3 w-3" />
-              {tt("mkGeri")}
-            </button>
-            <button type="button" data-minitur="menkibeler-x" onClick={() => setSeciliId(null)} className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{secili.kategori}</span>
-          <h3 className="mt-1 text-[16px] font-black text-white">{baslik}</h3>
-          <p className="mt-3 whitespace-pre-line text-[12px] leading-[1.85] text-white/80">{dilMetin(secili, "hikaye")}</p>
-          <div className="mt-4 rounded-xl bg-emerald-500/10 p-3">
-            <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-emerald-200">
-              <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              <span><span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}</span>
+        <div className="nur-book-shell">
+          <div className="nur-book-page nur-book-open p-4 sm:p-5 min-h-[320px]" style={{ color: "#352512" }}>
+            <div className="mb-3 flex items-center justify-between">
+              <button type="button" data-minitur="menkibeler-geri" onClick={() => setSeciliId(null)} className="flex items-center gap-1 rounded-lg border border-[#8c6428]/35 bg-[#f7efd8]/70 px-3 py-1 text-[10px] font-black text-[#5a3f1a] transition hover:bg-[#f1e4c5]">
+                <ChevronLeft className="h-3 w-3" />
+                {tt("mkGeri")}
+              </button>
+              <button type="button" data-minitur="menkibeler-x" onClick={() => setSeciliId(null)} className="rounded-lg border border-[#8c6428]/35 bg-[#f7efd8]/70 p-1.5 text-[#5a3f1a] transition hover:bg-[#f1e4c5]">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#7a5520]">{secili.kategori}</span>
+            <h3 className="mt-1 text-[18px] font-black text-[#2b1d0d]">{baslik}</h3>
+            <div className="my-3 h-px bg-[#8c6428]/30" />
+            <p className="whitespace-pre-line text-justify text-[13px] leading-[1.95]">{dilMetin(secili, "hikaye")}</p>
+            <div className="mt-4 rounded-xl border border-[#5f7a4a]/25 bg-[#eef5e6] p-3">
+              <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-[#355022]">
+                <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span><span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}</span>
+              </p>
+            </div>
+            <p className="mt-3 flex items-center gap-1.5 text-[9.5px] font-bold text-[#6b4a1e]">
+              <Library className="h-3 w-3 shrink-0" />
+              <span>{tt("mkKaynak")}: {secili.kaynak}</span>
             </p>
+            <div className="mt-4 flex items-center justify-between text-[10px] text-[#6b4a1e]/70">
+              <span>{onceki ? "◀ önceki menkıbe" : ""}</span>
+              <span>❦</span>
+              <span>{sonraki ? "sonraki menkıbe ▶" : ""}</span>
+            </div>
+            {onceki && <button type="button" aria-label="Önceki menkıbe" className="nur-page-click-zone left" onClick={onceki} />}
+            {sonraki && <button type="button" aria-label="Sonraki menkıbe" className="nur-page-click-zone right" onClick={sonraki} />}
           </div>
-          <p className="mt-3 flex items-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
-            <Library className="h-3 w-3 shrink-0" />
-            <span>{tt("mkKaynak")}: {secili.kaynak}</span>
-          </p>
         </div>
       )}
     </div>
@@ -209,11 +230,23 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
               {dilMetin(m, "baslik")}
             </span>
           </button>
-          {seciliId === m.id && (
-            <div className="col-span-2">
-              <MenkibeDetay tt={tt} secili={m} setSeciliId={setSeciliId} dilMetin={dilMetin} />
-            </div>
-          )}
+          {seciliId === m.id && (() => {
+            const idx = tamKasa.findIndex((x) => x.id === m.id);
+            const oncekiId = idx > 0 ? tamKasa[idx - 1]?.id ?? null : null;
+            const sonrakiId = idx >= 0 && idx < tamKasa.length - 1 ? tamKasa[idx + 1]?.id ?? null : null;
+            return (
+              <div className="col-span-2">
+                <MenkibeDetay
+                  tt={tt}
+                  secili={m}
+                  setSeciliId={setSeciliId}
+                  dilMetin={dilMetin}
+                  onceki={oncekiId ? () => setSeciliId(oncekiId) : null}
+                  sonraki={sonrakiId ? () => setSeciliId(sonrakiId) : null}
+                />
+              </div>
+            );
+          })()}
           </React.Fragment>
         ))}
       </div>

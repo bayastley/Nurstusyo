@@ -464,19 +464,28 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                     <div className="border-t border-white/10 px-3 pb-3 pt-2 space-y-2">
                       {toplamSayfa > 1 && kumanda}
                       <div className="nur-book-perspective">
-                        <div key={`${k.id}-${guvenliSayfa}`} className={`rounded-xl border border-white/10 bg-white/[.03] p-3 ${siyerYon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"}`}>
-                          <ul className="space-y-3">
-                            {gorunenOlaylar.map((o, j) => {
-                              const idx = bas + j;
-                              const dm = lang !== "tr" ? ((o as any)[`metin_${lang}`] as string | undefined) : undefined;
-                              return (
-                                <li key={idx} className="leading-relaxed">
-                                  <p className="whitespace-pre-line text-justify text-[12.5px] leading-[1.85] text-white/80">{dm || o.metin}</p>
-                                  <p className="mt-2 text-[10px] font-bold leading-relaxed" style={{ color: "var(--accent-2)" }}>📖 {tt("knSiyerKaynak")}: {o.kaynak}</p>
-                                </li>
-                              );
-                            })}
-                          </ul>
+                        <div className="nur-book-shell">
+                          <div key={`${k.id}-${guvenliSayfa}`} className={`nur-book-page p-4 sm:p-5 min-h-[280px] ${siyerYon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"}`}>
+                            <ul className="space-y-3">
+                              {gorunenOlaylar.map((o, j) => {
+                                const idx = bas + j;
+                                const dm = lang !== "tr" ? ((o as any)[`metin_${lang}`] as string | undefined) : undefined;
+                                return (
+                                  <li key={idx} className="leading-relaxed">
+                                    <p className="whitespace-pre-line text-justify text-[13px] leading-[1.95] text-[#352512]">{dm || o.metin}</p>
+                                    <p className="mt-3 text-[10px] font-bold leading-relaxed text-[#6b4a1e]">📖 {tt("knSiyerKaynak")}: {o.kaynak}</p>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                            <div className="mt-4 flex items-center justify-between text-[10px] text-[#6b4a1e]/70">
+                              <span>{guvenliSayfa > 0 ? "◀ önceki" : ""}</span>
+                              <span>❦ {guvenliSayfa + 1}/{toplamSayfa}</span>
+                              <span>{guvenliSayfa < toplamSayfa - 1 ? "sonraki ▶" : ""}</span>
+                            </div>
+                            {guvenliSayfa > 0 && <button type="button" aria-label="Önceki sayfa" className="nur-page-click-zone left" onClick={() => degistir(guvenliSayfa - 1)} />}
+                            {guvenliSayfa < toplamSayfa - 1 && <button type="button" aria-label="Sonraki sayfa" className="nur-page-click-zone right" onClick={() => degistir(guvenliSayfa + 1)} />}
+                          </div>
                         </div>
                       </div>
                       {toplamSayfa > 1 && kumanda}

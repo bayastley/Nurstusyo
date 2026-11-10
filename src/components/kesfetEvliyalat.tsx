@@ -90,47 +90,50 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
 
       {!acik ? (
         <div className="nur-book-perspective">
-          <button
-            type="button"
-            onClick={() => setAcik(true)}
-            className="nur-book-cover nur-page-turn-next relative w-full overflow-hidden rounded-2xl px-5 py-10 text-center"
-            style={{ minHeight: 320 }}
-          >
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-black/20" />
-            <div className="pointer-events-none absolute inset-y-3 left-3 w-px bg-amber-200/30" />
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-200/70">{tt("ksEvliyalar") || "Evliyalar"}</p>
-            <h3 className="mt-4 text-[22px] font-black leading-tight text-amber-50">{L.ad}</h3>
-            <p className="mt-2 text-[11px] font-bold uppercase tracking-widest text-amber-100/70">{L.unvan}</p>
-            <p className="mt-3 text-[10px] font-semibold text-amber-100/55">{L.donem}</p>
-            <p className="mt-8 text-[10px] font-bold text-amber-100/60">{toplam} {tt("evSayfaKisa") || "sayfa"}</p>
-            <p className="mt-2 text-[9px] text-amber-100/45">Kitap açılıyor…</p>
-          </button>
+          <div className="nur-book-shell">
+            <button
+              type="button"
+              onClick={() => setAcik(true)}
+              className="nur-book-cover nur-book-open relative w-full overflow-hidden px-6 py-12 text-center"
+              style={{ minHeight: 360 }}
+            >
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-200/70">{tt("ksEvliyalar") || "Evliyalar"}</p>
+              <div className="mx-auto mt-5 mb-4 h-px w-24 bg-amber-200/30" />
+              <h3 className="text-[24px] font-black leading-tight text-amber-50">{L.ad}</h3>
+              <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-amber-100/75">{L.unvan}</p>
+              <p className="mt-2 text-[10px] font-semibold text-amber-100/55">{L.donem}</p>
+              <p className="mt-10 text-[10px] font-bold text-amber-100/65">{toplam} {tt("evSayfaKisa") || "sayfa"}</p>
+              <p className="mt-2 text-[10px] text-amber-100/50">Açmak için kapağa dokun</p>
+            </button>
+          </div>
         </div>
       ) : (
         <>
           <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
 
           <div className="nur-book-perspective">
-            <div
-              key={sayfaNo}
-              className={"rounded-2xl p-4 font-serif " + (sayfaNo === 0 && yon === "ileri" ? "nur-book-open" : (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"))}
-              style={{
-                background: "#f3e9d2",
-                color: "#3d2f1c",
-                border: "1px solid rgba(215,170,82,.45)",
-                boxShadow: "inset 0 0 18px rgba(120,85,30,.12), 0 10px 24px rgba(0,0,0,.18)",
-              }}
-            >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-[13px] font-black">{L.ad}</span>
-                <span className="text-[9px] font-bold opacity-70">{L.donem}</span>
+            <div className="nur-book-shell">
+              <div
+                key={sayfaNo}
+                className={"nur-book-page font-serif p-5 sm:p-6 min-h-[340px] " + (sayfaNo === 0 && yon === "ileri" ? "nur-book-open" : (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"))}
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[14px] font-black">{L.ad}</span>
+                  <span className="text-[10px] font-bold opacity-70">{L.donem}</span>
+                </div>
+                <span className="block text-[10px] font-bold uppercase tracking-widest opacity-60">{L.unvan}</span>
+                <div className="my-3 h-px" style={{ background: "rgba(140,100,40,.35)" }} />
+                <p data-minitur="evliyalat-kitap-sayfa" className="whitespace-pre-line text-justify text-[13px] leading-[1.95]">
+                  {L.sayfalar[sayfaNo] || ""}
+                </p>
+                <div className="mt-4 flex items-center justify-between text-[10px] opacity-55">
+                  <span>{sayfaNo > 0 ? "◀ önceki" : ""}</span>
+                  <span>❦ {sayfaNo + 1}/{toplam}</span>
+                  <span>{sayfaNo < toplam - 1 ? "sonraki ▶" : ""}</span>
+                </div>
+                {sayfaNo > 0 && <button type="button" aria-label="Önceki sayfa" className="nur-page-click-zone left" onClick={() => sayfayaGec(sayfaNo - 1)} />}
+                {sayfaNo < toplam - 1 && <button type="button" aria-label="Sonraki sayfa" className="nur-page-click-zone right" onClick={() => sayfayaGec(sayfaNo + 1)} />}
               </div>
-              <span className="block text-[9.5px] font-bold uppercase tracking-widest opacity-60">{L.unvan}</span>
-              <div className="my-2 h-px" style={{ background: "rgba(140,100,40,.35)" }} />
-              <p data-minitur="evliyalat-kitap-sayfa" className="whitespace-pre-line text-justify text-[12px] leading-[1.9]">
-                {L.sayfalar[sayfaNo] || ""}
-              </p>
-              <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
             </div>
           </div>
 
@@ -184,13 +187,16 @@ export function EvliyalatBolumu({ tt, onGeri, lang = "tr" }: { tt: TT; onGeri: (
         </button>
       </div>
       <p className="text-center text-[9.5px] leading-relaxed text-white/40">{tt("evIntro")}</p>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-3">
         {EVLIYALAT.map((e) => { const Lc = loc(e, dil || "tr"); return (
-          <button key={e.id} type="button" data-minitur={`evliyalat-kitap-${e.id}`} onClick={() => setEvSecili(evSecili === e.id ? null : e.id)} className="rounded-xl border border-white/10 bg-white/[.03] p-3 text-left transition hover:bg-white/[.05]">
-            <span className="block text-[11.5px] font-black leading-snug text-white/90">{Lc.ad}</span>
-            <span className="mt-0.5 block text-[9px] font-bold uppercase tracking-wider" style={{ color: "var(--accent)" }}>{Lc.unvan}</span>
-            <span className="mt-1 block text-[9px] font-bold text-white/35">{Lc.donem}</span>
-            <span className="mt-1.5 inline-block rounded-full bg-white/[.06] px-2 py-0.5 text-[8.5px] font-black text-white/50">{Lc.sayfalar.length} {tt("evSayfaKisa") || "sayfa"}</span>
+          <button key={e.id} type="button" data-minitur={`evliyalat-kitap-${e.id}`} onClick={() => setEvSecili(evSecili === e.id ? null : e.id)} className="nur-book-perspective text-left">
+            <div className="nur-book-cover relative min-h-[132px] w-full rounded-xl px-3 py-4 transition-transform hover:-translate-y-0.5">
+              <div className="pointer-events-none absolute inset-y-2 left-2 w-px bg-amber-200/25" />
+              <span className="block pr-1 text-[12px] font-black leading-snug text-amber-50">{Lc.ad}</span>
+              <span className="mt-1 block text-[8.5px] font-bold uppercase tracking-wider text-amber-200/75">{Lc.unvan}</span>
+              <span className="mt-2 block text-[8.5px] font-semibold text-amber-100/50">{Lc.donem}</span>
+              <span className="mt-3 inline-block rounded bg-black/20 px-2 py-0.5 text-[8px] font-black text-amber-100/70">{Lc.sayfalar.length} {tt("evSayfaKisa") || "sayfa"}</span>
+            </div>
           </button>
         ); })}
       </div>

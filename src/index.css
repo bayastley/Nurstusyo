@@ -500,44 +500,121 @@ body.nur-rtl .uppercase {
   display: none;
 }
 
-/* ═══ Kitap sayfası çevirme efekti (menkıbeler/evliyalar/siyer) ═══ */
-@keyframes nurPageTurnNext {
-  0% { opacity: 0; transform: translateX(22px) rotateY(-18deg) scale(0.985); filter: drop-shadow(-6px 8px 10px rgba(0,0,0,.18)); transform-origin: left center; }
-  55% { opacity: 1; transform: translateX(-2px) rotateY(3deg) scale(1.002); filter: drop-shadow(2px 6px 8px rgba(0,0,0,.12)); }
-  100% { opacity: 1; transform: translateX(0) rotateY(0) scale(1); filter: drop-shadow(0 4px 6px rgba(0,0,0,.08)); transform-origin: left center; }
+/* ═══ Gerçek kitap görünümü ve sayfa çevirme (menkıbeler/evliyalar/siyer) ═══ */
+.nur-book-perspective { perspective: 1800px; perspective-origin: 50% 45%; }
+.nur-book-shell {
+  position: relative;
+  border-radius: 14px;
+  padding: 10px;
+  background: linear-gradient(90deg, #3a2414 0%, #5a3a22 48%, #2e1d10 50%, #5a3a22 52%, #3a2414 100%);
+  box-shadow: 0 18px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,220,170,.12);
 }
-@keyframes nurPageTurnPrev {
-  0% { opacity: 0; transform: translateX(-22px) rotateY(18deg) scale(0.985); filter: drop-shadow(6px 8px 10px rgba(0,0,0,.18)); transform-origin: right center; }
-  55% { opacity: 1; transform: translateX(2px) rotateY(-3deg) scale(1.002); filter: drop-shadow(-2px 6px 8px rgba(0,0,0,.12)); }
-  100% { opacity: 1; transform: translateX(0) rotateY(0) scale(1); filter: drop-shadow(0 4px 6px rgba(0,0,0,.08)); transform-origin: right center; }
+.nur-book-shell::before {
+  content: "";
+  position: absolute;
+  top: 8px; bottom: 8px; left: 50%;
+  width: 10px; transform: translateX(-50%);
+  background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,230,180,.08), rgba(0,0,0,.35));
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 3;
 }
-@keyframes nurBookOpen {
-  0% { opacity: 0; transform: rotateY(-72deg) scale(0.96); transform-origin: left center; filter: brightness(0.85); }
-  60% { opacity: 1; transform: rotateY(8deg) scale(1.01); filter: brightness(1.02); }
-  100% { opacity: 1; transform: rotateY(0) scale(1); transform-origin: left center; filter: brightness(1); }
+.nur-book-page {
+  position: relative;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(120,85,30,.12), rgba(0,0,0,0) 8%, rgba(0,0,0,0) 92%, rgba(120,85,30,.12)),
+    repeating-linear-gradient(0deg, rgba(120,85,30,.03) 0px, rgba(120,85,30,.03) 1px, transparent 1px, transparent 28px),
+    #f4ecd8;
+  color: #352512;
+  border: 1px solid rgba(140,100,40,.35);
+  box-shadow: inset 0 0 24px rgba(120,85,30,.10), 0 8px 18px rgba(0,0,0,.18);
+  overflow: hidden;
 }
-.nur-page-turn-next {
-  animation: nurPageTurnNext .42s cubic-bezier(.22,.61,.36,1);
-  will-change: transform, opacity, filter;
-  backface-visibility: hidden;
+.nur-book-page::before, .nur-book-page::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 18px;
+  pointer-events: none;
 }
-.nur-page-turn-prev {
-  animation: nurPageTurnPrev .42s cubic-bezier(.22,.61,.36,1);
-  will-change: transform, opacity, filter;
-  backface-visibility: hidden;
+.nur-book-page::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(90,60,20,.18), rgba(90,60,20,0));
 }
-.nur-book-open {
-  animation: nurBookOpen .55s cubic-bezier(.22,.61,.36,1);
-  will-change: transform, opacity, filter;
-  backface-visibility: hidden;
-}
-.nur-book-perspective {
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
+.nur-book-page::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(90,60,20,.14), rgba(90,60,20,0));
 }
 .nur-book-cover {
-  background: linear-gradient(160deg, #2a1b0f 0%, #4a3420 45%, #2f1f12 100%);
-  border: 1px solid rgba(215,170,82,.45);
-  box-shadow: inset 0 0 0 1px rgba(255,235,200,.08), 0 16px 30px rgba(0,0,0,.35);
+  position: relative;
+  border-radius: 10px;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(255,220,150,.12), rgba(255,220,150,0) 60%),
+    linear-gradient(160deg, #2a1b0f 0%, #4a3420 45%, #2f1f12 100%);
+  border: 1px solid rgba(215,170,82,.55);
+  box-shadow: inset 0 0 0 1px rgba(255,235,200,.10), inset 12px 0 18px rgba(0,0,0,.25), 0 18px 34px rgba(0,0,0,.42);
   color: #f7e7c3;
+  overflow: hidden;
 }
+.nur-book-cover::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 1px solid rgba(215,170,82,.35);
+  border-radius: 8px;
+  pointer-events: none;
+}
+.nur-book-cover::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 18px;
+  background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(255,220,150,.08));
+  pointer-events: none;
+}
+@keyframes nurPageTurnNext {
+  0%   { transform: rotateY(0deg) translateX(0); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+  35%  { transform: rotateY(-28deg) translateX(-6px) skewY(-0.6deg); box-shadow: -18px 10px 22px rgba(0,0,0,.22); }
+  100% { transform: rotateY(0deg) translateX(0); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+}
+@keyframes nurPageTurnPrev {
+  0%   { transform: rotateY(0deg) translateX(0); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+  35%  { transform: rotateY(28deg) translateX(6px) skewY(0.6deg); box-shadow: 18px 10px 22px rgba(0,0,0,.22); }
+  100% { transform: rotateY(0deg) translateX(0); box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+}
+@keyframes nurBookOpen {
+  0%   { transform: rotateY(-82deg) scale(0.97); transform-origin: left center; filter: brightness(0.82); }
+  55%  { transform: rotateY(10deg) scale(1.01); transform-origin: left center; filter: brightness(1.03); }
+  100% { transform: rotateY(0deg) scale(1); transform-origin: left center; filter: brightness(1); }
+}
+.nur-page-turn-next {
+  animation: nurPageTurnNext .55s cubic-bezier(.22,.61,.36,1);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.nur-page-turn-prev {
+  animation: nurPageTurnPrev .55s cubic-bezier(.22,.61,.36,1);
+  transform-origin: right center;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+.nur-book-open {
+  animation: nurBookOpen .7s cubic-bezier(.22,.61,.36,1);
+  transform-origin: left center;
+  backface-visibility: hidden;
+  will-change: transform, filter;
+}
+.nur-page-click-zone {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 22%;
+  z-index: 5;
+  cursor: pointer;
+}
+.nur-page-click-zone.left { left: 0; }
+.nur-page-click-zone.right { right: 0; }
+.nur-page-click-zone:hover { background: linear-gradient(90deg, rgba(215,170,82,.10), rgba(215,170,82,0)); }
+.nur-page-click-zone.right:hover { background: linear-gradient(270deg, rgba(215,170,82,.10), rgba(215,170,82,0)); }
+
