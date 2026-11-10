@@ -50,7 +50,7 @@ export function ayetKategorisiBul(ar: string, tr: string, surahName = ""): CatId
 
   // ★ ÇEŞİTLİLİK MOTORU v2 (kullanıcı 20.10: "akıllı AI her şeye deniz/sahil atmasın"):
   //   eşleşme yoksa stabil hash ile estetik kategorilere dağıtılır AMA
-  //   havuzdan 'deniz' ve 'gol' (en sık karışan) %25'e düşürüldü — y重磅
+  //   havuzdan 'deniz' ve 'gol' (en sık karışan) %25'e düşürüldü —
   //   içerik-anlamsız 'deniz' patlaması. Musaf (Kur'an mushaf görsel)
   //   en güvenli geri-dönünş olarak havuza 2x ağırlık verildi: temayı
   //   tahmin edemediğimizde en az-yanlış seçenek o (mushaf sayfa kart).

@@ -92,7 +92,7 @@ export const KATEGORI_AD_COKDIL_ADMIN: Record<string, Partial<Record<Lang, strin
   "admin_paradise_rivers_milk":    { en: "🎞️ Rivers and Milk of Paradise", ar: "🎞️ أنهار الجنة والحليب", id: "🎞️ Sungai Surga", ur: "🎞️ بہشت کے ندیاں" },
   "admin_pearl_coral_diving":      { en: "🎞️ Pearls and Coral Diving", ar: "🎞️ اللؤلؤ والمرجان", id: "🎞️ Mutiara & Karang", ur: "🎞️ موتی ور مرجان" },
   "admin_pen_ink_writing":         { en: "🎞️ Pen and Ink Writing", ar: "🎞️ القلم والحبر",    id: "🎞️ Kalam & Tinta",    ur: "🎞️ قلم اور سیاہی" },
-  "admin_praying_hands_islamic":   { en: "🎞️ Islamic Praying Hands", ar: "🎞️ الاستعمال الدعاء الإسلامي", id: "🎞️礼拜 Tangan Berdoa Il", ur: "🎞️礼拜 اسلامی مد حار" },
+  "admin_praying_hands_islamic":   { en: "🎞️ Islamic Praying Hands", ar: "🎞️ يدان ترفعان بالدعاء", id: "🎞️ Tangan Berdoa Islami", ur: "🎞️ دعا کے لیے اٹھے ہوئے ہاتھ" },
   "admin_regret_sadness_face":     { en: "🎞️ Regretful Face", ar: "🎞️ الوجهّ حرب", id: "🎞️ Wajah Menyesal", ur: "🎞️ غمگین چہرہ" },
   "admin_rock_carved_houses":      { en: "🎞️ Houses Carved in Rock", ar: "🎞️ بيوت محفورة في الصخر", id: "🎞️ Rumah Berukir Batu", ur: "🎞️ پتھر میں کندہ گھر" },
   "admin_seven_layers_atmosphere": { en: "🎞️ Seven Layers of the Atmosphere", ar: "🎞️ سبع طبقات الجو", id: "🎞️ Tujuh Lapis Atmosfer", ur: "🎞️ آسمان کی سات پرتیں" },

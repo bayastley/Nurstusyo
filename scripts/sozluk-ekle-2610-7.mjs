@@ -116,7 +116,7 @@ const KOMUT = {
     en: "Channel tips to grow with the videos you produce 🚀",
     ar: "نصائح القناة للنمو بالفيديوهات التي تنتجها 🚀",
     id: "Tips kanal untuk tumbuh dengan video yang kamu buat 🚀",
-    ur: "بنائی گئی ویڈیوز سے添 نمی کے لیے چینل تجاویز 🚀",
+    ur: "بنائی گئی ویڈیوز سے نئے ویڈیوز کے لیے چینل تجاویز 🚀",
   },
   ktTecvidMetin: {
     tr: "Tilavetin kuralları — her kural tanım + örnekle 🎓",

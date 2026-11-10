@@ -427,7 +427,7 @@ const dokunulan = new Set();
 for (const [p, bul, yeni] of ISLEMLER) {
   let metin = fs.readFileSync(p, "utf8");
   const ilk = !metin.includes(bul);
-  // aynı metin birden第二个 fazla yerdeyse hepsini değiştir (ör: ELİT rozetleri)
+  // aynı metin birden fazla yerdeyse hepsini değiştir (ör: ELİT rozetleri)
   if (ilk) { console.log("!! BULUNAMADI", p, "→", bul.slice(0, 58)); hata++; continue; }
   metin = metin.split(bul).join(yeni);
   metin = kokpruEkle(p, metin);

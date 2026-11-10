@@ -104,7 +104,7 @@ const KOMUT = {
   rsTur: { tr: "Üretim türü", en: "Production type", ar: "نوع الإنتاج", id: "Jenis produksi", ur: "تیاری کی قسم" },
   rsFormat: { tr: "Format sayısı", en: "Number of formats", ar: "عدد الصيغ", id: "Jumlah format", ur: "فارمیٹ کی تعداد" },
   rsSonra: { tr: "Üretim sonrası", en: "After production", ar: "بعد الإنتاج", id: "Setelah produksi", ur: "تیاری کے بعد" },
-  rsOnayla: { tr: "Onaylıyorum, üret", en: "I confirm, produce", ar: "أوافق، أنتج", id: "Saya setuju, buat", ur: "میں متفق ہوں، بن田野" },
+  rsOnayla: { tr: "Onaylıyorum, üret", en: "I confirm, produce", ar: "أوافق، أنتج", id: "Saya setuju, buat", ur: "میں متفق ہوں، بنائیں" },
   rsVazgec: { tr: "Vazgeç", en: "Cancel", ar: "إلغاء", id: "Batal", ur: "چھوڑ دیں" },
   // ── Kendi Ses modal ──
   ks2Hanim: { tr: "🕌 Hanım kardeşlerimiz için hatırlatma", en: "🕌 A reminder for our sisters", ar: "🕌 تذكير لأخواتنا", id: "🕌 Pengingat untuk saudari kita", ur: "مسلم بہنیوں کے لیے یاد دہانی" },

@@ -259,7 +259,7 @@ export const AYET_BASLIK_P2 = {
     "Ticaret Almaz": "لا تنفع تجارة",
     "İyilik Getiren": "من جاء بالحسنة",
     "İman & Salih Amel Edenlere": "للذين آمنوا وعملوا الصالحات",
-    "Laf Gezdirici": "س寧اع للخوض في الغيب",
+    "Laf Gezdirici": "استماع للخوض في الغيب",
     "Erkek & Kadın": "ذكر وأنثى",
     "Çok Anın O'nu": "فاذكروا الله كثيراً",
     "Bilen Korkar": "إنما يخشى الله من عباده العلماء",

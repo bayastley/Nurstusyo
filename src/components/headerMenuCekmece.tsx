@@ -229,7 +229,7 @@ export const HeaderMenuCekmece: React.FC<HeaderMenuCekmeceProps> = ({
                     {/* ★ 17.10 V2 KİLİT ÇİPLERİ (kullanıcı emri): oylamaya konan modüller
                         menüde görünsün ama yanında 🔒 V2 rozeti taşı — kullanıcı neden
                         kilitli olduğunu anlar; tıklayınca ModalsContainer v2Gate yol
-                        haritasına atar. Admin/master rozet görmez (开关 açık). */}
+                        haritasına atar. Admin/master rozet görmez (anahtar açık). */}
                     {
                       /* ★ 18.10 (kullanıcı emri): Ayet & Dua Kütüphanesi menüye GERİ EKLENDİ —
                           kodda ADMIN_HARD_KILITLI (modalsContainerV2.ts) onu

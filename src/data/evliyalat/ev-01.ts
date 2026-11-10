@@ -15,7 +15,7 @@ Abdülkâdir küçüktü; heştirîlik yılları yürüdü. Diğer çocuk madaly
 
     `On sekiz yaşına geldiğinde annesine döndü: "Ey annem, izin ver. Bağdat'a gideceğim, ilim tahsil edeceğim." Annesi bir an durakladı. Sonra elbisesinin dikişinden kopardığı bir saçağı oğlunun kolunun içine dikti. "Evlat, benim iznim bu ilmikle seninle olsun."
 
-Yola düştü. Ne dönemde kalendereverenlikleri açtı: çetelerin bile ondan dokunamadığı söylenir; çünkü kalbi sarійсьиռığınş o gecelere e質илmiр.`,
+Yola düştü. Rivayetlere göre yolculuğu sırasında eşkıyalarla karşılaştı; yanında emaneten taşıdığı altınları doğru söylemesi, onun doğruluk ve tevekkülünü gösteren meşhur menkıbeler arasında anlatılır.`,
 
     `Bağdat'ta ilim, hadis, tefsir, fıkıh — hepsini en büyük hocalardan ders aldı. Hanbelî ekolüne bağlandı. Hocaları ona Bağdat'ta ders verip itibâr kazanma yolunu gösterdi. O, reddetti: "Ben şehre ilim için girdim; ilim sevgilim. Lâkin kalbim surlar dışında bir yerdi."
 

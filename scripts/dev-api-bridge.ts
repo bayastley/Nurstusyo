@@ -89,7 +89,7 @@ function loadHandler(apiFile: string): AnyHandler | null {
   // Vite dev'de TS dosyaları tsconfig rootDir ile build edilebilir, ama
   // dev-api-bridge TEK tek ts-node şartı yok — Vite handler'ları mı destekler?
   // Hayır — ama Node ESM ile TS import destekleniyor (Vite 7 Node 18+ ESM).
-  // Biz de Vite'ın SSR modül yükleyicisinden (createServer内部的 ssrLoadModule)
+  // Biz de Vite'ın SSR modül yükleyicisinden (createServer içindeki ssrLoadModule)
   // kesin bağımsız kirli import kullanıyoruz; TS dosya Node ESM'de çalışmaz.
   //
   // ▼ ÇÖZÜM: handler'ları YENİDEN YAZMADAN çalıştırmak için Vite'ın ssrLoadModule

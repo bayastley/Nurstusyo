@@ -4,7 +4,7 @@
 //   • TR: yalnız eksik olanlar eklenir (mevcut değerler ASLA ezilmez).
 //   • en/ar/id/ur: anahtar yoksa VEYA değeri Türkçe'yle birebir aynıysa
 //     (çevrilmemiş kalmış) çevirisi yazılır — gerçek çevrilere dokunulmaz.
-//   • Düzeltme: dicts.ur.json "atmKategorilereDon" içindeki Çince '喻' ayıklanır.
+//   • Düzeltme: dicts.ur.json "atmKategorilereDon" içindeki Çince karakter ayıklanır.
 // Âdına güvenli: çalıştır → "npm run node:scripts/sozluk-ekle-2610.mjs" değil;
 //   node scripts/sozluk-ekle-2610.mjs
 // ════════════════════════════════════════════════════════════════════

@@ -80,7 +80,7 @@ export function asistanNormallestir(s: string): string {
     .replace(/û/g, "u").replace(/Û/g, "U")
     // ★ 22.10 APOSTROF SİLİMİ — "Kur'an" karakter-punc Run'te "kur, an" bölünüyordu; silini → "kuran" bir kelime:
     .replace(/[\u2019'`\u00B4]/g, "")
-    // ★ 22.10 RUN-SEKME (canlı-test fix): artı işareti遮めし字集、"nasil?" → "nasil," gibi DİP-bileşik virgül bırakıyordu
+    // ★ 22.10 RUN-SEKME (canlı-test fix): artı işareti ve "nasil?" → "nasil," gibi dip-bileşik virgül bırakıyordu
     //   → kelime-setine "nasil," geçiyor ve word-match KAYBEDİYORDU. Tümú işaret/boşluk RUN'ı TEK ", " olur:
     .replace(/[^\p{L}\p{N}]+/gu, ", ")
     .replace(/(?:,\s*)+$/, "")
@@ -236,7 +236,7 @@ export function asistanCevap(soru: string, seviye: AsistanSeviye = "free"): Asis
   //   anahtarla çoğul biçimler (key+lar/ler) de denenir — substring riski yok.
   // ★ KÖK EŞLEME (21.10, kullanıcı: "soru senin çiplerinden çıkıyor, cevap
   //   bilemiyor bu ne alaka"): çipler "paylaşırım/indirebilirim/dinlerim" gibi
-  //   EK理解和 biçimdiler; anahtar kelimesi eşleşmezdi. Artık 5+ harf kök
+  //   ek biçimleriydi; anahtar kelimesi eşleşmezdi. Artık 5+ harf kök
   //   anahtar kelime Başına eşleşir ("indir"→"indirebilirim" ✓, "paylas"→
   //   "paylasirim" ✓, "dinle"→"dinlerim" ✓). 4- ve al takılı hiç eşleşmez.
   const kelimeler = new Set(n.split(", "));

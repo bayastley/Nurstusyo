@@ -48,13 +48,21 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
   const L = loc(ev, dil || "tr");
   const [sayfaNo, setSayfaNo] = React.useState(0);
   const [yon, setYon] = React.useState("ileri");
+  const [acik, setAcik] = React.useState(false);
   const kitapUst = React.useRef<HTMLDivElement | null>(null);
   const toplam = L.sayfalar.length;
 
-  // açılışta kitabın başına bak
+  React.useEffect(() => {
+    setAcik(false);
+    setSayfaNo(0);
+    setYon("ileri");
+    const t = window.setTimeout(() => setAcik(true), 650);
+    return () => window.clearTimeout(t);
+  }, [ev.id]);
+
   React.useEffect(() => {
     kitapUst.current?.scrollIntoView({ behavior: "auto", block: "start" });
-  }, [ev.id]);
+  }, [ev.id, acik]);
 
   const sayfayaGec = (hedef: number) => {
     const yeni = Math.min(Math.max(0, hedef), toplam - 1);
@@ -66,66 +74,89 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
     });
   };
 
+  const geriEtiket = ({"tr":"Geri","en":"Back","ar":"رجوع","id":"Kembali","ur":"واپس"} as Record<string,string>)[dil] || "Geri";
+
   return (
     <div ref={kitapUst} className="space-y-2 pt-1">
       <div className="flex items-center justify-between">
         <button type="button" data-minitur="evliyalat-kitap-geri" onClick={onGeri} className="flex items-center gap-1 rounded-full bg-white/[.06] px-3 py-1 text-[10px] font-black text-white/70 transition hover:bg-white/[.12]">
           <ChevronLeft className="h-3 w-3" />
-          {({"tr":"Geri","en":"Back","ar":"رجوع","id":"Kembali","ur":"واپس"} as Record<string,string>)[dil] || "Geri"}
+          {geriEtiket}
         </button>
         <button type="button" data-minitur="evliyalat-kitap-x" onClick={onGeri} className="rounded-full bg-white/[.06] p-1.5 text-white/60 transition hover:bg-white/[.12] hover:text-white">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
 
-      <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
+      {!acik ? (
+        <div className="nur-book-perspective">
+          <button
+            type="button"
+            onClick={() => setAcik(true)}
+            className="nur-book-cover nur-page-turn-next relative w-full overflow-hidden rounded-2xl px-5 py-10 text-center"
+            style={{ minHeight: 320 }}
+          >
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-3 bg-black/20" />
+            <div className="pointer-events-none absolute inset-y-3 left-3 w-px bg-amber-200/30" />
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-200/70">{tt("ksEvliyalar") || "Evliyalar"}</p>
+            <h3 className="mt-4 text-[22px] font-black leading-tight text-amber-50">{L.ad}</h3>
+            <p className="mt-2 text-[11px] font-bold uppercase tracking-widest text-amber-100/70">{L.unvan}</p>
+            <p className="mt-3 text-[10px] font-semibold text-amber-100/55">{L.donem}</p>
+            <p className="mt-8 text-[10px] font-bold text-amber-100/60">{toplam} {tt("evSayfaKisa") || "sayfa"}</p>
+            <p className="mt-2 text-[9px] text-amber-100/45">Kitap açılıyor…</p>
+          </button>
+        </div>
+      ) : (
+        <>
+          <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
 
-      <div className="nur-book-perspective">
-        <div
-          key={sayfaNo}
-          className={"rounded-2xl p-4 font-serif " + (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev")}
-          style={{
-            background: "#f3e9d2",
-            color: "#3d2f1c",
-            border: "1px solid rgba(215,170,82,.45)",
-            boxShadow: "inset 0 0 18px rgba(120,85,30,.12), 0 10px 24px rgba(0,0,0,.18)",
-          }}
-        >
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="text-[13px] font-black">{L.ad}</span>
-          <span className="text-[9px] font-bold opacity-70">{L.donem}</span>
-        </div>
-        <span className="block text-[9.5px] font-bold uppercase tracking-widest opacity-60">{L.unvan}</span>
-        <div className="my-2 h-px" style={{ background: "rgba(140,100,40,.35)" }} />
-        <p data-minitur="evliyalat-kitap-sayfa" className="whitespace-pre-line text-justify text-[12px] leading-[1.9]">
-          {L.sayfalar[sayfaNo] || ""}
-        </p>
-        <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
-        </div>
-      </div>
+          <div className="nur-book-perspective">
+            <div
+              key={sayfaNo}
+              className={"rounded-2xl p-4 font-serif " + (sayfaNo === 0 && yon === "ileri" ? "nur-book-open" : (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"))}
+              style={{
+                background: "#f3e9d2",
+                color: "#3d2f1c",
+                border: "1px solid rgba(215,170,82,.45)",
+                boxShadow: "inset 0 0 18px rgba(120,85,30,.12), 0 10px 24px rgba(0,0,0,.18)",
+              }}
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-[13px] font-black">{L.ad}</span>
+                <span className="text-[9px] font-bold opacity-70">{L.donem}</span>
+              </div>
+              <span className="block text-[9.5px] font-bold uppercase tracking-widest opacity-60">{L.unvan}</span>
+              <div className="my-2 h-px" style={{ background: "rgba(140,100,40,.35)" }} />
+              <p data-minitur="evliyalat-kitap-sayfa" className="whitespace-pre-line text-justify text-[12px] leading-[1.9]">
+                {L.sayfalar[sayfaNo] || ""}
+              </p>
+              <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
+            </div>
+          </div>
 
-      {/* ★ 04.11 (kullanıcı emri): Önemli Anlar — her evliyanın hayatında bilinen değerli meşhur vâkıalar */}
-      {L.onemliAnlar && L.onemliAnlar.length > 0 && (
-        <div data-minitur="evliyalat-onemli" className="rounded-2xl border border-white/12 bg-white/[.04] p-3">
-          <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{tt("evOnemli")}</p>
-          <ul className="space-y-1">
-            {L.onemliAnlar.map((a, i) => (
-              <li key={i} className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-white/75">
-                <span className="mt-[3px] h-1 w-1 shrink-0 rounded-full" style={{ background: "var(--accent-2)" }} />
-                <span>{a}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {L.onemliAnlar && L.onemliAnlar.length > 0 && (
+            <div data-minitur="evliyalat-onemli" className="rounded-2xl border border-white/12 bg-white/[.04] p-3">
+              <p className="mb-1.5 text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{tt("evOnemli")}</p>
+              <ul className="space-y-1">
+                {L.onemliAnlar.map((a, i) => (
+                  <li key={i} className="flex items-start gap-1.5 text-[10.5px] leading-relaxed text-white/75">
+                    <span className="mt-[3px] h-1 w-1 shrink-0 rounded-full" style={{ background: "var(--accent-2)" }} />
+                    <span>{a}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex items-center justify-center gap-2">
+            <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
+          </div>
+          <p className="flex items-center justify-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
+            <Library className="h-3 w-3 shrink-0" />
+            {L.kaynak}
+          </p>
+        </>
       )}
-
-      <div className="flex items-center justify-center gap-2">
-        <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
-      </div>
-      <p className="flex items-center justify-center gap-1.5 text-[9px] font-bold" style={{ color: "var(--accent-2)" }}>
-        <Library className="h-3 w-3 shrink-0" />
-        {L.kaynak}
-      </p>
     </div>
   );
 }
