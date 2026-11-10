@@ -39,8 +39,9 @@ function degistemDili(): string {
 
 type DilMetinFn = (m: UzakKissa | undefined, alan: "baslik" | "hikaye" | "hikmet") => string;
 
-function bolSayfalar(m: UzakKissa, dilMetin: DilMetinFn): string[] {
-  const mevcut = (m as any).sayfalar as string[] | undefined;
+function bolSayfalar(m: UzakKissa, dilMetin: DilMetinFn, dil: string): string[] {
+  const dilSayfa = dil !== "tr" ? ((m as any)[`sayfalar_${dil}`] as string[] | undefined) : undefined;
+  const mevcut = (Array.isArray(dilSayfa) && dilSayfa.filter(Boolean).length > 0 ? dilSayfa : (m as any).sayfalar) as string[] | undefined;
   if (Array.isArray(mevcut) && mevcut.filter(Boolean).length > 0) return mevcut.filter(Boolean);
   const metin = [dilMetin(m, "hikaye"), "", dilMetin(m, "hikmet") ? `Hikmet: ${dilMetin(m, "hikmet")}` : "", m.kaynak ? `Kaynak: ${m.kaynak}` : ""].filter(Boolean).join("\n\n");
   const parcalar = metin.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
@@ -72,7 +73,8 @@ function MenkibeDetay({
   const [acik, setAcik] = React.useState(false);
   const [sayfaNo, setSayfaNo] = React.useState(0);
   const [yon, setYon] = React.useState<"ileri" | "geri">("ileri");
-  const sayfalar = React.useMemo(() => bolSayfalar(secili, dilMetin), [secili, dilMetin]);
+  const dil = degistemDili();
+  const sayfalar = React.useMemo(() => bolSayfalar(secili, dilMetin, dil), [secili, dilMetin, dil]);
   const toplam = sayfalar.length;
   React.useEffect(() => {
     setAcik(false);
