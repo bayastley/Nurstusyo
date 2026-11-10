@@ -92,6 +92,7 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
   const [seciliId, setSeciliId] = React.useState<string | null>(null);
   // ★ 04.11: sayfa durumu + başa dönme çapası (üst kumandanın kendisi)
   const [sayfaNo, setSayfaNo] = React.useState(0);
+  const [yon, setYon] = React.useState("ileri");
   const listeUst = React.useRef<HTMLDivElement | null>(null);
   const [uzakKissalar, setUzakKissalar] = React.useState<UzakKissa[]>([]);
   /** ★ dil seçimi sabit tutulur — bileşen boyunca yeniden örnekleme gerekmez */
@@ -137,6 +138,7 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
   const sayfayaGec = (hedef: number) => {
     const yeni = Math.min(Math.max(0, hedef), tamSayfa - 1);
     if (yeni === guvenliSayfa) return;
+    setYon(yeni > guvenliSayfa ? "ileri" : "geri");
     setSayfaNo(yeni);
     setSeciliId(null);
     requestAnimationFrame(() => {
@@ -158,7 +160,8 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
       </div>
 
       {/* KONU BUTONLARI — sayfadaki 10 kıssa; detay konunun ALTINDA açılır */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="nur-book-perspective">
+      <div key={guvenliSayfa} className={"grid grid-cols-2 gap-2 " + (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev")}>
         {gorunen.map((m) => (
           <React.Fragment key={m.id}>
           <button
@@ -186,6 +189,7 @@ export function MenkibelerBolumu({ tt }: { tt: TT }) {
           )}
           </React.Fragment>
         ))}
+      </div>
       </div>
 
       {/* kumanda ALTTA — alttan geçişte liste anında başa (ilk sıraya) döner */}

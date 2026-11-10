@@ -499,3 +499,16 @@ body.nur-rtl .uppercase {
 .max-md\:no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ═══ Kitap sayfası çevirme efekti (menkıbeler/evliyalar) ═══ */
+@keyframes nurPageTurnNext {
+  0% { opacity: 0; transform: translateX(18px) rotateY(-6deg); transform-origin: left center; }
+  100% { opacity: 1; transform: translateX(0) rotateY(0); transform-origin: left center; }
+}
+@keyframes nurPageTurnPrev {
+  0% { opacity: 0; transform: translateX(-18px) rotateY(6deg); transform-origin: right center; }
+  100% { opacity: 1; transform: translateX(0) rotateY(0); transform-origin: right center; }
+}
+.nur-page-turn-next { animation: nurPageTurnNext .28s ease-out; will-change: transform, opacity; }
+.nur-page-turn-prev { animation: nurPageTurnPrev .28s ease-out; will-change: transform, opacity; }
+.nur-book-perspective { perspective: 1200px; }

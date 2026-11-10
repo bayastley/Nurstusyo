@@ -47,6 +47,7 @@ function KitapKumanda({ tt, sayfa, toplam, degistir }: { tt: TT; sayfa: number; 
 function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () => void; dil: Dil }) {
   const L = loc(ev, dil || "tr");
   const [sayfaNo, setSayfaNo] = React.useState(0);
+  const [yon, setYon] = React.useState("ileri");
   const kitapUst = React.useRef<HTMLDivElement | null>(null);
   const toplam = L.sayfalar.length;
 
@@ -58,6 +59,7 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
   const sayfayaGec = (hedef: number) => {
     const yeni = Math.min(Math.max(0, hedef), toplam - 1);
     if (yeni === sayfaNo) return;
+    setYon(yeni > sayfaNo ? "ileri" : "geri");
     setSayfaNo(yeni);
     requestAnimationFrame(() => {
       kitapUst.current?.scrollIntoView({ behavior: "auto", block: "start" });
@@ -78,15 +80,17 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
 
       <KitapKumanda tt={tt} sayfa={sayfaNo} toplam={toplam} degistir={sayfayaGec} />
 
-      <div
-        className="rounded-2xl p-4 font-serif"
-        style={{
-          background: "#f3e9d2",
-          color: "#3d2f1c",
-          border: "1px solid rgba(215,170,82,.45)",
-          boxShadow: "inset 0 0 18px rgba(120,85,30,.12)",
-        }}
-      >
+      <div className="nur-book-perspective">
+        <div
+          key={sayfaNo}
+          className={"rounded-2xl p-4 font-serif " + (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev")}
+          style={{
+            background: "#f3e9d2",
+            color: "#3d2f1c",
+            border: "1px solid rgba(215,170,82,.45)",
+            boxShadow: "inset 0 0 18px rgba(120,85,30,.12), 0 10px 24px rgba(0,0,0,.18)",
+          }}
+        >
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-[13px] font-black">{L.ad}</span>
           <span className="text-[9px] font-bold opacity-70">{L.donem}</span>
@@ -97,6 +101,7 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
           {L.sayfalar[sayfaNo] || ""}
         </p>
         <div className="mt-3 text-center text-[11px] opacity-40">❦</div>
+        </div>
       </div>
 
       {/* ★ 04.11 (kullanıcı emri): Önemli Anlar — her evliyanın hayatında bilinen değerli meşhur vâkıalar */}
