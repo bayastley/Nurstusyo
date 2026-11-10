@@ -118,6 +118,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   const [acikPeygamber, setAcikPeygamber] = useState<number | null>(null);
   // ★ 31.10 SİYER: açık kategori idx — akordeon
   const [acikSiyer, setAcikSiyer] = useState<number | null>(null);
+  const [siyerSayfa, setSiyerSayfa] = useState(0);
+  const [siyerYon, setSiyerYon] = useState<"ileri" | "geri">("ileri");
   // ★ KELİME YENİLE (01.10): sahih havuzdan her seferinde rastgele 15 keşif kartı — günün 5'i hariç (03.10)
   const [kelimeKartlari, setKelimeKartlari] = useState<KelimeKart[]>([]);
   // ★ GÜNÜN KELİMELERİ (03.10): deterministik — oturum boyunca sabit, gün değişince yenilenir
@@ -410,7 +412,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {sekme === "siyer" && (
         <div className="space-y-2">
-          <p className="mb-1 text-center text-[9px] text-white/40">{tt("knSiyerMetin")}</p>
+          <p className="mb-1 text-center text-[10px] leading-relaxed text-white/45">{tt("knSiyerMetin")}</p>
           {filtreliSiyer.map((k, i) => {
             const c = siyerIsim(k.id, lang);
             const kAd = c ? c.ad : k.ad;
@@ -420,30 +422,67 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
                 {/* kapalı satır: sıra + kategori adı + dönem etiketi; tıkla-aç akordeon */}
                 <button
                   type="button"
-                  onClick={() => setAcikSiyer(acikSiyer === i ? null : i)}
+                  onClick={() => {
+                    const yeni = acikSiyer === i ? null : i;
+                    setAcikSiyer(yeni);
+                    setSiyerSayfa(0);
+                    setSiyerYon("ileri");
+                  }}
                   className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-white/[.04]"
                 >
                   <span className="flex min-w-0 flex-1 items-center gap-2">
                     <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[8.5px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{i + 1}</span>
-                    <span className="truncate text-[11px] font-black text-white/90">{kAd}</span>
+                    <span className="truncate text-[12px] font-black text-white/90">{kAd}</span>
                     <span className="shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-bold text-white/60">{kDonem}</span>
                   </span>
                   <ChevronDown size={12} className={`shrink-0 text-white/40 transition ${acikSiyer === i ? "rotate-180" : ""}`} />
                 </button>
-                {acikSiyer === i && (
-                  <div className="border-t border-white/10 px-3 pb-3 pt-2">
-                    <ul className="space-y-2">
-                      {k.olaylar.map((o, j) => {
-                        const dm = lang !== "tr" ? ((o as any)[`metin_${lang}`] as string | undefined) : undefined;
-                        return (
-                        <li key={j} className="text-[9.5px] leading-relaxed">
-                          <p className="text-white/70">{dm || o.metin}</p>
-                          <p className="mt-0.5 text-[8.5px] font-bold" style={{ color: "var(--accent-2)" }}>📖 {tt("knSiyerKaynak")}: {o.kaynak}</p>
-                        </li>
-                      ); })}
-                    </ul>
-                  </div>
-                )}
+                {acikSiyer === i && (() => {
+                  const olaylar = k.olaylar || [];
+                  const sayfaBoyutu = 1;
+                  const toplamSayfa = Math.max(1, Math.ceil(olaylar.length / sayfaBoyutu));
+                  const guvenliSayfa = Math.min(siyerSayfa, toplamSayfa - 1);
+                  const bas = guvenliSayfa * sayfaBoyutu;
+                  const gorunenOlaylar = olaylar.slice(bas, bas + sayfaBoyutu);
+                  const degistir = (hedef: number) => {
+                    const yeni = Math.min(Math.max(0, hedef), toplamSayfa - 1);
+                    if (yeni === guvenliSayfa) return;
+                    setSiyerYon(yeni > guvenliSayfa ? "ileri" : "geri");
+                    setSiyerSayfa(yeni);
+                  };
+                  const okBtn = "flex h-7 w-7 items-center justify-center rounded-full border border-white/15 bg-white/[.04] text-[11px] font-black text-white/70 transition hover:bg-white/[.08] disabled:cursor-not-allowed disabled:opacity-30";
+                  const kumanda = (
+                    <div className="flex items-center justify-center gap-2 py-1">
+                      <button type="button" className={okBtn} onClick={() => degistir(guvenliSayfa - 1)} disabled={guvenliSayfa <= 0}>◀</button>
+                      <span className="min-w-20 text-center text-[10px] font-black tracking-wide text-white/55">
+                        {tt("evSayfa").replace("{p}", String(guvenliSayfa + 1)).replace("{t}", String(toplamSayfa))}
+                      </span>
+                      <button type="button" className={okBtn} onClick={() => degistir(guvenliSayfa + 1)} disabled={guvenliSayfa >= toplamSayfa - 1}>▶</button>
+                    </div>
+                  );
+                  return (
+                    <div className="border-t border-white/10 px-3 pb-3 pt-2 space-y-2">
+                      {toplamSayfa > 1 && kumanda}
+                      <div className="nur-book-perspective">
+                        <div key={`${k.id}-${guvenliSayfa}`} className={`rounded-xl border border-white/10 bg-white/[.03] p-3 ${siyerYon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev"}`}>
+                          <ul className="space-y-3">
+                            {gorunenOlaylar.map((o, j) => {
+                              const idx = bas + j;
+                              const dm = lang !== "tr" ? ((o as any)[`metin_${lang}`] as string | undefined) : undefined;
+                              return (
+                                <li key={idx} className="leading-relaxed">
+                                  <p className="whitespace-pre-line text-justify text-[12.5px] leading-[1.85] text-white/80">{dm || o.metin}</p>
+                                  <p className="mt-2 text-[10px] font-bold leading-relaxed" style={{ color: "var(--accent-2)" }}>📖 {tt("knSiyerKaynak")}: {o.kaynak}</p>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      </div>
+                      {toplamSayfa > 1 && kumanda}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
