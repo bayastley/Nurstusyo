@@ -1,39 +1,38 @@
-// ev-01: ABDÜLKÂDİR-İ GEYLÂNÎ — Gavsü'l-Âzam (04.11)
-// Kullanıcı emri: 10 büyük evliya, her biri 5 sayfa, kitap gibi yaz.
+// ev-01: ABDÜLKÂDİR-İ GEYLÂNÎ — Gavsü'l-Âzam
 import type { Evliya } from "./tip";
 
 export const ev01: Evliya = {
   id: "ev-01",
   ad: "Abdülkâdir-i Geylânî",
   unvan: "Gavsü'l-Âzam — Pîr-i Bağdat",
-  donem: "1077–1166 · Gilân → Bağdat",
-  kaynak: "Attâr, Tazkiretü'l-Evliyâ; Abdülkâdir-i Geylânî, el-Gunya, el-Fethü'r-Rabbânî",
+  donem: "1077–1166 · Geylân → Bağdat",
+  kaynak: "Abdülkâdir-i Geylânî, el-Gunye li-Tâlibî Tarîki'l-Hak, el-Fethu'r-Rabbânî, Fütûhu'l-Gayb; İbn Receb, Zeylü Tabakâti'l-Hanâbile; İslam Ansiklopedisi (Abdülkadir Geylânî maddesi)",
   sayfalar: [
-    `Hazar Denizi'nin güneyinde, Gilân topraklarının küçük bir köyünde 1077 yılında bir çocuk dünyaya geldi. Adı Abdülkâdir koydu. Babası Ebû Sâlih, devrinin sâlihlerinden biriydi. Anne soyu Hz. Hüseyin'e, baba soyu Hz. Ebû Bekir'e bağlanır.
+    `Abdülkâdir-i Geylânî, Hicrî 470 / Milâdî 1077 yılı civarında İran'ın güneyindeki Geylân bölgesinde doğdu. Nesebi hakkında kaynaklarda farklı ayrıntılar bulunsa da, soyunun Hz. Peygamber'in ehl-i beytine dayandığı yönündeki rivayet yaygındır. Babası Ebû Sâlih Mûsâ, annesi ise dindar ve iffetli bir kadın olarak anılır.
 
-Abdülkâdir küçüktü; heştirîlik yılları yürüdü. Diğer çocuk madalyonu yerine o, ağaçların gölgesinde yatar, gökyüzüne bakar, mavzeri türlü düşünürdü. Sekiz yaşında babasını kaybetti; annesinin matemliği bir ilmik old.`,
+Çocukluğu Geylân'ın kırsalında geçti. Küçük yaşta babasını kaybettiği aktarılır. Bu dönem, onun hayatında zühd, sabır ve ilim arayışının erken bir temeli olarak görülür. Genç Abdülkâdir, bulunduğu çevrenin sınırlı imkânlarına rağmen ilim öğrenmeye ve ibadete yöneldi.`,
 
-    `On sekiz yaşına geldiğinde annesine döndü: "Ey annem, izin ver. Bağdat'a gideceğim, ilim tahsil edeceğim." Annesi bir an durakladı. Sonra elbisesinin dikişinden kopardığı bir saçağı oğlunun kolunun içine dikti. "Evlat, benim iznim bu ilmikle seninle olsun."
+    `On sekiz yaşlarında ilim tahsili için Bağdat'a gitmeye karar verdi. Menkıbevi anlatımlarda annesinin onu helâl kazanca ve doğruluğa sıkı sıkıya bağlaması, yolculuk sırasında eşyalarıyla ilgili doğru sözlü davranışı gibi hikâyeler aktarılır. Bu anlatımlar, tarihî kesinlikten çok onun dürüstlük ve tevekkül timsali olarak nasıl hatırlandığını gösterir.
 
-Yola düştü. Rivayetlere göre yolculuğu sırasında eşkıyalarla karşılaştı; yanında emaneten taşıdığı altınları doğru söylemesi, onun doğruluk ve tevekkülünü gösteren meşhur menkıbeler arasında anlatılır.`,
+Bağdat'a vardığında Abbâsî başkenti, medreseler, âlimler ve farklı fıkhî-ekol çevreleriyle canlı bir ilim merkeziydi. Abdülkâdir burada Hanbelî mezhebine mensup âlimlerden ders aldı; fıkıh, hadis ve tefsir gibi ilimlerde kendini yetiştirdi. Bu yıllar, onun hem ilmî hem de ahlâkî kişiliğinin oluşumunda belirleyici oldu.`,
 
-    `Bağdat'ta ilim, hadis, tefsir, fıkıh — hepsini en büyük hocalardan ders aldı. Hanbelî ekolüne bağlandı. Hocaları ona Bağdat'ta ders verip itibâr kazanma yolunu gösterdi. O, reddetti: "Ben şehre ilim için girdim; ilim sevgilim. Lâkin kalbim surlar dışında bir yerdi."
+    `Abdülkâdir-i Geylânî'nin hayatında uzun süreli bir inziva ve riyâzet dönemi bulunduğu rivayet edilir. Kaynaklarda Irak'ın kırsal bölgelerinde zorlu şartlar altında yaşadığı, az yediği ve ibadete yöneldiği anlatılır. Bu tür menkıbelerin ayrıntıları her zaman aynı kesinlikte doğrulanamaz; ancak onun zühd, nefis terbiyesi ve sabırla anıldığı konusunda güçlü bir gelenek vardır.
 
-Aynı yıl kararını verdi: "Gidiyorum." Bağdat'tan çıkarken kalbinde bir nur doğdu. İnsanların övgüleri, makamlar, kürsüdeki itibar — bunların hepsi külfetti. O, ilmi tacını yere koyup kendini çöle sordu. Bazı rivâyetlerde bu hâdise Hızır'la görüşme kıssasına bağlanır; bilinen olan şu: çölde iki adamtı sohbete başladı; biri sustu, diğeri konuştu.`,
+Bu dönemin sonunda Bağdat'a döndüğünde, yalnızca okumuş bir âlim değil; tecrübe ve manevi olgunluk kazanmış bir mürşid olarak görülmeye başladı. Vaazları ve sohbetleri, hem halktan insanlara hem de ilim ehline hitap eden bir üsluba sahipti.`,
 
-    `Bağdat'tan sonra yaklaşık yirmi beş yıl Irak çöllerinde geçirdi. Rivâyetlerde bu döneme "rızâ" yılları denir: karnı aç kaldı, sırtı soğuk, yastığı toprak oldu. Kendisi demiştir: "Ben bu yıllarda Allah'tan başkasından hiçbir şey istemedim."
+    `Bağdat'ta zamanla kendi medrese ve ribâtına bağlı olarak ders vermeye ve vaaz etmeye başladı. Onun meclislerinde Kur'ân ve sünnet, ahlâk, ihlâs, sabır, helâl kazanç ve kalp temizliği öne çıkan konulardı. Eserlerinden anlaşıldığı kadarıyla İslam'ın zahirî hükümlerine bağlılığı temel ilke saymış, bâtınî terbiyeyi de bunun tamamlayıcısı olarak görmüştür.
 
-Günün birinde çöl kenarında bir gölge buldu, orada uyudu. Uyandığında kalbinde bir nur doğdu. "Bunu kime anlatacağım bilemedim." Yirmi beş yıl kısa değildi; onun rızâsında tek gün bile uzundu.`,
+Talebeleri ve dinleyicileri yalnızca Bağdat'tan değildi; farklı bölgelerden gelen insanlar onun sohbetlerinden istifade etti. Bu etki, ileride Kâdiriyye olarak bilinecek yolun oluşumuna zemin hazırladı. Onun öğretisinde sertlikten çok nasihat, gösterişten çok samimiyet ve içtenlik öne çıkar.`,
 
-    `Yaklaşık elli yaşında, 1127 yılında Bağdat'a döndü. Şehir değişmişti; o da değişmişti. İlk işi ribât — dergâh — açmak oldu. Sıralar dışarıya taşar oldu; vaazına binlerce kişi gelir, hükümdarlar köşklerinden gelir, kervanlar yolundan dönerdi. Dergâhında aşevi ve misafirhâne faaliyet gösterdi; kapıya gelen herkese yemek ve gölge verildi.
+    `Abdülkâdir-i Geylânî 1166 yılında Bağdat'ta vefat etti. Türbesi Bağdat'ta asırlardır ziyaret edilen önemli bir mekân olmuştur. Kendisine sonradan verilen "Gavsü'l-Âzam" unvanı, halk ve tasavvuf geleneğindeki yerini gösterir; bu unvanın tarihî bir resmî lakap olmaktan çok saygınlık ifadesi olduğu unutulmamalıdır.
 
-1166'da Bağdat'ta vefat etti. Devrinin büyük isimleri ona "Gavsü'l-Âzam" dediler. Eserleri: "el-Gunya", "el-Fethü'r-Rabbânî", "Sirrü'l-Esrâr", "Fetûhu'l-Gayb". Arkasında Kâdiriyye tarikatı; halifeleriyle Irak'tan Anadolu'ya, Orta Asya'dan Hind'e kadar yayıldı. Meşhur sözü: "İnsanların kalbine bak; ihlâs sahibini cömert, günah işleyeni bile merhametli gör."`,
+Günümüze ulaşan eserleri arasında el-Gunye li-Tâlibî Tarîki'l-Hak, Fütûhu'l-Gayb ve el-Fethu'r-Rabbânî sayılır. Mirası, Kur'ân ve sünnete bağlılık, ihlâs, zühd ve insanlara faydalı olma çizgisinde özetlenebilir. Kâdiriyye geleneği, onun adını taşıyarak farklı coğrafyalarda yayılmıştır.`,
   ],
   onemliAnlar: [
-    "1077 — Gilân'da Nef köyünde doğum.",
-    "18 yaşında annesinden izin alıp Bağdat'a ilim yolculuğu.",
-    "25 yıl çölde rızâ çilesi.",
-    "1127'de Bağdat'ta ribât ve vaaz meclisi.",
-    "1166'da vefat — Gavsü'l-Âzam adı kalpler kaldı.",
+    "1077 civarı — Geylân'da doğum, genç yaşta ilim talebiyle Bağdat'a gidiş.",
+    "Bağdat'ta Hanbelî âlimlerden fıkıh, hadis ve tefsir tahsili.",
+    "Riyâzet ve zühd döneminden sonra Bağdat'ta vaaz ve irşad faaliyetleri.",
+    "el-Gunye, Fütûhu'l-Gayb ve el-Fethu'r-Rabbânî gibi eserler.",
+    "1166'da Bağdat'ta vefat; Kâdiriyye geleneğinin pîri olarak anılış.",
   ],
 };

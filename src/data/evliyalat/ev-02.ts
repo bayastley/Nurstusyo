@@ -1,5 +1,4 @@
-// ev-02: HÂCE AHMED-İ YESEVÎ — Pîr-i Türkistan (04.11)
-// Sayfalar tek tek doldurulur; metinler kısa ve sade Türkçe.
+// ev-02: HÂCE AHMED-İ YESEVÎ — Pîr-i Türkistan
 import type { Evliya } from "./tip";
 
 export const ev02: Evliya = {
@@ -7,29 +6,33 @@ export const ev02: Evliya = {
   ad: "Hâce Ahmed-i Yesevî",
   unvan: "Pîr-i Türkistan",
   donem: "1093–1166 · Yesi (Türkistan)",
-  kaynak: "Ahmed-i Yesevî, Divân-ı Hikmet; menâkıb rivâyetleri",
+  kaynak: "Ahmed-i Yesevî, Dîvân-ı Hikmet; Ebû'l-Hasan Bakrî, menâkıb rivâyetleri; İslam Ansiklopedisi (Ahmed Yesevî maddesi)",
   sayfalar: [
-    `Orta Asya'nın Yesi şehrinde, altıncı asrın başında bir çocuk dünyaya geldi. Adı Ahmed'di. Babası Şeyh İbrâhîm, şehrin âlimlerindendi.
+    `Hâce Ahmed-i Yesevî, Türkistan'daki Yesi şehrinde dünyaya gelmiştir. Doğum tarihi kaynaklarda 1093 civarı olarak verilir. Babası Şeyh İbrâhîm, annesiyle ilgili rivayetler daha sınırlıdır. Küçük yaşta yetim kaldığı, Yesi'deki derviş çevrelerinin ona gözetim ve terbiyede önemli katkıda bulunduğu nakledilir.
 
-Ahmed küçük yaşta yetim kaldı. Yesi'nin dervişleri onu yetiştirdi.`,
-    `Buhârâ'ya gidip ilim tahsil etti. Devrinin büyük mürşidi Hâce Yusuf-i Hemedânî şehre geldi. Ahmed onun meclisine katıldı.
+O dönemde Türkistan, Karahanlılar ve Selçuklu etkisinin kesiştiği, İslam'ın henüz kök salmaya devam ettiği bir coğrafyaydı. Ahmed bu ortamda, zahirde Kur'ân ve sünnet merkezli bir hayatı, bâtında da nefis muhasebesini esas alan bir terbiyeden geçti. Bu ilk yıllar, onun sonradan benimsediği yolun temelini oluşturur.`,
 
-Rivâyete göre Ahmed, hocasının halifesi oldu. Dervişlerin hâlini ondan öğrendi.`,
-    `Yesi'ye döndü. Türkistan'da insanlar ona Pîr-i Türkistan dediler. Rivâyette anlatılır ki Hâce Yusuf-i Hemedânî, Benim halifem Yesi'dekidir diye haber gönderdi.
+    `Gençliğinde ilim talebiyle Buhârâ'ya gitti. Buhârâ, o dönemde Horasan ve Mâverâünnehir'in en önemli ilim merkezlerinden biriydi. Burada fıkıh, tefsir ve hadise dair temel bilgileri öğrendiği kabul edilir.
 
-Ahmed'e müridler bağlandı. Yesevîlik dergâhları kuruldu.`,
-    `Ahmed-i Yesevî Türkçe sohbet etti, Türkçe yazdı. Rivâyette anlatılır ki 63 yaşında Toprak Altı Çilehanesi'ne indi. Hâce Yusuf'un ölüm yaşına ulaştı; son on yılını yer altında çile ile geçirdi.
+Bu sırada veya sonrasında Hâce Yûsuf-i Hemedânî ile tanışması belirleyici oldu. Kaynakların naklettiği ortak çekirdek şudur: Ahmed, Hâce Yûsuf'un sohbetlerine devamlı katıldı ve zamanla onun halifelerinden biri olarak görüldü. Yesevîlik silsilesinin buradan köklenmesi de bu irtibata dayandırılır. Ahmed için asıl ders, sadece bilgi değil; ilmin amele dönüşmesi ve kalbe tesiri olmuştu.`,
 
-Derler ki bu çile, İslâm'ın Türk coğrafyasına ruh verdi.`,
-    `En bilinen eseri Divân-ı Hikmet'tir. Bu eser Türkçe hikmetleriyle İslâm'ı Türk boylarına anlattı. Sonraki yüzyıllarda Anadolu'ya kadar etkisi yayıldı.
+    `Hâce Yûsuf-i Hemedânî'nin vefatından sonra Ahmed-i Yesevî Yesi'ye döndü. Burada kendisine bağlananlar bir meclis ve dergâh etrafında toplanmaya başladı. Halk arasında "Pîr-i Türkistan" olarak tanınması bu döneme rastlar.
 
-Timur 1397'de Yesi'deki türbeyi yaptırdı; bugün de binlerce insan ziyaret eder.`,
+Yesevî'nin yolunun ayırıcı özelliği, İslam'ı Arapça ilmî terimlerle olduğu kadar, Türkçe nasihat ve hikmetlerle anlatmasıydı. Bu yaklaşım, şehirli âlim çevrelerinin yanı sıra göçebe Türk boyları arasında da İslam'ın anlaşılmasını kolaylaştırdı. Zühd, tevekkül, sabır ve Allah'a yöneliş, onun Yesi'deki sohbetlerinin başlıca konuları idi.`,
+
+    `Ahmed-i Yesevî'nin en meşhur eseri, Türkçe olarak kaleme aldığı Dîvân-ı Hikmet'tir. Hikmetler; kısa, veciz beyitler halinde tevhid, ibadet, ahlâk, nefis terbiyesi ve ahiret hatırlatmalarını içerir. Eser, yalnızca manevî bir metin değil, aynı zamanda Türk dilinde İslamî düşüncenin erken ve güçlü bir örneğidir.
+
+Menkıbelere göre Ahmed-i Yesevî, ömrünün son on yılını "Toprak Altı Çilehanesi"nde geçirmiştir. Bu rivâyetin mahiyeti tartışmalı olmakla birlikte, Yesi'de uzun süredir bilinen ve saygın tutulan bir gelenektir. Tarihî olarak güvenilir çekirdek, onun sohbet ve terbiyesiyle şekillenen geniş bir halife zinciridir.`,
+
+    `Hâce Ahmed-i Yesevî 1166 civarında Yesi'de vefat etti. Vefatından sonra talebeleri ve halifeleri tarafından Yesevîlik tarîkatı olarak şekillenen yol, öncelikle Mâverâünnehir ve Türkistan'da yaygınlaştı. Zamanla Horasan, Kıpçak bozkırları ve Anadolu dahil birçok coğrafyaya ulaştı.
+
+Emîr Timur tarafından 1397 yılında Yesi'deki türbesi yeniden inşa ettirilmiş; türbe, yüzyıllardır Türkistan'ın en önemli ziyaretgâhlarından biri olmuştur. Asıl mirası ise Dîvân-ı Hikmet ve Türkistan'da İslam'ın gönüllere yerleşmesinde oynadığı derin etkidir.`,
   ],
   onemliAnlar: [
-    "Yesi'de doğum, Arıslan Baba'nın himâyesinde yetişme.",
-    "Buhârâ'da ilim; Hâce Yusuf-i Hemedânî'nin halifesi.",
-    "Yesi'ye dönüş — Pîr-i Türkistan.",
-    "63 yaşında Toprak Altı Çilehanesi.",
-    "Divân-ı Hikmet; 1397'de Timur'un yaptırdığı türbe.",
+    "1093 civarı — Yesi'de doğum, küçük yaşta yetim kalma.",
+    "Buhârâ'da ilim tahsili ve Hâce Yûsuf-i Hemedânî ile irtibat.",
+    "Yesi'ye dönüş, Pîr-i Türkistan unvanıyla sohbet ve terbiye meclisi.",
+    "Dîvân-ı Hikmet'in telifi; Türkçe hikmet geleneğinin temeli.",
+    "1166 civarı vefat, halifeler yoluyla Yesevîliğin yayılışı.",
   ],
 };

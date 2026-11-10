@@ -1,35 +1,38 @@
-// ev-04: ŞEMS-İ TEBRÎZÎ — Güneş-i Tebrîz (04.11)
-// Sayfalar tek tek doldurulur; metinler kısa ve sade Türkçe.
+// ev-04: ŞEMS-İ TEBRÎZÎ — Güneş-i Tebrîz
 import type { Evliya } from "./tip";
 
 export const ev04: Evliya = {
   id: "ev-04",
   ad: "Şems-i Tebrîzî",
   unvan: "Güneş-i Tebrîz",
-  donem: "1185–1247/48 · Tebrîz → Konya",
-  kaynak: "Divân-ı Şems; Aflâkî, Menâkıbü'l-Ârifîn; Şems'in Makâlâtı",
+  donem: "1185 civarı–1248 civarı · Tebrîz → Konya",
+  kaynak: "Makâlât-ı Şems-i Tebrîzî; Ahmed Eflâkî, Menâkıbü'l-Ârifîn (menkıbe niteliğinde); İslam Ansiklopedisi (Şems-i Tebrîzî maddesi)",
   sayfalar: [
-    `İran'ın Tebrîz şehrinde altıncı asrın sonlarında doğdu. Adı Şemseddîn'di; insanlar ona Şems, Güneş dediler. Tebrîz'in en bilinen âlimi ailesinde yetiştirdi.
+    `Şems-i Tebrîzî, asıl adı Muhammed b. Ali olan ve Tebrîz'e nispetiyle tanınan bir mutasavvıftır. Doğum tarihi kesin olarak bilinmez; 1185 civarı kabul edilir. Hayatı hakkında güvenilir biyografik bilgi sınırlıdır. Bildiklerimizin önemli bir kısmı, sonradan kaleme alınmış menkıbevî anlatımlara ve onunla ilişkilendirilen sözlere dayanır.
 
-Rivâyette anlatılır ki o, genç yaşta başına daskır çile çekildi. Çünkü ondan sonra gezer, gezgin bir arıf oldu.`,
-    `1244'te Konya'ya geldi. Talebeleri onu incelemede buldu. Rivâyette Mevlânâ'ya klasik kıssayı anlattı: Bayezid-i Bistâmî mi büyük, Hz. Peygamber mi büyük.
+Tebrîz'de yetiştiği, çeşitli hocalardan ders aldığı ve genç yaşlardan itibaren gezgin bir derviş hayatı sürdüğü nakledilir. Bu gezginlik, onu farklı ilim ve irfan çevreleriyle temas ettirmiştir. Şems'in kişiliğinde keskin bir zeka, doğrudan konuşma ve kalıplara sığmayan bir duruş öne çıkar.`,
 
-Mevlânâ cevabı verince Şems, doğru adam bulduğularını bildirdi. Bir sözle derleriyle: "İşte seni buldum."`,
-    `İkisi uzun halvet'e girdi. Derler ki Mevlânâ derste büyük değişime shook: ilim yerine aşk oldu.
+    `Şems-i Tebrîzî'nin hayatındaki en bilinen olay, Mevlânâ Celâleddîn-i Rûmî ile Konya'da karşılaşmasıdır. Bu buluşmanın 1244 yılında gerçekleştiği kabul edilir. Karşılaşmanın nasıl olduğu konusunda farklı rivayetler vardır; en yaygın anlatımlar menkıbe geleneğine aittir ve tarihî kesinlik taşımayabilir.
 
-Mevlânâ'ya semâ kolaylaştı; kalbi tanıdı.`,
-    `Konyalıların hasedi arttı. Bazan Şems'i kıskandı. 1247-48'de bir gece ortadan kayboldu; Mevlânâ kalbinde ağladı.
+Bununla birlikte, iki âlim arasındaki sohbetin Mevlânâ üzerinde derin bir etki bıraktığı konusunda geniş bir mutabakat vardır. Şems, Mevlânâ'nın ilmî olgunluğunu takdir etmekle birlikte, kalbî ve vecdî boyuta yönelen bir dil kullanmıştır. Bu temas, Mevlânâ'nın sonraki eserlerinde belirginleşen aşk ve vuslat temasının arka planını anlamak için önemlidir.`,
 
-Şems'in gıselleri bugün anlatılır; rivâyette çoklu hikâyet.`,
-    `Şems'in şiirlerini Divân-ı Şems toplandı. Bu şiirler aşk ve ilâhiricidir. Mevlânâ onu az unuttu; azı özledi.
+    `Şems ile Mevlânâ'nın yakın sohbet dönemi, Konya'daki bazı çevrelerde rahatsızlık uyandırdı. Rivayetlere göre Şems'in Konya'dan ayrılması ve geri dönmesi gibi olaylar yaşandı. Bu anlatımların ayrıntıları kaynaklara göre değişir; tarihî kayıtlar bu süreçte çok sınırlı olduğu için menkıbe ve tarih ayrımına dikkat etmek gerekir.
 
-Derler ki Şems'in memleketi insanın kalbidir.`,
+Şems'in Mevlânâ üzerindeki etkisi, onu sıradan bir hoca-talebe ilişkisinden öte, karşılıklı derin bir manevi aynalık olarak düşünmeyi gerektirir. Mevlânâ'nın şiirlerinde "Şems" adı, bazen tarihî kişiyi bazen de ilahî tecellinin sembolünü ifade eder. Bu ikili kullanım, onun adını tasavvuf edebiyatında kalıcı kılmıştır.`,
+
+    `Şems-i Tebrîzî'ye atfedilen en önemli metin Makâlât-ı Şems-i Tebrîzî'dir. Bu eser, onun sohbet ve düşüncelerinden derlenen notlar niteliğindedir. Makâlât'ta tasavvuf, nefis terbiyesi, halvet, ihlâs ve Hak yolcusunun iç dünyası gibi konular işlenir. Dil ve üslup, sistematik bir risaleden çok, canlı sohbet havası taşır.
+
+Bu metnin her bölümünün doğrudan Şems'e ait olup olmadığı konusunda ihtiyatlı yaklaşmak gerekir; yine de Makâlât, onun düşünce dünyasına dair eldeki en önemli kaynaklardan biridir. Eserde doğrudanlık, içtenlik ve kalıplaşmış dindarlığa karşı uyarı tonu dikkat çeker.`,
+
+    `Şems-i Tebrîzî'nin akıbeti kesin olarak bilinmemektedir. 1247 veya 1248 civarında Konya'da ortadan kaybolduğu kabul edilir. Ölümüyle ilgili cinayet, gizli ayrılış veya başka yerlere gidiş gibi farklı rivayetler bulunmaktadır; bu rivayetlerin hiçbiri kesin tarihî kanıtla doğrulanmış değildir.
+
+Bu belirsizliğe rağmen Şems, Mevlânâ geleneğinin ve genel olarak tasavvuf kültürünün en tanınan simalarından biri olmuştur. "Güneş-i Tebrîz" lakabı, onun Mevlânâ'nın gönlündeki aydınlatıcı etkisine işaret eder. Mirası, büyük bir eser külliyatından çok, derin bir manevi tesir ve ilham olarak yaşamaya devam etmektedir.`,
   ],
   onemliAnlar: [
-    "Tebrîz'de doğum; gezgin âlim olarak yol.",
-    "1244'te Konya'da Mevlânâ ile buluşma.",
-    "40 günlük halvet ve kalbin uyanışı.",
-    "Konyalıların hasedinden sonra ortadan kayboluş.",
-    "Dîvân-ı Şems — aşk dilinin şiirleri.",
+    "1185 civarı — Tebrîz'de doğum; gezgin bir mutasavvıf olarak yetişme.",
+    "1244 — Konya'da Mevlânâ Celâleddîn-i Rûmî ile karşılaşma.",
+    "Mevlânâ'nın vecdî ve aşk merkezli dilinin belirginleşmesinde etkisi.",
+    "Makâlât-ı Şems-i Tebrîzî: sohbet ve düşüncelerinden derlenen önemli kaynak.",
+    "1247-48 civarı — akıbeti belirsiz; menkıbe ve tarih ayrımı gerekir.",
   ],
 };
