@@ -7,6 +7,7 @@ CEVIRI = (
     "hikaye_en", "hikaye_ar", "hikaye_id", "hikaye_ur",
     "hikmet_en", "hikmet_ar", "hikmet_id", "hikmet_ur",
 )
+SAYFA_ALANLARI = ("sayfalar", "sayfalar_en", "sayfalar_ar", "sayfalar_id", "sayfalar_ur")
 CHUNK = 30
 HDR = "// Bu dosya scripts/derle_menkibeler.py ile uretilmistir (elle duzenleme yok)."
 
@@ -27,6 +28,11 @@ for ad in sorted(os.listdir(BASE), key=lambda x: (len(x), x)):
         v = data.get(alan)
         if v:
             sat.append('    %s: "%s",' % (alan, esc(v)))
+    for alan in SAYFA_ALANLARI:
+        v = data.get(alan)
+        if isinstance(v, list) and v:
+            sayfa_sat = ", ".join('"%s"' % esc(x) for x in v)
+            sat.append('    %s: [%s],' % (alan, sayfa_sat))
     sat.append("  },")
     items.append("\n".join(sat))
 

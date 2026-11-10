@@ -37,8 +37,23 @@ function degistemDili(): string {
   } catch { return "tr"; }
 }
 
-// Kitap açılışı: kapak tıklanınca açılır, içeriği gerçek kitap sayfası gibi gösterir.
 type DilMetinFn = (m: UzakKissa | undefined, alan: "baslik" | "hikaye" | "hikmet") => string;
+
+function bolSayfalar(m: UzakKissa, dilMetin: DilMetinFn): string[] {
+  const mevcut = (m as any).sayfalar as string[] | undefined;
+  if (Array.isArray(mevcut) && mevcut.filter(Boolean).length > 0) return mevcut.filter(Boolean);
+  const metin = [dilMetin(m, "hikaye"), "", dilMetin(m, "hikmet") ? `Hikmet: ${dilMetin(m, "hikmet")}` : "", m.kaynak ? `Kaynak: ${m.kaynak}` : ""].filter(Boolean).join("\n\n");
+  const parcalar = metin.split(/\n\s*\n/).map((s) => s.trim()).filter(Boolean);
+  const sayfalar: string[] = [];
+  let buf = "";
+  for (const p of parcalar.length ? parcalar : [metin]) {
+    if (buf && (buf.length + p.length > 900)) { sayfalar.push(buf.trim()); buf = p; }
+    else buf = buf ? `${buf}\n\n${p}` : p;
+  }
+  if (buf.trim()) sayfalar.push(buf.trim());
+  return sayfalar.length ? sayfalar : [metin];
+}
+
 function MenkibeDetay({
   tt,
   secili,
@@ -55,11 +70,23 @@ function MenkibeDetay({
   sonraki: (() => void) | null;
 }) {
   const [acik, setAcik] = React.useState(false);
+  const [sayfaNo, setSayfaNo] = React.useState(0);
+  const [yon, setYon] = React.useState<"ileri" | "geri">("ileri");
+  const sayfalar = React.useMemo(() => bolSayfalar(secili, dilMetin), [secili, dilMetin]);
+  const toplam = sayfalar.length;
   React.useEffect(() => {
     setAcik(false);
+    setSayfaNo(0);
+    setYon("ileri");
   }, [secili.id]);
 
   const baslik = dilMetin(secili, "baslik");
+  const sayfayaGit = (hedef: number) => {
+    const y = Math.max(0, Math.min(hedef, toplam - 1));
+    if (y === sayfaNo) return;
+    setYon(y > sayfaNo ? "ileri" : "geri");
+    setSayfaNo(y);
+  };
 
   return (
     <div data-minitur="menkibeler-detay" className="mt-1 nur-book-perspective">
@@ -74,42 +101,56 @@ function MenkibeDetay({
             <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-200/70">{secili.kategori}</p>
             <div className="mx-auto mt-4 mb-3 h-px w-20 bg-amber-200/30" />
             <h3 className="text-[20px] font-black leading-snug text-amber-50">{baslik}</h3>
-            <p className="mt-8 text-[10px] font-bold text-amber-100/60">Açmak için kapağa dokun</p>
+            <p className="mt-3 text-[10px] font-semibold text-amber-100/55">{toplam} sayfa</p>
+            <p className="mt-6 text-[10px] font-bold text-amber-100/60">Açmak için kapağa dokun</p>
           </button>
         </div>
       ) : (
         <div className="nur-book-shell">
-          <div className="nur-book-page nur-book-open p-4 sm:p-5 min-h-[320px]" style={{ color: "#352512" }}>
+          <div
+            key={`${secili.id}-${sayfaNo}`}
+            className={`nur-book-page p-4 sm:p-5 min-h-[360px] ${sayfaNo === 0 && yon === "ileri" ? "nur-book-open" : (yon === "ileri" ? "nur-page-turn-next" : "nur-page-turn-prev")}`}
+            style={{ color: "#352512" }}
+          >
             <div className="mb-3 flex items-center justify-between">
               <button type="button" data-minitur="menkibeler-geri" onClick={() => setSeciliId(null)} className="flex items-center gap-1 rounded-lg border border-[#8c6428]/35 bg-[#f7efd8]/70 px-3 py-1 text-[10px] font-black text-[#5a3f1a] transition hover:bg-[#f1e4c5]">
                 <ChevronLeft className="h-3 w-3" />
                 {tt("mkGeri")}
               </button>
+              <span className="text-[10px] font-black text-[#6b4a1e]/80">{sayfaNo + 1} / {toplam}</span>
               <button type="button" data-minitur="menkibeler-x" onClick={() => setSeciliId(null)} className="rounded-lg border border-[#8c6428]/35 bg-[#f7efd8]/70 p-1.5 text-[#5a3f1a] transition hover:bg-[#f1e4c5]">
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-[#7a5520]">{secili.kategori}</span>
-            <h3 className="mt-1 text-[18px] font-black text-[#2b1d0d]">{baslik}</h3>
-            <div className="my-3 h-px bg-[#8c6428]/30" />
-            <p className="whitespace-pre-line text-justify text-[13px] leading-[1.95]">{dilMetin(secili, "hikaye")}</p>
-            <div className="mt-4 rounded-xl border border-[#5f7a4a]/25 bg-[#eef5e6] p-3">
-              <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-[#355022]">
-                <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span><span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}</span>
-              </p>
-            </div>
-            <p className="mt-3 flex items-center gap-1.5 text-[9.5px] font-bold text-[#6b4a1e]">
-              <Library className="h-3 w-3 shrink-0" />
-              <span>{tt("mkKaynak")}: {secili.kaynak}</span>
-            </p>
+            {sayfaNo === 0 && (
+              <>
+                <span className="text-[9px] font-black uppercase tracking-widest text-[#7a5520]">{secili.kategori}</span>
+                <h3 className="mt-1 text-[18px] font-black text-[#2b1d0d]">{baslik}</h3>
+                <div className="my-3 h-px bg-[#8c6428]/30" />
+              </>
+            )}
+            <p className="whitespace-pre-line text-justify text-[13px] leading-[1.95]">{sayfalar[sayfaNo]}</p>
+            {sayfaNo === toplam - 1 && (
+              <>
+                <div className="mt-4 rounded-xl border border-[#5f7a4a]/25 bg-[#eef5e6] p-3">
+                  <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-[#355022]">
+                    <Lightbulb className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span><span className="font-black">{tt("mkHikmet")}</span> {dilMetin(secili, "hikmet")}</span>
+                  </p>
+                </div>
+                <p className="mt-3 flex items-center gap-1.5 text-[9.5px] font-bold text-[#6b4a1e]">
+                  <Library className="h-3 w-3 shrink-0" />
+                  <span>{tt("mkKaynak")}: {secili.kaynak}</span>
+                </p>
+              </>
+            )}
             <div className="mt-4 flex items-center justify-between text-[10px] text-[#6b4a1e]/70">
-              <span>{onceki ? "◀ önceki menkıbe" : ""}</span>
-              <span>❦</span>
-              <span>{sonraki ? "sonraki menkıbe ▶" : ""}</span>
+              <span>{sayfaNo > 0 ? "◀ önceki sayfa" : (onceki ? "◀ önceki menkıbe" : "")}</span>
+              <span>❦ {sayfaNo + 1}/{toplam}</span>
+              <span>{sayfaNo < toplam - 1 ? "sonraki sayfa ▶" : (sonraki ? "sonraki menkıbe ▶" : "")}</span>
             </div>
-            {onceki && <button type="button" aria-label="Önceki menkıbe" className="nur-page-click-zone left" onClick={onceki} />}
-            {sonraki && <button type="button" aria-label="Sonraki menkıbe" className="nur-page-click-zone right" onClick={sonraki} />}
+            {(sayfaNo > 0 || onceki) && <button type="button" aria-label="Önceki" className="nur-page-click-zone left" onClick={() => sayfaNo > 0 ? sayfayaGit(sayfaNo - 1) : onceki?.()} />}
+            {(sayfaNo < toplam - 1 || sonraki) && <button type="button" aria-label="Sonraki" className="nur-page-click-zone right" onClick={() => sayfaNo < toplam - 1 ? sayfayaGit(sayfaNo + 1) : sonraki?.()} />}
           </div>
         </div>
       )}
