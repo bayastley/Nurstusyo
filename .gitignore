@@ -76,3 +76,6 @@ eksikler-*.json
 tmp_en.txt
 turkce-string-*.txt
 /*.png
+
+# Kök dizindeki geçici generator betikleri (git'e girmez, diskte kalır)
+_mk*.py
