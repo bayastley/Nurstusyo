@@ -1,37 +1,19 @@
-import React, { useMemo, useState } from "react";
-import { Mic, Upload, Trash2, Check, Image as ImageIcon, Scissors, Loader2, Crown, X } from "lucide-react";
-import { SURAHS } from "../data";
-// ★ 29.10 SURE ADI 5 DİLDE (kullanıcı emri): sure adları seçili dile döner
-import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
+import React from "react";
+import { X } from "lucide-react";
 import type { Lang } from "../i18n";
-const sureDiliX2910 = (): Lang => ((typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr") as Lang);
-import type { Clip } from "../clips";
-import { translate } from "../i18n"; // ★ TUR 6: title kalıntısı LS bazlı çeviri
 import type { KendiSesAktif } from "../studio/useKendiSes";
 import type { StoredSes } from "../studio/sesDeposu";
-import { baslangicKaydir, type SesSegmenti } from "../studio/sesZamanlama";
+import type { SesSegmenti } from "../studio/sesZamanlama";
+import { translate } from "../i18n";
+import { KendiSesStudiosu } from "./KendiSesStudiosu";
+import type { Clip } from "../clips";
 
-// ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
-
-// ═══════════════════════════════════════════════════════════════
-// KENDİ SESİNİ YÜKLE MODALI (30.09) — ELİT ÜYELERE ÖZEL
-//
-// Kullanıcı senaryosu:
-//  • Nûr / İhlâs suresini kendi okur, tek dosya olarak yükler
-//    → sistem ayet geçişlerini KENDİ okuyuşundan milisanielik algılar
-//  • İsterse her ayeti AYRI dosya olarak yükler (ayet-başına mod)
-//  • Algılanan ayet sınırını milisanielik düzenler (audio player)
-//  • Ayetler arasına nefes aralığı ekler
-//  • Her ayete ayrı arka plan seçebilir ("arka plan bizden, ses ondan")
-// ELİT olmayan kullanıcı tıkladığında premium satın almaya yönlendirilir.
-// ═══════════════════════════════════════════════════════════════
 
 interface Props {
   open: boolean;
   onClose: () => void;
   sure: number;
-  /** Seçili ayet listesi (sıra = senkron sırası) */
   seciliAyetler: Array<{ s: number; a: number; sName?: string }>;
   aktifSes: KendiSesAktif | null;
   kayitlar: StoredSes[];
@@ -44,13 +26,10 @@ interface Props {
   sil: (id: string) => Promise<void>;
   zamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
   kaldirAktif: () => void;
-  /** Eski kaydı güncel motorla yeniden tara (01.10) — donmuş yanlış zamanlamaları düzeltir */
   yenidenTara: (id: string, ayetSayisi: number, maksSn?: number) => Promise<boolean>;
-  /** ★ 23.10: modal içi sure seçimi + üretimde maks süre (sn, 0 = mod sınırı) */
   sureEkle: (s: number) => Promise<void>;
   maksSn: number;
   maksAyarla: (sn: number) => void;
-  /** Ayet kartına arka plan ata (pickingFor mekanizmasıyla aynı kapı) */
   setPickingFor: (id: string) => void;
   setModal: (m: "atmos" | null) => void;
   ayahBackgrounds: Record<string, Clip>;
@@ -58,355 +37,26 @@ interface Props {
   notify: (msg: string) => void;
 }
 
-const fmt = (sn: number) => `${Math.floor(sn / 60)}:${String(Math.floor(sn % 60)).padStart(2, "0")}.${String(Math.floor((sn % 1) * 100)).padStart(2, "0")}`;
-
-/** ★ MAHREM UYARISI (01.10) — hanım kardeşlerin okuyuş sesi hakkında saygılı bilgilendirme.
- *  Kaynak: dinimizislam.com "Kadının sesi haram mı?" (Aid=2987) — Ahzab 32, Ramuz, İbni Abidin.
- *  Karar sorumluluğu kullanıcıya aittir; site yalnızca hatırlatır ve kaynağa yönlendirir.
- *  (Sadece TR — uyarı fıkhî metin, çeviriye açılırsa ayrı turda değerlendirilir.) */
-const MAHREM_UYARISI = (
-  <div className="rounded-xl border border-amber-400/25 bg-amber-500/[0.07] p-3">
-    <p className="text-[10px] font-bold text-amber-200">{ttX2610("ks2Hanim")}</p>
-    <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">
-      Bazı fıkhı kaynaklara göre hanımın okuyuş sesini yabancı erkeklere duyurması caiz görülmez;
-      bu videolar herkese açık platformlara yüklenip namahrem erkeklerce dinlenebilir. Kararı
-      bilerek verin, gerekiyorsa bilgili bir âliminize danışın.
-    </p>
-    <a
-      href="https://dinimizislam.com/detay.asp?Aid=2987"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-1 inline-block text-[9px] font-bold text-amber-300/90 underline decoration-amber-400/40 underline-offset-2 hover:text-amber-200"
-    >
-      Kaynak: dinimizislam.com — "Kadının sesi haram mı?" ↗
-    </a>
-  </div>
-);
-
 export const KendiSesModal: React.FC<Props> = ({
   open, onClose, sure, seciliAyetler, aktifSes, kayitlar, yukleniyor, isElit, nefes,
   yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara,
   sureEkle, maksSn, maksAyarla,
   setPickingFor, setModal, ayahBackgrounds, openPremium, notify,
 }) => {
-  const [mod, setMod] = useState<"tum" | "ayet">("tum");
-  const [duzenleIdx, setDuzenleIdx] = useState<number | null>(null);
-  const [sureEkleniyor, setSureEkleniyor] = useState(false); // ★ 23.10
-  const [nefesDeger, setNefesDeger] = useState(nefes);
-  const [sesliIdx, setSesliIdx] = useState<number | null>(null);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
-  // ★ DÜZENLE MODU (01.10): taslak = HAM (nefes'siz) segment kopyası — sürgüyle ayet başlangıcı kaydırılır
-  const [taslaklar, setTaslaklar] = useState<SesSegmenti[] | null>(null);
-
-  const sureMeta = useMemo(() => SURAHS[sure - 1], [sure]);
-  const sureAdi = seciliAyetler[0]?.sName || sureMeta?.name || `Sure ${sure}`;
-  const ayetSayisi = seciliAyetler.length;
-
-  if (!open) return null;
-
-  /** Nefes uygulanmış segmentleri HAM (depo) biçimine döndür — çifte-nefes koruması:
-   *  zamanlamaKaydet ham bekler, hook gösterirken nefesi kendisi ekler. */
-  const hamSegmentler = (applied: SesSegmenti[], nefesSn: number): SesSegmenti[] =>
-    applied.map((s, i) => ({ start: Math.max(0, +(s.start - i * nefesSn).toFixed(3)), dur: s.dur }));
-  /** Editörde gösterilen: taslak varsa ham + anlık nefes kayması (çalınan gerçek zaman) */
-  const gosterilen: SesSegmenti[] =
-    aktifSes && taslaklar
-      ? taslaklar.map((s, i) => ({ start: s.start + i * (aktifSes.nefes || 0), dur: s.dur }))
-      : aktifSes?.segments ?? [];
-
-  const elitKapisi = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    notify(ttX2610("vpKendiSesElit"));
-    openPremium("uyelik");
-  };
-
-  const dosyaSec = (konum: "tum" | number) => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "audio/*";
-    input.onchange = async () => {
-      const f = input.files?.[0];
-      if (!f) return;
-      if (mod === "tum") await yukle(f, sure, ayetSayisi, konum, maksSn);
-      else await yukleAyetAyri(f, sure, konum as number);
-    };
-    input.click();
-  };
-
-  const sesCalDurdur = (idx: number, baslangicSn?: number) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.onended = null;
-      audioRef.current = null;
-    }
-    if (sesliIdx === idx) { setSesliIdx(null); return; }
-    if (!aktifSes) return;
-    const seg = aktifSes.segments[idx];
-    if (!seg) return;
-    const a = new Audio(aktifSes.url);
-    const hedefBas = baslangicSn ?? seg.start;
-    // ★ ESKİ-KAYIT KORUMASI (01.10): metadata süresi hedefin altındaysa segment oynatılamaz
-    //   (WhatsApp mp4 vakası) — sessizlik yerine net yönlendirme ver.
-    a.onloadedmetadata = () => {
-      if (Number.isFinite(a.duration) && hedefBas >= a.duration - 0.05) {
-        notify(ttX2610("ksEskiZamanlama"));
-      }
-    };
-    a.currentTime = hedefBas;
-    // ★ FIX (01.10): bitiş sınırı — segment sonunda dursun. Önceden dosyanın
-    //   sonuna kadar çalıyordu ("hepsi bütün sesi okuyor" şikayetinin ikinci yarısı).
-    const son = idx < aktifSes.segments.length - 1
-      ? aktifSes.segments[idx + 1].start
-      : seg.start + seg.dur + 0.8;
-    const bitis = Math.max(hedefBas + 0.2, son);
-    a.onended = () => { setSesliIdx(null); audioRef.current = null; };
-    a.ontimeupdate = () => { if (a.currentTime >= bitis) { a.pause(); setSesliIdx(null); audioRef.current = null; } };
-    audioRef.current = a;
-    setSesliIdx(idx);
-    a.play().catch(() => setSesliIdx(null));
-  };
+  const lang = (typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr") as Lang;
 
   return (
-    <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md modal-in" onMouseDown={onClose}>
-      <div className="glass modal-in relative max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-2xl p-5" onMouseDown={(e) => e.stopPropagation()} style={{ border: "1px solid rgba(215,170,82,.3)" }}>
-        <button aria-label="Kapat" className="absolute right-3 top-3 text-white/50 hover:text-white" onClick={onClose}><X size={18} /></button>
-
-        {/* Başlık */}
-        <div className="mb-3 flex items-start gap-2.5">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}><Mic size={18} /></span>
-          <div className="min-w-0">
-            <h3 className="font-display text-sm font-black tracking-wider" style={{ color: "var(--accent-2)" }}>{ttX2610("ks2Baslik")}</h3>
-            <p className="text-[9.5px] leading-relaxed text-white/45">
-              {ayetSayisi > 0
-                ? <>{sureAdi} {ttX2610("ks2AyetKilit4").replace("{n}", String(ayetSayisi))}</>
-                : ttX2610("ks2Secilmedi")}
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-800">Kendi Sesinle Kur'an</h2>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500">
+            <X className="w-5 h-5" />
+          </button>
         </div>
-
-        {/* ELİT kilidi — admin değilse ve elit değilse tüm içerik kilitli görünüm */}
-        {!isElit && (
-          <div className="relative">
-            <div className="pointer-events-none select-none opacity-25 blur-[1.5px]">
-              <div className="mb-2 flex gap-2">
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">{ttX2610("ks2TamSure")}</span>
-                <span className="flex-1 rounded-xl bg-white/5 py-2 text-center text-[10px] font-bold text-white/60">{ttX2610("ks2AyetBasi")}</span>
-              </div>
-              <div className="space-y-1.5">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-3 py-2">
-                    <span className="h-2 w-2 rounded-full bg-white/30" />
-                    <span className="h-2 flex-1 rounded bg-white/10" />
-                    <span className="text-[9px] text-white/30">{fmt(1.2 + i)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 text-center">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40"><Crown size={20} className="text-amber-300" /></span>
-              <p className="text-[11px] font-black text-amber-200">{ttX2610("ks2Elit")}</p>
-              <p className="max-w-[260px] text-[9.5px] leading-relaxed text-white/55">{ttX2610("ks2ElitM")}</p>
-              <button onClick={elitKapisi} className="mt-1 rounded-xl px-5 py-2.5 text-[11px] font-black text-black transition hover:brightness-110 active:scale-[.98]" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
-                👑 {ttX2610("ksmEliteGec")}
-              </button>
-              <button onClick={onClose} className="text-[9px] text-white/35 hover:text-white/70">{ttX2610("ks2Kapat")}</button>
-            </div>
-          </div>
-        )}
-
-        {isElit && (
-          <>
-            {/* ★ 23.10: modal içi sure seçici — boş seçimde "Fâtiha · 0 ayet" e kilitliyordu */}
-            <div className="mb-3 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[9px] font-bold text-white/50">📚 Sure</span>
-                <select
-                  value={seciliAyetler[0]?.s ?? 0}
-                  disabled={sureEkleniyor || yukleniyor}
-                  onChange={async (e) => {
-                    const s = Number(e.target.value);
-                    if (!s || s === seciliAyetler[0]?.s) return;
-                    setSureEkleniyor(true);
-                    try { await sureEkle(s); } finally { setSureEkleniyor(false); }
-                  }}
-                  className="w-full rounded-xl bg-white/[.04] px-3 py-2 text-[10px] font-bold text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60 disabled:opacity-50"
-                >
-                  <option value={0} className="bg-[#141414]">{ttX2610("ks2SecSure")}</option>
-                  {SURAHS.map((sr) => (
-                    <option key={sr.n} value={sr.n} className="bg-[#141414]">{sr.n}. {sureAdX2910(sr.n, sr.name, sureDiliX2910())} ({sr.count} {ttX2610("ksmAyet")})</option>
-                  ))}
-                </select>
-              </div>
-              {/* ★ 23.10: maks süre (sn) — modun kotası tavandır, yalnız daraltılır */}
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 text-[9px] font-bold text-white/50">{ttX2610("ks2Maks")}</span>
-                <input
-                  type="number"
-                  min={10}
-                  max={7200}
-                  value={maksSn}
-                  onChange={(e) => maksAyarla(Math.min(7200, Math.max(0, Math.floor(Number(e.target.value) || 0))))}
-                  className="w-20 rounded-lg bg-white/[.04] px-2 py-1.5 text-right text-[10px] font-bold tabular-nums text-white/85 ring-1 ring-white/10 outline-none transition focus:ring-[color:var(--accent)]/60"
-                />
-                <span className="text-[9px] text-white/60">{ttX2610("ks2Sn")}</span>
-                {[60, 300, 600].map((v) => (
-                  <button key={v} onClick={() => maksAyarla(v)} className={`rounded-lg px-1.5 py-1 text-[8.5px] font-black transition ${maksSn === v ? "bg-[color:var(--accent)]/20 text-[color:var(--accent-2)]" : "bg-white/[.05] text-white/45 hover:bg-white/10"}`}>{v}</button>
-                ))}
-              </div>
-              <p className="text-[8px] leading-relaxed text-white/30">{ttX2610("ks2SureNot")}</p>
-            </div>
-
-            {/* Mod seçimi */}
-            <div className="mb-3 grid grid-cols-2 gap-2">
-              <button onClick={() => setMod("tum")} className={`rounded-xl px-3 py-2.5 text-left text-[10px] font-bold ring-1 transition ${mod === "tum" ? "bg-[color:var(--accent)]/15 text-white ring-[color:var(--accent)]/60" : "bg-white/[.04] text-white/55 ring-white/10 hover:bg-white/[.07]"}`}>
-                🎙️ {ttX2610("ks2TumDosya")}<br /><span className="text-[8.5px] font-normal text-white/40">{ttX2610("ks2TumDosyaAlt")}</span>
-              </button>
-              <button onClick={() => setMod("ayet")} className={`rounded-xl px-3 py-2.5 text-left text-[10px] font-bold ring-1 transition ${mod === "ayet" ? "bg-[color:var(--accent)]/15 text-white ring-[color:var(--accent)]/60" : "bg-white/[.04] text-white/55 ring-white/10 hover:bg-white/[.07]"}`}>
-                🔢 {ttX2610("ks2AyetDosya")}<br /><span className="text-[8.5px] font-normal text-white/40">{ttX2610("ksmAyetAyri")}</span>
-              </button>
-            </div>
-
-            {/* Aktif ses özeti */}
-            {aktifSes && (
-              <div className="mb-3 rounded-xl bg-emerald-500/10 px-3 py-2 ring-1 ring-emerald-400/30">
-                <p className="text-[10px] font-bold text-emerald-300">✅ {ttX2610("ks2AktifHazir").replace("{kaynak}", aktifSes.kaynak === "tum-sure" ? ttX2610("ks2TekDosya") : ttX2610("ks2AyetBasiK"))}</p>
-                {aktifSes.kaynak === "tum-sure" && aktifSes.segments.length !== ayetSayisi && (
-                  <p className="mt-1 text-[9px] font-bold text-amber-300">⚠ {ttX2610("ks2Uyusmazlik").replace("{b}", String(aktifSes.segments.length)).replace("{a}", String(ayetSayisi))}</p>
-                )}
-                <div className="mt-1 flex items-center gap-3">
-                  <button onClick={async () => { setTaslaklar(null); setDuzenleIdx(null); await yenidenTara(aktifSes.id, ayetSayisi, maksSn); }} disabled={yukleniyor} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline disabled:opacity-40">🔬 {ttX2610("ksmYenidenAnaliz")}</button>
-                  <button onClick={() => { kaldirAktif(); setDuzenleIdx(null); setTaslaklar(null); }} className="text-[9px] text-white/50 hover:text-white">{ttX2610("ksmKaldir")}</button>
-                </div>
-              </div>
-            )}
-
-            {/* Yükleme alanı */}
-            <div className="mb-3 space-y-1.5">
-              {MAHREM_UYARISI}
-              {mod === "tum" ? (
-                <button disabled={yukleniyor} onClick={() => dosyaSec("tum")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[.03] py-4 text-[11px] font-bold text-white/70 transition hover:border-[color:var(--accent)]/50 hover:bg-white/[.06] disabled:opacity-50">
-                  {yukleniyor ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
-                  {yukleniyor ? ttX2610("ks2Cozumleniyor") : ttX2610("ks2YukleUyari").replace("{sure}", sureAdi)}
-                </button>
-              ) : (
-                <div className="max-h-44 space-y-1 overflow-y-auto pr-1">
-                  {seciliAyetler.map((ay, i) => (
-                    <div key={`${ay.s}:${ay.a}`} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-2.5 py-1.5">
-                      <span className="w-14 shrink-0 text-[9.5px] font-bold text-white/70">{sureAdi.slice(0, 8)} {ay.a}</span>
-                      <button onClick={() => dosyaSec(ay.a)} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-white/5 py-1.5 text-[9.5px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white">
-                        <Upload size={11} /> {ttX2610("ks2SesYukle")}
-                      </button>
-                      {/* Ayet başına arka plan: "arka plan bizden seçer" */}
-                      <button
-                        onClick={() => { setPickingFor(`${ay.s}:${ay.a}`); setModal("atmos"); }}
-                        className="flex items-center gap-1 rounded-lg bg-white/5 px-2 py-1.5 text-[9px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-                        title={translate(localStorage.getItem("nur_lang"), "ksKendiSesBg")}
-                      >
-                        <ImageIcon size={11} />
-                        {ayahBackgrounds[`${ay.s}:${ay.a}`] ? <Check size={10} className="text-emerald-400" /> : ttX2610("ks2ArkaPlan")}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Algılanan segmentler + düzenleyici */}
-            {aktifSes && aktifSes.segments.length > 0 && (
-              <div className="mb-3 rounded-xl bg-white/[.03] p-3 ring-1 ring-white/10">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><Scissors size={11} /> {ttX2610("ksmGecisler")}</p>
-                  {taslaklar === null ? (
-                    <button onClick={() => { setTaslaklar(hamSegmentler(aktifSes.segments, aktifSes.nefes || 0)); setDuzenleIdx(0); }} className="text-[9px] font-bold text-[color:var(--accent-2)] hover:underline">{ttX2610("rmDuzenle")}</button>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <button onClick={async () => { await zamanlamaKaydet(aktifSes.id, taslaklar, aktifSes.nefes || 0); setTaslaklar(null); setDuzenleIdx(null); }} className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-0.5 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30">{ttX2610("mcbKaydet")}</button>
-                      <button onClick={() => { setTaslaklar(null); setDuzenleIdx(null); }} className="text-[9px] font-bold text-white/50 hover:text-white">{ttX2610("mcbVazgec")}</button>
-                    </span>
-                  )}
-                </div>
-                <div className="max-h-40 space-y-1 overflow-y-auto pr-1">
-                  {gosterilen.map((seg, i) => {
-                    const ay = seciliAyetler[i];
-                    const bgVar = ay && ayahBackgrounds[`${ay.s}:${ay.a}`];
-                    return (
-                      <React.Fragment key={i}>
-                        <div className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[9.5px] ${duzenleIdx === i ? "bg-[color:var(--accent)]/10 ring-1 ring-[color:var(--accent)]/50" : "bg-white/[.04]"}`}>
-                          <button onClick={() => sesCalDurdur(i, taslaklar ? seg.start : undefined)} className="w-5 shrink-0 rounded-full bg-white/10 p-1 text-white/70 hover:bg-white/20" title={i === sesliIdx ? ttX2610("ks2Durdur") : ttX2610("ks2DinleAyin")}>
-                            {sesliIdx === i ? "⏸" : "▶"}
-                          </button>
-                          <span className="w-16 shrink-0 font-bold text-white/75">{ay ? ttX2610("ks2AyetNum").replace("{n}", String(ay.a)) : ttX2610("ks2BolumNum").replace("{n}", String(i + 1))}</span>
-                          <span className="w-20 shrink-0 tabular-nums text-white/45">{fmt(seg.start)}</span>
-                          <span className="flex-1 h-1.5 rounded-full bg-white/10">
-                            <span className="block h-full rounded-full bg-[color:var(--accent)]" style={{ width: `${Math.min(100, (seg.dur / Math.max(gosterilen[gosterilen.length - 1]?.start + gosterilen[gosterilen.length - 1]?.dur || 1, 1)) * 100)}%` }} />
-                          </span>
-                          {bgVar && <span title={ttX2610("ksmArkaPlanTitle")}><Check size={11} className="shrink-0 text-emerald-400" /></span>}
-                          {taslaklar === null && duzenleIdx === i && (
-                            <span className="shrink-0 text-[8.5px] text-white/40">ttX2610("ksmHizali")</span>
-                          )}
-                        </div>
-                        {taslaklar && duzenleIdx === i && (() => {
-                          const hamToplam = taslaklar[taslaklar.length - 1].start + taslaklar[taslaklar.length - 1].dur;
-                          const altSinir = i > 0 ? taslaklar[i - 1].start + 0.2 : 0;
-                          const ustSinir = i < taslaklar.length - 1 ? taslaklar[i + 1].start - 0.2 : Math.max(0.3, hamToplam - 0.3);
-                          return (
-                            <div className="px-2.5 pb-1.5">
-                              <input
-                                type="range"
-                                min={altSinir}
-                                max={Math.max(altSinir + 0.05, ustSinir)}
-                                step={0.05}
-                                value={taslaklar[i].start}
-                                onChange={(e) => setTaslaklar(baslangicKaydir(taslaklar, i, Number(e.target.value), hamToplam))}
-                                className="h-1 w-full accent-[color:var(--accent)]"
-                              />
-                              <p className="text-[8px] text-white/35">{ttX2610("ksmBaslangicKaydir").replace("{s}", taslaklar[i].start.toFixed(2))}</p>
-                            </div>
-                          );
-                        })()}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-                {/* Nefes aralığı */}
-                <div className="mt-2.5 flex items-center gap-2.5">
-                  <span className="text-[9px] font-bold text-white/50">{ttX2610("ksmNefes")}</span>
-                  <input type="range" min={0} max={2} step={0.1} value={nefesDeger} onChange={(e) => setNefesDeger(Number(e.target.value))} className="h-1 flex-1 accent-[color:var(--accent)]" />
-                  <span className="w-10 text-right text-[9px] tabular-nums text-white/60">{nefesDeger.toFixed(1)} sn</span>
-                  <button
-                    onClick={() => zamanlamaKaydet(aktifSes.id, hamSegmentler(aktifSes.segments, aktifSes.nefes || 0), nefesDeger)}
-                    className="rounded-lg bg-[color:var(--accent)]/20 px-2.5 py-1 text-[9px] font-black text-[color:var(--accent-2)] hover:bg-[color:var(--accent)]/30"
-                  >{ttX2610("ks2Uygula")}</button>
-                </div>
-                <p className="mt-1.5 text-[8.5px] leading-relaxed text-white/35">{ttX2610("ks2BirebirNot")}</p>
-              </div>
-            )}
-
-            {/* Kayıtlar */}
-            {kayitlar.length > 0 && (
-              <div className="rounded-xl bg-white/[.02] p-3 ring-1 ring-white/5">
-                <p className="mb-1.5 text-[10px] font-black text-white/60">{ttX2610("ks2KayitliSesler").replace("{n}", String(kayitlar.length))}</p>
-                <div className="max-h-32 space-y-1 overflow-y-auto pr-1">
-                  {kayitlar.map((k) => (
-                    <div key={k.id} className="flex items-center gap-2 rounded-lg bg-white/[.04] px-2.5 py-1.5 text-[9.5px]">
-                      <button onClick={() => { void sec(k.id); setTaslaklar(null); setDuzenleIdx(null); }} className="min-w-0 flex-1 truncate text-left font-bold text-white/75 hover:text-white" title={k.ad}>
-                        {sureAdX2910(k.sure, SURAHS[k.sure - 1]?.name ?? String(k.sure), sureDiliX2910())} · {k.kaynak === "tum-sure" ? ttX2610("ks2TumSure") : ttX2610("ks2AyetNum").replace("{n}", String(k.konum))} · {k.ad}
-                      </button>
-                      <span className="shrink-0 tabular-nums text-white/35">{fmt(k.sure_sn)}</span>
-                      {aktifSes?.id === k.id && <Check size={11} className="shrink-0 text-emerald-400" />}
-                      <button onClick={() => sil(k.id)} className="shrink-0 text-white/30 hover:text-red-400" title="Sil"><Trash2 size={12} /></button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <p className="mt-3 text-center text-[8.5px] leading-relaxed text-white/30">
-              {ttX2610("ks2GizlilikNot")}
-            </p>
-          </>
-        )}
+        <div className="flex-1 overflow-y-auto p-4">
+          <KendiSesStudiosu lang={lang} onCheckout={(code) => { openPremium("uyelik"); }} />
+        </div>
       </div>
     </div>
   );

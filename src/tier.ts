@@ -495,7 +495,7 @@ export type FeatureKey =
   | "atmos_video_pro" | "atmos_video_elit" | "tema_pro" | "tema_elit" | "mode_long"
   | "mode_full" | "aspect_1_1" | "aspect_16_9" | "batch" | "ai_search" | "refresh_text"
   | "refresh_title" | "hashtag_add" | "watermark_remove" | "social_share" | "zip_upload"
-  | "story_kuran" | "story_kissa" | "story_hadis" | "gift_code";
+  | "story_kuran" | "story_kissa" | "story_hadis" | "gift_code" | "kendi_ses_yukle";
 
 export type FeatureGate = { kind: "tier"; tier: Tier } | { kind: "version"; version: "v2" | "v3" };
 
@@ -513,6 +513,7 @@ export const FEATURE_GATES: Record<FeatureKey, FeatureGate> = {
   social_share: { kind: "tier", tier: "elit" }, zip_upload: { kind: "version", version: "v3" },
   story_kuran: { kind: "version", version: "v2" }, story_kissa: { kind: "version", version: "v2" },
   story_hadis: { kind: "version", version: "v3" }, gift_code: { kind: "version", version: "v3" },
+  kendi_ses_yukle: { kind: "tier", tier: "pro" },
 };
 
 export function isFeatureUnlocked(key: FeatureKey, tier: Tier): boolean {
