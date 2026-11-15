@@ -67,7 +67,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
   const handleDosyaSec = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!/^(audio|video)\//.test(f.type || "")) {
+    if (!/^audio\//.test(f.type || "")) {
       setHata(t("ukSesYukleyin"));
       return;
     }
@@ -189,7 +189,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="audio/*,video/*"
+                  accept="audio/*"
                   className="hidden"
                   onChange={handleDosyaSec}
                 />

@@ -99,7 +99,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
   const yukle = useCallback(async (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn = 0): Promise<{ segments: SesSegmenti[]; id: string; total: number } | null> => {
     if (!dosya) return null;
     if (dosya.size > 60 * 1024 * 1024) { notify(ttX2610("ukBoyutSinir")); return null; }
-    if (!/^(audio|video)\//.test(dosya.type || "")) { notify(ttX2610("ukSesYukleyin")); return null; }
+    if (!/^audio\//.test(dosya.type || "")) { notify(ttX2610("ukSesYukleyin")); return null; }
     setYukleniyor(true);
     try {
       const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
