@@ -55,7 +55,11 @@ export const KendiSesModal: React.FC<Props> = ({
           </button>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
-          <KendiSesStudiosu lang={lang} onCheckout={(code) => { openPremium("uyelik"); }} />
+          <KendiSesStudiosu
+            lang={lang}
+            onCheckout={(code) => { openPremium("uyelik"); }}
+            onProduce={(id) => { void sec(id); setModal(null); }}
+          />
         </div>
       </div>
     </div>

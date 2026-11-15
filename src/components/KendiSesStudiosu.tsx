@@ -32,9 +32,11 @@ interface KayitOzet {
 interface KendiSesStudiosuProps {
   lang: Lang;
   onCheckout: (code: string) => void;
+  /** Üret butonuna tıklandığında aktif kendi-ses kaydını stüdyo motoruna aktarır */
+  onProduce?: (id: string) => void;
 }
 
-export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onCheckout }) => {
+export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onCheckout, onProduce }) => {
   const t = (k: string) => translate(lang, k);
   const tier: Tier = getCurrentTier();
   const canUpload = tier === "pro" || tier === "elit";
@@ -428,6 +430,14 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
             >
               ← Ana Ekran
             </button>
+            {onProduce && aktif && (
+              <button
+                onClick={() => onProduce(aktif.id)}
+                className="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700"
+              >
+                🎬 Stüdyoda Üret
+              </button>
+            )}
             <button
               onClick={() => { setStep("preview"); }}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700"
@@ -530,6 +540,14 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
           >
             ← Düzenlemeye Dön
           </button>
+          {onProduce && aktif && (
+            <button
+              onClick={() => onProduce(aktif.id)}
+              className="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700"
+            >
+              🎬 Stüdyoda Üret
+            </button>
+          )}
           <button
             onClick={() => { setStep("surah"); kaldirAktif(); }}
             className="bg-slate-700 text-white px-6 py-2 rounded-lg font-semibold hover:bg-slate-800"
