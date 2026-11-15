@@ -510,7 +510,6 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
           ayahBackgrounds={kendiSesAyahBackgrounds}
           openPremium={openPremium}
           notify={notify}
-          onProduce={(sureNo, ayetBas, ayetSon) => { void kendiSesSureEkle(sureNo); setModal(null); }}
         />
         </React.Suspense>
       )}

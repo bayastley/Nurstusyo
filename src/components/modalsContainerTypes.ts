@@ -130,7 +130,7 @@ export interface ModalsContainerProps {
   kendiSesKayitlari: StoredSes[];
   kendiSesYukleniyor: boolean;
   kendiSesNefes: number;
-  kendiSesYukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn?: number) => Promise<unknown>;
+  kendiSesYukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn?: number) => Promise<{ segments: SesSegmenti[]; id: string; total: number } | null>;
   kendiSesYukleAyetAyri: (dosya: File, sure: number, ayet: number) => Promise<boolean>;
   kendiSesSec: (id: string) => Promise<boolean>;
   kendiSesSil: (id: string) => Promise<void>;
