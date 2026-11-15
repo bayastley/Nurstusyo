@@ -180,6 +180,13 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
   const aspectCss = useMemo(() => ({ "9:16": "9 / 16", "1:1": "1 / 1", "4:5": "4 / 5", "16:9": "16 / 9" })[aspect], [aspect]);
 
+  // ★ Büyütülen önizleme (scale 1.7) ekranın altına taşmasın: açılınca üst hizaya kaydır
+  const buyukRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!previewMaximized || lowPower) return;
+    try { buyukRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); } catch { /* yut */ }
+  }, [previewMaximized, lowPower]);
+
   // Avoid expensive enlarged previews and continuous audio on constrained devices.
   useEffect(() => {
     if (!lowPower) return;
@@ -188,7 +195,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
   }, [lowPower, previewMaximized, previewPlaying, setPreviewMaximized, setPreviewPlaying]);
 
   return (
-    <section className={`space-y-3 ${previewMaximized && !lowPower ? "relative z-[60] overflow-visible" : ""}`}>
+    <section ref={buyukRef} className={`space-y-3 ${previewMaximized && !lowPower ? "relative z-[60] overflow-visible" : ""}`}>
       <div
         className={`relative mx-auto ${previewMaximized && !lowPower ? "z-[70]" : "z-0"}`}
         style={{
