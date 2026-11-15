@@ -188,12 +188,12 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
   }, [lowPower, previewMaximized, previewPlaying, setPreviewMaximized, setPreviewPlaying]);
 
   return (
-    <section className={`space-y-3 ${previewMaximized && !lowPower ? "relative z-30 overflow-visible" : ""}`}>
+    <section className={`space-y-3 ${previewMaximized && !lowPower ? "relative z-[60] overflow-visible" : ""}`}>
       <div
-        className={`relative mx-auto ${previewMaximized && !lowPower ? "z-40" : "z-0"}`}
+        className={`relative mx-auto ${previewMaximized && !lowPower ? "z-[70]" : "z-0"}`}
         style={{
           maxWidth: previewWidth,
-          transform: previewMaximized && !lowPower ? "scale(1.2)" : "scale(1)",
+          transform: previewMaximized && !lowPower ? "scale(1.7)" : "scale(1)",
           transformOrigin: "top center",
           transition: lowPower ? "none" : "transform .35s cubic-bezier(.16,1,.3,1)",
         }}
