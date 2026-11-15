@@ -1,12 +1,8 @@
 import React from "react";
 import { X } from "lucide-react";
 import type { Lang } from "../i18n";
-import type { KendiSesAktif } from "../studio/useKendiSes";
-import type { StoredSes } from "../studio/sesDeposu";
-import type { SesSegmenti } from "../studio/sesZamanlama";
 import { translate } from "../i18n";
-import { KendiSesStudiosu } from "./KendiSesStudiosu";
-import type { Clip } from "../clips";
+import { KendiSesPanel } from "./KendiSesPanel";
 
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 
@@ -15,26 +11,28 @@ interface Props {
   onClose: () => void;
   sure: number;
   seciliAyetler: Array<{ s: number; a: number; sName?: string }>;
-  aktifSes: KendiSesAktif | null;
-  kayitlar: StoredSes[];
+  aktifSes: any;
+  kayitlar: any[];
   yukleniyor: boolean;
   isElit: boolean;
   nefes: number;
-  yukle: (dosya: File, sure: number, ayetSayisi: number, konum: "tum" | number, maksSn?: number) => Promise<unknown>;
-  yukleAyetAyri: (dosya: File, sure: number, ayet: number) => Promise<boolean>;
-  sec: (id: string) => Promise<boolean>;
-  sil: (id: string) => Promise<void>;
-  zamanlamaKaydet: (id: string, segments: SesSegmenti[], nefes?: number) => Promise<void>;
+  yukle: any;
+  yukleAyetAyri: any;
+  sec: any;
+  sil: any;
+  zamanlamaKaydet: any;
   kaldirAktif: () => void;
-  yenidenTara: (id: string, ayetSayisi: number, maksSn?: number) => Promise<boolean>;
-  sureEkle: (s: number) => Promise<void>;
+  yenidenTara: any;
+  sureEkle: any;
   maksSn: number;
-  maksAyarla: (sn: number) => void;
-  setPickingFor: (id: string) => void;
-  setModal: (m: "atmos" | null) => void;
-  ayahBackgrounds: Record<string, Clip>;
-  openPremium: (tab?: "uyelik" | "jeton") => void;
-  notify: (msg: string) => void;
+  maksAyarla: any;
+  setPickingFor: any;
+  setModal: any;
+  ayahBackgrounds: any;
+  openPremium: any;
+  notify: any;
+  /** Sure/ayet aralığı seçildiğinde stüdyo motoruna aktarır */
+  onProduce: (sureNo: number, ayetBas: number, ayetSon: number) => void;
 }
 
 export const KendiSesModal: React.FC<Props> = ({
@@ -42,25 +40,14 @@ export const KendiSesModal: React.FC<Props> = ({
   yukle, yukleAyetAyri, sec, sil, zamanlamaKaydet, kaldirAktif, yenidenTara,
   sureEkle, maksSn, maksAyarla,
   setPickingFor, setModal, ayahBackgrounds, openPremium, notify,
+  onProduce,
 }) => {
   const lang = (typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr") as Lang;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-slate-100">
-          <h2 className="text-lg font-bold text-slate-800">Kendi Sesinle Kur'an</h2>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg text-slate-500">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-4">
-          <KendiSesStudiosu
-            lang={lang}
-            onCheckout={(code) => { openPremium("uyelik"); }}
-            onProduce={(id) => { void sec(id); setModal(null); }}
-          />
-        </div>
+      <div className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden border border-slate-700" onClick={(e) => e.stopPropagation()}>
+        <KendiSesPanel lang={lang} onProduce={onProduce} onClose={onClose} />
       </div>
     </div>
   );
