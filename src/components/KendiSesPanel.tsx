@@ -26,6 +26,8 @@ interface KendiSesPanelProps {
   yenidenTara: (id: string, ayetSayisi: number, maksSn?: number) => Promise<boolean>;
   sureEkle: (s: number) => Promise<void>;
   notify: (msg: string) => void;
+  /** Her ayete özel AI arkaplan videosu haritası: ayetNo -> videoUrl veya videoId */
+  ayahBackgrounds?: Record<number, string>;
 }
 
 const MB = 60 * 1024 * 1024;
@@ -47,6 +49,15 @@ const ATMOSPRESETLER: Array<{ id: string; ad: string; emoji: string }> = [
   { id: "none", ad: "Yok", emoji: "⚪" },
 ];
 
+const AI_VIDEO_PRESETLER: Array<{ id: string; ad: string; emoji: string; url?: string }> = [
+  { id: "ai-noor", ad: "Nûr Işığı", emoji: "✨" },
+  { id: "ai-masjid", ad: "Camii İçerisi", emoji: "🕌" },
+  { id: "ai-desert", ad: "Gece Çölü", emoji: "🏜️" },
+  { id: "ai-sea", ad: "Deniz Yıldızı", emoji: "🌊" },
+  { id: "ai-candle", ad: "Mum Işığı", emoji: "🕯️" },
+  { id: "ai-none", ad: "Video Yok", emoji: "⚪" },
+];
+
 const YAZI_STILLERI: Array<{ id: string; ad: string; fontFamily: string }> = [
   { id: "amiri", ad: "Amiri Kur'an", fontFamily: "'Amiri Quran', serif" },
   { id: "katibeh", ad: "Katibeh", fontFamily: "'Katibeh', serif" },
@@ -61,6 +72,7 @@ interface AyetSegment {
   arabic: string;
   meal: string;
   atmos: string;
+  videoBg: string;
   showArabic: boolean;
   showMeal: boolean;
 }
@@ -73,7 +85,7 @@ const PauseIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
   lang, onClose, yukle, sec, zamanlamaKaydet, kayitlar, aktifSes, yukleniyor,
-  isElit, nefes, maksSn, maksAyarla, yenidenTara, sureEkle, notify,
+  isElit, nefes, maksSn, maksAyarla, yenidenTara, sureEkle, notify, ayahBackgrounds,
 }) => {
   const t = (k: string): string => translate(lang, k);
   const tip = KENDI_SES_TIPS[lang] ?? KENDI_SES_TIPS.tr;
@@ -228,6 +240,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
             arabic: metin.arabic,
             meal: metin.meal,
             atmos: "none",
+            videoBg: ayahBackgrounds?.[ayetNo] || "",
             showArabic: true,
             showMeal: true,
           });
@@ -236,7 +249,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
         setNextSegId(baslangicSegmentler.length);
         setStep("duzenle");
       } finally {
-        ctx.close().catch(() => undefined);
+        ctx.close().catch((err) => { console.error("[KendiSes] AudioContext kapatma hatası:", err); });
       }
     } catch {
       setYuklemeMesaji(null);
@@ -297,7 +310,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
       setIsPlaying(false);
     } else {
       audio.currentTime = currentTime;
-      audio.play().catch(() => {});
+      audio.play().catch((err) => { console.error("[KendiSes] Oynatma engeli:", err); });
       setIsPlaying(true);
     }
   }, [isPlaying, currentTime]);
@@ -369,6 +382,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
             arabic: sagMetin.arabic,
             meal: sagMetin.meal,
             atmos: seg.atmos,
+            videoBg: ayahBackgrounds?.[sagAyetNo] || seg.videoBg,
             showArabic: seg.showArabic,
             showMeal: seg.showMeal,
           });
@@ -386,7 +400,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
     if (!audio) return;
     stop();
     audio.currentTime = seg.start;
-    audio.play().catch(() => {});
+    audio.play().catch((err) => { console.error("[KendiSes] Segment oynatma engeli:", err); });
     setIsPlaying(true);
     setCurrentTime(seg.start);
     setPlayingSegId(seg.id);
@@ -409,6 +423,10 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
 
   const setSegmentAtmos = useCallback((id: string, atmosId: string) => {
     setSegments((prev) => prev.map((s) => s.id === id ? { ...s, atmos: atmosId } : s));
+  }, []);
+
+  const setSegmentVideoBg = useCallback((id: string, videoBg: string) => {
+    setSegments((prev) => prev.map((s) => s.id === id ? { ...s, videoBg } : s));
   }, []);
 
   const toggleArabic = useCallback(() => setShowArabic((p) => !p), []);
@@ -668,6 +686,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                   <span className="w-16">Başlangıç</span>
                   <span className="w-16">Süre</span>
                   <span className="w-16">Atmosfer</span>
+                  <span className="w-20">AI Video</span>
                   <span className="flex-1">Arapça / Meal</span>
                   <span className="w-10">Oynat</span>
                 </div>
@@ -687,6 +706,17 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                         >
                           {ATMOSPRESETLER.map((a) => (
                             <option key={a.id} value={a.id}>{a.emoji} {a.ad}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-20">
+                        <select
+                          value={seg.videoBg}
+                          onChange={(e) => setSegmentVideoBg(seg.id, e.target.value)}
+                          className="w-full text-[10px] bg-slate-900 border border-slate-700 rounded text-slate-300 focus:border-purple-500"
+                        >
+                          {AI_VIDEO_PRESETLER.map((v) => (
+                            <option key={v.id} value={v.id}>{v.emoji} {v.ad}</option>
                           ))}
                         </select>
                       </div>

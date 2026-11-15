@@ -513,7 +513,7 @@ export const FEATURE_GATES: Record<FeatureKey, FeatureGate> = {
   social_share: { kind: "tier", tier: "elit" }, zip_upload: { kind: "version", version: "v3" },
   story_kuran: { kind: "version", version: "v2" }, story_kissa: { kind: "version", version: "v2" },
   story_hadis: { kind: "version", version: "v3" }, gift_code: { kind: "version", version: "v3" },
-  kendi_ses_yukle: { kind: "tier", tier: "pro" },
+  kendi_ses_yukle: { kind: "tier", tier: "elit" },
 };
 
 export function isFeatureUnlocked(key: FeatureKey, tier: Tier): boolean {

@@ -63,6 +63,7 @@ export const KendiSesModal: React.FC<Props> = ({
           yenidenTara={yenidenTara}
           sureEkle={sureEkle}
           notify={notify}
+          ayahBackgrounds={ayahBackgrounds}
         />
       </div>
     </div>

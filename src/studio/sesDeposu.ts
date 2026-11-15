@@ -119,7 +119,7 @@ export async function sesSil(id: string): Promise<void> {
     const tx = db.transaction(STORE, "readwrite");
     tx.objectStore(STORE).delete(id);
     await txDone(tx);
-  } catch { /* ignore */ }
+  } catch (err) { console.error("[sesDeposu] Silme hatası:", err); }
 }
 
 /** Zamanlama düzenlemesini kalıcıya yaz (blob yeniden yazılmaz). */
@@ -138,7 +138,7 @@ export async function zamanlamalariGuncelle(id: string, zamanlamalar: ZamanlamaK
       store.put(row);
     };
     await txDone(tx);
-  } catch { /* ignore */ }
+  } catch (err) { console.error("[sesDeposu] Zamanlama güncelleme hatası:", err); }
 }
 
 /** Tek kayıt oku (blob URL tazelerken). */

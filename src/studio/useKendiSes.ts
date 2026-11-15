@@ -52,7 +52,7 @@ async function oynatilabilirSure(blob: Blob): Promise<number | null> {
       const a = new Audio();
       const bitti = (v: number | null) => {
         window.clearTimeout(zaman);
-        try { URL.revokeObjectURL(url); } catch { /* ignore */ }
+        try { URL.revokeObjectURL(url); } catch (err) { console.error("[useKendiSes] URL révokasyon hatası:", err); }
         coz(v);
       };
       const zaman = window.setTimeout(() => bitti(null), 4000);
@@ -61,7 +61,8 @@ async function oynatilabilirSure(blob: Blob): Promise<number | null> {
       a.onerror = () => bitti(null);
       a.src = url;
     });
-  } catch {
+  } catch (err) {
+    console.error("[useKendiSes] Oynatılabilir süre okuma hatası:", err);
     return null;
   }
 }
@@ -145,7 +146,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
         notify(yazildi ? mesaj : mesaj + " (bu oturum için — kalıcı kayıt yapılamadı)");
         return { segments, id, total: tarama.total };
       } finally {
-        ctx.close().catch(() => undefined);
+        ctx.close().catch((err) => { console.error("[useKendiSes] AudioContext kapatma hatası:", err); });
       }
     } catch {
       notify(ttX2610("ukCozumlenemedi"));
@@ -181,7 +182,7 @@ export function useKendiSesiniYukle({ notify }: UseKendiSesParams) {
           : `🔬 Yeniden analiz tamam · ${segments.length} bölüm gerçek geçişlerden hizalandı · senkron hazır`);
         return true;
       } finally {
-        ctx.close().catch(() => undefined);
+        ctx.close().catch((err) => { console.error("[useKendiSes] AudioContext kapatma hatası:", err); });
       }
     } catch {
       notify(ttX2610("ukYenidenAnaliz"));
