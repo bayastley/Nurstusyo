@@ -3,7 +3,9 @@
 // Açılışta seriAcilisDengele() (artırmez, süresi geçeni düşürür);
 // kullanıcı bugün ayet okuyunca "nur_seri_degisti" olayı rozeti
 // canlı büyütür. Rozet seri<1 ise gizlidir. JETON YOK.
-// Konum: alt-sağ, BugunHediye (alt-sol) ile simetrik.
+// Konum: masaüstünde SOL alt — BugunHediye (md:left-4) ve asistan baloncuğunun
+// (md:left-20) ÜSTÜNE taşındı: sağ-altta Crisp destek balonu ve PWA bandı ile
+// çakışmayı önler. Mobilde alt-sağ kalır (solda hediye/asistan ile çakışıyordu).
 // =====================================================
 
 import React, { useEffect, useState } from "react";
@@ -43,7 +45,7 @@ export const GunlukSeriRozeti: React.FC<GunlukSeriRozetiProps> = ({ lang = "tr" 
     <button
       type="button"
       data-minitur="gunluk-seri"
-      className="fixed bottom-20 right-3 z-[85] flex h-10 max-w-[80vw] items-center gap-1.5 rounded-full px-3 shadow-2xl transition hover:scale-105 active:scale-95 md:bottom-4 md:right-4 md:h-11"
+      className="fixed bottom-20 left-[62px] right-auto z-[85] flex h-10 max-w-[80vw] items-center gap-1.5 rounded-full px-3 shadow-2xl transition hover:scale-105 active:scale-95 md:bottom-4 md:left-[152px] md:h-11"
       style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
       title={tt("seriTitle")}
     >

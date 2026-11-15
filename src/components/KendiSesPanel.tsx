@@ -499,7 +499,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
               <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-blue-500 hover:bg-slate-800/30 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                 <AudioWaveform className="w-12 h-12 mx-auto mb-3 text-blue-400" />
                 <p className="text-sm font-medium text-white mb-1">{t("kendiSesYukle")}</p>
-                <p className="text-xs text-slate-500">MP3 · WAV · M4A · OGG · 60 MB hasta · sadece ses</p>
+                <p className="text-xs text-slate-500">MP3 · WAV · M4A · OGG · MP4 · 60 MB hasta</p>
                 <input
                   ref={fileInputRef}
                   type="file"
