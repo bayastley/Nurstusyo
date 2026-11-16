@@ -264,7 +264,7 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
           </p>
         </div>
 
-        <PremiumKotaGostergesi activeTier={activeTier} remainingDays={remainingDays} packRightsProp={packRightsProp} dil={dil} />
+        <PremiumKotaGostergesi activeTier={activeTier} remainingDays={remainingDays} packRightsProp={packRightsProp} subscriptionEndsAt={subscriptionEndsAt} dil={dil} />
 
         <PremiumAlinanPaketler packRightsProp={packRightsProp} dil={dil} />
 

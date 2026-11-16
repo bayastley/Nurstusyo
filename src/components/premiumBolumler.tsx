@@ -20,11 +20,13 @@ export function PremiumKotaGostergesi({
   activeTier,
   remainingDays,
   packRightsProp,
+  subscriptionEndsAt,
   dil = "tr",
 }: {
   activeTier: Tier;
   remainingDays: number | null;
   packRightsProp?: Rights;
+  subscriptionEndsAt?: string | null;
   dil?: string;
 }) {
   const t = (k: string): string => translate(dil, k);
@@ -71,6 +73,35 @@ export function PremiumKotaGostergesi({
       <p className="mt-2.5 text-center text-[9px] text-white/30">
         {t("kotaYenilenmeNot")}
       </p>
+      {(() => {
+        let ist: { toplam: number; kisa: number; uzun: number; tam: number; sonTarih: number } | null = null;
+        try { ist = JSON.parse(localStorage.getItem("nur_uretim_istatistik_v1") || "null"); } catch { ist = null; }
+        const ends = subscriptionEndsAt ? new Date(subscriptionEndsAt) : null;
+        const endsTxt = ends && !isNaN(ends.getTime()) ? ends.toLocaleDateString(dil === "ar" ? "ar" : dil === "ur" ? "ur-PK" : dil === "id" ? "id-ID" : dil === "en" ? "en-US" : "tr-TR") : null;
+        const warn = typeof remainingDays === "number" && remainingDays > 0 && remainingDays <= 7;
+        return (
+          <div className="mt-3 space-y-2 border-t border-white/10 pt-2.5">
+            <div className="rounded-xl bg-white/[0.03] p-2.5">
+              <p className="text-[9px] font-black uppercase tracking-wider text-white/45">{t("pmKullanimOzeti")}</p>
+              <p className="mt-0.5 text-[8px] text-white/35">{t("pmBuCihaz")}</p>
+              <div className="mt-1.5 grid grid-cols-4 gap-1 text-center">
+                <div className="rounded-lg bg-white/5 py-1"><p className="text-[11px] font-black text-emerald-300">{ist?.toplam ?? 0}</p><p className="text-[7px] text-white/40">{t("pmToplamUretim")}</p></div>
+                <div className="rounded-lg bg-white/5 py-1"><p className="text-[11px] font-black text-sky-300">{ist?.kisa ?? 0}</p><p className="text-[7px] text-white/40">{t("itKisaK")}</p></div>
+                <div className="rounded-lg bg-white/5 py-1"><p className="text-[11px] font-black text-amber-300">{ist?.uzun ?? 0}</p><p className="text-[7px] text-white/40">{t("itUzunK")}</p></div>
+                <div className="rounded-lg bg-white/5 py-1"><p className="text-[11px] font-black text-fuchsia-300">{ist?.tam ?? 0}</p><p className="text-[7px] text-white/40">{t("itTamK")}</p></div>
+              </div>
+              {ist?.sonTarih ? <p className="mt-1 text-[7.5px] text-white/30">{t("itUretimBuAy")}: {new Date(ist.sonTarih).toLocaleDateString(dil === "ar" ? "ar" : dil === "ur" ? "ur-PK" : dil === "id" ? "id-ID" : dil === "en" ? "en-US" : "tr-TR")}</p> : null}
+            </div>
+            {(activeTier !== "free" && (endsTxt || warn)) && (
+              <div className={`rounded-xl p-2.5 ${warn ? "bg-amber-500/10 ring-1 ring-amber-400/20" : "bg-white/[0.03]"}`}>
+                <p className="text-[9px] font-black text-amber-100/90">{t("pmYenilemeHatirlatma")}</p>
+                <p className="mt-0.5 text-[8px] text-white/50">{warn ? t("pmAbonelikBitiyor") : t("pmYenilemeTarihiYaklasiyor")}{endsTxt ? ` • ${endsTxt}` : ""}</p>
+                <p className="mt-1 text-[7.5px] text-white/35">{t("pmIptalKosul")}</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

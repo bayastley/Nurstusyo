@@ -17,6 +17,7 @@ import { MEAL_EDITIONS, translate, type Lang } from "../i18n";
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
+  ezberHedefOku, ezberHedefYaz, ezberTekrarBugun, ezberTekrarEkle,
 } from "../hafizlikIstatistik";
 import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: hafızlık turu bitince günün serisi dolsun
 // ★ SRP adım 2 (30.09): sure havuzları + seviyeler + tur boyutları hafizlikVeri.ts'e
@@ -131,6 +132,8 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const [ist, setIst] = useState<HafizlikIstatistik>(() => hafizlikIstOku());
   // ★ ttX2610("htDevam") (madde 38)
   const [devam, setDevam] = useState(() => hafizlikDevamOku());
+  const [ezberHedef, setEzberHedef] = useState(() => ezberHedefOku());
+  const [tekrarBugun] = useState(() => ezberTekrarBugun());
   // ★ Sınırsız mod otomatik-tekrar referansları (28.09): modal kapanınca zamanlayıcı durur
   const yenidenDeneRef = React.useRef(0);
   const openRef = React.useRef(open);
@@ -307,7 +310,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     setSecim(i);
     const dogruMu = soru.secenekler[i] === soru.devam;
     setPuan((p) => ({ dogru: p.dogru + (dogruMu ? 1 : 0), toplam: p.toplam + 1 }));
-    if (!dogruMu) setYanlis((v) => v + 1);
+    if (!dogruMu) { setYanlis((v) => v + 1); ezberTekrarEkle(soru.s); }
     // ★ Geçmişe kaydet — özette "neden yanlış" listesi bununla kurulur
     setGecmis((g) => [...g, { sn: soru.sn, a: soru.a, dogru: dogruMu, devam: soru.devam }]);
     // ★ İstatistik + rozet kaydı (madde 52 & 16) — yalnız cihazda
@@ -474,6 +477,17 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               ))}
             </div>
             {turBoyu === 0 && <p className="mt-1.5 text-center text-[8.5px] text-white/35">{tt("hafizlikSinirsizNot")}</p>}
+          </div>
+
+          <div className="mt-3 rounded-xl border border-white/10 bg-white/[.03] p-3">
+            <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-white/40">{tt("htEzberPlanBaslik")}</p>
+            {tekrarBugun.length > 0 && <p className="mb-2 text-[9px] text-amber-200">{tt("htEzberBugunTekrar")}: {tekrarBugun.map(t=>t.sure).slice(0,6).join(", ")}</p>}
+            <div className="grid grid-cols-3 gap-1.5 text-[9px]">
+              <label className="text-white/50">{tt("htEzberGunlukSoru")}<input type="number" min={3} max={200} value={ezberHedef.gunlukSoru} onChange={e=>{const h={...ezberHedef,gunlukSoru:Number(e.target.value)||10}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>
+              <label className="text-white/50">{tt("htEzberHaftalikGun")}<input type="number" min={1} max={7} value={ezberHedef.haftalikGun} onChange={e=>{const h={...ezberHedef,haftalikGun:Number(e.target.value)||5}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>
+              <label className="text-white/50">{tt("htEzberAylikSure")}<input type="number" min={1} max={114} value={ezberHedef.aylikSure} onChange={e=>{const h={...ezberHedef,aylikSure:Number(e.target.value)||1}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>
+            </div>
+            <p className="mt-1 text-[8px] text-white/30">{tt("htEzberPlanNot")}</p>
           </div>
         </div>
       ) : ozetAcik ? (

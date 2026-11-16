@@ -32,7 +32,7 @@ type ToolTab = "prayer" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "sal
 //   Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim,
 //   HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart,
 //   RozetlerKarti, UreticiIstatistikKarti. Bu dosya sekme düzeni + kabuk.
-import { Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim, HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart, RozetlerKarti, UreticiIstatistikKarti, uretimIstYaz, uretimIstOku, type UretimIst, URETIM_IST_KEY } from "./islamicToolsVucut";
+import { Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim, HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart, HayirTakipKarti, RozetlerKarti, UreticiIstatistikKarti, uretimIstYaz, uretimIstOku, type UretimIst, URETIM_IST_KEY } from "./islamicToolsVucut";
 // ★ 26.10: Sahih Zikir & Dua Külliyatı — zikir dosyasındaki bileşenden doğrudan alınır
 import { SahihZikirKuliyati } from "./islamicToolsZikir";
 
@@ -150,6 +150,7 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 <NamazBildirim prayerTimings={prayerTimings} />
                 <OgutVakti />
                 <CevrimdisiKart />
+                <HayirTakipKarti />
                 <UreticiIstatistikKarti />
                 <RozetlerKarti />
                 <GeceModuDugmesi />

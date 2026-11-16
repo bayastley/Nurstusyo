@@ -258,6 +258,17 @@ export const KartOnizlemeBolumu: React.FC<{
                   </div>
                 </div>
 
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+                  <div className="min-w-0">
+                    <p className="text-[8.5px] font-bold text-white/70">{tt("akQrEkle")}</p>
+                    <p className="text-[7.5px] leading-snug text-white/35">{tt("akQrAciklama")}</p>
+                  </div>
+                  <button type="button" onClick={() => setAyar((a) => ({ ...a, qrAcik: !a.qrAcik }))}
+                    className={`h-5 w-9 shrink-0 rounded-full text-[7px] font-black transition ${ayar.qrAcik ? "text-black" : "glass-soft text-white/50"}`}
+                    style={ayar.qrAcik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                    {ayar.qrAcik ? tt("akAcik") : tt("akKapali")}
+                  </button>
+                </div>
                 <button type="button"
                   onClick={() => setAyar(VARSAYILAN_AYARLAR)}
                   className="w-full rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/50 transition hover:text-white">

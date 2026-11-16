@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Nûr Stüdyo — İslamî Video Üretici & Kur'an Medya Lab",
   "short_name": "Nûr Stüdyo",
   "description": "Ayetleri sinematik videolara dönüştür; Kur'an dinle, öğren, hatim takip et, Kâbe'yi canlı izle.",
@@ -12,29 +12,39 @@
   "dir": "ltr",
   "categories": ["education", "lifestyle", "video"],
   "icons": [
+    { "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
     {
-      "src": "/pwa-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "name": "Kur'an Oku",
+      "short_name": "Kur'an",
+      "description": "Kur'an Sayfaları / Mushaf",
+      "url": "/?sayfa=quran",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "/pwa-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
+      "name": "Zikir Sayacı",
+      "short_name": "Zikir",
+      "description": "Zikir ve tespih sayacı",
+      "url": "/?sayfa=tools&tab=zikir",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "/pwa-icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "Namaz Vakti",
+      "short_name": "Namaz",
+      "description": "Namaz vakitleri ve kible",
+      "url": "/?sayfa=tools&tab=namaz",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "src": "/pwa-icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "name": "Ayet Kartı",
+      "short_name": "Kart",
+      "description": "Ayet kartı oluştur",
+      "url": "/?sayfa=kartlar",
+      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

@@ -40,5 +40,5 @@ export {
 } from "./islamicToolsBildirim";
 
 // ★ İSTATİSTİK / ROZET / ÇEVRİMDIŞI bloğu islamicToolsIstatistik.tsx'te (03.10).
-export { AUDIO_CACHE_ADI, CevrimdisiKart, URETIM_IST_KEY, uretimIstOku, uretimIstYaz, RozetlerKarti, UreticiIstatistikKarti } from "./islamicToolsIstatistik";
+export { AUDIO_CACHE_ADI, CevrimdisiKart, HayirTakipKarti, URETIM_IST_KEY, uretimIstOku, uretimIstYaz, RozetlerKarti, UreticiIstatistikKarti } from "./islamicToolsIstatistik";
 export type { UretimIst } from "./islamicToolsIstatistik";

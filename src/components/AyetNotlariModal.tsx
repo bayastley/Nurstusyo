@@ -9,7 +9,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { translate, type Lang } from "../i18n";
-import { NotebookPen, Trash2, Search, Lock } from "lucide-react";
+import { NotebookPen, Trash2, Search, Lock, Bookmark, Repeat2, Bell } from "lucide-react";
 import { Modal } from "./UIElements";
 import { secureGet, secureSet } from "../secureStore";
 import { SURAHS } from "../data/surahs";
@@ -19,10 +19,12 @@ import { sureAdGorunum as sureAdX2910 } from "../data/surelerCokDil";
 const NOT_KEY = "nur_ayet_notlari_v1"; // secureStore ile şifreli
 
 interface NotKaydi {
-  /** "2:255" biçiminde ayet anahtarı */
   k: string;
   metin: string;
   ts: number;
+  isaretli?: boolean;
+  tekrar?: boolean;
+  hatirlatma?: string;
 }
 
 interface AyetNotlariModalProps {
@@ -49,6 +51,7 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
   const [yeniAyet, setYeniAyet] = useState(1);
   const [yeniMetin, setYeniMetin] = useState("");
   const [arama, setArama] = useState("");
+  const [filtre, setFiltre] = useState<"tumu"|"isaretli"|"tekrar"|"hatirlatma">("tumu");
 
   useEffect(() => { if (open) setNotlar(oku()); }, [open]);
 
@@ -59,9 +62,10 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
     const metin = yeniMetin.trim();
     if (!metin) { notify?.(tt("anNotBos")); return; }
     const k = `${yeniSure}:${yeniAyet}`;
+    const eski = notlar.find((n) => n.k === k);
     const yeni: NotKaydi[] = [
-      { k, metin, ts: Date.now() },
-      ...notlar.filter((n) => n.k !== k), // aynı ayede tek not — güncelleme
+      { k, metin, ts: Date.now(), isaretli: eski?.isaretli, tekrar: eski?.tekrar, hatirlatma: eski?.hatirlatma },
+      ...notlar.filter((n) => n.k !== k),
     ];
     setNotlar(yeni);
     yaz(yeni);
@@ -75,15 +79,24 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
     yaz(yeni);
   };
 
+  const guncelle = (k: string, patch: Partial<NotKaydi>) => {
+    const yeni = notlar.map((n) => (n.k === k ? { ...n, ...patch, ts: Date.now() } : n));
+    setNotlar(yeni);
+    yaz(yeni);
+  };
+
   const filtreli = useMemo(() => {
     const q = arama.trim().toLocaleLowerCase("tr");
-    if (!q) return notlar;
     return notlar.filter((n) => {
+      if (filtre === "isaretli" && !n.isaretli) return false;
+      if (filtre === "tekrar" && !n.tekrar) return false;
+      if (filtre === "hatirlatma" && !n.hatirlatma) return false;
+      if (!q) return true;
       const [s, a] = n.k.split(":").map(Number);
       const ad = SURAHS[s - 1]?.name ?? "";
       return ad.toLocaleLowerCase("tr").includes(q) || n.metin.toLocaleLowerCase("tr").includes(q) || n.k.includes(q);
     });
-  }, [notlar, arama]);
+  }, [notlar, arama, filtre]);
 
   if (!open) return null;
 
@@ -118,8 +131,15 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
           {tt("anNotuKaydet")}
         </button>
       </div>
-
-      {/* Arama */}
+      <div className="mb-2 flex flex-wrap gap-1.5">
+        {(["tumu","isaretli","tekrar","hatirlatma"] as const).map((f) => (
+          <button key={f} type="button" onClick={() => setFiltre(f)}
+            className={`rounded-lg px-2.5 py-1 text-[9px] font-bold transition ${filtre===f ? "bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/30" : "bg-white/5 text-white/55 hover:bg-white/10"}`}>
+            {f==="tumu"?tt("anFiltreTumu"):f==="isaretli"?tt("anFiltreIsaretli"):f==="tekrar"?tt("anFiltreTekrar"):tt("anFiltreHatirlatma")}
+          </button>
+        ))}
+        <span className="ml-auto self-center text-[8px] text-white/35">{notlar.length} {tt("anKayitli")}</span>
+      </div>
       <div className="relative mb-2.5">
         <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
         <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("anAra")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
@@ -132,14 +152,21 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
           const ad = sureAdX2910(s, SURAHS[s - 1]?.name ?? String(s), lang);
           return (
             <div key={n.k} className="rounded-xl border border-white/10 bg-white/[.02] p-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-[10px] font-black" style={{ color: "var(--accent-2)" }}>{ad} {s}:{a}</p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="text-[8px] text-white/30">{new Date(n.ts).toLocaleDateString(lang === "ar" ? "ar" : lang === "ur" ? "ur-PK" : lang === "id" ? "id-ID" : lang === "en" ? "en-US" : "tr-TR")}</span>
                   <button type="button" onClick={() => sil(n.k)} className="rounded-md p-1 text-white/30 transition hover:bg-red-500/10 hover:text-red-400" title={tt("anSilTitle")}><Trash2 size={12} /></button>
                 </div>
               </div>
               <p className="mt-1 whitespace-pre-wrap text-[10.5px] leading-relaxed text-white/75">{n.metin}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <button type="button" onClick={() => guncelle(n.k, { isaretli: !n.isaretli })} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[8.5px] font-bold ${n.isaretli ? "bg-amber-500/20 text-amber-100" : "bg-white/5 text-white/45 hover:bg-white/10"}`}><Bookmark size={10}/> {n.isaretli ? tt("anIsaretKaldir") : tt("anIsaretle")}</button>
+                <button type="button" onClick={() => guncelle(n.k, { tekrar: !n.tekrar })} className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[8.5px] font-bold ${n.tekrar ? "bg-sky-500/20 text-sky-100" : "bg-white/5 text-white/45 hover:bg-white/10"}`}><Repeat2 size={10}/> {n.tekrar ? tt("anTekrarCikar") : tt("anTekrarEkle")}</button>
+                <label className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-[8.5px] font-bold ${n.hatirlatma ? "bg-emerald-500/20 text-emerald-100" : "bg-white/5 text-white/45"}`}><Bell size={10}/> {tt("anHatirlatma")}
+                  <input type="date" value={n.hatirlatma || ""} onChange={(e)=>guncelle(n.k,{ hatirlatma: e.target.value || undefined })} className="ml-1 rounded bg-black/30 px-1 py-0.5 text-[8px] text-white/80" />
+                </label>
+              </div>
             </div>
           );
         })}

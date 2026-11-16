@@ -3,7 +3,8 @@
 // dışa açık adları re-export eder — mevcut import edenler KIRILMAZ.
 import React, { useState } from "react";
 import { rozetlerOku, rozetleriTazele, ROZET_LISTESI, rozetOzelOku, rozetGuncelEsik, rozetEsikCarpani, rozetOduluHesapla } from "../hafizlikIstatistik";
-// ★ 26.10 i18n — LS diline göre çeviri
+import { getDataSaverMode, setDataSaverMode, type DataSaverMode } from "../studio/useRenderQuality";
+// â˜… 26.10 i18n â€” LS diline gÃ¶re Ã§eviri
 import { translate } from "../i18n";
 const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
 
@@ -18,6 +19,7 @@ export function CevrimdisiKart() {
   const [adet, setAdet] = useState<number | null>(null);
   const [cevrimdisi, setCevrimdisi] = useState(!navigator.onLine);
   const [destek, setDestek] = useState(false);
+  const [dataSaver, setDataSaver] = useState<DataSaverMode>(() => getDataSaverMode());
 
   React.useEffect(() => {
     if (!("serviceWorker" in navigator) || !("caches" in window)) return;
@@ -39,26 +41,44 @@ export function CevrimdisiKart() {
 
   if (!destek) return null;
 
+  const dsLabel = dataSaver === "on" ? tt("itDsOn") : dataSaver === "off" ? tt("itDsOff") : tt("itDsAuto");
+  const dsToggle = () => {
+    const next: DataSaverMode = dataSaver === "auto" ? "on" : dataSaver === "on" ? "off" : "auto";
+    setDataSaverMode(next);
+    setDataSaver(next);
+  };
+
   return (
-    <div className="flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-      <div className="flex items-center gap-2">
-        <span className="text-base" aria-hidden>📥</span>
-        <div>
-          <p className="text-[10px] font-bold text-white">{tt("itCevrimdisiTilavet")}</p>
-          <p className="text-[8px] text-white/40">
-            {cevrimdisi
-              ? tt("itSimdiCevrimdisisun")
-              : adet === null
-                ? tt("itSesSayiliyor")
-                : adet === 0
-                  ? tt("itOtomatikKayit")
-                  : `${adet} ${tt("itAyetSesiHazir")}`}
-          </p>
+    <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base" aria-hidden>ğŸ“¥</span>
+          <div>
+            <p className="text-[10px] font-bold text-white">{tt("itCevrimdisiTilavet")}</p>
+            <p className="text-[8px] text-white/40">
+              {cevrimdisi
+                ? tt("itSimdiCevrimdisisun")
+                : adet === null
+                  ? tt("itSesSayiliyor")
+                  : adet === 0
+                    ? tt("itOtomatikKayit")
+                    : `${adet} ${tt("itAyetSesiHazir")}`}
+            </p>
+          </div>
         </div>
+        <span className={`shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
+          {cevrimdisi ? tt("itCevrimdisiEtiket") : tt("itHazirEtiket")}
+        </span>
       </div>
-      <span className={`shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
-        {cevrimdisi ? tt("itCevrimdisiEtiket") : tt("itHazirEtiket")}
-      </span>
+      <div className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-2">
+        <div>
+          <p className="text-[9px] font-bold text-white/80">{tt("itVeriTasarrufu")}</p>
+          <p className="text-[7.5px] text-white/35">{tt("itVeriTasarrufuAcik")}</p>
+        </div>
+        <button type="button" onClick={dsToggle} className="shrink-0 rounded-lg bg-emerald-500/15 px-2.5 py-1 text-[8.5px] font-black text-emerald-200 hover:bg-emerald-500/25">
+          {dsLabel}
+        </button>
+      </div>
     </div>
   );
 }
@@ -215,11 +235,15 @@ export function UreticiIstatistikKarti() {
     return () => window.removeEventListener("uretim-istatistik", tazele);
   }, []);
   const gun = ist.toplam && ist.ilkTarih ? Math.max(1, Math.ceil((ist.sonTarih - ist.ilkTarih) / 86_400_000)) : 0;
+  const son = ist.sonTarih ? new Date(ist.sonTarih).toLocaleDateString() : null;
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-      <div className="mb-1.5 flex items-center gap-2">
-        <span className="text-base" aria-hidden>📊</span>
-        <p className="text-[10px] font-bold text-white">{tt("itUreticiIst")}</p>
+      <div className="mb-1.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-base" aria-hidden>📊</span>
+          <p className="text-[10px] font-bold text-white">{tt("itUreticiIst")}</p>
+        </div>
+        {son && <span className="text-[7.5px] text-white/35">{tt("itUretimBuAy")}: {son}</span>}
       </div>
       {ist.toplam === 0 ? (
         <p className="text-[8px] leading-relaxed text-white/40">{tt("itUreticiBos")}</p>
@@ -248,6 +272,64 @@ export function UreticiIstatistikKarti() {
           </p>
         </>
       )}
+    </div>
+  );
+}
+
+// â˜… C54: Sevap / HayÄ±r Takibi â€” gÃ¼nlÃ¼k basit checklist, cihazda saklanÄ±r
+const HAYIR_KEY = "nur_hayir_takip_v1";
+type HayirKayit = { tarih: string; items: Record<string, boolean> };
+function hayirBugun(): HayirKayit {
+  const bugun = new Date().toISOString().slice(0, 10);
+  try {
+    const l = JSON.parse(localStorage.getItem(HAYIR_KEY) || "[]") as HayirKayit[];
+    return l.find((x) => x.tarih === bugun) || { tarih: bugun, items: {} };
+  } catch { return { tarih: bugun, items: {} }; }
+}
+function hayirIsaretle(id: string, v: boolean) {
+  const bugun = new Date().toISOString().slice(0, 10);
+  try {
+    const l = JSON.parse(localStorage.getItem(HAYIR_KEY) || "[]") as HayirKayit[];
+    const i = l.findIndex((x) => x.tarih === bugun);
+    const k = i >= 0 ? l[i] : { tarih: bugun, items: {} };
+    k.items[id] = v;
+    if (i >= 0) l[i] = k; else l.push(k);
+    localStorage.setItem(HAYIR_KEY, JSON.stringify(l.slice(-60)));
+  } catch { /* ignore */ }
+}
+const HAYIR_LIST = [
+  { id: "sadaka", key: "itHayirSadaka" },
+  { id: "selam", key: "itHayirSelam" },
+  { id: "yardim", key: "itHayirYardim" },
+  { id: "dua", key: "itHayirDua" },
+  { id: "kurban_niyet", key: "itHayirNiyet" },
+] as const;
+export function HayirTakipKarti() {
+  const [kayit, setKayit] = useState<HayirKayit>(() => hayirBugun());
+  const toggle = (id: string) => {
+    const nv = !kayit.items[id];
+    hayirIsaretle(id, nv);
+    setKayit(hayirBugun());
+  };
+  const done = Object.values(kayit.items).filter(Boolean).length;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-[10px] font-bold text-white">{tt("itHayirTakip")}</p>
+        <span className="text-[8.5px] text-amber-200">{done}/{HAYIR_LIST.length}</span>
+      </div>
+      <p className="mb-2 text-[8px] text-white/35">{tt("itHayirTakipNot")}</p>
+      <div className="space-y-1">
+        {HAYIR_LIST.map((h) => {
+          const ok = !!kayit.items[h.id];
+          return (
+            <button key={h.id} type="button" onClick={() => toggle(h.id)}
+              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[9px] font-bold transition ${ok ? "bg-emerald-500/15 text-emerald-200" : "bg-white/5 text-white/55 hover:bg-white/10"}`}>
+              <span>{tt(h.key)}</span><span>{ok ? "✓" : "○"}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -308,3 +308,103 @@ export function rozetleriTazele(): string[] {
     return rozetSayacGuncelle({ uretimToplam: uretim, hatimCuz: cuz, zikirToplam: zikir, testToplam: test });
   } catch { return []; }
 }
+
+/** ── Akıllı Ezber Tekrarı (madde 4 geliştirme) ─────────────────
+ *  Yanlış yapılan surelere 1 gün / 3 gün / 7 gün / 30 gün tekrar önerisi.
+ *  Cihazda saklanır; sunucu yok.
+ */
+export interface EzberTekrarKaydi {
+  sure: number;
+  eklenme: number;
+  /** 0=1gün, 1=3gün, 2=7gün, 3=30gün */
+  seviye: number;
+  sonTekrar: number;
+}
+const EZBER_TEKRAR_KEY = "nur_ezber_tekrar_v1";
+const TEKRAR_ARALIKLARI = [1, 3, 7, 30];
+
+export function ezberTekrarOku(): EzberTekrarKaydi[] {
+  try { return JSON.parse(localStorage.getItem(EZBER_TEKRAR_KEY) || "[]"); } catch { return []; }
+}
+export function ezberTekrarYaz(l: EzberTekrarKaydi[]) {
+  try { localStorage.setItem(EZBER_TEKRAR_KEY, JSON.stringify(l)); } catch { /* ignore */ }
+}
+export function ezberTekrarEkle(sure: number): void {
+  const l = ezberTekrarOku();
+  if (l.some((x) => x.sure === sure)) return;
+  l.push({ sure, eklenme: Date.now(), seviye: 0, sonTekrar: 0 });
+  ezberTekrarYaz(l);
+}
+export function ezberTekrarTamamla(sure: number): void {
+  const l = ezberTekrarOku();
+  const i = l.findIndex((x) => x.sure === sure);
+  if (i < 0) return;
+  l[i].seviye = Math.min(3, l[i].seviye + 1);
+  l[i].sonTekrar = Date.now();
+  ezberTekrarYaz(l);
+}
+export function ezberTekrarBugun(): EzberTekrarKaydi[] {
+  const now = Date.now();
+  return ezberTekrarOku().filter((k) => {
+    const gun = TEKRAR_ARALIKLARI[k.seviye] ?? 30;
+    const hedef = (k.sonTekrar || k.eklenme) + gun * 86400000;
+    return hedef <= now;
+  });
+}
+
+/** ── Ezber Planlayıcısı (madde 42) ────────────────────────── */
+export interface EzberHedef {
+  gunlukSoru: number;
+  haftalikGun: number;
+  aylikSure: number;
+}
+const EZBER_HEDEF_KEY = "nur_ezber_hedef_v1";
+export function ezberHedefOku(): EzberHedef {
+  try {
+    const p = JSON.parse(localStorage.getItem(EZBER_HEDEF_KEY) || "{}");
+    return {
+      gunlukSoru: Number(p.gunlukSoru) || 10,
+      haftalikGun: Number(p.haftalikGun) || 5,
+      aylikSure: Number(p.aylikSure) || 1,
+    };
+  } catch { return { gunlukSoru: 10, haftalikGun: 5, aylikSure: 1 }; }
+}
+export function ezberHedefYaz(h: EzberHedef): void {
+  try { localStorage.setItem(EZBER_HEDEF_KEY, JSON.stringify(h)); } catch { /* ignore */ }
+}
+
+/** ── Günlük Namaz Takip Defteri (madde 49) ─────────────────
+ *  Gizli, cihazda saklanan günlük namaz kaydı.
+ */
+export interface NamazGunKaydi { tarih: string; vakitler: Record<string, boolean> }
+const NAMAZ_TAKIP_KEY = "nur_namaz_takip_v1";
+export function namazTakipOku(): NamazGunKaydi[] {
+  try { return JSON.parse(localStorage.getItem(NAMAZ_TAKIP_KEY) || "[]"); } catch { return []; }
+}
+export function namazTakipYaz(l: NamazGunKaydi[]) {
+  try { localStorage.setItem(NAMAZ_TAKIP_KEY, JSON.stringify(l.slice(-90))); } catch { /* ignore */ }
+}
+export function namazTakipBugun(): NamazGunKaydi {
+  const bugun = new Date().toISOString().slice(0, 10);
+  const l = namazTakipOku();
+  return l.find((x) => x.tarih === bugun) || { tarih: bugun, vakitler: { sabah: false, ogle: false, ikindi: false, aksam: false, yatsi: false } };
+}
+export function namazTakipIsaretle(vakit: string, deger: boolean): void {
+  const bugun = new Date().toISOString().slice(0, 10);
+  const l = namazTakipOku();
+  const i = l.findIndex((x) => x.tarih === bugun);
+  const kayit = i >= 0 ? l[i] : { tarih: bugun, vakitler: { sabah: false, ogle: false, ikindi: false, aksam: false, yatsi: false } };
+  kayit.vakitler[vakit] = deger;
+  if (i >= 0) l[i] = kayit; else l.push(kayit);
+  namazTakipYaz(l);
+}
+
+/** ── Kaza Namazı Planlayıcısı (madde 50) ─────────────────── */
+export interface KazaPlan { toplam: number; tamamlanan: number; baslangic: string; gunlukHedef: number }
+const KAZA_PLAN_KEY = "nur_kaza_plan_v1";
+export function kazaPlanOku(): KazaPlan | null {
+  try { const v = localStorage.getItem(KAZA_PLAN_KEY); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+export function kazaPlanYaz(p: KazaPlan | null): void {
+  try { if (p) localStorage.setItem(KAZA_PLAN_KEY, JSON.stringify(p)); else localStorage.removeItem(KAZA_PLAN_KEY); } catch { /* ignore */ }
+}

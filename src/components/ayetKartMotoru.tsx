@@ -120,6 +120,7 @@ export interface KartAyarlari {
   cubuk: CubukAyar;
   /** ★ ÖZEL YAZI (01.10) — kartın içine çizilen kullanıcı mesajı */
   mesaj: MesajAyar;
+  qrAcik?: boolean;
 }
 
 export const VARSAYILAN_AYARLAR: KartAyarlari = {
@@ -130,7 +131,37 @@ export const VARSAYILAN_AYARLAR: KartAyarlari = {
   hizalama: "orta",
   cubuk: VARSAYILAN_CUBUK,
   mesaj: VARSAYILAN_MESAJ,
+  qrAcik: false,
 };
+
+
+function ayetQrUrl(ayet: AyetKarti): string {
+  const src = ayet.source || "";
+  const sureMatch = src.match(/^(.+?)\s+Suresi/i);
+  const ayetMatch = src.match(/•\s*(\d+)/);
+  if (sureMatch && ayetMatch) {
+    // best-effort: use quran.com search-less path via surah name not trivial; fall back to app link with query
+    const q = encodeURIComponent(`${sureMatch[1].trim()} ${ayetMatch[1]}`);
+    return `https://quran.com/search?q=${q}`;
+  }
+  if (ayet.id && ayet.id.startsWith("kuran-")) {
+    const parts = ayet.id.split("-");
+    if (parts.length >= 3) return `https://quran.com/${parts[1]}/${parts[2]}`;
+  }
+  return "https://nurstudyo.com";
+}
+function qrImgUrl(data: string, size: number): string {
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=0&format=png&data=${encodeURIComponent(data)}`;
+}
+async function loadQrImage(ayet: AyetKarti, size: number): Promise<HTMLImageElement | null> {
+  return await new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = qrImgUrl(ayetQrUrl(ayet), size);
+  });
+}
 
 export async function drawCard(
   ctx: CanvasRenderingContext2D,
@@ -299,6 +330,20 @@ export async function drawCard(
   // ★ ÖZEL YAZI (01.10) — kartın içine çizilen mesaj (üst katman)
   drawMesajYazisi(ctx, w, h, ayar.mesaj ?? VARSAYILAN_MESAJ, (text, maxW) => wrapCanvasText(ctx, text, maxW));
 
+  if (ayar.qrAcik) {
+    try {
+      const qrSize = Math.round(w * 0.13);
+      const qr = await loadQrImage(ayet, Math.max(160, qrSize));
+      if (qr) {
+        const pad = Math.round(w * 0.018);
+        const x = w - qrSize - Math.round(w * 0.045);
+        const y = h - qrSize - Math.round(h * 0.045);
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.fillRect(x - pad, y - pad, qrSize + pad*2, qrSize + pad*2);
+        ctx.drawImage(qr, x, y, qrSize, qrSize);
+      }
+    } catch { /* ignore */ }
+  }
   ctx.font = `500 ${Math.round(w * 0.018)}px Inter, sans-serif`;
   ctx.fillStyle = "rgba(255,255,255,.38)";
   ctx.fillText("nurstudyo.com", w / 2, Math.round(h * 0.928));
