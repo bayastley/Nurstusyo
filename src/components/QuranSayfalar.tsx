@@ -97,6 +97,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setMealDurum("bosta");
     // ★ 03.10: dokunmatik cihazda hover olmaz → oklar kalıcı görünür
     try { setOkDonme(window.matchMedia("(hover: none)").matches); } catch { setOkDonme(false); }
+    cevrimdisiSay();
   }, [open]);
 
   // Sayfa değişince: kaydı güncelle (★ 16.10: DEVAM çipini de) + kaynağı sıfırla + önden yükleme
@@ -250,6 +251,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
 
 
   const MUSHAF_CACHE = "nur_mushaf_sayfa_v1";
+  const [cevrimdisiSayfa, setCevrimdisiSayfa] = useState(0);
+  const cevrimdisiSay = async () => { try { if (!("caches" in window)) { setCevrimdisiSayfa(0); return; } const c = await caches.open(MUSHAF_CACHE); const k = await c.keys(); setCevrimdisiSayfa(k.length); } catch { setCevrimdisiSayfa(0); } };
+  const cevrimdisiTemizle = async () => { try { if ("caches" in window) await caches.delete(MUSHAF_CACHE); } catch {} setCevrimdisiSayfa(0); setHatimMesaji(ttX2610("qsCevrimdisiTemizlendi")); };
   const sayfayiCevrimdisiKaydet = async () => {
     if (!("caches" in window)) return;
     try {
@@ -263,6 +267,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
         } catch { /* try next */ }
       }
       setHatimMesaji(ttX2610(ok ? "qsCevrimdisiKaydedildi" : "qsCevrimdisiHata"));
+      cevrimdisiSay();
     } catch {
       setHatimMesaji(ttX2610("qsCevrimdisiHata"));
     }
@@ -577,6 +582,19 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <Plus size={13} />
             </button>
           </div>
+
+          <button
+            onClick={sayfayiCevrimdisiKaydet}
+            className="flex items-center gap-1 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-bold text-emerald-200 transition hover:bg-emerald-500/20 active:scale-95"
+            title={ttX2610("qsCevrimdisiKaydet")}
+          >
+            {ttX2610("qsCevrimdisiKaydet")}
+          </button>
+          {cevrimdisiSayfa > 0 && (
+            <button onClick={cevrimdisiTemizle} className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-1.5 text-[9.5px] font-bold text-white/60 transition hover:bg-white/10" title={ttX2610("qsCevrimdisiTemizle")}>
+              {ttX2610("qsCevrimdisiSayfaSayisi")}: {cevrimdisiSayfa} · ✕
+            </button>
+          )}
 
           {/* Tam ekran / yarım ekran */}
           <button

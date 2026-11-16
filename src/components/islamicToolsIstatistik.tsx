@@ -338,23 +338,43 @@ export function HayirTakipKarti() {
 export function BildirimMerkeziKarti() {
   const [namaz, setNamaz] = React.useState(false);
   const [ogut, setOgut] = React.useState(false);
+  const [ezber, setEzber] = React.useState(0);
+  const [mushaf, setMushaf] = React.useState(0);
+  const [takvim, setTakvim] = React.useState(0);
   React.useEffect(() => {
     try { setNamaz(localStorage.getItem("nur_namaz_bildirim") === "1"); } catch {}
     try { setOgut(localStorage.getItem("nur_push_abone") === "1"); } catch {}
+    try {
+      const bugun = new Date().toISOString().slice(0,10);
+      const tekrar = JSON.parse(localStorage.getItem("nur_ezber_tekrar_v1") || "[]") as Array<{sonTekrar?:number;eklenme:number;asama:number}>;
+      const now = Date.now();
+      const bek = tekrar.filter((k) => {
+        const gun = [1,3,7,30][Math.min(k.asama,3)] || 30;
+        return ((k.sonTekrar || k.eklenme) + gun*86400000) <= now;
+      }).length;
+      setEzber(bek);
+      const notlar = JSON.parse(localStorage.getItem("nur_ayet_notlari_v1") || "[]") as Array<{hatirlatma?:string}>;
+      setMushaf(notlar.filter((n) => n.hatirlatma && String(n.hatirlatma).slice(0,10) <= bugun).length);
+      const plan = JSON.parse(localStorage.getItem("nur_icerik_takvimi_v1") || "{}") as Record<string, boolean>;
+      setTakvim(Object.values(plan).filter(Boolean).length);
+    } catch {}
   }, []);
+  const Row = ({ label, val, ok }: { label: string; val: string; ok?: boolean }) => (
+    <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+      <span className="text-white/70">{label}</span>
+      <span className={ok ? "font-bold text-emerald-300" : "text-white/50"}>{val}</span>
+    </div>
+  );
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <p className="text-[10px] font-bold text-white">{tt("itBildirimMerkezi")}</p>
       <p className="mb-2 text-[8px] text-white/35">{tt("itBildirimMerkeziNot")}</p>
       <div className="space-y-1 text-[9px]">
-        <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
-          <span className="text-white/70">{tt("itBildirimNamaz")}</span>
-          <span className={namaz ? "font-bold text-emerald-300" : "text-white/40"}>{namaz ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
-        </div>
-        <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
-          <span className="text-white/70">{tt("itBildirimOgut")}</span>
-          <span className={ogut ? "font-bold text-emerald-300" : "text-white/40"}>{ogut ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
-        </div>
+        <Row label={tt("itBildirimNamaz")} val={namaz ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")} ok={namaz} />
+        <Row label={tt("itBildirimOgut")} val={ogut ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")} ok={ogut} />
+        <Row label={tt("itBildirimEzberHatirlatma")} val={ezber > 0 ? `${ezber} ${tt("itBildirimBekleyen")}` : tt("itBildirimYok")} ok={ezber === 0} />
+        <Row label={tt("itBildirimMushafHatirlatma")} val={mushaf > 0 ? `${mushaf} ${tt("itBildirimBekleyen")}` : tt("itBildirimYok")} ok={mushaf === 0} />
+        <Row label={tt("itBildirimIcerikTakvim")} val={takvim > 0 ? `${takvim} ${tt("itBildirimVar")}` : tt("itBildirimYok")} ok={takvim > 0} />
       </div>
     </div>
   );

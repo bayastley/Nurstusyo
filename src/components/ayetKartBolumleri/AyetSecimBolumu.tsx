@@ -68,7 +68,9 @@ export const AyetSecimBolumu: React.FC<{
   setSadeceFavori?: (v: boolean) => void;
   favoriIds?: Set<string>;
   onFavoriTak?: (id: string) => void;
-}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
+  onFavoriSeriIndir?: () => void;
+  seriIndiriliyor?: boolean;
+}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, onFavoriSeriIndir, seriIndiriliyor, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -184,6 +186,17 @@ export const AyetSecimBolumu: React.FC<{
               >
                 <Wand2 size={11} /> {tt("akAkilliAI")}{!akilliElitIzin && <span className="rounded bg-black/25 px-1 py-px text-[7px] font-black">{tt("tierElit")}</span>}
               </button>
+              {onFavoriSeriIndir && (favoriIds?.size ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={onFavoriSeriIndir}
+                  disabled={!!seriIndiriliyor}
+                  className="flex items-center gap-1.5 rounded-lg border border-rose-400/30 bg-rose-500/15 px-2.5 py-1.5 text-[9.5px] font-bold text-rose-100 transition hover:bg-rose-500/25 active:scale-95 disabled:opacity-50"
+                  title={tt("akFavoriSeriIndir")}
+                >
+                  <Download size={11} /> {tt("akFavoriSeriIndir")}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={shuffleAyet}

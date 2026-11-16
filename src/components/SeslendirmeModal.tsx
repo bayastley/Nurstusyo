@@ -67,6 +67,10 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
   //  canlı okur → kayıt anında kesilir, dosya YAZILMAZ (yarım dosya yok).
   const indirIptalRef = React.useRef({ iptalEdildi: false });
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const HIZ_KEY = "nur_ses_hiz_v1";
+  const [sesHiz, setSesHiz] = React.useState<number>(() => { try { const v = parseFloat(localStorage.getItem(HIZ_KEY)||"1"); return (v>=0.75 && v<=1.25)?v:1; } catch { return 1; } });
+  const sesHizRef = React.useRef(sesHiz);
+  React.useEffect(()=>{ sesHizRef.current = sesHiz; try{localStorage.setItem(HIZ_KEY,String(sesHiz));}catch{} if(audioRef.current) try{audioRef.current.playbackRate=sesHiz;}catch{} },[sesHiz]);
   const PARCA_ARASI = 300;
 
   const yaz = React.useCallback((t: string, tip: DurumTip = "hazir") => { setDurum(t); setDurumTip(tip); }, []);
@@ -319,6 +323,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       const url = await urlAl2(kuyruk[i].metin);
       if (mySeq !== seqRef.current) return; // arada durduruldu
       const audio = new Audio(url);
+      audio.playbackRate = sesHizRef.current;
       audioRef.current = audio;
       await new Promise<void>((res) => {
         let bitti = false;
@@ -486,7 +491,7 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       //   AYNI anda bekleme yapıyordu). Yeni akış: url'i al → hemen resolve → play()
       //   tarayıcının kendi streaming buffer'ı (IIS lstm + blob hızlı). Gecikme 6-20sn
       //   → ~0.3 sn'e indi.
-      const audioHazirla = (m2: string) => urlAl(m2).then((url) => ({ audio: new Audio(url) }));
+      const audioHazirla = (m2: string) => urlAl(m2).then((url) => { const a = new Audio(url); a.playbackRate = sesHizRef.current; return { audio: a }; });
       // ★ 26.10 503 TAKILMA (kullanıcı: "biçim iş düzgün yap, indirmiyor"): tek bölümün
       //   TTS 503 hatası ZİNCİRİ kırıyordu → zincir sonunda "Tamamlandı ✓" yanılgısı.
       //   Yeni kural: başarısız bölüm ⚠ uyarıyla atlanır, okuma sıradaki bölümle sürer.
@@ -644,6 +649,12 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
                 {sesListe.map((s) => <option key={s.id} value={s.id}>{s.ad}</option>)}
               </select>
             ) : null}
+            <label className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold text-white/70" title={ttX2610("smHizNot")}>
+              <span>{ttX2610("smHiz")}</span>
+              <select value={sesHiz} onChange={(e)=>setSesHiz(parseFloat(e.target.value))} className="rounded bg-black/40 px-1 py-0.5 text-[10px] text-white outline-none">
+                {[0.75,0.9,1,1.1,1.25].map(v=><option key={v} value={v}>{v}x</option>)}
+              </select>
+            </label>
             <button onClick={taslakKaydet} title={ttX2610("smTaslakKaydet")}
               className="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold text-white/80 transition hover:bg-white/10"
               style={{ border: "1px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)" }}>
