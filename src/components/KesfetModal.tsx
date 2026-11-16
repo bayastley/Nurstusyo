@@ -143,6 +143,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   // ★ Hoca karşılaştırma state'leri (madde 41)
   // ★ Kitaplık (madde 56) — sekme açılınca taze okunur
   const [kitaplikVeri, setKitaplikVeri] = useState<{ isaretler: string[]; notlar: KitaplikNot[] }>({ isaretler: [], notlar: [] });
+  const [kitaplikEk, setKitaplikEk] = useState<{ kart: number; dua: number; ders: number }>({ kart: 0, dua: 0, ders: 0 });
   const [camiKonum, setCamiKonum] = useState("");
   const [camiAranan, setCamiAranan] = useState<string | null>(null);
   // ★ CAMİ BULUCU — KONUMDAN AÇ (01.10, kullanıcı kararı): ortadaki büyük buton cihaz konumunu alıp haritayı açar
@@ -348,7 +349,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             <button
               key={s.id}
               type="button"
-              onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+              onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") { setKitaplikVeri(kitaplikOku()); try { const kart = JSON.parse(localStorage.getItem("nur_kart_favori_v1")||"[]").length||0; const dua = JSON.parse(localStorage.getItem("nur_kisisel_dualar_v1")||"[]").length||0; const ders = Object.keys(JSON.parse(localStorage.getItem("nur_offline_dersler_v1")||"{}")).length||0; setKitaplikEk({ kart, dua, ders }); } catch { setKitaplikEk({ kart:0, dua:0, ders:0 }); } } }}
               className={`flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-[11px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "text-white/60 hover:bg-white/5 hover:text-white"}`}
               style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
             >
@@ -365,7 +366,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               <button
                 key={s.id}
                 type="button"
-                onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") setKitaplikVeri(kitaplikOku()); }}
+                onClick={() => { setSekme(s.id); setArama(""); setKartCevrildi(null); setAcikSure(null); setAcikKissa(null); setAcikSoru(null); setAcikGenelSoru(null); if (s.id === "kitaplik") { setKitaplikVeri(kitaplikOku()); try { const kart = JSON.parse(localStorage.getItem("nur_kart_favori_v1")||"[]").length||0; const dua = JSON.parse(localStorage.getItem("nur_kisisel_dualar_v1")||"[]").length||0; const ders = Object.keys(JSON.parse(localStorage.getItem("nur_offline_dersler_v1")||"{}")).length||0; setKitaplikEk({ kart, dua, ders }); } catch { setKitaplikEk({ kart:0, dua:0, ders:0 }); } } }}
                 className={`rounded-full px-3 py-1.5 text-[10px] font-bold transition ${sekme === s.id ? "text-black shadow-md" : "glass-soft text-white/55 hover:text-white"}`}
                 style={sekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
               >
@@ -787,7 +788,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
               </div>
             )}
           </div>
-          {/* İndirilen videolar — IndexedDB'de saklananlar */}
+          {/* Kayıtlı içerikler özeti (C53/C40/83) — cihazdaki verilerden */}
+          <div>
+            <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ktKitaplikDiger")}</p>
+            <div className="space-y-1 rounded-xl border border-white/10 bg-white/[.02] p-2.5">
+              <div className="flex items-center justify-between text-[10px]"><span className="text-white/70">{tt("ktKitaplikKart")}</span><span className="font-black" style={{ color: "var(--accent-2)" }}>{kitaplikEk.kart}</span></div>
+              <div className="flex items-center justify-between text-[10px]"><span className="text-white/70">{tt("ktKitaplikDua")}</span><span className="font-black" style={{ color: "var(--accent-2)" }}>{kitaplikEk.dua}</span></div>
+              <div className="flex items-center justify-between text-[10px]"><span className="text-white/70">{tt("ktKitaplikDers")}</span><span className="font-black" style={{ color: "var(--accent-2)" }}>{kitaplikEk.ders}</span></div>
+              {(kitaplikEk.kart + kitaplikEk.dua + kitaplikEk.ders) === 0 && <p className="pt-1 text-center text-[9px] text-white/35">{tt("ktKitaplikBosOzet")}</p>}
+            </div>
+          </div>
+                    {/* İndirilen videolar — IndexedDB'de saklananlar */}
           <div>
             <p className="mb-1.5 text-[9px] font-black uppercase tracking-widest text-white/45">{tt("ktKitaplikVideolar")}</p>
             <p className="rounded-xl bg-white/[.03] px-3 py-2.5 text-center text-[9.5px] leading-relaxed text-white/45">{tt("ktKitaplikVideoBilgi")}</p>

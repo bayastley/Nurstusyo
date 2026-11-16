@@ -248,6 +248,26 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   const solKenarTikla = () => setSayfa((s) => Math.max(1, s - 1));
   const sagKenarTikla = () => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1));
 
+
+  const MUSHAF_CACHE = "nur_mushaf_sayfa_v1";
+  const sayfayiCevrimdisiKaydet = async () => {
+    if (!("caches" in window)) return;
+    try {
+      const cache = await caches.open(MUSHAF_CACHE);
+      const urls = sayfaGorselKaynaklari(sayfa);
+      let ok = false;
+      for (const u of urls) {
+        try {
+          const res = await fetch(u, { mode: "cors" });
+          if (res.ok) { await cache.put(u, res.clone()); ok = true; break; }
+        } catch { /* try next */ }
+      }
+      setHatimMesaji(ttX2610(ok ? "qsCevrimdisiKaydedildi" : "qsCevrimdisiHata"));
+    } catch {
+      setHatimMesaji(ttX2610("qsCevrimdisiHata"));
+    }
+  };
+
   if (!open) return null;
 
   return (

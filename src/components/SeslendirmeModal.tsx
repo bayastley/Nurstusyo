@@ -426,6 +426,34 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
     return () => clearTimeout(parlak);
   }, [plan, sunucuVar, yaz]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ★ 35 Seslendirme projesi kaydetme — yarım kalan taslağı localStorage'a al/geri yükle
+  const TASLAK_KEY = "nur_seslendirme_taslak_v1";
+  const taslakKaydet = React.useCallback(() => {
+    try {
+      const data = { v: 1, mod, dil, ses, metin, kuyruk, kuyrukSec, bg, bolumSayi, sureIdx, ayetIdx };
+      localStorage.setItem(TASLAK_KEY, JSON.stringify(data));
+      yaz(ttX2610("smTaslakKaydedildi"));
+    } catch { yaz(ttX2610("smHata"), "hata"); }
+  }, [mod, dil, ses, metin, kuyruk, kuyrukSec, bg, bolumSayi, sureIdx, ayetIdx, yaz]);
+  const taslakYukle = React.useCallback(() => {
+    try {
+      const raw = localStorage.getItem(TASLAK_KEY);
+      if (!raw) { yaz(ttX2610("smTaslakYok"), "hata"); return; }
+      const d = JSON.parse(raw);
+      if (d.dil && d.dil !== dil) setDil(d.dil);
+      if (d.mod === "ayet" || d.mod === "metin") setMod(d.mod);
+      if (typeof d.ses === "string" || d.ses === null) setSes(d.ses ?? null);
+      if (typeof d.metin === "string") setMetin(d.metin);
+      if (Array.isArray(d.kuyruk)) setKuyruk(d.kuyruk);
+      if (typeof d.kuyrukSec === "number") setKuyrukSec(d.kuyrukSec);
+      if (d.bg && typeof d.bg === "object") setBg(d.bg); else setBg(null);
+      if (typeof d.bolumSayi === "number") setBolumSayi(d.bolumSayi);
+      if (typeof d.sureIdx === "number") setSureIdx(d.sureIdx);
+      if (typeof d.ayetIdx === "number") setAyetIdx(d.ayetIdx);
+      yaz(ttX2610("smTaslakYuklendi"));
+    } catch { yaz(ttX2610("smHata"), "hata"); }
+  }, [dil, yaz]);
+
   // ── SESLENDİR ──
   const seslendir = async (baslangicIdx = 0) => {
     if (runningRef.current || !sunucuVar) return;
@@ -616,6 +644,16 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
                 {sesListe.map((s) => <option key={s.id} value={s.id}>{s.ad}</option>)}
               </select>
             ) : null}
+            <button onClick={taslakKaydet} title={ttX2610("smTaslakKaydet")}
+              className="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold text-white/80 transition hover:bg-white/10"
+              style={{ border: "1px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)" }}>
+              {ttX2610("smTaslakKaydet")}
+            </button>
+            <button onClick={taslakYukle} title={ttX2610("smTaslakYukle")}
+              className="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold text-white/80 transition hover:bg-white/10"
+              style={{ border: "1px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)" }}>
+              {ttX2610("smTaslakYukle")}
+            </button>
             <button onClick={kapat} aria-label="Kapat" title="Kapat"
               className="rounded-xl px-4 py-2 text-[11px] font-extrabold text-white transition hover:brightness-110"
               style={{ background: "#e04a5a", border: "1px solid #e04a5a" }}>

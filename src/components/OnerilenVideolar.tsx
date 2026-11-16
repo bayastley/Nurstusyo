@@ -169,7 +169,9 @@ export const OnerilenVideolar: React.FC<OnerilenVideolarProps> = ({ havuz, kulla
       <p className="mb-2 text-[9.5px] leading-relaxed text-white/45">
         {ttX2610("ovOzelIntro")} <b className="text-white/70">{ttX2610("ovTekTik")}</b>.
       </p>
-      <div className="grid grid-cols-2 gap-2.5">
+      {/* ★ 16.11: dar orta kolonda 2 sütun 130 px'e sıkışıyordu — sekme yuvasına
+          taşındığı için tek sütun, tam genişlik kart. */}
+      <div className="grid grid-cols-1 gap-2">
         {oneriler.map((o) => (
           <div key={o.baslik} className="group relative overflow-hidden rounded-xl border border-white/10 transition hover:border-[color:var(--accent)]">
             <img

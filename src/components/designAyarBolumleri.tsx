@@ -200,6 +200,12 @@ export function MarkaImza({
           </button>
         ))}
       </div>
+      <div className="grid grid-cols-2 gap-1 pt-0.5">
+        <button type="button" onClick={() => { try { localStorage.setItem("nur_marka_preset_v1", JSON.stringify({ brandSignature, brandOn, brandPos })); window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaKaydedildi")})); } catch {} }}
+          className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaKaydet")}</button>
+        <button type="button" onClick={() => { try { const r=localStorage.getItem("nur_marka_preset_v1"); if(!r){window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaYok")}));return;} const d=JSON.parse(r); if(typeof d.brandSignature==="string") setBrandSignature(d.brandSignature); if(typeof d.brandOn==="boolean") setBrandOn(d.brandOn); if(d.brandPos) setBrandPos(d.brandPos); window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaYuklendi")})); } catch {} }}
+          className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaYukle")}</button>
+      </div>
       <span className="block text-[8px] leading-relaxed text-white/35">
         {ttDA("dafImzaIpucu1")} <b className="text-white/50">{ttDA("dafSolUst")}</b> {ttDA("dafImzaIpucu2")}
       </span>

@@ -270,6 +270,24 @@ export const KartOnizlemeBolumu: React.FC<{
                   </button>
                 </div>
                 <button type="button"
+                  onClick={() => { setSize("916"); setAyar((a)=>({ ...a, konum:"orta", yaziOlcek: Math.max(a.yaziOlcek,100) })); }}
+                  className="w-full rounded-lg border border-amber-400/25 bg-amber-400/10 py-1.5 text-[8.5px] font-black text-amber-100 transition hover:bg-amber-400/20"
+                  title={tt("akHikayePresetNot")}>
+                  {tt("akHikayePreset")}
+                </button>
+                <div className="grid grid-cols-2 gap-1">
+                  <button type="button"
+                    onClick={() => { try { localStorage.setItem("nur_kart_tasarim_preset_v1", JSON.stringify(ayar)); window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimKaydedildi")})); } catch {} }}
+                    className="rounded-lg bg-white/5 py-1.5 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">
+                    {tt("akTasarimKaydet")}
+                  </button>
+                  <button type="button"
+                    onClick={() => { try { const r=localStorage.getItem("nur_kart_tasarim_preset_v1"); if(!r){window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimYok")}));return;} setAyar({...VARSAYILAN_AYARLAR,...JSON.parse(r)}); window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimYuklendi")})); } catch {} }}
+                    className="rounded-lg bg-white/5 py-1.5 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">
+                    {tt("akTasarimYukle")}
+                  </button>
+                </div>
+                <button type="button"
                   onClick={() => setAyar(VARSAYILAN_AYARLAR)}
                   className="w-full rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/50 transition hover:text-white">
                   ↺ Ayarları sıfırla

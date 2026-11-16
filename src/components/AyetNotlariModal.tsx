@@ -85,6 +85,9 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
     yaz(yeni);
   };
 
+  const bugunStr = new Date().toISOString().slice(0,10);
+  const hatirlatmaBugun = useMemo(() => notlar.filter((n) => n.hatirlatma && n.hatirlatma <= bugunStr), [notlar, bugunStr]);
+
   const filtreli = useMemo(() => {
     const q = arama.trim().toLocaleLowerCase("tr");
     return notlar.filter((n) => {
@@ -106,6 +109,12 @@ export const AyetNotlariModal: React.FC<AyetNotlariModalProps> = ({ open, onClos
       <div className="mb-3 flex items-center gap-2 rounded-xl bg-emerald-500/10 px-3 py-2 text-[9px] font-bold text-emerald-200/80 ring-1 ring-emerald-400/20">
         <Lock size={11} /> {tt("anGizlilik")}
       </div>
+
+      {hatirlatmaBugun.length > 0 && (
+        <button type="button" onClick={() => setFiltre("hatirlatma")} className="mb-3 w-full rounded-xl bg-amber-500/10 px-3 py-2 text-left text-[9px] font-bold text-amber-100 ring-1 ring-amber-400/20">
+          <Bell size={11} className="mr-1 inline" /> {tt("anHatirlatma")}: {hatirlatmaBugun.length} {tt("anKayitli")}
+        </button>
+      )}
 
       {/* Yeni not */}
       <div className="mb-4 rounded-xl border border-white/10 bg-white/[.03] p-3.5">

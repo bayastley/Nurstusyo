@@ -143,6 +143,10 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // Payment flow → usePaymentFlow hook'unda
 
   const stCekirdek = useStudioCekirdek({ developerMaster });
+  // ★ 16.11 HAZIR TASLAK YUVASI (kullanıcı: "önerilen klip aşırı yer kaplıyor"):
+  //   günün videosu + önerilen klipler tek yuvada sekme oldu. Aktif sekmeye
+  //   tekrar basınca yuva kapanır (orta kolonda 332 px yer kaplıyordu).
+  const [taslakSekme, setTaslakSekme] = useState<"gun" | "oneri" | null>("gun");
   const {
     adminGodMode, setAdminGodMode, setIsMasterSürüm, maintenance, isDevMaster, isMasterSürüm, setSentCode, setAdminSonEmail, notify,
     telifUyariAcik, setTelifUyariAcik,
@@ -370,8 +374,29 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
 
         {/* MIDDLE: VIDEO PREVIEW SECTION */}
         <div className="min-w-0 space-y-2.5">
+        {/* ★ 16.11 HAZIR TASLAK YUVASI — kullanıcı: "önerilen klip aşırı yer kaplıyor".
+            Günün videosu (117 px) + önerilen klipler (215 px) ayrı ayrı duruyordu;
+            artık tek yuvada sekme. Aktif sekmeye tekrar basınca yuva kapanır. */}
+        <div className="flex items-center gap-1 rounded-2xl border border-white/10 bg-white/[.02] p-1">
+          {([
+            { id: "gun" as const, etiket: ttX2610("gvBaslik") },
+            { id: "oneri" as const, etiket: ttX2610("ovBaslik") },
+          ]).map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              aria-pressed={taslakSekme === s.id}
+              onClick={() => setTaslakSekme((a) => (a === s.id ? null : s.id))}
+              className={`flex-1 truncate rounded-xl px-2 py-1.5 text-[9.5px] font-black uppercase tracking-wider transition ${taslakSekme === s.id ? 'text-black' : 'text-white/55 hover:bg-white/5 hover:text-white/80'}`}
+              style={taslakSekme === s.id ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
+            >
+              {s.etiket}
+            </button>
+          ))}
+        </div>
         {/* ★ GÜNÜN HAZIR VİDEOSU (01.10): güne/mübarek güne özel kart — tıkla, önizlemeye yüklensin.
             TIER KURALI: free'e PRO/ELİT atmosfer yüklemez; havuz üyelik katmanından seçilir. */}
+        {taslakSekme === "gun" && (
         <GununHazirVideosu
           accessTier={accessTier}
           ayetEkle={(s, a) => { if (!selectedRef.current.some((item) => item.id === `${s}:${a}`)) void addAyah(s, a); }}
@@ -379,6 +404,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           erisilebilirKlipBul={(cat) => combinedAllClips.find((clip) => clip.cat === cat && clip.kind === clipKind && isClipAccessible(clip)) ?? null}
           clipKind={clipKind}
         />
+        )}
         <PanelSuspense minHeight={360}>
         <VideoPreviewSection
           canvasRef={canvasRef}
@@ -472,6 +498,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
         </PanelSuspense>
         {/* ★ ÖNERİLEN VİDEOLAR (22.10): bugüne özel HAZIR TASLAKLAR — ayet+kâri+atmosfer
             atanmış, tek tıkla üretim. Üretim yaptıktan sonra değil HER ZAMAN üstte. */}
+        {taslakSekme === "oneri" && (
         <OnerilenVideolar
           havuz={oneriHavuzu}
           kullanilanKategoriler={oneriKullanilanlar}
@@ -480,6 +507,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           userAnahtar={user?.email || "misafir"}
           onUret={oneriUygulaVeUret}
         />
+        )}
         </div>
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}

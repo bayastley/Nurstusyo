@@ -71,6 +71,9 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
   };
 
   const [bildirimIstek, setBildirimIstek] = useState<"" | "ok" | "yok">("");
+  const [planMod, setPlanMod] = useState<7|30>(7);
+  const [plan, setPlan] = useState<Record<string, boolean>>(() => { try { return JSON.parse(localStorage.getItem("nur_icerik_takvimi_v1") || "{}"); } catch { return {}; } });
+  const planToggle = (k: string) => { const n = { ...plan, [k]: !plan[k] }; setPlan(n); try { localStorage.setItem("nur_icerik_takvimi_v1", JSON.stringify(n)); } catch {} };
   // ★ CANLI TAKVİM (28.09): "bugün" sabit useMemo'da donuyordu — uygulama açık kaldıkça
   //   sayaçlar hep aynı kalıyordu. Artık modal açıkken her 60 sn'de bir tazelenir;
   //   gün değişince (gece yarısı) sayaçlar otomatik güncellenir.
@@ -222,6 +225,30 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
       <p className="mt-2 text-center text-[8px] text-white/25">
         <Sparkles size={9} className="mr-1 inline" />{tt("ogAltNot")}
       </p>
+      <div className="mt-3 rounded-xl border border-white/10 bg-white/[.03] p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-[10px] font-black text-white/85">📅 {tt("ogIcerikTakvimi")}</p>
+          <div className="flex gap-1">
+            <button type="button" onClick={() => setPlanMod(7)} className={`rounded-lg px-2 py-1 text-[8.5px] font-bold ${planMod===7?"bg-amber-500/20 text-amber-100":"bg-white/5 text-white/50"}`}>{tt("ogPlan7")}</button>
+            <button type="button" onClick={() => setPlanMod(30)} className={`rounded-lg px-2 py-1 text-[8.5px] font-bold ${planMod===30?"bg-amber-500/20 text-amber-100":"bg-white/5 text-white/50"}`}>{tt("ogPlan30")}</button>
+          </div>
+        </div>
+        <p className="mb-2 text-[8.5px] text-white/40">{tt("ogIcerikNot")}</p>
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({length: planMod}, (_,i)=>i+1).map((d)=>{
+            const k = `${planMod}-${d}`;
+            const done = !!plan[k];
+            return (
+              <button key={k} type="button" onClick={()=>planToggle(k)} title={`${tt("ogPlanGun")} ${d}`}
+                className={`rounded-md py-1.5 text-[8.5px] font-black transition ${done?"bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/30":"bg-white/5 text-white/45 hover:bg-white/10"}`}>
+                {done?"✓":d}
+              </button>
+            );
+          })}
+        </div>
+        <button type="button" onClick={()=>{ try{localStorage.removeItem("nur_icerik_takvimi_v1")}catch{} setPlan({}); }} className="mt-2 text-[8px] font-bold text-white/35 hover:text-white/60">{tt("ogPlanTemizle")}</button>
+      </div>
+
     </Modal>
   );
 };

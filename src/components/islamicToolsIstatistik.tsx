@@ -333,3 +333,66 @@ export function HayirTakipKarti() {
     </div>
   );
 }
+
+
+export function BildirimMerkeziKarti() {
+  const [namaz, setNamaz] = React.useState(false);
+  const [ogut, setOgut] = React.useState(false);
+  React.useEffect(() => {
+    try { setNamaz(localStorage.getItem("nur_namaz_bildirim") === "1"); } catch {}
+    try { setOgut(localStorage.getItem("nur_push_abone") === "1"); } catch {}
+  }, []);
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <p className="text-[10px] font-bold text-white">{tt("itBildirimMerkezi")}</p>
+      <p className="mb-2 text-[8px] text-white/35">{tt("itBildirimMerkeziNot")}</p>
+      <div className="space-y-1 text-[9px]">
+        <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+          <span className="text-white/70">{tt("itBildirimNamaz")}</span>
+          <span className={namaz ? "font-bold text-emerald-300" : "text-white/40"}>{namaz ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
+        </div>
+        <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
+          <span className="text-white/70">{tt("itBildirimOgut")}</span>
+          <span className={ogut ? "font-bold text-emerald-300" : "text-white/40"}>{ogut ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+const A11Y_KEY = "nur_a11y_v1";
+type A11y = { buyukYazi: boolean; kontrast: boolean; kolayOkuma: boolean };
+function a11yOku(): A11y { try { return { buyukYazi:false, kontrast:false, kolayOkuma:false, ...JSON.parse(localStorage.getItem(A11Y_KEY)||"{}") }; } catch { return { buyukYazi:false, kontrast:false, kolayOkuma:false }; } }
+function a11yUygula(v: A11y) {
+  const r = document.documentElement;
+  r.style.fontSize = v.buyukYazi ? "112%" : "";
+  r.style.filter = v.kontrast ? "contrast(1.08) saturate(1.02)" : "";
+  r.style.lineHeight = v.kolayOkuma ? "1.7" : "";
+}
+export function ErisilebilirlikKarti() {
+  const [v, setV] = React.useState<A11y>(() => a11yOku());
+  React.useEffect(() => { a11yUygula(v); }, []);
+  const set = (k: keyof A11y) => {
+    const nv = { ...v, [k]: !v[k] };
+    setV(nv);
+    try { localStorage.setItem(A11Y_KEY, JSON.stringify(nv)); } catch {}
+    a11yUygula(nv);
+  };
+  const Row = ({ k, label }: { k: keyof A11y; label: string }) => (
+    <button type="button" onClick={() => set(k)} className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[9px] font-bold transition ${v[k] ? "bg-emerald-500/15 text-emerald-200" : "bg-white/5 text-white/55 hover:bg-white/10"}`}>
+      <span>{label}</span><span>{v[k] ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
+    </button>
+  );
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <p className="text-[10px] font-bold text-white">{tt("itErisilebilirlik")}</p>
+      <p className="mb-2 text-[8px] text-white/35">{tt("itErisilebilirlikNot")}</p>
+      <div className="space-y-1">
+        <Row k="buyukYazi" label={tt("itBuyukYazi")} />
+        <Row k="kontrast" label={tt("itYuksekKontrast")} />
+        <Row k="kolayOkuma" label={tt("itKolayOkuma")} />
+      </div>
+    </div>
+  );
+}

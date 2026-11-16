@@ -19,6 +19,15 @@ export function KissaBolumu({
   acikKissa: string | null;
   setAcikKissa: (v: string | null) => void;
 }) {
+  const [offline, setOffline] = React.useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem("nur_offline_dersler_v1") || "{}"); } catch { return {}; }
+  });
+  const offlineToggle = (ad: string) => {
+    const n = { ...offline, [ad]: !offline[ad] };
+    if (!n[ad]) delete n[ad];
+    setOffline(n);
+    try { localStorage.setItem("nur_offline_dersler_v1", JSON.stringify(n)); } catch {}
+  };
   return (
     <div className="space-y-1.5">
       {filtreliKissalar.map((k) => {
@@ -51,6 +60,10 @@ export function KissaBolumu({
                 </p>
                 {/* ★ 25.10 (kullanıcı emri): sahih kaynak satırı — kıssanın altında */}
                 {k.kaynak && <p className="mt-2 text-[8.5px] font-bold" style={{ color: "var(--accent-2)" }}>📚 {k.kaynak}</p>}
+                <button type="button" onClick={() => offlineToggle(k.ad)}
+                  className={`mt-2 rounded-lg px-2.5 py-1.5 text-[8.5px] font-bold transition ${offline[k.ad] ? "bg-emerald-500/15 text-emerald-100" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
+                  {offline[k.ad] ? tt("ksOfflineKaldir") : tt("ksOfflineKaydet")}
+                </button>
               </div>
             )}
           </div>
