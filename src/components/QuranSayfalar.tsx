@@ -351,7 +351,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           onDoubleClick={() => setZoom((z) => (z >= 1.9 ? 1 : 2))}
           onMouseEnter={() => setOkGorunur(true)}
           onMouseLeave={() => setOkGorunur(false)}
-          className="absolute inset-0 overflow-auto bg-[#1b150c] p-3 scrollbar-thin"
+          className="absolute inset-0 overflow-auto bg-[#12161a] p-3 scrollbar-thin"
           title={ttX2610("qsZoomTitle")}
         >
           <div className="flex min-h-full min-w-full items-center justify-center">
@@ -363,7 +363,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               >
                 {mealDurum === "yukleniyor" && (
                   <div className="flex items-center justify-center gap-2 py-20 text-[13px] font-bold text-[#8a6d1f]">
-                    <Loader2 size={15} className="animate-spin" /> meal sayfası yükleniyor…
+                    <Loader2 size={15} className="animate-spin" /> {ttX2610("qsMealYukleniyor")}
                   </div>
                 )}
                 {mealDurum === "hata" && (
@@ -374,7 +374,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                       onClick={() => { mealCacheRef.current.delete(sayfa); setMealYeniden((n) => n + 1); }}
                       className="flex items-center gap-1.5 rounded-xl bg-[#c9a227] px-3.5 py-1.5 text-[11px] font-black text-[#2b2416] transition hover:brightness-110 active:scale-95"
                     >
-                      <RotateCcw size={12} /> Tekrar dene
+                      <RotateCcw size={12} /> {ttX2610("qsTekrarDene")}
                     </button>
                   </div>
                 )}
@@ -436,9 +436,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                   height: gorselH ? `${gorselH}px` : "auto",
                   width: gorselG ? `${gorselG}px` : "auto",
                   maxWidth: "none",
-                  background: rasterMi ? "#ffffff" : undefined,
-                  // ★ 30.10 (kullanıcı emri "içi sarı olsun"): mushaf sayfası sıcak kağıt tonu
-                  filter: rasterMi ? "sepia(.28) saturate(1.08) brightness(1.01)" : undefined,
+                  background: rasterMi ? "#efe4c8" : undefined,
+                  // ★ 16.11: gece/göz yormayan yumuşak sıcak mushaf tonu (göz almaz krem)
+                  filter: rasterMi ? "sepia(.18) saturate(1.18) brightness(.955) contrast(.985) hue-rotate(-2deg)" : undefined,
                 }}
               />
             ) : (
@@ -449,7 +449,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                   onClick={() => { setKaynakIdx(0); setYukleniyor(true); setHata(false); setImgKey((k) => k + 1); }}
                   className="flex items-center gap-1.5 rounded-xl bg-gold px-3 py-1.5 text-[11px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"
                 >
-                  <RotateCcw size={12} /> Tekrar dene
+                  <RotateCcw size={12} /> {ttX2610("qsTekrarDene")}
                 </button>
               </div>
             )}
@@ -457,7 +457,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
           {yukleniyor && !hata && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-[11px] font-bold text-gold">
-                <Loader2 size={14} className="animate-spin" /> sayfa yükleniyor…
+                <Loader2 size={14} className="animate-spin" /> {ttX2610("qsSayfaYukleniyor")}
               </div>
             </div>
           )}
@@ -477,8 +477,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <div
                 onClick={sagKenarTikla}
                 className="pointer-events-auto absolute bottom-0 right-0 top-0 w-[90px] cursor-e-resize"
-                title="Sonraki sayfa →"
-                aria-label="Sonraki sayfa"
+                title={ttX2610("qsSonrakiSayfa")}
+                aria-label={ttX2610("qsSonrakiSayfa")}
                 role="button"
               />
             </div>
@@ -499,9 +499,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               <button
                 onClick={() => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1))}
                 disabled={sayfa >= SAYFA_SAYISI}
-                aria-label="Sonraki sayfa"
+                aria-label={ttX2610("qsSonrakiSayfa")}
                 className={`absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
-                title="Sonraki sayfa (→)"
+                title={ttX2610("qsSonrakiSayfa")}
               >
                 <ChevronRight size={22} strokeWidth={2.6} />
               </button>
@@ -537,9 +537,9 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               onClick={() => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1))}
               disabled={sayfa >= SAYFA_SAYISI}
               className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.04] px-3 py-1.5 text-[10px] font-bold text-[#d8cfae] transition hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:hover:bg-white/[.04]"
-              title="Sonraki sayfa"
+              title={ttX2610("qsSonrakiSayfa")}
             >
-              Sonraki <ChevronRight size={13} />
+              {ttX2610("qsSonraki")} <ChevronRight size={13} />
             </button>
             {/* Cüz atlaması */}
             <select

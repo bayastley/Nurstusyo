@@ -132,6 +132,16 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
         ))}
       </div>
 
+      {/* ── YENİ EKLENENLER (local güncellemeler) ─────── */}
+      <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-500/[.06] p-3.5">
+        <h3 className="mb-2 text-[11px] font-black uppercase tracking-wider text-emerald-200">{tt("shYeniBaslik")}</h3>
+        <ul className="space-y-1.5 text-[9.5px] leading-relaxed text-white/70 list-disc pl-4">
+          {["shYeni1","shYeni2","shYeni3","shYeni4","shYeni5","shYeni6","shYeni7","shYeni8","shYeni9","shYeni10","shYeni11","shYeni12","shYeni13","shYeni14","shYeni15"].map((k)=>(
+            <li key={k}>{tt(k)}</li>
+          ))}
+        </ul>
+      </div>
+
       {/* ── KAYNAKLAR ──────────────────────────────────── */}
       <div className="mb-4 rounded-xl border border-white/10 bg-white/[.03] p-3.5">
         <h3 className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>

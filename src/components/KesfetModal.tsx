@@ -343,8 +343,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     //   sağdaki arayüz değişir. Mobilde sol menü gizlenir, eski yatay çipler döner (kuplu).
     <Modal title={tt("v2KesfetTitle")} sub={tt("v2KesfetSub")} onClose={onClose} wide huge>
       <div className="flex items-start gap-3">
-        {/* ── SOL MENÜ (md+): kategoriler dikey ── */}
-        <aside className="sticky top-0 hidden w-[190px] shrink-0 self-start flex-col gap-1 border-r border-white/10 pr-2 md:flex">
+        {/* ── SOL MENÜ (md+): kategoriler dikey, uzun listede kaydırılabilir ── */}
+        <aside className="sticky top-0 hidden max-h-[calc(90vh-9rem)] w-[190px] shrink-0 self-start flex-col gap-1 overflow-y-auto overscroll-contain border-r border-white/10 pr-2 scrollbar-thin md:flex">
           {SEKMELER.map((s) => (
             <button
               key={s.id}
@@ -360,8 +360,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
         {/* ── SAĞ İÇERİK ALANI ── */}
         <div className="min-w-0 flex-1">
-          {/* Mobilde sol menü yok — yatay çipler (eski davranış korunur) */}
-          <div className="mb-3 flex flex-wrap gap-1.5 md:hidden">
+          {/* Mobilde sol menü yok — yatay çipler, taşarsa yatay kaydırılabilir */}
+          <div className="mb-3 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto overscroll-contain pr-1 scrollbar-thin md:hidden">
             {SEKMELER.map((s) => (
               <button
                 key={s.id}
