@@ -36,10 +36,18 @@ export function KissaBolumu({
       <div className="rounded-lg border border-white/10 bg-white/[.02] px-2.5 py-2">
         <div className="flex items-center justify-between gap-2">
           <p className="text-[9px] font-bold text-emerald-200/90">{tt("ksOfflineOzet").replace("{n}", String(offlineAdlar.length))}</p>
-          <button type="button" onClick={() => setSadeceOffline((v) => !v)}
-            className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-bold transition ${sadeceOffline ? "bg-emerald-500/20 text-emerald-100" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
-            {sadeceOffline ? tt("ksOfflineFiltreKapat") : tt("ksOfflineFiltre")}
-          </button>
+          <div className="flex shrink-0 gap-1">
+            {offlineAdlar.length > 0 && (
+              <button type="button" onClick={() => { setOffline({}); setSadeceOffline(false); try { localStorage.removeItem("nur_offline_dersler_v1"); } catch {} }}
+                className="rounded-md bg-white/5 px-2 py-1 text-[8px] font-bold text-white/45 transition hover:bg-white/10 hover:text-white/70">
+                {tt("ksOfflineTemizle")}
+              </button>
+            )}
+            <button type="button" onClick={() => setSadeceOffline((v) => !v)}
+              className={`rounded-md px-2 py-1 text-[8px] font-bold transition ${sadeceOffline ? "bg-emerald-500/20 text-emerald-100" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
+              {sadeceOffline ? tt("ksOfflineFiltreKapat") : tt("ksOfflineFiltre")}
+            </button>
+          </div>
         </div>
         {offlineAdlar.length > 0 ? (
           <p className="mt-1 text-[8.5px] leading-relaxed text-white/45 line-clamp-2">{offlineAdlar.slice(0, 6).join(" • ")}{offlineAdlar.length > 6 ? "…" : ""}</p>
