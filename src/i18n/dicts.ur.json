@@ -2436,5 +2436,6 @@
   "ksOfflineFiltreBos": "کوئی محفوظ آف لائن سبق نہیں۔",
   "itVeriA11y": "رسائی کی ترتیبات",
   "ksOfflineTemizle": "محفوظ اسباق صاف کریں",
-  "itVeriTakip": "ٹریکنگ اور نوٹس (نماز/قضا/نیکی/دعائیں)"
+  "itVeriTakip": "ٹریکنگ اور نوٹس (نماز/قضا/نیکی/دعائیں)",
+  "ogPlanIlerleme": "پیش رفت: {done}/{total}"
 }

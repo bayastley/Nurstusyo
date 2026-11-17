@@ -233,7 +233,8 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
             <button type="button" onClick={() => setPlanMod(30)} className={`rounded-lg px-2 py-1 text-[8.5px] font-bold ${planMod===30?"bg-amber-500/20 text-amber-100":"bg-white/5 text-white/50"}`}>{tt("ogPlan30")}</button>
           </div>
         </div>
-        <p className="mb-2 text-[8.5px] text-white/40">{tt("ogIcerikNot")}</p>
+        <p className="mb-1 text-[8.5px] text-white/40">{tt("ogIcerikNot")}</p>
+        <p className="mb-2 text-[8.5px] font-bold text-amber-100/80">{tt("ogPlanIlerleme").replace("{done}", String(Array.from({length: planMod}, (_,i)=>i+1).filter((d)=>plan[`${planMod}-${d}`]).length)).replace("{total}", String(planMod))}</p>
         <div className="grid grid-cols-7 gap-1">
           {Array.from({length: planMod}, (_,i)=>i+1).map((d)=>{
             const k = `${planMod}-${d}`;

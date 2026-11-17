@@ -2436,5 +2436,6 @@
   "ksOfflineFiltreBos": "Kayıtlı çevrimdışı ders yok.",
   "itVeriA11y": "Erişilebilirlik ayarları",
   "ksOfflineTemizle": "Kayıtlı dersleri temizle",
-  "itVeriTakip": "Takip ve notlar (namaz/kaza/hayır/dualar)"
+  "itVeriTakip": "Takip ve notlar (namaz/kaza/hayır/dualar)",
+  "ogPlanIlerleme": "İlerleme: {done}/{total}"
 }
