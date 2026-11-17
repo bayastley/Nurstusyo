@@ -2439,5 +2439,8 @@
   "itVeriTakip": "Takip ve notlar (namaz/kaza/hayır/dualar)",
   "ogPlanIlerleme": "İlerleme: {done}/{total}",
   "ogPlanHepsi": "Hepsini işaretle",
-  "ogPlanHepsiKaldir": "İşaretleri kaldır"
+  "ogPlanHepsiKaldir": "İşaretleri kaldır",
+  "akHikayePresetOrta": "Hikâye 9:16 (orta)",
+  "akHikayePresetAlt": "Hikâye 9:16 (alt)",
+  "akHikayePresetKompakt": "Hikâye 9:16 (kompakt)"
 }

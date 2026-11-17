@@ -269,12 +269,26 @@ export const KartOnizlemeBolumu: React.FC<{
                     {ayar.qrAcik ? tt("akAcik") : tt("akKapali")}
                   </button>
                 </div>
-                <button type="button"
-                  onClick={() => { setSize("916"); setAyar((a)=>({ ...a, konum:"orta", yaziOlcek: Math.max(a.yaziOlcek,100) })); }}
-                  className="w-full rounded-lg border border-amber-400/25 bg-amber-400/10 py-1.5 text-[8.5px] font-black text-amber-100 transition hover:bg-amber-400/20"
-                  title={tt("akHikayePresetNot")}>
-                  {tt("akHikayePreset")}
-                </button>
+                <div className="grid grid-cols-3 gap-1">
+                  <button type="button"
+                    onClick={() => { setSize("916"); setAyar((a)=>({ ...a, konum:"orta", yaziOlcek: Math.max(a.yaziOlcek,100) })); }}
+                    className="rounded-lg border border-amber-400/25 bg-amber-400/10 py-1.5 text-[8px] font-black text-amber-100 transition hover:bg-amber-400/20"
+                    title={tt("akHikayePresetNot")}>
+                    {tt("akHikayePresetOrta")}
+                  </button>
+                  <button type="button"
+                    onClick={() => { setSize("916"); setAyar((a)=>({ ...a, konum:"alt", yaziOlcek: 95 })); }}
+                    className="rounded-lg border border-amber-400/20 bg-white/5 py-1.5 text-[8px] font-bold text-white/70 transition hover:bg-white/10"
+                    title={tt("akHikayePresetNot")}>
+                    {tt("akHikayePresetAlt")}
+                  </button>
+                  <button type="button"
+                    onClick={() => { setSize("916"); setAyar((a)=>({ ...a, konum:"orta", yaziOlcek: 85 })); }}
+                    className="rounded-lg border border-amber-400/20 bg-white/5 py-1.5 text-[8px] font-bold text-white/70 transition hover:bg-white/10"
+                    title={tt("akHikayePresetNot")}>
+                    {tt("akHikayePresetKompakt")}
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-1">
                   <button type="button"
                     onClick={() => { try { localStorage.setItem("nur_kart_tasarim_preset_v1", JSON.stringify(ayar)); window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimKaydedildi")})); } catch {} }}

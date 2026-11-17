@@ -2439,5 +2439,8 @@
   "itVeriTakip": "Tracking & notes (prayer/qaza/good deeds/duas)",
   "ogPlanIlerleme": "Progress: {done}/{total}",
   "ogPlanHepsi": "Mark all",
-  "ogPlanHepsiKaldir": "Unmark all"
+  "ogPlanHepsiKaldir": "Unmark all",
+  "akHikayePresetOrta": "Story 9:16 (center)",
+  "akHikayePresetAlt": "Story 9:16 (bottom)",
+  "akHikayePresetKompakt": "Story 9:16 (compact)"
 }

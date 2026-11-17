@@ -2439,5 +2439,8 @@
   "itVeriTakip": "ٹریکنگ اور نوٹس (نماز/قضا/نیکی/دعائیں)",
   "ogPlanIlerleme": "پیش رفت: {done}/{total}",
   "ogPlanHepsi": "سب نشان زد کریں",
-  "ogPlanHepsiKaldir": "نشان ہٹائیں"
+  "ogPlanHepsiKaldir": "نشان ہٹائیں",
+  "akHikayePresetOrta": "اسٹوری 9:16 (درمیان)",
+  "akHikayePresetAlt": "اسٹوری 9:16 (نیچے)",
+  "akHikayePresetKompakt": "اسٹوری 9:16 (مختصر)"
 }

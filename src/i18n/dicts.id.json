@@ -2439,5 +2439,8 @@
   "itVeriTakip": "Pelacakan & catatan (salat/qada/kebaikan/doa)",
   "ogPlanIlerleme": "Progres: {done}/{total}",
   "ogPlanHepsi": "Tandai semua",
-  "ogPlanHepsiKaldir": "Hapus tanda"
+  "ogPlanHepsiKaldir": "Hapus tanda",
+  "akHikayePresetOrta": "Cerita 9:16 (tengah)",
+  "akHikayePresetAlt": "Cerita 9:16 (bawah)",
+  "akHikayePresetKompakt": "Cerita 9:16 (ringkas)"
 }

@@ -2439,5 +2439,8 @@
   "itVeriTakip": "التتبع والملاحظات (الصلاة/القضاء/الأعمال/الأدعية)",
   "ogPlanIlerleme": "التقدم: {done}/{total}",
   "ogPlanHepsi": "تحديد الكل",
-  "ogPlanHepsiKaldir": "إلغاء تحديد الكل"
+  "ogPlanHepsiKaldir": "إلغاء تحديد الكل",
+  "akHikayePresetOrta": "قصة 9:16 (وسط)",
+  "akHikayePresetAlt": "قصة 9:16 (أسفل)",
+  "akHikayePresetKompakt": "قصة 9:16 (مضغوط)"
 }
