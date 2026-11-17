@@ -2423,5 +2423,7 @@
   "ksAraButon": "بحث",
   "ksSonuc": "نتيجة",
   "ksKaynakliNot": "تُعرض فقط الروايات الصحيحة/الحسنة مع ذكر المصدر.",
-  "ksKaynakEtiket": "المصدر:"
+  "ksKaynakEtiket": "المصدر:",
+  "ksOfflineOzet": "الدروس المحفوظة دون اتصال: {n}",
+  "ksOfflineBos": "لم يتم حفظ دروس دون اتصال بعد."
 }

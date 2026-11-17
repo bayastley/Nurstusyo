@@ -2423,5 +2423,7 @@
   "ksAraButon": "Ara",
   "ksSonuc": "sonuç",
   "ksKaynakliNot": "Yalnız kaynağı belirtilen sahih/hasen kayıtlar gösterilir.",
-  "ksKaynakEtiket": "Kaynak:"
+  "ksKaynakEtiket": "Kaynak:",
+  "ksOfflineOzet": "Çevrimdışı kaydedilen ders: {n}",
+  "ksOfflineBos": "Henüz çevrimdışı ders kaydedilmedi."
 }

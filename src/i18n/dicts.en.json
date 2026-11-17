@@ -2423,5 +2423,7 @@
   "ksAraButon": "Search",
   "ksSonuc": "results",
   "ksKaynakliNot": "Only sahih/hasan entries with cited sources are shown.",
-  "ksKaynakEtiket": "Source:"
+  "ksKaynakEtiket": "Source:",
+  "ksOfflineOzet": "Offline saved lessons: {n}",
+  "ksOfflineBos": "No lessons saved offline yet."
 }

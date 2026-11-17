@@ -2423,5 +2423,7 @@
   "ksAraButon": "تلاش",
   "ksSonuc": "نتائج",
   "ksKaynakliNot": "صرف مآخذ والی صحیح/حسن روایات دکھائی جاتی ہیں۔",
-  "ksKaynakEtiket": "ماخذ:"
+  "ksKaynakEtiket": "ماخذ:",
+  "ksOfflineOzet": "آف لائن محفوظ اسباق: {n}",
+  "ksOfflineBos": "ابھی کوئی سبق آف لائن محفوظ نہیں۔"
 }

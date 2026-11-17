@@ -28,8 +28,17 @@ export function KissaBolumu({
     setOffline(n);
     try { localStorage.setItem("nur_offline_dersler_v1", JSON.stringify(n)); } catch {}
   };
+  const offlineAdlar = Object.keys(offline).filter((k) => offline[k]);
   return (
     <div className="space-y-1.5">
+      <div className="rounded-lg border border-white/10 bg-white/[.02] px-2.5 py-2">
+        <p className="text-[9px] font-bold text-emerald-200/90">{tt("ksOfflineOzet").replace("{n}", String(offlineAdlar.length))}</p>
+        {offlineAdlar.length > 0 ? (
+          <p className="mt-1 text-[8.5px] leading-relaxed text-white/45 line-clamp-2">{offlineAdlar.slice(0, 6).join(" • ")}{offlineAdlar.length > 6 ? "…" : ""}</p>
+        ) : (
+          <p className="mt-1 text-[8.5px] text-white/35">{tt("ksOfflineBos")}</p>
+        )}
+      </div>
       {filtreliKissalar.map((k) => {
         const acik = acikKissa === k.ad;
         return (

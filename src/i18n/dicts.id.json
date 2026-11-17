@@ -2423,5 +2423,7 @@
   "ksAraButon": "Cari",
   "ksSonuc": "hasil",
   "ksKaynakliNot": "Hanya entri sahih/hasan dengan sumber tercantum yang ditampilkan.",
-  "ksKaynakEtiket": "Sumber:"
+  "ksKaynakEtiket": "Sumber:",
+  "ksOfflineOzet": "Pelajaran tersimpan offline: {n}",
+  "ksOfflineBos": "Belum ada pelajaran tersimpan offline."
 }
