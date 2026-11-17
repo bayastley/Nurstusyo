@@ -2437,5 +2437,7 @@
   "itVeriA11y": "رسائی کی ترتیبات",
   "ksOfflineTemizle": "محفوظ اسباق صاف کریں",
   "itVeriTakip": "ٹریکنگ اور نوٹس (نماز/قضا/نیکی/دعائیں)",
-  "ogPlanIlerleme": "پیش رفت: {done}/{total}"
+  "ogPlanIlerleme": "پیش رفت: {done}/{total}",
+  "ogPlanHepsi": "سب نشان زد کریں",
+  "ogPlanHepsiKaldir": "نشان ہٹائیں"
 }

@@ -2437,5 +2437,7 @@
   "itVeriA11y": "إعدادات إمكانية الوصول",
   "ksOfflineTemizle": "مسح الدروس المحفوظة",
   "itVeriTakip": "التتبع والملاحظات (الصلاة/القضاء/الأعمال/الأدعية)",
-  "ogPlanIlerleme": "التقدم: {done}/{total}"
+  "ogPlanIlerleme": "التقدم: {done}/{total}",
+  "ogPlanHepsi": "تحديد الكل",
+  "ogPlanHepsiKaldir": "إلغاء تحديد الكل"
 }

@@ -2437,5 +2437,7 @@
   "itVeriA11y": "Accessibility settings",
   "ksOfflineTemizle": "Clear saved lessons",
   "itVeriTakip": "Tracking & notes (prayer/qaza/good deeds/duas)",
-  "ogPlanIlerleme": "Progress: {done}/{total}"
+  "ogPlanIlerleme": "Progress: {done}/{total}",
+  "ogPlanHepsi": "Mark all",
+  "ogPlanHepsiKaldir": "Unmark all"
 }

@@ -247,7 +247,17 @@ export const OzelGunTakvimiModal: React.FC<OzelGunTakvimiModalProps> = ({ open, 
             );
           })}
         </div>
-        <button type="button" onClick={()=>{ try{localStorage.removeItem("nur_icerik_takvimi_v1")}catch{} setPlan({}); }} className="mt-2 text-[8px] font-bold text-white/35 hover:text-white/60">{tt("ogPlanTemizle")}</button>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={() => {
+            const doneCount = Array.from({length: planMod}, (_,i)=>i+1).filter((d)=>plan[`${planMod}-${d}`]).length;
+            const allDone = doneCount === planMod;
+            const n = { ...plan };
+            for (let i=1;i<=planMod;i++) { const k=`${planMod}-${i}`; if (allDone) delete n[k]; else n[k]=true; }
+            setPlan(n);
+            try { localStorage.setItem("nur_icerik_takvimi_v1", JSON.stringify(n)); } catch {}
+          }} className="text-[8px] font-bold text-amber-100/80 hover:text-amber-100">{(() => { const doneCount = Array.from({length: planMod}, (_,i)=>i+1).filter((d)=>plan[`${planMod}-${d}`]).length; return doneCount === planMod ? tt("ogPlanHepsiKaldir") : tt("ogPlanHepsi"); })()}</button>
+          <button type="button" onClick={()=>{ try{localStorage.removeItem("nur_icerik_takvimi_v1")}catch{} setPlan({}); }} className="text-[8px] font-bold text-white/35 hover:text-white/60">{tt("ogPlanTemizle")}</button>
+        </div>
       </div>
 
     </Modal>

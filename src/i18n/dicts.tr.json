@@ -2437,5 +2437,7 @@
   "itVeriA11y": "Erişilebilirlik ayarları",
   "ksOfflineTemizle": "Kayıtlı dersleri temizle",
   "itVeriTakip": "Takip ve notlar (namaz/kaza/hayır/dualar)",
-  "ogPlanIlerleme": "İlerleme: {done}/{total}"
+  "ogPlanIlerleme": "İlerleme: {done}/{total}",
+  "ogPlanHepsi": "Hepsini işaretle",
+  "ogPlanHepsiKaldir": "İşaretleri kaldır"
 }

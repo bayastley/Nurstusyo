@@ -2437,5 +2437,7 @@
   "itVeriA11y": "Pengaturan aksesibilitas",
   "ksOfflineTemizle": "Hapus pelajaran tersimpan",
   "itVeriTakip": "Pelacakan & catatan (salat/qada/kebaikan/doa)",
-  "ogPlanIlerleme": "Progres: {done}/{total}"
+  "ogPlanIlerleme": "Progres: {done}/{total}",
+  "ogPlanHepsi": "Tandai semua",
+  "ogPlanHepsiKaldir": "Hapus tanda"
 }
