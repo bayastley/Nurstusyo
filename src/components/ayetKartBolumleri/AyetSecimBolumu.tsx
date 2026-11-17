@@ -70,8 +70,10 @@ export const AyetSecimBolumu: React.FC<{
   onFavoriTak?: (id: string) => void;
   onFavoriSeriIndir?: () => void;
   onFavoriTemizle?: () => void;
+  onFavoriDisaAktar?: () => void;
+  onFavoriIceAktar?: () => void;
   seriIndiriliyor?: boolean;
-}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, onFavoriSeriIndir, onFavoriTemizle, seriIndiriliyor, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
+}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, onFavoriSeriIndir, onFavoriTemizle, onFavoriDisaAktar, onFavoriIceAktar, seriIndiriliyor, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -206,6 +208,26 @@ export const AyetSecimBolumu: React.FC<{
                   title={tt("akFavoriTemizle")}
                 >
                   {tt("akFavoriTemizle")}
+                </button>
+              )}
+              {onFavoriDisaAktar && (favoriIds?.size ?? 0) > 0 && (
+                <button
+                  type="button"
+                  onClick={onFavoriDisaAktar}
+                  className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[9.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  title={tt("akFavoriDisaAktar")}
+                >
+                  {tt("akFavoriDisaAktar")}
+                </button>
+              )}
+              {onFavoriIceAktar && (
+                <button
+                  type="button"
+                  onClick={onFavoriIceAktar}
+                  className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[9.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white active:scale-95"
+                  title={tt("akFavoriIceAktar")}
+                >
+                  {tt("akFavoriIceAktar")}
                 </button>
               )}
               <button

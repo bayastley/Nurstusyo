@@ -2450,6 +2450,11 @@
   "akHikayePresetAlt": "قصة 9:16 (أسفل)",
   "akHikayePresetKompakt": "قصة 9:16 (مضغوط)",
   "akFavoriTemizle": "مسح المفضلة",
+  "akFavoriDisaAktar": "تصدير",
+  "akFavoriIceAktar": "استيراد",
+  "akFavoriDisaAktarildi": "تم نسخ قائمة البطاقات المفضلة إلى الحافظة",
+  "akFavoriIceAktarildi": "تم استيراد قائمة البطاقات المفضلة",
+  "akFavoriIceAktarYok": "لا توجد قائمة بطاقات مفضلة صالحة في الحافظة",
   "akAyarSifirla": "↺ إعادة تعيين الإعدادات",
   "itVeriIstatistik": "إحصاءات الاستخدام/الإنتاج",
   "itBildirimYenile": "تحديث"

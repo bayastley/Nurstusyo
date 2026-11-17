@@ -2450,6 +2450,11 @@
   "akHikayePresetAlt": "Story 9:16 (bottom)",
   "akHikayePresetKompakt": "Story 9:16 (compact)",
   "akFavoriTemizle": "Clear favorites",
+  "akFavoriDisaAktar": "Export",
+  "akFavoriIceAktar": "Import",
+  "akFavoriDisaAktarildi": "Favorite card list copied to clipboard",
+  "akFavoriIceAktarildi": "Favorite card list imported",
+  "akFavoriIceAktarYok": "No valid favorite card list in clipboard",
   "akAyarSifirla": "↺ Reset settings",
   "itVeriIstatistik": "Usage/creation stats",
   "itBildirimYenile": "Refresh"

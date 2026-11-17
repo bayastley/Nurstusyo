@@ -2445,6 +2445,11 @@
   "akHikayePresetAlt": "Hikâye 9:16 (alt)",
   "akHikayePresetKompakt": "Hikâye 9:16 (kompakt)",
   "akFavoriTemizle": "Favorileri temizle",
+  "akFavoriDisaAktar": "Dışa aktar",
+  "akFavoriIceAktar": "İçe aktar",
+  "akFavoriDisaAktarildi": "Favori kart listesi panoya kopyalandı",
+  "akFavoriIceAktarildi": "Favori kart listesi içe aktarıldı",
+  "akFavoriIceAktarYok": "Panoda geçerli favori kart listesi yok",
   "akAyarSifirla": "↺ Ayarları sıfırla",
   "itVeriIstatistik": "Kullanım/üretim istatistikleri",
   "itBildirimYenile": "Yenile"

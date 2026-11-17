@@ -33,3 +33,27 @@ export const kartFavoriTak = (id: string): string[] => {
 export const kartAlbumuTemizle = (): void => {
   kartAlbumuYaz([]);
 };
+
+/** Favori kart id listesini JSON olarak dışa aktarır (cihaz içi kopyalama için). */
+export const kartAlbumuDisaAktar = (): string => JSON.stringify(kartAlbumuOku());
+
+/** JSON'dan favori kart id listesini içe aktarır; geçerli string id'leri benzersiz tutar. */
+export const kartAlbumuIceAktar = (raw: string): string[] | null => {
+  try {
+    const ham = JSON.parse(raw) as unknown;
+    const liste = Array.isArray(ham)
+      ? ham
+      : ham && typeof ham === "object" && Array.isArray((ham as { favoriler?: unknown }).favoriler)
+        ? (ham as { favoriler: unknown[] }).favoriler
+        : null;
+    if (!liste) return null;
+    const seen = new Set<string>();
+    const ids = liste.filter((x): x is string => {
+      if (typeof x !== "string" || !x || seen.has(x)) return false;
+      seen.add(x);
+      return true;
+    });
+    kartAlbumuYaz(ids);
+    return ids;
+  } catch { return null; }
+};
