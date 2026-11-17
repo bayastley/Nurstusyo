@@ -209,8 +209,10 @@ export function MarkaImza({
           className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaPaylas")}</button>
         <button type="button" onClick={() => { void (async () => { try { const txt = await (navigator.clipboard?.readText?.() || Promise.resolve("")); if(!txt){window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaYok")}));return;} const d=JSON.parse(txt); if(typeof d.brandSignature==="string") setBrandSignature(d.brandSignature); if(typeof d.brandOn==="boolean") setBrandOn(d.brandOn); if(d.brandPos) setBrandPos(d.brandPos); window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaIceAktarildi")})); } catch { window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaYok")})); } })(); }}
           className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaYapistir")}</button>
+        <button type="button" onClick={() => { try { localStorage.removeItem("nur_marka_preset_v1"); window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaSilindi")})); } catch {} }}
+          className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaSil")}</button>
         <button type="button" onClick={() => { setBrandSignature("@nurstudyo"); setBrandOn(true); setBrandPos("sag-alt"); window.dispatchEvent(new CustomEvent("nur-notify",{detail:ttDA("dafMarkaSifirlandi")})); }}
-          className="col-span-2 rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaSifirla")}</button>
+          className="rounded-md bg-white/5 py-1 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{ttDA("dafMarkaSifirla")}</button>
       </div>
       <span className="block text-[8px] leading-relaxed text-white/35">
         {ttDA("dafImzaIpucu1")} <b className="text-white/50">{ttDA("dafSolUst")}</b> {ttDA("dafImzaIpucu2")}

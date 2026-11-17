@@ -2459,5 +2459,7 @@
     "itVeriIstatistik":  "Statistik penggunaan/pembuatan",
     "itBildirimYenile":  "Segarkan",
     "dafMarkaSifirlandi":  "Merek dikembalikan ke bawaan",
-    "dafMarkaSifirla":  "Kembalikan merek bawaan"
+    "dafMarkaSifirla":  "Kembalikan merek bawaan",
+    "dafMarkaSilindi":  "Merek tersimpan dihapus",
+    "dafMarkaSil":  "Hapus merek tersimpan"
 }

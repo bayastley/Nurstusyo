@@ -2459,5 +2459,7 @@
     "itVeriIstatistik":  "إحصاءات الاستخدام/الإنتاج",
     "itBildirimYenile":  "تحديث",
     "dafMarkaSifirlandi":  "تمت إعادة تعيين العلامة إلى الافتراضية",
-    "dafMarkaSifirla":  "إعادة تعيين العلامة الافتراضية"
+    "dafMarkaSifirla":  "إعادة تعيين العلامة الافتراضية",
+    "dafMarkaSilindi":  "تم حذف العلامة المحفوظة",
+    "dafMarkaSil":  "حذف العلامة المحفوظة"
 }

@@ -2459,5 +2459,7 @@
     "itVeriIstatistik":  "Usage/creation stats",
     "itBildirimYenile":  "Refresh",
     "dafMarkaSifirlandi":  "Brand reset to default",
-    "dafMarkaSifirla":  "Reset to default brand"
+    "dafMarkaSifirla":  "Reset to default brand",
+    "dafMarkaSilindi":  "Saved brand deleted",
+    "dafMarkaSil":  "Delete saved brand"
 }

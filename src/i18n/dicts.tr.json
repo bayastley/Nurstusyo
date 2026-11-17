@@ -2454,5 +2454,7 @@
     "itVeriIstatistik":  "Kullanım/üretim istatistikleri",
     "itBildirimYenile":  "Yenile",
     "dafMarkaSifirlandi":  "Marka varsayılana döndürüldü",
-    "dafMarkaSifirla":  "Varsayılan markaya dön"
+    "dafMarkaSifirla":  "Varsayılan markaya dön",
+    "dafMarkaSilindi":  "Kayıtlı marka silindi",
+    "dafMarkaSil":  "Kayıtlı markayı sil"
 }
