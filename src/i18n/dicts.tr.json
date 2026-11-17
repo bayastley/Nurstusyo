@@ -2407,7 +2407,7 @@
   "pmYenilemeYonet": "Yenileme/iptal ve plan yönetimi: Premium ekranından ödeme sağlayıcısı veya destek üzerinden ilerleyebilirsin.",
   "pmAbonelikAktif": "Aboneliğin aktif.",
   "itVeriGizlilik": "Veri ve Gizlilik (bu cihaz)",
-  "itVeriGizlilikNot": "Kayıtlı içeriklerin çoğu bu cihazda (localStorage/önbellek) tutulur. İstersen seçerek temizleyebilirsin.",
+  "itVeriGizlilikNot": "Kayıtlı içeriklerin çoğu bu cihazda (localStorage/önbellek) tutulur. İstersen seçerek temizleyebilirsin (taslaklar/presetler, erişilebilirlik, çevrimdışı mushaf).",
   "itVeriTaslaklar": "Taslaklar ve presetler",
   "itVeriMushafCache": "Çevrimdışı mushaf sayfaları",
   "itVeriTemizle": "Seçilenleri temizle",
@@ -2430,5 +2430,9 @@
   "akTasarimPaylas": "Tasarımı kopyala",
   "akTasarimKopyalandi": "Kart tasarımı panoya kopyalandı",
   "akTasarimYapistir": "Yapıştır/İçe al",
-  "akTasarimIceAktarildi": "Kart tasarımı içe aktarıldı"
+  "akTasarimIceAktarildi": "Kart tasarımı içe aktarıldı",
+  "ksOfflineFiltre": "Yalnız kaydedilenler",
+  "ksOfflineFiltreKapat": "Tümünü göster",
+  "ksOfflineFiltreBos": "Kayıtlı çevrimdışı ders yok.",
+  "itVeriA11y": "Erişilebilirlik ayarları"
 }

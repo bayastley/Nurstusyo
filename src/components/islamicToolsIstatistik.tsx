@@ -419,12 +419,15 @@ export function ErisilebilirlikKarti() {
 
 
 export function VeriGizlilikKarti() {
-  const [sel, setSel] = React.useState({ taslak: false, mushaf: false });
+  const [sel, setSel] = React.useState({ taslak: false, a11y: false, mushaf: false });
   const [msg, setMsg] = React.useState("");
   const temizle = () => {
     try {
       if (sel.taslak) {
         ["nur_seslendirme_taslak_v1","nur_kart_tasarim_preset_v1","nur_marka_preset_v1","nur_kart_favori_v1","nur_kisisel_dualar_v1","nur_icerik_takvimi_v1","nur_offline_dersler_v1"].forEach((k) => localStorage.removeItem(k));
+      }
+      if (sel.a11y) {
+        localStorage.removeItem("nur_a11y_v1");
       }
       if (sel.mushaf) {
         localStorage.removeItem("nur_mushaf_sayfa_v1");
@@ -436,21 +439,23 @@ export function VeriGizlilikKarti() {
       setMsg("");
     }
   };
-  const Row = ({ k, label }: { k: "taslak" | "mushaf"; label: string }) => (
+  const Row = ({ k, label }: { k: "taslak" | "a11y" | "mushaf"; label: string }) => (
     <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 text-[9px] font-bold text-white/70">
       <span>{label}</span>
       <input type="checkbox" checked={sel[k]} onChange={(e) => setSel((v) => ({ ...v, [k]: e.target.checked }))} />
     </label>
   );
+  const secili = sel.taslak || sel.a11y || sel.mushaf;
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <p className="text-[10px] font-bold text-white">{tt("itVeriGizlilik")}</p>
       <p className="mb-2 text-[8px] text-white/35">{tt("itVeriGizlilikNot")}</p>
       <div className="space-y-1">
         <Row k="taslak" label={tt("itVeriTaslaklar")} />
+        <Row k="a11y" label={tt("itVeriA11y")} />
         <Row k="mushaf" label={tt("itVeriMushafCache")} />
       </div>
-      <button type="button" onClick={temizle} disabled={!sel.taslak && !sel.mushaf}
+      <button type="button" onClick={temizle} disabled={!secili}
         className="mt-2 w-full rounded-lg bg-red-500/15 px-2.5 py-1.5 text-[9px] font-bold text-red-200 transition hover:bg-red-500/25 disabled:opacity-40 disabled:hover:bg-red-500/15">
         {tt("itVeriTemizle")}
       </button>

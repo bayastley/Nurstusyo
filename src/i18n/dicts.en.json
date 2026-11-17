@@ -2407,7 +2407,7 @@
   "pmYenilemeYonet": "Manage renewal/cancellation via Premium screen, payment provider, or support.",
   "pmAbonelikAktif": "Your subscription is active.",
   "itVeriGizlilik": "Data & Privacy (this device)",
-  "itVeriGizlilikNot": "Most saved content is stored on this device (localStorage/cache). You can clear selected data.",
+  "itVeriGizlilikNot": "Most saved content is stored on this device (localStorage/cache). You can clear selected data (drafts/presets, accessibility, offline mushaf).",
   "itVeriTaslaklar": "Drafts and presets",
   "itVeriMushafCache": "Offline mushaf pages",
   "itVeriTemizle": "Clear selected",
@@ -2430,5 +2430,9 @@
   "akTasarimPaylas": "Copy design",
   "akTasarimKopyalandi": "Card design copied to clipboard",
   "akTasarimYapistir": "Paste/Import",
-  "akTasarimIceAktarildi": "Card design imported"
+  "akTasarimIceAktarildi": "Card design imported",
+  "ksOfflineFiltre": "Saved only",
+  "ksOfflineFiltreKapat": "Show all",
+  "ksOfflineFiltreBos": "No saved offline lessons.",
+  "itVeriA11y": "Accessibility settings"
 }

@@ -2407,7 +2407,7 @@
   "pmYenilemeYonet": "تجدید/منسوخی کا انتظام Premium اسکرین، ادائیگی فراہم کنندہ یا سپورٹ سے کریں۔",
   "pmAbonelikAktif": "آپ کی رکنیت فعال ہے۔",
   "itVeriGizlilik": "ڈیٹا اور پرائیویسی (یہ آلہ)",
-  "itVeriGizlilikNot": "زیادہ تر محفوظ مواد اسی آلہ پر (localStorage/کیش) رکھا جاتا ہے۔ آپ منتخب ڈیٹا صاف کر سکتے ہیں۔",
+  "itVeriGizlilikNot": "زیادہ تر مواد اس آلے پر محفوظ ہوتا ہے (localStorage/کیش)۔ آپ منتخب ڈیٹا صاف کر سکتے ہیں (مسودے/پری سیٹس، رسائی، آف لائن مصحف)۔",
   "itVeriTaslaklar": "ڈرافٹس اور پری سیٹس",
   "itVeriMushafCache": "آف لائن مصحف صفحات",
   "itVeriTemizle": "منتخب صاف کریں",
@@ -2430,5 +2430,9 @@
   "akTasarimPaylas": "ڈیزائن کاپی کریں",
   "akTasarimKopyalandi": "کارڈ ڈیزائن کاپی ہو گیا",
   "akTasarimYapistir": "پیسٹ/درآمد",
-  "akTasarimIceAktarildi": "کارڈ ڈیزائن درآمد ہو گیا"
+  "akTasarimIceAktarildi": "کارڈ ڈیزائن درآمد ہو گیا",
+  "ksOfflineFiltre": "صرف محفوظ",
+  "ksOfflineFiltreKapat": "سب دکھائیں",
+  "ksOfflineFiltreBos": "کوئی محفوظ آف لائن سبق نہیں۔",
+  "itVeriA11y": "رسائی کی ترتیبات"
 }

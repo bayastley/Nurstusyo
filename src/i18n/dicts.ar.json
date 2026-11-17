@@ -2407,7 +2407,7 @@
   "pmYenilemeYonet": "إدارة التجديد/الإلغاء عبر شاشة بريميوم أو مزوّد الدفع أو الدعم.",
   "pmAbonelikAktif": "اشتراكك نشط.",
   "itVeriGizlilik": "البيانات والخصوصية (هذا الجهاز)",
-  "itVeriGizlilikNot": "معظم المحتوى المحفوظ على هذا الجهاز (localStorage/الذاكرة المؤقتة). يمكنك مسح ما تختاره.",
+  "itVeriGizlilikNot": "يُحفظ معظم المحتوى على هذا الجهاز (localStorage/الذاكرة المؤقتة). يمكنك مسح بيانات محددة (المسودات/الإعدادات المسبقة، إمكانية الوصول، المصحف دون اتصال).",
   "itVeriTaslaklar": "المسودات والإعدادات المسبقة",
   "itVeriMushafCache": "صفحات المصحف دون اتصال",
   "itVeriTemizle": "مسح المحدد",
@@ -2430,5 +2430,9 @@
   "akTasarimPaylas": "نسخ التصميم",
   "akTasarimKopyalandi": "تم نسخ تصميم البطاقة",
   "akTasarimYapistir": "لصق/استيراد",
-  "akTasarimIceAktarildi": "تم استيراد تصميم البطاقة"
+  "akTasarimIceAktarildi": "تم استيراد تصميم البطاقة",
+  "ksOfflineFiltre": "المحفوظة فقط",
+  "ksOfflineFiltreKapat": "عرض الكل",
+  "ksOfflineFiltreBos": "لا توجد دروس محفوظة دون اتصال.",
+  "itVeriA11y": "إعدادات إمكانية الوصول"
 }

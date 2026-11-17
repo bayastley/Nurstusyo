@@ -2407,7 +2407,7 @@
   "pmYenilemeYonet": "Kelola perpanjangan/pembatalan via layar Premium, penyedia pembayaran, atau dukungan.",
   "pmAbonelikAktif": "Langganan Anda aktif.",
   "itVeriGizlilik": "Data & Privasi (perangkat ini)",
-  "itVeriGizlilikNot": "Sebagian besar konten tersimpan di perangkat ini (localStorage/cache). Anda dapat menghapus data terpilih.",
+  "itVeriGizlilikNot": "Sebagian besar konten tersimpan di perangkat ini (localStorage/cache). Anda dapat menghapus data terpilih (draf/preset, aksesibilitas, mushaf offline).",
   "itVeriTaslaklar": "Draf dan preset",
   "itVeriMushafCache": "Halaman mushaf offline",
   "itVeriTemizle": "Hapus yang dipilih",
@@ -2430,5 +2430,9 @@
   "akTasarimPaylas": "Salin desain",
   "akTasarimKopyalandi": "Desain kartu disalin",
   "akTasarimYapistir": "Tempel/Impor",
-  "akTasarimIceAktarildi": "Desain kartu diimpor"
+  "akTasarimIceAktarildi": "Desain kartu diimpor",
+  "ksOfflineFiltre": "Hanya tersimpan",
+  "ksOfflineFiltreKapat": "Tampilkan semua",
+  "ksOfflineFiltreBos": "Tidak ada pelajaran offline tersimpan.",
+  "itVeriA11y": "Pengaturan aksesibilitas"
 }

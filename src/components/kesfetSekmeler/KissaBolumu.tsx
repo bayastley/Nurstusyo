@@ -22,6 +22,7 @@ export function KissaBolumu({
   const [offline, setOffline] = React.useState<Record<string, boolean>>(() => {
     try { return JSON.parse(localStorage.getItem("nur_offline_dersler_v1") || "{}"); } catch { return {}; }
   });
+  const [sadeceOffline, setSadeceOffline] = React.useState(false);
   const offlineToggle = (ad: string) => {
     const n = { ...offline, [ad]: !offline[ad] };
     if (!n[ad]) delete n[ad];
@@ -29,17 +30,24 @@ export function KissaBolumu({
     try { localStorage.setItem("nur_offline_dersler_v1", JSON.stringify(n)); } catch {}
   };
   const offlineAdlar = Object.keys(offline).filter((k) => offline[k]);
+  const liste = sadeceOffline ? filtreliKissalar.filter((k) => offline[k.ad]) : filtreliKissalar;
   return (
     <div className="space-y-1.5">
       <div className="rounded-lg border border-white/10 bg-white/[.02] px-2.5 py-2">
-        <p className="text-[9px] font-bold text-emerald-200/90">{tt("ksOfflineOzet").replace("{n}", String(offlineAdlar.length))}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[9px] font-bold text-emerald-200/90">{tt("ksOfflineOzet").replace("{n}", String(offlineAdlar.length))}</p>
+          <button type="button" onClick={() => setSadeceOffline((v) => !v)}
+            className={`shrink-0 rounded-md px-2 py-1 text-[8px] font-bold transition ${sadeceOffline ? "bg-emerald-500/20 text-emerald-100" : "bg-white/5 text-white/50 hover:bg-white/10"}`}>
+            {sadeceOffline ? tt("ksOfflineFiltreKapat") : tt("ksOfflineFiltre")}
+          </button>
+        </div>
         {offlineAdlar.length > 0 ? (
           <p className="mt-1 text-[8.5px] leading-relaxed text-white/45 line-clamp-2">{offlineAdlar.slice(0, 6).join(" • ")}{offlineAdlar.length > 6 ? "…" : ""}</p>
         ) : (
           <p className="mt-1 text-[8.5px] text-white/35">{tt("ksOfflineBos")}</p>
         )}
       </div>
-      {filtreliKissalar.map((k) => {
+      {liste.map((k) => {
         const acik = acikKissa === k.ad;
         return (
           <div key={k.ad} className={`overflow-hidden rounded-xl border transition-colors ${acik ? "border-white/20 bg-white/[.05]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}>
@@ -78,8 +86,8 @@ export function KissaBolumu({
           </div>
         );
       })}
-      {filtreliKissalar.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">{tt("ksKissaYok")}</p>}
-      <p className="pt-1 text-center text-[8px] text-white/25">{tt("ksKissaSayaci").replace("{n}", String(filtreliKissalar.length))}</p>
+      {liste.length === 0 && <p className="py-6 text-center text-[10px] text-white/40">{sadeceOffline ? tt("ksOfflineFiltreBos") : tt("ksKissaYok")}</p>}
+      <p className="pt-1 text-center text-[8px] text-white/25">{tt("ksKissaSayaci").replace("{n}", String(liste.length))}</p>
     </div>
   );
 }
