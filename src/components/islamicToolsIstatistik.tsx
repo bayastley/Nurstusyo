@@ -341,7 +341,7 @@ export function BildirimMerkeziKarti() {
   const [ezber, setEzber] = React.useState(0);
   const [mushaf, setMushaf] = React.useState(0);
   const [takvim, setTakvim] = React.useState(0);
-  React.useEffect(() => {
+  const yenile = React.useCallback(() => {
     try { setNamaz(localStorage.getItem("nur_namaz_bildirim") === "1"); } catch {}
     try { setOgut(localStorage.getItem("nur_push_abone") === "1"); } catch {}
     try {
@@ -359,6 +359,7 @@ export function BildirimMerkeziKarti() {
       setTakvim(Object.values(plan).filter(Boolean).length);
     } catch {}
   }, []);
+  React.useEffect(() => { yenile(); }, [yenile]);
   const Row = ({ label, val, ok }: { label: string; val: string; ok?: boolean }) => (
     <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
       <span className="text-white/70">{label}</span>
@@ -367,7 +368,10 @@ export function BildirimMerkeziKarti() {
   );
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-      <p className="text-[10px] font-bold text-white">{tt("itBildirimMerkezi")}</p>
+      <div className="mb-0.5 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold text-white">{tt("itBildirimMerkezi")}</p>
+        <button type="button" onClick={yenile} className="rounded-md bg-white/5 px-2 py-0.5 text-[8px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{tt("itBildirimYenile")}</button>
+      </div>
       <p className="mb-2 text-[8px] text-white/35">{tt("itBildirimMerkeziNot")}</p>
       <div className="space-y-1 text-[9px]">
         <Row label={tt("itBildirimNamaz")} val={namaz ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")} ok={namaz} />
@@ -419,7 +423,7 @@ export function ErisilebilirlikKarti() {
 
 
 export function VeriGizlilikKarti() {
-  const [sel, setSel] = React.useState({ taslak: false, takip: false, a11y: false, mushaf: false });
+  const [sel, setSel] = React.useState({ taslak: false, takip: false, a11y: false, mushaf: false, istatistik: false });
   const [msg, setMsg] = React.useState("");
   const temizle = () => {
     try {
@@ -436,19 +440,22 @@ export function VeriGizlilikKarti() {
         localStorage.removeItem("nur_mushaf_sayfa_v1");
         if (typeof caches !== "undefined") { void caches.delete("nur-mushaf-sayfa-v1"); }
       }
+      if (sel.istatistik) {
+        localStorage.removeItem(URETIM_IST_KEY);
+      }
       setMsg(tt("itVeriTemizlendi"));
       setTimeout(() => setMsg(""), 2500);
     } catch {
       setMsg("");
     }
   };
-  const Row = ({ k, label }: { k: "taslak" | "takip" | "a11y" | "mushaf"; label: string }) => (
+  const Row = ({ k, label }: { k: "taslak" | "takip" | "a11y" | "mushaf" | "istatistik"; label: string }) => (
     <label className="flex cursor-pointer items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5 text-[9px] font-bold text-white/70">
       <span>{label}</span>
       <input type="checkbox" checked={sel[k]} onChange={(e) => setSel((v) => ({ ...v, [k]: e.target.checked }))} />
     </label>
   );
-  const secili = sel.taslak || sel.takip || sel.a11y || sel.mushaf;
+  const secili = sel.taslak || sel.takip || sel.a11y || sel.mushaf || sel.istatistik;
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <p className="text-[10px] font-bold text-white">{tt("itVeriGizlilik")}</p>
@@ -458,6 +465,7 @@ export function VeriGizlilikKarti() {
         <Row k="takip" label={tt("itVeriTakip")} />
         <Row k="a11y" label={tt("itVeriA11y")} />
         <Row k="mushaf" label={tt("itVeriMushafCache")} />
+        <Row k="istatistik" label={tt("itVeriIstatistik")} />
       </div>
       <button type="button" onClick={temizle} disabled={!secili}
         className="mt-2 w-full rounded-lg bg-red-500/15 px-2.5 py-1.5 text-[9px] font-bold text-red-200 transition hover:bg-red-500/25 disabled:opacity-40 disabled:hover:bg-red-500/15">

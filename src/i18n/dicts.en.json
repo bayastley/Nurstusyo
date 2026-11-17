@@ -2444,5 +2444,7 @@
   "akHikayePresetAlt": "Story 9:16 (bottom)",
   "akHikayePresetKompakt": "Story 9:16 (compact)",
   "akFavoriTemizle": "Clear favorites",
-  "akAyarSifirla": "↺ Reset settings"
+  "akAyarSifirla": "↺ Reset settings",
+  "itVeriIstatistik": "Usage/creation stats",
+  "itBildirimYenile": "Refresh"
 }
