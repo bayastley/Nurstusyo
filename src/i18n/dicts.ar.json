@@ -2419,5 +2419,9 @@
   "dafMarkaIceAktarildi": "تم استيراد إعدادات العلامة",
   "abPlanHazir": "جدولة سريعة: يوم / 7 أيام",
   "abPlan1g": "يوم واحد",
-  "abPlan7g": "7 أيام"
+  "abPlan7g": "7 أيام",
+  "ksAraButon": "بحث",
+  "ksSonuc": "نتيجة",
+  "ksKaynakliNot": "تُعرض فقط الروايات الصحيحة/الحسنة مع ذكر المصدر.",
+  "ksKaynakEtiket": "المصدر:"
 }

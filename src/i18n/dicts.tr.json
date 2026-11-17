@@ -2419,5 +2419,9 @@
   "dafMarkaIceAktarildi": "Marka ayarı içe aktarıldı",
   "abPlanHazir": "Hızlı plan: 1 gün / 7 gün",
   "abPlan1g": "1 gün",
-  "abPlan7g": "7 gün"
+  "abPlan7g": "7 gün",
+  "ksAraButon": "Ara",
+  "ksSonuc": "sonuç",
+  "ksKaynakliNot": "Yalnız kaynağı belirtilen sahih/hasen kayıtlar gösterilir.",
+  "ksKaynakEtiket": "Kaynak:"
 }

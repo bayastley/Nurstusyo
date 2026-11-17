@@ -375,11 +375,15 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             ))}
           </div>
 
+          
           {/* Arama (kelime kartları hariç — kendi akışı var) */}
           {sekme !== "kelime" && (
-            <div className="relative mb-3">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-              <input value={arama} onChange={(e) => setArama(e.target.value)} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
+            <div className="mb-3 flex items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                <input value={arama} onChange={(e) => setArama(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }} placeholder={tt("ksAraPlaceholder")} className="glass-soft w-full rounded-xl py-2.5 pl-9 pr-3 text-[11px] outline-none placeholder:text-white/30" />
+              </div>
+              <button type="button" onClick={() => { /* canlı filtre; buton odak/erişim için */ }} className="shrink-0 rounded-xl px-3 py-2.5 text-[10px] font-bold text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>{tt("ksAraButon")}</button>
             </div>
           )}
 
@@ -396,6 +400,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           kuliyatYukleniyor={kuliyatYukleniyor} kuliyatSonuc={kuliyatSonuc}
           dereceAdi={dereceAdi}
           rivayetci={rivayetci} setRivayetci={setRivayetci} rivayetciSayilari={rivayetciSayilari}
+          arama={q}
         />
       )}
 

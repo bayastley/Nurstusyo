@@ -18,14 +18,15 @@ export const hadisBankasiGorunum = (lang?: Lang | string | null): HadisKaydi[] =
   const idx = _LANG_IDX[String(lang ?? "tr").toLowerCase()] ?? 0;
   const ekstra: HadisKaydi[] = [...HADIS_GENIS, ...HADIS_GENIS_EK].map((g) => ({ tema: g.t, metin: g.m[idx] ?? g.m[0], kaynak: g.k, derece: g.d }));
   // Çeviri boş gelirse TR metne düş (dürüst gösterim)
-  // ★ 31.10 Eski banka Komşuluk satırlarının 5-dil çevirisi (çevirisi olmayan satır TR kalır)
   const eski: HadisKaydi[] = HADIS_BANKASI.map((h) => {
     if (idx === 0) return h;
     const c = HADIS_ESKI_CEVRIM[h.metin];
     return c && c[idx] ? { ...h, metin: c[idx] } : h;
   });
-  const duzelt = ekstra.map((h, i) => (!h.metin ? { ...h, metin: HADIS_GENIS[i].m[0] } : h));
-  return [...eski, ...duzelt];
+  // ★ Güvenli gösterim: yalnız sahih/hasen ve kaynağı+metni bulunan kayıtlar (doğrulanmamış/zayıf gizlenir)
+  return [...eski, ...ekstra]
+    .map((h) => (!h.metin ? { ...h, metin: "" } : h))
+    .filter((h) => (h.derece === "sahih" || h.derece === "hasan") && !!h.kaynak && !!h.metin);
 };
 export const HADIS_BANKASI: HadisKaydi[] = [
   // Sabır
@@ -212,6 +213,7 @@ export const HADIS_TEMALARI = [
   { id: "sabir", label: "Sabır", emoji: "🌿" },
   { id: "sukur", label: "Şükür", emoji: "🤍" },
   { id: "ana-baba", label: "Ana-Baba", emoji: "👨‍👩‍👦" },
+  { id: "aile", label: "Aile", emoji: "👪" },
   { id: "komşuluk", label: "Komşuluk", emoji: "🏡" },
   { id: "ahlak", label: "Ahlâk", emoji: "✨" },
   { id: "zikir", label: "Zikir", emoji: "📿" },

@@ -2419,5 +2419,9 @@
   "dafMarkaIceAktarildi": "Brand settings imported",
   "abPlanHazir": "Quick schedule: 1 day / 7 days",
   "abPlan1g": "1 day",
-  "abPlan7g": "7 days"
+  "abPlan7g": "7 days",
+  "ksAraButon": "Search",
+  "ksSonuc": "results",
+  "ksKaynakliNot": "Only sahih/hasan entries with cited sources are shown.",
+  "ksKaynakEtiket": "Source:"
 }

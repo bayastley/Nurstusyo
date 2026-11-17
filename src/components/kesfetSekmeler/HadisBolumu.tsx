@@ -15,7 +15,7 @@ import { dereceSinif } from "./derece";
 export function HadisBolumu({
   tt, hadisTema, setHadisTema, hadisTemaAdi, filtreliHadisler,
   kuliyatYukleniyor, kuliyatSonuc, dereceAdi,
-  rivayetci, setRivayetci, rivayetciSayilari,
+  rivayetci, setRivayetci, rivayetciSayilari, arama,
 }: {
   tt: (k: string) => string;
   hadisTema: string;
@@ -28,6 +28,7 @@ export function HadisBolumu({
   rivayetci: string;
   setRivayetci: (id: string) => void;
   rivayetciSayilari: Record<string, number>;
+  arama?: string;
 }) {
   return (
     <>
@@ -56,15 +57,18 @@ export function HadisBolumu({
         </div>
         <p className="mt-1 text-[7.5px] text-white/30">{tt("ksKulliyatToplam")}: {RIVAYETCILER.map((r) => `${r.ad} ${r.kulliyat}`).join(" · ")}</p>
       </div>
-      {/* derece renk lejandı — isimleriyle birlikte küçük tutuldu */}
+
+      {/* derece lejandı — yalnız sahih/hasen (kaynaklı) */}
       <div className="mb-2.5 flex flex-wrap items-center gap-1.5 rounded-lg border border-white/10 bg-white/[.02] px-2 py-1.5">
         <span className="text-[8.5px] font-bold uppercase tracking-wide text-white/40">{tt("ksDereceLejand")}</span>
-        {(["sahih", "hasan", "zayif"] as const).map((d) => (
+        {(["sahih", "hasan"] as const).map((d) => (
           <span key={d} title={HADIS_DERECE_ETIKETI[d]?.aciklama} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(d)}`}>
             {dereceAdi(d)}
           </span>
         ))}
+        <span className="ml-auto text-[8.5px] font-bold text-emerald-300/80">{filtreliHadisler.length} {tt("ksSonuc")}</span>
       </div>
+      <p className="mb-2 text-[9px] text-white/40">{arama ? `🔎 "${arama}" · ${filtreliHadisler.length} ${tt("ksSonuc")} · ` : ""}{tt("ksKaynakliNot")}</p>
       <div className="mb-3 flex flex-wrap gap-1.5">
         {HADIS_TEMALARI.map((t) => (
           <button key={t.id} type="button" onClick={() => setHadisTema(t.id)}
@@ -81,16 +85,9 @@ export function HadisBolumu({
           <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
             <p className="text-[11px] leading-relaxed text-white/85">"{h.metin}"</p>
             <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              <p className="text-[9px] font-bold" style={{ color: "var(--accent)" }}>— {h.kaynak}</p>
-              {dr ? (
-                <span title={`${kaynaktanRivayetci(h.kaynak)} — ${dr.aciklama}`} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>
-                  {kaynaktanRivayetci(h.kaynak)}
-                </span>
-              ) : (
-                <span title={tt("ksDereceKaynak")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/50">
-                  {tt("ksDereceKaynak")}
-                </span>
-              )}
+              <p className="text-[9px] font-bold" style={{ color: "var(--accent)" }}>{tt("ksKaynakEtiket")} {h.kaynak}</p>
+              {dr ? (<span title={`${dereceAdi(h.derece)} — ${dr.aciklama}`} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece)}</span>) : null}
+              <span title={tt("ksRivayetciler")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/60">{kaynaktanRivayetci(h.kaynak)}</span>
             </div>
           </div>
           );
@@ -114,9 +111,7 @@ export function HadisBolumu({
               <p className={`text-[10.5px] leading-relaxed ${h.dil === "ar" ? "text-right font-arabic text-[13px]" : "text-white/80"}`} dir={h.dil === "ar" ? "rtl" : undefined}>
                 {h.metin}
               </p>
-              <span title={dereceAdi(h.derece) || ""} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>
-                {kaynaktanRivayetci(h.kaynak) || ""}
-              </span>
+              <span title={dereceAdi(h.derece) || h.kaynak} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece) || kaynaktanRivayetci(h.kaynak) || ""}</span>
             </div>
             <p className="mt-1.5 text-[8.5px] text-white/40">— {h.kaynak}</p>
           </div>
