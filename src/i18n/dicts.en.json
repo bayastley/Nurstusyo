@@ -2317,7 +2317,7 @@
   "itKalanUyelik": "Membership quota",
   "itKalanPaket": "Package rights",
   "akQrEkle": "Add QR",
-  "akQrAciklama": "QR link to open this ayah (audio/meaning page)",
+  "akQrAciklama": "QR link to open this ayah (generated via external service; internet required)",
   "ogIcerikTakvimi": "Content Calendar",
   "ogIcerikNot": "7/30-day posting plan (on device). Mark completed items.",
   "ogPlan7": "7 days",

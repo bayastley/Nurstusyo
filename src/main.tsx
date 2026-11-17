@@ -11,6 +11,17 @@ initErrorReport();
 // ★ 18.10: lazy chunk yüklenemezse (deploy sonrası eski HTML) tek reload ile kurtar
 chunkKurtarmayiKur();
 
+// ★ 85 (kısmi): erişilebilirlik tercihlerini (nur_a11y_v1) başlangıçta uygula
+(function a11yInit() {
+  try {
+    const v = JSON.parse(localStorage.getItem("nur_a11y_v1") || "{}") as { buyukYazi?: boolean; kontrast?: boolean; kolayOkuma?: boolean };
+    const r = document.documentElement;
+    r.style.fontSize = v.buyukYazi ? "112%" : "";
+    r.style.filter = v.kontrast ? "contrast(1.08) saturate(1.02)" : "";
+    r.style.lineHeight = v.kolayOkuma ? "1.7" : "";
+  } catch { /* ignore */ }
+})();
+
 // ★ 21.10 PWA TEK TIK KURULUM YAKALAYICISI (kullanıcı: "şimdi kura tıklayınca kursun"):
 //   KÖK NEDEN — beforeinstallprompt, dil yükleme (dilSaukle promise) + lazy StudioApp
 //   yüzünden PwaKurulumBanneri mount'tan ÖNCE açılışta ateşleniyordu; React tarafı
