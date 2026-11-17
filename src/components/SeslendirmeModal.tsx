@@ -458,6 +458,12 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
       yaz(ttX2610("smTaslakYuklendi"));
     } catch { yaz(ttX2610("smHata"), "hata"); }
   }, [dil, yaz]);
+  const taslakSil = React.useCallback(() => {
+    try {
+      localStorage.removeItem(TASLAK_KEY);
+      yaz(ttX2610("smTaslakSilindi"));
+    } catch { yaz(ttX2610("smHata"), "hata"); }
+  }, [yaz]);
 
   // ── SESLENDİR ──
   const seslendir = async (baslangicIdx = 0) => {
@@ -664,6 +670,11 @@ export const SeslendirmeModal: React.FC<SeslendirmeModalProps> = ({ open, onClos
               className="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold text-white/80 transition hover:bg-white/10"
               style={{ border: "1px solid rgba(255,255,255,.12)", background: "rgba(255,255,255,.05)" }}>
               {ttX2610("smTaslakYukle")}
+            </button>
+            <button onClick={taslakSil} title={ttX2610("smTaslakSil")}
+              className="rounded-xl px-2.5 py-1.5 text-[10px] font-extrabold text-red-200/80 transition hover:bg-red-500/10"
+              style={{ border: "1px solid rgba(248,113,113,.25)", background: "rgba(248,113,113,.06)" }}>
+              {ttX2610("smTaslakSil")}
             </button>
             <button onClick={kapat} aria-label="Kapat" title="Kapat"
               className="rounded-xl px-4 py-2 text-[11px] font-extrabold text-white transition hover:brightness-110"
