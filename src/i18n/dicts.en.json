@@ -2463,5 +2463,6 @@
     "dafMarkaSilindi":  "Saved brand deleted",
     "dafMarkaSil":  "Delete saved brand",
     "itSesCacheTemizlendi":  "Offline audio cache cleared",
-    "itSesCacheTemizle":  "Clear audio cache"
+    "itSesCacheTemizle":  "Clear audio cache",
+    "itA11ySifirla":  "Reset"
 }

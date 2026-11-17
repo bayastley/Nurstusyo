@@ -438,14 +438,24 @@ export function ErisilebilirlikKarti() {
     try { localStorage.setItem(A11Y_KEY, JSON.stringify(nv)); } catch {}
     a11yUygula(nv);
   };
+  const sifirla = () => {
+    const nv = { buyukYazi: false, kontrast: false, kolayOkuma: false };
+    setV(nv);
+    try { localStorage.setItem(A11Y_KEY, JSON.stringify(nv)); } catch {}
+    a11yUygula(nv);
+  };
   const Row = ({ k, label }: { k: keyof A11y; label: string }) => (
     <button type="button" onClick={() => set(k)} className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-[9px] font-bold transition ${v[k] ? "bg-emerald-500/15 text-emerald-200" : "bg-white/5 text-white/55 hover:bg-white/10"}`}>
       <span>{label}</span><span>{v[k] ? tt("itBildirimDurumAcik") : tt("itBildirimDurumKapali")}</span>
     </button>
   );
+  const aktif = v.buyukYazi || v.kontrast || v.kolayOkuma;
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
-      <p className="text-[10px] font-bold text-white">{tt("itErisilebilirlik")}</p>
+      <div className="mb-0.5 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold text-white">{tt("itErisilebilirlik")}</p>
+        {aktif && <button type="button" onClick={sifirla} className="rounded-md bg-white/5 px-2 py-0.5 text-[8px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">{tt("itA11ySifirla")}</button>}
+      </div>
       <p className="mb-2 text-[8px] text-white/35">{tt("itErisilebilirlikNot")}</p>
       <div className="space-y-1">
         <Row k="buyukYazi" label={tt("itBuyukYazi")} />
