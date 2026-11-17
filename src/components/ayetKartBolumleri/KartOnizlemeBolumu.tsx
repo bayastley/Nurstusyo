@@ -13,7 +13,7 @@ import { AYET_MOODS, SURE_ADLARI, type AyetKarti } from "../../data/ayetKartlari
 import { ayetBasligi } from "../../data/ayetBaslikCokDil"; // ★ 06.10: 575 başlık × 4 dil — liste + günün ayeti başlığı dilli
 import { RUH_HALLERI, ruhSayacOku, ruhSayacArttir, cipSirasi, ruhHaliAd, type RuhSayac } from "../../data/ruhHalleri";
 import { translate, type Lang } from "../../i18n";
-import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "../ayetKartMotoru";
+import { BACKGROUNDS, catLabel, BG_CATS, MOOD_COLORS, ayetQrUrl, type BgItem, type KartAyarlari, VARSAYILAN_AYARLAR } from "../ayetKartMotoru";
 import { CubukRenkSecici, CerceveDuzRenkleri } from "../renkCubuguSecici";
 import { HatFontuSeridi } from "../hatFontuSeridi";
 import { cubukRengi, hexToHue } from "../../studio/mesajKatmani";
@@ -42,9 +42,10 @@ export const KartOnizlemeBolumu: React.FC<{
   fotoYukle: (file: File | undefined | null) => void;
   hatPaletiAcik: boolean;
   hatKilitTiklandi: () => void;
-  /** ★ i18n (02.10): indirme butonu + başlıklar seçili dilde */
-  lang?: Lang;
-}> = ({ previewRef, size, setSize, bg, downloading, download, ayar, setAyar, ayarlariGoster, setAyarlariGoster, kendiFoto, kendiFotoAd, setKendiFoto, setKendiFotoAd, bgId, setBgId, fotoYukle, hatPaletiAcik, hatKilitTiklandi, lang = "tr" }) => {
+  ayet: AyetKarti;
+  notify?: (msg: string) => void;
+  lang?: string;
+}> = ({ previewRef, size, setSize, bg, downloading, download, ayar, setAyar, ayarlariGoster, setAyarlariGoster, kendiFoto, kendiFotoAd, setKendiFoto, setKendiFotoAd, bgId, setBgId, fotoYukle, hatPaletiAcik, hatKilitTiklandi, ayet, notify, lang = "tr" }) => {
   const tt = (k: string): string => translate(lang, k);
   const dim = size === "45" ? "1080 × 1350" : size === "916" ? "1080 × 1920" : "1080 × 1080";
   const mesajRenkDonme = hexToHue(ayar.mesaj.renk || "#ffffff");
@@ -258,16 +259,32 @@ export const KartOnizlemeBolumu: React.FC<{
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
-                  <div className="min-w-0">
-                    <p className="text-[8.5px] font-bold text-white/70">{tt("akQrEkle")}</p>
-                    <p className="text-[7.5px] leading-snug text-white/35">{tt("akQrAciklama")}</p>
+                <div className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-[8.5px] font-bold text-white/70">{tt("akQrEkle")}</p>
+                      <p className="text-[7.5px] leading-snug text-white/35">{tt("akQrAciklama")}</p>
+                    </div>
+                    <button type="button" onClick={() => setAyar((a) => ({ ...a, qrAcik: !a.qrAcik }))}
+                      className={`h-5 w-9 shrink-0 rounded-full text-[7px] font-black transition ${ayar.qrAcik ? "text-black" : "glass-soft text-white/50"}`}
+                      style={ayar.qrAcik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
+                      {ayar.qrAcik ? tt("akAcik") : tt("akKapali")}
+                    </button>
                   </div>
-                  <button type="button" onClick={() => setAyar((a) => ({ ...a, qrAcik: !a.qrAcik }))}
-                    className={`h-5 w-9 shrink-0 rounded-full text-[7px] font-black transition ${ayar.qrAcik ? "text-black" : "glass-soft text-white/50"}`}
-                    style={ayar.qrAcik ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}>
-                    {ayar.qrAcik ? tt("akAcik") : tt("akKapali")}
-                  </button>
+                  {ayar.qrAcik && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(ayetQrUrl(ayet));
+                          notify?.(tt("akQrLinkKopyalandi"));
+                        } catch { /* clipboard izni yoksa sessiz */ }
+                      }}
+                      className="mt-1.5 w-full rounded-lg border border-white/10 bg-white/[0.04] py-1 text-[8px] font-bold text-white/70 transition hover:bg-white/10"
+                    >
+                      {tt("akQrLinkKopyala")}
+                    </button>
+                  )}
                 </div>
                 <div className="grid grid-cols-3 gap-1">
                   <button type="button"

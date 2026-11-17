@@ -692,6 +692,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           fotoYukle={fotoYukle}
           hatPaletiAcik={hatPaletiAcik}
           hatKilitTiklandi={hatKilitTiklandi}
+          ayet={ayet}
+          notify={notify}
           lang={lang}
         />
       </div>

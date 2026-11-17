@@ -2464,5 +2464,7 @@
     "dafMarkaSil":  "حذف العلامة المحفوظة",
     "itSesCacheTemizlendi":  "تم مسح ذاكرة الصوت دون اتصال",
     "itSesCacheTemizle":  "مسح ذاكرة الصوت المؤقتة",
-    "itA11ySifirla":  "إعادة تعيين"
+    "itA11ySifirla":  "إعادة تعيين",
+    "akQrLinkKopyalandi":  "تم نسخ رابط QR",
+    "akQrLinkKopyala":  "نسخ الرابط"
 }

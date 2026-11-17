@@ -2383,7 +2383,7 @@
     "shYeni11":  "Voiceover draft save/load/clear and playback speed (0.75×–1.25×).",
     "shYeni12":  "Offline lesson bookmarking with saved-only filter/summary and clear; expanded My Library summary.",
     "shYeni13":  "PWA shortcut/deep-link to open Qur’an, Dhikr/Prayer tools, and Verse Card.",
-    "shYeni14":  "Notification Center (auto-refresh on focus/return), Accessibility (apply on startup, reset) and Data & Privacy: selectively clear drafts, campaign code note, tracking-notes, accessibility and mushaf cache; instant data saver, clear offline audio cache.",
+    "shYeni14":  "Notification Center (auto-refresh on focus/return), Accessibility (apply on startup, reset) and Data \u0026 Privacy: selectively clear drafts, campaign code note, tracking-notes, accessibility and mushaf cache; instant data saver, clear offline audio cache.",
     "shYeni15":  "Hadith bank: only sourced sahih/hasan view, clearer source/grade, search button and result count (no new content added).",
     "qsRenkNot":  "Note: Mushaf page images come from the source; colored verse markers depend on the source.",
     "akFavoriSeriIndir":  "Download Favorite Series (same design)",
@@ -2464,5 +2464,7 @@
     "dafMarkaSil":  "Delete saved brand",
     "itSesCacheTemizlendi":  "Offline audio cache cleared",
     "itSesCacheTemizle":  "Clear audio cache",
-    "itA11ySifirla":  "Reset"
+    "itA11ySifirla":  "Reset",
+    "akQrLinkKopyalandi":  "QR link copied",
+    "akQrLinkKopyala":  "Copy link"
 }

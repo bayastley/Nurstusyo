@@ -135,7 +135,7 @@ export const VARSAYILAN_AYARLAR: KartAyarlari = {
 };
 
 
-function ayetQrUrl(ayet: AyetKarti): string {
+export function ayetQrUrl(ayet: AyetKarti): string {
   const src = ayet.source || "";
   const sureMatch = src.match(/^(.+?)\s+Suresi/i);
   const ayetMatch = src.match(/•\s*(\d+)/);
