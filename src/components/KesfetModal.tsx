@@ -235,7 +235,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     [hadisTema, q, rivayetci],
   );
   // ★ ÇEVRİMİÇİ HADİS ARAMASI: arama yapıldığında yerel sonuçların yanında internetten de
-  //   sonuç getirir (Sünnetimiz/dorar vb. — /api/hadis/ara). Kod büyümez, veriler koda gömülmez.
+  //   sonuç getirir. Önce sunucu proxy (/api/hadis/ara), dev/erişimsiz ortamda doğrudan
+  //   Sünnetimiz araması fallback. Kod büyümez, veriler koda gömülmez.
   const [kuliyatYukleniyor, setKuliyatYukleniyor] = useState(false);
   const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string; url?: string }>>([]);
   React.useEffect(() => {
@@ -243,11 +244,40 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     let canli = true;
     setKuliyatYukleniyor(true);
     const kitap = ["buhari", "muslim", "tirmizi", "ebudavud", "nesai", "ibnmace"].includes(rivayetci) ? `&kitap=${encodeURIComponent(rivayetci)}` : "";
+    const kitapQ = kitap ? rivayetci : "buhari,muslim,ebudavud,tirmizi,nesai,ibnmace";
     const t = setTimeout(async () => {
       try {
         const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}${kitap}`);
-        const data = await r.json();
-        if (canli) setKuliyatSonuc(Array.isArray(data?.sonuclar) ? data.sonuclar : []);
+        const data = await r.json().catch(() => ({}));
+        let sonuclar = Array.isArray(data?.sonuclar) ? data.sonuclar : [];
+        if (!sonuclar.length) {
+          // Fallback: dev/erişimsiz proxy’de tarayıcıdan Sünnetimiz araması (CORS açık)
+          const sr = await fetch(`https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=12`);
+          if (sr.ok) {
+            const sd = await sr.json();
+            const normD = (label?: string) => {
+              const v = (label || "").toLocaleLowerCase("tr");
+              if (/sahih|صحيح/.test(v)) return "sahih";
+              if (/hasen|hasan|حسن/.test(v)) return "hasan";
+              if (/zay[ıi]f|ضعيف|mevzu/.test(v)) return "zayif";
+              return "bilinmiyor";
+            };
+            sonuclar = (Array.isArray(sd?.results) ? sd.results : []).slice(0, 12).map((h: any) => {
+              const metin = (h.turkish || h.arabic || "").trim();
+              const bname = h.book?.name || h.book?.slug || "Hadis";
+              const bolum = h.bab?.title || h.kitab?.title || "";
+              return metin ? {
+                metin,
+                kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
+                derece: normD(h.grade?.label),
+                kitap: bname,
+                dil: h.turkish ? "tr" : "ar",
+                url: h.url,
+              } : null;
+            }).filter(Boolean);
+          }
+        }
+        if (canli) setKuliyatSonuc(sonuclar);
       } catch { if (canli) setKuliyatSonuc([]); }
       finally { if (canli) setKuliyatYukleniyor(false); }
     }, 400); // debounce — her tuşta istek atılmaz
