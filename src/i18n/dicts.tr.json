@@ -2456,5 +2456,7 @@
     "dafMarkaSifirlandi":  "Marka varsayılana döndürüldü",
     "dafMarkaSifirla":  "Varsayılan markaya dön",
     "dafMarkaSilindi":  "Kayıtlı marka silindi",
-    "dafMarkaSil":  "Kayıtlı markayı sil"
+    "dafMarkaSil":  "Kayıtlı markayı sil",
+    "itSesCacheTemizlendi":  "Çevrimdışı ses önbelleği temizlendi",
+    "itSesCacheTemizle":  "Ses önbelleğini temizle"
 }

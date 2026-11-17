@@ -2461,5 +2461,7 @@
     "dafMarkaSifirlandi":  "تمت إعادة تعيين العلامة إلى الافتراضية",
     "dafMarkaSifirla":  "إعادة تعيين العلامة الافتراضية",
     "dafMarkaSilindi":  "تم حذف العلامة المحفوظة",
-    "dafMarkaSil":  "حذف العلامة المحفوظة"
+    "dafMarkaSil":  "حذف العلامة المحفوظة",
+    "itSesCacheTemizlendi":  "تم مسح ذاكرة الصوت دون اتصال",
+    "itSesCacheTemizle":  "مسح ذاكرة الصوت المؤقتة"
 }

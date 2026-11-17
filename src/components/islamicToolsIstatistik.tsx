@@ -20,6 +20,15 @@ export function CevrimdisiKart() {
   const [cevrimdisi, setCevrimdisi] = useState(!navigator.onLine);
   const [destek, setDestek] = useState(false);
   const [dataSaver, setDataSaver] = useState<DataSaverMode>(() => getDataSaverMode());
+  const [msg, setMsg] = useState("");
+
+  const say = React.useCallback(async () => {
+    try {
+      const cache = await caches.open(AUDIO_CACHE_ADI);
+      const keys = await cache.keys();
+      setAdet(keys.length);
+    } catch { /* yoksay */ }
+  }, []);
 
   React.useEffect(() => {
     if (!("serviceWorker" in navigator) || !("caches" in window)) return;
@@ -47,12 +56,21 @@ export function CevrimdisiKart() {
     setDataSaverMode(next);
     setDataSaver(next);
   };
+  const temizleSesCache = async () => {
+    try {
+      if ("caches" in window) await caches.delete(AUDIO_CACHE_ADI);
+      setAdet(0);
+      setMsg(tt("itSesCacheTemizlendi"));
+      setTimeout(() => setMsg(""), 1800);
+      void say();
+    } catch { /* yoksay */ }
+  };
 
   return (
     <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-base" aria-hidden>ğŸ“¥</span>
+          <span className="text-base" aria-hidden>📥</span>
           <div>
             <p className="text-[10px] font-bold text-white">{tt("itCevrimdisiTilavet")}</p>
             <p className="text-[8px] text-white/40">
@@ -66,9 +84,16 @@ export function CevrimdisiKart() {
             </p>
           </div>
         </div>
-        <span className={`shrink-0 rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
-          {cevrimdisi ? tt("itCevrimdisiEtiket") : tt("itHazirEtiket")}
-        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {(adet ?? 0) > 0 && (
+            <button type="button" onClick={temizleSesCache} className="rounded-lg bg-white/5 px-2 py-1 text-[8px] font-black text-white/55 transition hover:bg-white/10 hover:text-white">
+              {tt("itSesCacheTemizle")}
+            </button>
+          )}
+          <span className={`rounded-lg px-2 py-1 text-[8.5px] font-black ${cevrimdisi ? "bg-amber-500/25 text-amber-200" : "bg-emerald-500/15 text-emerald-300"}`}>
+            {cevrimdisi ? tt("itCevrimdisiEtiket") : tt("itHazirEtiket")}
+          </span>
+        </div>
       </div>
       <div className="flex items-center justify-between gap-2 rounded-lg bg-white/5 px-2.5 py-2">
         <div>
@@ -79,6 +104,7 @@ export function CevrimdisiKart() {
           {dsLabel}
         </button>
       </div>
+      {msg && <p className="text-[8px] font-bold text-emerald-300/90">{msg}</p>}
     </div>
   );
 }
@@ -360,6 +386,15 @@ export function BildirimMerkeziKarti() {
     } catch {}
   }, []);
   React.useEffect(() => { yenile(); }, [yenile]);
+  React.useEffect(() => {
+    const onVis = () => { if (document.visibilityState === "visible") yenile(); };
+    window.addEventListener("focus", yenile);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", yenile);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [yenile]);
   const Row = ({ label, val, ok }: { label: string; val: string; ok?: boolean }) => (
     <div className="flex items-center justify-between rounded-lg bg-white/5 px-2.5 py-1.5">
       <span className="text-white/70">{label}</span>

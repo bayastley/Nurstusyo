@@ -2461,5 +2461,7 @@
     "dafMarkaSifirlandi":  "Brand reset to default",
     "dafMarkaSifirla":  "Reset to default brand",
     "dafMarkaSilindi":  "Saved brand deleted",
-    "dafMarkaSil":  "Delete saved brand"
+    "dafMarkaSil":  "Delete saved brand",
+    "itSesCacheTemizlendi":  "Offline audio cache cleared",
+    "itSesCacheTemizle":  "Clear audio cache"
 }
