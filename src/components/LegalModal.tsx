@@ -105,7 +105,13 @@ export const LegalModal: React.FC<LegalModalProps> = ({
           {legalTab === "tos" && <LegalPanel text={copy.legalBody.tos} lang={lang} />}
           {legalTab === "kvkk" && <LegalPanel text={copy.legalBody.kvkk} lang={lang} />}
           {legalTab === "gizlilik" && (
-            <LegalPanel text={copy.legalBody.privacy} lang={lang} />
+            <div className="space-y-3">
+              <LegalPanel text={copy.legalBody.privacy} lang={lang} />
+              <div className="rounded-xl border border-emerald-400/20 bg-emerald-500/[.06] p-3 text-[10px] leading-relaxed text-emerald-100/85">
+                <p className="font-bold text-emerald-200">{translate(lang, "itVeriGizlilik")}</p>
+                <p className="mt-1 text-white/70">{translate(lang, "legalLocalDataNotu")}</p>
+              </div>
+            </div>
           )}
           {legalTab === "iade" && <LegalPanel text={copy.legalBody.refund} lang={lang} />}
         </div>
