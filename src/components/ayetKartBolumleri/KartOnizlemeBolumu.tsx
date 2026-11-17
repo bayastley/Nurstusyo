@@ -314,7 +314,7 @@ export const KartOnizlemeBolumu: React.FC<{
                 <button type="button"
                   onClick={() => setAyar(VARSAYILAN_AYARLAR)}
                   className="w-full rounded-lg glass-soft py-1.5 text-[9px] font-bold text-white/50 transition hover:text-white">
-                  ↺ Ayarları sıfırla
+                  {tt("akAyarSifirla")}
                 </button>
               </div>
             )}
