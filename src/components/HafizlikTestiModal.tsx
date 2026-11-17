@@ -17,7 +17,7 @@ import { MEAL_EDITIONS, translate, type Lang } from "../i18n";
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
-  ezberHedefOku, ezberHedefYaz, ezberTekrarBugun, ezberTekrarEkle,
+  ezberHedefOku, ezberHedefYaz, ezberHedefIlerlet, ezberTekrarBugun, ezberTekrarEkle,
 } from "../hafizlikIstatistik";
 import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: hafızlık turu bitince günün serisi dolsun
 // ★ SRP adım 2 (30.09): sure havuzları + seviyeler + tur boyutları hafizlikVeri.ts'e
@@ -316,6 +316,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     // ★ İstatistik + rozet kaydı (madde 52 & 16) — yalnız cihazda
     hafizlikIstKaydet(soru.s, dogruMu);
     setIst(hafizlikIstOku());
+    setEzberHedef(ezberHedefIlerlet(1));
     rozetleriTazele();
   };
 
@@ -481,6 +482,22 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
 
           <div className="mt-3 rounded-xl border border-white/10 bg-white/[.03] p-3">
             <p className="mb-1 text-[9px] font-black uppercase tracking-widest text-white/40">{tt("htEzberPlanBaslik")}</p>
+            {(() => {
+              const bugun = ezberHedef.bugunSoru || 0;
+              const hedef = Math.max(1, ezberHedef.gunlukSoru || 10);
+              const oran = Math.min(100, Math.round((bugun / hedef) * 100));
+              return (
+                <>
+                  <div className="mb-2 flex items-center justify-between gap-2 text-[9px] text-white/60">
+                    <span>{tt("htEzberBugunIlerleme")}: {bugun}/{hedef}</span>
+                    <span className={oran >= 100 ? "text-emerald-300" : "text-amber-200"}>{oran}%</span>
+                  </div>
+                  <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full" style={{ width: `${oran}%`, background: "linear-gradient(90deg,var(--accent-2),var(--accent))" }} />
+                  </div>
+                </>
+              );
+            })()}
             {tekrarBugun.length > 0 && <p className="mb-2 text-[9px] text-amber-200">{tt("htEzberBugunTekrar")}: {tekrarBugun.map(t=>t.sure).slice(0,6).join(", ")}</p>}
             <div className="grid grid-cols-3 gap-1.5 text-[9px]">
               <label className="text-white/50">{tt("htEzberGunlukSoru")}<input type="number" min={3} max={200} value={ezberHedef.gunlukSoru} onChange={e=>{const h={...ezberHedef,gunlukSoru:Number(e.target.value)||10}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>

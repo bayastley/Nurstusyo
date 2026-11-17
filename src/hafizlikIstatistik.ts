@@ -357,20 +357,42 @@ export interface EzberHedef {
   gunlukSoru: number;
   haftalikGun: number;
   aylikSure: number;
+  /** yerel günlük ilerleme (YYYY-MM-DD), cihazda */
+  bugun?: string;
+  bugunSoru?: number;
 }
 const EZBER_HEDEF_KEY = "nur_ezber_hedef_v1";
+export function ezberHedefBugun(): string {
+  return new Date().toLocaleDateString("en-CA");
+}
+export function ezberHedefNormalize(h: EzberHedef): EzberHedef {
+  const bugun = ezberHedefBugun();
+  return {
+    ...h,
+    bugun,
+    bugunSoru: h.bugun === bugun ? Math.max(0, Number(h.bugunSoru) || 0) : 0,
+  };
+}
 export function ezberHedefOku(): EzberHedef {
   try {
     const p = JSON.parse(localStorage.getItem(EZBER_HEDEF_KEY) || "{}");
-    return {
+    return ezberHedefNormalize({
       gunlukSoru: Number(p.gunlukSoru) || 10,
       haftalikGun: Number(p.haftalikGun) || 5,
       aylikSure: Number(p.aylikSure) || 1,
-    };
-  } catch { return { gunlukSoru: 10, haftalikGun: 5, aylikSure: 1 }; }
+      bugun: typeof p.bugun === "string" ? p.bugun : undefined,
+      bugunSoru: Number(p.bugunSoru) || 0,
+    });
+  } catch { return { gunlukSoru: 10, haftalikGun: 5, aylikSure: 1, bugun: ezberHedefBugun(), bugunSoru: 0 }; }
 }
 export function ezberHedefYaz(h: EzberHedef): void {
-  try { localStorage.setItem(EZBER_HEDEF_KEY, JSON.stringify(h)); } catch { /* ignore */ }
+  try { localStorage.setItem(EZBER_HEDEF_KEY, JSON.stringify(ezberHedefNormalize(h))); } catch { /* ignore */ }
+}
+export function ezberHedefIlerlet(adet = 1): EzberHedef {
+  const h = ezberHedefOku();
+  const next = ezberHedefNormalize({ ...h, bugunSoru: (h.bugunSoru || 0) + Math.max(1, adet) });
+  ezberHedefYaz(next);
+  return next;
 }
 
 /** ── Günlük Namaz Takip Defteri (madde 49) ─────────────────
