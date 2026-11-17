@@ -21,7 +21,7 @@ import type { PremiumModalProps, PremiumTab } from "./premiumModalHelpers";
 import { DAILY_QUOTA, TIER_LABEL, emptyRights, readPackRights, PRO_FEATURES, ELIT_FEATURES } from "./premiumModalHelpers";
 import { TIER_PRICE_TRY } from "../tier";
 const TIER_AYLIK = TIER_PRICE_TRY;
-import { PremiumKotaGostergesi, PremiumAlinanPaketler, PremiumSozlesme } from "./premiumBolumler";
+import { PremiumKotaGostergesi, PremiumAlinanPaketler, PremiumKampanyaNotu, PremiumSozlesme } from "./premiumBolumler";
 
 // ★ AC/KAPA PANOSU (22.10): plan kartındaki "nelere sahiptir" listesi karışmasın —
 //   küçük satır sayısı önizle (3) gösterilir, "Neler dahil?" satırına tıklayınca
@@ -547,6 +547,8 @@ export const PremiumModal: React.FC<PremiumModalProps> = ({
               </p>
             </>
           )}
+
+          <PremiumKampanyaNotu dil={dil} />
 
           <PremiumSozlesme accepted={accepted} setAccepted={setAccepted} termsOpen={termsOpen} setTermsOpen={setTermsOpen} termsHighlight={termsHighlight} termsRef={termsRef} dil={dil} />
 

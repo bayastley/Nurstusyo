@@ -428,7 +428,7 @@ export function VeriGizlilikKarti() {
   const temizle = () => {
     try {
       if (sel.taslak) {
-        ["nur_seslendirme_taslak_v1","nur_kart_tasarim_preset_v1","nur_marka_preset_v1","nur_kart_favori_v1","nur_icerik_takvimi_v1","nur_offline_dersler_v1"].forEach((k) => localStorage.removeItem(k));
+        ["nur_seslendirme_taslak_v1","nur_kart_tasarim_preset_v1","nur_marka_preset_v1","nur_kart_favori_v1","nur_icerik_takvimi_v1","nur_offline_dersler_v1","nur_kampanya_kodu_not_v1"].forEach((k) => localStorage.removeItem(k));
       }
       if (sel.takip) {
         ["nur_kisisel_dualar_v1","nur_namaz_takip_v1","nur_kaza_plan_v1","nur_hayir_takip_v1"].forEach((k) => localStorage.removeItem(k));

@@ -4,7 +4,7 @@
 // Kota göstergesi + Satın alınan paketler + Satın alma sözleşmesi
 // ════════════════════════════════════════════════════════
 
-import React from "react";
+import React, { useState } from "react";
 import {
   PACKAGE_GROUP_META,
   type VideoKind,
@@ -14,6 +14,7 @@ import { translate } from "../i18n";
 import { TIER_LABEL, TIER_LABEL_TR } from "./premiumModalHelpers";
 
 type Rights = { kisa: number; uzun: number; tam: number };
+const KAMPANYA_NOT_KEY = "nur_kampanya_kodu_not_v1";
 
 // ── 1) GÜNLÜK KOTA GÖSTERGESİ ────────────────────────────
 export function PremiumKotaGostergesi({
@@ -147,6 +148,45 @@ export function PremiumAlinanPaketler({ packRightsProp, dil = "tr" }: { packRigh
 }
 
 // ── 3) SATIN ALMA ONAYI + SÖZLEŞME ───────────────────────
+// ── 4) KAMPANYA / HEDİYE KODU NOTU (madde 64, local iskelet) ───
+export function PremiumKampanyaNotu({ dil = "tr" }: { dil?: string }) {
+  const t = (k: string): string => translate(dil, k);
+  const [kod, setKod] = useState(() => {
+    try { return localStorage.getItem(KAMPANYA_NOT_KEY) || ""; } catch { return ""; }
+  });
+  const [msg, setMsg] = useState("");
+  const kaydet = () => {
+    try {
+      const v = kod.trim();
+      if (v) localStorage.setItem(KAMPANYA_NOT_KEY, v.slice(0, 64));
+      else localStorage.removeItem(KAMPANYA_NOT_KEY);
+      setKod(v ? v.slice(0, 64) : "");
+      setMsg(t("pmKampanyaKaydedildi"));
+      setTimeout(() => setMsg(""), 1800);
+    } catch { /* ignore */ }
+  };
+  return (
+    <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-[10px] font-black uppercase tracking-wider text-white/55">{t("pmKampanyaNotBaslik")}</p>
+      <div className="mt-2 flex gap-2">
+        <input
+          type="text"
+          value={kod}
+          onChange={(e) => setKod(e.target.value)}
+          placeholder={t("pmKampanyaKod")}
+          maxLength={64}
+          className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-[10px] text-white placeholder:text-white/25 outline-none focus:border-white/25"
+        />
+        <button type="button" onClick={kaydet} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-[9.5px] font-black text-white/80 transition hover:bg-white/10">
+          {t("pmKampanyaKaydet")}
+        </button>
+      </div>
+      <p className="mt-2 text-[9px] leading-relaxed text-white/35">{t("pmKampanyaNot")}</p>
+      {msg && <p className="mt-1 text-[9px] font-bold text-emerald-300/90">{msg}</p>}
+    </div>
+  );
+}
+
 export function PremiumSozlesme({
   accepted,
   setAccepted,
