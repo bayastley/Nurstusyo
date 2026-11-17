@@ -2426,5 +2426,9 @@
   "ksKaynakEtiket": "Sumber:",
   "ksOfflineOzet": "Pelajaran tersimpan offline: {n}",
   "ksOfflineBos": "Belum ada pelajaran tersimpan offline.",
-  "legalLocalDataNotu": "Data yang disimpan di perangkat ini: draf, favorit, catatan, kalender/pengaturan, dan cache halaman offline dapat tersimpan di localStorage/Cache Storage. Anda dapat menghapus item terpilih di Alat > Data & Privasi; ini hanya memengaruhi perangkat ini."
+  "legalLocalDataNotu": "Data yang disimpan di perangkat ini: draf, favorit, catatan, kalender/pengaturan, dan cache halaman offline dapat tersimpan di localStorage/Cache Storage. Anda dapat menghapus item terpilih di Alat > Data & Privasi; ini hanya memengaruhi perangkat ini.",
+  "akTasarimPaylas": "Salin desain",
+  "akTasarimKopyalandi": "Desain kartu disalin",
+  "akTasarimYapistir": "Tempel/Impor",
+  "akTasarimIceAktarildi": "Desain kartu diimpor"
 }

@@ -2426,5 +2426,9 @@
   "ksKaynakEtiket": "Kaynak:",
   "ksOfflineOzet": "Çevrimdışı kaydedilen ders: {n}",
   "ksOfflineBos": "Henüz çevrimdışı ders kaydedilmedi.",
-  "legalLocalDataNotu": "Bu cihazda saklanan veriler: taslaklar, favoriler, notlar, takvim/ayarlar ve çevrimdışı sayfa önbelleği localStorage/Cache Storage içinde tutulabilir. Araçlar > Veri ve Gizlilik bölümünden seçerek temizleyebilirsin; bu işlem yalnız bu cihazı etkiler."
+  "legalLocalDataNotu": "Bu cihazda saklanan veriler: taslaklar, favoriler, notlar, takvim/ayarlar ve çevrimdışı sayfa önbelleği localStorage/Cache Storage içinde tutulabilir. Araçlar > Veri ve Gizlilik bölümünden seçerek temizleyebilirsin; bu işlem yalnız bu cihazı etkiler.",
+  "akTasarimPaylas": "Tasarımı kopyala",
+  "akTasarimKopyalandi": "Kart tasarımı panoya kopyalandı",
+  "akTasarimYapistir": "Yapıştır/İçe al",
+  "akTasarimIceAktarildi": "Kart tasarımı içe aktarıldı"
 }

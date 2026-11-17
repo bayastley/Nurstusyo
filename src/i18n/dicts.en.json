@@ -2426,5 +2426,9 @@
   "ksKaynakEtiket": "Source:",
   "ksOfflineOzet": "Offline saved lessons: {n}",
   "ksOfflineBos": "No lessons saved offline yet.",
-  "legalLocalDataNotu": "Data stored on this device: drafts, favorites, notes, calendar/settings and offline page cache may be kept in localStorage/Cache Storage. You can clear selected items in Tools > Data & Privacy; this affects only this device."
+  "legalLocalDataNotu": "Data stored on this device: drafts, favorites, notes, calendar/settings and offline page cache may be kept in localStorage/Cache Storage. You can clear selected items in Tools > Data & Privacy; this affects only this device.",
+  "akTasarimPaylas": "Copy design",
+  "akTasarimKopyalandi": "Card design copied to clipboard",
+  "akTasarimYapistir": "Paste/Import",
+  "akTasarimIceAktarildi": "Card design imported"
 }

@@ -286,6 +286,16 @@ export const KartOnizlemeBolumu: React.FC<{
                     className="rounded-lg bg-white/5 py-1.5 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">
                     {tt("akTasarimYukle")}
                   </button>
+                  <button type="button"
+                    onClick={() => { try { void navigator.clipboard?.writeText(JSON.stringify(ayar)); window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimKopyalandi")})); } catch {} }}
+                    className="rounded-lg bg-white/5 py-1.5 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">
+                    {tt("akTasarimPaylas")}
+                  </button>
+                  <button type="button"
+                    onClick={() => { void (async () => { try { const txt = await (navigator.clipboard?.readText?.() || Promise.resolve("")); if(!txt){window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimYok")}));return;} const d=JSON.parse(txt); setAyar({...VARSAYILAN_AYARLAR,...d}); window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimIceAktarildi")})); } catch { window.dispatchEvent(new CustomEvent("nur-notify",{detail:tt("akTasarimYok")})); } })(); }}
+                    className="rounded-lg bg-white/5 py-1.5 text-[8.5px] font-bold text-white/55 transition hover:bg-white/10 hover:text-white">
+                    {tt("akTasarimYapistir")}
+                  </button>
                 </div>
                 <button type="button"
                   onClick={() => setAyar(VARSAYILAN_AYARLAR)}
