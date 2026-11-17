@@ -2403,5 +2403,21 @@
   "ktKitaplikSesTaslak": "مسودة التعليق الصوتي",
   "ktKitaplikKartTasarim": "إعداد تصميم البطاقة",
   "ktKitaplikMarka": "إعداد الهوية البصرية",
-  "ktKitaplikMushafOffline": "صفحات مصحف دون اتصال"
+  "ktKitaplikMushafOffline": "صفحات مصحف دون اتصال",
+  "pmYenilemeYonet": "إدارة التجديد/الإلغاء عبر شاشة بريميوم أو مزوّد الدفع أو الدعم.",
+  "pmAbonelikAktif": "اشتراكك نشط.",
+  "itVeriGizlilik": "البيانات والخصوصية (هذا الجهاز)",
+  "itVeriGizlilikNot": "معظم المحتوى المحفوظ على هذا الجهاز (localStorage/الذاكرة المؤقتة). يمكنك مسح ما تختاره.",
+  "itVeriTaslaklar": "المسودات والإعدادات المسبقة",
+  "itVeriMushafCache": "صفحات المصحف دون اتصال",
+  "itVeriTemizle": "مسح المحدد",
+  "itVeriTemizlendi": "تم مسح البيانات المحلية المحددة",
+  "itVeriSilUyari": "لا يمكن التراجع (هذا الجهاز فقط).",
+  "dafMarkaPaylas": "نسخ إعدادات العلامة",
+  "dafMarkaKopyalandi": "تم نسخ إعدادات العلامة",
+  "dafMarkaYapistir": "لصق/استيراد",
+  "dafMarkaIceAktarildi": "تم استيراد إعدادات العلامة",
+  "abPlanHazir": "جدولة سريعة: يوم / 7 أيام",
+  "abPlan1g": "يوم واحد",
+  "abPlan7g": "7 أيام"
 }

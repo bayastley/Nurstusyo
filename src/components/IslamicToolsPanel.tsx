@@ -23,6 +23,7 @@ interface IslamicToolsPanelProps {
   prayerCity: string;
   setPrayerCity: (city: string) => void;
   prayerTimings: Record<string, string> | null;
+  initialTab?: ToolTab;
 }
 
 // ★ 30.10 KIBLA çıktı (kullanıcı emri): artık üst barda ayrı bir KIBLE butonuna taşındı.
@@ -32,12 +33,13 @@ type ToolTab = "prayer" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "sal
 //   Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim,
 //   HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart,
 //   RozetlerKarti, UreticiIstatistikKarti. Bu dosya sekme düzeni + kabuk.
-import { Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim, HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart, HayirTakipKarti, BildirimMerkeziKarti, ErisilebilirlikKarti, RozetlerKarti, UreticiIstatistikKarti, uretimIstYaz, uretimIstOku, type UretimIst, URETIM_IST_KEY } from "./islamicToolsVucut";
+import { Zikirmatik, ToplulukVitrinSayaci, DuaTakip, SalahTracker, TopluHatim, HatimTakibi, GeceModuDugmesi, OgutVakti, NamazBildirim, CevrimdisiKart, HayirTakipKarti, BildirimMerkeziKarti, ErisilebilirlikKarti, VeriGizlilikKarti, RozetlerKarti, UreticiIstatistikKarti, uretimIstYaz, uretimIstOku, type UretimIst, URETIM_IST_KEY } from "./islamicToolsVucut";
 // ★ 26.10: Sahih Zikir & Dua Külliyatı — zikir dosyasındaki bileşenden doğrudan alınır
 import { SahihZikirKuliyati } from "./islamicToolsZikir";
 
-export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings, lang }) => {
-  const [activeTab, setActiveTab] = useState<ToolTab>("prayer");
+export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onClose, prayerCity, setPrayerCity, prayerTimings, lang, initialTab }) => {
+  const [activeTab, setActiveTab] = useState<ToolTab>(initialTab || "prayer");
+  useEffect(() => { if (open && initialTab) setActiveTab(initialTab); }, [open, initialTab]);
   // ★ 26.10: kısa çeviri yardımcısı — translate(lang, key) → TR → EN fallback (i18n/index.ts)
   const t = (key: string): string => translate(lang, key);
   const [expandedDua, setExpandedDua] = useState<number | null>(null);
@@ -220,6 +222,11 @@ export const IslamicToolsPanel: React.FC<IslamicToolsPanelProps> = ({ open, onCl
                 <p className="text-[8px] text-white/30 text-center">{t("itDualarDerleme")}</p>
               </div>
             )}
+          </div>
+
+          {/* Veri & Gizlilik */}
+          <div className="pt-2">
+            <VeriGizlilikKarti />
           </div>
 
           {/* Footer */}

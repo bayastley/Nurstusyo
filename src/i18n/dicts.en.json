@@ -2403,5 +2403,21 @@
   "ktKitaplikSesTaslak": "Voiceover draft",
   "ktKitaplikKartTasarim": "Card design preset",
   "ktKitaplikMarka": "Brand identity preset",
-  "ktKitaplikMushafOffline": "Offline mushaf pages"
+  "ktKitaplikMushafOffline": "Offline mushaf pages",
+  "pmYenilemeYonet": "Manage renewal/cancellation via Premium screen, payment provider, or support.",
+  "pmAbonelikAktif": "Your subscription is active.",
+  "itVeriGizlilik": "Data & Privacy (this device)",
+  "itVeriGizlilikNot": "Most saved content is stored on this device (localStorage/cache). You can clear selected data.",
+  "itVeriTaslaklar": "Drafts and presets",
+  "itVeriMushafCache": "Offline mushaf pages",
+  "itVeriTemizle": "Clear selected",
+  "itVeriTemizlendi": "Selected local data cleared",
+  "itVeriSilUyari": "This cannot be undone (this device only).",
+  "dafMarkaPaylas": "Copy brand settings",
+  "dafMarkaKopyalandi": "Brand settings copied to clipboard",
+  "dafMarkaYapistir": "Paste/Import",
+  "dafMarkaIceAktarildi": "Brand settings imported",
+  "abPlanHazir": "Quick schedule: 1 day / 7 days",
+  "abPlan1g": "1 day",
+  "abPlan7g": "7 days"
 }

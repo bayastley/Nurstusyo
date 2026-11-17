@@ -2403,5 +2403,21 @@
   "ktKitaplikSesTaslak": "Seslendirme taslağı",
   "ktKitaplikKartTasarim": "Kart tasarım preseti",
   "ktKitaplikMarka": "Marka kimliği preseti",
-  "ktKitaplikMushafOffline": "Çevrimdışı mushaf sayfası"
+  "ktKitaplikMushafOffline": "Çevrimdışı mushaf sayfası",
+  "pmYenilemeYonet": "Yenileme/iptal ve plan yönetimi: Premium ekranından ödeme sağlayıcısı veya destek üzerinden ilerleyebilirsin.",
+  "pmAbonelikAktif": "Aboneliğin aktif.",
+  "itVeriGizlilik": "Veri ve Gizlilik (bu cihaz)",
+  "itVeriGizlilikNot": "Kayıtlı içeriklerin çoğu bu cihazda (localStorage/önbellek) tutulur. İstersen seçerek temizleyebilirsin.",
+  "itVeriTaslaklar": "Taslaklar ve presetler",
+  "itVeriMushafCache": "Çevrimdışı mushaf sayfaları",
+  "itVeriTemizle": "Seçilenleri temizle",
+  "itVeriTemizlendi": "Seçilen yerel veriler temizlendi",
+  "itVeriSilUyari": "Bu işlem geri alınamaz (yalnız bu cihaz).",
+  "dafMarkaPaylas": "Marka ayarını kopyala",
+  "dafMarkaKopyalandi": "Marka ayarı panoya kopyalandı",
+  "dafMarkaYapistir": "Yapıştır/İçe al",
+  "dafMarkaIceAktarildi": "Marka ayarı içe aktarıldı",
+  "abPlanHazir": "Hızlı plan: 1 gün / 7 gün",
+  "abPlan1g": "1 gün",
+  "abPlan7g": "7 gün"
 }

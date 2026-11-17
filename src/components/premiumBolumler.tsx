@@ -92,11 +92,15 @@ export function PremiumKotaGostergesi({
               </div>
               {ist?.sonTarih ? <p className="mt-1 text-[7.5px] text-white/30">{t("itUretimBuAy")}: {new Date(ist.sonTarih).toLocaleDateString(dil === "ar" ? "ar" : dil === "ur" ? "ur-PK" : dil === "id" ? "id-ID" : dil === "en" ? "en-US" : "tr-TR")}</p> : null}
             </div>
-            {(activeTier !== "free" && (endsTxt || warn)) && (
+            {(activeTier !== "free") && (
               <div className={`rounded-xl p-2.5 ${warn ? "bg-amber-500/10 ring-1 ring-amber-400/20" : "bg-white/[0.03]"}`}>
                 <p className="text-[9px] font-black text-amber-100/90">{t("pmYenilemeHatirlatma")}</p>
-                <p className="mt-0.5 text-[8px] text-white/50">{warn ? t("pmAbonelikBitiyor") : t("pmYenilemeTarihiYaklasiyor")}{endsTxt ? ` • ${endsTxt}` : ""}</p>
-                <p className="mt-1 text-[7.5px] text-white/35">{t("pmIptalKosul")}</p>
+                <p className="mt-0.5 text-[8px] text-white/50">
+                  {warn ? t("pmAbonelikBitiyor") : (endsTxt ? t("pmYenilemeTarihiYaklasiyor") : t("pmAbonelikAktif"))}
+                  {endsTxt ? ` • ${endsTxt}` : ""}{typeof remainingDays === "number" && remainingDays > 0 ? ` (${remainingDays} ${dil === "en" ? "days" : dil === "ar" ? "يوم" : dil === "id" ? "hari" : dil === "ur" ? "دن" : "gün"})` : ""}
+                </p>
+                <p className="mt-1 text-[7.5px] text-white/35">{t("pmYenilemeYonet")}</p>
+                <p className="mt-1 text-[7.5px] text-white/30">{t("pmIptalKosul")}</p>
               </div>
             )}
           </div>

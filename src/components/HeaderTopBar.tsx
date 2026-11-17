@@ -67,13 +67,40 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
   const uyelikKotaToplami = getQuotaLeft("kisa", aktifTier) + getQuotaLeft("uzun", aktifTier) + getQuotaLeft("tam", aktifTier);
   const toplamHak = jetonCount + uyelikKotaToplami;
   const [toolsOpen, setToolsOpen] = React.useState(false);
+  const [toolsTab, setToolsTab] = React.useState<"prayer" | "zikir" | "kaza" | "calendar" | "dua" | "hatim" | "salah">("prayer");
   // ★ 18.10 SEVAP KÖŞESİ KÖPRÜSÜ (kullanıcı emri): Kur'an ekranındaki ✨ butonu
   //   bu event'i basar → Araçlar paneli buradan açılır (zikirmatik + hatim + sevap tek yer)
   React.useEffect(() => {
-    const ac = () => setToolsOpen(true);
-    window.addEventListener("nur_araclar_ac", ac);
-    return () => window.removeEventListener("nur_araclar_ac", ac);
+    const ac = (e: Event) => {
+      const d = (e as CustomEvent)?.detail as { tab?: string } | undefined;
+      const t = d?.tab;
+      if (t === "prayer" || t === "zikir" || t === "kaza" || t === "calendar" || t === "dua" || t === "hatim" || t === "salah") setToolsTab(t);
+      setToolsOpen(true);
+    };
+    window.addEventListener("nur_araclar_ac", ac as EventListener);
+    return () => window.removeEventListener("nur_araclar_ac", ac as EventListener);
   }, []);
+
+  // ★ 81 (kısmi): PWA kısayol deep-link (?sayfa=quran|tools|kartlar&tab=...)
+  React.useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      const sayfa = p.get("sayfa");
+      const tab = p.get("tab");
+      if (sayfa === "quran") setModal("quranLearn");
+      else if (sayfa === "kartlar") setModal("ayetKartlari");
+      else if (sayfa === "tools") {
+        const ttab = tab === "namaz" ? "prayer" : tab;
+        if (ttab === "prayer" || ttab === "zikir" || ttab === "kaza" || ttab === "calendar" || ttab === "dua" || ttab === "hatim" || ttab === "salah") setToolsTab(ttab);
+        setToolsOpen(true);
+      }
+      if (sayfa) {
+        p.delete("sayfa"); p.delete("tab");
+        const q = p.toString();
+        window.history.replaceState({}, "", window.location.pathname + (q ? `?${q}` : ""));
+      }
+    } catch { /* ignore */ }
+  }, [setModal]);
 
 
 
@@ -223,6 +250,7 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
         prayerCity={prayerCity}
         setPrayerCity={setPrayerCity}
         prayerTimings={prayerTimings}
+        initialTab={toolsTab}
       />
     </>
   );

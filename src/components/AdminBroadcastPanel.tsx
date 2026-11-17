@@ -453,6 +453,11 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
             <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
           </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold text-white/35">Hızlı plan:</span>
+            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">1 gün</button>
+            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+7*86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">7 gün</button>
+          </div>
           <button onClick={publish} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black disabled:opacity-50" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
             <Send size={13} /> {saving ? "Yayınlanıyor..." : "Duyuruyu Yayınla"}
           </button>

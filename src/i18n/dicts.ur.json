@@ -2403,5 +2403,21 @@
   "ktKitaplikSesTaslak": "آواز ڈرافٹ",
   "ktKitaplikKartTasarim": "کارڈ ڈیزائن پری سیٹ",
   "ktKitaplikMarka": "برانڈ شناخت پری سیٹ",
-  "ktKitaplikMushafOffline": "آف لائن مصحف صفحات"
+  "ktKitaplikMushafOffline": "آف لائن مصحف صفحات",
+  "pmYenilemeYonet": "تجدید/منسوخی کا انتظام Premium اسکرین، ادائیگی فراہم کنندہ یا سپورٹ سے کریں۔",
+  "pmAbonelikAktif": "آپ کی رکنیت فعال ہے۔",
+  "itVeriGizlilik": "ڈیٹا اور پرائیویسی (یہ آلہ)",
+  "itVeriGizlilikNot": "زیادہ تر محفوظ مواد اسی آلہ پر (localStorage/کیش) رکھا جاتا ہے۔ آپ منتخب ڈیٹا صاف کر سکتے ہیں۔",
+  "itVeriTaslaklar": "ڈرافٹس اور پری سیٹس",
+  "itVeriMushafCache": "آف لائن مصحف صفحات",
+  "itVeriTemizle": "منتخب صاف کریں",
+  "itVeriTemizlendi": "منتخب مقامی ڈیٹا صاف ہو گیا",
+  "itVeriSilUyari": "یہ واپس نہیں ہو سکتا (صرف یہ آلہ)۔",
+  "dafMarkaPaylas": "برانڈ ترتیبات کاپی کریں",
+  "dafMarkaKopyalandi": "برانڈ ترتیبات کاپی ہو گئیں",
+  "dafMarkaYapistir": "پیسٹ/درآمد",
+  "dafMarkaIceAktarildi": "برانڈ ترتیبات درآمد ہو گئیں",
+  "abPlanHazir": "فوری شیڈول: 1 دن / 7 دن",
+  "abPlan1g": "1 دن",
+  "abPlan7g": "7 دن"
 }

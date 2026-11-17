@@ -2403,5 +2403,21 @@
   "ktKitaplikSesTaslak": "Draf sulih suara",
   "ktKitaplikKartTasarim": "Preset desain kartu",
   "ktKitaplikMarka": "Preset identitas merek",
-  "ktKitaplikMushafOffline": "Halaman mushaf offline"
+  "ktKitaplikMushafOffline": "Halaman mushaf offline",
+  "pmYenilemeYonet": "Kelola perpanjangan/pembatalan via layar Premium, penyedia pembayaran, atau dukungan.",
+  "pmAbonelikAktif": "Langganan Anda aktif.",
+  "itVeriGizlilik": "Data & Privasi (perangkat ini)",
+  "itVeriGizlilikNot": "Sebagian besar konten tersimpan di perangkat ini (localStorage/cache). Anda dapat menghapus data terpilih.",
+  "itVeriTaslaklar": "Draf dan preset",
+  "itVeriMushafCache": "Halaman mushaf offline",
+  "itVeriTemizle": "Hapus yang dipilih",
+  "itVeriTemizlendi": "Data lokal terpilih dihapus",
+  "itVeriSilUyari": "Tidak dapat dibatalkan (hanya perangkat ini).",
+  "dafMarkaPaylas": "Salin pengaturan merek",
+  "dafMarkaKopyalandi": "Pengaturan merek disalin",
+  "dafMarkaYapistir": "Tempel/Impor",
+  "dafMarkaIceAktarildi": "Pengaturan merek diimpor",
+  "abPlanHazir": "Jadwal cepat: 1 hari / 7 hari",
+  "abPlan1g": "1 hari",
+  "abPlan7g": "7 hari"
 }
