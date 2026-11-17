@@ -234,25 +234,25 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     () => hadisBanka.filter((h) => (hadisTema === "tumu" || h.tema === hadisTema) && (rivayetci === "tumu" || rivayetciUyar(h.kaynak, rivayetci)) && (!q || h.metin.toLocaleLowerCase("tr").includes(q) || h.kaynak.toLocaleLowerCase("tr").includes(q))),
     [hadisTema, q, rivayetci],
   );
-  // ★ KÜLLİYAT ARAMASI (28.09): yerel bankada sonuç yoksa Buhârî+Müslim külliyatı
-  //   /api/hadis/ara'dan çekilir (dorar.net + opsiyonel sunnah.com). "aile" gibi
-  //   yerel bankada olmayan kelimelerde artık boş değil, külliyattan sonuç gelir.
+  // ★ ÇEVRİMİÇİ HADİS ARAMASI: arama yapıldığında yerel sonuçların yanında internetten de
+  //   sonuç getirir (Sünnetimiz/dorar vb. — /api/hadis/ara). Kod büyümez, veriler koda gömülmez.
   const [kuliyatYukleniyor, setKuliyatYukleniyor] = useState(false);
-  const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string }>>([]);
+  const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string; url?: string }>>([]);
   React.useEffect(() => {
-    if (sekme !== "hadis" || q.length < 2 || filtreliHadisler.length > 0) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); return; }
+    if (sekme !== "hadis" || q.length < 2) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); return; }
     let canli = true;
     setKuliyatYukleniyor(true);
+    const kitap = ["buhari", "muslim", "tirmizi", "ebudavud", "nesai", "ibnmace"].includes(rivayetci) ? `&kitap=${encodeURIComponent(rivayetci)}` : "";
     const t = setTimeout(async () => {
       try {
-        const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}`);
+        const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}${kitap}`);
         const data = await r.json();
         if (canli) setKuliyatSonuc(Array.isArray(data?.sonuclar) ? data.sonuclar : []);
       } catch { if (canli) setKuliyatSonuc([]); }
       finally { if (canli) setKuliyatYukleniyor(false); }
     }, 400); // debounce — her tuşta istek atılmaz
     return () => { canli = false; clearTimeout(t); };
-  }, [sekme, q, filtreliHadisler.length]);
+  }, [sekme, q, rivayetci]);
   // ★ KISSA ÇOKDİL (06.10): önce dile çevir, sonra arama çevrilmiş ad/özet üzerinden koşsun
   // ★ 25.10 GENİŞLETME: çeviri hizası 19 referansta korunur; 12 yeni kıssa (KISSA_EK) çevirisiz eklenir — TR görünür
   const filtreliKissalar = useMemo(() => [...kissaCevir(lang, KISSA_LISTESI), ...KISSA_EK].filter((k) => !q || k.ad.toLocaleLowerCase("tr").includes(q) || k.ozet.toLocaleLowerCase("tr").includes(q)), [q, lang]);

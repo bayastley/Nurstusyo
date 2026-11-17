@@ -23,7 +23,7 @@ export function HadisBolumu({
   hadisTemaAdi: (id: string) => string;
   filtreliHadisler: Array<{ metin: string; kaynak: string; derece?: string }>;
   kuliyatYukleniyor: boolean;
-  kuliyatSonuc: Array<{ metin: string; kaynak: string; derece: string; dil: string }>;
+  kuliyatSonuc: Array<{ metin: string; kaynak: string; derece: string; dil: string; url?: string }>;
   dereceAdi: (d?: string) => string;
   rivayetci: string;
   setRivayetci: (id: string) => void;
@@ -69,6 +69,9 @@ export function HadisBolumu({
         <span className="ml-auto text-[8.5px] font-bold text-emerald-300/80">{filtreliHadisler.length} {tt("ksSonuc")}</span>
       </div>
       <p className="mb-2 text-[9px] text-white/40">{arama ? `🔎 "${arama}" · ${filtreliHadisler.length} ${tt("ksSonuc")} · ` : ""}{tt("ksKaynakliNot")}</p>
+      {arama && kuliyatYukleniyor && (
+        <p className="mb-2 text-[10px] text-white/35">{tt("ksKulliyatTaranıyor")}</p>
+      )}
       <div className="mb-3 flex flex-wrap gap-1.5">
         {HADIS_TEMALARI.map((t) => (
           <button key={t.id} type="button" onClick={() => setHadisTema(t.id)}
@@ -92,19 +95,17 @@ export function HadisBolumu({
           </div>
           );
         })}
-        {filtreliHadisler.length === 0 && (
+        {filtreliHadisler.length === 0 && !kuliyatYukleniyor && kuliyatSonuc.length === 0 && (
           <div className="py-4 text-center">
-            <p className="text-[11px] text-white/40">{tt("ksYerelBulunamadi")}</p>
-            {kuliyatYukleniyor && <p className="mt-2 text-[10px] text-white/30">{tt("ksKulliyatTaranıyor")}</p>}
-            {!kuliyatYukleniyor && kuliyatSonuc.length > 0 && (
-              <p className="mt-1 text-[9.5px] text-emerald-300">✓ {kuliyatSonuc.length} hadis bulundu — aşağıda</p>
-            )}
-            {!kuliyatYukleniyor && kuliyatSonuc.length === 0 && (
-              <p className="mt-1 text-[9.5px] text-white/30">{tt("ksKulliyatYok")}</p>
-            )}
+            <p className="text-[11px] text-white/40">{arama ? tt("ksKulliyatYok") : tt("ksYerelBulunamadi")}</p>
           </div>
         )}
-        {/* ★ KÜLLİYAT SONUÇLARI — Buhârî/Müslim'den gelen hadisler (derece etiketiyle) */}
+        {/* ★ ÇEVRİMİÇİ SONUÇLAR — aramada internetten (Sünnetimiz vb.), derece/kaynakla */}
+        {kuliyatSonuc.length > 0 && (
+          <div className="pt-1">
+            <p className="mb-1.5 text-[9px] font-bold text-amber-200/80">{tt("ksCevrimiciSonuclar")} · {kuliyatSonuc.length}</p>
+          </div>
+        )}
         {kuliyatSonuc.map((h, i) => (
           <div key={`k-${i}`} className="rounded-xl border border-amber-400/20 bg-amber-500/[.04] p-3">
             <div className="flex items-start justify-between gap-2">
@@ -113,7 +114,9 @@ export function HadisBolumu({
               </p>
               <span title={dereceAdi(h.derece) || h.kaynak} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece) || kaynaktanRivayetci(h.kaynak) || ""}</span>
             </div>
-            <p className="mt-1.5 text-[8.5px] text-white/40">— {h.kaynak}</p>
+            <p className="mt-1.5 text-[8.5px] text-white/40">
+              — {h.url ? <a href={h.url} target="_blank" rel="noreferrer" className="underline decoration-white/20 hover:text-white/60">{h.kaynak}</a> : h.kaynak}
+            </p>
           </div>
         ))}
       </div>

@@ -79,6 +79,19 @@ interface HadisSonuc {
   derece: "sahih" | "hasan" | "zayif" | "bilinmiyor";
   kitap: string;
   dil: "tr" | "ar" | "en";
+  url?: string;
+}
+
+const KITAP_SLUG: Record<string, string> = {
+  buhari: "buhari", muslim: "muslim", tirmizi: "tirmizi", ebudavud: "ebudavud",
+  nesai: "nesai", ibnmace: "ibnmace",
+};
+function sunnetimizDerece(label?: string): HadisSonuc["derece"] {
+  const v = (label || "").toLocaleLowerCase("tr");
+  if (/sahih|صحيح/.test(v)) return "sahih";
+  if (/hasen|hasan|حسن/.test(v)) return "hasan";
+  if (/zay[ıi]f|ضعيف|mevzu|موضوع/.test(v)) return "zayif";
+  return "bilinmiyor";
 }
 
 // ─── dorar.net derece metnini standart hale getir ───
@@ -128,14 +141,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (q.length < 2) return res.status(400).json({ ok: false, error: "Arama en az 2 karakter olmalı" });
 
   const sonuclar: HadisSonuc[] = [];
+  const seen = new Set<string>();
+  const ekle = (s: HadisSonuc) => {
+    const key = s.metin.replace(/\s+/g, " ").trim().slice(0, 120);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    sonuclar.push(s);
+  };
   // ★ Dürüst kaynak raporu: hangi sağlayıcı ne durumda, yanıtla birlikte döner
-  const kaynaklar: { dorar: string; sunnah: string } = { dorar: "kapali", sunnah: "anahtar-yok" };
+  const kaynaklar: Record<string, string> = { sunnetimiz: "kapali", dorar: "kapali", sunnah: "anahtar-yok" };
 
-  // ─── 1) sunnah.com (API anahtarı varsa) — Buhârî + Müslim, İngilizce metin ───
+  // Seçili rivayetçi/kitap (opsiyonel) — sadece Sünnetimiz'de desteklenen slug'lar
+  const kitapParam = String(req.query.kitap ?? req.query.book ?? "").toLocaleLowerCase("tr").replace(/[^a-z,]/g, "");
+  const kitaplarSecili = kitapParam.split(",").map((k) => KITAP_SLUG[k.trim()]).filter(Boolean) as string[];
+  const kitapQ = kitaplarSecili.length ? kitaplarSecili.join(",") : "buhari,muslim,ebudavud,tirmizi,nesai,ibnmace";
+
+  // ─── 1) Sünnetimiz (anahtarsız, TR+Arapça + derece) — öncelikli ───
+  try {
+    const url = `https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=12`;
+    const r = await fetch(url, {
+      headers: { "User-Agent": DIS_UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (r.ok) {
+      const data = (await r.json()) as { results?: Array<{ ref?: string; turkish?: string; arabic?: string; grade?: { label?: string }; book?: { slug?: string; name?: string }; kitab?: { title?: string }; bab?: { title?: string }; url?: string }>; error?: unknown };
+      for (const h of (data.results ?? []).slice(0, 12)) {
+        const metin = (h.turkish || h.arabic || "").trim();
+        if (!metin) continue;
+        const bname = h.book?.name || h.book?.slug || "Hadis";
+        const bolum = h.bab?.title || h.kitab?.title || "";
+        ekle({
+          metin,
+          kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
+          derece: sunnetimizDerece(h.grade?.label),
+          kitap: bname,
+          dil: h.turkish ? "tr" : "ar",
+          url: h.url,
+        });
+      }
+      kaynaklar.sunnetimiz = `ok-${sonuclar.length}`;
+    } else {
+      kaynaklar.sunnetimiz = `hata-${r.status}`;
+    }
+  } catch { kaynaklar.sunnetimiz = "hata"; }
+
+  // ─── 2) sunnah.com (API anahtarı varsa) — Buhârî + Müslim ───
   const apiKey = process.env.HADITH_API_KEY;
   if (apiKey) {
     try {
-      const kitaplar = ["bukhari", "muslim"] as const;
+      const kitaplar = (["bukhari", "muslim"] as const).filter((k) => !kitaplarSecili.length || kitaplarSecili.includes(k));
       await Promise.all(kitaplar.map(async (kitap) => {
         const r = await fetch(`https://api.sunnah.com/v1/${kitap}/search/${encodeURIComponent(q)}?limit=5`, {
           headers: { "X-API-KEY": apiKey, "User-Agent": DIS_UA, Accept: "application/json" },
@@ -148,7 +202,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         for (const h of (data.data ?? []).slice(0, 5)) {
           const metin = h.hadithEnglish || h.hadithArabic || "";
           if (!metin) continue;
-          sonuclar.push({
+          ekle({
             metin,
             kaynak: `Sahih ${kitap === "bukhari" ? "Buhârî" : "Müslim"}${h.chapter?.chapterName ? ` · ${h.chapter.chapterName}` : ""}${h.hadithNumber ? ` · ${h.hadithNumber}` : ""}`,
             derece: "sahih",
@@ -156,40 +210,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: h.hadithEnglish ? "en" : "ar",
           });
         }
-        kaynaklar.sunnah = `ok-${sonuclar.length}`;
       }));
-    } catch { kaynaklar.sunnah = "hata"; /* sunnah.com kapalıysa dorar devam eder */ }
+      if (!kaynaklar.sunnah.startsWith("hata")) kaynaklar.sunnah = `ok`;
+    } catch { if (kaynaklar.sunnah === "anahtar-yok") kaynaklar.sunnah = "hata"; }
   }
 
-  // ─── 2) dorar.net — anahtarsız külliyat arama (Arapça) ───
-  if (sonuclar.length < 5) {
+  // ─── 3) dorar.net — anonim külliyat araması (Arapça), yedek ───
+  if (sonuclar.length < 8) {
     try {
       const url = `https://dorar.net/dorar_api.json?skey=${encodeURIComponent(q)}`;
-      // ★ İki kimlikli deneme: uygulama UA → reddedilirse tarayıcı UA
-      let r = await fetch(url, {
-        headers: { "User-Agent": DIS_UA, Accept: "application/json" },
-        signal: AbortSignal.timeout(8000),
-      });
+      let r = await fetch(url, { headers: { "User-Agent": DIS_UA, Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
       if (!r.ok) {
         kaynaklar.dorar = `ua-reddet-${r.status}`;
-        r = await fetch(url, {
-          headers: { "User-Agent": BROWSER_UA, Accept: "application/json" },
-          signal: AbortSignal.timeout(8000),
-        });
+        r = await fetch(url, { headers: { "User-Agent": BROWSER_UA, Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
       }
       if (r.ok) {
-        kaynaklar.dorar = "ok";
         const data = (await r.json()) as { ahadith?: { result?: { html?: string } } };
         const html = data?.ahadith?.result?.html ?? "";
-        // HTML kalıpları: metin <div class="hadith">, künye <div class="hadith-info">
         const metinler = [...html.matchAll(/class="hadith"[^>]*>([\s\S]*?)<\/div>/g)]
           .map((m) => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean);
         const bilgiler = [...html.matchAll(/class="hadith-info"[^>]*>([\s\S]*?)<\/div>/g)]
           .map((m) => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean);
-        for (let i = 0; i < metinler.length && sonuclar.length < 12; i++) {
+        for (let i = 0; i < metinler.length && sonuclar.length < 16; i++) {
           const metin = metinler[i];
           const bilgi = bilgiler[i] ?? "";
-          sonuclar.push({
+          ekle({
             metin,
             kaynak: bilgi.slice(0, 200) || dorarKitap(bilgi),
             derece: dorarDerece(bilgi),
@@ -197,12 +242,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             dil: "ar",
           });
         }
-        kaynaklar.dorar = `ok-${sonuclar.length}`;
+        kaynaklar.dorar = `ok`;
       } else {
         kaynaklar.dorar = `kapali-${r.status}`;
       }
-    } catch { kaynaklar.dorar = "hata"; /* dorar kapalıysa sunnah sonuçları kalır */ }
+    } catch { if (kaynaklar.dorar === "kapali") kaynaklar.dorar = "hata"; }
   }
 
-  return res.status(200).json({ ok: true, q, sayi: sonuclar.length, kaynaklar, sonuclar: sonuclar.slice(0, 12) });
+  return res.status(200).json({ ok: true, q, sayi: sonuclar.length, kaynaklar, sonuclar: sonuclar.slice(0, 16) });
 }
