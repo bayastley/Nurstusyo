@@ -14,7 +14,7 @@ import { dereceSinif } from "./derece";
 
 export function HadisBolumu({
   tt, hadisTema, setHadisTema, hadisTemaAdi, filtreliHadisler,
-  kuliyatYukleniyor, kuliyatSonuc, dereceAdi,
+  kuliyatYukleniyor, kuliyatSonuc, kuliyatOffline, dereceAdi,
   rivayetci, setRivayetci, rivayetciSayilari, arama,
 }: {
   tt: (k: string) => string;
@@ -24,6 +24,7 @@ export function HadisBolumu({
   filtreliHadisler: Array<{ metin: string; kaynak: string; derece?: string }>;
   kuliyatYukleniyor: boolean;
   kuliyatSonuc: Array<{ metin: string; kaynak: string; derece: string; dil: string; url?: string }>;
+  kuliyatOffline?: boolean;
   dereceAdi: (d?: string) => string;
   rivayetci: string;
   setRivayetci: (id: string) => void;
@@ -69,6 +70,9 @@ export function HadisBolumu({
         <span className="ml-auto text-[8.5px] font-bold text-emerald-300/80">{filtreliHadisler.length} {tt("ksSonuc")}</span>
       </div>
       <p className="mb-2 text-[9px] text-white/40">{arama ? `🔎 "${arama}" · ${filtreliHadisler.length} ${tt("ksSonuc")} · ` : ""}{tt("ksKaynakliNot")}</p>
+      {arama && kuliyatOffline && !kuliyatYukleniyor && (
+        <p className="mb-2 rounded-lg border border-amber-400/20 bg-amber-500/10 px-2.5 py-1.5 text-[10px] text-amber-100/90">{tt("ksCevrimdisiUyari")}</p>
+      )}
       {arama && kuliyatYukleniyor && (
         <p className="mb-2 text-[10px] text-white/35">{tt("ksKulliyatTaranıyor")}</p>
       )}
@@ -97,7 +101,7 @@ export function HadisBolumu({
         })}
         {filtreliHadisler.length === 0 && !kuliyatYukleniyor && kuliyatSonuc.length === 0 && (
           <div className="py-4 text-center">
-            <p className="text-[11px] text-white/40">{arama ? tt("ksKulliyatYok") : tt("ksYerelBulunamadi")}</p>
+            <p className="text-[11px] text-white/40">{arama ? (kuliyatOffline ? tt("ksCevrimdisiUyari") : tt("ksKulliyatYok")) : tt("ksYerelBulunamadi")}</p>
           </div>
         )}
         {/* ★ ÇEVRİMİÇİ SONUÇLAR — aramada internetten (Sünnetimiz vb.), derece/kaynakla */}

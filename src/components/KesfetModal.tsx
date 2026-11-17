@@ -239,9 +239,12 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   //   Sünnetimiz araması fallback. Kod büyümez, veriler koda gömülmez.
   const [kuliyatYukleniyor, setKuliyatYukleniyor] = useState(false);
   const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string; url?: string }>>([]);
+  const [kuliyatOffline, setKuliyatOffline] = useState(false);
   React.useEffect(() => {
-    if (sekme !== "hadis" || q.length < 2) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); return; }
+    if (sekme !== "hadis" || q.length < 2) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); setKuliyatOffline(false); return; }
+    if (typeof navigator !== "undefined" && !navigator.onLine) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); setKuliyatOffline(true); return; }
     let canli = true;
+    setKuliyatOffline(false);
     setKuliyatYukleniyor(true);
     const kitap = ["buhari", "muslim", "tirmizi", "ebudavud", "nesai", "ibnmace"].includes(rivayetci) ? `&kitap=${encodeURIComponent(rivayetci)}` : "";
     const kitapQ = kitap ? rivayetci : "buhari,muslim,ebudavud,tirmizi,nesai,ibnmace";
@@ -277,8 +280,8 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             }).filter(Boolean);
           }
         }
-        if (canli) setKuliyatSonuc(sonuclar);
-      } catch { if (canli) setKuliyatSonuc([]); }
+        if (canli) { setKuliyatSonuc(sonuclar); if (!sonuclar.length && typeof navigator !== "undefined" && !navigator.onLine) setKuliyatOffline(true); }
+      } catch { if (canli) { setKuliyatSonuc([]); if (typeof navigator !== "undefined" && !navigator.onLine) setKuliyatOffline(true); } }
       finally { if (canli) setKuliyatYukleniyor(false); }
     }, 400); // debounce — her tuşta istek atılmaz
     return () => { canli = false; clearTimeout(t); };
@@ -428,6 +431,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           tt={tt} hadisTema={hadisTema} setHadisTema={setHadisTema}
           hadisTemaAdi={hadisTemaAdi} filtreliHadisler={filtreliHadisler}
           kuliyatYukleniyor={kuliyatYukleniyor} kuliyatSonuc={kuliyatSonuc}
+          kuliyatOffline={kuliyatOffline}
           dereceAdi={dereceAdi}
           rivayetci={rivayetci} setRivayetci={setRivayetci} rivayetciSayilari={rivayetciSayilari}
           arama={q}
