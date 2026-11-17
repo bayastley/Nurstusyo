@@ -26,7 +26,7 @@ import { ayetBasligi } from "../data/ayetBaslikCokDil"; // ★ 06.10: 575 başl�
 //   açıkken günde N indirme; ELİT üyelik boyunca açık. admin/master muaf.
 import { akErisim, akKutuphaneAc, akIndirmeKullan, type AkErisim } from "../studio/ayetKutuphaneKurali";
 // ★ 02.11 KARTLARIM ALBÜMÜ: favori kart listesini cihazda (localStorage) taşır
-import { kartAlbumuOku, kartFavoriTak } from "../studio/kartAlbumu";
+import { kartAlbumuOku, kartFavoriTak, kartAlbumuTemizle } from "../studio/kartAlbumu";
 
 // ★ 02.11: Kütüphane alt notundaki ayet sayısı — tüm Kur'an (6.236). Seçki (~611) bu
 //   ayetlerin içinden öne çıkanlardır; arama tüm Kur'an'ı tarar (alquran /v1/search).
@@ -648,6 +648,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           favoriIds={favoriIds}
           onFavoriTak={(id) => { const yeni = kartFavoriTak(id); setFavoriIds(new Set(yeni)); if (sadeceFavori) setSadeceFavori(yeni.length > 0); }}
           onFavoriSeriIndir={downloadFavoriSeri}
+          onFavoriTemizle={() => { kartAlbumuTemizle(); setFavoriIds(new Set()); setSadeceFavori(false); }}
           seriIndiriliyor={downloading}
           mealCevir={(k) => gorunenMeal(k, lang)}
           kaynakCevir={(k) => kartKaynagi(lang, k.source)}

@@ -28,3 +28,8 @@ export const kartFavoriTak = (id: string): string[] => {
   kartAlbumuYaz(yeni);
   return yeni;
 };
+
+/** Tüm favori kartları temizler (cihazda). */
+export const kartAlbumuTemizle = (): void => {
+  kartAlbumuYaz([]);
+};
