@@ -17,7 +17,7 @@ import { MEAL_EDITIONS, translate, type Lang } from "../i18n";
 import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
-  ezberHedefOku, ezberHedefYaz, ezberHedefIlerlet, ezberTekrarBugun, ezberTekrarEkle,
+  ezberHedefOku, ezberHedefYaz, ezberHedefIlerlet, ezberHedefBugunSifirla, ezberTekrarBugun, ezberTekrarEkle,
 } from "../hafizlikIstatistik";
 import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: hafızlık turu bitince günün serisi dolsun
 // ★ SRP adım 2 (30.09): sure havuzları + seviyeler + tur boyutları hafizlikVeri.ts'e
@@ -490,7 +490,13 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
                 <>
                   <div className="mb-2 flex items-center justify-between gap-2 text-[9px] text-white/60">
                     <span>{tt("htEzberBugunIlerleme")}: {bugun}/{hedef}</span>
-                    <span className={oran >= 100 ? "text-emerald-300" : "text-amber-200"}>{oran}%</span>
+                    <div className="flex items-center gap-1.5">
+                      {bugun > 0 && (
+                        <button type="button" onClick={() => setEzberHedef(ezberHedefBugunSifirla())}
+                          className="rounded bg-white/10 px-1.5 py-0.5 text-[8px] font-bold text-white/55 hover:bg-white/20">{tt("htEzberBugunSifirla")}</button>
+                      )}
+                      <span className={oran >= 100 ? "text-emerald-300" : "text-amber-200"}>{oran}%</span>
+                    </div>
                   </div>
                   <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div className="h-full rounded-full" style={{ width: `${oran}%`, background: "linear-gradient(90deg,var(--accent-2),var(--accent))" }} />

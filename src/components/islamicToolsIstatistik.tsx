@@ -337,12 +337,27 @@ export function HayirTakipKarti() {
     hayirIsaretle(id, nv);
     setKayit(hayirBugun());
   };
+  const reset = () => {
+    const bugun = new Date().toISOString().slice(0, 10);
+    hayirIsaretle("__reset__", false); // trigger write path not ideal; do direct
+    try {
+      const l = JSON.parse(localStorage.getItem(HAYIR_KEY) || "[]") as HayirKayit[];
+      const i = l.findIndex((x) => x.tarih === bugun);
+      const k = { tarih: bugun, items: {} };
+      if (i >= 0) l[i] = k; else l.push(k);
+      localStorage.setItem(HAYIR_KEY, JSON.stringify(l.slice(-60)));
+    } catch { /* ignore */ }
+    setKayit(hayirBugun());
+  };
   const done = Object.values(kayit.items).filter(Boolean).length;
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <div className="mb-1.5 flex items-center justify-between">
         <p className="text-[10px] font-bold text-white">{tt("itHayirTakip")}</p>
-        <span className="text-[8.5px] text-amber-200">{done}/{HAYIR_LIST.length}</span>
+        <div className="flex items-center gap-1.5">
+          {done > 0 && <button type="button" onClick={reset} className="text-[8px] font-bold text-white/40 hover:text-white/70">{tt("itHayirBugunSifirla")}</button>}
+          <span className="text-[8.5px] text-amber-200">{done}/{HAYIR_LIST.length}</span>
+        </div>
       </div>
       <p className="mb-2 text-[8px] text-white/35">{tt("itHayirTakipNot")}</p>
       <div className="space-y-1">

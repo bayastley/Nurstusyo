@@ -1,4 +1,4 @@
-﻿{
+{
     "dailyAyah":  "Ayat Hari Ini",
     "loading":  "Memuat...",
     "menuGuide":  "Panduan Pengguna",
@@ -2245,6 +2245,7 @@
     "itDsOn":  "Aktif",
     "itDsOff":  "Nonaktif",
     "itHayirTakip":  "Catatan Kebaikan Harian",
+    "itHayirBugunSifirla":  "Reset hari ini",
     "itHayirTakipNot":  "Tandai kebaikan hari ini untuk diri sendiri (tersimpan di perangkat; bukan hitungan poin/pahala).",
     "itHayirSadaka":  "Sedekah / infak",
     "itHayirSelam":  "Salam / kata baik",
@@ -2264,12 +2265,14 @@
     "ksfDuaDefterimNot":  "Tulis dan simpan doa pribadi. Hanya tersimpan di perangkat ini.",
     "ksfDuaDefterimPlaceholder":  "Tulis doamu...",
     "ksfDuaDefterimKaydet":  "Simpan",
+    "ksfDuaDefterimTemizle":  "Hapus semua",
     "ksfDuaOkunduIsaretle":  "Tandai sudah dibaca",
     "ksfDuaIsaretKaldir":  "Hapus tanda",
     "ksfDuaOkundu":  "dibaca",
     "htEzberPlanBaslik":  "Rencana Hafalan \u0026 Ulangan",
     "htEzberBugunTekrar":  "Ulangan hari ini",
     "htEzberBugunIlerleme":  "Progres hari ini",
+    "htEzberBugunSifirla":  "Reset hari ini",
     "htEzberSure":  "surah",
     "htEzberGunlukSoru":  "Soal harian",
     "htEzberHaftalikGun":  "Hari/minggu",

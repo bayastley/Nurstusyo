@@ -1,4 +1,4 @@
-﻿{
+{
     "dailyAyah":  "آية اليوم",
     "loading":  "جاري التحميل...",
     "menuGuide":  "دليل الاستخدام",
@@ -2245,6 +2245,7 @@
     "itDsOn":  "تشغيل",
     "itDsOff":  "إيقاف",
     "itHayirTakip":  "متابعة الأعمال اليومية",
+    "itHayirBugunSifirla":  "إعادة تعيين اليوم",
     "itHayirTakipNot":  "سجّل أعمال الخير لليوم لنفسك (محفوظة على هذا الجهاز؛ دون احتساب نقاط أو ثواب).",
     "itHayirSadaka":  "صدقة / إنفاق",
     "itHayirSelam":  "سلام / كلمة طيبة",
@@ -2264,12 +2265,14 @@
     "ksfDuaDefterimNot":  "اكتب أدعيتك الشخصية واحفظها. محفوظة على هذا الجهاز فقط.",
     "ksfDuaDefterimPlaceholder":  "اكتب دعاءك...",
     "ksfDuaDefterimKaydet":  "حفظ",
+    "ksfDuaDefterimTemizle":  "مسح الكل",
     "ksfDuaOkunduIsaretle":  "وضع علامة مقروء",
     "ksfDuaIsaretKaldir":  "إزالة العلامة",
     "ksfDuaOkundu":  "مقروء",
     "htEzberPlanBaslik":  "خطة الحفظ والمراجعة",
     "htEzberBugunTekrar":  "مراجعة اليوم",
     "htEzberBugunIlerleme":  "تقدم اليوم",
+    "htEzberBugunSifirla":  "إعادة تعيين اليوم",
     "htEzberSure":  "سورة",
     "htEzberGunlukSoru":  "أسئلة يومية",
     "htEzberHaftalikGun":  "أيام/أسبوع",

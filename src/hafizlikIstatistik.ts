@@ -394,6 +394,12 @@ export function ezberHedefIlerlet(adet = 1): EzberHedef {
   ezberHedefYaz(next);
   return next;
 }
+export function ezberHedefBugunSifirla(): EzberHedef {
+  const h = ezberHedefOku();
+  const next = ezberHedefNormalize({ ...h, bugunSoru: 0 });
+  ezberHedefYaz(next);
+  return next;
+}
 
 /** ── Günlük Namaz Takip Defteri (madde 49) ─────────────────
  *  Gizli, cihazda saklanan günlük namaz kaydı.

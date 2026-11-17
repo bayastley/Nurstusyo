@@ -1,4 +1,4 @@
-﻿{
+{
     "dailyAyah":  "Günün Ayeti",
     "loading":  "Yükleniyor...",
     "menuGuide":  "Kullanım Kılavuzu",
@@ -2245,6 +2245,7 @@
     "itDsOn":  "Açık",
     "itDsOff":  "Kapalı",
     "itHayirTakip":  "Günlük Hayır Takibi",
+    "itHayirBugunSifirla":  "Bugünü sıfırla",
     "itHayirTakipNot":  "Bugünkü iyiliklerini kendin için işaretle (cihazda saklanır, puan/sevap hesabı değildir).",
     "itHayirSadaka":  "Sadaka / infak",
     "itHayirSelam":  "Selam / güzel söz",
@@ -2264,12 +2265,14 @@
     "ksfDuaDefterimNot":  "Kişisel dualarını yaz ve kaydet. Yalnızca bu cihazda saklanır.",
     "ksfDuaDefterimPlaceholder":  "Duanı yaz...",
     "ksfDuaDefterimKaydet":  "Kaydet",
+    "ksfDuaDefterimTemizle":  "Tümünü temizle",
     "ksfDuaOkunduIsaretle":  "Okundu işaretle",
     "ksfDuaIsaretKaldir":  "İşareti kaldır",
     "ksfDuaOkundu":  "okundu",
     "htEzberPlanBaslik":  "Ezber Planı \u0026 Tekrar",
     "htEzberBugunTekrar":  "Bugün tekrar",
     "htEzberBugunIlerleme":  "Bugün ilerleme",
+    "htEzberBugunSifirla":  "Bugünü sıfırla",
     "htEzberSure":  "sure",
     "htEzberGunlukSoru":  "Günlük soru",
     "htEzberHaftalikGun":  "Haftalık gün",

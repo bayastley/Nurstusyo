@@ -1,4 +1,4 @@
-﻿{
+{
     "dailyAyah":  "Ayah of the Day",
     "loading":  "Loading...",
     "menuGuide":  "User Guide",
@@ -2245,6 +2245,7 @@
     "itDsOn":  "On",
     "itDsOff":  "Off",
     "itHayirTakip":  "Daily Good Deeds Log",
+    "itHayirBugunSifirla":  "Reset today",
     "itHayirTakipNot":  "Mark today\u0027s good deeds for yourself (saved on this device; no points or reward tracking).",
     "itHayirSadaka":  "Charity / giving",
     "itHayirSelam":  "Greeting / kind word",
@@ -2264,12 +2265,14 @@
     "ksfDuaDefterimNot":  "Write and save personal duas. Stored only on this device.",
     "ksfDuaDefterimPlaceholder":  "Write your dua...",
     "ksfDuaDefterimKaydet":  "Save",
+    "ksfDuaDefterimTemizle":  "Clear all",
     "ksfDuaOkunduIsaretle":  "Mark as read",
     "ksfDuaIsaretKaldir":  "Remove mark",
     "ksfDuaOkundu":  "read",
     "htEzberPlanBaslik":  "Memorization Plan \u0026 Review",
     "htEzberBugunTekrar":  "Review today",
     "htEzberBugunIlerleme":  "Today progress",
+    "htEzberBugunSifirla":  "Reset today",
     "htEzberSure":  "surah",
     "htEzberGunlukSoru":  "Daily questions",
     "htEzberHaftalikGun":  "Days/week",

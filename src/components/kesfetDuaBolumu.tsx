@@ -59,6 +59,10 @@ export function DuaRehberBolumu({
     setKisisel(yeni);
     kisiselYaz(yeni);
   };
+  const tumunuSilKisisel = () => {
+    setKisisel([]);
+    kisiselYaz([]);
+  };
 
   return (
     <div className="space-y-3">
@@ -83,6 +87,7 @@ export function DuaRehberBolumu({
         </button>
         {kisisel.length > 0 && (
           <div className="mt-2 space-y-1.5">
+            <div className="flex justify-end"><button type="button" onClick={tumunuSilKisisel} className="text-[8.5px] font-bold text-white/40 hover:text-red-300">{ttX2610("ksfDuaDefterimTemizle") || "Tümünü temizle"}</button></div>
             {kisisel.map((d) => (
               <div key={d.id} className="flex items-start gap-2 rounded-lg border border-white/10 bg-white/[.03] p-2">
                 <p className="flex-1 text-[10px] leading-relaxed text-white/80 whitespace-pre-wrap">{d.metin}</p>

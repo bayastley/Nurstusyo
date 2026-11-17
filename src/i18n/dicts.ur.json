@@ -1,4 +1,4 @@
-﻿{
+{
     "dailyAyah":  "آج کی آیت",
     "loading":  "لوڈ ہو رہا ہے...",
     "menuGuide":  "رہنمائی",
@@ -2245,6 +2245,7 @@
     "itDsOn":  "آن",
     "itDsOff":  "آف",
     "itHayirTakip":  "روزانہ نیکیوں کا ریکارڈ",
+    "itHayirBugunSifirla":  "آج ری سیٹ کریں",
     "itHayirTakipNot":  "آج کی نیکیاں اپنے لیے نشان زد کریں (اس آلہ پر محفوظ؛ کوئی پوائنٹ یا ثواب کا حساب نہیں).",
     "itHayirSadaka":  "صدقہ / انفاق",
     "itHayirSelam":  "سلام / اچھا کلمہ",
@@ -2264,12 +2265,14 @@
     "ksfDuaDefterimNot":  "ذاتی دعائیں لکھیں اور محفوظ کریں۔ صرف اس آلہ پر محفوظ۔",
     "ksfDuaDefterimPlaceholder":  "اپنی دعا لکھیں...",
     "ksfDuaDefterimKaydet":  "محفوظ کریں",
+    "ksfDuaDefterimTemizle":  "سب صاف کریں",
     "ksfDuaOkunduIsaretle":  "پڑھا ہوا نشان لگائیں",
     "ksfDuaIsaretKaldir":  "نشان ہٹائیں",
     "ksfDuaOkundu":  "پڑھا گیا",
     "htEzberPlanBaslik":  "حفظ کا منصوبہ اور دہرائی",
     "htEzberBugunTekrar":  "آج کی دہرائی",
     "htEzberBugunIlerleme":  "آج کی پیش رفت",
+    "htEzberBugunSifirla":  "آج ری سیٹ کریں",
     "htEzberSure":  "سورت",
     "htEzberGunlukSoru":  "روزانہ سوالات",
     "htEzberHaftalikGun":  "دن/ہفتہ",
