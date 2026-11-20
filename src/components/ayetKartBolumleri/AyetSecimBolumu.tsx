@@ -69,11 +69,13 @@ export const AyetSecimBolumu: React.FC<{
   favoriIds?: Set<string>;
   onFavoriTak?: (id: string) => void;
   onFavoriSeriIndir?: () => void;
+  /** ★ 20.11 HAZIR SERİLER (madde 37): duyguya göre 5 kartlık set indirir */
+  onSeriIndir?: (moodId: string) => void;
   onFavoriTemizle?: () => void;
   onFavoriDisaAktar?: () => void;
   onFavoriIceAktar?: () => void;
   seriIndiriliyor?: boolean;
-}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, onFavoriSeriIndir, onFavoriTemizle, onFavoriDisaAktar, onFavoriIceAktar, seriIndiriliyor, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
+}> = ({ sadeceFavori, setSadeceFavori, favoriIds, onFavoriTak, onFavoriSeriIndir, onSeriIndir, onFavoriTemizle, onFavoriDisaAktar, onFavoriIceAktar, seriIndiriliyor, filteredAyets, ayetId, setAyetId, ayetVisibleCount, setAyetVisibleCount, mood, setMood, sadeceGunun, setSadeceGunun, sureFiltre, setSureFiltre, ayetSearch, setAyetSearch, gununAyetiObj, shuffleAyet, akilliAyetSec, akilliElitIzin = true, akilliPremiumAc, ruhHaliMetin, setRuhHaliMetin, ruhHaliUygula, lang = "tr", mealCevir, kaynakCevir, tkSure, setTkSure, tkAyet, setTkAyet, tkSureAyetSayisi, tkYukleniyor, tkAktar, tamKuranYuk = false }) => {
   const tt = (k: string): string => translate(lang, k);
   // ★ 04.10 TUR 2: mood etiketleri 5 dile (AYET_MOODS TR verisinden anahtar türetme)
   const moodEtiketi = (id: string): string => {
@@ -169,6 +171,28 @@ export const AyetSecimBolumu: React.FC<{
               >
                 {tkYukleniyor ? tt("akTumKuranYukleniyor") : `+ ${tt("akTumKuranGet")}`}
               </button>
+            </div>
+          )}
+
+          {/* ★ 20.11 HAZIR SERİLER (madde 37) — aynı tasarımla 5 kartlık duygu seti */}
+          {onSeriIndir && (
+            <div className="mb-2 rounded-xl border border-white/10 bg-white/[.03] p-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[8.5px] font-black uppercase tracking-wider text-white/40">{tt("akSeri")}</span>
+                {["huzur", "sabir", "tevekkul", "rahmet", "aile", "sevgi"].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    data-minitur={`seri-${m}`}
+                    onClick={() => onSeriIndir(m)}
+                    disabled={!!seriIndiriliyor}
+                    className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[.04] px-2 py-1 text-[8.5px] font-bold text-white/65 transition hover:bg-white/[.09] hover:text-white active:scale-95 disabled:opacity-50"
+                    title={`${tt("akSeriIndir")} · ${moodEtiketi(m)}`}
+                  >
+                    <Download size={9} /> {moodEtiketi(m)} · 5
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

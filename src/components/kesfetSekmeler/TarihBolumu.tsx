@@ -1,8 +1,8 @@
 import React from "react";
-import { ChevronDown, Clock3, MapPin, Languages } from "lucide-react";
+import { ChevronDown, Clock3, MapPin, Languages, Map as MapIcon } from "lucide-react";
 import type { Lang } from "../../i18n";
 import { useIcerikCeviri } from "../../hooks/useIcerikCeviri";
-import { TARIH_DONEMLERI, TARIH_KAYNAK_NOTU, TARIH_TOPLAM } from "../../data/islamTarihiData";
+import { TARIH_DONEMLERI, TARIH_KAYNAK_NOTU, TARIH_TOPLAM, TARIH_YERLERI, TARIH_YER_TOPLAM } from "../../data/islamTarihiData";
 
 // ════════════════════════════════════════════════════════
 // TARIHBOLUMU.TSX — İslam Tarihi Zaman Tüneli (yol haritası madde 9)
@@ -30,6 +30,8 @@ export function TarihBolumu({
   const [donemId, setDonemId] = React.useState<string>("tumu");
   const [acik, setAcik] = React.useState<string | null>(null);
   const [trGoster, setTrGoster] = React.useState(false);
+  // ★ 20.11 HARİTA: zaman tüneli ↔ tarihî mekânlar görünümü
+  const [gorunum, setGorunum] = React.useState<"zaman" | "harita">("zaman");
 
   const ara = q.trim().toLocaleLowerCase("tr");
   const donemler = React.useMemo(() => {
@@ -58,12 +60,18 @@ export function TarihBolumu({
 
   const ceviriMetinleri = React.useMemo(() => {
     const liste: string[] = [TARIH_KAYNAK_NOTU, ...TARIH_DONEMLERI.map((d) => d.ad)];
-    donemler.forEach((d) => {
-      d.olaylar.forEach((o) => { liste.push(o.baslik, o.tarih); });
-    });
-    if (acikOzet) liste.push(acikOzet);
+    if (gorunum === "zaman") {
+      donemler.forEach((d) => {
+        d.olaylar.forEach((o) => { liste.push(o.baslik, o.tarih); });
+      });
+      if (acikOzet) liste.push(acikOzet);
+    } else {
+      // ★ Özel adlar (Mekke, Kudüs...) çevrilmez: makine çevirisi bozuyor;
+      //   yalnız ülke ve açıklama çevrilir.
+      TARIH_YERLERI.forEach((y) => { liste.push(y.ulke, y.ozet); });
+    }
     return liste;
-  }, [donemler, acikOzet]);
+  }, [donemler, acikOzet, gorunum]);
 
   const { aktif, yukleniyor, cevir } = useIcerikCeviri(ceviriMetinleri, lang);
   const g = React.useCallback((m: string) => (aktif && !trGoster ? cevir(m) : m), [aktif, trGoster, cevir]);
@@ -73,7 +81,9 @@ export function TarihBolumu({
       <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
         <p className="flex items-center gap-1.5 text-[10px] font-black text-white/85">
           <Clock3 size={12} style={{ color: "var(--accent)" }} />
-          {t("trZaman")} · {TARIH_TOPLAM} {t("trOlay")} · {TARIH_DONEMLERI.length} {t("trDonem")}
+          {gorunum === "zaman"
+            ? `${t("trZaman")} · ${TARIH_TOPLAM} ${t("trOlay")} · ${TARIH_DONEMLERI.length} ${t("trDonem")}`
+            : `${t("trHarita")} · ${TARIH_YER_TOPLAM} ${t("trMekan")}`}
         </p>
         <p className="mt-1 text-[8.5px] leading-relaxed text-white/40">{g(TARIH_KAYNAK_NOTU)}</p>
         {aktif && (
@@ -93,8 +103,30 @@ export function TarihBolumu({
         )}
       </div>
 
-      {/* Dönem filtresi */}
-      <div className="flex flex-wrap gap-1.5">
+      {/* Görünüm seçici: zaman tüneli ↔ harita */}
+      <div className="flex gap-1.5">
+        {([
+          { id: "zaman" as const, ad: t("trZaman"), ikon: <Clock3 size={11} /> },
+          { id: "harita" as const, ad: t("trHarita"), ikon: <MapIcon size={11} /> },
+        ]).map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            data-minitur={`tarih-gorunum-${g.id}`}
+            onClick={() => setGorunum(g.id)}
+            className={`flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-[9.5px] font-bold transition ${
+              gorunum === g.id
+                ? "border-white/25 bg-white/[.09] text-white"
+                : "border-white/10 bg-white/[.03] text-white/55 hover:bg-white/[.06] hover:text-white/80"
+            }`}
+          >
+            {g.ikon}{g.ad}
+          </button>
+        ))}
+      </div>
+
+      {/* Dönem filtresi (yalnız zaman tünelinde) */}
+      {gorunum === "zaman" && <div className="flex flex-wrap gap-1.5">
         <button
           type="button"
           onClick={() => setDonemId("tumu")}
@@ -124,14 +156,14 @@ export function TarihBolumu({
             </button>
           );
         })}
-      </div>
+      </div>}
 
-      {gorunen === 0 && (
+      {gorunum === "zaman" && gorunen === 0 && (
         <p className="rounded-xl bg-white/[.03] px-3 py-4 text-center text-[10px] text-white/40">{t("trBos")}</p>
       )}
 
       {/* Zaman tüneli */}
-      <div className="space-y-4">
+      {gorunum === "zaman" && <div className="space-y-4">
         {donemler.map((d) => {
           const renk = DONEM_RENK[d.renk] ?? DONEM_RENK.amber;
           return (
@@ -190,9 +222,48 @@ export function TarihBolumu({
             </div>
           );
         })}
-      </div>
+      </div>}
 
-      <p className="pt-1 text-center text-[8px] leading-relaxed text-white/25">{t("trDipnot")}</p>
+      {/* ★ HARİTA: tarihî mekânlar — koordinat + ilgili olaylar + harita bağlantısı */}
+      {gorunum === "harita" && (
+        <div className="space-y-1.5">
+          {TARIH_YERLERI.map((y) => {
+            const donem = TARIH_DONEMLERI.find((d) => d.id === y.donemId);
+            return (
+              <div key={y.id} data-minitur={`harita-${y.id}`} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black text-white/90">📍 {y.ad}</p>
+                    <p className="mt-0.5 text-[8.5px] text-white/40">
+                      {g(y.ulke)} · {donem ? g(donem.ad) : ""} · {y.koord[0].toFixed(3)}, {y.koord[1].toFixed(3)}
+                    </p>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps?q=${y.koord[0]},${y.koord[1]}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 rounded-lg border border-white/15 bg-white/[.05] px-2 py-1 text-[8.5px] font-black text-white/70 transition hover:bg-white/[.12] hover:text-white"
+                  >
+                    {t("trHaritadaAc")} ↗
+                  </a>
+                </div>
+                <p className="mt-1.5 text-[9.5px] leading-relaxed text-white/65">{g(y.ozet)}</p>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {y.olaylar.map((o, oi) => (
+                    <span key={oi} className="rounded-full bg-white/[.06] px-2 py-0.5 text-[8px] font-bold text-white/55">
+                      {o}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-1.5 text-[8px] font-bold" style={{ color: "var(--accent)" }}>📖 {y.kaynak}</p>
+              </div>
+            );
+          })}
+          <p className="pt-1 text-center text-[8px] leading-relaxed text-white/25">{t("trHaritaNot")}</p>
+        </div>
+      )}
+
+      {gorunum === "zaman" && <p className="pt-1 text-center text-[8px] leading-relaxed text-white/25">{t("trDipnot")}</p>}
     </div>
   );
 }

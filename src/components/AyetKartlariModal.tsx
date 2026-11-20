@@ -473,6 +473,47 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
     finally { setDownloading(false); }
   }, [favoriIds, bg, bgId, kendiFoto, ayar, ensureImage, notify, lang, erisim.acik, erisim.kalanBugun, size]);
 
+  // ★ 20.11 HAZIR SERİ (madde 37): duyguya göre 5 kartlık set — aynı tasarım/arka plan/ayar
+  const downloadMoodSeri = useCallback(async (moodId: string) => {
+    const secili = AYET_KARTILARI.filter((x) => x.mood === moodId).slice(0, 5);
+    if (!secili.length) { notify?.(tt("akSeriYok")); return; }
+    if (bgId === "kendi-foto" && !kendiFoto) { notify?.(tt("akNotifFotoOnce")); return; }
+    setDownloading(true);
+    try {
+      notify?.(tt("akFavoriSeriBasladi"));
+      const w = 1080;
+      const h = size === "45" ? 1350 : size === "916" ? 1920 : 1080;
+      let okCount = 0;
+      let quotaStop = false;
+      for (const a of secili) {
+        if (erisim.acik && (erisim.kalanBugun - okCount) <= 0) { quotaStop = true; break; }
+        const ag = gorunenKart(a, lang);
+        const img = await ensureImage(bg);
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) continue;
+        await drawCard(ctx, w, h, ag, bg, img, ayar);
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+        if (!blob) continue;
+        const url = URL.createObjectURL(blob);
+        const el = document.createElement("a");
+        el.href = url;
+        el.download = `nurstudyo-seri-${moodId}-${a.id}.png`;
+        document.body.appendChild(el); el.click(); el.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+        if (erisim.acik) akIndirmeKullan();
+        okCount++;
+        await new Promise((r) => setTimeout(r, 350));
+      }
+      if (erisim.acik) setAkTick((v) => v + 1);
+      if (quotaStop) notify?.(tt("akFavoriSeriDurdu"));
+      else if (okCount > 0) notify?.(tt("akSeriBitti"));
+      else notify?.(tt("akSeriYok"));
+    } catch { notify?.(tt("akNotifHata")); }
+    finally { setDownloading(false); }
+  }, [bg, bgId, kendiFoto, ayar, ensureImage, notify, lang, erisim.acik, erisim.kalanBugun, size]);
+
   // ★ KARIŞTIR (03.10, kullanıcı kararı): hem ayet hem arka plan rastgele değişir —
   //   bilinçli eşleştirme YOK (uyumlu seçim Akıllı Seç'in işi).
   const shuffleBg = useCallback(() => {
@@ -648,6 +689,7 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
           favoriIds={favoriIds}
           onFavoriTak={(id) => { const yeni = kartFavoriTak(id); setFavoriIds(new Set(yeni)); if (sadeceFavori) setSadeceFavori(yeni.length > 0); }}
           onFavoriSeriIndir={downloadFavoriSeri}
+          onSeriIndir={downloadMoodSeri}
           onFavoriTemizle={() => { kartAlbumuTemizle(); setFavoriIds(new Set()); setSadeceFavori(false); }}
           onFavoriDisaAktar={async () => {
             try {

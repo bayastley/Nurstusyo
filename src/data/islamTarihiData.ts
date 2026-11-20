@@ -513,3 +513,170 @@ export const TARIH_DONEMLERI: TarihDonem[] = [
 ];
 
 export const TARIH_TOPLAM = TARIH_DONEMLERI.reduce((t, d) => t + d.olaylar.length, 0);
+
+// ════════════════════════════════════════════════════════
+// İSLAM TARİHİ HARİTASI (yol haritası madde 10)
+// 14 tarihî mekân: koordinat + ilgili olaylar + kaynak. Harita kütüphanesi
+// kullanılmaz; koordinatlı kart + Google Maps bağlantısı ile çalışır
+// (site ağırlığı artmaz, mobilde de akıcı).
+// ════════════════════════════════════════════════════════
+
+export interface TarihYeri {
+  id: string;
+  ad: string;
+  ulke: string;
+  /** enlem, boylam */
+  koord: [number, number];
+  donemId: string;
+  ozet: string;
+  olaylar: string[];
+  kaynak: string;
+}
+
+export const TARIH_YERLERI: TarihYeri[] = [
+  {
+    id: "mekke",
+    ad: "Mekke-i Mükerreme",
+    ulke: "Suudi Arabistan",
+    koord: [21.4225, 39.8262],
+    donemId: "mekke",
+    ozet:
+      "Kâbe'nin bulunduğu şehir. Hz. Peygamber burada doğdu, ilk vahyi aldı ve 630'da şehir fethedildi.",
+    olaylar: ["571 doğum", "610 ilk vahiy", "613 açık davet", "622 hicret", "630 Mekke'nin fethi"],
+    kaynak: "İbn Hişâm, es-Sîre, I-IV; Buhârî, Megâzî",
+  },
+  {
+    id: "medine",
+    ad: "Medine-i Münevvere",
+    ulke: "Suudi Arabistan",
+    koord: [24.4672, 39.6111],
+    donemId: "medine",
+    ozet:
+      "Hicret yurdu. Mescid-i Nebevî burada inşa edildi, Medine Vesikası imzalandı ve Hz. Peygamber burada vefat etti.",
+    olaylar: ["622 hicret", "623 Mescid-i Nebevî", "624 Bedir (yakını)", "625 Uhud", "627 Hendek", "632 vefat"],
+    kaynak: "İbn Hişâm, es-Sîre, II-IV; Buhârî, Menâkıbü'l-ensâr",
+  },
+  {
+    id: "kudus",
+    ad: "Kudüs",
+    ulke: "Filistin",
+    koord: [31.7767, 35.2345],
+    donemId: "hulefa",
+    ozet:
+      "Mescid-i Aksâ'nın bulunduğu şehir. İsrâ ve Mi'râc'ın durağı; 638'de sulhla fethedildi, 1099'da işgal, 1187'de kurtuldu.",
+    olaylar: ["620 İsrâ ve Mi'râc", "623 kıble değişikliği (Mescid-i Aksâ)", "638 Hz. Ömer'in fethi", "1099 işgal", "1187 Hıttîn ve kurtuluş"],
+    kaynak: "İsrâ 17:1; Taberî, Târîh, IV; İbnü'l-Esîr, el-Kâmil, X-XI",
+  },
+  {
+    id: "bedir",
+    ad: "Bedir",
+    ulke: "Suudi Arabistan",
+    koord: [23.78, 38.79],
+    donemId: "medine",
+    ozet: "Hicretin 2. yılında Müslümanlarla Mekke müşrikleri arasındaki ilk büyük savaşın yapıldığı yer.",
+    olaylar: ["624 Bedir Gazvesi"],
+    kaynak: "Âl-i İmrân 3:123; İbn Hişâm, es-Sîre, II",
+  },
+  {
+    id: "uhud",
+    ad: "Uhud Dağı",
+    ulke: "Suudi Arabistan",
+    koord: [24.51, 39.61],
+    donemId: "medine",
+    ozet: "Uhud Gazvesi'nde Hz. Hamza ve birçok sahabinin şehit olduğu dağ; Medine'nin kuzeyindedir.",
+    olaylar: ["625 Uhud Gazvesi", "625 Hz. Hamza'nın şehadeti"],
+    kaynak: "Âl-i İmrân 3:152; Buhârî, Megâzî",
+  },
+  {
+    id: "hayber",
+    ad: "Hayber",
+    ulke: "Suudi Arabistan",
+    koord: [25.03, 39.02],
+    donemId: "medine",
+    ozet: "Hudeybiye sonrası fethedilen Yahudi yerleşimi; hicretin 7. yılındaki seferle bilinir.",
+    olaylar: ["628 Hayber'in fethi"],
+    kaynak: "Buhârî, Megâzî; İbn Hişâm, es-Sîre, III",
+  },
+  {
+    id: "taif",
+    ad: "Tâif",
+    ulke: "Suudi Arabistan",
+    koord: [21.2703, 40.4158],
+    donemId: "mekke",
+    ozet: "Hüzün yılında Hz. Peygamber'in gittiği, daha sonra İslâm'a giren şehir; Sakîf kabilesinin yurdu.",
+    olaylar: ["619 Tâif yolculuğu", "630 Huneyn sonrası İslâm'a giriş"],
+    kaynak: "İbn Hişâm, es-Sîre, II-IV",
+  },
+  {
+    id: "sam",
+    ad: "Şam",
+    ulke: "Suriye",
+    koord: [33.5138, 36.2765],
+    donemId: "hulefa",
+    ozet: "Yermük zaferinden sonra fethedilen bölgenin merkezi; Emevî hilafetinin başkenti oldu.",
+    olaylar: ["636 Yermük", "661 Emevî hilafeti"],
+    kaynak: "Taberî, Târîh, IV-VI; Belâzürî, Fütûh",
+  },
+  {
+    id: "bagdat",
+    ad: "Bağdat",
+    ulke: "Irak",
+    koord: [33.3152, 44.3661],
+    donemId: "medeniyet",
+    ozet: "762'de Abbâsî başkenti olarak kurulan ilim merkezi; 1258'de Moğol istilasında yıkıldı.",
+    olaylar: ["762 kuruluş", "IX-XII. yüzyıl ilim altın çağı", "1258 Moğol istilası"],
+    kaynak: "Hatîb el-Bağdâdî, Târîhu Bağdâd; İbn Kesîr, el-Bidâye, XIII",
+  },
+  {
+    id: "buhara",
+    ad: "Buhara",
+    ulke: "Özbekistan",
+    koord: [39.7747, 64.4286],
+    donemId: "medeniyet",
+    ozet: "Hadis ilminin merkezlerinden; İmam Buhârî'nin memleketi. İslâm ilim geleneğinde özel yeri vardır.",
+    olaylar: ["IX. yüzyıl hadis ilmi", "Sahîh-i Buhârî'nin telifi"],
+    kaynak: "İbn Hallikân, Vefeyâtü'l-a'yân; Zehebî, Siyeru a'lâmi'n-nübelâ",
+  },
+  {
+    id: "kahire",
+    ad: "Kahire",
+    ulke: "Mısır",
+    koord: [30.0444, 31.2357],
+    donemId: "medeniyet",
+    ozet: "Fâtımîlerle kurulan, Eyyûbî ve Memlük dönemlerinde ilim merkezi olan şehir; 1517'de Osmanlı'ya geçti.",
+    olaylar: ["969 Fâtımî kuruluşu", "1187 Selâhaddîn dönemi", "1517 Osmanlı fethi"],
+    kaynak: "İbn İyâs, Bedâyiü'z-zühûr; İbn Kesîr, el-Bidâye",
+  },
+  {
+    id: "kurtuba",
+    ad: "Kurtuba (Córdoba)",
+    ulke: "İspanya",
+    koord: [37.8882, -4.7794],
+    donemId: "medeniyet",
+    ozet: "Endülüs İslâm medeniyetinin başkenti; kütüphaneleri ve âlimleriyle tanınır.",
+    olaylar: ["711 Endülüs'ün fethi", "VIII-XIII. yüzyıl Endülüs ilmi"],
+    kaynak: "İbn Abdülhakem, Fütûhu Mısr; İbn Haldûn, Mukaddime",
+  },
+  {
+    id: "istanbul",
+    ad: "İstanbul (Kostantiniyye)",
+    ulke: "Türkiye",
+    koord: [41.0082, 28.9784],
+    donemId: "medeniyet",
+    ozet: "1453'te Sultan II. Mehmed'in fethiyle Osmanlı başkenti oldu; asırlarca hilafet merkeziydi.",
+    olaylar: ["1453 İstanbul'un fethi", "1517 hilafetin Osmanlı'ya geçişi", "1924 hilafetin kaldırılması"],
+    kaynak: "Osmanlı kronikleri; Ahmed b. Hanbel, Müsned (fetih müjdesi)",
+  },
+  {
+    id: "konya",
+    ad: "Konya",
+    ulke: "Türkiye",
+    koord: [37.8746, 32.4932],
+    donemId: "medeniyet",
+    ozet: "Anadolu Selçuklu Devleti'nin başkenti; tasavvuf ve ilim geleneğinin önemli merkezi.",
+    olaylar: ["1071 Malazgirt sonrası Anadolu", "XIII. yüzyıl tasavvuf ve ilim"],
+    kaynak: "İbnü'l-Esîr, el-Kâmil, X; Selçuklu kronikleri",
+  },
+];
+
+export const TARIH_YER_TOPLAM = TARIH_YERLERI.length;
