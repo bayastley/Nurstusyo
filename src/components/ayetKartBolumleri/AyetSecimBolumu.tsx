@@ -70,7 +70,7 @@ export const AyetSecimBolumu: React.FC<{
   onFavoriTak?: (id: string) => void;
   onFavoriSeriIndir?: () => void;
   /** ★ 20.11 HAZIR SERİLER (madde 37): duyguya göre 5 kartlık set indirir */
-  onSeriIndir?: (moodId: string) => void;
+  onSeriIndir?: (moodId: string, adet: number) => void;
   onFavoriTemizle?: () => void;
   onFavoriDisaAktar?: () => void;
   onFavoriIceAktar?: () => void;
@@ -96,6 +96,8 @@ export const AyetSecimBolumu: React.FC<{
   // ★ ÇİP SAYACI (02.10): her basış localStorage'a yazılır; popüler 5 çip ÖNE
   //   sabitlenir (🏅 rozet + seçim sayısı). State tick'i sıralamayı anında günceller.
   const [ruhSayac, setRuhSayac] = useState<RuhSayac>(() => ruhSayacOku());
+  // ★ 20.11: seri adedi 5 veya 10 (kullanıcı seçer)
+  const [seriAdet, setSeriAdet] = useState<5 | 10>(5);
   const cipTikla = (ruhId: string) => {
     setRuhSayac(ruhSayacArttir(ruhId));
     ruhHaliUygula(ruhId);
@@ -179,17 +181,30 @@ export const AyetSecimBolumu: React.FC<{
             <div className="mb-2 rounded-xl border border-white/10 bg-white/[.03] p-2">
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[8.5px] font-black uppercase tracking-wider text-white/40">{tt("akSeri")}</span>
+                <span className="flex items-center gap-0.5 rounded-lg bg-white/[.05] p-0.5">
+                  {([5, 10] as const).map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      data-minitur={`seri-adet-${n}`}
+                      onClick={() => setSeriAdet(n)}
+                      className={`rounded-md px-1.5 py-0.5 text-[8px] font-black transition ${seriAdet === n ? "bg-white/20 text-white" : "text-white/45 hover:text-white/75"}`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </span>
                 {["huzur", "sabir", "tevekkul", "rahmet", "aile", "sevgi"].map((m) => (
                   <button
                     key={m}
                     type="button"
                     data-minitur={`seri-${m}`}
-                    onClick={() => onSeriIndir(m)}
+                    onClick={() => onSeriIndir(m, seriAdet)}
                     disabled={!!seriIndiriliyor}
                     className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/[.04] px-2 py-1 text-[8.5px] font-bold text-white/65 transition hover:bg-white/[.09] hover:text-white active:scale-95 disabled:opacity-50"
                     title={`${tt("akSeriIndir")} · ${moodEtiketi(m)}`}
                   >
-                    <Download size={9} /> {moodEtiketi(m)} · 5
+                    <Download size={9} /> {moodEtiketi(m)} · {seriAdet}
                   </button>
                 ))}
               </div>

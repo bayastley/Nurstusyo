@@ -474,8 +474,8 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
   }, [favoriIds, bg, bgId, kendiFoto, ayar, ensureImage, notify, lang, erisim.acik, erisim.kalanBugun, size]);
 
   // ★ 20.11 HAZIR SERİ (madde 37): duyguya göre 5 kartlık set — aynı tasarım/arka plan/ayar
-  const downloadMoodSeri = useCallback(async (moodId: string) => {
-    const secili = AYET_KARTILARI.filter((x) => x.mood === moodId).slice(0, 5);
+  const downloadMoodSeri = useCallback(async (moodId: string, adet = 5) => {
+    const secili = AYET_KARTILARI.filter((x) => x.mood === moodId).slice(0, Math.max(1, Math.min(adet, 10)));
     if (!secili.length) { notify?.(tt("akSeriYok")); return; }
     if (bgId === "kendi-foto" && !kendiFoto) { notify?.(tt("akNotifFotoOnce")); return; }
     setDownloading(true);

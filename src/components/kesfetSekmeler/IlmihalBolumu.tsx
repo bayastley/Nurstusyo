@@ -20,6 +20,8 @@ import {
 
 export function IlmihalBolumu({
   tt, q = "", lang = "tr", baslangicDers, onSekme,
+  derslerVeri = ILMIHAL_DERSLERI, kaynakNotu = ILMIHAL_KAYNAK_NOTU,
+  toplam = ILMIHAL_TOPLAM, miniturOnek = "ilmihal",
 }: {
   tt?: (k: string) => string;
   q?: string;
@@ -28,25 +30,30 @@ export function IlmihalBolumu({
   baslangicDers?: string;
   /** Alt köprü: ilgili sekmeye geçiş (Namaz Öğretici, Soru-Cevap...) */
   onSekme?: (sekme: string) => void;
+  /** ★ 20.11 GENELLEŞTİRME: aynı ders+sınav düzenini Ahlâk bölümü de kullanır */
+  derslerVeri?: IlmihalDers[];
+  kaynakNotu?: string;
+  toplam?: { ders: number; madde: number; soru: number };
+  miniturOnek?: string;
 }) {
   const t = tt ?? ((k: string) => k);
-  const [dersId, setDersId] = React.useState<string>(baslangicDers || ILMIHAL_DERSLERI[0]?.id || "");
+  const [dersId, setDersId] = React.useState<string>(baslangicDers || derslerVeri[0]?.id || "");
   const [cevaplar, setCevaplar] = React.useState<Record<string, number>>({});
   const [acikMadde, setAcikMadde] = React.useState<string | null>(null);
   const [trGoster, setTrGoster] = React.useState(false);
 
   // ★ 20.11 DAĞITIM: Namaz/Abdest/Soru-Cevap gibi sekmelerden "ilmihal dersine git"
   React.useEffect(() => {
-    if (baslangicDers && ILMIHAL_DERSLERI.some((d) => d.id === baslangicDers)) {
+    if (baslangicDers && derslerVeri.some((d) => d.id === baslangicDers)) {
       setDersId(baslangicDers);
       setAcikMadde(null);
     }
-  }, [baslangicDers]);
+  }, [baslangicDers, derslerVeri]);
 
   const ara = q.trim().toLocaleLowerCase("tr");
   const dersler = React.useMemo(() => {
-    if (!ara) return ILMIHAL_DERSLERI;
-    return ILMIHAL_DERSLERI.filter((d) =>
+    if (!ara) return derslerVeri;
+    return derslerVeri.filter((d) =>
       d.ad.toLocaleLowerCase("tr").includes(ara) ||
       d.alt.toLocaleLowerCase("tr").includes(ara) ||
       d.maddeler.some((m) =>
@@ -56,13 +63,13 @@ export function IlmihalBolumu({
       ) ||
       d.sorular.some((s) => s.soru.toLocaleLowerCase("tr").includes(ara))
     );
-  }, [ara]);
+  }, [ara, derslerVeri]);
 
   const ders: IlmihalDers | undefined = dersler.find((d) => d.id === dersId) ?? dersler[0];
 
   // Çevrilecek metinler: ders çipleri + açık dersin tüm alanları
   const ceviriMetinleri = React.useMemo(() => {
-    const liste: string[] = [ILMIHAL_KAYNAK_NOTU, ...ILMIHAL_DERSLERI.map((d) => d.ad)];
+    const liste: string[] = [kaynakNotu, ...derslerVeri.map((d) => d.ad)];
     if (ders) {
       liste.push(ders.ad, ders.alt);
       ders.maddeler.forEach((m) => { liste.push(m.baslik, m.metin); });
@@ -71,7 +78,7 @@ export function IlmihalBolumu({
       });
     }
     return liste;
-  }, [ders]);
+  }, [ders, kaynakNotu, derslerVeri]);
 
   const { aktif, yukleniyor, cevir } = useIcerikCeviri(ceviriMetinleri, lang);
   // trGoster: kullanıcı çeviriyi kapatıp asıl metni görmek isterse
@@ -83,9 +90,9 @@ export function IlmihalBolumu({
       <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
         <p className="flex items-center gap-1.5 text-[10px] font-black text-white/85">
           <BookOpenCheck size={12} style={{ color: "var(--accent)" }} />
-          {t("ilKapsam")} · {ILMIHAL_TOPLAM.ders} {t("ilDers")} · {ILMIHAL_TOPLAM.madde} {t("ilMadde")} · {ILMIHAL_TOPLAM.soru} {t("ilSoru")}
+          {t("ilKapsam")} · {toplam.ders} {t("ilDers")} · {toplam.madde} {t("ilMadde")} · {toplam.soru} {t("ilSoru")}
         </p>
-        <p className="mt-1 text-[8.5px] leading-relaxed text-white/40">{g(ILMIHAL_KAYNAK_NOTU)}</p>
+        <p className="mt-1 text-[8.5px] leading-relaxed text-white/40">{g(kaynakNotu)}</p>
         {aktif && (
           <div className="mt-1.5 flex items-center gap-2">
             <span className="flex items-center gap-1 rounded-full bg-white/[.06] px-2 py-0.5 text-[8px] font-bold text-white/50">
@@ -111,7 +118,7 @@ export function IlmihalBolumu({
             <button
               key={d.id}
               type="button"
-              data-minitur={`ilmihal-${d.id}`}
+              data-minitur={`${miniturOnek}-${d.id}`}
               onClick={() => { setDersId(d.id); setAcikMadde(null); }}
               className={`rounded-xl border px-2.5 py-1.5 text-[9.5px] font-bold transition ${
                 secili

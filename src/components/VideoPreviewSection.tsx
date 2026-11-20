@@ -126,7 +126,7 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
 
   // ★ 20.11 ALTYAZI (madde 19): üretilen videonun süresini ayetlere eşit bölüp
   //     .srt indirir (TR meal + sure/ayet). Dosya adı videonun adıyla eşleşir.
-  const srtIndir = (out: Output) => {
+  const altyaziIndir = (out: Output, tip: "srt" | "vtt" = "srt") => {
     if (!selected.length) { notify(t("altyaziYok")); return; }
     const pad = (n: number, len = 2) => String(n).padStart(len, "0");
     const ts = (sn: number) => {
@@ -134,18 +134,18 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       const m = Math.floor((sn % 3600) / 60);
       const s = Math.floor(sn % 60);
       const ms = Math.round((sn % 1) * 1000);
-      return `${pad(h)}:${pad(m)}:${pad(s)},${pad(ms, 3)}`;
+      return `${pad(h)}:${pad(m)}:${pad(s)}${tip === "vtt" ? "." : ","}${pad(ms, 3)}`;
     };
     const sure = Math.max(1, out.duration || selected.length * 5);
     const per = sure / selected.length;
     const govde = selected
       .map((a, i) => `${i + 1}\n${ts(i * per)} --> ${ts(Math.min(sure, (i + 1) * per))}\n${a.sName} ${a.a}. ayet — ${a.tr}\n`)
       .join("\n");
-    const blob = new Blob([govde], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([tip === "vtt" ? `WEBVTT\n\n${govde}` : govde], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const el = document.createElement("a");
     el.href = url;
-    el.download = `nurstudyo-altyazi-${selected.length}ayet.srt`;
+    el.download = `nurstudyo-altyazi-${selected.length}ayet.${tip}`;
     document.body.appendChild(el); el.click(); el.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 5000);
     notify(t("altyaziIndir"));
@@ -590,7 +590,8 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
               <div className="grid grid-cols-2 gap-1.5">
                 <a href={user ? activeOutput.url : "#"} download={user ? `nur-studyo-${Date.now()}.${activeOutput.ext}` : undefined} onClick={(event) => { if (!user) { event.preventDefault(); setLoginTab("register"); setModal("login"); } }} className="flex items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-black text-black" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }} title={t("vpKaydetTitle")}><Download size={12} />{t("download")}</a>
                 <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("vpPaylasTitle")}><Share2 size={12} />{t("share")}</button>
-                <button data-minitur="altyazi-srt" onClick={() => srtIndir(activeOutput)} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("altyaziIndir")}><FileText size={12} />SRT</button>
+                <button data-minitur="altyazi-srt" onClick={() => altyaziIndir(activeOutput, "srt")} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("altyaziIndir")}><FileText size={12} />SRT</button>
+                <button data-minitur="altyazi-vtt" onClick={() => altyaziIndir(activeOutput, "vtt")} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("altyaziIndir")}><FileText size={12} />VTT</button>
               </div>
               {/* ★ KUTLAMA ANI TEKLİFİ (27.10, kullanıcının emri): İndir/Paylaş kartında
                   öneri çipi — kutlama anında elite/pro gidiş teklifi. admin/master gizli. */}

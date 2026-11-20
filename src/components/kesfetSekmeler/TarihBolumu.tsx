@@ -32,6 +32,8 @@ export function TarihBolumu({
   const [trGoster, setTrGoster] = React.useState(false);
   // ★ 20.11 HARİTA: zaman tüneli ↔ tarihî mekânlar görünümü
   const [gorunum, setGorunum] = React.useState<"zaman" | "harita">("zaman");
+  // ★ 20.11 GÖRSEL HARİTA: seçili mekân OSM gömülü haritada işaretlenir
+  const [seciliYer, setSeciliYer] = React.useState<string>(TARIH_YERLERI[0]?.id ?? "");
 
   const ara = q.trim().toLocaleLowerCase("tr");
   const donemler = React.useMemo(() => {
@@ -227,10 +229,49 @@ export function TarihBolumu({
       {/* ★ HARİTA: tarihî mekânlar — koordinat + ilgili olaylar + harita bağlantısı */}
       {gorunum === "harita" && (
         <div className="space-y-1.5">
+          {/* Görsel harita (OpenStreetMap embed — ek kütüphane yok) */}
+          {(() => {
+            const y = TARIH_YERLERI.find((x) => x.id === seciliYer) ?? TARIH_YERLERI[0];
+            if (!y) return null;
+            const [lat, lon] = y.koord;
+            const bbox = `${(lon - 1.1).toFixed(3)},${(lat - 0.8).toFixed(3)},${(lon + 1.1).toFixed(3)},${(lat + 0.8).toFixed(3)}`;
+            return (
+              <div className="rounded-xl border border-white/10 bg-white/[.03] p-2">
+                <div className="mb-1.5 flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-[9px] font-black text-white/85">
+                    <MapIcon size={11} style={{ color: "var(--accent)" }} /> {t("trHaritaGorsel")}
+                  </span>
+                  <select
+                    value={seciliYer}
+                    onChange={(e) => setSeciliYer(e.target.value)}
+                    className="ml-auto max-w-[55%] rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[9px] font-bold text-white/80 outline-none"
+                    aria-label={t("trYerSec")}
+                  >
+                    {TARIH_YERLERI.map((x) => (
+                      <option key={x.id} value={x.id} className="bg-neutral-900">{x.ad}</option>
+                    ))}
+                  </select>
+                </div>
+                <iframe
+                  key={y.id}
+                  title={y.ad}
+                  src={`https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`}
+                  className="h-44 w-full rounded-lg border border-white/10"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            );
+          })()}
           {TARIH_YERLERI.map((y) => {
             const donem = TARIH_DONEMLERI.find((d) => d.id === y.donemId);
             return (
-              <div key={y.id} data-minitur={`harita-${y.id}`} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+              <div
+                key={y.id}
+                data-minitur={`harita-${y.id}`}
+                onClick={() => setSeciliYer(y.id)}
+                className={`cursor-pointer rounded-xl border p-3 transition ${seciliYer === y.id ? "border-white/25 bg-white/[.07]" : "border-white/10 bg-white/[.03] hover:bg-white/[.05]"}`}
+              >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black text-white/90">📍 {y.ad}</p>
