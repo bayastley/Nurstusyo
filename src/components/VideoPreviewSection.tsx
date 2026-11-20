@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { translate } from "../i18n";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
-import { ChevronDown, ChevronLeft, ChevronRight, Download, FileText, Film, ImageIcon, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Download, FileText, Film, ImageIcon, Layers, Loader2, Maximize2, Minimize2, Palette, Pause, PenLine, Play, Share2, Shuffle, Sparkles, Video, Wand2, X } from "lucide-react";
 import { LockBadge } from "./LockBadge";
 import { Segmented } from "./UIElements";
 import { randomClip, type Clip, type CatId } from "../clips";
@@ -78,7 +78,7 @@ interface VideoPreviewSectionProps {
   setLoginTab: (tab: LoginTab) => void;
   notify: (message: string) => void;
   t: (key: keyof (typeof T)["tr"]) => string;
-  handleGenerate: () => void;
+  handleGenerate: (secim?: unknown[]) => void;
   generating: boolean;
   progress: number;
   generateCost: number;
@@ -123,6 +123,60 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     kendiSesAktifMi, onKendiSesAc,
   } = props;
   const onClipKindChangeRef = useRef(props.onClipKindChange ?? (() => {}));
+
+  // ★ 20.11 SIRALI TOPLU ÜRETİM (madde 17): seçili ayetleri TEK TEK üretir.
+  //   Çekirdek üreticiye dokunmadan çalışır: her adımda seçim tek ayete indirilir,
+  //   en güncel handleGenerate ref üzerinden çağrılır, üretim bitince sıradakine geçer.
+  //   Sonunda orijinal seçim geri yüklenir.
+  const hgRef = useRef(handleGenerate);
+  hgRef.current = handleGenerate;
+  const genRef = useRef(generating);
+  genRef.current = generating;
+  const outRef = useRef(outputs.length);
+  outRef.current = outputs.length;
+  const iptalRef = useRef(false);
+  const [seriDurum, setSeriDurum] = useState<{ i: number; n: number } | null>(null);
+
+  const seriDurdur = () => {
+    iptalRef.current = true;
+    if (genRef.current) hgRef.current();
+  };
+
+  const seriUret = async () => {
+    if (generating || seriDurum) return;
+    if (!user) { setLoginTab("register"); setModal("login"); return; }
+    const liste = [...selected];
+    if (liste.length < 2) return;
+    iptalRef.current = false;
+    let uretilen = 0;
+    for (let i = 0; i < liste.length; i += 1) {
+      if (iptalRef.current) break;
+      setSeriDurum({ i: i + 1, n: liste.length });
+      const oncekiCikti = outRef.current;
+      setSelected([liste[i]]);
+      await new Promise((r) => window.setTimeout(r, 400));
+      if (iptalRef.current) break;
+      hgRef.current();
+      const baslangic = Date.now();
+      let goruldu = false;
+      await new Promise<void>((resolve) => {
+        const id = window.setInterval(() => {
+          const g = genRef.current;
+          if (g) goruldu = true;
+          const gecti = Date.now() - baslangic;
+          if ((goruldu && !g) || gecti > 1000 * 60 * 8) { window.clearInterval(id); resolve(); }
+          else if (!goruldu && gecti > 25000) { window.clearInterval(id); resolve(); }
+        }, 700);
+      });
+      await new Promise((r) => window.setTimeout(r, 500));
+      if (outRef.current > oncekiCikti) uretilen += 1;
+      // Hak/kota bitince döngüyü boşa çevirme: hiç çıktı yoksa dur.
+      else if (!goruldu) break;
+    }
+    setSelected(liste);
+    setSeriDurum(null);
+    notify(t("vpSeriBitti").replace("{n}", String(uretilen)));
+  };
 
   // ★ 20.11 ALTYAZI (madde 19): üretilen videonun süresini ayetlere eşit bölüp
   //     .srt indirir (TR meal + sure/ayet). Dosya adı videonun adıyla eşleşir.
@@ -661,10 +715,30 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
       </div>
 
       <div className="min-h-[74px] space-y-2">
-        <button onClick={handleGenerate} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-[14px] font-black tracking-[.16em]" style={{ background: generating ? "#b91c1c" : "linear-gradient(135deg,var(--accent-2),var(--accent))", color: generating ? "white" : "black" }}>
+        <button onClick={() => handleGenerate()} className="flex w-full items-center justify-center gap-2 rounded-2xl py-4 font-display text-[14px] font-black tracking-[.16em]" style={{ background: generating ? "#b91c1c" : "linear-gradient(135deg,var(--accent-2),var(--accent))", color: generating ? "white" : "black" }}>
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
           {generating ? `%${progress} · ${t("stop")}` : isMasterSürüm ? `${t("generate")} · ADMIN` : denemeAktifMi() ? `${t("generate")} 🎁` : `${t("generate")} · ${generateCost} ⚡ ${t("uretimHakki")}`}
         </button>
+        {selected.length > 1 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              data-minitur="seri-uretim"
+              onClick={seriUret}
+              disabled={generating || !!seriDurum}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[.05] py-2 text-[9.5px] font-black text-white/75 transition hover:bg-white/[.1] hover:text-white disabled:opacity-50"
+              title={t("vpSeriTek")}
+            >
+              <Layers size={11} /> {t("vpSeri")} · {selected.length}
+            </button>
+            {seriDurum && (
+              <>
+                <span className="rounded-full bg-white/[.07] px-2 py-1 text-[8.5px] font-black text-white/60">{seriDurum.i}/{seriDurum.n} · {t("vpSeriIsliyor")}</span>
+                <button type="button" onClick={seriDurdur} className="rounded-xl border border-red-400/30 bg-red-500/15 px-2.5 py-1.5 text-[8.5px] font-black text-red-100">{t("vpSeriDurdur")}</button>
+              </>
+            )}
+          </div>
+        )}
         {/* ★ 25.10 LANSMAN DENEMESİ — sahibin emri: "hakkın kaç kaldığı altında da
             yazsın, sonra üyelik almaya yöneltsin". Misafirde görünmez (null). */}
         {!isMasterSürüm && denemeKalan() !== null && (
