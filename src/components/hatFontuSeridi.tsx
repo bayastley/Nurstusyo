@@ -6,9 +6,10 @@
 // tarafın işi — bu bileşen saf kalır).
 // ════════════════════════════════════════════════════════
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
 import { ARABIC_FONTS, arabicFontWeight } from "../studio/studioConstants";
+import { hasMicroUnlock } from "../microUnlock";
 
 import { translate } from "../i18n"; // ★ TUR 6: title kalıntıları LS bazlı çeviri
 
@@ -21,6 +22,14 @@ export const HatFontuSeridi: React.FC<{
 }> = ({ seciliHatCss, onSec, proAcik, kilitTiklandi, boy = "normal" }) => {
   const kucuk = boy === "kucuk";
   const tt = (k: string): string => translate(localStorage.getItem("nur_lang"), k);
+  // ★ 20.11: günlük hediye "Hat Sanatı" açtıysa palet PRO+ olmadan da açılır
+  const [, tazele] = useState(0);
+  useEffect(() => {
+    const f = () => tazele((x) => x + 1);
+    window.addEventListener("nur-micro-unlock", f);
+    return () => window.removeEventListener("nur-micro-unlock", f);
+  }, []);
+  const hatAcik = proAcik || hasMicroUnlock("hat");
   return (
     <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-thin">
       <button
@@ -32,7 +41,7 @@ export const HatFontuSeridi: React.FC<{
       >
         {tt("hfAa")}
       </button>
-      {proAcik ? (
+      {hatAcik ? (
         ARABIC_FONTS.map((f) => (
           <button
             key={f.id}

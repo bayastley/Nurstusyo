@@ -5,16 +5,20 @@
 
 import type { VideoKind } from "./tier";
 
-export type MicroUnlockKey = "batch" | "ai_search" | "full_mode";
+export type MicroUnlockKey = "batch" | "ai_search" | "full_mode" | "ai_smart" | "hat";
 const MICRO_UNLOCK_PREFIX = "nur_micro_unlock_";
 export const MICRO_UNLOCK_HOURS = 24;
 
 export function hasMicroUnlock(key: MicroUnlockKey): boolean {
   return typeof window !== "undefined" && Date.now() < Number(localStorage.getItem(MICRO_UNLOCK_PREFIX + key) || 0);
 }
-export function grantMicroUnlock(key: MicroUnlockKey): void {
+/** hours verilmezse 24 saat (ücretli mikro kilit). Günlük hediye kısa süre verir (4/12 sa).
+ *  Mevcut açıklık DAHA UZUNSA kısaltmaz — en uzun bitiş yazılır. */
+export function grantMicroUnlock(key: MicroUnlockKey, hours: number = MICRO_UNLOCK_HOURS): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem(MICRO_UNLOCK_PREFIX + key, String(Date.now() + MICRO_UNLOCK_HOURS * 3600000));
+    const yeni = Date.now() + hours * 3600000;
+    const eski = Number(localStorage.getItem(MICRO_UNLOCK_PREFIX + key) || 0);
+    localStorage.setItem(MICRO_UNLOCK_PREFIX + key, String(Math.max(eski, yeni)));
   }
 }
 export function microUnlockRemainingMs(key: MicroUnlockKey): number {

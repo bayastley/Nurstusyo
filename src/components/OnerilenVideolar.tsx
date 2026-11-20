@@ -95,7 +95,37 @@ const HAFTA_PAKETLERI: Record<number, OneriPaketi[]> = {
 
 /** Mübarek gün kartını öneri paketine çevirir */
 function karttanPaket(kart: GununVideoKarti): OneriPaketi {
-  return { emoji: kart.emoji, baslik: kart.baslik, aciklama: kart.aciklama, ayetler: kart.ayetler, kategoriler: kart.kategoriler };
+  return paketTamam({ emoji: kart.emoji, baslik: kart.baslik, aciklama: kart.aciklama, ayetler: kart.ayetler, kategoriler: kart.kategoriler });
+}
+
+// ★ 20.11 KULLANICI EMRİ: "önerilen klipte 1 ayet olmasın" — her paket EN AZ 2 ayet taşır.
+//   Eksik pakete, ilk ayetin konusuna uyan ikinci bir KUR'ÂN ayeti eklenir; uydurma metin yok.
+const IKINCI_AYET: Record<string, { s: number; a: number; sName: string }> = {
+  "13:28": { s: 13, a: 29, sName: "Ra'd" },
+  "56:75": { s: 56, a: 96, sName: "Vâkıa" },
+  "2:153": { s: 2, a: 155, sName: "Bakara" },
+  "1:1": { s: 1, a: 6, sName: "Fâtiha" },
+  "3:139": { s: 3, a: 200, sName: "Âl-i İmrân" },
+  "14:7": { s: 2, a: 152, sName: "Bakara" },
+  "34:13": { s: 16, a: 96, sName: "Nahl" },
+  "39:53": { s: 39, a: 54, sName: "Zümer" },
+  "24:43": { s: 30, a: 48, sName: "Rûm" },
+  "33:56": { s: 33, a: 43, sName: "Ahzâb" },
+  "17:79": { s: 17, a: 80, sName: "İsrâ" },
+  "71:10": { s: 71, a: 11, sName: "Nûh" },
+  "62:9": { s: 62, a: 10, sName: "Cuma" },
+  "18:10": { s: 18, a: 24, sName: "Kehf" },
+  "21:107": { s: 33, a: 56, sName: "Ahzâb" },
+  "55:13": { s: 55, a: 16, sName: "Rahmân" },
+  "108:1": { s: 108, a: 2, sName: "Kevser" },
+};
+
+/** Tek ayetli paketi ikiye tamamlar (yukarıdaki emir) */
+function paketTamam(p: OneriPaketi): OneriPaketi {
+  if (p.ayetler.length >= 2 || !p.ayetler.length) return p;
+  const ilk = p.ayetler[0];
+  const ikinci = IKINCI_AYET[`${ilk.s}:${ilk.a}`] ?? { s: 13, a: 28, sName: "Ra'd" };
+  return { ...p, ayetler: [...p.ayetler, ikinci] };
 }
 
 function karma(anahtar: string): number {
@@ -114,7 +144,7 @@ export const OnerilenVideolar: React.FC<OnerilenVideolarProps> = ({ havuz, kulla
     const { kart: bugunku } = gununVideosunuBul();
     const gun = new Date().getDay();
     // Mübarek gün varsa gün kartı ÖN sıraya koyulur; yoksa hafta paketleri
-    const uzunliste = HAFTA_PAKETLERI[gun] ?? HAFTA_PAKETLERI[5];
+    const uzunliste = (HAFTA_PAKETLERI[gun] ?? HAFTA_PAKETLERI[5]).map(paketTamam);
     const paketler = bugunku && bugunku.baslik !== uzunliste[0]?.baslik ? [karttanPaket(bugunku), ...uzunliste] : uzunliste;
     const pencere = Math.floor(Date.now() / PENCERE);
     const temel = pencere * 7 + karma(userAnahtar) + dagitucu * 11;
@@ -129,6 +159,7 @@ export const OnerilenVideolar: React.FC<OnerilenVideolarProps> = ({ havuz, kulla
       return katmanli[temel % katmanli.length];
     };
     const oneriler: OneriVideo[] = [];
+    // paketler zaten paketTamam'dan geçti; ayetler en az 2
     const gorulenler = new Set<string>();
     for (let i = 0; i < 2 && i < paketler.length; i++) {
       const paket = paketler[(temel + i * 3) % paketler.length];
@@ -149,48 +180,44 @@ export const OnerilenVideolar: React.FC<OnerilenVideolarProps> = ({ havuz, kulla
 
   if (!oneriler.length) return null;
 
+  // ★ 20.11 KOMPAKT (kullanıcı: "küçült, sekmeyle önizleme arasında çıksın"):
+  //   orta kolonda sekmelerin hemen altında 2 küçük kart — önizlemeyi aşağı itmez.
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[.02] p-3">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="flex items-center gap-1.5 text-[10.5px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
-          <Sparkles size={12} />
+    <div className="rounded-2xl border border-white/10 bg-white/[.02] p-2">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
+          <Sparkles size={10} />
           {ttX2610("ovBaslik")}
-          <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black text-white/60">{ttX2610("ovBugun")}</span>
         </p>
         <button
           type="button"
           onClick={() => setDagitucu((d) => d + 1)}
           title={ttX2610("ovOnerTitle")}
-          className="rounded-lg bg-white/5 p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
+          className="rounded-md bg-white/5 p-1 text-white/60 transition hover:bg-white/10 hover:text-white active:scale-95"
         >
-          <RefreshCw size={11} />
+          <RefreshCw size={9} />
         </button>
       </div>
-      <p className="mb-2 text-[9.5px] leading-relaxed text-white/45">
-        {ttX2610("ovOzelIntro")} <b className="text-white/70">{ttX2610("ovTekTik")}</b>.
-      </p>
-      {/* ★ 16.11: dar orta kolonda 2 sütun 130 px'e sıkışıyordu — sekme yuvasına
-          taşındığı için tek sütun, tam genişlik kart. */}
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-2 gap-1.5">
         {oneriler.map((o) => (
           <div key={o.baslik} className="group relative overflow-hidden rounded-xl border border-white/10 transition hover:border-[color:var(--accent)]">
             <img
               src={o.katliClip.r2Poster || o.katliClip.poster || o.katliClip.src}
               alt={o.katliClip.label}
               onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
-              className="h-24 w-full object-cover"
+              className="h-14 w-full object-cover"
             />
-            <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-2">
-              <p className="truncate text-[9.5px] font-black text-white/90">{o.emoji} {ttX2610(o.baslik)}</p>
-              <p className="mt-px truncate text-[8px] text-white/55">
-                {o.ayetler.map((a) => `${a.sName} ${a.s}:${a.a}`).join(" · ")} · 🎤 {o.reciterName}
+            <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-1.5">
+              <p className="truncate text-[8px] font-black text-white/90">{o.emoji} {ttX2610(o.baslik)}</p>
+              <p className="truncate text-[6.5px] text-white/55">
+                {o.ayetler.map((a) => `${a.sName} ${a.s}:${a.a}`).join(" · ")}
               </p>
               <button
                 type="button"
                 disabled={generating}
                 onClick={() => onUret(o)}
-                className="mt-1 w-full rounded-lg py-1 text-[8.5px] font-black text-black transition hover:brightness-110 active:scale-[.97] disabled:opacity-50"
+                className="mt-0.5 w-full rounded-md py-0.5 text-[7.5px] font-black text-black transition hover:brightness-110 active:scale-[.97] disabled:opacity-50"
                 style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
               >
                 {generating ? ttX2610("ovUretimSuruyor") : ttX2610("ovUret")}

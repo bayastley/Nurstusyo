@@ -405,6 +405,18 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           clipKind={clipKind}
         />
         )}
+        {/* ★ 20.11 ÖNERİLEN KLİPLER — Günün Videosu ile AYNI yuvada: sekmelerin hemen
+            altında, önizlemenin ÜSTÜNDE küçük kartlar olarak açılır. */}
+        {taslakSekme === "oneri" && (
+        <OnerilenVideolar
+          havuz={oneriHavuzu}
+          kullanilanKategoriler={oneriKullanilanlar}
+          kabileler={oneriKabileleri}
+          generating={generating}
+          userAnahtar={user?.email || "misafir"}
+          onUret={oneriUygulaVeUret}
+        />
+        )}
         <PanelSuspense minHeight={360}>
         <VideoPreviewSection
           canvasRef={canvasRef}
@@ -496,18 +508,6 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           }}
         />
         </PanelSuspense>
-        {/* ★ ÖNERİLEN VİDEOLAR (22.10): bugüne özel HAZIR TASLAKLAR — ayet+kâri+atmosfer
-            atanmış, tek tıkla üretim. Üretim yaptıktan sonra değil HER ZAMAN üstte. */}
-        {taslakSekme === "oneri" && (
-        <OnerilenVideolar
-          havuz={oneriHavuzu}
-          kullanilanKategoriler={oneriKullanilanlar}
-          kabileler={oneriKabileleri}
-          generating={generating}
-          userAnahtar={user?.email || "misafir"}
-          onUret={oneriUygulaVeUret}
-        />
-        )}
         </div>
 
         {/* RIGHT: DESIGN & SETTINGS PANEL */}

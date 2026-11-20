@@ -711,6 +711,14 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           //   Mobil tarayıcıda MediaRecorder, MediaStream'e sonradan katılan ses kanalını
           //   bazı sürümlerde tam almıyordu → ilk ayet sesi + donuk kare. Önce player,
           //   250ms sonra recorder — ses kanalı kayıt başladığında AKTİF oluyor.
+          // ★ 17.11 KULLANICI EMRİ ("işlem yap sonra seslendir"): seslendirme (player)
+          //   başlamadan ÖNCE canvas'ın ilk kareleri ÇİZİLMİŞ olsun. Eskiden player
+          //   ilk hareketi yapıyor, kare gelmemişse kayda siyah/donuk başlangıç
+          //   giriyordu ("video çekme sorunu"). 3 kare pompalıyoruz: işlem (kare) → ses.
+          for (let kare = 0; kare < 3; kare += 1) {
+            try { canvasTrack?.requestFrame?.(); } catch { /* requestFrame yoksa sorun değil */ }
+            await new Promise((resolve) => window.requestAnimationFrame(() => resolve(null)));
+          }
           player.start();
           await new Promise((resolve) => window.setTimeout(resolve, 250));
           // ★ 29.10 1-SANİYE KESİLME FİX (kullanıcı: "seçtiğim ayet 1 saniyede kapanıyor"):

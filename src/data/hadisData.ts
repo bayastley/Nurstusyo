@@ -257,9 +257,19 @@ export const RIVAYETCILER: RivayetciKaydi[] = [
 /** Kaynak metninden rivayetçi adı çıkarır: "Buhari, Edeb, 30" → "Buhârî"
  *  Kartta derece rozetinin yerine KİŞİ ADI gösterilir; derece bilgisi
  *  rozetin renk + ipucu metninde korunur. */
+/** ★ 20.11: Türkçe harf katlaması — "Buhârî" / "İbn Mâce" / "Nesâî" gibi yazımlar
+ *  düz ASCII'ye indirilip karşılaştırılır. Önceki hâlde /buhar/ testi "Buhârî"yi
+ *  tutmadığı için rozetlerde "bankada 0" görünüyordu (kullanıcı: "0 olanlar"). */
+const _sade = (s: string): string =>
+  (s || "")
+    .replace(/[âÂ]/g, "a").replace(/[îÎ]/g, "i").replace(/[ûÛ]/g, "u")
+    .replace(/[İIı]/g, "i")
+    .replace(/[şŞ]/g, "s").replace(/[ğĞ]/g, "g").replace(/[çÇ]/g, "c")
+    .replace(/[öÖ]/g, "o").replace(/[üÜ]/g, "u");
+
 export const kaynaktanRivayetci = (kaynak: string): string => {
   const ilkin = (kaynak || "").split("/")[0].trim();
-  const birinci = ilkin.split(",")[0].trim();
+  const birinci = _sade(ilkin.split(",")[0].trim());
   const harita: Array<[RegExp, string]> = [
     [/^buhar/i, "Buhârî"],
     [/^m[üu]slim/i, "Müslim"],
@@ -279,7 +289,7 @@ export const kaynaktanRivayetci = (kaynak: string): string => {
 
 /** Rivayetçi filtresi: kaynak metni verilen kitaba ait mi diye bakar */
 export const rivayetciUyar = (kaynak: string, kitapId: string): boolean => {
-  const ravi = kaynaktanRivayetci(kaynak);
+  const ravi = _sade(kaynaktanRivayetci(kaynak));
   const anahtar: Record<string, RegExp> = {
     buhari: /buhar/i,
     muslim: /m[üu]slim/i,

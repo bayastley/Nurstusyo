@@ -76,6 +76,12 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
   t,
 }) => {
   const [configVersion, setConfigVersion] = useState(0);
+  // ★ 20.11 KATLANIR PANELLER (kullanıcı emri): başlığa tıkla → aç/kapa.
+  //   Varsayılan AÇIK (görüntü eskisiyle aynı kalsın); seçim hatırlanır.
+  const [yaziAcik, setYaziAcik] = useState(() => { try { return localStorage.getItem("nur_daf_yazi") !== "0"; } catch { return true; } });
+  const [cineAcik, setCineAcik] = useState(() => { try { return localStorage.getItem("nur_daf_cine") !== "0"; } catch { return true; } });
+  const yaziToggle = () => setYaziAcik((v) => { try { localStorage.setItem("nur_daf_yazi", v ? "0" : "1"); } catch { /* yut */ } return !v; });
+  const cineToggle = () => setCineAcik((v) => { try { localStorage.setItem("nur_daf_cine", v ? "0" : "1"); } catch { /* yut */ } return !v; });
   const [backgroundVideoUrl, setBackgroundVideoUrl] = useState("");
   const [backgroundPosterUrl, setBackgroundPosterUrl] = useState<string | undefined>();
   // ★ ÖLÜ VİDEO YEDEĞİ (02.10): R2/CORS kapalıyken (örn. local preview) bozuk
@@ -355,6 +361,9 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <Palette size={11} />
               </span>
               <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">{t("yaziTasarim")}</h2>
+              <button type="button" onClick={yaziToggle} aria-expanded={yaziAcik} aria-label={t("yaziTasarim")} className="ml-0.5 rounded-md p-0.5 text-white/40 transition hover:bg-white/10 hover:text-white">
+                <ChevronDown size={12} className={`transition-transform ${yaziAcik ? "rotate-180" : ""}`} />
+              </button>
             </div>
             <div className="flex items-center gap-1.5">
               <button
@@ -368,6 +377,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
               {!tierAtLeast(accessTier, "elit") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#e8d48a,#8b6914)" }}>{t("tierElit")}</span>}
             </div>
           </div>
+          {yaziAcik && (<>
           {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}
           <div className="relative">
           <div className="grid grid-cols-2 gap-1.5">
@@ -442,6 +452,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             <LockedOverlay kind="elit" onUpgrade={() => openPremium("uyelik")} rounded="rounded-xl" />
           )}
           </div>
+          </>)}
         </div>
 
         {/* Cinematic Filter (Pro) */}
@@ -452,9 +463,13 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
                 <Wand2 size={11} />
               </span>
               <h2 className="font-display text-[10.5px] font-bold tracking-wider text-white/90">{t("dafSinematik")}</h2>
+              <button type="button" onClick={cineToggle} aria-expanded={cineAcik} aria-label={t("dafSinematik")} className="ml-0.5 rounded-md p-0.5 text-white/40 transition hover:bg-white/10 hover:text-white">
+                <ChevronDown size={12} className={`transition-transform ${cineAcik ? "rotate-180" : ""}`} />
+              </button>
             </div>
             {!tierAtLeast(accessTier, "pro") && <span className="rounded px-1.5 py-0.5 text-[7.5px] font-black text-black" style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}>PRO</span>}
           </div>
+          {cineAcik && (<>
           {/* ★ Kilit sadece içeriği kapsar — başlık her zaman görünür */}
           <div className="relative">
           <div className="grid grid-cols-2 gap-1">
@@ -479,6 +494,7 @@ export const DesignSettingsPanel: React.FC<DesignSettingsPanelProps> = ({
             <LockedOverlay kind="pro" onUpgrade={() => openPremium("uyelik")} rounded="rounded-xl" />
           )}
           </div>
+          </>)}
         </div>
       </div>
 
