@@ -907,6 +907,250 @@ export const ILMIHAL_DERSLERI: IlmihalDers[] = [
       },
     ],
   },
+  {
+    id: "oruc-kaza",
+    ad: "Oruç: Kaza, Fidye ve İtikâf",
+    emoji: "🌙",
+    alt: "Tutulamayan günler, fidye ölçüsü ve son on günün ibadeti",
+    maddeler: [
+      {
+        baslik: "Kaza orucu",
+        metin:
+          "Hastalık, yolculuk veya kadınlara mahsus hâller sebebiyle tutulamayan oruçlar, gün sayısınca sonradan kaza edilir. Kaza, Ramazan dışında her zaman tutulabilir.",
+        delil: "Bakara 2:184-185",
+      },
+      {
+        baslik: "Fidye kimlere gerekir",
+        metin:
+          "İyileşme ümidi olmayan hasta ve oruç tutamayacak kadar yaşlı kimse, tutamadığı her gün için bir fakire bir günlük yemek (fidye) verir. Sonradan iyileşen kişi ise kaza eder.",
+        delil: "Bakara 2:184",
+      },
+      {
+        baslik: "Yolculuk ve hastalık ruhsatı",
+        metin:
+          "Yolculuk ve hastalık, orucu ertelemek için meşru mazerettir; ancak mazeret ortadan kalkınca kaza borcu kalır. Ruhsat, sorumluluğu kaldırmaz; süreyi esnetir.",
+        delil: "Bakara 2:185",
+      },
+      {
+        baslik: "İtikâf",
+        metin:
+          "İtikâf, Ramazanın son on gününde mescitte belirli bir süre kalmak ve dünya meşgalesinden kopup ibadete yönelmektir. Hz. Peygamber'in sünnetidir; en az bir gün veya bir gecelik niyetle yapılır.",
+        delil: "Buhârî, İ'tikâf",
+      },
+      {
+        baslik: "Orucu bozan durumlar",
+        metin:
+          "Bilerek yiyip içmek orucu bozar ve kaza ile birlikte keffâret (iki ay oruç veya altmış fakiri doyurmak) gerektirir. Unutarak yiyen kimse orucuna devam eder; unutma sorumluluk doğurmaz.",
+        delil: "Buhârî, Savm; Müslim, Sıyâm",
+      },
+    ],
+    sorular: [
+      {
+        soru: "İyileşme ümidi olmayan yaşlı kimse oruç için ne yapar?",
+        secenekler: ["Hiçbir şey", "Her gün için fidye verir", "Keffâret olarak 60 gün tutar", "Orucu tamamen terk eder ve dua etmez"],
+        cevap: 1,
+        aciklama: "Bakara 2:184, güç yetiremeyenlere fidye (bir fakire bir günlük yemek) ruhsatı verir.",
+        kaynak: "Bakara 2:184",
+      },
+      {
+        soru: "İtikâf hangi zamanda yapılır?",
+        secenekler: ["Ramazanın son on gününde", "Yalnız bayramda", "Her cuma", "Hacda"],
+        cevap: 0,
+        aciklama: "Hz. Peygamber Ramazanın son on gününde itikâfa girmiştir; bu sünnetin en bilinen vaktidir.",
+        kaynak: "Buhârî, İ'tikâf",
+      },
+      {
+        soru: "Orucu unutarak yiyen kimse ne yapar?",
+        secenekler: ["Keffâret verir", "Orucuna devam eder", "O günü kaza eder ve keffâret verir", "Orucu bozulur, hiçbir şey gerekmez"],
+        cevap: 1,
+        aciklama: "Hadis, unutarak yiyip içenin orucuna devam edeceğini bildirir; unutma sorumluluk doğurmaz.",
+        kaynak: "Buhârî, Savm",
+      },
+    ],
+  },
+  {
+    id: "zekat-detay",
+    ad: "Zekât: Mallar ve Hak Sahipleri",
+    emoji: "💰",
+    alt: "Nisap, oranlar, ticaret malı ve sekiz sınıf",
+    maddeler: [
+      {
+        baslik: "Nisap ve oran",
+        metin:
+          "Altında nisap 85 gram, gümüşte 595 gramdır. Nisaba ulaşan ve üzerinden bir yıl geçen mala zekât olarak kırkta bir (1/40) verilir.",
+        delil: "Buhârî, Zekât; Ebû Dâvûd, Zekât",
+      },
+      {
+        baslik: "Nakit ve ticaret malı",
+        metin:
+          "Nakit para, banka bakiyesi ve satış için tutulan ticaret malları piyasa değeri üzerinden hesaplanır; borçlar düşüldükten sonra kalan nisaba ulaşırsa zekâta tabidir.",
+        delil: "Buhârî, Zekât; İbn Mâce, Zekât",
+      },
+      {
+        baslik: "Tarım ürünleri",
+        metin:
+          "Toprak mahsullerinde nisap ölçüsü beş vesk (yaklaşık 650-900 kg) kabul edilir. Emek ve masrafla sulanan üründe yirmide bir (1/20), yağmurla sulanan üründe onda bir (1/10) verilir.",
+        delil: "Buhârî, Zekât",
+      },
+      {
+        baslik: "Hayvanlar",
+        metin:
+          "Saime (senenin çoğunu merada geçiren) hayvanlarda belirli sayılar esas alınır; örneğin kırk koyunda bir koyun verilir. Çalıştırılan ve ticaret dışı hayvanlarda zekât yoktur.",
+        delil: "Buhârî, Zekât; Ebû Dâvûd, Zekât",
+      },
+      {
+        baslik: "Zekât kimlere verilir",
+        metin:
+          "Kur'an sekiz sınıf sayar: fakirler, miskinler, zekât toplayanlar, kalpleri ısındırılacaklar, köleler, borçlular, Allah yolunda olanlar ve yolda kalanlar. Zekât bunların dışına verilmez.",
+        delil: "Tevbe 9:60",
+      },
+    ],
+    sorular: [
+      {
+        soru: "Altında zekât nisabı kaç gramdır?",
+        secenekler: ["40 gram", "85 gram", "150 gram", "300 gram"],
+        cevap: 1,
+        aciklama: "Hanefî fıkhında altın nisabı 85 gram olarak kabul edilir; gümüşte 595 gramdır.",
+        kaynak: "Buhârî, Zekât",
+      },
+      {
+        soru: "Yağmurla sulanan tarım ürününde zekât oranı nedir?",
+        secenekler: ["1/40", "1/20", "1/10", "1/5"],
+        cevap: 2,
+        aciklama: "Masrafsız (yağmurla) sulanan üründe onda bir, masrafla sulanan üründe yirmide bir verilir.",
+        kaynak: "Buhârî, Zekât",
+      },
+      {
+        soru: "Zekâtın verileceği sınıflar hangi âyette sayılır?",
+        secenekler: ["Tevbe 9:60", "Bakara 2:183", "Nisâ 4:43", "Mâide 5:6"],
+        cevap: 0,
+        aciklama: "Tevbe 9:60 zekâtın sekiz sınıfını tek tek sayar.",
+        kaynak: "Tevbe 9:60",
+      },
+    ],
+  },
+  {
+    id: "hac-menasik",
+    ad: "Hac ve Umre Menâsiki",
+    emoji: "🕋",
+    alt: "İhramdan tıraşa: hac ve umrenin adımları",
+    maddeler: [
+      {
+        baslik: "İhram",
+        metin:
+          "Hac veya umreye niyet edip ihrama girmek, menâsikin başlangıcıdır. İhramlı iken yasaklar devreye girer; bu yüzden niyet öncesi hazırlık tamamlanır.",
+        delil: "Bakara 2:196; Buhârî, Hac",
+      },
+      {
+        baslik: "Tavaf ve sa'y",
+        metin:
+          "Kâbe'nin etrafında yedi kez dönmek tavaftır; Safâ ile Merve arasında yedi kez gidip gelmek sa'ydır. Tavaf, hac ve umrenin temel rükünlerindendir.",
+        delil: "Bakara 2:125, 2:158; Buhârî, Hac",
+      },
+      {
+        baslik: "Arafat vakfesi",
+        metin:
+          "Haccın en önemli rüknü, Zilhicce'nin dokuzuncu günü Arafat'ta belirli vakitte bulunmaktır. Vakfe kaçırılırsa hac yapılmamış sayılır.",
+        delil: "Buhârî, Hac; Ebû Dâvûd, Menâsik",
+      },
+      {
+        baslik: "Müzdelife, Mina ve şeytan taşlama",
+        metin:
+          "Arafat'tan sonra Müzdelife'de gecelemek, bayram günlerinde Mina'da şeytan taşlamak, kurban kesmek ve tıraş olmak sırasıyla yapılır. Bu adımlar hac menâsikinin tamamlayıcısıdır.",
+        delil: "Buhârî, Hac; Müslim, Hac",
+      },
+      {
+        baslik: "Umre ile hac arasındaki fark",
+        metin:
+          "Umre; ihram, tavaf, sa'y ve tıraştan oluşur; Arafat vakfesi ve Mina günleri yoktur. Hac ise belirli günlerde yapılan ziyaret olup vakfe ile tamamlanır.",
+        delil: "Bakara 2:196; Buhârî, Umre",
+      },
+    ],
+    sorular: [
+      {
+        soru: "Haccın en önemli rüknü hangisidir?",
+        secenekler: ["Tavaf", "Arafat vakfesi", "Şeytan taşlama", "Tıraş"],
+        cevap: 1,
+        aciklama: "Arafat vakfesi yapılmazsa hac geçersiz olur; bu yüzden haccın rüknü sayılır.",
+        kaynak: "Buhârî, Hac",
+      },
+      {
+        soru: "Sa'y nerede yapılır?",
+        secenekler: ["Safâ ile Merve arasında", "Arafat'ta", "Mina'da", "Mescid-i Nebevî'de"],
+        cevap: 0,
+        aciklama: "Sa'y, Safâ ile Merve arasında yedi kez gidip gelmektir (Bakara 2:158).",
+        kaynak: "Bakara 2:158",
+      },
+      {
+        soru: "Umrede bulunmayan ibadet hangisidir?",
+        secenekler: ["İhram", "Tavaf", "Arafat vakfesi", "Tıraş"],
+        cevap: 2,
+        aciklama: "Umre ihram, tavaf, sa'y ve tıraştan oluşur; Arafat vakfesi hacca mahsustur.",
+        kaynak: "Buhârî, Umre",
+      },
+    ],
+  },
+  {
+    id: "sehiv",
+    ad: "Sehiv Secdesi ve Kaza Namazı",
+    emoji: "🧎",
+    alt: "Unutma, eksiklik ve vaktinde kılınamayan namazlar",
+    maddeler: [
+      {
+        baslik: "Sehiv secdesi nedir",
+        metin:
+          "Namazda unutma veya yanılma sebebiyle oluşan eksikliği gidermek için yapılan iki secdedir. Son oturuşta teşehhüdden sonra iki secde edilip tekrar oturulur ve selam verilir.",
+        delil: "Buhârî, Sehv; Müslim, Mesâcid",
+      },
+      {
+        baslik: "Ne zaman gerekir",
+        metin:
+          "Bir farzın geciktirilmesi, bir vacibin terk edilmesi veya rekât sayısında şüpheye düşülmesi hâlinde sehiv secdesi gerekir. Şüphede az olan rekât esas alınır ve eksik tamamlanır.",
+        delil: "Buhârî, Sehv",
+      },
+      {
+        baslik: "Nasıl yapılır",
+        metin:
+          "Son oturuşta tahiyyât okunduktan sonra iki secde yapılır, tekrar oturulur, tahiyyât ve salavât okunup selam verilir. Cemaatle kılınan namazda imam sehiv secdesi yaparsa cemaat de ona uyar.",
+        delil: "Buhârî, Sehv; Ebû Dâvûd, Salât",
+      },
+      {
+        baslik: "Kaza namazı",
+        metin:
+          "Vaktinde kılınamayan farz namaz, vakti çıktıktan sonra kaza edilir. Kaza borcu, kılınana kadar üzerinde kalır; özürsüz terk etmek ayrıca tövbe gerektirir.",
+        delil: "Müslim, Mesâcid; Buhârî, Mevâkît",
+      },
+      {
+        baslik: "Kazada sıra",
+        metin:
+          "Hanefî fıkhında kaza namazlarının sırasını gözetmek esastır; ancak kaza çoksa ve sıra takip edilemiyorsa vakit namazı öne alınır, kalanlar sırayla kaza edilir. Önce vaktin farzı, sonra kaza kılınır.",
+        delil: "Mevsılî, el-İhtiyâr; İbn Âbidîn, Reddü'l-muhtâr",
+      },
+    ],
+    sorular: [
+      {
+        soru: "Sehiv secdesi kaç secdedir?",
+        secenekler: ["Bir", "İki", "Üç", "Dört"],
+        cevap: 1,
+        aciklama: "Sehiv secdesi iki secdedir; son oturuşta teşehhüdden sonra yapılır.",
+        kaynak: "Buhârî, Sehv",
+      },
+      {
+        soru: "Rekât sayısında şüpheye düşen kimse ne yapar?",
+        secenekler: ["Namazı bozar", "Az olanı esas alıp tamamlar", "Çok olanı esas alır", "Hiçbir şey yapmaz"],
+        cevap: 1,
+        aciklama: "Hadis, şüphede az olan rekâtın esas alınmasını ve namazın tamamlanmasını bildirir.",
+        kaynak: "Buhârî, Sehv",
+      },
+      {
+        soru: "Vaktinde kılınamayan farz namaz için ne yapılır?",
+        secenekler: ["Kaza edilir", "Yalnız tövbe edilir", "Sünnet kılınır", "Fidye verilir"],
+        cevap: 0,
+        aciklama: "Kılınmayan farz namaz, vakti çıktıktan sonra kaza edilir; borç kalkmaz.",
+        kaynak: "Müslim, Mesâcid",
+      },
+    ],
+  },
 ];
 
 export const ILMIHAL_TOPLAM = {

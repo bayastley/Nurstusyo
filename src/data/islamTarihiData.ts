@@ -508,6 +508,90 @@ export const TARIH_DONEMLERI: TarihDonem[] = [
           "En çok hadis rivayet eden sahabi. Peygamber'in sohbetine devam etti, rivayetleri hadis külliyatının temelini oluşturdu.",
         kaynak: "İbn Sa'd, et-Tabakât, IV; Buhârî, Fedâilü's-sahâbe",
       },
+      {
+        tarih: "vefatı 633",
+        baslik: "Hz. Fâtıma (r.anhâ)",
+        ozet:
+          "Hz. Peygamber'in kızı, Hz. Ali'nin eşi, Hasan ve Hüseyin'in annesi. Babasının vefatından kısa süre sonra vefat etti; ahlâkı ve sabrıyla anılır.",
+        kaynak: "İbn Sa'd, et-Tabakât, VIII; Buhârî, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 650",
+        baslik: "Talha b. Ubeydullah (r.a.)",
+        ozet:
+          "Aşere-i mübeşşereden, Uhud'da Hz. Peygamber'i koruyan sahabi. Cömertliğiyle tanınır; aşere-i mübeşşere arasında yer alır.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Tirmizî, Menâkıb",
+      },
+      {
+        tarih: "vefatı 656",
+        baslik: "Zübeyr b. Avvâm (r.a.)",
+        ozet:
+          "Hz. Peygamber'in halası Safiyye'nin oğlu, aşere-i mübeşşereden. İslâm'ı ilk kabul edenlerdendir; cesaretiyle bilinir.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Buhârî, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 652",
+        baslik: "Abdurrahman b. Avf (r.a.)",
+        ozet:
+          "Aşere-i mübeşşereden tüccar sahabi. Hicretten sonra ticaretiyle zenginleşti ve malını Allah yolunda bolca infak etti.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Buhârî, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 639",
+        baslik: "Ebû Ubeyde b. Cerrâh (r.a.)",
+        ozet:
+          "Aşere-i mübeşşereden, Hz. Ömer döneminde Şam ordularının komutanı. Emanetiyle tanınır; “emînü'l-ümme” diye anılır.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Müslim, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 675",
+        baslik: "Sa'd b. Ebî Vakkâs (r.a.)",
+        ozet:
+          "Aşere-i mübeşşereden, Kadisiye Savaşı'nın komutanı. Duâsı makbul sahabilerden biri olarak anılır.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Buhârî, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 627",
+        baslik: "Sa'd b. Muâz (r.a.)",
+        ozet:
+          "Ensarın ileri gelenlerinden, Evs kabilesinin reisi. Hendek sonrası verdiği hükümle bilinir; vefatında Hz. Peygamber bizzat cenazesine katıldı.",
+        kaynak: "İbn Hişâm, es-Sîre, III-IV; Buhârî, Menâkıbü'l-ensâr",
+      },
+      {
+        tarih: "vefatı 653",
+        baslik: "Abdullah b. Mes'ûd (r.a.)",
+        ozet:
+          "Kur'an okuma ve fıkıhta öne çıkan sahabi. Hz. Peygamber'in “Kur'an'ı ondan öğrenin” dediği isimlerdendir; Kûfe ilim geleneğinin temeli oldu.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Buhârî, Fedâilü'l-Kur'ân",
+      },
+      {
+        tarih: "vefatı 693",
+        baslik: "Enes b. Mâlik (r.a.)",
+        ozet:
+          "Hz. Peygamber'e on yıl hizmet eden ensar sahabisi. Peygamber'in hizmetinde bulunduğu için çok hadis rivayet etti; Basra'da vefat etti.",
+        kaynak: "İbn Sa'd, et-Tabakât, VII; Buhârî, Fedâilü's-sahâbe",
+      },
+      {
+        tarih: "vefatı 683",
+        baslik: "Câbir b. Abdullah (r.a.)",
+        ozet:
+          "Ensarın ileri gelenlerinden, çok hadis rivayet eden sahabi. Veda Haccı'nda bulundu ve hac menâsikinin rivayetinde önemli yer tutar.",
+        kaynak: "İbn Sa'd, et-Tabakât, V; Müslim, Hac",
+      },
+      {
+        tarih: "vefatı 656",
+        baslik: "Huzeyfe b. Yemân (r.a.)",
+        ozet:
+          "Hz. Peygamber'in sırdaşlarından. Fiten (iç karışıklıklar) konusundaki rivayetleriyle tanınır; İran fetihlerinde bulundu.",
+        kaynak: "İbn Sa'd, et-Tabakât, VI; Buhârî, Menâkıbü'l-ensâr",
+      },
+      {
+        tarih: "vefatı 674",
+        baslik: "Üsâme b. Zeyd (r.a.)",
+        ozet:
+          "Zeyd b. Hârise'nin oğlu, Hz. Peygamber'in azatlısı ve sevdiği genç komutan. Genç yaşta orduya komutan tayin edildi.",
+        kaynak: "İbn Sa'd, et-Tabakât, IV; Buhârî, Megâzî",
+      },
     ],
   },
 ];
