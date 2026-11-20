@@ -9,6 +9,9 @@
 //   • Şüpheli/zayıf rivayet kullanılmadı.
 // ════════════════════════════════════════════════════════
 
+import { ILMIHAL_EK1_DERSLERI } from "./ilmihalEk1Data";
+import { ILMIHAL_EK2_DERSLERI } from "./ilmihalEk2Data";
+
 export interface IlmihalMadde {
   baslik: string;
   metin: string;
@@ -1151,6 +1154,9 @@ export const ILMIHAL_DERSLERI: IlmihalDers[] = [
       },
     ],
   },
+  // ★ 21.11 İÇERİK GENİŞLETME: 8 yeni ders (toplam 24 ders)
+  ...ILMIHAL_EK1_DERSLERI,
+  ...ILMIHAL_EK2_DERSLERI,
 ];
 
 export const ILMIHAL_TOPLAM = {

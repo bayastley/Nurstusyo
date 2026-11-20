@@ -15,6 +15,7 @@ import type { ModalName, Output, SelectedAyah, Tier, LoginTab } from "../types";
 import type { MicroUnlockKey } from "../microUnlock";
 import { getFeatureLock } from "../services/adminSyncService"; // ★ 25.10 kendiSes dinamik kilidi
 import { denemeAktifMi, denemeKalan, DENEME_TOPLAM } from "../studio/deneme"; // ★ 25.10 lansman denemesi
+import { altyaziYak } from "../utils/altyaziYak"; // ★ 21.11 altyazıyı videoya yakma (burn-in)
 
 interface VideoPreviewSectionProps {
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -203,6 +204,37 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
     document.body.appendChild(el); el.click(); el.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 5000);
     notify(t("altyaziIndir"));
+  };
+
+  // ★ 21.11 ALTYAZIYI VİDEOYA YAK (burn-in): SRT/VTT'nin yanında kalıcı altyazı
+  //     — kaynak video canvas üzerinde oynatılır, altyazı her karede çizilir ve
+  //     MediaRecorder ile yeniden kaydedilir. Sunucu/ffmpeg gerekmez.
+  const [altyaziYakiliyor, setAltyaziYakiliyor] = useState(false);
+  const altyaziYakTikla = async (out: Output) => {
+    if (!selected.length) { notify(t("altyaziYok")); return; }
+    if (altyaziYakiliyor) return;
+    setAltyaziYakiliyor(true);
+    try {
+      const sure = Math.max(1, out.duration || selected.length * 5);
+      const per = sure / selected.length;
+      const satirlar = selected.map((a, i) => ({
+        bas: i * per,
+        bit: Math.min(sure, (i + 1) * per),
+        metin: `${a.sName} ${a.a}. ayet — ${a.tr}`,
+      }));
+      const { blob, uzanti } = await altyaziYak(out.url, satirlar);
+      const indirmeUrl = URL.createObjectURL(blob);
+      const el = document.createElement("a");
+      el.href = indirmeUrl;
+      el.download = `nurstudyo-altyazili-${selected.length}ayet.${uzanti}`;
+      document.body.appendChild(el); el.click(); el.remove();
+      window.setTimeout(() => URL.revokeObjectURL(indirmeUrl), 8000);
+      notify(t("altyaziYakBitti"));
+    } catch {
+      notify(t("altyaziYakHata"));
+    } finally {
+      setAltyaziYakiliyor(false);
+    }
   };
   onClipKindChangeRef.current = props.onClipKindChange ?? onClipKindChangeRef.current;
   const [lowPower] = useState(lowPowerDevice);
@@ -646,6 +678,10 @@ export const VideoPreviewSection: React.FC<VideoPreviewSectionProps> = (props) =
                 <button onClick={() => user ? shareOutput(activeOutput) : (setLoginTab("register"), setModal("login"))} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("vpPaylasTitle")}><Share2 size={12} />{t("share")}</button>
                 <button data-minitur="altyazi-srt" onClick={() => altyaziIndir(activeOutput, "srt")} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("altyaziIndir")}><FileText size={12} />SRT</button>
                 <button data-minitur="altyazi-vtt" onClick={() => altyaziIndir(activeOutput, "vtt")} className="flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px]" title={t("altyaziIndir")}><FileText size={12} />VTT</button>
+                <button data-minitur="altyazi-yak" disabled={altyaziYakiliyor} onClick={() => altyaziYakTikla(activeOutput)} className="col-span-2 flex items-center justify-center gap-1 rounded-xl bg-white/[.06] py-2 text-[10px] transition hover:bg-white/[.1] disabled:opacity-60" title={t("altyaziYak")}>
+                  {altyaziYakiliyor ? <Loader2 size={12} className="animate-spin" /> : <Film size={12} />}
+                  {altyaziYakiliyor ? t("altyaziYakiliyor") : t("altyaziYak")}
+                </button>
               </div>
               {/* ★ KUTLAMA ANI TEKLİFİ (27.10, kullanıcının emri): İndir/Paylaş kartında
                   öneri çipi — kutlama anında elite/pro gidiş teklifi. admin/master gizli. */}

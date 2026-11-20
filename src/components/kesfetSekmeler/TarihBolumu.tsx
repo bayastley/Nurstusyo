@@ -6,7 +6,8 @@ import { TARIH_DONEMLERI, TARIH_KAYNAK_NOTU, TARIH_TOPLAM, TARIH_YERLERI, TARIH_
 
 // ════════════════════════════════════════════════════════
 // TARIHBOLUMU.TSX — İslam Tarihi Zaman Tüneli (yol haritası madde 9)
-// 6 dönem (doğum → Mekke → Medine → Hulefâ → medeniyet → sahabiler), 59 olay.
+// 6 dönem (doğum → Mekke → Medine → Hulefâ → medeniyet → sahabiler), 87 olay
+// (Sahabeler döneminde 40 biyografi).
 // Her olay: tarih + özet + kaynak. Dönem filtresi + arama.
 //
 // ★ 5 DİL: dönem adları, olay başlıkları ve açılan olayın özeti seçili dile

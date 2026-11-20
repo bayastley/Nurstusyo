@@ -8,6 +8,8 @@
 // Metinler TR asıl; en/ar/id/ur çeviri katmanıyla üretilir.
 // ════════════════════════════════════════════════════════
 
+import { YARISMA_EK_SORULARI } from "./yarismaEkData";
+
 export type YarismaSeviye = "baslangic" | "orta" | "ileri";
 
 export interface YarismaSoru {
@@ -299,6 +301,8 @@ export const YARISMA_SORULARI: YarismaSoru[] = [
     aciklama: "Tevbe 9:100, muhacir ve ensardan ilk önce iman edenlerden Allah'ın razı olduğunu bildirir.",
     kaynak: "Tevbe 9:100",
   },
+  // ★ 21.11 İÇERİK GENİŞLETME: 24 yeni soru (toplam 60 soru, her seviyede 20)
+  ...YARISMA_EK_SORULARI,
 ];
 
 export const YARISMA_TOPLAM = YARISMA_SORULARI.length;

@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════
 // ISLAMTARIHIDATA.TS — İslam Tarihi Zaman Tüneli (yol haritası madde 9)
-// 6 dönem · 71 olay. Kronolojik sıra: doğum → nübüvvet → Mekke → Medine →
+// 6 dönem · 87 olay (Sahabeler dönemi: 40 biyografi). Kronolojik sıra: doğum → nübüvvet → Mekke → Medine →
 // Hulefâ-yi Râşidîn → İslâm medeniyeti.
 //
 // ★ SAHİHLİK İLKESİ (kullanıcı emri: "her içerik sahih olsun"):
@@ -10,6 +10,8 @@
 //     olmayan tarih kesinmiş gibi yazılmaz.
 //   • Menkıbe/uydurma anlatı yoktur; her olayın yanında kaynak gösterilir.
 // ════════════════════════════════════════════════════════
+
+import { SAHABE_EK_OLAYLARI } from "./sahabeEkData";
 
 export interface TarihOlay {
   /** Görünen tarih etiketi: "571", "624 (2/17 Ramazan)" gibi */
@@ -592,6 +594,8 @@ export const TARIH_DONEMLERI: TarihDonem[] = [
           "Zeyd b. Hârise'nin oğlu, Hz. Peygamber'in azatlısı ve sevdiği genç komutan. Genç yaşta orduya komutan tayin edildi.",
         kaynak: "İbn Sa'd, et-Tabakât, IV; Buhârî, Megâzî",
       },
+      // ★ 21.11 EK KADRO: 16 yeni biyografi (toplam 40 sahabi)
+      ...SAHABE_EK_OLAYLARI,
     ],
   },
 ];

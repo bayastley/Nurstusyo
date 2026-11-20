@@ -9,6 +9,7 @@
 // ════════════════════════════════════════════════════════
 
 import type { IlmihalDers } from "./ilmihalData";
+import { AHLAK_EK_DERSLERI } from "./ahlakEkData";
 
 export const AHLAK_DERSLERI: IlmihalDers[] = [
   {
@@ -584,6 +585,8 @@ export const AHLAK_DERSLERI: IlmihalDers[] = [
       },
     ],
   },
+  // ★ 21.11 İÇERİK GENİŞLETME: 4 yeni ders (toplam 12 ders)
+  ...AHLAK_EK_DERSLERI,
 ];
 
 export const AHLAK_TOPLAM = {
