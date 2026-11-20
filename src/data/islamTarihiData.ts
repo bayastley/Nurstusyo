@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════
 // ISLAMTARIHIDATA.TS — İslam Tarihi Zaman Tüneli (yol haritası madde 9)
-// 5 dönem · 41 olay. Kronolojik sıra: doğum → nübüvvet → Mekke → Medine →
+// 6 dönem · 71 olay. Kronolojik sıra: doğum → nübüvvet → Mekke → Medine →
 // Hulefâ-yi Râşidîn → İslâm medeniyeti.
 //
 // ★ SAHİHLİK İLKESİ (kullanıcı emri: "her içerik sahih olsun"):
@@ -29,7 +29,7 @@ export interface TarihDonem {
 }
 
 export const TARIH_KAYNAK_NOTU =
-  "Kaynaklar: İbn Hişâm, es-Sîre · Taberî, Târîhu'l-ümem · İbnü'l-Esîr, el-Kâmil fi't-târîh · İbn Kesîr, el-Bidâye ve'n-nihâye · Belâzürî, Fütûhu'l-büldân · Buhârî, Megâzî · Müslim, Cihâd. İhtilaflı tarihler \"yaklaşık\" kaydıyla verilmiştir.";
+  "Kaynaklar: İbn Hişâm, es-Sîre · Taberî, Târîhu'l-ümem · İbnü'l-Esîr, el-Kâmil fi't-târîh · İbn Kesîr, el-Bidâye ve'n-nihâye · Belâzürî, Fütûhu'l-büldân · İbn Sa'd, et-Tabakâtü'l-kübrâ · Buhârî, Megâzî · Müslim, Cihâd · TDV İslâm Ansiklopedisi (sahâbe maddeleri). İhtilaflı tarihler \"yaklaşık / ~\" kaydıyla verilmiştir; bir kaynağın tercih ettiği yıl esas alınmış, farklı rivayetler özet içinde belirtilmiştir.";
 
 export const TARIH_DONEMLERI: TarihDonem[] = [
   // ───────────────── 1 ─────────────────
@@ -509,18 +509,18 @@ export const TARIH_DONEMLERI: TarihDonem[] = [
         kaynak: "İbn Sa'd, et-Tabakât, IV; Buhârî, Fedâilü's-sahâbe",
       },
       {
-        tarih: "vefatı 633",
+        tarih: "vefatı 632 (11/3 Ramazan)",
         baslik: "Hz. Fâtıma (r.anhâ)",
         ozet:
-          "Hz. Peygamber'in kızı, Hz. Ali'nin eşi, Hasan ve Hüseyin'in annesi. Babasının vefatından kısa süre sonra vefat etti; ahlâkı ve sabrıyla anılır.",
-        kaynak: "İbn Sa'd, et-Tabakât, VIII; Buhârî, Fedâilü's-sahâbe",
+          "Hz. Peygamber'in kızı, Hz. Ali'nin eşi, Hasan ve Hüseyin'in annesi. Babasının vefatından yaklaşık beş buçuk ay sonra, 3 Ramazan 11'de (22 Kasım 632) Medine'de vefat etti ve Cennetü'l-Bakî'ye defnedildi; ahlâkı ve sabrıyla anılır.",
+        kaynak: "İbn Sa'd, et-Tabakât, VIII; Buhârî, Fedâilü's-sahâbe; TDV İslâm Ansiklopedisi, “Fâtıma”",
       },
       {
-        tarih: "vefatı 650",
+        tarih: "vefatı 656 (36)",
         baslik: "Talha b. Ubeydullah (r.a.)",
         ozet:
-          "Aşere-i mübeşşereden, Uhud'da Hz. Peygamber'i koruyan sahabi. Cömertliğiyle tanınır; aşere-i mübeşşere arasında yer alır.",
-        kaynak: "İbn Sa'd, et-Tabakât, III; Tirmizî, Menâkıb",
+          "Aşere-i mübeşşereden, Uhud'da Hz. Peygamber'i koruyan sahabi. Cömertliğiyle tanınır. 36 yılı Cemâziyelâhir ayında (Aralık 656) Basra yakınındaki Cemel Vak'ası'nda vefat etti; kabri Basra'dadır.",
+        kaynak: "İbn Sa'd, et-Tabakât, III; Tirmizî, Menâkıb; TDV İslâm Ansiklopedisi, “Talha b. Ubeydullah”",
       },
       {
         tarih: "vefatı 656",
@@ -565,18 +565,18 @@ export const TARIH_DONEMLERI: TarihDonem[] = [
         kaynak: "İbn Sa'd, et-Tabakât, III; Buhârî, Fedâilü'l-Kur'ân",
       },
       {
-        tarih: "vefatı 693",
+        tarih: "vefatı ~711 (93)",
         baslik: "Enes b. Mâlik (r.a.)",
         ozet:
-          "Hz. Peygamber'e on yıl hizmet eden ensar sahabisi. Peygamber'in hizmetinde bulunduğu için çok hadis rivayet etti; Basra'da vefat etti.",
-        kaynak: "İbn Sa'd, et-Tabakât, VII; Buhârî, Fedâilü's-sahâbe",
+          "Hz. Peygamber'e on yıl hizmet eden ensar sahabisi. Peygamber'in hizmetinde bulunduğu için çok hadis rivayet etti. 93 (711-12) yılında 103 yaşında Basra'da vefat etti; 90, 91, 92 ve 95 yıllarını veren rivayetler de vardır.",
+        kaynak: "İbn Sa'd, et-Tabakât, VII; Buhârî, Fedâilü's-sahâbe; TDV İslâm Ansiklopedisi, “Enes b. Mâlik”",
       },
       {
-        tarih: "vefatı 683",
+        tarih: "vefatı ~697 (78)",
         baslik: "Câbir b. Abdullah (r.a.)",
         ozet:
-          "Ensarın ileri gelenlerinden, çok hadis rivayet eden sahabi. Veda Haccı'nda bulundu ve hac menâsikinin rivayetinde önemli yer tutar.",
-        kaynak: "İbn Sa'd, et-Tabakât, V; Müslim, Hac",
+          "Ensarın ileri gelenlerinden, çok hadis rivayet eden sahabi. Veda Haccı'nda bulundu ve hac menâsikinin rivayetinde önemli yer tutar. 78 (697) yılında doksan dört yaşında Medine'de vefat etti; 68, 73 ve 77 yıllarını veren rivayetler de nakledilir.",
+        kaynak: "İbn Sa'd, et-Tabakât, V; Müslim, Hac; TDV İslâm Ansiklopedisi, “Câbir b. Abdullah”",
       },
       {
         tarih: "vefatı 656",
