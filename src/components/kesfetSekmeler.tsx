@@ -6,3 +6,5 @@ export { SoruBolumu } from "./kesfetSekmeler/SoruBolumu";
 export { KelimeBolumu } from "./kesfetSekmeler/KelimeBolumu";
 export { EsmaBolumu } from "./kesfetSekmeler/EsmaBolumu";
 export { SureBolumu } from "./kesfetSekmeler/SureBolumu";
+export { IlmihalBolumu } from "./kesfetSekmeler/IlmihalBolumu";
+export { TarihBolumu } from "./kesfetSekmeler/TarihBolumu";

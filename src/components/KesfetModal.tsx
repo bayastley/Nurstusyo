@@ -31,6 +31,9 @@ import { HOCA_KARSILASTIRMA_AYETLER } from "../data/hocaData";
 import { camiHaritaUrl, camiListeUrl } from "../data/camiData";
 import { KANAL_REHBERI } from "../data/kanalData";
 import { TECVID_KURALLARI } from "../data/tecvidData";
+// ★ 20.11 DAĞITIM: İlmihal derslerinin başlıkları diğer sekmelerdeki köprü çiplerinde kullanılır
+import { ILMIHAL_DERSLERI } from "../data/ilmihalData";
+import { TARIH_TOPLAM } from "../data/islamTarihiData";
 // ★ 31.10 PEYGAMBERLER HAYATI: Kur'ân'da adı geçen 25 peygamber — kıssa + olaylar + ders + kaynak
 import { PEYGAMBERLER } from "../data/peygamberler";
 // ★ 31.10 SİYER-İ NEBİ: Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler + sahih kaynak
@@ -44,7 +47,7 @@ import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KAR
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
-import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
+import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, TarihBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
 import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
 
@@ -62,6 +65,31 @@ function gununKelimeleriHesapla(): KelimeKart[] {
 
 
 // ★ SRP adım 4 (30.09): kitaplık okuma + TTS ses motoru + kâriler + sekme tanımları kesfetTemel.tsx'e taşındı
+/** ★ 20.11 DAĞITIM KÖPRÜSÜ — bir sekmenin içinden ilgili ilmihal dersine geçiş.
+ *  Modal kapanmaz; yalnız sekme değişir ve ders seçili açılır (mevcut akışlara dokunmaz). */
+function IlmihalKopru({ baslik, dersler, git }: { baslik: string; dersler: string[]; git: (id: string) => void }) {
+  const secili = ILMIHAL_DERSLERI.filter((d) => dersler.includes(d.id));
+  if (!secili.length) return null;
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[.04] p-2.5">
+      <p className="text-[8.5px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>{baslik}</p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5">
+        {secili.map((d) => (
+          <button
+            key={d.id}
+            type="button"
+            data-minitur={`kopru-${d.id}`}
+            onClick={() => git(d.id)}
+            className="rounded-lg border border-white/10 bg-white/[.03] px-2 py-1 text-[9px] font-bold text-white/65 transition hover:bg-white/[.08] hover:text-white"
+          >
+            {d.emoji} {d.ad}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface KesfetModalProps {
   /** ★ FULL I18N (01.10): başlık/sub seçili dile döner */
   lang?: Lang;
@@ -82,8 +110,11 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
     menkibeler: "ksMenkibeler", evliyalar: "ksEvliyalar", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
+    ilmihal: "ksIlmihal", tarih: "ksTarih",
   };
-  const sekmeAdi = (id: string): string => (SEKME_KEY[id] ? tt(SEKME_KEY[id]) : id);
+  // ★ 20.11: sözlükte karşılığı olmayan yeni sekmeler SEKMELER etiketine düşer (ham anahtar görünmez)
+  const sekmeAdi = (id: string): string =>
+    SEKME_KEY[id] ? tt(SEKME_KEY[id]) : (SEKMELER.find((s) => s.id === id)?.label ?? id);
   const TEMA_KEY: Record<string, string> = {
     tumu: "ksTemaTumu", sabir: "ksTemaSabir", sukur: "ksTemaSukur", "ana-baba": "ksTemaAnaBaba",
     "komşuluk": "ksTemaKomsuluk", ahlak: "ksTemaAhlak", zikir: "ksTemaZikir", hayir: "ksTemaHayir",
@@ -97,6 +128,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   // ★ 02.11 (kullanıcı emri): İslâmi Öğreniyorum ilk tıklamada Hadis Bankası açılsın
   const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
   const [arama, setArama] = useState("");
+  // ★ 20.11 DAĞITIM: sekmeler arası ilmihal köprüsü — hangi dersin açılacağı burada tutulur
+  const [ilmihalDers, setIlmihalDers] = useState<string>("temizlik");
+  const gitIlmihal = (ders: string) => { setIlmihalDers(ders); setSekme("ilmihal"); };
   const [hadisTema, setHadisTema] = useState("tumu");
   // ★ 02.11 RİVAYET EDENLER (kullanıcı emri): derece kısmına Buhâri/Tirmizî gibi
   //   sahih kabul edilen_rnn kişiler buton olarak girer; tıklayınca yalnız ondan
@@ -422,7 +456,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 112: RAMAZAN İMSAKİYESİ (01.11) — kesfetImsakiye.tsx: en üst sekme ── */}
       {sekme === "imsakiye" && (
-        <KesfetImsakiye tt={tt} lang={String(lang)} />
+        <div className="space-y-2">
+          <IlmihalKopru baslik={tt("kopruRamazan")} dersler={["oruc", "zekat", "cuma"]} git={gitIlmihal} />
+          <KesfetImsakiye tt={tt} lang={String(lang)} />
+        </div>
       )}
 
       {/* ── 18: HADİS BANKASI — SRP adım 9 (09.10 2. tur): kesfetSekmeler.tsx ── */}
@@ -444,7 +481,31 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       )}
 
       {/* ── 19b: MEZHEPLER — 02.11 kullanıcı emri: üstte 4 hak mezhep ── */}
-      {sekme === "mezhepler" && <MezheplerBolumu tt={tt} />}
+      {sekme === "mezhepler" && (
+        <div className="space-y-2">
+          <IlmihalKopru baslik={tt("kopruHanefi")} dersler={["temizlik", "namaz", "oruc", "zekat"]} git={gitIlmihal} />
+          <MezheplerBolumu tt={tt} />
+        </div>
+      )}
+
+      {/* ── 11: İLMİHAL AKADEMİSİ (20.11) — Hanefî esaslı 12 ders · 72 madde · 36 soru · 5 dil ── */}
+      {sekme === "ilmihal" && <IlmihalBolumu tt={tt} lang={lang} q={q} baslangicDers={ilmihalDers} onSekme={(s) => setSekme(s as SekmeId)} />}
+
+      {/* ── 9: İSLAM TARİHİ ZAMAN TÜNELİ (20.11) — 5 dönem · 41 olay, kaynaklı ── */}
+      {sekme === "tarih" && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            data-minitur="tarih-siyer-kopru"
+            onClick={() => setSekme("siyer")}
+            className="flex w-full items-center justify-between gap-2 rounded-xl border border-white/[.12] bg-white/[.04] px-3 py-2 text-left transition hover:bg-white/[.07]"
+          >
+            <span className="text-[9.5px] font-bold text-white/70">🕋 {tt("kopruSiyer")}</span>
+            <span className="shrink-0 text-[9px] font-black" style={{ color: "var(--accent)" }}>{tt("kopruAc")} →</span>
+          </button>
+          <TarihBolumu tt={tt} lang={lang} q={q} />
+        </div>
+      )}
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
       {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
@@ -452,6 +513,19 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {sekme === "siyer" && (
         <div className="space-y-2">
+          {/* ★ 20.11 DAĞITIM: siyerin kronolojik omurgası zaman tünelinde — buradan tek tıkla açılır */}
+          <button
+            type="button"
+            data-minitur="siyer-tarih-kopru"
+            onClick={() => setSekme("tarih")}
+            className="w-full rounded-xl border border-white/[.12] bg-white/[.04] px-3 py-2 text-left transition hover:bg-white/[.07]"
+          >
+            <span className="flex items-center justify-between gap-2">
+              <span className="text-[9.5px] font-bold text-white/75">🕰️ {tt("trZaman")} · {TARIH_TOPLAM} {tt("trOlay")}</span>
+              <span className="shrink-0 text-[9px] font-black" style={{ color: "var(--accent)" }}>{tt("kopruAc")} →</span>
+            </span>
+            <span className="mt-1 block text-[8.5px] leading-relaxed text-white/40">{tt("kopruSiyerOzet")}</span>
+          </button>
           <p className="mb-1 text-center text-[10px] leading-relaxed text-white/45">{tt("knSiyerMetin")}</p>
           {filtreliSiyer.map((k, i) => {
             const c = siyerIsim(k.id, lang);
@@ -590,11 +664,18 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 20: SORU-CEVAP — SRP adım 9: kesfetSekmeler.tsx ── */}
       {sekme === "soru" && (
-        <SoruBolumu
-          tt={tt} filtreliBesSart={filtreliBesSart} filtreliSorular={filtreliSorular}
-          acikSoru={acikSoru} setAcikSoru={setAcikSoru}
-          acikGenelSoru={acikGenelSoru} setAcikGenelSoru={setAcikGenelSoru}
-        />
+        <div className="space-y-2">
+          <IlmihalKopru
+            baslik={tt("kopruSoru")}
+            dersler={["iman", "temizlik", "gusul", "namaz", "oruc", "zekat", "hac", "cuma"]}
+            git={gitIlmihal}
+          />
+          <SoruBolumu
+            tt={tt} filtreliBesSart={filtreliBesSart} filtreliSorular={filtreliSorular}
+            acikSoru={acikSoru} setAcikSoru={setAcikSoru}
+            acikGenelSoru={acikGenelSoru} setAcikGenelSoru={setAcikGenelSoru}
+          />
+        </div>
       )}
 
       {/* ── 21: KELİME KARTLARI — SRP adım 9: kesfetSekmeler.tsx ── */}
@@ -614,7 +695,10 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
       {/* ── 28: NAMAZ ÖĞRETİCİ — SRP ayrıldı: kesfetNamazBolumu.tsx (bağlamlar prop korundu); ilk buton (Namaz Çeşitleri) otomatik açık ── */}
       {sekme === "namaz" && (
-        <NamazOgreticiBolumu tt={tt} lang={lang} namazPanel={namazPanel} setNamazPanel={setNamazPanel} />
+        <div className="space-y-2">
+          <IlmihalKopru baslik={tt("kopruNamaz")} dersler={["temizlik", "gusul", "namaz", "cuma"]} git={gitIlmihal} />
+          <NamazOgreticiBolumu tt={tt} lang={lang} namazPanel={namazPanel} setNamazPanel={setNamazPanel} />
+        </div>
       )}
 
       {/* ── 35: BEBEK DUASI — KALDIRILDI (kullanıcı kararı 28.09: doğum köşesi sitede olmayacak) ── */}
@@ -734,6 +818,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 20c: ADAB-I MUAŞERET REHBERİ (30.10, +100 sahih kaynaklı) ── */}
       {sekme === "adab" && (
         <div className="space-y-2">
+          <IlmihalKopru baslik={tt("kopruAhlak")} dersler={["helal-haram", "aile"]} git={gitIlmihal} />
           <p className="mb-1 text-center text-[9px] text-white/40">{tt("ktAdabMetin")}</p>
           {ADABI_MUASERET.filter((m) => !q || m.ad.toLocaleLowerCase("tr").includes(q) || m.metin.toLocaleLowerCase("tr").includes(q)).map((m, i) => (
             <div key={i} className="rounded-xl border border-white/10 bg-white/[.03] p-3">
