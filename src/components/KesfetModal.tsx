@@ -47,7 +47,7 @@ import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KAR
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
-import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, TarihBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
+import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, YarismaBolumu, TarihBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
 import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
 
@@ -110,7 +110,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
     menkibeler: "ksMenkibeler", evliyalar: "ksEvliyalar", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
-    ilmihal: "ksIlmihal", tarih: "ksTarih", ahlak: "ksAhlak",
+    ilmihal: "ksIlmihal", tarih: "ksTarih", ahlak: "ksAhlak", yarisma: "ksYarisma",
   };
   // ★ 20.11: sözlükte karşılığı olmayan yeni sekmeler SEKMELER etiketine düşer (ham anahtar görünmez)
   const sekmeAdi = (id: string): string =>
@@ -491,6 +491,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 11: İLMİHAL AKADEMİSİ (20.11) — Hanefî esaslı 12 ders · 72 madde · 36 soru · 5 dil ── */}
       {sekme === "ilmihal" && <IlmihalBolumu tt={tt} lang={lang} q={q} baslangicDers={ilmihalDers} onSekme={(s) => setSekme(s as SekmeId)} />}
       {sekme === "ahlak" && <AhlakBolumu tt={tt} lang={lang} q={q} onSekme={(s) => setSekme(s as SekmeId)} />}
+      {sekme === "yarisma" && <YarismaBolumu tt={tt} lang={lang} />}
 
       {/* ── 9: İSLAM TARİHİ ZAMAN TÜNELİ (20.11) — 5 dönem · 41 olay, kaynaklı ── */}
       {sekme === "tarih" && (
