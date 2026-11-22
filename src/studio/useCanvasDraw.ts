@@ -203,6 +203,8 @@ export function useCanvasDraw(p: CanvasDrawParams) {
             : (p.previewTime > 0 && ayahSureG > 0 ? Math.min(1, Math.max(0, (p.previewTime - ayahBaslaG) / ayahSureG)) : 1);
           const zarf = gecisZarf(gecis.tur, ilerlemeG, gecis.sure, zarfSuresi);
           const zoom = (1.03 + Math.sin(tick / 500) * 0.012) * zarf.yakinlasma;
+          // GEÇİCİ TEŞHİS: kayıt sırasında zarfı okumak için (iş bitince kaldırılacak)
+          (window as unknown as { __nurZarf?: unknown }).__nurZarf = { tur: gecis.tur, sure: gecis.sure, ilerlemeG: Math.round(ilerlemeG * 1000) / 1000, karartma: Math.round(zarf.karartma * 100) / 100, generating: p.generating, ayahSureG: Math.round(ayahSureG * 100) / 100 };
           if (p.cineFilter.css !== "none") { try { ctx.filter = p.cineFilter.css; } catch { /* ignore */ } }
           if (clip.kind === "vid") {
             const primaryUrl = getVideoUrlSync(clip), posterUrl = getPosterUrlSync(clip), video = p.ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
