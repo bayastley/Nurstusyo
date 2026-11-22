@@ -433,5 +433,5 @@ export function useCanvasDraw(p: CanvasDrawParams) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandOn, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah, p.cubuk, p.mesaj]);
+  }, [p.ensureImage, p.ensureVideo, p.showArapca, p.showSubMeal, p.accessTier, p.arabicFontCss, p.arabicFontWeight, p.textSizeMul, p.mealSizeMul, p.shimmerCfg, p.shimmerIntensity, p.cardBg, p.textOffset, p.cineFilter, p.isMasterSürüm, p.brandSignature, p.brandOn, p.brandPos, p.previewFps, p.previewTime, p.previewDuration, p.previewIsSurah, p.cubuk, p.mesaj, p.generating]);
 }
