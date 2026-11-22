@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v10"; // ★ 02.11: v9→v10 — eski shell cache'ten servirken yeni deploy'un kullanıcıya ulaşmadığı tespit edildi; sürüm artışı eski cache'i aktivasyonda temizletiyor
+const CACHE = "nurstudyo-v11"; // ★ 22.11: v10→v11 — içerik takvimi · ses düzenleme · sahne geçişi yayınlandı; eski kabuk cache'i temizlensin
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
