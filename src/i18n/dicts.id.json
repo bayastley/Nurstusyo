@@ -2594,5 +2594,13 @@
   "sdSifirla": "Atur ulang",
   "sdNot": "Setelan berlaku pada produksi berikutnya.",
   "sdAyetYok": "Pilih ayat untuk pratinjau.",
-  "sdHata": "Audio gagal diunduh — coba lagi."
+  "sdHata": "Audio gagal diunduh — coba lagi.",
+  "sgBaslik": "Transisi Adegan",
+  "sgSub": "Efek transisi antar ayat",
+  "sgYok": "Tidak ada",
+  "sgKarartma": "Redup ke hitam",
+  "sgIsik": "Cahaya",
+  "sgSinematik": "Sinematik",
+  "sgSure": "Durasi",
+  "sgNot": "Diterapkan di awal dan akhir setiap ayat; langsung terlihat di pratinjau."
 }

@@ -9,6 +9,7 @@ import { CATEGORY_PALETTE } from "../clips";
 import { getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes } from "../clips";
 import { dimensions } from "./studioHelpers";
+import { sahneGecis, gecisZarf } from "./sahneGecis";
 import { CanvasDoldurucu, cubukRengi, drawMesajYazisi, type CubukAyar, type MesajAyar } from "./mesajKatmani";
 import type { Clip, CatId } from "../clips";
 import type { SelectedAyah, Aspect, Tier } from "../types";
@@ -59,6 +60,9 @@ interface CanvasDrawParams {
 export function useCanvasDraw(p: CanvasDrawParams) {
   useEffect(() => {
     let frame = 0, tick = 0, lastPreviewDraw = 0;
+    // ★ MADDE 22: kayıt sırasında previewTime güncellenmediği için ayet değişiminden
+    //   beri geçen duvar saati tutulur (hem önizleme hem kayıt aynı zarfı kullanır).
+    let sonAyetIndex = -1, sonAyetZamani = 0;
     // ★ var() çözümleyici — renk çubuğu durağı hex olduğu için cache pratikte boş;
     //   ileride tema renkleri (var(--accent)) çubuğa bağlanırsa hazır.
     const doldurucu = new CanvasDoldurucu();
@@ -186,7 +190,19 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           const currentItems = p.selectedRef.current, currentIndex = Math.min(p.verseIndexRef.current, Math.max(currentItems.length - 1, 0)), currentAyah = currentItems[currentIndex];
           const clip = (currentAyah && p.ayahBackgroundsRef.current[currentAyah.id]) || p.backgroundRef.current, currentTheme = p.themeRef.current;
           ctx.fillStyle = currentTheme.bg; ctx.fillRect(0, 0, width, height); let painted = false;
-          const zoom = 1.03 + Math.sin(tick / 500) * 0.012;
+          // ★ MADDE 22: sahne geçiş zarfı (tür + süre) — hem önizleme hem kayıt
+          const gecis = sahneGecis();
+          if (currentIndex !== sonAyetIndex) { sonAyetIndex = currentIndex; sonAyetZamani = performance.now(); }
+          const ayahSureG = p.previewIsSurah ? p.previewDuration / Math.max(currentItems.length, 1) : Math.max(0.01, p.previewDuration);
+          const ayahBaslaG = p.previewIsSurah ? currentIndex * ayahSureG : 0;
+          const gecenSn = Math.max(0, (performance.now() - sonAyetZamani) / 1000);
+          // kayıtta önizleme süresi sabit kalır → referans süre olarak 4 sn kullanılır
+          const zarfSuresi = p.generating ? Math.max(ayahSureG, 4) : ayahSureG;
+          const ilerlemeG = p.generating
+            ? Math.min(1, gecenSn / (zarfSuresi > 0.01 ? zarfSuresi : 4))
+            : (p.previewTime > 0 && ayahSureG > 0 ? Math.min(1, Math.max(0, (p.previewTime - ayahBaslaG) / ayahSureG)) : 1);
+          const zarf = gecisZarf(gecis.tur, ilerlemeG, gecis.sure, zarfSuresi);
+          const zoom = (1.03 + Math.sin(tick / 500) * 0.012) * zarf.yakinlasma;
           if (p.cineFilter.css !== "none") { try { ctx.filter = p.cineFilter.css; } catch { /* ignore */ } }
           if (clip.kind === "vid") {
             const primaryUrl = getVideoUrlSync(clip), posterUrl = getPosterUrlSync(clip), video = p.ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);
@@ -381,6 +397,14 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           // ★ RENK ÇUBUĞU + ÖZEL YAZI (01.10): önce çubuk, en üstte yazı.
           //   draw() sonunda olduğundan captureStream(renderFps) bunları otomatik
           //   videoya alır — mesaj katmanı planındaki tasarım buraya kuruldu.
+          // ★ MADDE 22: karartma + sıcak ışık perdesi (çubuk/yazının ALTINDA kalır)
+          if (zarf.karartma > 0.002) { ctx.save(); ctx.globalAlpha = zarf.karartma; ctx.fillStyle = "#000"; ctx.fillRect(0, 0, width, height); ctx.restore(); }
+          if (zarf.isik > 0.002) {
+            const isikGrad = ctx.createRadialGradient(width / 2, height * 0.45, 0, width / 2, height * 0.45, Math.max(width, height) * 0.7);
+            isikGrad.addColorStop(0, `rgba(255,222,150,${(0.5 * zarf.isik).toFixed(3)})`);
+            isikGrad.addColorStop(1, "rgba(0,0,0,0)");
+            ctx.save(); ctx.globalCompositeOperation = "screen"; ctx.fillStyle = isikGrad; ctx.fillRect(0, 0, width, height); ctx.restore();
+          }
           doldurucu.cubukCiz(ctx, width, height, p.cubuk);
           drawMesajYazisi(ctx, width, height, p.mesaj, (text, maxW) => wrapText(ctx, text, maxW));
           // ★ ETİKET KURALI (22.10 kullanıcı emri): nurstudyo.com etiketi YALNIZ

@@ -2589,5 +2589,13 @@
   "sdSifirla": "Sıfırla",
   "sdNot": "Ayarlar bir sonraki üretimde geçerli.",
   "sdAyetYok": "Önizleme için önce bir ayet seç.",
-  "sdHata": "Ses indirilemedi — tekrar dene."
+  "sdHata": "Ses indirilemedi — tekrar dene.",
+  "sgBaslik": "Sahne Geçişi",
+  "sgSub": "Ayetler arası geçiş efekti",
+  "sgYok": "Yok",
+  "sgKarartma": "Karartma",
+  "sgIsik": "Işık",
+  "sgSinematik": "Sinematik",
+  "sgSure": "Geçiş süresi",
+  "sgNot": "Geçiş ayetin girişinde ve çıkışında uygulanır; önizlemede anında görünür."
 }

@@ -663,6 +663,17 @@ Mevcut güvenlik altyapısını tekrarlamak yerine, sistem büyüdükçe şu gel
 - Hata oranı.
 - API gecikmesi.
 
+93. Anlamlı Şablonlar (Tema Gibi Ana Ekran + Üretim Çerçevesi)
+
+- Tema gibi tek dokunuşla ana ekranı değiştiren şablonlar.
+- Her şablonda anlamlı sahne: kandil gecesi etrafta mumlar, ramazan fenerleri, kandil ışıkları.
+- Video üretirken çerçeve şablonu: altın işlemeli çerçeve, kandil, cami silüeti, geometrik desen.
+- Şablon hem arayüz renklerini hem üretim çerçevesini birlikte değiştirir.
+- Mübarek gün ve mevsim şablonları: Ramazan, Kadir Gecesi, Kandil, Bayram, Muharrem.
+- Şablon içinde canlı animasyon: mum alevi titremesi, ışık huzmesi, yavaş parıltı.
+- Tier dağılımı: free birkaç şablon, PRO geniş set, ELİT tamamı + kendi çerçevesini yükleme.
+- Şablonlar yalnız arayüz süsü değil; video çıktısına çerçeve ve ışık tonu olarak yansır.
+
 ---
 
 14. NÛR STÜDYO'NUN EN GÜÇLÜ 5 BÜYÜK PROJESİ

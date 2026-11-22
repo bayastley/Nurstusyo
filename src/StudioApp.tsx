@@ -92,6 +92,7 @@ import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
 import { IcerikTakvimi } from "./components/IcerikTakvimi";
 import { SesDuzenlemePaneli } from "./components/SesDuzenlemePaneli";
+import { SahneGecisPaneli } from "./components/SahneGecisPaneli";
 import { OnerilenVideolar, type OneriVideo } from "./components/OnerilenVideolar"; // ★ 22.10: güne özel hazır video taslakları
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { AsistanBaloncugu } from "./components/AsistanBaloncugu"; // ★ 19.10 ücretsiz SSS asistanı
@@ -148,7 +149,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ 16.11 HAZIR TASLAK YUVASI (kullanıcı: "önerilen klip aşırı yer kaplıyor"):
   //   günün videosu + önerilen klipler tek yuvada sekme oldu. Aktif sekmeye
   //   tekrar basınca yuva kapanır (orta kolonda 332 px yer kaplıyordu).
-  const [taslakSekme, setTaslakSekme] = useState<"gun" | "oneri" | "takvim" | "ses" | null>("gun");
+  const [taslakSekme, setTaslakSekme] = useState<"gun" | "oneri" | "takvim" | "ses" | "gecis" | null>("gun");
   const {
     adminGodMode, setAdminGodMode, setIsMasterSürüm, maintenance, isDevMaster, isMasterSürüm, setSentCode, setAdminSonEmail, notify,
     telifUyariAcik, setTelifUyariAcik,
@@ -385,6 +386,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
             { id: "oneri" as const, etiket: ttX2610("ovBaslik") },
             { id: "takvim" as const, etiket: ttX2610("ictBaslik") },
             { id: "ses" as const, etiket: ttX2610("sdBaslik") },
+            { id: "gecis" as const, etiket: ttX2610("sgBaslik") },
           ]).map((s) => (
             <button
               key={s.id}
@@ -429,6 +431,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           ayet={selected[0] ? { s: selected[0].s, a: selected[0].a } : null}
           reciterId={reciterId}
         />
+        )}
+        {taslakSekme === "gecis" && (
+        <SahneGecisPaneli />
         )}
         <PanelSuspense minHeight={360}>
         <VideoPreviewSection

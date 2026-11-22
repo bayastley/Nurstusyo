@@ -2594,5 +2594,13 @@
   "sdSifirla": "Reset",
   "sdNot": "Settings apply to your next render.",
   "sdAyetYok": "Select a verse to preview.",
-  "sdHata": "Audio could not be downloaded — try again."
+  "sdHata": "Audio could not be downloaded — try again.",
+  "sgBaslik": "Scene Transition",
+  "sgSub": "Transition effect between verses",
+  "sgYok": "None",
+  "sgKarartma": "Fade to black",
+  "sgIsik": "Light",
+  "sgSinematik": "Cinematic",
+  "sgSure": "Duration",
+  "sgNot": "Applied at the start and end of each verse; visible immediately in preview."
 }
