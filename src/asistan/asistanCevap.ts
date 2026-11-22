@@ -137,7 +137,7 @@ const SAHIP_KORUMA_MARKALARI = [
 function sahiplikCevabi(seviye: AsistanSeviye): { cevap: string; aksiyon?: AsistanSonuc["aksiyon"] } {
   if (seviye === "pro") {
     return {
-      cevap: "NÛR PRO'da neler var 💎 — 1) Günde 8 kısa + 3 uzun video (600 sn). 2) 25 kâri sesi (10 ücretsiz + 15 PRO-özel). 3) 60 tema (51 PRO + 9 ücretsiz). 4) Sinematik filtreler. 5) Renk çubuğu + özel yazı. 6) Foto üzerine ayet — Ayet & Dua Kütüphanesi. 7) Uzun video modu + 16:9 yatay ekran. 8) Etiketsiz üretim — videonda nurstudyo.com ÇIKMAZ. — Bu paket zaten güçlü, ama bir adım ötede NÛR ELİT farkı gözle görülür 👑: günde 15 kısa + 5 uzun + 1 tam sure sürümü, TÜM 45 kâri sesi + TÜM 106 tema, açıklama üretimi, AI hashtag paketleri, gelişmiş sosyal paylaşım araçları, Tasarım stüdyosu + marka imza, Seslendirme, Kendi sesinle üretim, Haftanın Videosu vitrine ekleme ve Akıllı AI arka plan seçimi DAHİL. Paylaştığın videoda sergilenen imza senin olur — büyütmek istersen aşağıdaki 💎 butonu seni plan paneline götürür. 🌙",
+      cevap: "NÛR PRO'da neler var 💎 — 1) Günde 8 kısa + 3 uzun video (600 sn). 2) 25 kâri sesi (10 ücretsiz + 15 PRO-özel). 3) 78 tema (33 PRO + 45 ücretsiz). 4) Sinematik filtreler. 5) Renk çubuğu + özel yazı. 6) Foto üzerine ayet — Ayet & Dua Kütüphanesi. 7) Uzun video modu + 16:9 yatay ekran. 8) Etiketsiz üretim — videonda nurstudyo.com ÇIKMAZ. — Bu paket zaten güçlü, ama bir adım ötede NÛR ELİT farkı gözle görülür 👑: günde 15 kısa + 5 uzun + 1 tam sure sürümü, TÜM 45 kâri sesi + TÜM 106 tema, açıklama üretimi, AI hashtag paketleri, gelişmiş sosyal paylaşım araçları, Tasarım stüdyosu + marka imza, Seslendirme, Kendi sesinle üretim, Haftanın Videosu vitrine ekleme ve Akıllı AI arka plan seçimi DAHİL. Paylaştığın videoda sergilenen imza senin olur — büyütmek istersen aşağıdaki 💎 butonu seni plan paneline götürür. 🌙",
       aksiyon: "uyelik",
     };
   }
@@ -148,7 +148,7 @@ function sahiplikCevabi(seviye: AsistanSeviye): { cevap: string; aksiyon?: Asist
   }
   // free → Pro önerisi daha kapsamlı diye öne çıkarılır
   return {
-    cevap: "Ücretsiz planda neler var 🌿 — 1) Her gün 3 kısa video (59 sn). 2) 10 kâri sesi. 3) 1300+ atmosfer klibi. 4) 9 ücretsiz tema. 5) Başlık üretimi + 16:9 format. 6) Kâbe canlı, Kur'an okuma/dinleme, hafızlık testi, Nur araçları ve radyo — HERKESE ÜCRETSİZ. 7) Çıktılarda köşede 'nurstudyo.com' etiketi olur (kaldırılamaz). — Başlamak için birebir! Ama sana NÛR PRO'yu öneririm 💎: günde 8 kısa + 3 uzun (600 sn) video, 25 kâri sesi, 60 tema, sinematik filtreler, renk çubuğu + özel yazı, Foto üzerine ayet (Ayet & Dua Kütüphanesi), 16:9 yatay format VE etiketsiz üretim (nurstudyo.com yazmaz). Kısacası Ücretsiz'in en az 2 katı hak. Aşağıdaki 💎 butonundan plan panelini açıp hemen inceleyebilirsin. 🌙",
+    cevap: "Ücretsiz planda neler var 🌿 — 1) Her gün 3 kısa video (59 sn). 2) 10 kâri sesi. 3) 1300+ atmosfer klibi. 4) 45 ücretsiz tema. 5) Başlık üretimi + 16:9 format. 6) Kâbe canlı, Kur'an okuma/dinleme, hafızlık testi, Nur araçları ve radyo — HERKESE ÜCRETSİZ. 7) Çıktılarda köşede 'nurstudyo.com' etiketi olur (kaldırılamaz). — Başlamak için birebir! Ama sana NÛR PRO'yu öneririm 💎: günde 8 kısa + 3 uzun (600 sn) video, 25 kâri sesi, 60 tema, sinematik filtreler, renk çubuğu + özel yazı, Foto üzerine ayet (Ayet & Dua Kütüphanesi), 16:9 yatay format VE etiketsiz üretim (nurstudyo.com yazmaz). Kısacası Ücretsiz'in en az 2 katı hak. Aşağıdaki 💎 butonundan plan panelini açıp hemen inceleyebilirsin. 🌙",
     aksiyon: "uyelik",
   };
 }

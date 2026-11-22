@@ -43,7 +43,7 @@ export const ASISTAN_BILGI_KURALLARI: AsistanRule[] = [
   {
     id: "tema-sayisi",
     anahtar: ["tema sayisi", "kac tema", "tema nereden", "tema degistir", "tema rengi"],
-    cevap: "106 tema toplam: 9 ücretsiz, 51 PRO, 46 ELİT. Ayarlar → Tasarım ekranından tema seçilir; kilidi planınla açılır. 💎",
+    cevap: "106 tema toplam: 45 ücretsiz, 33 PRO, 28 ELİT. Ayarlar → Tasarım ekranından tema seçilir; kilidi planınla açılır. 💎",
   },
   {
     id: "ai-arkaplan",

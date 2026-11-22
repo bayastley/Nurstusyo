@@ -7,7 +7,7 @@ import type { Tier, VideoKind } from "../tier";
 
 // ★ SAYI DÜRÜSTLÜĞÜ (29.09 denetimi): buradaki her sayı koddaki gerçek veriyle
 //   eşleşir — 45 kâri (src/reciters.ts; 10 free + 15 pro + 20 elit, src/tier.ts), 1300+ benzersiz atmosfer
-//   klibi (src/clips/*), 106 tema (9 free + 51 pro + 46 elit, data/themesData.ts
+//   klibi (src/clips/*), 106 tema (45 free + 33 pro + 28 elit, data/themesData.ts
 //   THEME_TIER).
 //   ★ ETİKET KURALI (22.10 KULLANICI EMRİ): FREE = nurstudyo.com etiketi
 //   ZORUNLU · PRO = etiketsiz üretim · ELİT = etiketsiz + kendi marka
@@ -16,7 +16,7 @@ import type { Tier, VideoKind } from "../tier";
 export const PRO_FEATURES = [
   "Günde 8 kısa + 3 uzun video (600 sn)",
   "25 kâri sesi (10 ücretsiz + 15 PRO)",
-  "60 tema erişimi (51 PRO + 9 ücretsiz)",
+  "78 tema erişimi (33 PRO + 45 ücretsiz)",
   "Sinematik filtreler",
   "Renk çubuğu + özel yazı",
   "Foto üzerine ayet — Ayet & Dua Kütüphanesi",
