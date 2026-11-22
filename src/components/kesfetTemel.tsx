@@ -169,7 +169,7 @@ export const KARILER = [
 export const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
 
-export type SekmeId = "hadis" | "menkibeler" | "evliyalar" | "siyer" | "tarih" | "kissa" | "mezhepler" | "ilmihal" | "ahlak" | "yarisma" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
+export type SekmeId = "hadis" | "menkibeler" | "evliyalar" | "siyer" | "tarih" | "kissa" | "mezhepler" | "ilmihal" | "ahlak" | "yarisma" | "sahabeler" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
 
 export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "hadis", label: "Hadis Bankası", emoji: "📚" },
@@ -177,6 +177,7 @@ export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "evliyalar", label: "Evliyalar", emoji: "🌟" },
   { id: "siyer", label: "Siyer-i Nebi", emoji: "🕋" },
   { id: "tarih", label: "İslam Tarihi", emoji: "🕰️" },
+  { id: "sahabeler", label: "Sahabeler", emoji: "⭐" },
   { id: "kissa", label: "Kur'an Kıssaları", emoji: "🕌" },
   { id: "mezhepler", label: "Mezhepler", emoji: "🏛️" },
   { id: "ilmihal", label: "İlmihal Akademisi", emoji: "📗" },

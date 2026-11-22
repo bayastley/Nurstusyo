@@ -8,5 +8,6 @@ export { EsmaBolumu } from "./kesfetSekmeler/EsmaBolumu";
 export { SureBolumu } from "./kesfetSekmeler/SureBolumu";
 export { IlmihalBolumu } from "./kesfetSekmeler/IlmihalBolumu";
 export { TarihBolumu } from "./kesfetSekmeler/TarihBolumu";
+export { SahabelerBolumu } from "./kesfetSekmeler/SahabelerBolumu";
 export { AhlakBolumu } from "./kesfetSekmeler/AhlakBolumu";
 export { YarismaBolumu } from "./kesfetSekmeler/YarismaBolumu";

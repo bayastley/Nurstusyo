@@ -47,7 +47,7 @@ import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KAR
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
-import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, YarismaBolumu, TarihBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
+import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, YarismaBolumu, TarihBolumu, SahabelerBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
 import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
 
@@ -110,7 +110,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     sure: "ksSureBilgileri", namaz: "ksNamazOgretici", dua: "ksDuaRehberi", adab: "ksAdabiMuaseret",
     menkibeler: "ksMenkibeler", evliyalar: "ksEvliyalar", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
-    ilmihal: "ksIlmihal", tarih: "ksTarih", ahlak: "ksAhlak", yarisma: "ksYarisma",
+    ilmihal: "ksIlmihal", tarih: "ksTarih", ahlak: "ksAhlak", yarisma: "ksYarisma", sahabeler: "ksSahabeler",
   };
   // ★ 20.11: sözlükte karşılığı olmayan yeni sekmeler SEKMELER etiketine düşer (ham anahtar görünmez)
   const sekmeAdi = (id: string): string =>
@@ -508,6 +508,9 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           <TarihBolumu tt={tt} lang={lang} q={q} />
         </div>
       )}
+
+      {/* ── 21.11 SAHABELER: 20 önemli sahabe · her biri 500+ kelimelik biyografi ── */}
+      {sekme === "sahabeler" && <SahabelerBolumu tt={tt} lang={lang} q={q} />}
 
       {/* ── 19a: SİYER-İ NEBİ (31.10): Hz. Muhammed (s.a.v.) hayatı — kronolojik kategoriler ── */}
       {sekme === "menkibeler" && <MenkibelerBolumu tt={tt} />}
