@@ -2575,5 +2575,19 @@
   "ictYukle": "Yükle",
   "ictUretildi": "Üretildi",
   "ictIlerleme": "{d}/{t} üretildi",
-  "ictNot": "Satırdaki ayet stüdyoya eklenir; \"Üretildi\" işaretin bu cihazda saklanır."
+  "ictNot": "Satırdaki ayet stüdyoya eklenir; \"Üretildi\" işaretin bu cihazda saklanır.",
+  "sdBaslik": "Ses Düzenleme",
+  "sdSub": "Videoya uygulanacak ses ayarları",
+  "sdSeviye": "Ses seviyesi",
+  "sdSessizlik": "Sessizlik",
+  "sdBaslangic": "Başlangıç",
+  "sdFadeIn": "Fade-in",
+  "sdFadeOut": "Fade-out",
+  "sdOnizle": "Önizle",
+  "sdDurdur": "Durdur",
+  "sdYukleniyor": "İniyor…",
+  "sdSifirla": "Sıfırla",
+  "sdNot": "Ayarlar bir sonraki üretimde geçerli.",
+  "sdAyetYok": "Önizleme için önce bir ayet seç.",
+  "sdHata": "Ses indirilemedi — tekrar dene."
 }

@@ -1,4 +1,5 @@
 import { translate } from "../i18n";
+import { fadeEgrisi, sesAyarOku, sesBufferiniDuzenle } from "./sesDuzenleme";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 
@@ -387,6 +388,8 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
           notify(ttX2610("vgSesCozumHatasi"));
         }
       }
+      // ★ MADDE 21: ses düzenleme ayarları (seviye · sessizlik · başlangıç · fade)
+      const sesAyar = sesAyarOku();
       if (!kendiKullandi && surahOnlyReciter) {
         setProgress(10);
         const sNum = selected[0].s;
@@ -402,7 +405,8 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         try {
           const response = await fetch(url);
           if (response.ok) {
-            const buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+            const cozulen = await audioContext.decodeAudioData(await response.arrayBuffer());
+            const buffer = sesBufferiniDuzenle(cozulen, sesAyar);
             audioOffsets.push(0); buffers.push(buffer); usedItems.push(...selected);
             cursor = Math.min(buffer.duration, cap) + 0.03;
             const sureSüresi = cursor - 0.03;
@@ -448,7 +452,8 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
         const sesIndelmedi = sesSonucları.filter((sonuc) => !sonuc).length;
         for (const sonuc of sesSonucları) {
           if (!sonuc) continue;
-          const { item, buffer } = sonuc;
+          const { item, buffer: hamBuffer } = sonuc;
+          const buffer = sesBufferiniDuzenle(hamBuffer, sesAyar);
           if (cursor > 0 && cursor + buffer.duration > cap) break;
           audioOffsets.push(cursor); buffers.push(buffer); usedItems.push(item);
           ayetSüreleri.push({ start: cursor, dur: buffer.duration });
@@ -478,7 +483,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
       for (const sureSüresi of ayetSüreleri) sureSüresi.start += SES_BASLAMA_REZERV;
       cursor += SES_BASLAMA_REZERV;
       const total = cursor - .03, offline = new OfflineAudioContext(2, Math.ceil((total + .1) * 48000), 48000);
-      buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index], end = start + buffer.duration; const fadeIn = Math.min(.06, buffer.duration * .1), fadeOut = Math.min(.15, buffer.duration * .1); gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(.92, start + fadeIn); gain.gain.setValueAtTime(.92, Math.max(start + fadeIn, end - fadeOut)); gain.gain.linearRampToValueAtTime(0.001, end); source.connect(gain).connect(offline.destination); source.start(start); });
+      buffers.forEach((buffer, index) => { const source = offline.createBufferSource(), gain = offline.createGain(); source.buffer = buffer; const start = audioOffsets[index]; fadeEgrisi(gain, start, buffer.duration, sesAyar); source.connect(gain).connect(offline.destination); source.start(start); });
       setProgress(28); const rendered = await offline.startRendering(), canvas = canvasRef.current; if (!canvas) throw new Error("Önizleme bulunamadı");
 
       // ★ 29.10 KİLİTLİ KLİPS KORUMASI (kullanıcı: "video yine aynı çıktı"): üretim

@@ -2580,5 +2580,19 @@
   "ictYukle": "Muat",
   "ictUretildi": "Selesai",
   "ictIlerleme": "{d}/{t} selesai",
-  "ictNot": "Ayat ditambahkan ke studio; tanda \"Selesai\" tersimpan di perangkat ini."
+  "ictNot": "Ayat ditambahkan ke studio; tanda \"Selesai\" tersimpan di perangkat ini.",
+  "sdBaslik": "Edit Audio",
+  "sdSub": "Setelan audio untuk video",
+  "sdSeviye": "Volume",
+  "sdSessizlik": "Bersihkan senyap",
+  "sdBaslangic": "Potong awal",
+  "sdFadeIn": "Fade-in",
+  "sdFadeOut": "Fade-out",
+  "sdOnizle": "Pratinjau",
+  "sdDurdur": "Hentikan",
+  "sdYukleniyor": "Memuat…",
+  "sdSifirla": "Atur ulang",
+  "sdNot": "Setelan berlaku pada produksi berikutnya.",
+  "sdAyetYok": "Pilih ayat untuk pratinjau.",
+  "sdHata": "Audio gagal diunduh — coba lagi."
 }
