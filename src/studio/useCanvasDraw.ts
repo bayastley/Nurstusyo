@@ -9,7 +9,7 @@ import { CATEGORY_PALETTE } from "../clips";
 import { getVideoUrlSync, getPosterUrlSync, isR2Media } from "../videoUrl";
 import { toHiRes } from "../clips";
 import { dimensions } from "./studioHelpers";
-import { sahneGecis, gecisZarf } from "./sahneGecis";
+import { sahneGecis, gecisZarf, kayitAktif } from "./sahneGecis";
 import { CanvasDoldurucu, cubukRengi, drawMesajYazisi, type CubukAyar, type MesajAyar } from "./mesajKatmani";
 import type { Clip, CatId } from "../clips";
 import type { SelectedAyah, Aspect, Tier } from "../types";
@@ -197,14 +197,15 @@ export function useCanvasDraw(p: CanvasDrawParams) {
           const ayahBaslaG = p.previewIsSurah ? currentIndex * ayahSureG : 0;
           const gecenSn = Math.max(0, (performance.now() - sonAyetZamani) / 1000);
           // kayıtta önizleme süresi sabit kalır → referans süre olarak 4 sn kullanılır
-          const zarfSuresi = p.generating ? Math.max(ayahSureG, 4) : ayahSureG;
-          const ilerlemeG = p.generating
+          const kayitta = kayitAktif() || p.generating;
+          const zarfSuresi = kayitta ? Math.max(ayahSureG, 4) : ayahSureG;
+          const ilerlemeG = kayitta
             ? Math.min(1, gecenSn / (zarfSuresi > 0.01 ? zarfSuresi : 4))
             : (p.previewTime > 0 && ayahSureG > 0 ? Math.min(1, Math.max(0, (p.previewTime - ayahBaslaG) / ayahSureG)) : 1);
           const zarf = gecisZarf(gecis.tur, ilerlemeG, gecis.sure, zarfSuresi);
           const zoom = (1.03 + Math.sin(tick / 500) * 0.012) * zarf.yakinlasma;
           // GEÇİCİ TEŞHİS: kayıt sırasında zarfı okumak için (iş bitince kaldırılacak)
-          (window as unknown as { __nurZarf?: unknown }).__nurZarf = { tur: gecis.tur, sure: gecis.sure, ilerlemeG: Math.round(ilerlemeG * 1000) / 1000, karartma: Math.round(zarf.karartma * 100) / 100, generating: p.generating, ayahSureG: Math.round(ayahSureG * 100) / 100 };
+          (window as unknown as { __nurZarf?: unknown }).__nurZarf = { tur: gecis.tur, sure: gecis.sure, ilerlemeG: Math.round(ilerlemeG * 1000) / 1000, karartma: Math.round(zarf.karartma * 100) / 100, generating: kayitta, ayahSureG: Math.round(ayahSureG * 100) / 100 };
           if (p.cineFilter.css !== "none") { try { ctx.filter = p.cineFilter.css; } catch { /* ignore */ } }
           if (clip.kind === "vid") {
             const primaryUrl = getVideoUrlSync(clip), posterUrl = getPosterUrlSync(clip), video = p.ensureVideo(primaryUrl, isR2Media(clip) ? undefined : clip.src);

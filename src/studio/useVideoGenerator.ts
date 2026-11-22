@@ -1,5 +1,6 @@
 import { translate } from "../i18n";
 import { fadeEgrisi, sesAyarOku, sesBufferiniDuzenle } from "./sesDuzenleme";
+import { kayitBaslat, kayitBitir } from "./sahneGecis";
 // ★ 26.10 I18N KÖPRÜSÜ: oturumun dilini her çağrıda okur
 const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 
@@ -697,6 +698,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             }
           }, 200);
           const finishRecording = () => {
+            kayitBitir();
             if (finished) return; finished = true; window.clearInterval(syncTimer); window.clearInterval(framePump); window.clearTimeout(safetyTimer);
             // ★ 27.10 DÜRÜST UYARI: kayıt hedef sürenin erken kesilirse (tarayıcı motoru
             //   MediaRecorder'ı düşürdüğünde / çöktüğünde) kullanıcıya "yarım inmiş olabilir"
@@ -725,6 +727,7 @@ export function useVideoGenerator(params: UseVideoGeneratorParams) {
             await new Promise((resolve) => window.requestAnimationFrame(() => resolve(null)));
           }
           player.start();
+          kayitBaslat();
           await new Promise((resolve) => window.setTimeout(resolve, 250));
           // ★ 29.10 1-SANİYE KESİLME FİX (kullanıcı: "seçtiğim ayet 1 saniyede kapanıyor"):
           //   Chrome'un MediaRecorder MP4 muxer'ında start(timeslice) kombinasyonunda

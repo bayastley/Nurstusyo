@@ -82,3 +82,11 @@ export function gecisZarf(tur: GecisTuru, ilerleme: number, sure: number, ayetSu
   // sinematik: yumuşak karartma + yavaş yakınlaşma (ayet boyunca %6)
   return { karartma: k * 0.8, isik: k * 0.5, yakinlasma: 1 + 0.06 * (1 - p) };
 }
+
+// ★ KAYIT İŞARETİ (22.11): kayıt sırasında React prop'ları gecikmeli gelebildiği için
+//   geçiş zarfının zaman kaynağını üretici motor doğrudan işaretler.
+let kayitBaslangici = 0;
+
+export function kayitBaslat(): void { kayitBaslangici = performance.now(); }
+export function kayitBitir(): void { kayitBaslangici = 0; }
+export function kayitAktif(): boolean { return kayitBaslangici > 0; }
