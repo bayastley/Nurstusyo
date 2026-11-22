@@ -2372,7 +2372,7 @@
   "htEzberGunlukSoru": "أسئلة يومية",
   "htEzberHaftalikGun": "أيام/أسبوع",
   "htEzberAylikSure": "سور/شهر",
-  "htEzberPlanNot": "تُجدول السور الخاطئة للمراجعة بعد 1/3/7/30 يومًا (على الجهاز).",
+  "htEzberPlanNot": "تُضاف الآيات التي تخطئ فيها إلى قائمة مراجعة بعد 1/3/7/30/60 يومًا، ويزيد الفاصل كلما تذكرتها (على الجهاز).",
   "ksKazaPlanBaslik": "مخطط قضاء الصلوات",
   "ksKazaPlanNot": "أنشئ خطة لقضاء الصلوات وتابع تقدمك. محفوظ على هذا الجهاز فقط.",
   "ksKazaToplam": "إجمالي القضاء",
@@ -2565,5 +2565,10 @@
   "itA11ySifirla": "إعادة تعيين",
   "akQrLinkKopyalandi": "تم نسخ رابط QR",
   "akQrLinkKopyala": "نسخ الرابط",
-  "ksCevrimdisiUyari": "يبدو أنك غير متصل بالإنترنت. يمكنك متابعة البحث في الأحاديث المحلية."
+  "ksCevrimdisiUyari": "يبدو أنك غير متصل بالإنترنت. يمكنك متابعة البحث في الأحاديث المحلية.",
+  "htEzberAyet": "· آية",
+  "htEzberBildim": "أجبت",
+  "htEzberBilemedim": "أخطأت",
+  "htEzberGecikme": "تأخير {g} يوم",
+  "htEzberKaldir": "إزالة من القائمة"
 }

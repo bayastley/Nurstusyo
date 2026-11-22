@@ -309,47 +309,117 @@ export function rozetleriTazele(): string[] {
   } catch { return []; }
 }
 
-/** ── Akıllı Ezber Tekrarı (madde 4 geliştirme) ─────────────────
- *  Yanlış yapılan surelere 1 gün / 3 gün / 7 gün / 30 gün tekrar önerisi.
- *  Cihazda saklanır; sunucu yok.
+/** ── Akıllı Ezber Tekrarı (madde 4) ─────────────────────────
+ *  Yanlış yapılan AYETLER kaydedilir; 1/3/7/30/60 günlük aralıklarla tekrar
+ *  önerilir. Aralık, kaydın kolaylık çarpanıyla ölçeklenir (SM-2 esinli):
+ *  doğru bildikçe aralık uzar, bilemedikçe kısalır. Cihazda saklanır.
  */
 export interface EzberTekrarKaydi {
   sure: number;
+  /** 0 = sure geneli (eski kayıtlar), >0 = belirli ayet */
+  ayet: number;
   eklenme: number;
-  /** 0=1gün, 1=3gün, 2=7gün, 3=30gün */
+  /** üst üste doğru sayısı → aralık tablosunda indeks */
   seviye: number;
   sonTekrar: number;
+  /** kolaylık çarpanı 1.3–2.8; unutma riski yüksekse düşer */
+  kolaylik: number;
+  yanlisSayisi: number;
+  dogruSayisi: number;
 }
 const EZBER_TEKRAR_KEY = "nur_ezber_tekrar_v1";
-const TEKRAR_ARALIKLARI = [1, 3, 7, 30];
+const TEKRAR_ARALIKLARI = [1, 3, 7, 30, 60];
+const GUN_MS = 86400000;
+
+function ezberKaydiNormalize(v: unknown): EzberTekrarKaydi | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Partial<EzberTekrarKaydi>;
+  const sure = Number(o.sure);
+  if (!Number.isFinite(sure) || sure <= 0) return null;
+  const ayet = Number(o.ayet);
+  return {
+    sure,
+    ayet: Number.isFinite(ayet) ? Math.max(0, Math.trunc(ayet)) : 0,
+    eklenme: Number(o.eklenme) || Date.now(),
+    seviye: Math.min(TEKRAR_ARALIKLARI.length - 1, Math.max(0, Math.trunc(Number(o.seviye) || 0))),
+    sonTekrar: Number(o.sonTekrar) || 0,
+    kolaylik: Math.min(2.8, Math.max(1.3, Number(o.kolaylik) || 2.5)),
+    yanlisSayisi: Math.max(0, Math.trunc(Number(o.yanlisSayisi) || 0)),
+    dogruSayisi: Math.max(0, Math.trunc(Number(o.dogruSayisi) || 0)),
+  };
+}
 
 export function ezberTekrarOku(): EzberTekrarKaydi[] {
-  try { return JSON.parse(localStorage.getItem(EZBER_TEKRAR_KEY) || "[]"); } catch { return []; }
+  try {
+    const ham: unknown = JSON.parse(localStorage.getItem(EZBER_TEKRAR_KEY) || "[]");
+    if (!Array.isArray(ham)) return [];
+    return ham.map(ezberKaydiNormalize).filter((k): k is EzberTekrarKaydi => k !== null);
+  } catch { return []; }
 }
 export function ezberTekrarYaz(l: EzberTekrarKaydi[]) {
   try { localStorage.setItem(EZBER_TEKRAR_KEY, JSON.stringify(l)); } catch { /* ignore */ }
 }
-export function ezberTekrarEkle(sure: number): void {
+/** Bir kaydın tekrar aralığı (gün) — kolaylık çarpanıyla ölçeklenir */
+export function ezberTekrarAralikGun(k: EzberTekrarKaydi): number {
+  const taban = TEKRAR_ARALIKLARI[Math.min(k.seviye, TEKRAR_ARALIKLARI.length - 1)];
+  return Math.max(1, Math.round(taban * (k.kolaylik / 2.5)));
+}
+export function ezberTekrarVade(k: EzberTekrarKaydi): number {
+  return (k.sonTekrar || k.eklenme) + ezberTekrarAralikGun(k) * GUN_MS;
+}
+/** Vadeye kalan gün; negatifse gecikme günü */
+export function ezberTekrarKalanGun(k: EzberTekrarKaydi): number {
+  return Math.ceil((ezberTekrarVade(k) - Date.now()) / GUN_MS);
+}
+export function ezberTekrarEkle(sure: number, ayet = 0): void {
   const l = ezberTekrarOku();
-  if (l.some((x) => x.sure === sure)) return;
-  l.push({ sure, eklenme: Date.now(), seviye: 0, sonTekrar: 0 });
+  if (l.some((x) => x.sure === sure && x.ayet === ayet)) return;
+  l.push({ sure, ayet, eklenme: Date.now(), seviye: 0, sonTekrar: 0, kolaylik: 2.5, yanlisSayisi: 1, dogruSayisi: 0 });
   ezberTekrarYaz(l);
 }
-export function ezberTekrarTamamla(sure: number): void {
+/** Tekrar sonucunu işle: doğru → aralık uzar, yanlış → başa döner */
+export function ezberTekrarCevapla(sure: number, ayet: number, dogru: boolean): void {
   const l = ezberTekrarOku();
-  const i = l.findIndex((x) => x.sure === sure);
-  if (i < 0) return;
-  l[i].seviye = Math.min(3, l[i].seviye + 1);
-  l[i].sonTekrar = Date.now();
+  const i = l.findIndex((x) => x.sure === sure && x.ayet === ayet);
+  if (i < 0) {
+    if (!dogru) ezberTekrarEkle(sure, ayet);
+    return;
+  }
+  const k = l[i];
+  if (dogru) {
+    k.seviye = Math.min(TEKRAR_ARALIKLARI.length - 1, k.seviye + 1);
+    k.kolaylik = Math.min(2.8, k.kolaylik + 0.05);
+    k.dogruSayisi += 1;
+  } else {
+    k.seviye = 0;
+    k.kolaylik = Math.max(1.3, k.kolaylik - 0.2);
+    k.yanlisSayisi += 1;
+  }
+  k.sonTekrar = Date.now();
   ezberTekrarYaz(l);
+}
+/** Geriye uyum: tekrar tamamlandı = doğru bilindi */
+export function ezberTekrarTamamla(sure: number, ayet = 0): void {
+  ezberTekrarCevapla(sure, ayet, true);
+}
+export function ezberTekrarSil(sure: number, ayet = 0): void {
+  ezberTekrarYaz(ezberTekrarOku().filter((x) => !(x.sure === sure && x.ayet === ayet)));
 }
 export function ezberTekrarBugun(): EzberTekrarKaydi[] {
   const now = Date.now();
-  return ezberTekrarOku().filter((k) => {
-    const gun = TEKRAR_ARALIKLARI[k.seviye] ?? 30;
-    const hedef = (k.sonTekrar || k.eklenme) + gun * 86400000;
-    return hedef <= now;
-  });
+  return ezberTekrarOku()
+    .filter((k) => ezberTekrarVade(k) <= now)
+    .sort((a, b) => ezberTekrarVade(a) - ezberTekrarVade(b));
+}
+export function ezberTekrarOzet(): { bugun: number; yarin: number; toplam: number } {
+  const now = Date.now();
+  const l = ezberTekrarOku();
+  const yarinSon = now + GUN_MS;
+  return {
+    bugun: l.filter((k) => ezberTekrarVade(k) <= now).length,
+    yarin: l.filter((k) => ezberTekrarVade(k) > now && ezberTekrarVade(k) <= yarinSon).length,
+    toplam: l.length,
+  };
 }
 
 /** ── Ezber Planlayıcısı (madde 42) ────────────────────────── */

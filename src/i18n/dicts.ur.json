@@ -2372,7 +2372,7 @@
   "htEzberGunlukSoru": "روزانہ سوالات",
   "htEzberHaftalikGun": "دن/ہفتہ",
   "htEzberAylikSure": "سورتیں/ماہ",
-  "htEzberPlanNot": "غلط سورتیں 1/3/7/30 دن بعد دہرائی کے لیے شیڈول ہوتی ہیں (آلہ پر).",
+  "htEzberPlanNot": "غلط آیات 1/3/7/30/60 دن کی تکرار فہرست میں شامل ہوتی ہیں؛ یاد آنے پر وقفہ بڑھتا ہے (ڈیوائس پر)۔",
   "ksKazaPlanBaslik": "قضا نماز پلانر",
   "ksKazaPlanNot": "قضا نماز کا منصوبہ بنائیں اور پیشرفت ٹریک کریں۔ صرف اس آلہ پر محفوظ۔",
   "ksKazaToplam": "کل قضا",
@@ -2565,5 +2565,10 @@
   "itA11ySifirla": "ری سیٹ",
   "akQrLinkKopyalandi": "QR لنک کاپی ہو گیا",
   "akQrLinkKopyala": "لنک کاپی کریں",
-  "ksCevrimdisiUyari": "ایسا لگتا ہے کہ آپ انٹرنیٹ سے منسلک نہیں ہیں۔ آپ مقامی احادیث میں تلاش جاری رکھ سکتے ہیں۔"
+  "ksCevrimdisiUyari": "ایسا لگتا ہے کہ آپ انٹرنیٹ سے منسلک نہیں ہیں۔ آپ مقامی احادیث میں تلاش جاری رکھ سکتے ہیں۔",
+  "htEzberAyet": "· آیت",
+  "htEzberBildim": "آتا تھا",
+  "htEzberBilemedim": "نہیں آیا",
+  "htEzberGecikme": "{g} دن تاخیر",
+  "htEzberKaldir": "فہرست سے ہٹائیں"
 }

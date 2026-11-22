@@ -2372,7 +2372,7 @@
   "htEzberGunlukSoru": "Günlük soru",
   "htEzberHaftalikGun": "Haftalık gün",
   "htEzberAylikSure": "Aylık sure",
-  "htEzberPlanNot": "Yanlış yapılan sureler 1/3/7/30 gün tekrar listesine eklenir (cihazda).",
+  "htEzberPlanNot": "Yanlış yapılan ayetler 1/3/7/30/60 günlük tekrar listesine eklenir; doğru bildikçe aralık uzar (cihazda).",
   "ksKazaPlanBaslik": "Kaza Namazı Planlayıcısı",
   "ksKazaPlanNot": "Kaza namazı planını oluştur ve ilerlemeni takip et. Yalnızca bu cihazda saklanır.",
   "ksKazaToplam": "Toplam kaza",
@@ -2560,5 +2560,10 @@
   "itA11ySifirla": "Sıfırla",
   "akQrLinkKopyalandi": "QR bağlantısı kopyalandı",
   "akQrLinkKopyala": "Link kopyala",
-  "ksCevrimdisiUyari": "İnternete bağlı görünmüyorsunuz. Yerel hadislerde aramaya devam edebilirsiniz."
+  "ksCevrimdisiUyari": "İnternete bağlı görünmüyorsunuz. Yerel hadislerde aramaya devam edebilirsiniz.",
+  "htEzberAyet": ". ayet",
+  "htEzberBildim": "Bildim",
+  "htEzberBilemedim": "Bilemedim",
+  "htEzberGecikme": "{g} gün gecikme",
+  "htEzberKaldir": "Listeden kaldır"
 }

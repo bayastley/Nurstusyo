@@ -18,6 +18,7 @@ import {
   hafizlikIstKaydet, hafizlikIstOku, hafizlikDevamOku, hafizlikDevamKaydet,
   rozetleriTazele, type HafizlikIstatistik,
   ezberHedefOku, ezberHedefYaz, ezberHedefIlerlet, ezberHedefBugunSifirla, ezberTekrarBugun, ezberTekrarEkle,
+  ezberTekrarCevapla, ezberTekrarSil, ezberTekrarKalanGun,
 } from "../hafizlikIstatistik";
 import { seriOkundu } from "../studio/gunlukSeri"; // ★ 02.11: hafızlık turu bitince günün serisi dolsun
 // ★ SRP adım 2 (30.09): sure havuzları + seviyeler + tur boyutları hafizlikVeri.ts'e
@@ -133,7 +134,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   // ★ ttX2610("htDevam") (madde 38)
   const [devam, setDevam] = useState(() => hafizlikDevamOku());
   const [ezberHedef, setEzberHedef] = useState(() => ezberHedefOku());
-  const [tekrarBugun] = useState(() => ezberTekrarBugun());
+  const [tekrarBugun, setTekrarBugun] = useState(() => ezberTekrarBugun());
   // ★ Sınırsız mod otomatik-tekrar referansları (28.09): modal kapanınca zamanlayıcı durur
   const yenidenDeneRef = React.useRef(0);
   const openRef = React.useRef(open);
@@ -310,7 +311,12 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
     setSecim(i);
     const dogruMu = soru.secenekler[i] === soru.devam;
     setPuan((p) => ({ dogru: p.dogru + (dogruMu ? 1 : 0), toplam: p.toplam + 1 }));
-    if (!dogruMu) { setYanlis((v) => v + 1); ezberTekrarEkle(soru.s); }
+    // ★ Akıllı ezber tekrarı (madde 4): yanlış AYET kaydedilir, doğru bilinen tekrarın
+    //   aralığı uzar. (Önceden sure geneli tutuluyordu.)
+    if (!dogruMu) setYanlis((v) => v + 1);
+    if (dogruMu) ezberTekrarCevapla(soru.s, soru.a, true);
+    else ezberTekrarEkle(soru.s, soru.a);
+    setTekrarBugun(ezberTekrarBugun());
     // ★ Geçmişe kaydet — özette "neden yanlış" listesi bununla kurulur
     setGecmis((g) => [...g, { sn: soru.sn, a: soru.a, dogru: dogruMu, devam: soru.devam }]);
     // ★ İstatistik + rozet kaydı (madde 52 & 16) — yalnız cihazda
@@ -504,7 +510,24 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
                 </>
               );
             })()}
-            {tekrarBugun.length > 0 && <p className="mb-2 text-[9px] text-amber-200">{tt("htEzberBugunTekrar")}: {tekrarBugun.map(t=>t.sure).slice(0,6).join(", ")}</p>}
+            {tekrarBugun.length > 0 && (
+              <div className="mb-2 rounded-lg border border-amber-400/25 bg-amber-500/5 p-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-amber-200">{tt("htEzberBugunTekrar")} · {tekrarBugun.length}</p>
+                <ul className="mt-1 space-y-1">
+                  {tekrarBugun.slice(0, 6).map((k) => (
+                    <li key={`${k.sure}-${k.ayet}`} className="flex items-center gap-1 text-[9px] text-white/70">
+                      <span className="min-w-0 flex-1 truncate">
+                        {k.sure}{tt("htEzberSure")}{k.ayet > 0 ? ` · ${k.ayet}${tt("htEzberAyet")}` : ""}
+                        {" · "}{tt("htEzberGecikme").replace("{g}", String(Math.abs(ezberTekrarKalanGun(k))))}
+                      </span>
+                      <button type="button" onClick={() => { ezberTekrarCevapla(k.sure, k.ayet, true); setTekrarBugun(ezberTekrarBugun()); }} className="rounded bg-emerald-500/20 px-1.5 py-0.5 font-bold text-emerald-200">{tt("htEzberBildim")}</button>
+                      <button type="button" onClick={() => { ezberTekrarCevapla(k.sure, k.ayet, false); setTekrarBugun(ezberTekrarBugun()); }} className="rounded bg-red-500/20 px-1.5 py-0.5 font-bold text-red-200">{tt("htEzberBilemedim")}</button>
+                      <button type="button" aria-label={tt("htEzberKaldir")} onClick={() => { ezberTekrarSil(k.sure, k.ayet); setTekrarBugun(ezberTekrarBugun()); }} className="text-white/30">✕</button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <div className="grid grid-cols-3 gap-1.5 text-[9px]">
               <label className="text-white/50">{tt("htEzberGunlukSoru")}<input type="number" min={3} max={200} value={ezberHedef.gunlukSoru} onChange={e=>{const h={...ezberHedef,gunlukSoru:Number(e.target.value)||10}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>
               <label className="text-white/50">{tt("htEzberHaftalikGun")}<input type="number" min={1} max={7} value={ezberHedef.haftalikGun} onChange={e=>{const h={...ezberHedef,haftalikGun:Number(e.target.value)||5}; setEzberHedef(h); ezberHedefYaz(h);}} className="mt-0.5 w-full rounded bg-white/5 px-2 py-1 text-white" /></label>

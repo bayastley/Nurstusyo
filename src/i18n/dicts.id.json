@@ -2372,7 +2372,7 @@
   "htEzberGunlukSoru": "Soal harian",
   "htEzberHaftalikGun": "Hari/minggu",
   "htEzberAylikSure": "Surah/bulan",
-  "htEzberPlanNot": "Surah yang salah dijadwalkan ulang setelah 1/3/7/30 hari (di perangkat).",
+  "htEzberPlanNot": "Ayat yang salah masuk daftar ulang 1/3/7/30/60 hari; jeda memanjang saat Anda mengingatnya (di perangkat).",
   "ksKazaPlanBaslik": "Perencana Qada Salat",
   "ksKazaPlanNot": "Buat rencana qada salat dan lacak progres. Hanya tersimpan di perangkat ini.",
   "ksKazaToplam": "Total qada",
@@ -2565,5 +2565,10 @@
   "itA11ySifirla": "Atur ulang",
   "akQrLinkKopyalandi": "Tautan QR disalin",
   "akQrLinkKopyala": "Salin tautan",
-  "ksCevrimdisiUyari": "Sepertinya Anda tidak terhubung ke internet. Anda masih dapat mencari di hadis lokal."
+  "ksCevrimdisiUyari": "Sepertinya Anda tidak terhubung ke internet. Anda masih dapat mencari di hadis lokal.",
+  "htEzberAyet": ". ayat",
+  "htEzberBildim": "Tahu",
+  "htEzberBilemedim": "Tidak tahu",
+  "htEzberGecikme": "terlambat {g} hari",
+  "htEzberKaldir": "Hapus dari daftar"
 }
