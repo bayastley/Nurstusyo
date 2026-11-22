@@ -2570,5 +2570,15 @@
   "htEzberBildim": "Knew it",
   "htEzberBilemedim": "Missed it",
   "htEzberGecikme": "{g}d overdue",
-  "htEzberKaldir": "Remove from list"
+  "htEzberKaldir": "Remove from list",
+  "ictBaslik": "Content Calendar",
+  "ictSub": "Your daily production plan",
+  "ictHafta": "7 days",
+  "ictAy": "30 days",
+  "ictBugun": "Today",
+  "ictYarin": "Tomorrow",
+  "ictYukle": "Load",
+  "ictUretildi": "Produced",
+  "ictIlerleme": "{d}/{t} produced",
+  "ictNot": "The verse is added to the studio; \"Produced\" marks stay on this device."
 }

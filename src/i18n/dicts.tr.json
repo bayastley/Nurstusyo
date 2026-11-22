@@ -2565,5 +2565,15 @@
   "htEzberBildim": "Bildim",
   "htEzberBilemedim": "Bilemedim",
   "htEzberGecikme": "{g} gün gecikme",
-  "htEzberKaldir": "Listeden kaldır"
+  "htEzberKaldir": "Listeden kaldır",
+  "ictBaslik": "İçerik Takvimi",
+  "ictSub": "Günlük üretim planın",
+  "ictHafta": "7 gün",
+  "ictAy": "30 gün",
+  "ictBugun": "Bugün",
+  "ictYarin": "Yarın",
+  "ictYukle": "Yükle",
+  "ictUretildi": "Üretildi",
+  "ictIlerleme": "{d}/{t} üretildi",
+  "ictNot": "Satırdaki ayet stüdyoya eklenir; \"Üretildi\" işaretin bu cihazda saklanır."
 }

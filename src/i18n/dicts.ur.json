@@ -2570,5 +2570,15 @@
   "htEzberBildim": "آتا تھا",
   "htEzberBilemedim": "نہیں آیا",
   "htEzberGecikme": "{g} دن تاخیر",
-  "htEzberKaldir": "فہرست سے ہٹائیں"
+  "htEzberKaldir": "فہرست سے ہٹائیں",
+  "ictBaslik": "مواد کا کیلنڈر",
+  "ictSub": "آپ کا روزانہ پیداواری منصوبہ",
+  "ictHafta": "7 دن",
+  "ictAy": "30 دن",
+  "ictBugun": "آج",
+  "ictYarin": "کل",
+  "ictYukle": "لوڈ",
+  "ictUretildi": "تیار",
+  "ictIlerleme": "{d}/{t} تیار",
+  "ictNot": "آیت اسٹوڈیو میں شامل ہوتی ہے؛ \"تیار\" کا نشان اسی ڈیوائس پر محفوظ رہتا ہے۔"
 }

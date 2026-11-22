@@ -2570,5 +2570,15 @@
   "htEzberBildim": "Tahu",
   "htEzberBilemedim": "Tidak tahu",
   "htEzberGecikme": "terlambat {g} hari",
-  "htEzberKaldir": "Hapus dari daftar"
+  "htEzberKaldir": "Hapus dari daftar",
+  "ictBaslik": "Kalender Konten",
+  "ictSub": "Rencana produksi harianmu",
+  "ictHafta": "7 hari",
+  "ictAy": "30 hari",
+  "ictBugun": "Hari ini",
+  "ictYarin": "Besok",
+  "ictYukle": "Muat",
+  "ictUretildi": "Selesai",
+  "ictIlerleme": "{d}/{t} selesai",
+  "ictNot": "Ayat ditambahkan ke studio; tanda \"Selesai\" tersimpan di perangkat ini."
 }

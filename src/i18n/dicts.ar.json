@@ -2570,5 +2570,15 @@
   "htEzberBildim": "أجبت",
   "htEzberBilemedim": "أخطأت",
   "htEzberGecikme": "تأخير {g} يوم",
-  "htEzberKaldir": "إزالة من القائمة"
+  "htEzberKaldir": "إزالة من القائمة",
+  "ictBaslik": "تقويم المحتوى",
+  "ictSub": "خطة إنتاجك اليومية",
+  "ictHafta": "٧ أيام",
+  "ictAy": "٣٠ يومًا",
+  "ictBugun": "اليوم",
+  "ictYarin": "غدًا",
+  "ictYukle": "تحميل",
+  "ictUretildi": "تم الإنتاج",
+  "ictIlerleme": "{d}/{t} تم إنتاجه",
+  "ictNot": "تُضاف الآية إلى الاستوديو، وتبقى علامة \"تم الإنتاج\" على هذا الجهاز."
 }

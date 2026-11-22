@@ -90,6 +90,7 @@ import { GunlukSeriRozeti } from "./studio/GunlukSeriRozeti";
 import { MiniTur } from "./components/MiniTur"; // ★ madde 3: ilk girişte 5 duraklı tur
 import { SevapSayaciKarti } from "./components/SevapSayaciKarti"; // ★ madde 4: dürüst aylık harf sayacı
 import { GununHazirVideosu } from "./components/GununHazirVideosu";
+import { IcerikTakvimi } from "./components/IcerikTakvimi";
 import { OnerilenVideolar, type OneriVideo } from "./components/OnerilenVideolar"; // ★ 22.10: güne özel hazır video taslakları
 import { PwaKurulumBanneri } from "./components/PwaKurulumBanneri";
 import { AsistanBaloncugu } from "./components/AsistanBaloncugu"; // ★ 19.10 ücretsiz SSS asistanı
@@ -146,7 +147,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
   // ★ 16.11 HAZIR TASLAK YUVASI (kullanıcı: "önerilen klip aşırı yer kaplıyor"):
   //   günün videosu + önerilen klipler tek yuvada sekme oldu. Aktif sekmeye
   //   tekrar basınca yuva kapanır (orta kolonda 332 px yer kaplıyordu).
-  const [taslakSekme, setTaslakSekme] = useState<"gun" | "oneri" | null>("gun");
+  const [taslakSekme, setTaslakSekme] = useState<"gun" | "oneri" | "takvim" | null>("gun");
   const {
     adminGodMode, setAdminGodMode, setIsMasterSürüm, maintenance, isDevMaster, isMasterSürüm, setSentCode, setAdminSonEmail, notify,
     telifUyariAcik, setTelifUyariAcik,
@@ -381,6 +382,7 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           {([
             { id: "gun" as const, etiket: ttX2610("gvBaslik") },
             { id: "oneri" as const, etiket: ttX2610("ovBaslik") },
+            { id: "takvim" as const, etiket: ttX2610("ictBaslik") },
           ]).map((s) => (
             <button
               key={s.id}
@@ -416,6 +418,9 @@ export default function StudioApp({ isMasterSürüm: developerMaster = DEFAULT_M
           userAnahtar={user?.email || "misafir"}
           onUret={oneriUygulaVeUret}
         />
+        )}
+        {taslakSekme === "takvim" && (
+        <IcerikTakvimi ayetEkle={(s, a) => { if (!selectedRef.current.some((item) => item.id === `${s}:${a}`)) void addAyah(s, a); }} />
         )}
         <PanelSuspense minHeight={360}>
         <VideoPreviewSection
