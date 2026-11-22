@@ -25,10 +25,14 @@ export const SahneGecisPaneli: React.FC = () => {
   const gt = (k: string): string => translate(dil, k);
   const [ayar, setAyar] = React.useState<SahneGecisAyar>(() => sahneGecis());
 
+  // ★ ART ARDA SEÇİM: preset + süre aynı anda değişirse eski state yazılmasın
+  //   (fonksiyonel güncelleme — stale closure yok)
   const uygula = (yama: Partial<SahneGecisAyar>) => {
-    const yeni = { ...ayar, ...yama };
-    setAyar(yeni);
-    sahneGecisYaz(yeni);
+    setAyar((onceki) => {
+      const yeni = { ...onceki, ...yama };
+      sahneGecisYaz(yeni);
+      return yeni;
+    });
   };
 
   return (
