@@ -1,0 +1,438 @@
+{
+  "src/data/arkaplanCokDil.ts": {
+    "adet": 55,
+    "ozet": "414c180479e9b6ea"
+  },
+  "src/data/arkaplanUretici.ts": {
+    "adet": 4,
+    "ozet": "ddc3ed9064459612"
+  },
+  "src/data/ayetBaslikHaritaAr.p1.ts": {
+    "adet": 288,
+    "ozet": "7d68f6025b9ba5c5"
+  },
+  "src/data/ayetBaslikHaritaAr.p2.ts": {
+    "adet": 287,
+    "ozet": "6eae773035aeaae0"
+  },
+  "src/data/ayetBaslikHaritaUr.p1.ts": {
+    "adet": 287,
+    "ozet": "c2a509fafd378713"
+  },
+  "src/data/ayetBaslikHaritaUr.p2.ts": {
+    "adet": 288,
+    "ozet": "9c1c46a36b5aca2b"
+  },
+  "src/data/ayetKartlariData.ts": {
+    "adet": 70,
+    "ozet": "71d4e0ddf8e2a419"
+  },
+  "src/data/ayetKartlariEk.ts": {
+    "adet": 118,
+    "ozet": "7fc2d77f6cfcc735"
+  },
+  "src/data/ayetKartlariMega/parca1.ts": {
+    "adet": 73,
+    "ozet": "74277635256f7e77"
+  },
+  "src/data/ayetKartlariMega/parca2.ts": {
+    "adet": 73,
+    "ozet": "a916f0a9da22dcb8"
+  },
+  "src/data/ayetKartlariMega/parca3.ts": {
+    "adet": 72,
+    "ozet": "909f9ddbbd79fd34"
+  },
+  "src/data/ayetKartlariMega2/parca1.ts": {
+    "adet": 69,
+    "ozet": "f5ea1c61c52c6243"
+  },
+  "src/data/ayetKartlariMega2/parca2.ts": {
+    "adet": 69,
+    "ozet": "b93000100ce6bb12"
+  },
+  "src/data/ayetKartlariMega2/parca3.ts": {
+    "adet": 67,
+    "ozet": "5c8edaf60caae65d"
+  },
+  "src/data/ayetMealCokDil.ts": {
+    "adet": 1,
+    "ozet": "6d5e799c2b4b2bde"
+  },
+  "src/data/ayetPaketleriCokDil.ts": {
+    "adet": 20,
+    "ozet": "97d5af325cb52601"
+  },
+  "src/data/duaCokDil.ts": {
+    "adet": 66,
+    "ozet": "c6528a02f4778684"
+  },
+  "src/data/duaData.ts": {
+    "adet": 6,
+    "ozet": "e000a8580fe75bf8"
+  },
+  "src/data/esmaHusna.ts": {
+    "adet": 99,
+    "ozet": "a544a0212c0f253c"
+  },
+  "src/data/evliyalat/ev-01.ts": {
+    "adet": 38,
+    "ozet": "28aa7c30875d9259"
+  },
+  "src/data/evliyalat/ev-02.ts": {
+    "adet": 38,
+    "ozet": "444c785ad5b0c69a"
+  },
+  "src/data/evliyalat/ev-04.ts": {
+    "adet": 38,
+    "ozet": "397232601f08dc10"
+  },
+  "src/data/evliyalat/ev-05.ts": {
+    "adet": 38,
+    "ozet": "ee25e605ce604459"
+  },
+  "src/data/evliyalat/ev-06.ts": {
+    "adet": 38,
+    "ozet": "eb85f90a7973233d"
+  },
+  "src/data/evliyalat/ev-07.ts": {
+    "adet": 38,
+    "ozet": "23341256ca4c8f08"
+  },
+  "src/data/evliyalat/ev-08.ts": {
+    "adet": 38,
+    "ozet": "4a21003d53c258b1"
+  },
+  "src/data/evliyalat/ev-09.ts": {
+    "adet": 38,
+    "ozet": "08ca79542562a3d3"
+  },
+  "src/data/evliyalat/ev-10.ts": {
+    "adet": 38,
+    "ozet": "1e3a337b51635fbb"
+  },
+  "src/data/evliyalat/ev-11.ts": {
+    "adet": 33,
+    "ozet": "8922f48583ccab4b"
+  },
+  "src/data/evliyalat/ev-12.ts": {
+    "adet": 33,
+    "ozet": "8432ff34dd92b28e"
+  },
+  "src/data/evliyalat/ev-13.ts": {
+    "adet": 33,
+    "ozet": "355f4d7d160999bc"
+  },
+  "src/data/evliyalat/ev-14.ts": {
+    "adet": 28,
+    "ozet": "e3fa4ff31e6fbc83"
+  },
+  "src/data/evliyalat/ev-15.ts": {
+    "adet": 28,
+    "ozet": "210d9faccd161597"
+  },
+  "src/data/evliyalat/ev-16.ts": {
+    "adet": 28,
+    "ozet": "9be8d5789ea0365e"
+  },
+  "src/data/evliyalat/ev-17.ts": {
+    "adet": 28,
+    "ozet": "0c851431848527bf"
+  },
+  "src/data/evliyalat/ev-18.ts": {
+    "adet": 33,
+    "ozet": "2abb0ae711f4ffc3"
+  },
+  "src/data/evliyalat/ev-19.ts": {
+    "adet": 28,
+    "ozet": "d41e142642058daf"
+  },
+  "src/data/evliyalat/ev-20.ts": {
+    "adet": 28,
+    "ozet": "50e636f578e9d8d2"
+  },
+  "src/data/evliyalat/ev-21.ts": {
+    "adet": 28,
+    "ozet": "7cfebb219aa3b054"
+  },
+  "src/data/evliyalat/ev-22.ts": {
+    "adet": 28,
+    "ozet": "948aaaec2e8d2572"
+  },
+  "src/data/evliyalat/ev-23.ts": {
+    "adet": 28,
+    "ozet": "236fe84cb71d412b"
+  },
+  "src/data/evliyalat/ev-24.ts": {
+    "adet": 28,
+    "ozet": "1ebb124825e3c2f4"
+  },
+  "src/data/evliyalat/ev-25.ts": {
+    "adet": 28,
+    "ozet": "623d2183fc602805"
+  },
+  "src/data/evliyalat/ev-26.ts": {
+    "adet": 28,
+    "ozet": "8b967731e907b56d"
+  },
+  "src/data/evliyalat/ev-27.ts": {
+    "adet": 28,
+    "ozet": "84f1cf3094a31bd2"
+  },
+  "src/data/evliyalat/ev-28.ts": {
+    "adet": 28,
+    "ozet": "1941bb1edc966200"
+  },
+  "src/data/evliyalat/ev-29.ts": {
+    "adet": 28,
+    "ozet": "1843ae38e8ba18bf"
+  },
+  "src/data/evliyalat/ev-30.ts": {
+    "adet": 28,
+    "ozet": "70cafbd15769095c"
+  },
+  "src/data/evliyalat/ev-31.ts": {
+    "adet": 28,
+    "ozet": "d2946bc72c8a0713"
+  },
+  "src/data/evliyalat/ev-32.ts": {
+    "adet": 28,
+    "ozet": "73412e0f52e08f0c"
+  },
+  "src/data/evliyalat/ev-33.ts": {
+    "adet": 28,
+    "ozet": "d4471b70efa2c64b"
+  },
+  "src/data/evliyalat/ev-34.ts": {
+    "adet": 28,
+    "ozet": "9e0dcc77b29b23ae"
+  },
+  "src/data/hadisGenis.ts": {
+    "adet": 233,
+    "ozet": "b770024204cbcdc6"
+  },
+  "src/data/hadisGenisEk.ts": {
+    "adet": 52,
+    "ozet": "508be5cd9e018f68"
+  },
+  "src/data/hashtags.ts": {
+    "adet": 22,
+    "ozet": "0a14c3aba87f27f0"
+  },
+  "src/data/hediyeCokDil.ts": {
+    "adet": 118,
+    "ozet": "bcf9b12bc6106ea3"
+  },
+  "src/data/kategoriCokDil.ts": {
+    "adet": 104,
+    "ozet": "18beef9d99d02634"
+  },
+  "src/data/kelimeCipCokDil.ts": {
+    "adet": 92,
+    "ozet": "7d5ad9d0040282ce"
+  },
+  "src/data/kelimeData.ts": {
+    "adet": 211,
+    "ozet": "196a04c5c2d9cfee"
+  },
+  "src/data/kelimeEk1.ts": {
+    "adet": 26,
+    "ozet": "c947d48798dfeea0"
+  },
+  "src/data/kelimeEk2.ts": {
+    "adet": 25,
+    "ozet": "90edf87bb44f05fa"
+  },
+  "src/data/kelimeEk3.ts": {
+    "adet": 25,
+    "ozet": "b2b3bb6c53f07528"
+  },
+  "src/data/kelimeEk4.ts": {
+    "adet": 25,
+    "ozet": "7c0da13720f997b5"
+  },
+  "src/data/kelimeEk5.ts": {
+    "adet": 25,
+    "ozet": "913237a902802c5a"
+  },
+  "src/data/kelimeEk6.ts": {
+    "adet": 25,
+    "ozet": "428d2cc976764dc0"
+  },
+  "src/data/kissaCokDil.ts": {
+    "adet": 56,
+    "ozet": "2d66637225e245fe"
+  },
+  "src/data/kissaData.ts": {
+    "adet": 9,
+    "ozet": "4fead591e880c8c0"
+  },
+  "src/data/kuranOkulu.ts": {
+    "adet": 45,
+    "ozet": "4b7ee84405338846"
+  },
+  "src/data/kutuphaneCokDil.ts": {
+    "adet": 62,
+    "ozet": "70de50f0a61cf319"
+  },
+  "src/data/menkibeler/liste/part01.ts": {
+    "adet": 122,
+    "ozet": "eb274905432a4edb"
+  },
+  "src/data/menkibeler/liste/part02.ts": {
+    "adet": 60,
+    "ozet": "4726576fe1264d94"
+  },
+  "src/data/menkibeler/liste/part03.ts": {
+    "adet": 18,
+    "ozet": "bc348bcf424f6999"
+  },
+  "src/data/menkibeler/liste/part05.ts": {
+    "adet": 48,
+    "ozet": "98fdb6bf31adb29d"
+  },
+  "src/data/menkibeler/liste/part06.ts": {
+    "adet": 48,
+    "ozet": "c0309f331a19b6a0"
+  },
+  "src/data/menkibeler.ts": {
+    "adet": 26,
+    "ozet": "c11d26172f0b8575"
+  },
+  "src/data/moodSozluk.ts": {
+    "adet": 28,
+    "ozet": "bec8537680d81a84"
+  },
+  "src/data/namazData.ts": {
+    "adet": 20,
+    "ozet": "55648ee8fc37f1ec"
+  },
+  "src/data/ogGunlerCokDil.ts": {
+    "adet": 16,
+    "ozet": "3f0504f3359d8f22"
+  },
+  "src/data/peygamberler.ts": {
+    "adet": 25,
+    "ozet": "e94574f090badf90"
+  },
+  "src/data/ramazanCokDil.ts": {
+    "adet": 62,
+    "ozet": "f57b305825e8e4cb"
+  },
+  "src/data/ruhHalleri.ts": {
+    "adet": 30,
+    "ozet": "0d28d071968abd2b"
+  },
+  "src/data/siyer/p01-dogum.ts": {
+    "adet": 4,
+    "ozet": "0b4e7dd2a9daa5b0"
+  },
+  "src/data/siyer/p02-genclik.ts": {
+    "adet": 14,
+    "ozet": "ee978926937b6d77"
+  },
+  "src/data/siyer/p03-hira.ts": {
+    "adet": 14,
+    "ozet": "7fc3c7309166104f"
+  },
+  "src/data/siyer/p04-davet.ts": {
+    "adet": 10,
+    "ozet": "5f00f8cc0ef5bfff"
+  },
+  "src/data/siyer/p05-eziyet.ts": {
+    "adet": 12,
+    "ozet": "f37ef1afddd6bde9"
+  },
+  "src/data/siyer/p06-boykot.ts": {
+    "adet": 10,
+    "ozet": "88a02212d9dd4cc8"
+  },
+  "src/data/siyer/p07-akabe.ts": {
+    "adet": 10,
+    "ozet": "9fa0f7c9c0465757"
+  },
+  "src/data/siyer/p08-hicret.ts": {
+    "adet": 14,
+    "ozet": "7b695705f541a9c3"
+  },
+  "src/data/siyer/p09-medine.ts": {
+    "adet": 10,
+    "ozet": "44412b581e663842"
+  },
+  "src/data/siyer/p10-bedir.ts": {
+    "adet": 12,
+    "ozet": "432e794f35941e28"
+  },
+  "src/data/siyer/p11-uhud.ts": {
+    "adet": 8,
+    "ozet": "63c0c6ebe637359b"
+  },
+  "src/data/siyer/p12-handak.ts": {
+    "adet": 8,
+    "ozet": "c7e7266d0b28f86c"
+  },
+  "src/data/siyer/p13-hudaybiye.ts": {
+    "adet": 18,
+    "ozet": "d6253270df931c33"
+  },
+  "src/data/siyer/p14-huneyn.ts": {
+    "adet": 16,
+    "ozet": "3fdd9273dffe8a0f"
+  },
+  "src/data/siyer/p15-veda.ts": {
+    "adet": 18,
+    "ozet": "eff90589d3226a4a"
+  },
+  "src/data/siyerCokDil.ts": {
+    "adet": 44,
+    "ozet": "58289d41e0826c58"
+  },
+  "src/data/sureArapca.ts": {
+    "adet": 115,
+    "ozet": "5de51c8aa60692ec"
+  },
+  "src/data/sureBilgileriEk.ts": {
+    "adet": 89,
+    "ozet": "6666ef984f337b11"
+  },
+  "src/data/sureData.ts": {
+    "adet": 25,
+    "ozet": "dfdf5f35eeea31db"
+  },
+  "src/data/surelerCokDil.ts": {
+    "adet": 114,
+    "ozet": "93594369b289fad1"
+  },
+  "src/data/tecvidData.ts": {
+    "adet": 24,
+    "ozet": "3092fba651c99f94"
+  },
+  "src/data/temalarCokDil.ts": {
+    "adet": 107,
+    "ozet": "b18a632ba8655e75"
+  },
+  "src/data/titleData.cta.ts": {
+    "adet": 146,
+    "ozet": "1de9ff09e0329115"
+  },
+  "src/data/titleData.desc.ts": {
+    "adet": 64,
+    "ozet": "c6c83cefe85755ff"
+  },
+  "src/data/titleData.hadith.ts": {
+    "adet": 68,
+    "ozet": "cddcc9476e0290fb"
+  },
+  "src/data/titleData.templates.emotional.ts": {
+    "adet": 150,
+    "ozet": "509218cc5302a8f4"
+  },
+  "src/data/titleData.templates.main.ts": {
+    "adet": 174,
+    "ozet": "4668bb6c4347de00"
+  },
+  "src/data/titleTemplates.ts": {
+    "adet": 23,
+    "ozet": "d1175547c53ae1a1"
+  }
+}

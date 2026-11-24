@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Hizmet Durumu · Nûr Stüdyo</title>
+<meta name="description" content="Nûr Stüdyo hizmetlerinin canlı durumu: site, Kur'an, hadis, canlı yayın, ödeme ve bildirim uçları." />
+<meta name="robots" content="index,follow" />
+<style>
+  :root { --altin:#e2b96b; --zemin:#0b0b0d; --kart:#141417; --cizgi:rgba(255,255,255,.09); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(900px 500px at 50% -10%,#1d1a14,#0b0b0d 60%); color:#eee; font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; min-height:100vh; }
+  header { max-width:760px; margin:0 auto; padding:32px 20px 8px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  h1 { font-size:20px; margin:0; letter-spacing:.2px; }
+  h1 span { color:var(--altin); }
+  a { color:var(--altin); text-decoration:none; }
+  select { background:var(--kart); color:#eee; border:1px solid var(--cizgi); border-radius:10px; padding:7px 10px; font-size:12px; }
+  main { max-width:760px; margin:0 auto; padding:12px 20px 48px; }
+  .not { font-size:12px; color:#9a948a; margin:0 0 16px; }
+  .ozet { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 16px; }
+  .rozet { border:1px solid var(--cizgi); background:var(--kart); border-radius:999px; padding:5px 11px; font-size:11px; font-weight:700; }
+  ul { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+  li { display:flex; align-items:center; gap:12px; background:var(--kart); border:1px solid var(--cizgi); border-radius:12px; padding:12px 14px; }
+  .ad { flex:1; min-width:0; }
+  .ad b { display:block; font-size:13.5px; font-weight:600; }
+  .ad small { color:#8f897f; font-size:11px; }
+  .durum { font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px; white-space:nowrap; }
+  .ok { background:rgba(52,211,153,.14); color:#6ee7b7; }
+  .yavas { background:rgba(251,191,36,.14); color:#fcd34d; }
+  .sorun { background:rgba(248,113,113,.15); color:#fca5a5; }
+  .bilinmiyor { background:rgba(255,255,255,.07); color:#bbb; }
+  .ms { font-variant-numeric:tabular-nums; font-size:11px; color:#8f897f; min-width:52px; text-align:right; }
+  footer { max-width:760px; margin:0 auto; padding:0 20px 40px; font-size:11.5px; color:#7d776d; }
+  button { background:transparent; border:1px solid var(--cizgi); color:#ddd; border-radius:10px; padding:6px 12px; font-size:12px; cursor:pointer; }
+  button:hover { border-color:var(--altin); color:#fff; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Nûr <span>Stüdyo</span> · <span id="baslik">Hizmet Durumu</span></h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <select id="dil" aria-label="Dil">
+      <option value="tr">Türkçe</option>
+      <option value="en">English</option>
+      <option value="ar">العربية</option>
+      <option value="id">Bahasa Indonesia</option>
+      <option value="ur">اردو</option>
+    </select>
+    <button id="yenile" type="button">↻</button>
+  </div>
+</header>
+<main>
+  <p class="not" id="not"></p>
+  <div class="ozet" id="ozet"></div>
+  <ul id="liste"></ul>
+</main>
+<footer>
+  <p id="altnot"></p>
+  <p><a href="/">← nurstudyo.com</a></p>
+</footer>
+<script>
+(function () {
+  "use strict";
+  var SOZLUK = {
+    tr: { baslik:"Hizmet Durumu", not:"Durum, şu an açık olan tarayıcınızdan ölçülür. Resmî bir SLA değildir; yavaş bağlantı sonucu etkileyebilir.", altnot:"Son kontrol tarayıcı saatine göredir. Sorun sürüyorsa Geri Bildirim ile bildirin.", yenile:"Yeniden kontrol et", calisiyor:"Çalışıyor", yavas:"Yavaş", sorun:"Sorun", bilinmiyor:"Ulaşılamıyor", kontrol:"Kontrol ediliyor…", site:"Web sitesi", kuran:"Kur'an servisi", hadis:"Hadis arama", kabe:"Kâbe canlı yayın", odeme:"Ödeme ve cüzdan", push:"Bildirim servisi", toplam:"toplam", sorunlu:"sorunlu", saat:"Son kontrol" },
+    en: { baslik:"Service Status", not:"Status is measured from this browser right now. It is not an official SLA; a slow connection may affect results.", altnot:"Last check uses your browser clock. If a problem persists, report it via Feedback.", yenile:"Check again", calisiyor:"Operational", yavas:"Slow", sorun:"Problem", bilinmiyor:"Unreachable", kontrol:"Checking…", site:"Website", kuran:"Qur'an service", hadis:"Hadith search", kabe:"Kaaba live stream", odeme:"Payment & wallet", push:"Notifications", toplam:"total", sorunlu:"issues", saat:"Last check" },
+    ar: { baslik:"حالة الخدمات", not:"تُقاس الحالة من متصفحك الآن، وليست اتفاقية مستوى خدمة رسمية؛ قد يؤثر ضعف الاتصال في النتيجة.", altnot:"آخر فحص بحسب ساعة متصفحك. إن استمرت المشكلة أبلغنا عبر الملاحظات.", yenile:"أعد الفحص", calisiyor:"يعمل", yavas:"بطيء", sorun:"مشكلة", bilinmiyor:"لا يمكن الوصول", kontrol:"جارٍ الفحص…", site:"الموقع", kuran:"خدمة القرآن", hadis:"بحث الحديث", kabe:"بث الكعبة المباشر", odeme:"الدفع والمحفظة", push:"الإشعارات", toplam:"إجمالي", sorunlu:"مشاكل", saat:"آخر فحص" },
+    id: { baslik:"Status Layanan", not:"Status diukur dari peramban Anda saat ini. Ini bukan SLA resmi; koneksi lambat dapat memengaruhi hasil.", altnot:"Pemeriksaan terakhir memakai jam peramban Anda. Jika masalah berlanjut, laporkan lewat Umpan Balik.", yenile:"Periksa lagi", calisiyor:"Berjalan", yavas:"Lambat", sorun:"Masalah", bilinmiyor:"Tidak terjangkau", kontrol:"Memeriksa…", site:"Situs web", kuran:"Layanan Al-Qur'an", hadis:"Pencarian hadis", kabe:"Siaran langsung Ka'bah", odeme:"Pembayaran & dompet", push:"Notifikasi", toplam:"total", sorunlu:"masalah", saat:"Pemeriksaan terakhir" },
+    ur: { baslik:"خدمات کی حالت", not:"حالت اسی لمحے آپ کے براؤزر سے ناپی جاتی ہے۔ یہ سرکاری SLA نہیں؛ سست کنکشن نتیجہ متاثر کر سکتا ہے۔", altnot:"آخری جانچ براؤزر کی گھڑی کے مطابق ہے۔ مسئلہ برقرار رہے تو رائے کے ذریعے بتائیں۔", yenile:"دوبارہ جانچیں", calisiyor:"چل رہا ہے", yavas:"سست", sorun:"مسئلہ", bilinmiyor:"دستیاب نہیں", kontrol:"جانچ ہو رہی ہے…", site:"ویب سائٹ", kuran:"قرآن سروس", hadis:"حدیث تلاش", kabe:"کعبہ براہِ راست نشر", odeme:"ادائیگی اور والٹ", push:"اطلاعات", toplam:"کل", sorunlu:"مسائل", saat:"آخری جانچ" }
+  };
+  var HIZMETLER = [
+    { id:"site", yol:"/" },
+    { id:"kuran", yol:"/api/quran/fetch" },
+    { id:"hadis", yol:"/api/hadis/ara?q=rahmet" },
+    { id:"kabe", yol:"/api/live/kabe" },
+    { id:"odeme", yol:"/api/payments/wallet" },
+    { id:"push", yol:"/api/push/subscribe" }
+  ];
+  var dil = "tr";
+  try { dil = localStorage.getItem("nur_lang") || "tr"; } catch (e) { console.warn("Dil okunamadı:", e); }
+  if (!SOZLUK[dil]) dil = "tr";
+  var S = SOZLUK[dil];
+  var listeEl = document.getElementById("liste");
+  var ozetEl = document.getElementById("ozet");
+  var notEl = document.getElementById("not");
+
+  function uygula() {
+    S = SOZLUK[dil];
+    document.documentElement.lang = dil;
+    document.documentElement.dir = dil === "ar" || dil === "ur" ? "rtl" : "ltr";
+    document.getElementById("baslik").textContent = S.baslik;
+    document.getElementById("not").textContent = S.not;
+    document.getElementById("altnot").textContent = S.altnot;
+    document.getElementById("yenile").title = S.yenile;
+    document.getElementById("dil").value = dil;
+    ciz();
+  }
+
+  function satir(h) {
+    var li = document.createElement("li");
+    var ad = document.createElement("div");
+    ad.className = "ad";
+    var b = document.createElement("b");
+    b.textContent = S[h.id];
+    var small = document.createElement("small");
+    small.textContent = h.yol;
+    ad.append(b, small);
+    var durum = document.createElement("span");
+    durum.className = "durum bilinmiyor";
+    durum.textContent = S.bilinmiyor;
+    var ms = document.createElement("span");
+    ms.className = "ms";
+    li.append(ad, durum, ms);
+    return { li: li, durum: durum, ms: ms };
+  }
+
+  var satirlar = {};
+  function ciz() {
+    listeEl.textContent = "";
+    HIZMETLER.forEach(function (h) {
+      var s = satir(h);
+      satirlar[h.id] = s;
+      listeEl.append(s.li);
+    });
+    ozetEl.textContent = "";
+    var t = document.createElement("span");
+    t.className = "rozet";
+    t.textContent = HIZMETLER.length + " " + S.toplam;
+    var d = document.createElement("span");
+    d.className = "rozet";
+    d.id = "sorunRozet";
+    d.textContent = S.kontrol;
+    ozetEl.append(t, d);
+    olc();
+  }
+
+  function bekle(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  async function dene(h) {
+    var ctrl = new AbortController();
+    var zaman = setTimeout(function () { ctrl.abort(); }, 6000);
+    var bas = performance.now();
+    try {
+      var yanit = await fetch(h.yol, { cache: "no-store", signal: ctrl.signal, headers: { "x-durum-kontrol": "1" } });
+      var sure = Math.round(performance.now() - bas);
+      if (yanit.status >= 500) return { sonuc: "sorun", sure: sure };
+      return { sonuc: sure > 1500 ? "yavas" : "calisiyor", sure: sure };
+    } catch (hata) {
+      console.warn("Kontrol başarısız:", h.yol, hata);
+      return { sonuc: "bilinmiyor", sure: Math.round(performance.now() - bas) };
+    } finally {
+      clearTimeout(zaman);
+    }
+  }
+
+  async function olc() {
+    var sorun = 0;
+    for (var i = 0; i < HIZMETLER.length; i++) {
+      var h = HIZMETLER[i];
+      var s = satirlar[h.id];
+      if (!s) continue;
+      s.durum.className = "durum bilinmiyor";
+      s.durum.textContent = S.kontrol;
+      s.ms.textContent = "";
+      var r = await dene(h);
+      s.durum.className = "durum " + r.sonuc;
+      s.durum.textContent = S[r.sonuc];
+      s.ms.textContent = r.sure + " ms";
+      if (r.sonuc === "sorun" || r.sonuc === "bilinmiyor") sorun++;
+      await bekle(120);
+    }
+    var rozet = document.getElementById("sorunRozet");
+    if (rozet) {
+      rozet.textContent = sorun === 0 ? "✓ " + S.calisiyor : sorun + " " + S.sorunlu;
+      rozet.style.color = sorun === 0 ? "#6ee7b7" : "#fca5a5";
+    }
+    document.title = S.baslik + " · Nûr Stüdyo";
+  }
+
+  document.getElementById("dil").addEventListener("change", function (e) {
+    dil = e.target.value;
+    try { localStorage.setItem("nur_lang", dil); } catch (hata) { console.warn("Dil yazılamadı:", hata); }
+    uygula();
+  });
+  document.getElementById("yenile").addEventListener("click", function () { ciz(); });
+
+  uygula();
+})();
+</script>
+</body>
+</html>

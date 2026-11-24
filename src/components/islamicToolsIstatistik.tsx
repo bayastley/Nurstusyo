@@ -6,6 +6,7 @@ import { rozetlerOku, rozetleriTazele, ROZET_LISTESI, rozetOzelOku, rozetGuncelE
 import { getDataSaverMode, setDataSaverMode, type DataSaverMode } from "../studio/useRenderQuality";
 // â˜… 26.10 i18n â€” LS diline gÃ¶re Ã§eviri
 import { translate } from "../i18n";
+import { yedekIndir, yedekCoz, yedekDogrula, yedekGeriYukle } from "../studio/veriYedek";
 const tt = (k: string): string => translate(typeof localStorage !== "undefined" ? localStorage.getItem("nur_lang") : "tr", k);
 
 // ★ ÇEVRİMDIŞI TİLAVET (İş 24+59) — Service Worker dinlenen ayet seslerini
@@ -485,6 +486,27 @@ export function ErisilebilirlikKarti() {
 export function VeriGizlilikKarti() {
   const [sel, setSel] = React.useState({ taslak: false, takip: false, a11y: false, mushaf: false, istatistik: false });
   const [msg, setMsg] = React.useState("");
+  const [yedekMsg, setYedekMsg] = React.useState("");
+
+  // ★ 24.11 YEDEKLEME (madde 88): indir → doğrula → geri yükle (tatbikat)
+  const yedekAlTik = () => {
+    const adet = yedekIndir();
+    setYedekMsg(`${adet} ${tt("itYedekAnahtar")}`);
+    setTimeout(() => setYedekMsg(""), 3000);
+  };
+  const yedekYukleTik = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dosya = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!dosya) return;
+    const { yedek, hata } = yedekCoz(await dosya.text());
+    if (!yedek) { setYedekMsg(`${tt("itYedekHata")}: ${hata || "-"}`); return; }
+    const ozet = yedekDogrula(yedek);
+    const onay = `${ozet.anahtar} ${tt("itYedekAnahtar")} · ${ozet.kayit} ${tt("itYedekKayit")}. ${tt("itYedekOnay")}`;
+    if (!window.confirm(onay)) return;
+    const sonuc = yedekGeriYukle(yedek, "degistir");
+    setYedekMsg(`${tt("itYedekTamam")} (${sonuc.yazilan} ${tt("itYedekAnahtar")}${sonuc.gecersiz.length ? ` · ${sonuc.gecersiz.length} ${tt("itYedekGecersiz")}` : ""})`);
+    setTimeout(() => window.location.reload(), 900);
+  };
   const temizle = () => {
     try {
       if (sel.taslak) {
@@ -505,8 +527,9 @@ export function VeriGizlilikKarti() {
       }
       setMsg(tt("itVeriTemizlendi"));
       setTimeout(() => setMsg(""), 2500);
-    } catch {
-      setMsg("");
+    } catch (hata) {
+      console.warn("Yerel veri temizlenemedi:", hata);
+      setMsg(tt("itVeriTemizleHata"));
     }
   };
   const Row = ({ k, label }: { k: "taslak" | "takip" | "a11y" | "mushaf" | "istatistik"; label: string }) => (
@@ -533,6 +556,26 @@ export function VeriGizlilikKarti() {
       </button>
       <p className="mt-1 text-[7.5px] text-white/30">{tt("itVeriSilUyari")}</p>
       {msg ? <p className="mt-1 text-[8px] font-bold text-emerald-300">{msg}</p> : null}
+
+      {/* ★ 24.11 YEDEKLEME (madde 88) — yalnız cihazdaki nur_* kayıtları */}
+      <div className="mt-2.5 rounded-lg border border-white/10 bg-white/[.03] px-2.5 py-2">
+        <p className="text-[9px] font-bold text-white/80">{tt("itYedekBaslik")}</p>
+        <p className="mb-1.5 text-[7.5px] text-white/35">{tt("itYedekNot")}</p>
+        <div className="flex flex-wrap gap-1.5">
+          <button type="button" onClick={yedekAlTik}
+            className="rounded-md bg-white/10 px-2 py-1 text-[8px] font-bold text-white/75 transition hover:bg-white/20">
+            ⬇ {tt("itYedekAl")}
+          </button>
+          <label className="cursor-pointer rounded-md bg-white/10 px-2 py-1 text-[8px] font-bold text-white/75 transition hover:bg-white/20">
+            ⬆ {tt("itYedekYukle")}
+            <input type="file" accept="application/json,.json" className="hidden" onChange={yedekYukleTik} />
+          </label>
+        </div>
+        {yedekMsg ? <p className="mt-1 text-[8px] font-bold text-emerald-300">{yedekMsg}</p> : null}
+      </div>
+      <a href="/durum.html" className="mt-1.5 block text-center text-[8px] font-bold text-white/40 underline-offset-2 transition hover:text-white/75 hover:underline">
+        {tt("itDurumSayfasi")} →
+      </a>
     </div>
   );
 }

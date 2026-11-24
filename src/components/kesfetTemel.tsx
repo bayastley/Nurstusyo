@@ -169,7 +169,7 @@ export const KARILER = [
 export const everyAyetUrl = (reciterId: string, s: number, a: number) =>
   `https://everyayah.com/data/${reciterId}/${String(s).padStart(3, "0")}${String(a).padStart(3, "0")}.mp3`;
 
-export type SekmeId = "hadis" | "menkibeler" | "evliyalar" | "siyer" | "tarih" | "kissa" | "mezhepler" | "ilmihal" | "ahlak" | "yarisma" | "sahabeler" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid";
+export type SekmeId = "hadis" | "menkibeler" | "evliyalar" | "siyer" | "tarih" | "kissa" | "mezhepler" | "ilmihal" | "ahlak" | "yarisma" | "sahabeler" | "peygamber" | "soru" | "kelime" | "sure" | "namaz" | "dua" | "adab" | "sunnet" | "imsakiye" | "hoca" | "cami" | "rehber" | "kitaplik" | "tecvid" | "klasikEserler" | "kuranOkulu";
 
 export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "hadis", label: "Hadis Bankası", emoji: "📚" },
@@ -197,4 +197,6 @@ export const SEKMELER: Array<{ id: SekmeId; label: string; emoji: string }> = [
   { id: "rehber", label: "Kanal Rehberi", emoji: "🚀" },
   { id: "tecvid", label: "Tecvid Rehberi", emoji: "🎓" },
   { id: "kitaplik", label: "Kitaplığım", emoji: "🔖" },
+  { id: "klasikEserler", label: "Klasik Eserler", emoji: "🗂️" },
+  { id: "kuranOkulu", label: "Kur'an Okulu", emoji: "🎓" },
 ];

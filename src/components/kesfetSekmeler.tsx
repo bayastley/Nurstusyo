@@ -11,3 +11,5 @@ export { TarihBolumu } from "./kesfetSekmeler/TarihBolumu";
 export { SahabelerBolumu } from "./kesfetSekmeler/SahabelerBolumu";
 export { AhlakBolumu } from "./kesfetSekmeler/AhlakBolumu";
 export { YarismaBolumu } from "./kesfetSekmeler/YarismaBolumu";
+export { KitapBolumu } from "./kesfetSekmeler/KitapBolumu";
+export { KuranOkuluBolumu } from "./kesfetSekmeler/KuranOkuluBolumu";
