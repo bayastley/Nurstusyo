@@ -2684,5 +2684,13 @@
   "koEnIyi": "Best",
   "koYeniTur": "New round",
   "koSonraki": "Next",
-  "ilJsonIndir": "Download JSON"
+  "ilJsonIndir": "Download JSON",
+  "araEtiket": "Search",
+  "araBaslik": "Search the site",
+  "araYer": "What are you looking for? (mahr, tahajjud, Badr…)",
+  "araSonuc": "{n} results",
+  "araYok": "No results — simplify the spelling or try a topic.",
+  "araTumu": "All",
+  "araCihaz": "Runs on your device; no internet needed.",
+  "araIpucu": "Quick start: pick a topic"
 }

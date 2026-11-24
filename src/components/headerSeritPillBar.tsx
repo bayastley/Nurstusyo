@@ -1,6 +1,6 @@
 import React from "react";
 // ★ 04.11 SRP: HeaderTopBar'daki üst pill şeridi + Kıble modal + marquee ölçüm + şerit sürükleme kendi dosyasına taşındı.
-import { Coins, Gem, Shield, ShieldOff, X, Check, ChevronDown, Moon } from "lucide-react";
+import { Coins, Gem, Shield, ShieldOff, X, Check, ChevronDown, Moon, Search } from "lucide-react";
 import { LANGS, vakitAdi, sureceCevir } from "../i18n";
 import { isAdminEmail, getJetonVault, getPackRights, type Tier } from "../tier";
 import { QiblaCompass } from "./islamicToolsBolumler";
@@ -163,6 +163,13 @@ export const HeaderSeritPillBar: React.FC<HeaderSeritPillBarProps> = ({
             </button>
             {/* ★ 30.10 KIBLE (kullanıcı emri): Nur Araçlar'dan çıkarıldı, üst barda
                 KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM ARASINA kendi butonuyla kondu. */}
+            {/* ★ 24.11 SİTE ARAMASI (kullanıcı emri): "Google'a ihtiyaç duymasın" —
+                tek kutuda ilmihal, hadis, kıssa, sure, dua, sahabe, siyer araması. */}
+            <button data-minitur="site-arama" onClick={() => setModal("siteArama")}
+              className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-white/80 transition hover:scale-105"
+              style={{ boxShadow: "0 0 0 1px rgba(255,255,255,.18)" }} title={`${t("araEtiket")} (Ctrl+K)`}>
+              <Search size={11} /> {t("araEtiket")}
+            </button>
             <button data-minitur="kible" onClick={() => setKibleAcik(true)}
               className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}

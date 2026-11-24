@@ -2679,5 +2679,13 @@
   "koEnIyi": "En iyi",
   "koYeniTur": "Yeni tur",
   "koSonraki": "Sonraki",
-  "ilJsonIndir": "JSON indir"
+  "ilJsonIndir": "JSON indir",
+  "araEtiket": "Ara",
+  "araBaslik": "Sitede ara",
+  "araYer": "Ne arıyorsun? (mehir, teheccüd, Bedir…)",
+  "araSonuc": "{n} sonuç",
+  "araYok": "Sonuç bulunamadı — yazımı sadeleştir veya konu başlığı dene.",
+  "araTumu": "Tümü",
+  "araCihaz": "Arama cihazında çalışır; internete gitmez.",
+  "araIpucu": "Hızlı başlangıç: bir konu seç"
 }

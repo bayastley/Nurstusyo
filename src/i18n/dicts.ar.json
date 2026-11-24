@@ -2684,5 +2684,13 @@
   "koEnIyi": "الأفضل",
   "koYeniTur": "جولة جديدة",
   "koSonraki": "التالي",
-  "ilJsonIndir": "تنزيل JSON"
+  "ilJsonIndir": "تنزيل JSON",
+  "araEtiket": "بحث",
+  "araBaslik": "ابحث في الموقع",
+  "araYer": "عن ماذا تبحث؟ (المهر، التهجد، بدر…)",
+  "araSonuc": "{n} نتيجة",
+  "araYok": "لا نتائج — بسّط الكتابة أو جرّب موضوعًا.",
+  "araTumu": "الكل",
+  "araCihaz": "يعمل على جهازك دون إنترنت.",
+  "araIpucu": "بداية سريعة: اختر موضوعًا"
 }

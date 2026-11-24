@@ -25,6 +25,8 @@ const RamazanModal = React.lazy(() => import("./RamazanModal").then((m) => ({ de
 const AyetPaketleriModal = React.lazy(() => import("./AyetPaketleriModal").then((m) => ({ default: m.AyetPaketleriModal })));
 const OzelGunTakvimiModal = React.lazy(() => import("./OzelGunTakvimiModal").then((m) => ({ default: m.OzelGunTakvimiModal })));
 const KesfetModal = React.lazy(() => import("./KesfetModal").then((m) => ({ default: m.KesfetModal })));
+// ★ 24.11 SİTE ARAMASI — Google'a ihtiyaç yok: tüm içerik cihazda indekslenir
+const SiteAramaModal = React.lazy(() => import("./SiteAramaModal").then((m) => ({ default: m.SiteAramaModal })));
 const HafizlikTestiModal = React.lazy(() => import("./HafizlikTestiModal").then((m) => ({ default: m.HafizlikTestiModal })));
 const AyetNotlariModal = React.lazy(() => import("./AyetNotlariModal").then((m) => ({ default: m.AyetNotlariModal })));
 const KelimeAtolyesiModal = React.lazy(() => import("./KelimeAtolyesiModal").then((m) => ({ default: m.KelimeAtolyesiModal })));
@@ -611,6 +613,14 @@ export const ModalsContainer: React.FC<ModalsContainerProps> = ({
       {acildiMi("kesfet") && (
       <React.Suspense fallback={null}>
       <KesfetModal open={v2Acik("kesfet")} onClose={() => setModal(null)} notify={notify} lang={lang} atolyeAc={(kelime, ar) => { setAtolyeBaslangic({ kelime, ar }); setModal("kelimeAtolyesi"); }} />
+      </React.Suspense>
+      )}
+
+      {/* ★ SİTE İÇİ ARAMA (24.11) — ilmihal, hadis, kıssa, sure, dua, sahabe, siyer…
+          hepsi tek kutuda; indeks cihazda kurulur, ağ isteği yok. Herkese açık. */}
+      {acildiMi("siteArama") && (
+      <React.Suspense fallback={null}>
+      <SiteAramaModal open={modal === "siteArama"} onClose={() => setModal(null)} lang={lang} />
       </React.Suspense>
       )}
 

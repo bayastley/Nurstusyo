@@ -2684,5 +2684,13 @@
   "koEnIyi": "Terbaik",
   "koYeniTur": "Putaran baru",
   "koSonraki": "Berikutnya",
-  "ilJsonIndir": "Unduh JSON"
+  "ilJsonIndir": "Unduh JSON",
+  "araEtiket": "Cari",
+  "araBaslik": "Cari di situs",
+  "araYer": "Apa yang Anda cari? (mahar, tahajud, Badar…)",
+  "araSonuc": "{n} hasil",
+  "araYok": "Tidak ada hasil — sederhanakan ejaan atau coba topik.",
+  "araTumu": "Semua",
+  "araCihaz": "Berjalan di perangkat; tanpa internet.",
+  "araIpucu": "Mulai cepat: pilih topik"
 }

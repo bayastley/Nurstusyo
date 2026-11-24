@@ -92,6 +92,7 @@ const MODAL_ADLARI: Record<ModalAdi, string> = {
   haftaninVideosu: "Haftanın Videosu",
   kendiSes: "Kendi Sesin",
   seslendirme: "Seslendirme (lokal TTS)",
+  siteArama: "Site Araması",
 };
 
 /** Dev'de (oturumsuz + master değil) hiç mount edilmeyenler — açılış denenmez.

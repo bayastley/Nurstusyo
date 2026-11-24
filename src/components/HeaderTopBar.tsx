@@ -104,6 +104,18 @@ export const HeaderTopBar: React.FC<HeaderTopBarProps> = ({
 
 
 
+  // ★ 24.11 SİTE ARAMASI KISAYOLU: Ctrl/⌘+K her yerden arama kutusunu açar.
+  React.useEffect(() => {
+    const tus = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setModal("siteArama");
+      }
+    };
+    window.addEventListener("keydown", tus);
+    return () => window.removeEventListener("keydown", tus);
+  }, [setModal]);
+
   // ★ CANLI BAN SAYACI — yeni ban geldiğinde rozet anında güncellenir
   const [banCount, setBanCount] = React.useState<number>(() => getBanLogs().length);
   React.useEffect(() => {
