@@ -2630,5 +2630,14 @@
   "itYedekHata": "تعذّرت قراءة النسخة",
   "itYedekGecersiz": "مفاتيح غير صالحة تم تجاوزها",
   "itVeriTemizleHata": "تعذّر التنظيف — قد يكون تخزين المتصفح معطّلًا.",
-  "itDurumSayfasi": "صفحة حالة الخدمات"
+  "itDurumSayfasi": "صفحة حالة الخدمات",
+  "htBenzer": "الآيات المتشابهة",
+  "htBenzerGoster": "عرض الآيات المتشابهة",
+  "htBenzerGizle": "إخفاء الآيات المتشابهة",
+  "htBenzerListe": "قائمة المراجعة",
+  "htBenzerBos": "قائمة المراجعة فارغة — أضف مجموعة بالنقر على ＋ بجانبها.",
+  "htBenzerEkle": "أضف إلى قائمة المراجعة",
+  "htBenzerKaldir": "احذف من قائمة المراجعة",
+  "htBenzerTemizle": "إفراغ القائمة",
+  "keKapakLink": "استوديو الأغلفة والبطاقات المتحركة"
 }

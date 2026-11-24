@@ -28,6 +28,7 @@ import {
   TEST_SURELERI, SEVIYELER, TUR_BOYUTLARI, TUR_BOYUTU, karistir, type SeviyeId,
 } from "./hafizlikVeri";
 import { PerformansCizgisi } from "./hafizlikGrafigi"; // ★ SRP (09.10): grafik bileşeni buradan
+import { BenzerAyetlerBolumu } from "./hafizlikBenzerAyetler"; // ★ 24.11 madde 44: benzer ayet karşılaştırması
 
 interface HafizlikTestiModalProps {
   /** ★ FULL I18N + SORU MEALİ DİLİ (01.10): başlık/sub seçili dile döner; cevap sonrası
@@ -130,6 +131,7 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
   const [turBoyu, setTurBoyu] = useState<number>(5);
   // ★ İstatistik görünümü (madde 52)
   const [istGoster, setIstGoster] = useState(false);
+  const [benzerGoster, setBenzerGoster] = useState(false);
   const [ist, setIst] = useState<HafizlikIstatistik>(() => hafizlikIstOku());
   // ★ ttX2610("htDevam") (madde 38)
   const [devam, setDevam] = useState(() => hafizlikDevamOku());
@@ -455,6 +457,13 @@ export const HafizlikTestiModal: React.FC<HafizlikTestiModalProps> = ({ open, on
               )}
             </div>
           )}
+
+          {/* ★ 24.11 BENZER AYETLER (madde 44) — yan yana karşılaştırma + çalışma listesi */}
+          <button type="button" onClick={() => setBenzerGoster((v) => !v)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg glass-soft py-1.5 text-[9.5px] font-bold text-white/60 transition hover:text-white">
+            🧩 {benzerGoster ? tt("htBenzerGizle") : tt("htBenzerGoster")}
+          </button>
+          {benzerGoster && <BenzerAyetlerBolumu tt={tt} lang={lang} />}
 
           <p className="mb-2 text-center text-[10px] text-white/50">{tt("hafizlikSeviyeSec")}</p>
           {SEVIYELER.map((s) => (

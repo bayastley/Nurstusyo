@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Kapak ve Animasyonlu Kart · Nûr Stüdyo</title>
+<meta name="description" content="Ayetlerden YouTube, Instagram ve TikTok kapakları; tek dokunuşla animasyonlu (WebM) ayet kartı üretin." />
+<style>
+  :root { --altin:#e2b96b; --kart:#141417; --cizgi:rgba(255,255,255,.1); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(900px 500px at 50% -10%,#1d1a14,#0b0b0d 60%); color:#eee; font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  header { max-width:1100px; margin:0 auto; padding:22px 18px 8px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  h1 { font-size:17px; margin:0; font-weight:800; }
+  h1 span { color:var(--altin); }
+  a { color:var(--altin); text-decoration:none; }
+  main { max-width:1100px; margin:0 auto; padding:10px 18px 40px; display:grid; gap:16px; grid-template-columns:340px 1fr; align-items:start; }
+  @media (max-width:860px) { main { grid-template-columns:1fr; } }
+  .panel { background:var(--kart); border:1px solid var(--cizgi); border-radius:14px; padding:14px; }
+  label { display:block; font-size:11px; font-weight:700; color:#b8b2a8; margin:10px 0 4px; }
+  select, textarea, input[type=text] { width:100%; background:#0e0e11; color:#eee; border:1px solid var(--cizgi); border-radius:9px; padding:8px 9px; font:inherit; font-size:12px; }
+  textarea { min-height:58px; resize:vertical; }
+  .satir { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .temalar { display:flex; gap:6px; flex-wrap:wrap; }
+  .tema { width:34px; height:34px; border-radius:9px; border:2px solid transparent; cursor:pointer; }
+  .tema.sec { border-color:#fff; }
+  .dugme { width:100%; margin-top:10px; border:0; border-radius:10px; padding:10px; font-weight:800; font-size:12px; cursor:pointer; background:linear-gradient(135deg,#f0cd8c,#c99b45); color:#241a05; }
+  .dugme.ikincil { background:#22222a; color:#ddd; border:1px solid var(--cizgi); }
+  .dugme:disabled { opacity:.55; cursor:wait; }
+  .not { font-size:10.5px; color:#8f897f; margin:8px 0 0; }
+  .tuvalKutu { display:flex; align-items:center; justify-content:center; background:#08080a; border:1px solid var(--cizgi); border-radius:14px; padding:14px; }
+  canvas { max-width:100%; height:auto; border-radius:10px; box-shadow:0 18px 50px rgba(0,0,0,.5); }
+  #durum { font-size:11px; font-weight:700; color:#6ee7b7; min-height:16px; margin:8px 0 0; }
+  .rozetler { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+  .rozetler span { font-size:10px; border:1px solid var(--cizgi); border-radius:999px; padding:3px 8px; color:#a9a299; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Kapak <span>ve Animasyonlu Kart</span></h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <select id="dil" aria-label="Dil" style="width:auto;padding:6px 8px">
+      <option value="tr">Türkçe</option><option value="en">English</option>
+      <option value="ar">العربية</option><option value="id">Bahasa Indonesia</option><option value="ur">اردو</option>
+    </select>
+    <a href="/">← nurstudyo.com</a>
+  </div>
+</header>
+<main>
+  <section class="panel">
+    <label for="ayet" id="lAyet"></label>
+    <select id="ayet"></select>
+
+    <label for="ozel" id="lOzel"></label>
+    <textarea id="ozel" placeholder="…"></textarea>
+
+    <div class="satir">
+      <div>
+        <label for="format" id="lFormat"></label>
+        <select id="format">
+          <option value="yt">YouTube 1280×720</option>
+          <option value="kare">Instagram 1080×1080</option>
+          <option value="dikey">Story / TikTok 1080×1920</option>
+        </select>
+      </div>
+      <div>
+        <label for="baslik" id="lBaslik"></label>
+        <input id="baslik" type="text" maxlength="40" />
+      </div>
+    </div>
+
+    <label id="lTema"></label>
+    <div class="temalar" id="temalar"></div>
+
+    <label id="lFiligran" style="display:flex;align-items:center;gap:7px;cursor:pointer">
+      <input type="checkbox" id="filigran" checked /> <span></span>
+    </label>
+
+    <button class="dugme" id="png" type="button"></button>
+    <button class="dugme ikincil" id="webm" type="button"></button>
+    <p id="durum"></p>
+    <p class="not" id="not"></p>
+    <div class="rozetler"><span>PNG</span><span>WebM 4 sn</span><span>5 tema</span><span>3 format</span></div>
+  </section>
+
+  <section class="tuvalKutu">
+    <canvas id="tuval" width="1280" height="720"></canvas>
+  </section>
+</main>
+<script>
+(function () {
+  "use strict";
+  var D = {
+    tr: { ayet:"Ayet seç", ozel:"Kendi metnin (boşsa seçili ayet kullanılır)", format:"Format", baslik:"Başlık (isteğe bağlı)", tema:"Tema", filigran:"nurstudyo.com filigranı", png:"PNG kapak indir", webm:"Animasyonlu kart (WebM, 4 sn)", hazir:"Hazır", uretiliyor:"Kaydediliyor…", inen:"İndirildi", hata:"Üretim başarısız — tarayıcı MediaRecorder desteklemiyor olabilir.", not:"Kapak ve animasyon tamamen cihazınızda üretilir; hiçbir metin sunucuya gönderilmez. YouTube kapağı 1280×720, dikey kart 1080×1920." },
+    en: { ayet:"Choose a verse", ozel:"Your own text (empty = selected verse)", format:"Format", baslik:"Title (optional)", tema:"Theme", filigran:"nurstudyo.com watermark", png:"Download PNG cover", webm:"Animated card (WebM, 4s)", hazir:"Ready", uretiliyor:"Recording…", inen:"Downloaded", hata:"Export failed — this browser may not support MediaRecorder.", not:"Cover and animation are generated on your device; no text is sent to a server. YouTube cover 1280×720, vertical card 1080×1920." },
+    ar: { ayet:"اختر آية", ozel:"نصّك الخاص (اتركه فارغًا لاستخدام الآية المختارة)", format:"المقاس", baslik:"العنوان (اختياري)", tema:"السمة", filigran:"علامة nurstudyo.com", png:"تنزيل الغلاف PNG", webm:"بطاقة متحركة (WebM، ٤ ثوانٍ)", hazir:"جاهز", uretiliyor:"جارٍ التسجيل…", inen:"تم التنزيل", hata:"تعذّر التصدير — قد لا يدعم المتصفح MediaRecorder.", not:"يُنتج الغلاف والتحريك على جهازك، ولا يُرسل أي نص إلى الخادم. غلاف يوتيوب 1280×720، البطاقة العمودية 1080×1920." },
+    id: { ayet:"Pilih ayat", ozel:"Teks Anda (kosong = ayat terpilih)", format:"Format", baslik:"Judul (opsional)", tema:"Tema", filigran:"Tanda air nurstudyo.com", png:"Unduh sampul PNG", webm:"Kartu animasi (WebM, 4 dtk)", hazir:"Siap", uretiliyor:"Merekam…", inen:"Terunduh", hata:"Ekspor gagal — peramban ini mungkin tidak mendukung MediaRecorder.", not:"Sampul dan animasi dibuat di perangkat Anda; tidak ada teks yang dikirim ke server. Sampul YouTube 1280×720, kartu vertikal 1080×1920." },
+    ur: { ayet:"آیت منتخب کریں", ozel:"اپنا متن (خالی = منتخب آیت)", format:"سائز", baslik:"عنوان (اختیاری)", tema:"تھیم", filigran:"nurstudyo.com واٹر مارک", png:"PNG کور ڈاؤن لوڈ کریں", webm:"متحرک کارڈ (WebM، 4 سیکنڈ)", hazir:"تیار", uretiliyor:"ریکارڈ ہو رہا ہے…", inen:"ڈاؤن لوڈ ہو گیا", hata:"ایکسپورٹ ناکام — براؤزر MediaRecorder سپورٹ نہیں کرتا۔", not:"کور اور اینیمیشن آپ کے ڈیوائس پر بنتی ہے؛ کوئی متن سرور پر نہیں جاتا۔ یوٹیوب کور 1280×720، عمودی کارڈ 1080×1920۔" }
+  };
+  var AYETLER = [
+    { ref:"İnşirâh 94:5-6", ar:"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", meal:"Şüphesiz güçlükle beraber bir kolaylık vardır." },
+    { ref:"Zilzâl 99:7", ar:"فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُ", meal:"Kim zerre miktarı hayır işlerse onu görür." },
+    { ref:"Bakara 2:286", ar:"لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا", meal:"Allah hiç kimseye gücünün üstünde bir şey yüklemez." },
+    { ref:"Ra'd 13:28", ar:"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", meal:"Bilesiniz ki kalpler ancak Allah'ı anmakla huzur bulur." },
+    { ref:"Talak 65:3", ar:"وَمَن يَتَوَكَّلْ عَلَى اللَّهِ فَهُوَ حَسْبُهُ", meal:"Kim Allah'a tevekkül ederse O ona yeter." },
+    { ref:"Duhâ 93:5", ar:"وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَىٰ", meal:"Rabbin sana verecek ve sen hoşnut olacaksın." },
+    { ref:"Ankebût 29:69", ar:"وَالَّذِينَ جَاهَدُوا فِينَا لَنَهْدِيَنَّهُمْ سُبُلَنَا", meal:"Bizim uğrumuzda çaba gösterenleri elbette yollarımıza ileteceğiz." },
+    { ref:"Şerh 94:8", ar:"وَإِلَىٰ رَبِّكَ فَارْغَب", meal:"Yalnız Rabbine yönel." }
+  ];
+  var TEMALAR = [
+    { id:"gece", ad:"Gece", arka:["#0b1224","#1b2a4a"], altin:"#e6c07b", metin:"#f3efe6" },
+    { id:"kum", ad:"Kum", arka:["#2a2015","#5a4526"], altin:"#f0d9a5", metin:"#fff8ea" },
+    { id:"yesil", ad:"Yeşil", arka:["#071b16","#124a3a"], altin:"#9fe0bd", metin:"#effaf4" },
+    { id:"gul", ad:"Gül", arka:["#25101a","#5a2338"], altin:"#f2b8c6", metin:"#fdf1f4" },
+    { id:"mavi", ad:"Mavi", arka:["#081626","#123a5c"], altin:"#9ecbe8", metin:"#eef7fd" }
+  ];
+  var BOYUT = { yt:{ w:1280, h:720 }, kare:{ w:1080, h:1080 }, dikey:{ w:1080, h:1920 } };
+
+  var dil = "tr";
+  try { dil = localStorage.getItem("nur_lang") || "tr"; } catch (e) { console.warn("Dil okunamadı:", e); }
+  if (!D[dil]) dil = "tr";
+  var S = D[dil];
+  var temaId = "gece";
+  var tuval = document.getElementById("tuval");
+  var ctx = tuval.getContext("2d");
+  var durumEl = document.getElementById("durum");
+
+  function kaydir() {
+    S = D[dil];
+    document.getElementById("lAyet").textContent = S.ayet;
+    document.getElementById("lOzel").textContent = S.ozel;
+    document.getElementById("lFormat").textContent = S.format;
+    document.getElementById("lBaslik").textContent = S.baslik;
+    document.getElementById("lTema").textContent = S.tema;
+    document.querySelector("#lFiligran span").textContent = S.filigran;
+    document.getElementById("png").textContent = S.png;
+    document.getElementById("webm").textContent = S.webm;
+    document.getElementById("not").textContent = S.not;
+    document.getElementById("dil").value = dil;
+    document.documentElement.lang = dil;
+    document.documentElement.dir = (dil === "ar" || dil === "ur") ? "rtl" : "ltr";
+    document.getElementById("ozel").placeholder = dil === "tr" ? "İstersen kendi ayetini/duanı yaz…" : S.ozel;
+    ciz(1);
+  }
+
+  function tema() { return TEMALAR.find(function (t) { return t.id === temaId; }) || TEMALAR[0]; }
+
+  function metin() {
+    var ozel = document.getElementById("ozel").value.trim();
+    if (ozel) return { ref: document.getElementById("baslik").value.trim(), ar: "", meal: ozel };
+    var sec = AYETLER[Number(document.getElementById("ayet").value) || 0];
+    return { ref: sec.ref, ar: sec.ar, meal: sec.meal };
+  }
+
+  function sari(metin2, font, maxGen) {
+    ctx.font = font;
+    var kelimeler = metin2.split(/\s+/);
+    var satirlar = [], satir = "";
+    for (var i = 0; i < kelimeler.length; i++) {
+      var dene = satir ? satir + " " + kelimeler[i] : kelimeler[i];
+      if (ctx.measureText(dene).width > maxGen && satir) { satirlar.push(satir); satir = kelimeler[i]; }
+      else satir = dene;
+    }
+    if (satir) satirlar.push(satir);
+    return satirlar;
+  }
+
+  function ciz(ilerleme) {
+    var boyut = BOYUT[document.getElementById("format").value] || BOYUT.yt;
+    if (tuval.width !== boyut.w || tuval.height !== boyut.h) { tuval.width = boyut.w; tuval.height = boyut.h; }
+    var w = tuval.width, h = tuval.height, t = tema(), veri = metin();
+    var zoom = 1 + 0.05 * ilerleme;
+    ctx.save();
+    ctx.translate(w / 2, h / 2);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-w / 2, -h / 2);
+
+    var g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, t.arka[0]); g.addColorStop(1, t.arka[1]);
+    ctx.fillStyle = g; ctx.fillRect(-40, -40, w + 80, h + 80);
+
+    // hafif ışık huzmesi
+    var saydam = 0.06 + 0.05 * ilerleme;
+    var isik = ctx.createRadialGradient(w * 0.5, h * 0.22, 0, w * 0.5, h * 0.22, h * 0.9);
+    isik.addColorStop(0, "rgba(255,255,255," + saydam + ")"); isik.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = isik; ctx.fillRect(0, 0, w, h);
+
+    // ince çerçeve
+    ctx.strokeStyle = t.altin; ctx.globalAlpha = 0.35; ctx.lineWidth = Math.max(2, w * 0.0022);
+    var bosluk = w * 0.045;
+    ctx.strokeRect(bosluk, bosluk, w - bosluk * 2, h - bosluk * 2);
+    ctx.globalAlpha = 1;
+
+    var op = Math.min(1, ilerleme * 1.8 + 0.15);
+    ctx.globalAlpha = op;
+    ctx.textAlign = "center";
+
+    var basY = h * 0.2, genis = w * 0.78;
+    var baslik = document.getElementById("baslik").value.trim();
+    if (baslik) {
+      ctx.fillStyle = t.altin; ctx.font = "700 " + Math.round(w * 0.026) + "px system-ui, sans-serif";
+      ctx.fillText(baslik, w / 2, basY);
+      basY += h * 0.07;
+    }
+
+    if (veri.ar) {
+      var arapFont = "700 " + Math.round(w * 0.062) + "px 'Traditional Arabic','Amiri','Segoe UI',serif";
+      var satirlar = sari(veri.ar, arapFont, genis);
+      ctx.fillStyle = t.metin; ctx.font = arapFont;
+      satirlar.forEach(function (satir, i) { ctx.fillText(satir, w / 2, basY + i * w * 0.085); });
+      basY += satirlar.length * w * 0.085 + h * 0.03;
+    }
+
+    var mealFont = "500 " + Math.round(w * 0.03) + "px system-ui, sans-serif";
+    ctx.font = mealFont; ctx.fillStyle = t.metin; ctx.globalAlpha = op * 0.92;
+    var mealSatir = sari(veri.meal, mealFont, genis);
+    mealSatir.forEach(function (satir, i) { ctx.fillText(satir, w / 2, basY + i * w * 0.042); });
+    basY += mealSatir.length * w * 0.042;
+
+    if (veri.ref) {
+      ctx.globalAlpha = op * 0.85; ctx.fillStyle = t.altin;
+      ctx.font = "700 " + Math.round(w * 0.019) + "px system-ui, sans-serif";
+      ctx.fillText(veri.ref, w / 2, Math.min(h - h * 0.1, basY + h * 0.07));
+    }
+
+    if (document.getElementById("filigran").checked) {
+      ctx.globalAlpha = 0.5; ctx.fillStyle = t.metin;
+      ctx.font = "600 " + Math.round(w * 0.015) + "px system-ui, sans-serif";
+      ctx.fillText("nurstudyo.com", w / 2, h - h * 0.045);
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  function inen(blob, ad) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = ad; a.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    durumEl.textContent = S.inen;
+  }
+
+  document.getElementById("png").addEventListener("click", function () {
+    ciz(1);
+    if (!tuval.toBlob) { durumEl.textContent = S.hata; return; }
+    tuval.toBlob(function (blob) {
+      if (!blob) { durumEl.textContent = S.hata; return; }
+      inen(blob, "nurstudyo-kapak-" + Date.now() + ".png");
+    }, "image/png");
+  });
+
+  document.getElementById("webm").addEventListener("click", function () {
+    var dugme = this;
+    if (typeof MediaRecorder === "undefined" || !tuval.captureStream) { durumEl.textContent = S.hata; return; }
+    var tip = MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm";
+    var akis, kayit, parcalar = [];
+    try {
+      akis = tuval.captureStream(30);
+      kayit = new MediaRecorder(akis, { mimeType: tip, videoBitsPerSecond: 6000000 });
+    } catch (hata) {
+      console.warn("Kayıt başlatılamadı:", hata);
+      durumEl.textContent = S.hata;
+      return;
+    }
+    dugme.disabled = true; durumEl.textContent = S.uretiliyor;
+    kayit.ondataavailable = function (e) { if (e.data && e.data.size) parcalar.push(e.data); };
+    kayit.onstop = function () {
+      var blob = new Blob(parcalar, { type: "video/webm" });
+      inen(blob, "nurstudyo-kart-" + Date.now() + ".webm");
+      dugme.disabled = false;
+      ciz(1);
+    };
+    kayit.start();
+    var bas = performance.now(), sure = 4000;
+    function kare(simdi) {
+      var oran = Math.min(1, (simdi - bas) / sure);
+      ciz(oran);
+      if (oran < 1) requestAnimationFrame(kare);
+      else kayit.stop();
+    }
+    requestAnimationFrame(kare);
+  });
+
+  // seçim / tema olayları
+  var sec = document.getElementById("ayet");
+  AYETLER.forEach(function (a, i) {
+    var o = document.createElement("option");
+    o.value = String(i); o.textContent = a.ref + " — " + a.meal.slice(0, 42) + (a.meal.length > 42 ? "…" : "");
+    sec.append(o);
+  });
+  var temaKutu = document.getElementById("temalar");
+  TEMALAR.forEach(function (t) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "tema" + (t.id === temaId ? " sec" : "");
+    b.title = t.ad;
+    b.style.background = "linear-gradient(135deg," + t.arka[0] + "," + t.arka[1] + ")";
+    b.style.borderColor = t.id === temaId ? "#fff" : "transparent";
+    b.addEventListener("click", function () {
+      temaId = t.id;
+      Array.prototype.forEach.call(temaKutu.children, function (el) { el.classList.remove("sec"); el.style.borderColor = "transparent"; });
+      b.classList.add("sec"); b.style.borderColor = "#fff";
+      ciz(1);
+    });
+    temaKutu.append(b);
+  });
+
+  ["ayet", "format", "baslik", "ozel", "filigran"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", function () { durumEl.textContent = ""; ciz(1); });
+  });
+  document.getElementById("dil").addEventListener("change", function (e) {
+    dil = e.target.value;
+    try { localStorage.setItem("nur_lang", dil); } catch (hata) { console.warn("Dil yazılamadı:", hata); }
+    kaydir();
+  });
+
+  kaydir();
+})();
+</script>
+</body>
+</html>

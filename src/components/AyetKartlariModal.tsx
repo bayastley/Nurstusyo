@@ -742,6 +742,12 @@ export const AyetKartlariModal: React.FC<AyetKartlariModalProps> = ({ open, onCl
 
       {/* ── ALTTA: ARKA PLAN GALERİSİ ────────────────────── */}
       <ArkaPlanGalerisi bgSearch={bgSearch} setBgSearch={setBgSearch} bgCat={bgCat} setBgCat={setBgCat} filteredBgs={filteredBgs} visibleCount={visibleCount} bgId={bgId} setBgId={setBgId} loadMoreRef={loadMoreRef} akilliSec={akilliSec} shuffleBg={shuffleBg} lang={lang} />
+
+      {/* ★ 24.11 (madde 23 + 41): kapak ve animasyonlu kart stüdyosu — ayrı sayfa, cihaz içi üretim */}
+      <a href="/kapak.html" target="_blank" rel="noopener noreferrer"
+        className="mt-2 flex items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/[.04] py-2 text-[9.5px] font-bold text-white/55 transition hover:bg-white/[.07] hover:text-white">
+        🖼️ {tt("keKapakLink")} →
+      </a>
     </Modal>
   );
 };

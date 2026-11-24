@@ -2630,5 +2630,14 @@
   "itYedekHata": "Backup could not be read",
   "itYedekGecersiz": "invalid keys skipped",
   "itVeriTemizleHata": "Cleanup failed — browser storage may be disabled.",
-  "itDurumSayfasi": "Service status page"
+  "itDurumSayfasi": "Service status page",
+  "htBenzer": "Similar Verses",
+  "htBenzerGoster": "Show similar verses",
+  "htBenzerGizle": "Hide similar verses",
+  "htBenzerListe": "My study list",
+  "htBenzerBos": "Your study list is empty — add one with ＋ next to a verse group.",
+  "htBenzerEkle": "Add to study list",
+  "htBenzerKaldir": "Remove from study list",
+  "htBenzerTemizle": "Clear the list",
+  "keKapakLink": "Cover and animated card studio"
 }

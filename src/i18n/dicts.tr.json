@@ -2625,5 +2625,14 @@
   "itYedekHata": "Yedek okunamadı",
   "itYedekGecersiz": "geçersiz anahtar atlandı",
   "itVeriTemizleHata": "Temizlik yapılamadı — tarayıcı depolaması kapalı olabilir.",
-  "itDurumSayfasi": "Hizmet durumu sayfası"
+  "itDurumSayfasi": "Hizmet durumu sayfası",
+  "htBenzer": "Benzer Ayetler",
+  "htBenzerGoster": "Benzer ayetleri göster",
+  "htBenzerGizle": "Benzer ayetleri gizle",
+  "htBenzerListe": "Çalışma listem",
+  "htBenzerBos": "Çalışma listen boş — ayet grubunun yanındaki ＋ ile ekle.",
+  "htBenzerEkle": "Çalışma listesine ekle",
+  "htBenzerKaldir": "Çalışma listesinden çıkar",
+  "htBenzerTemizle": "Listeyi temizle",
+  "keKapakLink": "Kapak ve animasyonlu kart stüdyosu"
 }

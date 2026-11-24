@@ -2630,5 +2630,14 @@
   "itYedekHata": "Cadangan tidak dapat dibaca",
   "itYedekGecersiz": "kunci tidak valid dilewati",
   "itVeriTemizleHata": "Pembersihan gagal — penyimpanan peramban mungkin nonaktif.",
-  "itDurumSayfasi": "Halaman status layanan"
+  "itDurumSayfasi": "Halaman status layanan",
+  "htBenzer": "Ayat Serupa",
+  "htBenzerGoster": "Tampilkan ayat serupa",
+  "htBenzerGizle": "Sembunyikan ayat serupa",
+  "htBenzerListe": "Daftar belajarku",
+  "htBenzerBos": "Daftar belajarmu kosong — tambahkan dengan ＋ di samping kelompok ayat.",
+  "htBenzerEkle": "Tambahkan ke daftar belajar",
+  "htBenzerKaldir": "Hapus dari daftar belajar",
+  "htBenzerTemizle": "Kosongkan daftar",
+  "keKapakLink": "Studio sampul dan kartu animasi"
 }
