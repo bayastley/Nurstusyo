@@ -2692,5 +2692,13 @@
   "araYok": "No results — simplify the spelling or try a topic.",
   "araTumu": "All",
   "araCihaz": "Runs on your device; no internet needed.",
-  "araIpucu": "Quick start: pick a topic"
+  "araIpucu": "Quick start: pick a topic",
+  "shEser": "works",
+  "shSahabe": "companions",
+  "shAramaKayit": "search records",
+  "shYeni16": "Fiqh Academy expanded to 41 lessons (242 articles, 131 questions): menstruation, marriage-divorce-iddah, inheritance, slaughter and hunting, contracts, penalties, charity, water and impurity, prostration of recitation, aqiqah, interest-banking, food and dress, major sins, neighbours, schools of law, fiqh terms and intention.",
+  "shYeni17": "\"Download JSON\" in the Fiqh Academy: all 41 lessons in one file; the content ships inside the app, so it works offline.",
+  "shYeni18": "On-site search (top bar \"Search\" + Ctrl/⌘+K): fiqh, hadith, stories, surahs, supplications, companions, classical works, prophets, sirah, sunnah, manners, vocabulary and Q&A in one box; the index runs on the device with no network request.",
+  "shYeni19": "Companions section: detailed lives of 24 companions (71 events) with source references, in its own tab.",
+  "shYeni20": "Classical works library (34 works) and the Elifba school (29 letters, initial-medial-final forms, articulation points, voiced reading, letter quiz)."
 }

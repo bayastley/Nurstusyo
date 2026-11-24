@@ -2687,5 +2687,13 @@
   "araYok": "Sonuç bulunamadı — yazımı sadeleştir veya konu başlığı dene.",
   "araTumu": "Tümü",
   "araCihaz": "Arama cihazında çalışır; internete gitmez.",
-  "araIpucu": "Hızlı başlangıç: bir konu seç"
+  "araIpucu": "Hızlı başlangıç: bir konu seç",
+  "shEser": "eser",
+  "shSahabe": "sahabe",
+  "shAramaKayit": "arama kaydı",
+  "shYeni16": "İlmihal Akademisi 41 derse çıktı (242 madde, 131 soru): kadın halleri, nikâh-talâk-iddet, miras/ferâiz, av-kesim, akitler, had-kısas, sadaka, sular-necâset, tilavet secdesi, akika, faiz-banka, yeme-giyim, büyük günahlar, komşuluk, mezhepler, fıkıh terimleri ve niyet.",
+  "shYeni17": "İlmihalde \"JSON indir\": 41 dersin tamamı tek dosya; içerik pakete gömülü olduğu için çevrimdışı çalışır.",
+  "shYeni18": "Site içi arama (üst bar \"Ara\" + Ctrl/⌘+K): ilmihal, hadis, kıssa, sure, dua, sahabe, klasik eser, peygamber, siyer, sünnet, edep, kelime ve soru-cevap tek kutuda; indeks cihazda, ağ isteği yok.",
+  "shYeni19": "Sahabeler dönemi: 24 sahabenin detaylı hayatı (71 olay), kaynak künyeleriyle; ayrı sekmede.",
+  "shYeni20": "Klasik eserler kütüphanesi (34 eser) ve Elifbâ okulu (29 harf, başta-ortada-sonda, mahreç, sesli okuma, harf sınavı)."
 }

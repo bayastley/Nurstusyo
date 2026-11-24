@@ -11,6 +11,11 @@ import React, { useState } from "react";
 import { translate, type Lang } from "../i18n";
 import { BookOpen, Radio, ShieldCheck, Mail, ExternalLink, HeartHandshake, Video, Sparkles, Clapperboard, PlayCircle } from "lucide-react";
 import { Modal } from "./UIElements";
+// ★ 24.11 İÇİNDEKİLER CANLI SAYAÇ: sayılar elle yazılmaz — veriden okunur.
+import { ILMIHAL_TOPLAM } from "../data/ilmihalData";
+import { ESER_TOPLAM } from "../data/klasikEserler";
+import { SAHABELER_TOPLAM } from "../data/sahabelerDetayData";
+import { siteIndeksi } from "../data/siteAramaIndeksi";
 
 // ★ TANITIM VİDEOSU — "Bu Sitede Ne Var?" (İÇİNDEKİLER) modalında oynatılır.
 //   ★ 16.10 (kullanıcı emri): üstte TANITIM bölümü — R2 CDN'den MP4 oynatır.
@@ -49,6 +54,8 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
   const tt = (k: string): string => translate(lang, k);
 
   const [mesajGoster, setMesajGoster] = useState(false);
+  // İndeks yalnız modal açılınca ve bir kez kurulur (1.5 bin kayıt, ~10 ms).
+  const aramaKayit = React.useMemo(() => (open ? siteIndeksi().length : 0), [open]);
 
   // YouTube linkini embed'e çevir (watch?v=, youtu.be, shorts — hepsi)
   const videoEmbed = (() => {
@@ -135,8 +142,15 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
       {/* ── YENİ EKLENENLER (local güncellemeler) ─────── */}
       <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-500/[.06] p-3.5">
         <h3 className="mb-2 text-[11px] font-black uppercase tracking-wider text-emerald-200">{tt("shYeniBaslik")}</h3>
+        {/* Canlı sayaç — veri değişince kendiliğinden güncellenir */}
+        <p className="mb-2 flex flex-wrap items-center gap-1.5 text-[8.5px] font-bold text-emerald-100/70">
+          <span className="rounded-full bg-white/[.06] px-2 py-0.5">📗 {ILMIHAL_TOPLAM.ders} {tt("ilDers")} · {ILMIHAL_TOPLAM.madde} {tt("ilMadde")} · {ILMIHAL_TOPLAM.soru} {tt("ilSoru")}</span>
+          <span className="rounded-full bg-white/[.06] px-2 py-0.5">📚 {ESER_TOPLAM} {tt("shEser")}</span>
+          <span className="rounded-full bg-white/[.06] px-2 py-0.5">⭐ {SAHABELER_TOPLAM} {tt("shSahabe")}</span>
+          <span className="rounded-full bg-white/[.06] px-2 py-0.5">🔍 {aramaKayit} {tt("shAramaKayit")}</span>
+        </p>
         <ul className="space-y-1.5 text-[9.5px] leading-relaxed text-white/70 list-disc pl-4">
-          {["shYeni1","shYeni2","shYeni3","shYeni4","shYeni5","shYeni6","shYeni7","shYeni8","shYeni9","shYeni10","shYeni11","shYeni12","shYeni13","shYeni14","shYeni15"].map((k)=>(
+          {Array.from({ length: 20 }, (_, i) => `shYeni${i + 1}`).map((k)=>(
             <li key={k}>{tt(k)}</li>
           ))}
         </ul>
