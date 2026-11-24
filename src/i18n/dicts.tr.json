@@ -2665,5 +2665,18 @@
   "tpIceAl": "İçe aktar",
   "tpGeriBildirim": "Hoca notu",
   "tpGeriBildirimYaz": "Not yaz…",
-  "tpKaydet": "Kaydet"
+  "tpKaydet": "Kaydet",
+  "koHarfTanindi": "harf tanındı",
+  "koSifirla": "Sıfırla",
+  "koSes": "Sesli oku",
+  "koBas": "Başta",
+  "koOrta": "Ortada",
+  "koSon": "Sonda",
+  "koBaglanmaz": "Bu harf sonraki harfe bağlanmaz.",
+  "koCocukSinav": "Harf tanıma sınavı",
+  "koSoru": "Bu harf hangisi?",
+  "koSonuc": "Sonuç",
+  "koEnIyi": "En iyi",
+  "koYeniTur": "Yeni tur",
+  "koSonraki": "Sonraki"
 }

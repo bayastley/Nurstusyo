@@ -2670,5 +2670,18 @@
   "tpIceAl": "استيراد",
   "tpGeriBildirim": "ملاحظة الأستاذ",
   "tpGeriBildirimYaz": "اكتب ملاحظة…",
-  "tpKaydet": "حفظ"
+  "tpKaydet": "حفظ",
+  "koHarfTanindi": "حرفًا تم تعلّمه",
+  "koSifirla": "تصفير",
+  "koSes": "اقرأ بصوت",
+  "koBas": "في البداية",
+  "koOrta": "في الوسط",
+  "koSon": "في النهاية",
+  "koBaglanmaz": "هذا الحرف لا يتصل بالحرف التالي.",
+  "koCocukSinav": "اختبار تمييز الحروف",
+  "koSoru": "أي حرف هذا؟",
+  "koSonuc": "النتيجة",
+  "koEnIyi": "الأفضل",
+  "koYeniTur": "جولة جديدة",
+  "koSonraki": "التالي"
 }

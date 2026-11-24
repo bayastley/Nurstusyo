@@ -2670,5 +2670,18 @@
   "tpIceAl": "Impor",
   "tpGeriBildirim": "Catatan guru",
   "tpGeriBildirimYaz": "Tulis catatan…",
-  "tpKaydet": "Simpan"
+  "tpKaydet": "Simpan",
+  "koHarfTanindi": "huruf dikenali",
+  "koSifirla": "Atur ulang",
+  "koSes": "Bacakan",
+  "koBas": "Awal",
+  "koOrta": "Tengah",
+  "koSon": "Akhir",
+  "koBaglanmaz": "Huruf ini tidak menyambung ke huruf berikutnya.",
+  "koCocukSinav": "Kuis mengenal huruf",
+  "koSoru": "Huruf apa ini?",
+  "koSonuc": "Hasil",
+  "koEnIyi": "Terbaik",
+  "koYeniTur": "Putaran baru",
+  "koSonraki": "Berikutnya"
 }

@@ -13,6 +13,12 @@ export type KuranHarfi = {
   nokta: string;
   ornek: string;
   ornekAnlam: string;
+  /** Harfin kelime içindeki yazılışları (başta / ortada / sonda) */
+  bas: string;
+  orta: string;
+  son: string;
+  /** Sonraki harfe bağlanır mı (elif, dal, zel, ra, ze, vav, hemze bağlanmaz) */
+  baglanir: boolean;
 };
 
 export const MAHREC_GRUPLARI: Array<{ id: MahrecGrup; ad: string; aciklama: string }> = [
@@ -25,35 +31,35 @@ export const MAHREC_GRUPLARI: Array<{ id: MahrecGrup; ad: string; aciklama: stri
 
 // 29 harf — elifbâ sırası
 export const KURAN_HARFLERI: KuranHarfi[] = [
-  { harf: "ا", ad: "Elif", grup: "med", nokta: "Kendi sesi yok; önündeki fetha ile 'â' okunur.", ornek: "قَالَ", ornekAnlam: "dedi" },
-  { harf: "ب", ad: "Bâ", grup: "sefe", nokta: "İki dudağın birleşmesi.", ornek: "بَاب", ornekAnlam: "kapı" },
-  { harf: "ت", ad: "Tâ", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü.", ornek: "تَوْبَة", ornekAnlam: "tövbe" },
-  { harf: "ث", ad: "Sâ", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu.", ornek: "ثَوَاب", ornekAnlam: "sevap" },
-  { harf: "ج", ad: "Cîm", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "جَنَّة", ornekAnlam: "cennet" },
-  { harf: "ح", ad: "Hâ", grup: "halk", nokta: "Boğazın orta bölgesi.", ornek: "حَقّ", ornekAnlam: "hak" },
-  { harf: "خ", ad: "Hı", grup: "halk", nokta: "Boğazın üst bölgesine yakın kısım.", ornek: "خَيْر", ornekAnlam: "hayır" },
-  { harf: "د", ad: "Dâl", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü.", ornek: "دِين", ornekAnlam: "din" },
-  { harf: "ذ", ad: "Zâl", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu.", ornek: "ذِكْر", ornekAnlam: "zikir" },
-  { harf: "ر", ad: "Râ", grup: "lisan", nokta: "Dil ucu, üst diş etine yakın; titretilir.", ornek: "رَحْمَة", ornekAnlam: "rahmet" },
-  { harf: "ز", ad: "Zey", grup: "lisan", nokta: "Dil ucu, alt ön dişlerin ucu.", ornek: "زَكَاة", ornekAnlam: "zekât" },
-  { harf: "س", ad: "Sîn", grup: "lisan", nokta: "Dil ucu, alt ön dişlerin ucu.", ornek: "سَلَام", ornekAnlam: "selâm" },
-  { harf: "ش", ad: "Şîn", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "شَمْس", ornekAnlam: "güneş" },
-  { harf: "ص", ad: "Sâd", grup: "lisan", nokta: "Dil ucu, alt ön dişler; kalın okunur.", ornek: "صَبْر", ornekAnlam: "sabır" },
-  { harf: "ض", ad: "Dâd", grup: "lisan", nokta: "Dil kenarı, üst azı dişleri.", ornek: "ضَوْء", ornekAnlam: "ışık" },
-  { harf: "ط", ad: "Tı", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü; kalın.", ornek: "طَيْر", ornekAnlam: "kuş" },
-  { harf: "ظ", ad: "Zı", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu; kalın.", ornek: "ظِلّ", ornekAnlam: "gölge" },
-  { harf: "ع", ad: "Ayn", grup: "halk", nokta: "Boğazın orta bölgesi.", ornek: "عِلْم", ornekAnlam: "ilim" },
-  { harf: "غ", ad: "Gayn", grup: "halk", nokta: "Boğazın üst bölgesine yakın kısım.", ornek: "غَيْب", ornekAnlam: "gayb" },
-  { harf: "ف", ad: "Fâ", grup: "sefe", nokta: "Alt dudak, üst ön dişlerin ucu.", ornek: "فَجْر", ornekAnlam: "fecir" },
-  { harf: "ق", ad: "Kâf", grup: "lisan", nokta: "Dilin kökü, yumuşak damak.", ornek: "قَلَم", ornekAnlam: "kalem" },
-  { harf: "ك", ad: "Kef", grup: "lisan", nokta: "Dilin köküne yakın kısım, sert damak.", ornek: "كِتَاب", ornekAnlam: "kitap" },
-  { harf: "ل", ad: "Lâm", grup: "lisan", nokta: "Dil ucu, üst ön damak.", ornek: "لَيْل", ornekAnlam: "gece" },
-  { harf: "م", ad: "Mîm", grup: "sefe", nokta: "İki dudak; ayrıca gunne ile genizden ses.", ornek: "مَاء", ornekAnlam: "su" },
-  { harf: "ن", ad: "Nûn", grup: "lisan", nokta: "Dil ucu, üst diş eti; gunne ile genizden ses.", ornek: "نُور", ornekAnlam: "nur" },
-  { harf: "ه", ad: "Hâ", grup: "halk", nokta: "Boğazın en alt bölgesi.", ornek: "هُدًى", ornekAnlam: "hidayet" },
-  { harf: "و", ad: "Vâv", grup: "sefe", nokta: "İki dudağın yuvarlanması.", ornek: "وُضُوء", ornekAnlam: "abdest" },
-  { harf: "ي", ad: "Yâ", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "يَد", ornekAnlam: "el" },
-  { harf: "ء", ad: "Hemze", grup: "halk", nokta: "Boğazın en alt bölgesi.", ornek: "أَسَد", ornekAnlam: "aslan" },
+  { harf: "ا", ad: "Elif", grup: "med", nokta: "Kendi sesi yok; önündeki fetha ile 'â' okunur.", ornek: "قَالَ", ornekAnlam: "dedi" , bas: "ا", orta: "ـا", son: "ـا", baglanir: false },
+  { harf: "ب", ad: "Bâ", grup: "sefe", nokta: "İki dudağın birleşmesi.", ornek: "بَاب", ornekAnlam: "kapı" , bas: "بـ", orta: "ـبـ", son: "ـب", baglanir: true },
+  { harf: "ت", ad: "Tâ", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü.", ornek: "تَوْبَة", ornekAnlam: "tövbe" , bas: "تـ", orta: "ـتـ", son: "ـت", baglanir: true },
+  { harf: "ث", ad: "Sâ", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu.", ornek: "ثَوَاب", ornekAnlam: "sevap" , bas: "ثـ", orta: "ـثـ", son: "ـث", baglanir: true },
+  { harf: "ج", ad: "Cîm", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "جَنَّة", ornekAnlam: "cennet" , bas: "جـ", orta: "ـجـ", son: "ـج", baglanir: true },
+  { harf: "ح", ad: "Hâ", grup: "halk", nokta: "Boğazın orta bölgesi.", ornek: "حَقّ", ornekAnlam: "hak" , bas: "حـ", orta: "ـحـ", son: "ـح", baglanir: true },
+  { harf: "خ", ad: "Hı", grup: "halk", nokta: "Boğazın üst bölgesine yakın kısım.", ornek: "خَيْر", ornekAnlam: "hayır" , bas: "خـ", orta: "ـخـ", son: "ـخ", baglanir: true },
+  { harf: "د", ad: "Dâl", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü.", ornek: "دِين", ornekAnlam: "din" , bas: "د", orta: "ـد", son: "ـد", baglanir: false },
+  { harf: "ذ", ad: "Zâl", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu.", ornek: "ذِكْر", ornekAnlam: "zikir" , bas: "ذ", orta: "ـذ", son: "ـذ", baglanir: false },
+  { harf: "ر", ad: "Râ", grup: "lisan", nokta: "Dil ucu, üst diş etine yakın; titretilir.", ornek: "رَحْمَة", ornekAnlam: "rahmet" , bas: "ر", orta: "ـر", son: "ـر", baglanir: false },
+  { harf: "ز", ad: "Zey", grup: "lisan", nokta: "Dil ucu, alt ön dişlerin ucu.", ornek: "زَكَاة", ornekAnlam: "zekât" , bas: "ز", orta: "ـز", son: "ـز", baglanir: false },
+  { harf: "س", ad: "Sîn", grup: "lisan", nokta: "Dil ucu, alt ön dişlerin ucu.", ornek: "سَلَام", ornekAnlam: "selâm" , bas: "سـ", orta: "ـسـ", son: "ـس", baglanir: true },
+  { harf: "ش", ad: "Şîn", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "شَمْس", ornekAnlam: "güneş" , bas: "شـ", orta: "ـشـ", son: "ـش", baglanir: true },
+  { harf: "ص", ad: "Sâd", grup: "lisan", nokta: "Dil ucu, alt ön dişler; kalın okunur.", ornek: "صَبْر", ornekAnlam: "sabır" , bas: "صـ", orta: "ـصـ", son: "ـص", baglanir: true },
+  { harf: "ض", ad: "Dâd", grup: "lisan", nokta: "Dil kenarı, üst azı dişleri.", ornek: "ضَوْء", ornekAnlam: "ışık" , bas: "ضـ", orta: "ـضـ", son: "ـض", baglanir: true },
+  { harf: "ط", ad: "Tı", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin kökü; kalın.", ornek: "طَيْر", ornekAnlam: "kuş" , bas: "طـ", orta: "ـطـ", son: "ـط", baglanir: true },
+  { harf: "ظ", ad: "Zı", grup: "lisan", nokta: "Dil ucu, üst ön dişlerin ucu; kalın.", ornek: "ظِلّ", ornekAnlam: "gölge" , bas: "ظـ", orta: "ـظـ", son: "ـظ", baglanir: true },
+  { harf: "ع", ad: "Ayn", grup: "halk", nokta: "Boğazın orta bölgesi.", ornek: "عِلْم", ornekAnlam: "ilim" , bas: "عـ", orta: "ـعـ", son: "ـع", baglanir: true },
+  { harf: "غ", ad: "Gayn", grup: "halk", nokta: "Boğazın üst bölgesine yakın kısım.", ornek: "غَيْب", ornekAnlam: "gayb" , bas: "غـ", orta: "ـغـ", son: "ـغ", baglanir: true },
+  { harf: "ف", ad: "Fâ", grup: "sefe", nokta: "Alt dudak, üst ön dişlerin ucu.", ornek: "فَجْر", ornekAnlam: "fecir" , bas: "فـ", orta: "ـفـ", son: "ـف", baglanir: true },
+  { harf: "ق", ad: "Kâf", grup: "lisan", nokta: "Dilin kökü, yumuşak damak.", ornek: "قَلَم", ornekAnlam: "kalem" , bas: "قـ", orta: "ـقـ", son: "ـق", baglanir: true },
+  { harf: "ك", ad: "Kef", grup: "lisan", nokta: "Dilin köküne yakın kısım, sert damak.", ornek: "كِتَاب", ornekAnlam: "kitap" , bas: "كـ", orta: "ـكـ", son: "ـك", baglanir: true },
+  { harf: "ل", ad: "Lâm", grup: "lisan", nokta: "Dil ucu, üst ön damak.", ornek: "لَيْل", ornekAnlam: "gece" , bas: "لـ", orta: "ـلـ", son: "ـل", baglanir: true },
+  { harf: "م", ad: "Mîm", grup: "sefe", nokta: "İki dudak; ayrıca gunne ile genizden ses.", ornek: "مَاء", ornekAnlam: "su" , bas: "مـ", orta: "ـمـ", son: "ـم", baglanir: true },
+  { harf: "ن", ad: "Nûn", grup: "lisan", nokta: "Dil ucu, üst diş eti; gunne ile genizden ses.", ornek: "نُور", ornekAnlam: "nur" , bas: "نـ", orta: "ـنـ", son: "ـن", baglanir: true },
+  { harf: "ه", ad: "Hâ", grup: "halk", nokta: "Boğazın en alt bölgesi.", ornek: "هُدًى", ornekAnlam: "hidayet" , bas: "هـ", orta: "ـهـ", son: "ـه", baglanir: true },
+  { harf: "و", ad: "Vâv", grup: "sefe", nokta: "İki dudağın yuvarlanması.", ornek: "وُضُوء", ornekAnlam: "abdest" , bas: "و", orta: "ـو", son: "ـو", baglanir: false },
+  { harf: "ي", ad: "Yâ", grup: "lisan", nokta: "Dil ortası, üst damak.", ornek: "يَد", ornekAnlam: "el" , bas: "يـ", orta: "ـيـ", son: "ـي", baglanir: true },
+  { harf: "ء", ad: "Hemze", grup: "halk", nokta: "Boğazın en alt bölgesi.", ornek: "أَسَد", ornekAnlam: "aslan" , bas: "ء", orta: "ء", son: "ء", baglanir: false },
 ];
 
 export type MahrecSorusu = { soru: string; secenekler: string[]; dogru: number; aciklama: string };

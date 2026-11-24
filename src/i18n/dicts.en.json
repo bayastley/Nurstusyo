@@ -2670,5 +2670,18 @@
   "tpIceAl": "Import",
   "tpGeriBildirim": "Teacher note",
   "tpGeriBildirimYaz": "Write a note…",
-  "tpKaydet": "Save"
+  "tpKaydet": "Save",
+  "koHarfTanindi": "letters learned",
+  "koSifirla": "Reset",
+  "koSes": "Read aloud",
+  "koBas": "Initial",
+  "koOrta": "Medial",
+  "koSon": "Final",
+  "koBaglanmaz": "This letter does not connect to the next one.",
+  "koCocukSinav": "Letter recognition quiz",
+  "koSoru": "Which letter is this?",
+  "koSonuc": "Result",
+  "koEnIyi": "Best",
+  "koYeniTur": "New round",
+  "koSonraki": "Next"
 }
