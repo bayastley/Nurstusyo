@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sahabeler Ansiklopedisi</title>
+<meta name="description" content="Peygamberimizin arkadaşları: hayatları, önemli olayları ve hatıraları." />
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-soft: #141a23;
+    --card: #161d27;
+    --card-hover: #1c2531;
+    --line: rgba(255, 255, 255, .09);
+    --text: #e9edf3;
+    --muted: #98a4b5;
+    --gold: #d8b878;
+    --gold-soft: rgba(216, 184, 120, .12);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(216, 184, 120, .10), transparent 60%),
+      radial-gradient(700px 420px at 100% 0%, rgba(84, 122, 160, .14), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { width: min(1120px, 100% - 32px); margin: 0 auto; }
+
+  /* ── Başlık ── */
+  header.hero { padding: 56px 0 28px; text-align: center; }
+
+  .eyebrow {
+    display: inline-block;
+    padding: 6px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 18px 0 10px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(28px, 5vw, 44px);
+    font-weight: 700;
+    letter-spacing: -.01em;
+  }
+
+  .hero p {
+    margin: 0 auto;
+    max-width: 620px;
+    color: var(--muted);
+    font-size: clamp(13px, 1.6vw, 15px);
+  }
+
+  /* ── Arama ── */
+  .search-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 14px 0;
+    margin-top: 18px;
+    background: linear-gradient(to bottom, var(--bg) 62%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .search-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-soft);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .35);
+  }
+
+  .search-inner:focus-within {
+    border-color: rgba(216, 184, 120, .55);
+    box-shadow: 0 0 0 3px var(--gold-soft);
+  }
+
+  .search-inner svg { flex: none; color: var(--muted); }
+
+  #arama {
+    flex: 1;
+    min-width: 0;
+    padding: 15px 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--text);
+    font-size: 15px;
+    font-family: inherit;
+  }
+
+  #arama::placeholder { color: #6f7b8b; }
+
+  .temizle {
+    display: none;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .08);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .temizle:hover { background: rgba(255, 255, 255, .16); color: var(--text); }
+  .temizle.gorunur { display: grid; place-items: center; }
+
+  /* ── Sonuç sayacı ── */
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 6px 2px 18px;
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+
+  .meta strong { color: var(--text); }
+
+  /* ── Kart ızgarası ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+    padding-bottom: 64px;
+  }
+
+  .kart {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--card), var(--bg-soft));
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    overflow: hidden;
+  }
+
+  .kart::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(216, 184, 120, .45), transparent);
+    opacity: 0;
+    transition: opacity .18s ease;
+  }
+
+  .kart:hover, .kart:focus-visible {
+    transform: translateY(-3px);
+    border-color: rgba(216, 184, 120, .3);
+    background: linear-gradient(180deg, var(--card-hover), var(--bg-soft));
+    outline: none;
+  }
+
+  .kart:hover::after, .kart:focus-visible::after { opacity: 1; }
+
+  .kart-ust { display: flex; align-items: center; gap: 12px; }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(216, 184, 120, .9), rgba(216, 184, 120, .35));
+    color: #241d10;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .kart h2 {
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  .kunye {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 500;
+  }
+
+  .ozet {
+    margin: 0;
+    color: #c3ccd8;
+    font-size: 13px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .kart-alt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .vefat {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--gold-soft);
+    color: var(--gold);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .oku {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .kart:hover .oku { gap: 8px; }
+
+  /* ── Durumlar ── */
+  .durum {
+    grid-column: 1 / -1;
+    padding: 48px 20px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    text-align: center;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  .durum strong { display: block; margin-bottom: 6px; color: var(--text); font-size: 15px; }
+
+  .iskelet {
+    height: 186px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: linear-gradient(100deg, var(--card) 30%, #1b2330 50%, var(--card) 70%);
+    background-size: 200% 100%;
+    animation: parla 1.4s infinite linear;
+  }
+
+  @keyframes parla {
+    from { background-position: 140% 0; }
+    to { background-position: -60% 0; }
+  }
+
+  footer {
+    padding: 26px 0 40px;
+    border-top: 1px solid var(--line);
+    color: #6f7b8b;
+    font-size: 11.5px;
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    header.hero { padding: 36px 0 18px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .kart { padding: 16px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <span class="eyebrow">Sahabeler Ansiklopedisi</span>
+    <h1>Peygamberimizin Arkadaşları</h1>
+    <p>Hayatları, önemli olayları ve Peygamberimizle yaşadıkları hatıralar — sade ve kaynaklı bir dille.</p>
+
+    <div class="search-bar">
+      <div class="search-inner">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path>
+        </svg>
+        <input id="arama" type="search" placeholder="İsim, künye veya olay ara…" autocomplete="off" aria-label="Sahabe ara" />
+        <button id="temizle" class="temizle" type="button" aria-label="Aramayı temizle">×</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="meta">
+    <span id="sonuc"><strong>—</strong> sahabe</span>
+    <span id="ipucu">Karta dokun, hayatını oku.</span>
+  </div>
+
+  <main class="grid" id="liste" aria-live="polite">
+    <div class="iskelet"></div><div class="iskelet"></div><div class="iskelet"></div>
+  </main>
+
+  <footer>
+    Veriler <code>sahabeler.json</code> dosyasından okunur. Yeni sahabe eklemek için yalnız bu dosyaya yeni bir kayıt ekleyin.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var VERI_YOLU = "sahabeler.json";
+  var liste = document.getElementById("liste");
+  var arama = document.getElementById("arama");
+  var temizle = document.getElementById("temizle");
+  var sonuc = document.getElementById("sonuc");
+  var ipucu = document.getElementById("ipucu");
+  var sahabeler = [];
+
+  // ── Yardımcılar ──
+  function basHarfler(isim) {
+    return String(isim || "?")
+      .replace(/\(r\.[^)]*\)/g, "")
+      .replace(/^Hz\.\s*/i, "")
+      .trim()
+      .split(/\s+/)
+      .filter(function (p) { return p && p.length > 1; })
+      .slice(0, 2)
+      .map(function (p) { return p.charAt(0).toLocaleUpperCase("tr"); })
+      .join("");
+  }
+
+  function metneCevir(deger) {
+    if (!deger) return "";
+    if (typeof deger === "string") return deger;
+    if (Array.isArray(deger)) {
+      return deger.map(function (p) { return metneCevir(p); }).join(" ");
+    }
+    if (typeof deger === "object") {
+      if (deger.tr) return metneCevir(deger.tr);
+      if (deger.metin) return metneCevir(deger.metin);
+      if (deger.baslik) return metneCevir(deger.baslik);
+    }
+    return "";
+  }
+
+  function kacis(metin) {
+    return String(metin == null ? "" : metin)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function aramaHavuzu(s) {
+    var parcalar = [s.isim, s.kunye, s.kisa_ozet, s.vefat_yili, s.hayati, s.peygamberle_bir_anisi];
+    (s.olaylar || []).forEach(function (o) { parcalar.push(o.baslik, o.metin); });
+    (s.anilar || []).forEach(function (o) { parcalar.push(o.baslik, o.metin); });
+    return parcalar.map(metneCevir).join(" ").toLocaleLowerCase("tr");
+  }
+
+  // ── Kart ──
+  function kartHtml(s) {
+    var ozet = metneCevir(s.kisa_ozet);
+    var vefat = s.vefat_yili ? '<span class="vefat">vefat ' + kacis(s.vefat_yili) + "</span>" : "<span></span>";
+    return (
+      '<a class="kart" href="detay.html?sahabe=' + encodeURIComponent(s.slug) + '" data-minitur="kart-' + kacis(s.slug) + '">' +
+        '<div class="kart-ust">' +
+          '<span class="avatar" aria-hidden="true">' + kacis(basHarfler(s.isim)) + "</span>" +
+          "<div>" +
+            "<h2>" + kacis(s.isim) + "</h2>" +
+            (s.kunye ? '<span class="kunye">' + kacis(s.kunye) + "</span>" : "") +
+          "</div>" +
+        "</div>" +
+        '<p class="ozet">' + kacis(ozet) + "</p>" +
+        '<div class="kart-alt">' + vefat +
+          '<span class="oku">Hayatını oku <span aria-hidden="true">→</span></span>' +
+        "</div>" +
+      "</a>"
+    );
+  }
+
+  function ciz(kayitlar) {
+    if (!kayitlar.length) {
+      liste.innerHTML =
+        '<div class="durum"><strong>Sonuç bulunamadı</strong>' +
+        "Farklı bir isim, künye ya da olay adı deneyin.</div>";
+      return;
+    }
+    liste.innerHTML = kayitlar.map(kartHtml).join("");
+  }
+
+  function guncelle() {
+    var q = arama.value.trim().toLocaleLowerCase("tr");
+    temizle.classList.toggle("gorunur", q.length > 0);
+    var suzulen = q ? sahabeler.filter(function (s) { return s._havuz.indexOf(q) > -1; }) : sahabeler;
+    sonuc.innerHTML = "<strong>" + suzulen.length + "</strong> sahabe" + (q ? " bulundu" : "");
+    ipucu.textContent = q ? "Arama: “" + arama.value.trim() + "”" : "Karta dokun, hayatını oku.";
+    ciz(suzulen);
+  }
+
+  // ── Yükleme ──
+  fetch(VERI_YOLU, { cache: "no-cache" })
+    .then(function (yanit) {
+      if (!yanit.ok) throw new Error("HTTP " + yanit.status);
+      return yanit.json();
+    })
+    .then(function (veri) {
+      var ham = Array.isArray(veri) ? veri : (veri.sahabeler || veri.data || []);
+      sahabeler = ham
+        .filter(function (s) { return s && s.slug && s.isim; })
+        .map(function (s) { s._havuz = aramaHavuzu(s); return s; });
+
+      if (!sahabeler.length) {
+        liste.innerHTML = '<div class="durum"><strong>Veri boş</strong>sahabeler.json içine en az bir sahabe ekleyin.</div>';
+        sonuc.innerHTML = "<strong>0</strong> sahabe";
+        return;
+      }
+      guncelle();
+    })
+    .catch(function (hata) {
+      liste.innerHTML =
+        '<div class="durum"><strong>Veri yüklenemedi</strong>' +
+        "sahabeler.json dosyasına ulaşılamadı (" + kacis(hata.message) + "). " +
+        "Sayfayı bir sunucu üzerinden açın (file:// ile fetch çalışmaz).</div>";
+      sonuc.innerHTML = "<strong>—</strong> sahabe";
+    });
+
+  // ── Olaylar ──
+  var zamanlayici = null;
+  arama.addEventListener("input", function () {
+    clearTimeout(zamanlayici);
+    zamanlayici = setTimeout(guncelle, 90);
+  });
+  temizle.addEventListener("click", function () {
+    arama.value = "";
+    arama.focus();
+    guncelle();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "/" && document.activeElement !== arama) {
+      e.preventDefault();
+      arama.focus();
+    }
+  });
+})();
+</script>
+</body>
+</html>

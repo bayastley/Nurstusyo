@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sahabe — Sahabeler Ansiklopedisi</title>
+<meta name="description" content="Sahabelerin hayatı, önemli olayları ve Peygamberimizle hatıraları." />
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-soft: #141a23;
+    --card: #161d27;
+    --line: rgba(255, 255, 255, .09);
+    --text: #e9edf3;
+    --muted: #98a4b5;
+    --gold: #d8b878;
+    --gold-soft: rgba(216, 184, 120, .12);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(900px 480px at 20% -10%, rgba(216, 184, 120, .10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { width: min(820px, 100% - 32px); margin: 0 auto; }
+
+  /* ── Üst çubuk ── */
+  .ust {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0;
+    background: linear-gradient(to bottom, var(--bg) 70%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  .geri {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    transition: background .16s ease, color .16s ease, border-color .16s ease;
+  }
+
+  .geri:hover {
+    background: rgba(255, 255, 255, .07);
+    border-color: rgba(216, 184, 120, .35);
+    color: var(--text);
+  }
+
+  .marka {
+    color: var(--gold);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 13px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+
+  /* ── Kahraman alanı ── */
+  .kahraman {
+    padding: 26px 0 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .kimlik { display: flex; align-items: center; gap: 16px; }
+
+  .avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 66px;
+    height: 66px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(216, 184, 120, .95), rgba(216, 184, 120, .35));
+    color: #241d10;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(22px, 4.6vw, 32px);
+    line-height: 1.25;
+    letter-spacing: -.01em;
+  }
+
+  .kunye { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+
+  .etiketler { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+  .etiket {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .etiket.altin {
+    border-color: rgba(216, 184, 120, .3);
+    background: var(--gold-soft);
+    color: var(--gold);
+  }
+
+  .ozet {
+    margin: 18px 0 0;
+    color: #cdd6e1;
+    font-size: 15px;
+    font-style: italic;
+  }
+
+  /* ── Metin blokları ── */
+  main { padding: 26px 0 20px; }
+
+  section { margin-bottom: 30px; }
+
+  .bolum-baslik {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 12px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .bolum-baslik::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(216, 184, 120, .35), transparent);
+  }
+
+  .metin p {
+    margin: 0 0 14px;
+    color: #d3dae4;
+    font-size: 15px;
+    line-height: 1.85;
+  }
+
+  .metin p:last-child { margin-bottom: 0; }
+
+  /* Olay kartları */
+  .olaylar { display: grid; gap: 12px; }
+
+  .olay {
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-left: 2px solid rgba(216, 184, 120, .55);
+    border-radius: 12px;
+    background: linear-gradient(180deg, var(--card), var(--bg-soft));
+  }
+
+  .olay h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #f2e6cd;
+  }
+
+  .olay p { margin: 0; color: #c3ccd8; font-size: 13.5px; line-height: 1.8; }
+
+  /* Anı bloğu */
+  .ani {
+    position: relative;
+    padding: 22px 22px 22px 26px;
+    border: 1px solid rgba(216, 184, 120, .25);
+    border-radius: var(--radius);
+    background: linear-gradient(160deg, rgba(216, 184, 120, .1), rgba(216, 184, 120, .02));
+  }
+
+  .ani::before {
+    content: "“";
+    position: absolute;
+    top: 2px;
+    left: 10px;
+    color: rgba(216, 184, 120, .35);
+    font-family: Georgia, serif;
+    font-size: 54px;
+    line-height: 1;
+  }
+
+  .ani p {
+    margin: 0 0 10px;
+    color: #eee4d2;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15.5px;
+    font-style: italic;
+    line-height: 1.85;
+  }
+
+  .ani p:last-child { margin-bottom: 0; }
+
+  .ani .ani-baslik {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gold);
+    font-family: inherit;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  /* Anılar listesi */
+  .anilar { display: grid; gap: 10px; }
+
+  .anilar .olay { border-left-color: rgba(152, 164, 181, .5); }
+
+  /* Alt gezinme */
+  .alt-gezinme {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 0 50px;
+  }
+
+  /* Durum */
+  .durum {
+    margin: 40px 0 60px;
+    padding: 44px 24px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    text-align: center;
+  }
+
+  .durum strong { display: block; margin-bottom: 8px; font-size: 17px; }
+  .durum p { margin: 0 0 18px; color: var(--muted); font-size: 13.5px; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: var(--gold);
+    color: #241d10;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .btn:hover { filter: brightness(1.06); }
+
+  .iskelet-satir {
+    height: 14px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    background: linear-gradient(100deg, var(--card) 30%, #1b2330 50%, var(--card) 70%);
+    background-size: 200% 100%;
+    animation: parla 1.4s infinite linear;
+  }
+
+  .iskelet-satir.kisa { width: 55%; }
+  .iskelet-satir.orta { width: 80%; }
+  .iskelet-satir.buyuk { height: 30px; width: 45%; margin-bottom: 22px; }
+
+  @keyframes parla {
+    from { background-position: 140% 0; }
+    to { background-position: -60% 0; }
+  }
+
+  footer {
+    padding: 22px 0 40px;
+    border-top: 1px solid var(--line);
+    color: #6f7b8b;
+    font-size: 11.5px;
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .kimlik { gap: 12px; }
+    .avatar { width: 54px; height: 54px; font-size: 20px; }
+    .metin p, .ozet { font-size: 14.5px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ust">
+    <a class="geri" href="index.html"><span aria-hidden="true">←</span> Tüm sahabeler</a>
+    <a class="marka" href="index.html">Sahabeler Ansiklopedisi</a>
+  </div>
+
+  <div id="icerik" aria-live="polite">
+    <div class="kahraman">
+      <div class="iskelet-satir buyuk"></div>
+      <div class="iskelet-satir orta"></div>
+    </div>
+    <main>
+      <div class="iskelet-satir"></div>
+      <div class="iskelet-satir"></div>
+      <div class="iskelet-satir orta"></div>
+      <div class="iskelet-satir kisa"></div>
+    </main>
+  </div>
+
+  <footer>
+    Kaynak dosya: <code>sahabeler.json</code> · Yeni sahabe eklemek için yalnız bu dosyaya kayıt ekleyin.
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var VERI_YOLU = "sahabeler.json";
+  var icerik = document.getElementById("icerik");
+
+  // ── Yardımcılar ──
+  function metneCevir(deger) {
+    if (deger == null) return "";
+    if (typeof deger === "string") return deger;
+    if (Array.isArray(deger)) {
+      return deger.map(metneCevir).filter(Boolean).join("\n\n");
+    }
+    if (typeof deger === "object") {
+      if (typeof deger.tr === "string") return deger.tr;
+      if (typeof deger.metin === "string") return deger.metin;
+      if (typeof deger.baslik === "string" && !deger.paragraflar) return deger.baslik;
+    }
+    return "";
+  }
+
+  function paragraflar(deger) {
+    var metin = metneCevir(deger).trim();
+    if (!metin) return [];
+    return metin.split(/\n{2,}/).map(function (p) { return p.trim(); }).filter(Boolean);
+  }
+
+  function kacis(metin) {
+    return String(metin == null ? "" : metin)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function basHarfler(isim) {
+    return String(isim || "?")
+      .replace(/\(r\.[^)]*\)/g, "")
+      .replace(/^Hz\.\s*/i, "")
+      .trim()
+      .split(/\s+/)
+      .filter(function (p) { return p && p.length > 1; })
+      .slice(0, 2)
+      .map(function (p) { return p.charAt(0).toLocaleUpperCase("tr"); })
+      .join("");
+  }
+
+  function slugOku() {
+    var p = new URLSearchParams(window.location.search);
+    return (p.get("sahabe") || p.get("slug") || "").trim();
+  }
+
+  // ── Bölüm üreticileri ──
+  function metinBolumu(baslik, deger) {
+    var ps = paragraflar(deger);
+    if (!ps.length) return "";
+    return (
+      '<section><h2 class="bolum-baslik">' + kacis(baslik) + "</h2>" +
+      '<div class="metin">' + ps.map(function (p) { return "<p>" + kacis(p) + "</p>"; }).join("") +
+      "</div></section>"
+    );
+  }
+
+  function kayitBolumu(baslik, kayitlar, sinif) {
+    var gecerli = (kayitlar || []).filter(function (k) {
+      return k && (metneCevir(k.metin) || metneCevir(k.baslik));
+    });
+    if (!gecerli.length) return "";
+    return (
+      '<section><h2 class="bolum-baslik">' + kacis(baslik) + "</h2>" +
+      '<div class="' + (sinif || "olaylar") + '">' +
+      gecerli.map(function (k) {
+        var b = metneCevir(k.baslik);
+        var m = metneCevir(k.metin);
+        return (
+          '<article class="olay">' +
+          (b ? "<h3>" + kacis(b) + "</h3>" : "") +
+          (m ? "<p>" + kacis(m).replace(/\n{2,}/g, "</p><p>") + "</p>" : "") +
+          "</article>"
+        );
+      }).join("") +
+      "</div></section>"
+    );
+  }
+
+  function aniBolumu(baslik, deger) {
+    var ps = paragraflar(deger);
+    if (!ps.length) return "";
+    return (
+      '<section><h2 class="bolum-baslik">' + kacis(baslik) + "</h2>" +
+      '<div class="ani">' +
+      '<span class="ani-baslik">Peygamberimizle hatırası</span>' +
+      ps.map(function (p) { return "<p>" + kacis(p) + "</p>"; }).join("") +
+      "</div></section>"
+    );
+  }
+
+  // ── Hata ekranı ──
+  function hata(baslik, aciklama) {
+    icerik.innerHTML =
+      '<div class="durum"><strong>' + kacis(baslik) + "</strong>" +
+      "<p>" + kacis(aciklama) + "</p>" +
+      '<a class="btn" href="index.html">← Tüm sahabeler</a></div>';
+  }
+
+  // ── Çizim ──
+  function ciz(s) {
+    var isim = metneCevir(s.isim);
+    var kunye = metneCevir(s.kunye);
+    var vefat = metneCevir(s.vefat_yili);
+    var ozet = metneCevir(s.kisa_ozet);
+    var dogum = metneCevir(s.dogum_yili);
+
+    document.title = (isim || "Sahabe") + " — Sahabeler Ansiklopedisi";
+
+    var etiketler = "";
+    if (vefat) etiketler += '<span class="etiket altin">vefat ' + kacis(vefat) + "</span>";
+    if (dogum) etiketler += '<span class="etiket">doğum ' + kacis(dogum) + "</span>";
+    if (s.kavim) etiketler += '<span class="etiket">' + kacis(metneCevir(s.kavim)) + "</span>";
+
+    icerik.innerHTML =
+      '<header class="kahraman">' +
+        '<div class="kimlik">' +
+          '<span class="avatar" aria-hidden="true">' + kacis(basHarfler(isim)) + "</span>" +
+          "<div>" +
+            "<h1>" + kacis(isim) + "</h1>" +
+            (kunye ? '<p class="kunye">' + kacis(kunye) + "</p>" : "") +
+          "</div>" +
+        "</div>" +
+        (etiketler ? '<div class="etiketler">' + etiketler + "</div>" : "") +
+        (ozet ? '<p class="ozet">' + kacis(ozet) + "</p>" : "") +
+      "</header>" +
+      "<main>" +
+        metinBolumu("Hayatı", s.hayati) +
+        kayitBolumu("Önemli olayları", s.olaylar, "olaylar") +
+        aniBolumu("Peygamberle bir anısı", s.peygamberle_bir_anisi) +
+        kayitBolumu("Diğer hatıralar", s.anilar, "anilar") +
+        metinBolumu("Kaynaklar", s.kaynak) +
+      "</main>" +
+      '<div class="alt-gezinme"><a class="geri" href="index.html"><span aria-hidden="true">←</span> Tüm sahabeler</a></div>';
+  }
+
+  // ── Akış ──
+  var slug = slugOku();
+  if (!slug) {
+    hata("Sahabe seçilmedi", "Başlangıç sayfasından bir sahabe kartı seçin.");
+    return;
+  }
+
+  fetch(VERI_YOLU, { cache: "no-cache" })
+    .then(function (yanit) {
+      if (!yanit.ok) throw new Error("HTTP " + yanit.status);
+      return yanit.json();
+    })
+    .then(function (veri) {
+      var ham = Array.isArray(veri) ? veri : (veri.sahabeler || veri.data || []);
+      var sahabe = ham.filter(function (s) {
+        return s && (s.slug === slug || String(s.id) === slug);
+      })[0];
+
+      if (!sahabe) {
+        hata("Bu sahabe bulunamadı", "“" + slug + "” kaydı sahabeler.json içinde yok. Bağlantıyı kontrol edin.");
+        return;
+      }
+      ciz(sahabe);
+    })
+    .catch(function (e) {
+      hata("Veri yüklenemedi", "sahabeler.json okunamadı (" + e.message + "). Sayfayı bir sunucu üzerinden açın.");
+    });
+})();
+</script>
+</body>
+</html>
