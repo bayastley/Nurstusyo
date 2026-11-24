@@ -1,6 +1,6 @@
 // ════════════════════════════════════════════════════════
 // ILMIHALDATA.TS — İlmihal Akademisi (yol haritası madde 11)
-// Hanefî mezhebi esaslı temel ilmihal: 10 ders · 60 madde · 30 sınav sorusu.
+// Hanefî mezhebi esaslı ilmihal: 31 ders · 182 madde · 101 sınav sorusu (modüller birleşik).
 //
 // ★ SAHİHLİK İLKESİ (kullanıcı emri: "her içerik sahih olsun"):
 //   • Her maddede Kur'ân ayeti (sure:ayet) veya hadis kitabı/bölümü kaynağı var.
@@ -11,6 +11,7 @@
 
 import { ILMIHAL_EK1_DERSLERI } from "./ilmihalEk1Data";
 import { ILMIHAL_EK2_DERSLERI } from "./ilmihalEk2Data";
+import { ILMIHAL_EK3_DERSLERI } from "./ilmihalEk3Data";
 
 export interface IlmihalMadde {
   baslik: string;
@@ -556,7 +557,7 @@ export const ILMIHAL_DERSLERI: IlmihalDers[] = [
       {
         baslik: "Nikâhın şartları",
         metin:
-          "İcap-kabul, iki Müslüman şahit ve mehrin belirlenmesi nikâhın rükünleridir. Nikâh, devletin resmî kaydıyla da tescil edilmelidir.",
+          "Nikâh icap-kabul ile kurulur; iki Müslüman şahit şarttır. Mehir kadının hakkıdır; belirtilmezse mehr-i misil takdir edilir. Nikâh, devletin resmî kaydıyla da tescil edilmelidir.",
         delil: "Nisâ 4:4; Nisâ 4:24-25",
       },
       {
@@ -1157,6 +1158,7 @@ export const ILMIHAL_DERSLERI: IlmihalDers[] = [
   // ★ 21.11 İÇERİK GENİŞLETME: 8 yeni ders (toplam 24 ders)
   ...ILMIHAL_EK1_DERSLERI,
   ...ILMIHAL_EK2_DERSLERI,
+  ...ILMIHAL_EK3_DERSLERI, // ★ 24.11: hayız, nikâh-talâk, miras, av-kesim, akitler, ceza, sadaka
 ];
 
 export const ILMIHAL_TOPLAM = {
