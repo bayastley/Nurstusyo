@@ -70,6 +70,26 @@
     color: var(--text);
   }
 
+  select.dil-secici {
+    padding: 7px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--bg-soft);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  select.dil-secici:focus-visible { outline: 2px solid rgba(216, 184, 120, .5); outline-offset: 2px; }
+
+  .icerik-uyari {
+    margin: 10px 0 0;
+    color: #8b96a6;
+    font-size: 11.5px;
+  }
+
   .marka {
     color: var(--gold);
     font-family: Georgia, "Times New Roman", serif;
@@ -417,9 +437,14 @@
 <body>
 <div class="wrap">
   <div class="ust">
-    <a class="geri" href="index.html"><span aria-hidden="true">←</span> Tüm sahabeler</a>
-    <a class="marka" href="index.html">Sahabeler Ansiklopedisi</a>
+    <a class="geri" href="index.html" data-i18n="geri">← Tüm sahabeler</a>
+    <div style="display:flex;align-items:center;gap:8px">
+      <a class="marka" href="index.html" data-i18n="ansiklopedi">Sahabeler Ansiklopedisi</a>
+      <select class="dil-secici" data-dil-secici aria-label="Dil"></select>
+    </div>
   </div>
+
+  <p class="icerik-uyari" data-icerik-uyari hidden></p>
 
   <div id="icerik" aria-live="polite">
     <div class="kahraman">
@@ -434,17 +459,22 @@
     </main>
   </div>
 
-  <footer>
-    Kaynak dosya: <code>sahabeler.json</code> · Yeni sahabe eklemek için yalnız bu dosyaya kayıt ekleyin.
+  <footer data-i18n="altBilgi">
+    Veriler sahabeler.json dosyasından okunur. Yeni sahabe eklemek için yalnız bu dosyaya kayıt ekleyin.
   </footer>
 </div>
 
+<script src="diller.js"></script>
 <script>
 (function () {
   "use strict";
 
-  var VERI_YOLU = "sahabeler.json";
+  var D = window.SahabelerDil;
   var icerik = document.getElementById("icerik");
+  var sonSayfa = 0;
+  var sonVeri = null;
+
+  function T(anahtar, veriler) { return D.cevir(D.suanki(), anahtar, veriler); }
 
   // ── Yardımcılar ──
   function metneCevir(deger) {
@@ -551,7 +581,7 @@
     var ham = s.sayfalar;
     if (Array.isArray(ham) && ham.length) {
       // 1. sayfa her zaman giriş/hayat metni, sonrakiler olay sayfaları
-      liste.push({ baslik: "Hayatı", paragraflar: paragraflar(s.hayati) });
+      liste.push({ baslik: T("hayati"), paragraflar: paragraflar(s.hayati) });
       ham.forEach(function (p) {
         liste.push({
           baslik: metneCevir(p.baslik),
@@ -559,12 +589,12 @@
         });
       });
     } else {
-      liste.push({ baslik: "Hayatı", paragraflar: paragraflar(s.hayati) });
+      liste.push({ baslik: T("hayati"), paragraflar: paragraflar(s.hayati) });
       (s.olaylar || []).forEach(function (o) {
         liste.push({ baslik: metneCevir(o.baslik), paragraflar: paragraflar(o.metin) });
       });
       if (s.peygamberle_bir_anisi) {
-        liste.push({ baslik: "Peygamberimizle bir anısı", paragraflar: paragraflar(s.peygamberle_bir_anisi) });
+        liste.push({ baslik: T("hatira"), paragraflar: paragraflar(s.peygamberle_bir_anisi) });
       }
       (s.anilar || []).forEach(function (o) {
         liste.push({ baslik: metneCevir(o.baslik), paragraflar: paragraflar(o.metin) });
@@ -577,7 +607,7 @@
     var satirlar = Array.isArray(kaynak) ? kaynak.filter(Boolean) : paragraflar(kaynak);
     if (!satirlar.length) return "";
     return (
-      '<section><h2 class="bolum-baslik">Kaynaklar</h2><ul class="kaynak-listesi">' +
+      '<section><h2 class="bolum-baslik">' + kacis(T("kaynaklar")) + '</h2><ul class="kaynak-listesi">' +
       satirlar.map(function (k) { return "<li>" + kacis(metneCevir(k)) + "</li>"; }).join("") +
       "</ul></section>"
     );
@@ -617,14 +647,14 @@
       "<main>" +
         '<div id="sayfa-icerik"></div>' +
         '<div class="pager">' +
-          '<button class="pager-btn" id="onceki" type="button">← Önceki</button>' +
+          '<button class="pager-btn" id="onceki" type="button">' + kacis(T("onceki")) + '</button>' +
           '<span class="pager-sayi" id="pager-sayi"></span>' +
-          '<button class="pager-btn" id="sonraki" type="button">Sonraki →</button>' +
+          '<button class="pager-btn" id="sonraki" type="button">' + kacis(T("sonraki")) + '</button>' +
         "</div>" +
         '<ul class="sayfa-liste" id="sayfa-liste"></ul>' +
         kaynakBolumu(s.kaynak) +
       "</main>" +
-      '<div class="alt-gezinme"><a class="geri" href="index.html"><span aria-hidden="true">←</span> Tüm sahabeler</a></div>';
+      '<div class="alt-gezinme"><a class="geri" href="index.html">' + kacis(T("geri")) + '</a></div>';
 
     var icerikAlani = document.getElementById("sayfa-icerik");
     var onceki = document.getElementById("onceki");
@@ -641,8 +671,9 @@
     function goster(indeks, kaydir) {
       aktif = Math.max(0, Math.min(indeks, sayfalar.length - 1));
       var p = sayfalar[aktif];
+      sonSayfa = aktif;
       icerikAlani.innerHTML =
-        '<section><p class="sayfa-no">' + (aktif + 1) + " / " + sayfalar.length + " · sayfa</p>" +
+        '<section><p class="sayfa-no">' + (aktif + 1) + " / " + sayfalar.length + " · " + kacis(T("sayfa")) + "</p>" +
         '<h2 class="sayfa-baslik">' + kacis(p.baslik || isim) + "</h2>" +
         '<div class="metin">' +
           p.paragraflar.map(function (par) { return "<p>" + kacis(par) + "</p>"; }).join("") +
@@ -655,7 +686,7 @@
         var b = li.firstElementChild;
         if (b) b.className = i === aktif ? "aktif" : "";
       });
-      document.title = (isim || "Sahabe") + " · " + (aktif + 1) + "/" + sayfalar.length + " — Sahabeler Ansiklopedisi";
+      document.title = (isim || "Sahabe") + " · " + (aktif + 1) + "/" + sayfalar.length + " — " + T("ansiklopedi");
       urlYaz();
       if (kaydir) window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -689,26 +720,52 @@
     return;
   }
 
-  fetch(VERI_YOLU, { cache: "no-cache" })
-    .then(function (yanit) {
+  function veriOku(yol) {
+    return fetch(yol, { cache: "no-cache" }).then(function (yanit) {
       if (!yanit.ok) throw new Error("HTTP " + yanit.status);
       return yanit.json();
-    })
-    .then(function (veri) {
+    });
+  }
+
+  function yukleVeCiz() {
+    var yol = D.icerikYolu();
+    veriOku(yol).catch(function () {
+      if (yol !== "sahabeler.json") return veriOku("sahabeler.json");
+      throw new Error("veri yok");
+    }).then(function (veri) {
       var ham = Array.isArray(veri) ? veri : (veri.sahabeler || veri.data || []);
       var sahabe = ham.filter(function (s) {
         return s && (s.slug === slug || String(s.id) === slug);
       })[0];
 
       if (!sahabe) {
-        hata("Bu sahabe bulunamadı", "“" + slug + "” kaydı sahabeler.json içinde yok. Bağlantıyı kontrol edin.");
+        hata(T("bulunamadi"), "“" + slug + "”");
         return;
       }
+      sonVeri = sahabe;
       ciz(sahabe);
-    })
-    .catch(function (e) {
-      hata("Veri yüklenemedi", "sahabeler.json okunamadı (" + e.message + "). Sayfayı bir sunucu üzerinden açın.");
+      if (sonSayfa > 0) {
+        var dugme = document.querySelector('#sayfa-liste button[data-sayfa="' + sonSayfa + '"]');
+        if (dugme) dugme.click();
+      }
+    }).catch(function (e) {
+      hata(T("hataBaslik"), T("hataMetin", { hata: e.message }));
     });
+  }
+
+  document.addEventListener("sahabeler:dil", function () {
+    if (sonVeri) {
+      ciz(sonVeri);
+      if (sonSayfa > 0) {
+        var dugme = document.querySelector('#sayfa-liste button[data-sayfa="' + sonSayfa + '"]');
+        if (dugme) dugme.click();
+      }
+    } else {
+      yukleVeCiz();
+    }
+  });
+
+  yukleVeCiz();
 })();
 </script>
 </body>
