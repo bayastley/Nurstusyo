@@ -77,11 +77,13 @@ export const RECITERS: Reciter[] = [
   // koleksiyonu ve Tarteel-AI EveryAyah veri seti ile capraz kontrol edildi).
   { id: "ahmed_neana", name: "Ahmed Nu'ine", path: "Ahmed_Neana_128kbps", makam: "Telif", risk: "low", telifRiski: 6, riskAciklamasi: "Klasik Misir ekolu; tahmini cok dusuk risk.", color: classic, initial: "AN", country: "Misir" },
   { id: "sahl_yassin", name: "Sehl Yasin", path: "Sahl_Yassin_128kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "SY", country: "Suudi Arabistan" },
-  // ali_hajjaj — EveryAyah'ta ses dosyasi yok (404), kaldirildi
+  // ★ 24.11: ali_hajjaj yeniden eklendi — EveryAyah'ta 128 kbps ayet dosyalari artik VAR (001001 / 002255 / 114006 → 206 OK).
+  { id: "ali_hajjaj", name: "Ali Haccac es-Süveysi", path: "Ali_Hajjaj_AlSuesy_128kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "EveryAyah 128 kbps ayet kaydi (24.11 dogrulandi). Klasik Misir okuyusu; tahmini dusuk risk.", color: classic, initial: "AH", country: "Misir" },
   { id: "aziz_alili", name: "Aziz Alili", path: "Aziz_Alili_128kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "AZ", country: "Bosna Hersek" },
   { id: "karim_mansoori", name: "Kerim Mansuri", path: "Karim_Mansoori_40kbps", makam: "Telif", risk: "low", telifRiski: 8, riskAciklamasi: "Tahmini dusuk risk.", color: classic, initial: "KM", country: "Iran" },
   // khalid_aljalil — EveryAyah'ta ses dosyasi yok (404), kaldirildi
-  // nabil_rifai — EveryAyah'ta ses dosyasi yok (404), kaldirildi
+  // ★ 24.11: nabil_rifai yeniden eklendi — EveryAyah'ta 48 kbps ayet dosyalari artik VAR (001001 / 002255 / 114006 → 206 OK).
+  { id: "nabil_rifai", name: "Nabil er-Rifai", path: "Nabil_Rifa3i_48kbps", makam: "Telif", risk: "low", telifRiski: 10, riskAciklamasi: "EveryAyah 48 kbps ayet kaydi (24.11 dogrulandi). Tahmini dusuk risk.", color: classic, initial: "NR", country: "Suriye" },
   // hady_toure — EveryAyah'ta ses dosyasi yok (404), kaldirildi
   // balila (Bender Baliile) — EveryAyah'ta ses dosyasi yok, 404 donuyor, kaldirildi
   // ibrahim_dosary_warsh — EveryAyah'ta ses dosyasi yok (404), kaldirildi
@@ -255,4 +257,5 @@ export const RECITER_SES_TARZI: Record<string, SesTarzi> = {
   yaser_salamah: "yuksek", tunaiji: "yuksek",
   ahmed_neana: "klasik", sahl_yassin: "orta", aziz_alili: "orta",
   karim_mansoori: "klasik", balila: "yuksek",
+  ali_hajjaj: "klasik", nabil_rifai: "orta",
 };

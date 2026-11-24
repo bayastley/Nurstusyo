@@ -528,11 +528,11 @@ export function featureLockLabel(key: FeatureKey): string {
     : gate.version.toUpperCase();
 }
 
-// ★ DÜRÜST KÂRİ LİSTELERİ (08.10, kullanıcı emri) — reciters.ts'deki 45 gerçek id ile birebir
+// ★ DÜRÜST KÂRİ LİSTELERİ (08.10, kullanıcı emri) — reciters.ts'deki 47 gerçek id ile birebir
 //   FREE  : 10 kâri — foto4'tekiler KESİN free (Juhany, Shuraim, Maher, Sudais) + telifi
 //           en yüksek ünlüler (Husary, Abdulbasit, Minşavi, Afasi) herkese açık
 //   PRO   : 25 kâri GÖRÜR (10 free + 15 pro) — yani PRO listesinde 15 kâri var
-//   ELİT  : HEPSİNİ GÖRÜR (45) — yani ELİT listesinde 20 kâri var
+//   ELİT  : HEPSİNİ GÖRÜR (47) — yani ELİT listesinde 22 kâri var
 //   (senin emrin: free 10, pro +15 = 25 toplam, elit hepsi)
 export const FREE_RECITER_IDS = [
   'sudais', 'shuraim', 'maher', 'juhany',
@@ -547,7 +547,7 @@ export const PRO_RECITER_IDS = [
   'ghamdi_saad', 'hani_rifai',
 ] as const;
 
-// ★ ELİT — yalnız ELİT üyelerin görebildiği özel kâriler (20 adet; elit geri kalan 45'in HEPSİNİ görür)
+// ★ ELİT — yalnız ELİT üyelerin görebildiği özel kâriler (22 adet; elit geri kalan 47'nin HEPSİNİ görür)
 export const ELIT_RECITER_IDS = [
   'muhaisny',        // (reciters.ts'de de requiredTier: "elit" işaretli)
   'dosari',          // ★ Yaser el-Dosari — kullanıcı emri: KESİN ELİT
@@ -557,6 +557,8 @@ export const ELIT_RECITER_IDS = [
   'husary_mujawwad', 'husary_teacher', 'budair', 'ayyoub',
   'sowaid', 'parhizgar', 'ali_jaber', 'fares_abbad',
   'abdulkareem', 'bukhatir',
+  'ali_hajjaj',      // ★ 24.11: EveryAyah ayet dosyaları doğrulandı (128 kbps)
+  'nabil_rifai',     // ★ 24.11: EveryAyah ayet dosyaları doğrulandı (48 kbps)
 ] as const;
 
 
