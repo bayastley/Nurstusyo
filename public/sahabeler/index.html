@@ -258,6 +258,20 @@
     font-weight: 700;
   }
 
+  .kart-sol {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .sayfa-rozet {
+    color: #7d8998;
+    font-size: 10.5px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
   .kart:hover .oku { gap: 8px; }
 
   /* ── Durumlar ── */
@@ -393,7 +407,9 @@
   // ── Kart ──
   function kartHtml(s) {
     var ozet = metneCevir(s.kisa_ozet);
-    var vefat = s.vefat_yili ? '<span class="vefat">vefat ' + kacis(s.vefat_yili) + "</span>" : "<span></span>";
+    var vefat = s.vefat_yili ? '<span class="vefat">vefat ' + kacis(s.vefat_yili) + "</span>" : "";
+    var bolum = Array.isArray(s.sayfalar) ? s.sayfalar.length : 0;
+    var sayfaRozet = '<span class="sayfa-rozet">' + (bolum + 1) + " sayfa</span>";
     return (
       '<a class="kart" href="detay.html?sahabe=' + encodeURIComponent(s.slug) + '" data-minitur="kart-' + kacis(s.slug) + '">' +
         '<div class="kart-ust">' +
@@ -404,7 +420,7 @@
           "</div>" +
         "</div>" +
         '<p class="ozet">' + kacis(ozet) + "</p>" +
-        '<div class="kart-alt">' + vefat +
+        '<div class="kart-alt"><span class="kart-sol">' + vefat + sayfaRozet + "</span>" +
           '<span class="oku">Hayatını oku <span aria-hidden="true">→</span></span>' +
         "</div>" +
       "</a>"

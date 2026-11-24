@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v11"; // ★ 22.11: v10→v11 — içerik takvimi · ses düzenleme · sahne geçişi yayınlandı; eski kabuk cache'i temizlensin
+const CACHE = "nurstudyo-v12"; // ★ 24.11: v11→v12 — sahabeler ansiklopedisi eklendi; eski kabuk cache'i (bayat json) temizlensin
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
@@ -136,6 +136,14 @@ self.addEventListener("fetch", (event) => {
         return res;
       }).catch(() => caches.match("/").then((hit) => hit || fetch(event.request)))
     );
+    return;
+  }
+
+  // ★ 24.11 SAHABELER ANSİKLOPEDİSİ: /sahabeler/ altındaki HTML + JSON her zaman ağdan
+  //   okunur. Önceden .json cache-first olduğu için sahabeler.json'a yeni kayıt
+  //   eklendiğinde kullanıcı eski listeyi görüyordu (bayat içerik).
+  if (url.pathname.startsWith("/sahabeler/")) {
+    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }
 

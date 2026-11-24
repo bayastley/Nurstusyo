@@ -248,6 +248,109 @@
     padding: 10px 0 50px;
   }
 
+  /* ── Sayfa başlığı ve sayfalama ── */
+  .sayfa-baslik {
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(18px, 3.4vw, 23px);
+    line-height: 1.35;
+  }
+
+  .sayfa-no {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: var(--gold);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 26px 0 8px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .pager-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .03);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .16s ease, color .16s ease, border-color .16s ease;
+  }
+
+  .pager-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, .07);
+    border-color: rgba(216, 184, 120, .35);
+    color: var(--text);
+  }
+
+  .pager-btn:disabled { opacity: .3; cursor: default; }
+
+  .pager-sayi {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    white-space: nowrap;
+  }
+
+  .sayfa-liste {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .sayfa-liste button {
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .02);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .14s ease, color .14s ease, border-color .14s ease;
+  }
+
+  .sayfa-liste button:hover { background: rgba(255, 255, 255, .07); color: var(--text); }
+
+  .sayfa-liste button.aktif {
+    border-color: rgba(216, 184, 120, .5);
+    background: var(--gold-soft);
+    color: var(--gold);
+  }
+
+  .kaynak-listesi {
+    margin: 0;
+    padding-left: 18px;
+    color: #96a2b2;
+    font-size: 12px;
+    line-height: 1.9;
+  }
+
+  .kaynak-listesi li { margin-bottom: 4px; }
+
   /* Durum */
   .durum {
     margin: 40px 0 60px;
@@ -440,6 +543,46 @@
       '<a class="btn" href="index.html">← Tüm sahabeler</a></div>';
   }
 
+  // ── Sayfalara bölme ──
+  // Yeni biçim: kayıtta "sayfalar": [{ baslik, metin }] varsa her biri bir sayfa.
+  // Eski biçim: hayatı + olaylar + anısı + hatıralar ayrı sayfalara dağıtılır.
+  function sayfalaraAyir(s) {
+    var liste = [];
+    var ham = s.sayfalar;
+    if (Array.isArray(ham) && ham.length) {
+      // 1. sayfa her zaman giriş/hayat metni, sonrakiler olay sayfaları
+      liste.push({ baslik: "Hayatı", paragraflar: paragraflar(s.hayati) });
+      ham.forEach(function (p) {
+        liste.push({
+          baslik: metneCevir(p.baslik),
+          paragraflar: paragraflar(p.metin),
+        });
+      });
+    } else {
+      liste.push({ baslik: "Hayatı", paragraflar: paragraflar(s.hayati) });
+      (s.olaylar || []).forEach(function (o) {
+        liste.push({ baslik: metneCevir(o.baslik), paragraflar: paragraflar(o.metin) });
+      });
+      if (s.peygamberle_bir_anisi) {
+        liste.push({ baslik: "Peygamberimizle bir anısı", paragraflar: paragraflar(s.peygamberle_bir_anisi) });
+      }
+      (s.anilar || []).forEach(function (o) {
+        liste.push({ baslik: metneCevir(o.baslik), paragraflar: paragraflar(o.metin) });
+      });
+    }
+    return liste.filter(function (p) { return p.paragraflar.length > 0; });
+  }
+
+  function kaynakBolumu(kaynak) {
+    var satirlar = Array.isArray(kaynak) ? kaynak.filter(Boolean) : paragraflar(kaynak);
+    if (!satirlar.length) return "";
+    return (
+      '<section><h2 class="bolum-baslik">Kaynaklar</h2><ul class="kaynak-listesi">' +
+      satirlar.map(function (k) { return "<li>" + kacis(metneCevir(k)) + "</li>"; }).join("") +
+      "</ul></section>"
+    );
+  }
+
   // ── Çizim ──
   function ciz(s) {
     var isim = metneCevir(s.isim);
@@ -447,8 +590,12 @@
     var vefat = metneCevir(s.vefat_yili);
     var ozet = metneCevir(s.kisa_ozet);
     var dogum = metneCevir(s.dogum_yili);
+    var sayfalar = sayfalaraAyir(s);
 
-    document.title = (isim || "Sahabe") + " — Sahabeler Ansiklopedisi";
+    if (!sayfalar.length) {
+      hata("İçerik bulunamadı", "Bu kayıtta okunacak metin yok.");
+      return;
+    }
 
     var etiketler = "";
     if (vefat) etiketler += '<span class="etiket altin">vefat ' + kacis(vefat) + "</span>";
@@ -468,13 +615,71 @@
         (ozet ? '<p class="ozet">' + kacis(ozet) + "</p>" : "") +
       "</header>" +
       "<main>" +
-        metinBolumu("Hayatı", s.hayati) +
-        kayitBolumu("Önemli olayları", s.olaylar, "olaylar") +
-        aniBolumu("Peygamberle bir anısı", s.peygamberle_bir_anisi) +
-        kayitBolumu("Diğer hatıralar", s.anilar, "anilar") +
-        metinBolumu("Kaynaklar", s.kaynak) +
+        '<div id="sayfa-icerik"></div>' +
+        '<div class="pager">' +
+          '<button class="pager-btn" id="onceki" type="button">← Önceki</button>' +
+          '<span class="pager-sayi" id="pager-sayi"></span>' +
+          '<button class="pager-btn" id="sonraki" type="button">Sonraki →</button>' +
+        "</div>" +
+        '<ul class="sayfa-liste" id="sayfa-liste"></ul>' +
+        kaynakBolumu(s.kaynak) +
       "</main>" +
       '<div class="alt-gezinme"><a class="geri" href="index.html"><span aria-hidden="true">←</span> Tüm sahabeler</a></div>';
+
+    var icerikAlani = document.getElementById("sayfa-icerik");
+    var onceki = document.getElementById("onceki");
+    var sonraki = document.getElementById("sonraki");
+    var sayac = document.getElementById("pager-sayi");
+    var noktalar = document.getElementById("sayfa-liste");
+    var aktif = 0;
+
+    function urlYaz() {
+      var yeni = "detay.html?sahabe=" + encodeURIComponent(s.slug) + (aktif > 0 ? "&sayfa=" + (aktif + 1) : "");
+      try { history.replaceState(null, "", yeni); } catch (e) { /* file:// */ }
+    }
+
+    function goster(indeks, kaydir) {
+      aktif = Math.max(0, Math.min(indeks, sayfalar.length - 1));
+      var p = sayfalar[aktif];
+      icerikAlani.innerHTML =
+        '<section><p class="sayfa-no">' + (aktif + 1) + " / " + sayfalar.length + " · sayfa</p>" +
+        '<h2 class="sayfa-baslik">' + kacis(p.baslik || isim) + "</h2>" +
+        '<div class="metin">' +
+          p.paragraflar.map(function (par) { return "<p>" + kacis(par) + "</p>"; }).join("") +
+        "</div></section>";
+
+      sayac.textContent = p.baslik ? (aktif + 1) + "/" + sayfalar.length : (aktif + 1) + "/" + sayfalar.length;
+      onceki.disabled = aktif === 0;
+      sonraki.disabled = aktif === sayfalar.length - 1;
+      Array.prototype.forEach.call(noktalar.children, function (li, i) {
+        var b = li.firstElementChild;
+        if (b) b.className = i === aktif ? "aktif" : "";
+      });
+      document.title = (isim || "Sahabe") + " · " + (aktif + 1) + "/" + sayfalar.length + " — Sahabeler Ansiklopedisi";
+      urlYaz();
+      if (kaydir) window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    noktalar.innerHTML = sayfalar.map(function (p, i) {
+      return '<li><button type="button" data-sayfa="' + i + '" title="' + kacis(p.baslik || "") + '">' +
+        (i + 1) + ". " + kacis((p.baslik || "").slice(0, 26)) + "</button></li>";
+    }).join("");
+
+    noktalar.addEventListener("click", function (e) {
+      var hedef = e.target.closest("button[data-sayfa]");
+      if (!hedef) return;
+      goster(Number(hedef.getAttribute("data-sayfa")), true);
+    });
+    onceki.addEventListener("click", function () { goster(aktif - 1, true); });
+    sonraki.addEventListener("click", function () { goster(aktif + 1, true); });
+    document.addEventListener("keydown", function (e) {
+      if (e.target && /input|textarea/i.test(e.target.tagName)) return;
+      if (e.key === "ArrowRight") goster(aktif + 1, true);
+      if (e.key === "ArrowLeft") goster(aktif - 1, true);
+    });
+
+    var istenen = Number(new URLSearchParams(window.location.search).get("sayfa") || 1);
+    goster(Number.isFinite(istenen) && istenen > 0 ? istenen - 1 : 0, false);
   }
 
   // ── Akış ──
