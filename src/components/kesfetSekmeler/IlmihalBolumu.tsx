@@ -84,6 +84,18 @@ export function IlmihalBolumu({
   // trGoster: kullanıcı çeviriyi kapatıp asıl metni görmek isterse
   const g = React.useCallback((m: string) => (aktif && !trGoster ? cevir(m) : m), [aktif, trGoster, cevir]);
 
+  // ★ 24.11: dersleri tek JSON dosyası olarak indir — çevrimdışı arşiv/paylaşım
+  const jsonIndir = () => {
+    const veri = { surum: 1, tarih: new Date().toISOString(), toplam, dersler: derslerVeri };
+    const blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${miniturOnek}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  };
+
   return (
     <div className="space-y-2.5">
       {/* Kaynak ve kapsam notu — "her içerik sahih" ilkesi görünür olsun */}
@@ -93,6 +105,10 @@ export function IlmihalBolumu({
           {t("ilKapsam")} · {toplam.ders} {t("ilDers")} · {toplam.madde} {t("ilMadde")} · {toplam.soru} {t("ilSoru")}
         </p>
         <p className="mt-1 text-[8.5px] leading-relaxed text-white/40">{g(kaynakNotu)}</p>
+        <button type="button" onClick={jsonIndir}
+          className="mt-1.5 rounded-full bg-white/[.06] px-2 py-0.5 text-[8px] font-bold text-white/50 transition hover:bg-white/[.12] hover:text-white/80">
+          ⬇ {t("ilJsonIndir")}
+        </button>
         {aktif && (
           <div className="mt-1.5 flex items-center gap-2">
             <span className="flex items-center gap-1 rounded-full bg-white/[.06] px-2 py-0.5 text-[8px] font-bold text-white/50">

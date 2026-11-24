@@ -12,6 +12,7 @@
 import { ILMIHAL_EK1_DERSLERI } from "./ilmihalEk1Data";
 import { ILMIHAL_EK2_DERSLERI } from "./ilmihalEk2Data";
 import { ILMIHAL_EK3_DERSLERI } from "./ilmihalEk3Data";
+import { ILMIHAL_EK4_DERSLERI } from "./ilmihalEk4Data";
 
 export interface IlmihalMadde {
   baslik: string;
@@ -1159,6 +1160,7 @@ export const ILMIHAL_DERSLERI: IlmihalDers[] = [
   ...ILMIHAL_EK1_DERSLERI,
   ...ILMIHAL_EK2_DERSLERI,
   ...ILMIHAL_EK3_DERSLERI, // ★ 24.11: hayız, nikâh-talâk, miras, av-kesim, akitler, ceza, sadaka
+  ...ILMIHAL_EK4_DERSLERI, // ★ 24.11: sular-necâset, tilavet secdesi, akika, faiz-banka, yeme-giyim, büyük günahlar, komşuluk, mezhepler, terimler, niyet
 ];
 
 export const ILMIHAL_TOPLAM = {
