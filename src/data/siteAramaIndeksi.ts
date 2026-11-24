@@ -21,10 +21,113 @@ import { SÜNNETLER } from "./sunnetler";
 import { ADABI_MUASERET } from "./adabiMuaseret";
 import { KELIME_KARTLARI } from "./kelimeData";
 import { SORU_BANKASI } from "./sorular";
+// ★ 24.11 ÇOKDİLLİ ARAMA: ilmihal ders adları/açıklamaları 4 dilde indekse girer
+import { dersAdi, dersAlt } from "./ilmihalCokDil";
 
 export type AramaGrup =
   | "ilmihal" | "hadis" | "kissa" | "sure" | "dua" | "sahabe" | "eser"
   | "peygamber" | "siyer" | "sunnet" | "adab" | "kelime" | "soru";
+
+/**
+ * ★ 24.11 ÇOKDİLLİ EŞANLAM SÖZLÜĞÜ
+ * Bir dizi = aynı kavramın 5 dildeki yaygın yazılışları. Sorgu kelimesi
+ * hangi dilde gelirse gelsin (prayer / صلاة / salat / نماز) aynı gruba düşer
+ * ve Türkçe kayıtları da bulur. Tamamen cihazda; ağ isteği yok.
+ * Kural: yalnız yerleşik dinî terimler; uydurma karşılık yok.
+ */
+const ESANLAM: string[][] = [
+  ["namaz", "prayer", "salah", "صلاة", "salat", "shalat", "نماز"],
+  ["abdest", "wudu", "ablution", "وضوء", "wudhu", "وضو"],
+  ["gusül", "ghusl", "غسل", "mandi", "غسل"],
+  ["teyemmüm", "tayammum", "تيمم", "tayamum", "تیمم"],
+  ["oruç", "fasting", "sawm", "صوم", "puasa", "روزہ"],
+  ["zekât", "zakat", "alms", "زكاة", "زکوٰۃ"],
+  ["fitre", "fitrah", "فطرة", "fitrah", "فطرہ"],
+  ["hac", "hajj", "pilgrimage", "حج", "haji", "حج"],
+  ["umre", "umrah", "عمرة", "umrah", "عمرہ"],
+  ["kurban", "sacrifice", "أضحية", "kurban", "قربانی"],
+  ["dua", "supplication", "دعاء", "doa", "دعا"],
+  ["zikir", "remembrance", "ذكر", "zikir", "ذکر"],
+  ["tövbe", "repentance", "توبة", "tobat", "توبہ"],
+  ["iman", "faith", "إيمان", "iman", "ایمان"],
+  ["tevhid", "oneness", "monotheism", "توحيد", "tauhid", "توحید"],
+  ["cennet", "paradise", "جنة", "surga", "جنت"],
+  ["cehennem", "hell", "جهنم", "neraka", "جہنم"],
+  ["melek", "angel", "ملك", "malaikat", "فرشتہ"],
+  ["peygamber", "prophet", "نبي", "nabi", "نبی"],
+  ["sahabe", "companion", "صحابي", "sahabat", "صحابی"],
+  ["hadis", "hadith", "حديث", "hadis", "حدیث"],
+  ["sure", "surah", "سورة", "surah", "سورت"],
+  ["ayet", "verse", "آية", "ayat", "آیت"],
+  ["kuran", "quran", "koran", "قرآن", "quran", "قرآن"],
+  ["mehir", "mahr", "dowry", "مهر", "mahar", "مہر"],
+  ["nikah", "marriage", "نكاح", "nikah", "نکاح"],
+  ["talak", "divorce", "طلاق", "talak", "طلاق"],
+  ["iddet", "iddah", "عدة", "idah", "عدت"],
+  ["miras", "inheritance", "ميراث", "warisan", "وراثت"],
+  ["faiz", "interest", "usury", "ربا", "riba", "سود"],
+  ["zina", "adultery", "زنا", "zina", "زنا"],
+  ["içki", "alcohol", "خمر", "khamar", "شراب"],
+  ["domuz", "pork", "pig", "خنزير", "babi", "خنزیر"],
+  ["helal", "halal", "lawful", "حلال", "حلال"],
+  ["haram", "forbidden", "حرام", "haram", "حرام"],
+  ["farz", "obligatory", "فرض", "fardu", "فرض"],
+  ["vacip", "necessary", "واجب", "wajib", "واجب"],
+  ["sünnet", "sunnah", "سنة", "sunnah", "سنت"],
+  ["mekruh", "disliked", "مكروه", "makruh", "مکروہ"],
+  ["cuma", "friday", "جمعة", "jumat", "جمعہ"],
+  ["bayram", "eid", "عيد", "id", "عید"],
+  ["ezan", "adhan", "أذان", "azan", "اذان"],
+  ["imam", "إمام", "imam", "امام"],
+  ["cami", "mosque", "مسجد", "masjid", "مسجد"],
+  ["kâbe", "kaaba", "كعبة", "kabah", "کعبہ"],
+  ["kıble", "qibla", "قبلة", "kiblat", "قبلہ"],
+  ["cenaze", "funeral", "جنازة", "jenazah", "جنازہ"],
+  ["ölüm", "death", "موت", "kematian", "موت"],
+  ["ahiret", "afterlife", "آخرة", "akhirat", "آخرت"],
+  ["kıyamet", "resurrection", "قيامة", "kiamat", "قیامت"],
+  ["sadaka", "charity", "صدقة", "sedekah", "صدقہ"],
+  ["infak", "spending", "إنفاق", "infak", "انفاق"],
+  ["yetim", "orphan", "يتيم", "yatim", "یتیم"],
+  ["anne", "mother", "أم", "ibu", "ماں"],
+  ["baba", "father", "أب", "ayah", "باپ"],
+  ["komşu", "neighbour", "neighbor", "جار", "tetangga", "ہمسایہ"],
+  ["aile", "family", "أسرة", "keluarga", "خاندان"],
+  ["sabır", "patience", "صبر", "sabar", "صبر"],
+  ["şükür", "gratitude", "شكر", "syukur", "شکر"],
+  ["gıybet", "backbiting", "غيبة", "ghibah", "غیبت"],
+  ["iftira", "slander", "بهتان", "tuduhan", "بہتان"],
+  ["yalan", "lie", "كذب", "dusta", "جھوٹ"],
+  ["cihad", "jihad", "جهاد", "jihad", "جہاد"],
+  ["ilim", "knowledge", "علم", "ilmu", "علم"],
+  ["tecvid", "tajweed", "تجويد", "tajwid", "تجوید"],
+  ["hatim", "khatm", "ختم", "khatam", "ختم"],
+  ["kıraat", "recitation", "قراءة", "qiraah", "قرات"],
+  ["vakıf", "endowment", "وقف", "wakaf", "وقف"],
+  ["rehin", "pledge", "رهن", "gadai", "رہن"],
+  ["kefalet", "guarantee", "كفالة", "jaminan", "کفالت"],
+  ["yemin", "oath", "يمين", "sumpah", "قسم"],
+  ["adak", "vow", "نذر", "nadzar", "نذر"],
+  ["kefaret", "expiation", "كفارة", "kafarat", "کفارہ"],
+  ["nisap", "nisab", "نصاب", "nisab", "نصاب"],
+  ["av", "hunting", "صيد", "berburu", "شکار"],
+  ["kesim", "slaughter", "ذبح", "sembelih", "ذبح"],
+  ["hayvan", "animal", "حيوان", "hewan", "جانور"],
+  ["deniz", "sea", "بحر", "laut", "سمندر"],
+  ["su", "water", "ماء", "air", "پانی"],
+  ["temizlik", "purity", "طهارة", "bersuci", "طہارت"],
+  ["necaset", "impurity", "نجاسة", "najis", "نجاست"],
+  ["hastalık", "illness", "مرض", "sakit", "بیماری"],
+  ["sefer", "travel", "سفر", "perjalanan", "سفر"],
+  ["ruhsat", "concession", "رخصة", "rukhsah", "رخصت"],
+  ["kaza", "makeup", "قضاء", "qada", "قضا"],
+  ["vitir", "witr", "وتر", "witir", "وتر"],
+  ["teravih", "tarawih", "تراويح", "tarawih", "تراویح"],
+  ["itikaf", "itikaf", "اعتكاف", "itikaf", "اعتکاف"],
+  ["imsak", "imsak", "إمساك", "imsak", "امساک"],
+  ["iftar", "iftar", "إفطار", "iftar", "افطار"],
+  ["sahur", "suhoor", "سحور", "sahur", "سحری"],
+];
 
 export interface AramaKaydi {
   id: string;
@@ -86,9 +189,12 @@ export function siteIndeksi(): AramaKaydi[] {
   const ekle = (k: AramaKaydi) => kayitlar.push(k);
 
   for (const d of ILMIHAL_DERSLERI) {
+    // ★ 24.11 ÇOKDİLLİ: 4 dildeki ders adı + açıklaması indekse eklenir (kayıt sayısı değişmez)
+    const yerelAdlar = (["en", "ar", "id", "ur"] as const)
+      .flatMap((l) => [dersAdi(d, l), dersAlt(d, l)]).filter(Boolean).join(" · ");
     ekle({
       id: `ilmihal:${d.id}`, grup: "ilmihal", kaynak: "İlmihal", emoji: d.emoji,
-      baslik: d.ad, metin: d.alt, ek: `${d.maddeler.length} madde · ${d.sorular.length} soru`,
+      baslik: d.ad, metin: `${d.alt} — ${yerelAdlar}`, ek: `${d.maddeler.length} madde · ${d.sorular.length} soru`,
     });
     d.maddeler.forEach((m, i) => ekle({
       id: `ilmihal:${d.id}:${i}`, grup: "ilmihal", kaynak: "İlmihal", emoji: d.emoji,
@@ -177,6 +283,22 @@ function onbellegeAl() {
   return onbellek;
 }
 
+/** Normalize edilmiş eşanlam haritası: "prayer" → tüm dillerdeki karşılıkları. */
+let esanlamHaritasi: Map<string, string[]> | null = null;
+function esanlamlariAl(): Map<string, string[]> {
+  if (esanlamHaritasi) return esanlamHaritasi;
+  const harita = new Map<string, string[]>();
+  for (const grup of ESANLAM) {
+    const norm = grup.map((s) => aramaNormal(s)).filter(Boolean);
+    for (const k of norm) {
+      const mevcut = harita.get(k) ?? [];
+      harita.set(k, [...new Set([...mevcut, ...norm])]);
+    }
+  }
+  esanlamHaritasi = harita;
+  return harita;
+}
+
 export interface AramaSonucu {
   kayit: AramaKaydi;
   puan: number;
@@ -186,26 +308,44 @@ export interface AramaSonucu {
 export function siteAra(sorgu: string, grup: AramaGrup | "tumu" = "tumu", limit = 60): AramaSonucu[] {
   const q = aramaNormal(sorgu);
   if (q.length < 2) return [];
+  const harita = esanlamlariAl();
   const kelimeler = q.split(" ").filter(Boolean);
+  // ★ 24.11 ÇOKDİLLİ: her kelime kendi eşanlam grubuna açılır (prayer → namaz, salah, صلاة…)
+  const gruplar = kelimeler.map((w) => harita.get(w) ?? [w]);
   const veri = onbellegeAl();
-  const sonuc: AramaSonucu[] = [];
 
-  for (const satir of veri) {
-    if (grup !== "tumu" && satir.k.grup !== grup) continue;
-    let puan = 0;
-    let tamam = true;
-    for (const w of kelimeler) {
-      const bas = satir.bas.includes(w);
-      const tam = satir.tam.includes(w);
-      if (!bas && !tam) { tamam = false; break; }
-      if (bas) puan += satir.bas.startsWith(w) ? 9 : 6;
-      else puan += 2;
+  // ★ 24.11: kelime sınırı — "mahr" sorgusu "mahrem"i yakalamasın
+  const kelimeVar = (metin: string, w: string): boolean => ` ${metin} `.includes(` ${w} `);
+
+  const tara = (grupListesi: string[][]): AramaSonucu[] => {
+    const bulunan: AramaSonucu[] = [];
+    for (const satir of veri) {
+      if (grup !== "tumu" && satir.k.grup !== grup) continue;
+      let puan = 0;
+      let tamam = true;
+      for (const esler of grupListesi) {
+        let grupPuani = 0;
+        for (const w of esler) {
+          if (kelimeVar(satir.bas, w)) grupPuani = Math.max(grupPuani, satir.bas.startsWith(w) ? 9 : 6);
+          else if (kelimeVar(satir.tam, w)) grupPuani = Math.max(grupPuani, 2);
+        }
+        if (grupPuani === 0) { tamam = false; break; }
+        puan += grupPuani;
+      }
+      if (!tamam) continue;
+      if (satir.bas.includes(q)) puan += 10;
+      if (satir.bas.startsWith(q)) puan += 8;
+      bulunan.push({ kayit: satir.k, puan });
     }
-    if (!tamam) continue;
-    // Tam ifade başlıkta geçiyorsa büyük avantaj
-    if (satir.bas.includes(q)) puan += 10;
-    if (satir.bas.startsWith(q)) puan += 8;
-    sonuc.push({ kayit: satir.k, puan });
+    return bulunan;
+  };
+
+  let sonuc = tara(gruplar);
+  // Hiç sonuç yoksa: sözlükte karşılığı olmayan tek kelimeleri atıp daraltılmış aramayı dene
+  // (ör. "prayer times" → "times" eşleşmezse yalnız "prayer" ile aranır)
+  if (sonuc.length === 0 && gruplar.length > 1) {
+    const daralt = gruplar.filter((g) => g.length > 1);
+    if (daralt.length) sonuc = tara(daralt);
   }
 
   sonuc.sort((a, b) => b.puan - a.puan || a.kayit.baslik.length - b.kayit.baslik.length);

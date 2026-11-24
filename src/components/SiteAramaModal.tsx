@@ -93,7 +93,7 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
 
         {/* Kapsam notu — dürüstlük: cihazda, internetsiz */}
         <div className="flex items-center gap-1.5 border-b border-white/[.06] px-3 py-1.5 text-[8.5px] text-white/35">
-          <WifiOff size={9} /> {t("araCihaz")}
+          <WifiOff size={9} /> {t("araCihaz")} · {t("araCokDil")}
           <span className="ml-auto tabular-nums">{sorgu.trim().length >= 2 ? t("araSonuc").replace("{n}", String(sonuclar.length)) : `${sayilar.tumu ?? 0} kayıt`}</span>
         </div>
 
