@@ -144,8 +144,10 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
   const acF = async (id: string, tier: "free" | "pro" | "elit") => {
     setBusyId(id);
     try {
+      // ★ 24.11 CANLI FIX: revealFeature sunucuda DELETE dalında; POST gönderildiği
+      //   için istek oy uçına düşüp 400/401 dönüyordu ("Aç" butonları hiç çalışmıyordu).
       const response = await fetch("/api/roadmap", {
-        method: "POST",
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         // ★ 25.10 KİLİT BAĞI: v2 modül kapısı camelCase kimlikle kontrol ediyor —
         //   modül bağına eşlenen hesaplar featureId de gönderilerek gerçek kapı
@@ -165,8 +167,9 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
   const gizleF = async (id: string) => {
     setBusyId(id);
     try {
+      // ★ 24.11 CANLI FIX: hideFeature de DELETE dalında — POST oy ucuna düşüyordu.
       const response = await fetch("/api/roadmap", {
-        method: "POST",
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         // ★ 25.10 KİLİT BAĞI: gerçek kapı satırını da 'hidden'a çek (ayrıca yazılır).
         body: JSON.stringify({ action: "hideFeature", id, featureId: (liste.find((f) => f.id === id)?.modul || "") }),

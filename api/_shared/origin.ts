@@ -18,6 +18,25 @@ function allowedOrigins(): Set<string> {
   return new Set([...DEFAULT_ALLOWED_ORIGINS, ...envOrigins]);
 }
 
+/**
+ * İSTEK KENDİ SUNUCUMUZA MI GELİYOR?
+ * ★ 24.11 CANLI FIX: tarayıcı canlıda /api/ban/status ve /api/roadmap için
+ *   403 "İzin verilmeyen istek kaynağı" alıyordu. Sebep: beyaz liste yalnız
+ *   https://www.nurstudyo.com + https://nurstudyo.com biliyordu; site http ile,
+ *   önizleme/alternatif alan adıyla ya da Host başlığı farklıyken açıldığında
+ *   aynı-köken isteği bile reddediliyordu. CSRF koruması "kaynak = hedef host"
+ *   karşılaştırmasıyla yapılır; bu yüzden Host başlığıyla eşleşen kaynak kabul edilir.
+ */
+function ayniKoken(adres: string, host: string): boolean {
+  try {
+    const gelen = new URL(adres).hostname.toLowerCase().replace(/^www\./, "");
+    const hedef = host.toLowerCase().split(":")[0].replace(/^www\./, "");
+    return Boolean(gelen) && gelen === hedef;
+  } catch {
+    return false;
+  }
+}
+
 export function originAllowed(req: VercelRequest, opts?: { allowMissing?: boolean }): boolean {
   const origin = typeof req.headers.origin === "string" ? req.headers.origin : "";
   const referer = typeof req.headers.referer === "string" ? req.headers.referer : "";
@@ -33,6 +52,13 @@ export function originAllowed(req: VercelRequest, opts?: { allowMissing?: boolea
     } catch {
       /* beklenen: bozuk referer */
     }
+  }
+
+  // Aynı köken (Host ile eşleşen kaynak) her zaman geçerli — şema/alt alan farkı engel değil
+  const host = String(req.headers.host || "");
+  if (host) {
+    if (origin && ayniKoken(origin, host)) return true;
+    if (referer && ayniKoken(referer, host)) return true;
   }
   return false;
 }
