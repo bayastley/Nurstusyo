@@ -13,3 +13,4 @@ export { AhlakBolumu } from "./kesfetSekmeler/AhlakBolumu";
 export { YarismaBolumu } from "./kesfetSekmeler/YarismaBolumu";
 export { KitapBolumu } from "./kesfetSekmeler/KitapBolumu";
 export { KuranOkuluBolumu } from "./kesfetSekmeler/KuranOkuluBolumu";
+export { ToplulukBolumu } from "./kesfetSekmeler/ToplulukBolumu";

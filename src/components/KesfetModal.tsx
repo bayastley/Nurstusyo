@@ -47,7 +47,7 @@ import { kitaplikOku, kelimeOku, bilinenKelimelerOku, bilinenKelimeIsaretle, KAR
 import { sesUrlYedegi } from "../reciters"; // ★ YEDEK SES KAYNAĞI (02.10)
 import { DuaRehberBolumu } from "./kesfetDuaBolumu";
 // ★ SRP adım 9 (09.10 2. tur): 5 büyük sekme JSX bloğu + KelimeKarti kesfetSekmeler.tsx'e taşındı
-import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, YarismaBolumu, TarihBolumu, SahabelerBolumu, KitapBolumu, KuranOkuluBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
+import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, IlmihalBolumu, AhlakBolumu, YarismaBolumu, TarihBolumu, SahabelerBolumu, KitapBolumu, KuranOkuluBolumu, ToplulukBolumu, atolyeKelimeOner } from "./kesfetSekmeler";
 import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
 
@@ -111,7 +111,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
     menkibeler: "ksMenkibeler", evliyalar: "ksEvliyalar", sunnet: "ksSunnetler", hoca: "ksHocaKarsilastir", peygamber: "ksPeygamberHayati",
     cami: "ksCamiBulucu", rehber: "ksKanalRehberi", tecvid: "ksTecvidRehberi", kitaplik: "ksKitapligim", mezhepler: "ksMezhepler",
     ilmihal: "ksIlmihal", tarih: "ksTarih", ahlak: "ksAhlak", yarisma: "ksYarisma", sahabeler: "ksSahabeler",
-    klasikEserler: "ksKlasikEserler", kuranOkulu: "ksKuranOkulu",
+    klasikEserler: "ksKlasikEserler", kuranOkulu: "ksKuranOkulu", topluluk: "ksTopluluk",
   };
   // ★ 20.11: sözlükte karşılığı olmayan yeni sekmeler SEKMELER etiketine düşer (ham anahtar görünmez)
   const sekmeAdi = (id: string): string =>
@@ -497,6 +497,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       {/* ── 24.11: KLASİK ESERLER (madde 15) + KUR'AN OKULU (madde 1 & 8) ── */}
       {sekme === "klasikEserler" && <KitapBolumu tt={tt} lang={lang} q={q} />}
       {sekme === "kuranOkulu" && <KuranOkuluBolumu tt={tt} lang={lang} />}
+      {sekme === "topluluk" && <ToplulukBolumu tt={tt} lang={lang} />}
 
       {/* ── 9: İSLAM TARİHİ ZAMAN TÜNELİ (20.11) — 5 dönem · 41 olay, kaynaklı ── */}
       {sekme === "tarih" && (
