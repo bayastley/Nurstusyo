@@ -6,6 +6,8 @@ import {
   ILMIHAL_DERSLERI, ILMIHAL_KAYNAK_NOTU, ILMIHAL_TOPLAM,
   type IlmihalDers,
 } from "../../data/ilmihalData";
+// ★ 24.11: ders adı / alt açıklama / soru kökü için 4 dilli yerleşik çeviri
+import { dersAdi, dersAlt, soruKoku } from "../../data/ilmihalCokDil";
 
 // ════════════════════════════════════════════════════════
 // ILMIHALBOLUMU.TSX — İlmihal Akademisi (yol haritası madde 11)
@@ -142,7 +144,7 @@ export function IlmihalBolumu({
                   : "border-white/10 bg-white/[.03] text-white/55 hover:bg-white/[.06] hover:text-white/80"
               }`}
             >
-              <span className="mr-1">{d.emoji}</span>{g(d.ad)}
+              <span className="mr-1">{d.emoji}</span>{dersAdi(d, lang) ?? g(d.ad)}
             </button>
           );
         })}
@@ -161,8 +163,8 @@ export function IlmihalBolumu({
                 <span className="text-[9px] font-black uppercase tracking-widest" style={{ color: "var(--accent)" }}>
                   {t("ilDers")}
                 </span>
-                <h3 className="mt-0.5 text-[15px] font-black text-white">{ders.emoji} {g(ders.ad)}</h3>
-                <p className="mt-1 text-[9.5px] leading-relaxed text-white/50">{g(ders.alt)}</p>
+                <h3 className="mt-0.5 text-[15px] font-black text-white">{ders.emoji} {dersAdi(ders, lang) ?? g(ders.ad)}</h3>
+                <p className="mt-1 text-[9.5px] leading-relaxed text-white/50">{dersAlt(ders, lang) ?? g(ders.alt)}</p>
               </div>
               <span className="shrink-0 rounded-full border border-white/15 bg-black/25 px-2 py-0.5 text-[8px] font-black text-white/60">
                 {ders.maddeler.length} {t("ilMadde")}
@@ -208,7 +210,7 @@ export function IlmihalBolumu({
                 const cevaplandi = secim !== undefined;
                 return (
                   <div key={anahtar} className="rounded-xl border border-white/10 bg-white/[.02] p-2.5">
-                    <p className="text-[10px] font-black text-white/85" dir={lang === "ar" ? "rtl" : undefined}>{si + 1}. {g(s.soru)}</p>
+                    <p className="text-[10px] font-black text-white/85" dir={lang === "ar" ? "rtl" : undefined}>{si + 1}. {soruKoku(ders.id, si, lang) ?? g(s.soru)}</p>
                     <div className="mt-1.5 grid gap-1">
                       {s.secenekler.map((sec, oi) => {
                         const dogru = oi === s.cevap;
