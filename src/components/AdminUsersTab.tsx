@@ -75,9 +75,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             onClick={handleEmailSearch}
             className="rounded-xl px-3 py-2 text-[10px] font-black text-black"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-          >
-            ARA
-          </button>
+          >{ttX2610("adxAra")}</button>
         </div>
 
         {emailSearchResult && (
@@ -99,9 +97,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <button
                 onClick={() => handleSetTierViaEmail(emailSearchResult.email, "pro")}
                 className="rounded-lg bg-amber-500/20 px-2 py-1 text-[9px] font-bold text-amber-200 hover:bg-amber-500/30"
-              >
-                PRO YAP
-              </button>
+              >{ttX2610("adxProYap")}</button>
               <button
                 onClick={() => handleSetTierViaEmail(emailSearchResult.email, "elit")}
                 className="rounded-lg bg-amber-400/30 px-2 py-1 text-[9px] font-bold text-amber-100 hover:bg-amber-400/40"
@@ -134,16 +130,12 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 <button
                   onClick={() => handleUnban(emailSearchResult.email)}
                   className="rounded-lg bg-white/10 px-2 py-1 text-[9px] font-bold text-white hover:bg-white/20"
-                >
-                  BAN KALDIR
-                </button>
+                >{ttX2610("adxBanKaldir2")}</button>
               ) : (
                 <button
                   onClick={() => handleBan(emailSearchResult.email, banReasonInput || "Admin kararı")}
                   className="rounded-lg bg-red-500/25 px-2 py-1 text-[9px] font-bold text-red-200 hover:bg-red-500/35"
-                >
-                  BANLA
-                </button>
+                >{ttX2610("adxBanla")}</button>
               )}
             </div>
             {/* GEÇMİŞ GÖR BUTONU */}
@@ -326,8 +318,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
         >
           {isAdminEmail(selectedUser.email) && (
             <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/40 px-2.5 py-0.5 text-[8.5px] font-black text-amber-300">
-              <Crown size={10} /> KURUCU HESABI
-            </span>
+              <Crown size={10} />{ttX2610("adxKurucuHesabi")}</span>
           )}
 
           <div className="mb-4">
@@ -428,9 +419,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, jetonDelta, "set")}
                   className="flex h-9 items-center justify-center gap-1 rounded-xl px-4 text-[11px] font-black text-black transition hover:brightness-110 active:scale-95"
                   style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-                >
-                  TANIMLA
-                </button>
+                >{ttX2610("adxTanimla")}</button>
               </div>
 
               {/* Hızlı EKLEME butonları — seçilen türün hakkının ÜZERİNE ekler */}

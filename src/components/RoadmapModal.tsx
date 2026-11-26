@@ -442,7 +442,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
           {/* ★ OYLAMA BANNERI — hangi özellik önce gelsin? (kart tasarımıyla uyumlu) */}
           <div className="relative overflow-hidden rounded-2xl border border-emerald-400/25 bg-gradient-to-br from-emerald-500/[0.12] via-amber-500/[0.07] to-transparent p-5">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="rounded-md bg-emerald-500/25 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-300 ring-1 ring-emerald-400/40">OYLAMA</span>
+              <span className="rounded-md bg-emerald-500/25 px-2.5 py-1 text-[10px] font-black tracking-widest text-emerald-300 ring-1 ring-emerald-400/40">{ttX2610("adxOylama")}</span>
               <h3 className="text-[15px] font-black text-white">{ttX2610("rmHangiOnde")}</h3>
             </div>
             <p className="mt-1.5 text-[11px] leading-relaxed text-white/55">

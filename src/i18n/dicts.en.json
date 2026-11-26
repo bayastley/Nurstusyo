@@ -2776,5 +2776,13 @@
   "adxYolHaritasi": "Update roadmap",
   "adxYeniOzellik": "Add new feature",
   "adxOylariSifirla": "Reset votes",
-  "adxPlanlariTemizle": "Clear plans"
+  "adxPlanlariTemizle": "Clear plans",
+  "adxAra": "SEARCH",
+  "adxBanKaldir2": "REMOVE BAN",
+  "adxBanla": "BAN",
+  "adxKapat2": "CLOSE",
+  "adxKurucuHesabi": "FOUNDER ACCOUNT",
+  "adxOylama": "VOTING",
+  "adxProYap": "MAKE PRO",
+  "adxTanimla": "ASSIGN"
 }

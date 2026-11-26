@@ -579,8 +579,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
             🧭 {ttQL("nurAraclari")}
           </button>
           {/* ★ KAPAT: en sağda — modalı kapatır (radyo açıkken bile) */}
-          <button onClick={onClose} aria-label={ttQL("qrKapat")} className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttQL("qrEkranKapatTitle")}>
-          KAPAT <X size={13} />
+          <button onClick={onClose} aria-label={ttQL("qrKapat")} className="ml-1 flex items-center gap-1.5 rounded-xl border border-red-900/30 bg-red-950/40 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttQL("qrEkranKapatTitle")}>{ttX2610("adxKapat2")}<X size={13} />
         </button>
         </div>
       </div>

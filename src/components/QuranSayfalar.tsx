@@ -284,8 +284,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
         {/* ── ÜST BAR ── */}
         <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[#D7AA41]/20 px-3 py-2">
           <button onClick={onClose} aria-label="Kapat" className="flex items-center gap-1 rounded-xl border border-red-900/30 bg-red-950/40 px-2.5 py-1.5 text-[10px] font-bold text-red-400 transition hover:bg-red-900/60 active:scale-95" title={ttX2610("qsSayfalarKapat")}>
-            <X size={13} /> KAPAT
-          </button>
+            <X size={13} />{ttX2610("adxKapat2")}</button>
           <span className="text-[11px] font-black tracking-wider text-gold">📖 MUSHAF · KUR'AN-I KERİM</span>
 
           {/* ★ KAYNAK BUTONLARI (03.10): Arapça = Diyanet beyaz mushaf · Meal = Diyanet mealı */}
