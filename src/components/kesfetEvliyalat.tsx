@@ -1,3 +1,5 @@
+import { translate } from "../i18n";
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // // KESFET-EVLIYALAT.TSX — 04.11, kullanıcı emri: "menkıbelerin altına Evliyalat
 //   diye bir buton; 10 büyük hikâye, her biri 5 sayfa, gerçek kitap sayfası gibi;
 //   alttaki okla diğer sayfaya geçilince hemen yukarı, ilk sıraya dön."
@@ -103,7 +105,7 @@ function EvliyaKitap({ tt, ev, onGeri, dil }: { tt: TT; ev: Evliya; onGeri: () =
               <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-amber-100/75">{L.unvan}</p>
               <p className="mt-2 text-[10px] font-semibold text-amber-100/55">{L.donem}</p>
               <p className="mt-10 text-[10px] font-bold text-amber-100/65">{toplam} {tt("evSayfaKisa") || "sayfa"}</p>
-              <p className="mt-2 text-[10px] text-amber-100/50">Açmak için kapağa dokun</p>
+              <p className="mt-2 text-[10px] text-amber-100/50">{ttX2610("adxKapagaDokun")}</p>
             </button>
           </div>
         </div>

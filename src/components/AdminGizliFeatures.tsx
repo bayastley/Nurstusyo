@@ -236,9 +236,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-fuchsia-500/30 bg-fuchsia-500/10 p-4 space-y-3">
-        <h4 className="font-display text-sm font-black text-white flex items-center gap-2">
-          🎭 Gizli Özellikler — Admin Kontrolü
-        </h4>
+        <h4 className="font-display text-sm font-black text-white flex items-center gap-2">{ttX2610("adxGizliBaslik")}</h4>
         <p className="text-[10px] leading-relaxed text-white/60">
           Aşağıdaki 22 özellik (6 ana yenilik + 15 atmosfer kategorisi + 2 V3'lü) kullanıcıların ekranında
           HİÇ yok gibi görünür (menü yok, buton yok); yol haritası oylamasında ise SADECE İSİMLERİ
@@ -253,8 +251,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
           className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-[11px] font-black text-black transition hover:brightness-110 active:scale-95 disabled:opacity-50"
           style={{ background: "linear-gradient(135deg,#f5dda6,#d7aa52)" }}
         >
-          <RotateCcw size={13} /> Oylama Listesini Sıfırla + 22 Gizli Maddeyi Yerleştir
-        </button>
+          <RotateCcw size={13} />{ttX2610("adxOylamaSifirla")}</button>
         {/* ★ 23.10 BOŞALTI — V3 uzun vadeli listeyi tek tıkla temizler (sahibin emri:
             "uzun vadelileri boşalt, hiçbir şey yazma, biz dolduralım"). V2 + oylar korunur. */}
         <button
@@ -262,8 +259,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
           disabled={yukleniyor}
           className="flex items-center justify-center gap-2 w-full rounded-xl border border-white/15 py-2 text-[10px] font-bold text-white/70 transition hover:bg-white/10 disabled:opacity-50"
         >
-          <EyeOff size={12} /> V3 (Uzun Vadeli) Listesini Boşalt — V2 oyuna dokunma
-        </button>
+          <EyeOff size={12} />{ttX2610("adxV3Bosalt")}</button>
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
@@ -289,23 +285,17 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
                 disabled={busyId === f.id || yukleniyor}
                 onClick={() => acF(f.id, "free")}
                 className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[9px] font-black text-emerald-300 ring-1 ring-emerald-400/30 transition hover:bg-emerald-500/30 disabled:opacity-40"
-              >
-                free'e aç
-              </button>
+              >{ttX2610("adxFreeAc")}</button>
               <button
                 disabled={busyId === f.id || yukleniyor}
                 onClick={() => acF(f.id, "pro")}
                 className="rounded-lg bg-sky-500/20 px-2.5 py-1 text-[9px] font-black text-sky-300 ring-1 ring-sky-400/30 transition hover:bg-sky-500/30 disabled:opacity-40"
-              >
-                pro'ya aç
-              </button>
+              >{ttX2610("adxProAc")}</button>
               <button
                 disabled={busyId === f.id || yukleniyor}
                 onClick={() => acF(f.id, "elit")}
                 className="rounded-lg bg-fuchsia-500/20 px-2.5 py-1 text-[9px] font-black text-fuchsia-300 ring-1 ring-fuchsia-400/30 transition hover:bg-fuchsia-500/30 disabled:opacity-40"
-              >
-                elit'e aç
-              </button>
+              >{ttX2610("adxElitAc")}</button>
               {/* ★ 17.10: V3 etiketi — admin bu üyeye "V3 kilidi" koyar (kullanıcı haritası yol haritasında oy görmeye devam eder) */}
               <button
                 disabled={busyId === f.id || yukleniyor}

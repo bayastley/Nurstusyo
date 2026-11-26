@@ -77,12 +77,9 @@ export function AdminBanLogsTab({
 
                 {bannedLoading && bannedUsers.length === 0 ? (
                   <div className="flex items-center justify-center gap-2 py-6 text-[11px] text-white/50">
-                    <Loader2 size={14} className="animate-spin" /> Ban listesi yükleniyor…
-                  </div>
+                    <Loader2 size={14} className="animate-spin" />{ttX2610("adxBanYukleniyor")}</div>
                 ) : sayfadaki.length === 0 ? (
-                  <p className="p-4 text-center text-[10px] text-white/40 italic">
-                    Şu anda aktif banlı kullanıcı yok — tüm hesaplar erişimde.
-                  </p>
+                  <p className="p-4 text-center text-[10px] text-white/40 italic">{ttX2610("adxBanYok")}</p>
                 ) : (
                   <>
                     <div className="space-y-2 pt-1">
@@ -118,9 +115,7 @@ export function AdminBanLogsTab({
                         onClick={() => setBanPage(Math.max(0, guvenliSayfa - 1))}
                         disabled={guvenliSayfa === 0}
                         className="flex items-center gap-1 rounded-lg bg-white/10 px-3 py-1.5 text-[10px] font-black text-white/80 transition hover:bg-white/20 disabled:opacity-30"
-                      >
-                        ◀ Önceki
-                      </button>
+                      >{ttX2610("adxOnceki")}</button>
                       <span className="text-[9.5px] font-bold text-white/50">
                         Sayfa {guvenliSayfa + 1} / {sayfaSayisi} · {bannedUsers.length} banlı
                       </span>
@@ -176,9 +171,7 @@ export function AdminBanLogsTab({
                       </div>
                     ))
                   ) : (
-                    <p className="p-4 text-center text-[10px] text-white/40 italic">
-                      Henüz kayıtlı bir ban olayı bulunmamaktadır.
-                    </p>
+                    <p className="p-4 text-center text-[10px] text-white/40 italic">{ttX2610("adxBanKaydiYok")}</p>
                   )}
                 </div>
               </div>

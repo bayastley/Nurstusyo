@@ -362,9 +362,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-gray-950/90 backdrop-blur px-6 py-4">
           <div>
             <h2 className="text-lg font-black text-white flex items-center gap-2">
-              <Rocket size={20} style={{ color: "var(--accent-2)" }} />
-              Güncelleme Yol Haritası
-            </h2>
+              <Rocket size={20} style={{ color: "var(--accent-2)" }} />{ttX2610("adxYolHaritasi")}</h2>
             <p className="text-[11px] text-white/40 mt-0.5">{ttX2610("rmBaslik")}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -413,8 +411,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               {/* Yeni Özellik Ekleme */}
               {!showAddForm ? (
                 <button onClick={() => setShowAddForm(true)} className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-[10px] font-bold text-white/60 hover:bg-white/10 transition">
-                  <Plus size={12} /> Yeni Özellik Ekle
-                </button>
+                  <Plus size={12} />{ttX2610("adxYeniOzellik")}</button>
               ) : (
                 <div className="rounded-lg bg-black/30 p-3 space-y-2">
                   <div className="flex gap-2">
@@ -435,11 +432,9 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               {/* Toplu İşlemler */}
               <div className="flex gap-2 pt-1">
                 <button onClick={handleResetVotes} className="flex items-center gap-1 rounded-lg bg-red-500/15 px-2.5 py-1 text-[9px] font-bold text-red-300 hover:bg-red-500/25 transition">
-                  <RotateCcw size={10} /> Oyları Sıfırla
-                </button>
+                  <RotateCcw size={10} />{ttX2610("adxOylariSifirla")}</button>
                 <button onClick={() => { save({ v2: [], v3: [] }); setLocalVotes({}); }} className="flex items-center gap-1 rounded-lg bg-white/5 px-2.5 py-1 text-[9px] text-white/40 hover:bg-white/10 transition">
-                  <RotateCcw size={10} /> Planları Temizle
-                </button>
+                  <RotateCcw size={10} />{ttX2610("adxPlanlariTemizle")}</button>
               </div>
             </div>
           )}

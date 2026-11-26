@@ -442,11 +442,9 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
               <option value="warning">{ttX2610("abpUyari")}</option>
             </select>
             <label className="glass-soft flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs text-white">
-              <input type="checkbox" checked={blinking} onChange={(e) => setBlinking(e.target.checked)} /> Yanıp sönsün
-            </label>
+              <input type="checkbox" checked={blinking} onChange={(e) => setBlinking(e.target.checked)} />{ttX2610("adxYanipSonsun")}</label>
             <label className="glass-soft flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs text-white">
-              <input type="checkbox" checked={forceOpen} onChange={(e) => setForceOpen(e.target.checked)} /> Girişte aç
-            </label>
+              <input type="checkbox" checked={forceOpen} onChange={(e) => setForceOpen(e.target.checked)} />{ttX2610("adxGiristeAc")}</label>
             <label className="glass-soft flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs text-white">
               <input type="checkbox" checked={requireAck} onChange={(e) => setRequireAck(e.target.checked)} /> Okudum zorunlu
             </label>
@@ -454,25 +452,22 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             <input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className="glass-soft rounded-xl px-3 py-2 text-xs text-white" />
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold text-white/35">Hızlı plan:</span>
-            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">1 gün</button>
-            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+7*86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">7 gün</button>
+            <span className="text-[10px] font-bold text-white/35">{ttX2610("adxHizliPlan")}</span>
+            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">{ttX2610("adxBirGun")}</button>
+            <button type="button" onClick={() => { const n=new Date(); setStartsAt(n.toISOString().slice(0,16)); setEndsAt(new Date(n.getTime()+7*86400000).toISOString().slice(0,16)); }} className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold text-white/60 hover:bg-white/10">{ttX2610("adxYediGun")}</button>
           </div>
           <button onClick={publish} disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-black text-black disabled:opacity-50" style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}>
             <Send size={13} /> {saving ? "Yayınlanıyor..." : "Duyuruyu Yayınla"}
           </button>
           <button onClick={clearAll} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 py-2.5 text-xs font-bold text-red-400 hover:bg-red-500/20">
-            <Trash2 size={13} /> Tüm Duyuruları Kaldır
-          </button>
+            <Trash2 size={13} />{ttX2610("adxDuyurulariKaldir")}</button>
         </div>
       </section>
       <section className="rounded-2xl border border-red-400/25 bg-red-950/10 p-4">
         <h4 className="mb-3 flex items-center gap-2 text-xs font-black text-white"><LockKeyhole size={15} /> {ttX2610("abpBakimModu")}</h4>
         <div className="grid gap-2 sm:grid-cols-2">
           <label className="glass-soft flex items-center gap-2 rounded-xl px-3 py-2 text-xs text-white sm:col-span-2">
-            <input type="checkbox" checked={maintenance.enabled} onChange={(e) => setMaintenance((v) => ({ ...v, enabled: e.target.checked }))} />
-            Siteyi bakım moduna al
-          </label>
+            <input type="checkbox" checked={maintenance.enabled} onChange={(e) => setMaintenance((v) => ({ ...v, enabled: e.target.checked }))} />{ttX2610("adxBakimModu")}</label>
           <label className="text-[10px] text-white/60">{ttX2610("abpBaslangic")}<input type="datetime-local" value={maintenance.startsAt ? maintenance.startsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, startsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
           <label className="text-[10px] text-white/60">{ttX2610("abpBitis")}<input type="datetime-local" value={maintenance.endsAt ? maintenance.endsAt.slice(0, 16) : ""} onChange={(e) => setMaintenance((v) => ({ ...v, endsAt: e.target.value }))} className="glass-soft mt-1 w-full rounded-xl px-3 py-2 text-xs text-white" /></label>
         </div>
@@ -545,9 +540,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
             {LOCK_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
           {featureLock === "maintenance" && (
-            <div className="rounded-xl border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-[10px] text-yellow-300">
-              🔧 Bakımda seçildi → Uygulayınca seçilen hedefte sarı rozet çıkar.
-            </div>
+            <div className="rounded-xl border border-yellow-400/30 bg-yellow-400/10 px-3 py-2 text-[10px] text-yellow-300">{ttX2610("adxBakimdaSecildi")}</div>
           )}
           <button type="button" onClick={applyLock} className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 py-3 text-xs font-black text-black">
             <Save size={13} /> Kilidi Uygula
@@ -565,8 +558,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
                   <span className="flex items-center gap-1.5 text-[10px] font-black text-white/70"><LockKeyhole size={11} /> Aktif Kilitler ({entries.length})</span>
                   {entries.length > 0 && (
                     <button onClick={removeAllLocks} className="rounded-lg bg-red-500/15 px-2 py-1 text-[9px] font-bold text-red-300 hover:bg-red-500/25">
-                      <RotateCcw size={9} className="mr-0.5 inline" /> Tümünü Aç
-                    </button>
+                      <RotateCcw size={9} className="mr-0.5 inline" />{ttX2610("adxTumunuAc")}</button>
                   )}
                 </div>
                 {entries.length === 0 ? (

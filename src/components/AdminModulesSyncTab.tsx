@@ -35,8 +35,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
       <div className="space-y-4">
         <div className="rounded-2xl border border-white/10 bg-black/40 p-4 space-y-3">
           <h4 className="font-display text-xs font-black uppercase tracking-wider text-white flex items-center gap-2">
-            <FolderPlus size={14} style={{ color: "var(--accent)" }} /> Dinamik Modül & Fikir Ekle
-          </h4>
+            <FolderPlus size={14} style={{ color: "var(--accent)" }} />{ttX2610("adxDinamikModul")}</h4>
           <div className="grid gap-2 sm:grid-cols-2">
             <input
               value={newModTitle}
@@ -67,15 +66,12 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
             className="flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-[11px] font-black text-black"
             style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
           >
-            <Plus size={14} /> Yeni Modülü Sisteme Ekle
-          </button>
+            <Plus size={14} />{ttX2610("adxModulEkle")}</button>
         </div>
 
         {/* Mevcut Modüller Listesi */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-            📋 Aktif Dinamik Modüller
-          </label>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">{ttX2610("adxAktifModuller")}</label>
           <div className="grid gap-2 sm:grid-cols-2">
             {sysConfig.modules.map((m) => (
               <div
@@ -126,9 +122,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
           </div>
 
           <div className="space-y-2 pt-1">
-            <label className="block text-[9.5px] font-bold text-white/60">
-              GitHub Personal Access Token (Gist İzinli):
-            </label>
+            <label className="block text-[9.5px] font-bold text-white/60">{ttX2610("adxGhToken")}</label>
             <input
               type="password"
               value={ghToken}
@@ -137,9 +131,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
               className="glass-soft w-full rounded-xl px-3 py-2 text-[11px] font-mono text-white outline-none"
             />
 
-            <label className="block text-[9.5px] font-bold text-white/60">
-              Gist ID (İsteğe bağlı — boş bırakırsanız otomatik yeni Gist oluşturur):
-            </label>
+            <label className="block text-[9.5px] font-bold text-white/60">{ttX2610("adxGistId")}</label>
             <input
               value={ghGistId}
               onChange={(e) => setGhGistId(e.target.value)}

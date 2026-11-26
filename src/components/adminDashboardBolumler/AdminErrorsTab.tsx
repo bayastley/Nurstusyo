@@ -156,8 +156,7 @@ export function AdminErrorsTab({
                 return (
                   <div className="rounded-xl border border-red-500/25 bg-red-500/[.06] p-3">
                     <p className="mb-2 flex items-center gap-1.5 text-[9.5px] font-black uppercase tracking-wider text-red-300">
-                      <span>🖥️</span> Endpoint Kırılımı — hangi API kaç hata verdi
-                      <span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300">{sirali.length} endpoint</span>
+                      <span>🖥️</span>{ttX2610("adxEndpointKirilimi")}<span className="rounded bg-red-500/20 px-1.5 py-0.5 text-[8px] font-black text-red-300">{sirali.length} endpoint</span>
                     </p>
                     <div className="space-y-1.5">
                       {sirali.map(([ep, bilgi]) => (
@@ -216,9 +215,7 @@ export function AdminErrorsTab({
                     <button
                       onClick={() => { setErrorFilter("server"); setErrorPage(0); }}
                       className="shrink-0 rounded-lg bg-red-500/30 px-2.5 py-1.5 text-[9px] font-black text-red-100 transition hover:bg-red-500/50"
-                    >
-                      Kırılımı Gör
-                    </button>
+                    >{ttX2610("adxKirilimGor")}</button>
                   </div>
                 );
               })()}
@@ -261,9 +258,7 @@ export function AdminErrorsTab({
                   🗑 Eskileri temizle
                 </button>
                 <button onClick={clearAllErrorLogs}
-                  className="rounded-xl border border-red-500/40 bg-red-500/20 px-3 py-2 text-[10px] font-black text-red-200 transition hover:bg-red-500/30">
-                  🔥 Tümünü temizle
-                </button>
+                  className="rounded-xl border border-red-500/40 bg-red-500/20 px-3 py-2 text-[10px] font-black text-red-200 transition hover:bg-red-500/30">{ttX2610("adxTumunuTemizle")}</button>
               </div>
 
               {/* Liste */}

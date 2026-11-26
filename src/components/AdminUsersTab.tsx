@@ -63,9 +63,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
     <>
       {/* 0. EMAIL ile Kullanıcı Bul & Yönet */}
       <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-        <label className="mb-2 block text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>
-           Email ile Kullanıcı Bul ve Yönet
-        </label>
+        <label className="mb-2 block text-[11px] font-black uppercase tracking-wider" style={{ color: "var(--accent-2)" }}>{ttX2610("adxEmailBul")}</label>
         <div className="flex flex-wrap items-center gap-2">
           <input
             value={emailSearchQuery}
@@ -131,9 +129,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 onClick={() => handleGiftRights(emailSearchResult.email, giftAmount, giftTier)}
                 className="rounded-lg bg-emerald-500/25 px-2 py-1 text-[9px] font-bold text-emerald-200 hover:bg-emerald-500/35"
                 title={`+${giftAmount} ⚡ jeton ve ${giftTier.toUpperCase()} üyelik olarak hediye edilir`}
-              >
-                HAK HEDİYE ET
-              </button>
+              >{ttX2610("adxHakHediye")}</button>
               {emailSearchResult.isBanned ? (
                 <button
                   onClick={() => handleUnban(emailSearchResult.email)}
@@ -250,9 +246,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center text-[10px] text-white/30 py-2">
-                    Henüz sipariş kaydı yok
-                  </div>
+                  <div className="text-center text-[10px] text-white/30 py-2">{ttX2610("adxSiparisYok")}</div>
                 )}
 
                 {/* Admin İşlem Geçmişi (hediye, tier değişikliği, ban vb.) */}
@@ -273,26 +267,20 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 )}
               </>
             ) : (
-              <div className="text-center text-[10px] text-white/30 py-2">
-                Bu email adresinde kayıtlı kullanıcı bulunamadı
-              </div>
+              <div className="text-center text-[10px] text-white/30 py-2">{ttX2610("adxKullaniciYok")}</div>
             )}
 
             <button
               onClick={() => setUserHistory(null)}
               className="mt-2 w-full rounded-lg bg-white/5 px-2 py-1 text-[9px] text-white/40 hover:bg-white/10 transition"
-            >
-              Geçmişi Kapat
-            </button>
+            >{ttX2610("adxGecmisiKapat")}</button>
           </div>
         )}
       </div>
 
       {/* Kayıtlı Kullanıcılar Listesi */}
       <div>
-        <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/60">
-          🔍 Kayıtlı Kullanıcılar
-        </label>
+        <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-white/60">{ttX2610("adxKayitliKullanicilar")}</label>
         <div className="mt-2.5 flex flex-wrap gap-1.5 max-h-28 overflow-y-auto scrollbar-thin p-1 rounded-xl bg-black/20">
           {filteredUsers.map((u) => {
             const isSelected = u.email.toLowerCase() === selectedEmail.toLowerCase();
@@ -351,9 +339,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
           <div className="grid gap-4 md:grid-cols-2">
             {/* Paket Tanımlama Dropdown */}
             <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                📦 Paket Tanımlama Menüsü
-              </label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">{ttX2610("adxPaketMenu")}</label>
               <select
                 value={selectedUser.tier || "free"}
                 onChange={(e) => handleTierChange(selectedUser.email, e.target.value as Tier)}
@@ -364,16 +350,12 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 <option value="pro">{ttX2610("autPro")}</option>
                 <option value="elit">{ttX2610("autSelit")}</option>
               </select>
-              <p className="text-[9px] text-white/45 leading-relaxed">
-                Değiştirdiğiniz anda tüm kilitler bu kullanıcı için canlı güncellenir.
-              </p>
+              <p className="text-[9px] text-white/45 leading-relaxed">{ttX2610("adxKilitCanli")}</p>
               <button
                 type="button"
                 onClick={() => { if (window.confirm(`⚠️ ${selectedUser.email} kullanıcısının TÜM hakları sıfırlanacak:\n\n• Kısa/Uzun/Tam video hakları\n• Jeton bakiyesi\n• Abonelik iptal edilecek\n• Tier FREE yapılacak\n\nEmin misiniz?`)) handleResetRights(selectedUser.email); }}
                 className="w-full rounded-xl bg-red-500/15 border border-red-500/30 px-3 py-2 text-[10px] font-bold text-red-400 hover:bg-red-500/25 transition mt-1"
-              >
-                🗑️ TÜM HAKLARI SIFIRLA (Free Yap + Paketleri Sil)
-              </button>
+              >{ttX2610("adxTumHaklariSifirla")}</button>
 
               {/* ★ TEK HAK SIFIRLAMA — suçun boyutuna göre kısmi ceza; tümü nükleer, bu cerrahi */}
               <details className="mt-2 rounded-xl border border-white/10 bg-black/30 p-2">
@@ -393,9 +375,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                         onClick={() => { const ad = kind === "kisa" ? "Kısa Video" : kind === "uzun" ? "Uzun Video" : "Tam Sürüm"; if (window.confirm(`${selectedUser.email} kullanıcısının ${ad} hakları sıfırlanacak VE aktif üyeliği iptal edilecek.\n\nEmin misiniz?`)) handleResetSingleRight(selectedUser.email, kind, true); }}
                         className="rounded-lg bg-red-500/10 border border-red-500/25 px-2 py-1.5 text-[9px] font-bold text-red-300 hover:bg-red-500/20 transition"
                         title={ttX2610("autAyniHakTitle")}
-                      >
-                        + üyelik iptal
-                      </button>
+                      >{ttX2610("adxUyelikIptal")}</button>
                     </div>
                   ))}
                 </div>
@@ -406,9 +386,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                 Haklar nur_video_rights tablosuna (kisa/uzun/tam) yazılır — üretim izni
                 (nur_consume_video) BU tablodan harcar. Eski jeton bakiyesi ölü veriydi. */}
             <div className="rounded-2xl border border-white/10 bg-black/40 p-3.5 space-y-2">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">
-                🪙 ⚡ Üretim Hakkı Ver — Kısa / Orta / Uzun
-              </label>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-white/60">{ttX2610("adxUretimHakkiVer")}</label>
 
               {/* Mevcut hak durumu — tür bazlı */}
               <div className="grid grid-cols-3 gap-1.5">
@@ -473,9 +451,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
               <button
                 onClick={() => handleSetVideoRights(selectedUser.email, rightsKind, 0, "set")}
                 className="mt-1 w-full rounded-lg border border-red-500/30 bg-red-500/10 py-1.5 text-[9.5px] font-black text-red-400 transition hover:bg-red-500/20 active:scale-95"
-              >
-                🔄 SEÇİLİ TÜRÜ SIFIRLA
-              </button>
+              >{ttX2610("adxSeciliTuruSifirla")}</button>
               <p className="text-[8.5px] leading-relaxed text-white/35">
                 Orta = 600 sn'ye kadar video · Uzun = 120 dk'ya kadar tam sürüm. Haklar anında geçerli olur — kullanıcı üretimde bu türden harcar.
               </p>
@@ -486,12 +462,9 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
           <div className="mt-4 rounded-2xl border border-red-500/30 bg-red-950/20 p-3.5 space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black uppercase tracking-wider text-red-300 flex items-center gap-1.5">
-                <Ban size={13} className="text-red-400" /> Siber Denetim & Yasal Ban Modülü
-              </label>
+                <Ban size={13} className="text-red-400" />{ttX2610("adxSiberDenetim")}</label>
               {selectedUser.isBanned && (
-                <span className="rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[8.5px] font-black text-red-300 animate-pulse">
-                  ⛔ SÜRESİZ BANLI
-                </span>
+                <span className="rounded-full bg-red-500/20 border border-red-500/40 px-2.5 py-0.5 text-[8.5px] font-black text-red-300 animate-pulse">{ttX2610("adxSuresizBanli")}</span>
               )}
             </div>
 
@@ -509,15 +482,12 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-black text-black shadow-lg transition hover:brightness-110 active:scale-95 cursor-pointer"
                   style={{ background: "linear-gradient(135deg, #4ade80, #16a34a)" }}
                 >
-                  <CheckCircle size={14} /> BANINI KALDIR (Sisteme Erişimi Geri Aç)
-                </button>
+                  <CheckCircle size={14} />{ttX2610("adxBaniKaldir")}</button>
               </div>
             ) : (
               <div className="space-y-2">
                 <div>
-                  <label className="block text-[9px] font-bold text-white/50 mb-1">
-                    Ban Gerekçesi / Yasal Suç Nedeni:
-                  </label>
+                  <label className="block text-[9px] font-bold text-white/50 mb-1">{ttX2610("adxBanGerekce")}</label>
                   <input
                     value={banReasonInput}
                     onChange={(e) => setBanReasonInput(e.target.value)}
@@ -530,8 +500,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   onClick={() => handleBan(selectedUser.email, banReasonInput)}
                   className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 text-[11px] font-black text-white shadow-lg transition hover:brightness-110 active:scale-95 bg-red-600 border border-red-500 cursor-pointer"
                 >
-                  <Ban size={14} /> SÜRESİZ BANLA
-                </button>
+                  <Ban size={14} />{ttX2610("adxSuresizBanla")}</button>
               </div>
             )}
           </div>

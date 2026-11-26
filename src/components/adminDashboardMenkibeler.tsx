@@ -1,3 +1,5 @@
+import { translate } from "../i18n";
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════════════════
 // ADMINDASHBOARDMENKIBELER.TSX (02.11, kullanıcı emri: admin panele
 // "Ekle / Yayınla" butonu bağlı olsun, eklediği kıssa tüm kullanıcılara
@@ -140,9 +142,8 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
       <div className="rounded-2xl border border-sky-400/30 bg-sky-500/[.07] p-3">
         <p className="flex items-start gap-2 text-[10.5px] leading-relaxed text-sky-200">
           <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          <span><span className="font-black">İslâmi Menkıbeler yönetimi.</span> Türkçe yaz →
-            <span className="font-black"> 5 dile Çevir</span> (en/ar/id/ur otomatik) →
-            <span className="font-black"> Yayınla.</span> Yayınlanan kıssa tüm kullanıcılara menkibeler ekranında görünür; "Çıkar" ile listeden düşer.
+          <span><span className="font-black">{ttX2610("adxMenkibeYonetim")}</span>{ttX2610("adxTurkceYaz")}<span className="font-black">{ttX2610("adxBeseCevir")}</span> (en/ar/id/ur otomatik) →
+            <span className="font-black">{ttX2610("adxYayinla")}</span> Yayınlanan kıssa tüm kullanıcılara menkibeler ekranında görünür; "Çıkar" ile listeden düşer.
             Supabase tablosu yoksa kök: <code className="font-mono text-[9px]">NUR-KISSALAR-SQL.sql</code> (SQL Editor, 1 kez).</span>
         </p>
       </div>
@@ -168,7 +169,7 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
             </select>
           </label>
           <label className="flex-[2]">
-            <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">Başlık (TR)</span>
+            <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">{ttX2610("adxBaslikTr")}</span>
             <input
               value={baslik}
               onChange={(e) => setBaslik(e.target.value)}
@@ -178,7 +179,7 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
           </label>
         </div>
         <label className="block">
-          <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">Hikâye (TR — paragrafları boş satırla ayır)</span>
+          <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">{ttX2610("adxHikayeTr")}</span>
           <textarea
             value={hikaye}
             onChange={(e) => setHikaye(e.target.value)}
@@ -189,7 +190,7 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
         </label>
         <div className="flex gap-2">
           <label className="flex-1">
-            <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">Kıssadan hisse (TR)</span>
+            <span className="block text-[9px] font-black uppercase tracking-wider text-white/40">{ttX2610("adxHisseTr")}</span>
             <input
               value={hikmet}
               onChange={(e) => setHikmet(e.target.value)}
@@ -211,8 +212,7 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
         {ceviri && (
           <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/[.07] p-2 space-y-1.5">
             <p className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-emerald-300">
-              <Languages className="h-3 w-3" /> Çeviri önizleme — 4 dil
-            </p>
+              <Languages className="h-3 w-3" />{ttX2610("adxCeviriOnizleme")}</p>
             {(["en", "ar", "id", "ur"] as Dil[]).map((dil) => (
               <p key={dil} className="text-[9.5px] leading-snug text-white/70" dir={dil === "ar" || dil === "ur" ? "rtl" : undefined}>
                 <span className="font-black text-emerald-300">{dil.toUpperCase()}: </span>
@@ -262,9 +262,9 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
           </button>
         </div>
         <div className="space-y-1.5">
-          {listeyuklaniyor && <p className="text-[10px] text-white/40">Yükleniyor…</p>}
+          {listeyuklaniyor && <p className="text-[10px] text-white/40">{ttX2610("adxYukleniyor")}</p>}
           {!listeyuklaniyor && liste.length === 0 && (
-            <p className="text-[10px] text-white/40">Henüz yayınlı kıssa yok — ilk kıssayı yukarıdan Ekle / Yayınla ile gönder.</p>
+            <p className="text-[10px] text-white/40">{ttX2610("adxKissaYok")}</p>
           )}
           {liste.map((k) => (
             <div key={k.id} className="flex items-center justify-between rounded-lg bg-black/30 px-2 py-1.5">
@@ -278,8 +278,7 @@ export const MenkibelerYonetimTab: React.FC<Props> = ({ notify }) => {
                 onClick={() => void cikar(k.id)}
                 className="flex items-center gap-1 rounded-full bg-red-500/20 px-2 py-0.5 text-[9px] font-bold text-red-300 hover:bg-red-500/40"
               >
-                <Trash2 className="h-3 w-3" /> Çıkar
-              </button>
+                <Trash2 className="h-3 w-3" />{ttX2610("adxCikar")}</button>
             </div>
           ))}
         </div>

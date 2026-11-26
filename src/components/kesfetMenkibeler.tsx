@@ -1,3 +1,5 @@
+import { translate } from "../i18n";
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // KESFET-MENKIBELER.TS (02.11, kullanıcı emri: "İslami menkıbeler olsun;
 // üstte konu butonları olsun, en fazla 5 buton gözüksün ama içinde başka
@@ -104,7 +106,7 @@ function MenkibeDetay({
             <div className="mx-auto mt-4 mb-3 h-px w-20 bg-amber-200/30" />
             <h3 className="text-[20px] font-black leading-snug text-amber-50">{baslik}</h3>
             <p className="mt-3 text-[10px] font-semibold text-amber-100/55">{toplam} sayfa</p>
-            <p className="mt-6 text-[10px] font-bold text-amber-100/60">Açmak için kapağa dokun</p>
+            <p className="mt-6 text-[10px] font-bold text-amber-100/60">{ttX2610("adxKapagaDokun")}</p>
           </button>
         </div>
       ) : (
