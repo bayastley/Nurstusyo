@@ -5,6 +5,7 @@ import { LANGS, vakitAdi, sureceCevir } from "../i18n";
 import { isAdminEmail, getJetonVault, getPackRights, type Tier } from "../tier";
 import { QiblaCompass } from "./islamicToolsBolumler";
 import { ozellikGorunur } from "../features/ozellikKilit";
+import { ensureRemoteSync } from "../services/adminSyncService";
 import { TIER_SOZLUK } from "./headerTierSozluk";
 import type { ModalName, User } from "../types";
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
@@ -17,6 +18,17 @@ export const HeaderSeritPillBar: React.FC<HeaderSeritPillBarProps> = ({
   setBatchFormats, misafirKalanHak, nextPrayer, prayerCity, formatRemaining,
 }) => {
   const [kibleAcik, setKibleAcik] = React.useState(false);
+  // ★ 26.11 KİLİT TAZELEME: kilitler sunucudan geldikten sonra şerit yeniden çizilsin
+  //   (ilk boyamada config henüz gelmemiş olabilir; gizlenen düğme görünür kalmasın).
+  const [, kilitSurum] = React.useState(0);
+  React.useEffect(() => {
+    let iptal = false;
+    const yenile = () => { if (!iptal) kilitSurum((n) => n + 1); };
+    window.addEventListener("nur_kilit_guncel", yenile);
+    void ensureRemoteSync().then(yenile).catch(() => undefined);
+    const zaman = window.setInterval(yenile, 60000);
+    return () => { iptal = true; window.removeEventListener("nur_kilit_guncel", yenile); window.clearInterval(zaman); };
+  }, []);
   // ★ 01.11 ŞERİT SÜRÜKLEME (kullanıcı emri: "sürüklensin, logo hariç"): pill şeridi
   //   fareyle sürüklenince yatay kayar (dokunmatikte kaydırma zaten native). Sürükleme
   //   sonrası yanlış buton tıklanmasın diye 5px eşiği aşılınca tık yakalanıp yutulur.
