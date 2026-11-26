@@ -286,7 +286,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
   //   sonuç getirir. Önce sunucu proxy (/api/hadis/ara), dev/erişimsiz ortamda doğrudan
   //   Sünnetimiz araması fallback. Kod büyümez, veriler koda gömülmez.
   const [kuliyatYukleniyor, setKuliyatYukleniyor] = useState(false);
-  const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string; url?: string }>>([]);
+  const [kuliyatSonuc, setKuliyatSonuc] = useState<Array<{ metin: string; kaynak: string; derece: string; kitap: string; dil: string; url?: string; bab?: string; kitab?: string; dereceEtiket?: string }>>([]);
   const [kuliyatOffline, setKuliyatOffline] = useState(false);
   React.useEffect(() => {
     if (sekme !== "hadis" || q.length < 2) { setKuliyatSonuc([]); setKuliyatYukleniyor(false); setKuliyatOffline(false); return; }
@@ -316,14 +316,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
             sonuclar = (Array.isArray(sd?.results) ? sd.results : []).slice(0, 12).map((h: any) => {
               const metin = (h.turkish || h.arabic || "").trim();
               const bname = h.book?.name || h.book?.slug || "Hadis";
-              const bolum = h.bab?.title || h.kitab?.title || "";
-              return metin ? {
+                            const bolum = h.bab?.title || "";
+                return metin ? {
                 metin,
                 kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
                 derece: normD(h.grade?.label),
                 kitap: bname,
                 dil: h.turkish ? "tr" : "ar",
                 url: h.url,
+                bab: bolum,
+                kitab: h.kitab?.title || "",
+                dereceEtiket: [h.grade?.label, h.grade?.by].filter(Boolean).join(" · "),
               } : null;
             }).filter(Boolean);
           }
