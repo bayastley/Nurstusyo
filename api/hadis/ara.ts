@@ -80,6 +80,9 @@ interface HadisSonuc {
   kitap: string;
   dil: "tr" | "ar" | "en";
   url?: string;
+  ref?: string;
+  bab?: string;
+  dereceEtiket?: string;
 }
 
 const KITAP_SLUG: Record<string, string> = {
@@ -140,6 +143,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const q = temizle(String(req.query.q ?? ""));
   if (q.length < 2) return res.status(400).json({ ok: false, error: "Arama en az 2 karakter olmalı" });
 
+  // ★ 26.11: "binlerce sahih hadis" — sayfalama + sahih/hasan süzgeci.
+  // Külliyat 34.566 Türkçe hadis (Buhârî 7.583 · Müslim 7.603 · Nesâî 5.765 ·
+  // Ebû Dâvûd 5.274 · İbn Mâce 4.343 · Tirmizî 3.998 — Sünnetimiz /books, 26.11.2026).
+  const sayfa = Math.min(Math.max(Number.parseInt(String(req.query.sayfa ?? "1"), 10) || 1, 1), 40);
+  const adet = Math.min(Math.max(Number.parseInt(String(req.query.adet ?? "30"), 10) || 30, 5), 100);
+  const yalnizSahih = String(req.query.sahih ?? "1") !== "0";
+
   const sonuclar: HadisSonuc[] = [];
   const seen = new Set<string>();
   const ekle = (s: HadisSonuc) => {
@@ -157,26 +167,36 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const kitapQ = kitaplarSecili.length ? kitaplarSecili.join(",") : "buhari,muslim,ebudavud,tirmizi,nesai,ibnmace";
 
   // ─── 1) Sünnetimiz (anahtarsız, TR+Arapça + derece) — öncelikli ───
+  let sunnetimizHasMore = false;
   try {
-    const url = `https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=12`;
+    const cekim = Math.min(Math.max(adet * 2, 60), 100);
+    const url = `https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=${cekim}&page=${sayfa}`;
     const r = await fetch(url, {
       headers: { "User-Agent": DIS_UA, Accept: "application/json" },
       signal: AbortSignal.timeout(8000),
     });
     if (r.ok) {
-      const data = (await r.json()) as { results?: Array<{ ref?: string; turkish?: string; arabic?: string; grade?: { label?: string }; book?: { slug?: string; name?: string }; kitab?: { title?: string }; bab?: { title?: string }; url?: string }>; error?: unknown };
-      for (const h of (data.results ?? []).slice(0, 12)) {
+      const data = (await r.json()) as { results?: Array<{ ref?: string; turkish?: string; arabic?: string; grade?: { label?: string; by?: string; tone?: string }; book?: { slug?: string; name?: string }; kitab?: { title?: string }; bab?: { title?: string }; url?: string }>; has_more?: boolean; error?: unknown };
+      sunnetimizHasMore = Boolean(data.has_more);
+      for (const h of (data.results ?? [])) {
         const metin = (h.turkish || h.arabic || "").trim();
         if (!metin) continue;
+        const derece = sunnetimizDerece(h.grade?.tone || h.grade?.label);
+        // Sahih süzgeci: derecesi belirtilmemiş rivayetleri de dışlar, zayıfı asla göstermez.
+        if (yalnizSahih && derece !== "sahih" && derece !== "hasan") continue;
+        if (sonuclar.length >= adet) break;
         const bname = h.book?.name || h.book?.slug || "Hadis";
         const bolum = h.bab?.title || h.kitab?.title || "";
         ekle({
           metin,
           kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
-          derece: sunnetimizDerece(h.grade?.label),
+          derece,
           kitap: bname,
           dil: h.turkish ? "tr" : "ar",
           url: h.url,
+          ref: h.ref,
+          bab: bolum,
+          dereceEtiket: [h.grade?.label, h.grade?.by].filter(Boolean).join(" · "),
         });
       }
       kaynaklar.sunnetimiz = `ok-${sonuclar.length}`;
@@ -216,7 +236,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ─── 3) dorar.net — anonim külliyat araması (Arapça), yedek ───
-  if (sonuclar.length < 8) {
+  if (sonuclar.length < 8 && !yalnizSahih) {
     try {
       const url = `https://dorar.net/dorar_api.json?skey=${encodeURIComponent(q)}`;
       let r = await fetch(url, { headers: { "User-Agent": DIS_UA, Accept: "application/json" }, signal: AbortSignal.timeout(8000) });
@@ -231,7 +251,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .map((m) => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean);
         const bilgiler = [...html.matchAll(/class="hadith-info"[^>]*>([\s\S]*?)<\/div>/g)]
           .map((m) => m[1].replace(/<[^>]+>/g, "").trim()).filter(Boolean);
-        for (let i = 0; i < metinler.length && sonuclar.length < 16; i++) {
+        for (let i = 0; i < metinler.length && sonuclar.length < adet; i++) {
           const metin = metinler[i];
           const bilgi = bilgiler[i] ?? "";
           ekle({
@@ -249,5 +269,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch { if (kaynaklar.dorar === "kapali") kaynaklar.dorar = "hata"; }
   }
 
-  return res.status(200).json({ ok: true, q, sayi: sonuclar.length, kaynaklar, sonuclar: sonuclar.slice(0, 16) });
+  return res.status(200).json({
+    ok: true,
+    q,
+    sayfa,
+    adet,
+    sayi: sonuclar.length,
+    hasMore: sunnetimizHasMore,
+    kulliyat: { kitap: 6, hadis: 34566 },
+    kaynaklar,
+    sonuclar: sonuclar.slice(0, adet),
+  });
 }

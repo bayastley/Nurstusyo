@@ -26,7 +26,13 @@ interface CevrimiciHadis {
   kitap: string;
   dil: string;
   url?: string;
+  ref?: string;
+  bab?: string;
+  dereceEtiket?: string;
 }
+
+/** Külliyat sayfası — tek istekte 30, "daha fazla" ile binlerce rivayete inilir. */
+const HADIS_SAYFA_ADEDI = 30;
 
 // ★ 26.11: derece rozetleri — sahih / hasan / zayıf / bilinmiyor
 const DERECE_SINIF: Record<string, string> = {
@@ -76,24 +82,31 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
   // ★ 26.11 ÇEVRİMİÇİ HADİS: sorgu 3+ harfse külliyattan da ara (Buhârî, Müslim, Tirmizî…)
   const [hadisler, setHadisler] = useState<CevrimiciHadis[]>([]);
   const [hadisDurum, setHadisDurum] = useState<"bos" | "yuk" | "ok" | "hata">("bos");
-  const hadisOnbellek = useRef(new Map<string, CevrimiciHadis[]>());
+  const [hadisSayfa, setHadisSayfa] = useState(1);
+  const [hadisHasMore, setHadisHasMore] = useState(false);
+  const [hadisDahaYuk, setHadisDahaYuk] = useState(false);
+  const hadisOnbellek = useRef(new Map<string, { liste: CevrimiciHadis[]; hasMore: boolean }>());
 
   useEffect(() => {
     const q = sorgu.trim();
+    setHadisSayfa(1);
+    setHadisHasMore(false);
     if (!open || q.length < 3) { setHadisler([]); setHadisDurum("bos"); return; }
     const anahtar = q.toLocaleLowerCase("tr");
     const hazir = hadisOnbellek.current.get(anahtar);
-    if (hazir) { setHadisler(hazir); setHadisDurum(hazir.length ? "ok" : "bos"); return; }
+    if (hazir) { setHadisler(hazir.liste); setHadisHasMore(hazir.hasMore); setHadisDurum(hazir.liste.length ? "ok" : "bos"); return; }
     const kontrol = new AbortController();
     setHadisDurum("yuk");
     const zaman = window.setTimeout(async () => {
       try {
-        const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}`, { signal: kontrol.signal });
+        const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}&sayfa=1&adet=${HADIS_SAYFA_ADEDI}`, { signal: kontrol.signal });
         if (!r.ok) throw new Error(String(r.status));
-        const d = (await r.json()) as { sonuclar?: CevrimiciHadis[] };
-        const liste = (d.sonuclar ?? []).slice(0, 8);
-        hadisOnbellek.current.set(anahtar, liste);
+        const d = (await r.json()) as { sonuclar?: CevrimiciHadis[]; hasMore?: boolean };
+        const liste = d.sonuclar ?? [];
+        const hasMore = Boolean(d.hasMore);
+        hadisOnbellek.current.set(anahtar, { liste, hasMore });
         setHadisler(liste);
+        setHadisHasMore(hasMore);
         setHadisDurum(liste.length ? "ok" : "bos");
       } catch (e) {
         if (e instanceof Error && e.name === "AbortError") return;
@@ -103,6 +116,32 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
     }, 450);
     return () => { window.clearTimeout(zaman); kontrol.abort(); };
   }, [sorgu, open]);
+
+  // "Daha fazla" — aynı sorgunun sonraki külliyat sayfasını ekler (binlerce rivayet).
+  const hadisDahaFazla = async () => {
+    const q = sorgu.trim();
+    if (!q || hadisDahaYuk) return;
+    const sonraki = hadisSayfa + 1;
+    setHadisDahaYuk(true);
+    try {
+      const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}&sayfa=${sonraki}&adet=${HADIS_SAYFA_ADEDI}`);
+      if (!r.ok) throw new Error(String(r.status));
+      const d = (await r.json()) as { sonuclar?: CevrimiciHadis[]; hasMore?: boolean };
+      const gelen = d.sonuclar ?? [];
+      setHadisler((eski) => {
+        const anahtar = (h: CevrimiciHadis) => h.url || h.ref || h.metin.slice(0, 80);
+        const gorulen = new Set(eski.map(anahtar));
+        return [...eski, ...gelen.filter((h) => !gorulen.has(anahtar(h)))];
+      });
+      setHadisSayfa(sonraki);
+      setHadisHasMore(Boolean(d.hasMore));
+      setHadisDurum("ok");
+    } catch {
+      setHadisHasMore(false);
+    } finally {
+      setHadisDahaYuk(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -237,9 +276,14 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
           {/* ★ 26.11 ÇEVRİMİÇİ HADİS KÜLLİYATI — Buhârî, Müslim, Tirmizî… dereceli */}
           {sorgu.trim().length >= 3 && (
             <div className="mt-2 border-t border-white/[.07] px-1 pt-2">
-              <p className="px-1 text-[8.5px] font-black uppercase tracking-widest text-emerald-300/70">
-                {t("araHadisBaslik")}
-              </p>
+              <div className="flex flex-wrap items-baseline gap-1.5 px-1">
+                <p className="text-[8.5px] font-black uppercase tracking-widest text-emerald-300/70">
+                  {t("araHadisBaslik")}
+                </p>
+                <span className="ml-auto rounded-full bg-white/[.06] px-1.5 py-0.5 text-[7.5px] font-bold tabular-nums text-white/40">
+                  {hadisler.length > 0 ? t("araHadisSayi").replace("{n}", String(hadisler.length)) : t("araHadisToplam")}
+                </span>
+              </div>
               {hadisDurum === "yuk" && <p className="px-1 py-2 text-[9.5px] text-white/40">{t("araHadisAraniyor")}</p>}
               {hadisDurum === "hata" && <p className="px-1 py-2 text-[9.5px] text-amber-200/70">{t("araHadisKapali")}</p>}
               {hadisDurum === "bos" && <p className="px-1 py-2 text-[9.5px] text-white/40">{t("araHadisYok")}</p>}
@@ -258,6 +302,16 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
                       <Vurgulu metin={h.metin} sorgu={sorgu} sinir={280} />
                     </p>
                     <p className="mt-0.5 text-[8px] font-bold text-emerald-300/50">{h.kaynak}</p>
+                    {/* Rivayet bağlamı: hadisin külliyattaki kitap/bâb bilgisi — uydurma değil, kaynaktan. */}
+                    {h.bab && (
+                      <p className="mt-1 rounded-md border border-white/[.06] bg-black/20 px-1.5 py-1 text-[8px] text-white/45">
+                        <span className="font-black uppercase tracking-wide text-white/35">{t("araHadisBaglam")}: </span>
+                        {h.bab}
+                      </p>
+                    )}
+                    {h.dereceEtiket && (
+                      <p className="mt-0.5 text-[7.5px] text-white/30">{t("araHadisDereceNot")}: {h.dereceEtiket}</p>
+                    )}
                   </>
                 );
                 const sinif = "mb-1 block w-full rounded-xl border border-white/[.07] bg-white/[.02] p-2.5 text-left transition hover:border-white/15 hover:bg-white/[.05]";
@@ -267,6 +321,16 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
                   <div key={`${h.kitap}-${i}`} className={sinif}>{icerik}</div>
                 );
               })}
+              {hadisHasMore && (
+                <button
+                  type="button"
+                  onClick={hadisDahaFazla}
+                  disabled={hadisDahaYuk}
+                  className="mt-1 w-full rounded-xl border border-emerald-400/25 bg-emerald-500/[.08] py-1.5 text-[9px] font-black text-emerald-200/80 transition hover:bg-emerald-500/[.15] disabled:opacity-50"
+                >
+                  {hadisDahaYuk ? t("araHadisAraniyor") : t("araHadisDaha")}
+                </button>
+              )}
               <p className="px-1 pb-1 pt-0.5 text-[7.5px] text-white/25">{t("araHadisKaynakNot")}</p>
             </div>
           )}
