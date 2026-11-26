@@ -246,7 +246,7 @@ export const AdminPanelKabuk: React.FC<{
                 {errorAlarm === "alarm" ? "🚨 ACİL HATA ALARMI" : "⚠️ HATA UYARISI"}
                 {errorStats ? ` — Son 24 saatte ${errorStats.total24h} hata (${errorStats.unique24h} benzersiz)` : ""}
               </p>
-              <p className="mt-1 text-[10px] text-white/60">ttX2610("adkHataUyari")</p>
+              <p className="mt-1 text-[10px] text-white/60">{ttX2610("adkHataUyari")}</p>
               <button onClick={() => setActiveTab("errors")} className="mt-2 rounded-lg bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 transition hover:bg-white/20">
                 → Hata Logları'na git
               </button>

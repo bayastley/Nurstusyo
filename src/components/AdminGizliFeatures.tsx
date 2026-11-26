@@ -230,7 +230,7 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
   };
 
   if (yukleniyor && liste.length === 0) {
-    return <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center text-[11px] text-white/50">ttX2610("agfYukleniyor")</div>;
+    return <div className="rounded-2xl border border-white/10 bg-black/40 p-4 text-center text-[11px] text-white/50">{ttX2610("agfYukleniyor")}</div>;
   }
 
   return (

@@ -118,7 +118,7 @@ export const AdminModulesSyncTab: React.FC<AdminModulesSyncTabProps> = ({
               <CloudUpload size={18} />
             </span>
             <div>
-              <h4 className="text-[12px] font-black text-white">ttX2610("amsSync")</h4>
+              <h4 className="text-[12px] font-black text-white">{ttX2610("amsSync")}</h4>
               <p className="text-[9.5px] text-white/50 leading-relaxed">
                 GitHub Gist API kullanarak Admin panelinden yaptığınız her değişimi tüm dünya kullanıcılarına anlık canlı yayınlayabilirsiniz.
               </p>

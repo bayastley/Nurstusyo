@@ -43,7 +43,7 @@ export function AdminFeedbackTab({
               <div className="grid grid-cols-2 gap-3">
                 <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-center">
                   <p className="text-2xl font-black text-emerald-300">{feedbackStats?.toplam ?? "—"}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbToplamGorus")</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-white/45">{ttX2610("adbToplamGorus")}</p>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-center">
                   <p className="text-2xl font-black text-amber-300">{feedbackStats?.puanOrtalama ? `${feedbackStats.puanOrtalama} ⭐` : "—"}</p>
@@ -54,14 +54,14 @@ export function AdminFeedbackTab({
               {/* ttX2610("adbTurDagilimi") */}
               {feedbackStats && (
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbTurDagilimi")</p>
+                  <p className="mb-2 text-[9px] font-bold uppercase tracking-widest text-white/45">{ttX2610("adbTurDagilimi")}</p>
                   <div className="flex flex-wrap gap-2">
                     <span className="rounded-lg bg-amber-500/15 px-2.5 py-1 text-[10px] font-bold text-amber-300">💡 Öneri: {feedbackStats.turDagilimi.oneri ?? 0}</span>
                     <span className="rounded-lg bg-sky-500/15 px-2.5 py-1 text-[10px] font-bold text-sky-300">✨ Özellik: {feedbackStats.turDagilimi.ozellik ?? 0}</span>
                     <span className="rounded-lg bg-red-500/15 px-2.5 py-1 text-[10px] font-bold text-red-300">😔 Şikayet: {feedbackStats.turDagilimi.sikayet ?? 0}</span>
                     <span className="rounded-lg bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white/60">✉️ Diğer: {feedbackStats.turDagilimi.diger ?? 0}</span>
                   </div>
-                  <p className="mb-2 mt-3 text-[9px] font-bold uppercase tracking-widest text-white/45">ttX2610("adbPuanDagilimi")</p>
+                  <p className="mb-2 mt-3 text-[9px] font-bold uppercase tracking-widest text-white/45">{ttX2610("adbPuanDagilimi")}</p>
                   {[5, 4, 3, 2, 1].map((n) => {
                     const adet = feedbackStats.puanDagilimi[n] ?? 0;
                     const yuzde = feedbackStats.toplam ? Math.round((adet / feedbackStats.toplam) * 100) : 0;
@@ -111,10 +111,10 @@ export function AdminFeedbackTab({
                       {fb.admin_yanit && !yanitAcik && (
                         <div className="rounded-lg border border-amber-400/25 bg-amber-500/[.06] p-2">
                           <p className="flex items-center justify-between gap-2 text-[8.5px] font-black uppercase tracking-wider text-amber-300">
-                            <span>ttX2610("adbVerilenYanit")</span>
+                            <span>{ttX2610("adbVerilenYanit")}</span>
                             <span className="flex items-center gap-1 font-bold normal-case tracking-normal">
                               {fb.mail_gonderildi
-                                ? <span className="rounded bg-emerald-500/20 px-1.5 py-px text-emerald-300">ttX2610("adbMailGitti")</span>
+                                ? <span className="rounded bg-emerald-500/20 px-1.5 py-px text-emerald-300">{ttX2610("adbMailGitti")}</span>
                                 : <span className="rounded bg-red-500/15 px-1.5 py-px text-red-300" title={fb.mail_hata || ""}>📧 gönderilemedi{fb.mail_hata ? `: ${fb.mail_hata}` : ""}</span>}
                             </span>
                           </p>

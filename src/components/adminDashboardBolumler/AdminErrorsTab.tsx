@@ -183,7 +183,7 @@ export function AdminErrorsTab({
                         </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-[8px] text-white/35">ttX2610("adbCubukInfo")</p>
+                    <p className="mt-2 text-[8px] text-white/35">{ttX2610("adbCubukInfo")}</p>
                   </div>
                 );
               })()}
@@ -301,7 +301,7 @@ export function AdminErrorsTab({
                       </div>
                       {log.stack && (
                         <details className="text-white/40">
-                          <summary className="cursor-pointer text-[9px] hover:text-white/70">ttX2610("adbStack")</summary>
+                          <summary className="cursor-pointer text-[9px] hover:text-white/70">{ttX2610("adbStack")}</summary>
                           <pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-black/60 p-2 text-[8.5px] text-white/50">{log.stack}</pre>
                         </details>
                       )}

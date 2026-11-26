@@ -365,7 +365,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               <Rocket size={20} style={{ color: "var(--accent-2)" }} />
               Güncelleme Yol Haritası
             </h2>
-            <p className="text-[11px] text-white/40 mt-0.5">ttX2610("rmBaslik")</p>
+            <p className="text-[11px] text-white/40 mt-0.5">{ttX2610("rmBaslik")}</p>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
@@ -392,7 +392,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
               {/* Oylama Süresi */}
               <div className="flex items-center gap-2">
                 <Clock size={12} className="text-white/50" />
-                <span className="text-[10px] text-white/60">ttX2610("rmOyBitisi")</span>
+                <span className="text-[10px] text-white/60">{ttX2610("rmOyBitisi")}</span>
                 <input
                   type="datetime-local"
                   value={deadline}
@@ -493,7 +493,7 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
             </div>
             <div className="space-y-2">
               {data.v2.filter(f => f.active).sort((a, b) => b.votes - a.votes).map((f, i) => renderFeature(f, "V2", i))}
-              {data.v2.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">ttX2610("rmV2Bos")</p>}
+              {data.v2.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">{ttX2610("rmV2Bos")}</p>}
             </div>
           </div>
 
@@ -506,14 +506,14 @@ export const RoadmapModal: React.FC<RoadmapModalProps> = ({ open, onClose, admin
             </div>
             <div className="space-y-2">
               {data.v3.filter(f => f.active).sort((a, b) => b.votes - a.votes).map((f, i) => renderFeature(f, "V3", i))}
-              {data.v3.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">ttX2610("rmV3Bos")</p>}
+              {data.v3.filter(f => f.active).length === 0 && <p className="rounded-xl border border-dashed border-white/10 px-4 py-5 text-center text-[10px] text-white/30">{ttX2610("rmV3Bos")}</p>}
             </div>
           </div>
 
           {/* Footer */}
           <div className="text-center pt-2 pb-4 space-y-1">
             <p className="text-[10px] text-white/30">🕌 Nûr Stüdyo — Dünyada tek "Kur'an Video Üreten AI Stüdyo"</p>
-            <p className="text-[9px] text-white/20">ttX2610("rmSiraylaEklenecek")</p>
+            <p className="text-[9px] text-white/20">{ttX2610("rmSiraylaEklenecek")}</p>
           </div>
         </div>
       </div>

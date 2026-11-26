@@ -142,7 +142,7 @@ export function AdminBanLogsTab({
                     <Lightbulb size={18} className="animate-pulse" fill="currentColor" />
                   </span>
                   <div>
-                    <h4 className="text-[12px] font-black text-white">ttX2610("adbSiberKayitlar")</h4>
+                    <h4 className="text-[12px] font-black text-white">{ttX2610("adbSiberKayitlar")}</h4>
                     <p className="text-[9.5px] text-white/50 leading-relaxed">
                       Sistem tarafından otomatik tespit edilen güvenlik ihlalleri ve Admin tarafından uygulanan yasal ban işlemleri.
                     </p>
@@ -167,7 +167,7 @@ export function AdminBanLogsTab({
                           </span>
                         </div>
                         <p className="text-white/80 leading-relaxed">
-                          <b>ttX2610("adbGerekceSuclama")</b> {log.reason}
+                          <b>{ttX2610("adbGerekceSuclama")}</b> {log.reason}
                         </p>
                         <div className="flex items-center justify-between text-[8.5px] text-white/40 pt-1 border-t border-white/5">
                           <span>Yetkili: {log.bannedBy}</span>

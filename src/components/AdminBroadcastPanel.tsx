@@ -503,7 +503,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="flex items-center gap-1.5 text-[10.5px] font-black text-amber-200"><Rocket size={12} /> V2 Test Kilidi</p>
-              <p className="mt-0.5 text-[9px] leading-relaxed text-white/45">ttX2610("abpKilitAciklama")</p>
+              <p className="mt-0.5 text-[9px] leading-relaxed text-white/45">{ttX2610("abpKilitAciklama")}</p>
               <p className="mt-1 text-[9px] font-bold text-white/60">🗳️ Oy lideri: <span className="text-amber-300">{roadmapLider || "…"}</span></p>
             </div>
             <button
@@ -570,7 +570,7 @@ export const AdminBroadcastPanel: React.FC<AdminBroadcastPanelProps> = ({ notify
                   )}
                 </div>
                 {entries.length === 0 ? (
-                  <p className="py-2 text-center text-[9.5px] text-white/35 italic">ttX2610("abpBos")</p>
+                  <p className="py-2 text-center text-[9.5px] text-white/35 italic">{ttX2610("abpBos")}</p>
                 ) : (
                   <div className="max-h-44 space-y-1.5 overflow-y-auto">
                     {entries.map(([id, lock]) => (

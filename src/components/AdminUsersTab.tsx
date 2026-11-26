@@ -260,7 +260,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
                   <div className="mt-2 rounded-lg bg-blue-500/10 border border-blue-500/20 p-2">
                     <div className="mb-1 flex items-center gap-1">
                       <History size={11} className="text-blue-400" />
-                      <span className="text-[10px] font-bold text-blue-300">ttX2610("autAdminIslemleri")</span>
+                      <span className="text-[10px] font-bold text-blue-300">{ttX2610("autAdminIslemleri")}</span>
                     </div>
                     {userHistory.auditLogs.map((log: any, i: number) => (
                       <div key={i} className="flex items-center justify-between text-[9px] text-white/60">
@@ -498,7 +498,7 @@ export const AdminUsersTab: React.FC<AdminUsersTabProps> = ({
             {selectedUser.isBanned ? (
               <div className="space-y-2">
                 <div className="rounded-xl bg-black/40 p-2.5 text-[10px] leading-relaxed text-red-200 border border-red-500/20">
-                  <b className="text-red-400">ttX2610("autBanGerekce")</b> {selectedUser.banReason || "Belirtilmedi"}
+                  <b className="text-red-400">{ttX2610("autBanGerekce")}</b> {selectedUser.banReason || "Belirtilmedi"}
                   <span className="block text-[8.5px] text-white/40 mt-1">
                     Tarih: {selectedUser.bannedAt ? new Date(selectedUser.bannedAt).toLocaleString("tr-TR") : "-"} · Banned By: {selectedUser.bannedBy || "Admin"}
                   </span>

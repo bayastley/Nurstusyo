@@ -88,7 +88,7 @@ export const AdminHaftaVideoTab: React.FC<{ notify: (msg: string) => void }> = (
         {yukleniyor ? "Yükleniyor…" : "↻ Yenile"}
       </button>
       {videolar.length === 0 ? (
-        <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtBos")</p>
+        <p className="p-6 text-center text-[10px] text-white/40 italic">{ttX2610("adtBos")}</p>
       ) : (
         <div className="space-y-2">
           {videolar.map((v) => (
@@ -182,7 +182,7 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
       <div className="rounded-2xl border border-sky-400/25 bg-sky-500/[0.07] p-3.5">
         <p className="text-[10px] font-black text-sky-200">{ttX2610("adtHizTesti")}</p>
         {!perf ? (
-          <p className="mt-1 text-[9px] text-white/40">ttX2610("adtOlculuyor")</p>
+          <p className="mt-1 text-[9px] text-white/40">{ttX2610("adtOlculuyor")}</p>
         ) : (
           <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
             <div className="rounded-lg bg-white/5 py-1.5">
@@ -204,7 +204,7 @@ export const AdminHaftalikRaporTab: React.FC<{ notify: (msg: string) => void }> 
 
       <div className="rounded-2xl border border-teal-500/30 bg-teal-500/[0.08] p-4">
         <p className="text-[11px] font-black text-teal-200">{ttX2610("adtHaftaRapor")}</p>
-        <p className="mt-1 text-[10px] text-white/55">ttX2610("adtRaporAciklama")</p>
+        <p className="mt-1 text-[10px] text-white/55">{ttX2610("adtRaporAciklama")}</p>
       </div>
       <button onClick={yukle} disabled={yukleniyor}
         className="rounded-xl bg-white/10 px-3 py-2 text-[10px] font-bold text-white/80 transition hover:bg-white/20 disabled:opacity-50">
@@ -328,7 +328,7 @@ export const AdminKullanimTab: React.FC<{
       </div>
 
       {rows.length === 0 ? (
-        <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtKayitBos")yle listelenir.</p>
+        <p className="p-6 text-center text-[10px] text-white/40 italic">{ttX2610("adtKayitBos")}yle listelenir.</p>
       ) : (
         <>
           {/* Hafta seçici — tarihe göre tıkla */}
@@ -361,7 +361,7 @@ export const AdminKullanimTab: React.FC<{
               </div>
             </div>
           ) : (
-            <p className="p-6 text-center text-[10px] text-white/40 italic">ttX2610("adtHaftaBos")</p>
+            <p className="p-6 text-center text-[10px] text-white/40 italic">{ttX2610("adtHaftaBos")}</p>
           )}
 
           <p className="text-[8.5px] text-white/30">

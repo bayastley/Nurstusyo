@@ -139,7 +139,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
           )}
           {kabeStatus === "error" && (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <p className="text-[11px] font-black text-[#f5dda6]">ttX2610("ckAçilamadı")</p>
+              <p className="text-[11px] font-black text-[#f5dda6]">{ttX2610("ckAçilamadı")}</p>
               <button onClick={() => { setKabeStatus("loading"); startHls(); }} className="rounded-lg bg-gold/20 px-3 py-1.5 text-[10px] font-black text-gold transition hover:bg-gold/30">↻ Tekrar Dene</button>
             </div>
           )}

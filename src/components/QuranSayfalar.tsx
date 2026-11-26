@@ -374,7 +374,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 {mealDurum === "hata" && (
                   <div className="flex flex-col items-center gap-3 py-16 text-center">
                     <span className="text-3xl">📡</span>
-                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">ttX2610("qsMealHata")</p>
+                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">{ttX2610("qsMealHata")}</p>
                     <button
                       onClick={() => { mealCacheRef.current.delete(sayfa); setMealYeniden((n) => n + 1); }}
                       className="flex items-center gap-1.5 rounded-xl bg-[#c9a227] px-3.5 py-1.5 text-[11px] font-black text-[#2b2416] transition hover:brightness-110 active:scale-95"
@@ -449,7 +449,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
             ) : (
               <div className="flex flex-col items-center gap-3 py-16 text-center">
                 <span className="text-3xl">📡</span>
-                <p className="max-w-xs text-[11px] text-[#b8b093]">ttX2610("qsYuklemeHatasi")</p>
+                <p className="max-w-xs text-[11px] text-[#b8b093]">{ttX2610("qsYuklemeHatasi")}</p>
                 <button
                   onClick={() => { setKaynakIdx(0); setYukleniyor(true); setHata(false); setImgKey((k) => k + 1); }}
                   className="flex items-center gap-1.5 rounded-xl bg-gold px-3 py-1.5 text-[11px] font-black text-slate-950 transition hover:brightness-110 active:scale-95"
