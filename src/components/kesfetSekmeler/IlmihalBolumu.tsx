@@ -8,6 +8,8 @@ import {
 } from "../../data/ilmihalData";
 // ★ 24.11: ders adı / alt açıklama / soru kökü için 4 dilli yerleşik çeviri
 import { dersAdi, dersAlt, soruKoku } from "../../data/ilmihalCokDil";
+// ★ 24.11: 242 madde başlığı da 4 dilde
+import { maddeBasligi } from "../../data/ilmihalMaddeCokDil";
 
 // ════════════════════════════════════════════════════════
 // ILMIHALBOLUMU.TSX — İlmihal Akademisi (yol haritası madde 11)
@@ -184,7 +186,7 @@ export function IlmihalBolumu({
                     onClick={() => setAcikMadde(acik ? null : anahtar)}
                     className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
                   >
-                    <span className="text-[10.5px] font-black text-white/90">{i + 1}. {g(m.baslik)}</span>
+                    <span className="text-[10.5px] font-black text-white/90">{i + 1}. {maddeBasligi(ders.id, i, lang) ?? g(m.baslik)}</span>
                     <ChevronDown size={12} className={`shrink-0 text-white/40 transition-transform ${acik ? "" : "-rotate-90"}`} />
                   </button>
                   {acik && (
