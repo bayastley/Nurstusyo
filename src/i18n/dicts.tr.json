@@ -2701,5 +2701,20 @@
   "pmKampanyaKod": "Kodu buraya yazın (isteğe bağlı)…",
   "pmKampanyaKaydet": "Kaydet",
   "pmKampanyaKaydedildi": "Kod notu bu cihazda saklandı",
-  "pmKampanyaNot": "Bu alan yalnız cihazınızda bir not tutar. Kodlar otomatik doğrulanmaz veya etkinleştirilmez; geçerli kampanya/hediye kodları için resmî duyuruları ve destek kanallarını takip edin."
+  "pmKampanyaNot": "Bu alan yalnız cihazınızda bir not tutar. Kodlar otomatik doğrulanmaz veya etkinleştirilmez; geçerli kampanya/hediye kodları için resmî duyuruları ve destek kanallarını takip edin.",
+  "adkBaslik": "ADMIN YÖNETİM PANELİ",
+  "adkSifreli": "ŞİFRELİ KORUMALI",
+  "adkOturum": "Oturum",
+  "adkKapat": "Kapat",
+  "adkKullanici": "Kullanıcı & ⚡Üretim hakkı",
+  "adkDuyuru": "Duyuru & Kilitlar",
+  "adkBan": "Ban & Siber Denetim",
+  "adkHatalar": "Hata Logları",
+  "adkMenkibeler": "Menkıbeler",
+  "adkGeriBildirim": "Geri Bildirim",
+  "adkAcilAlarm": "🚨 ACİL HATA ALARMI",
+  "adkHataAlarm": "⚠️ HATA UYARISI",
+  "adkHataOzet": "— Son 24 saatte {a} hata ({b} benzersiz)",
+  "adkHataGit": "→ Hata Logları'na git",
+  "adkTamam": "Tamamlandı"
 }

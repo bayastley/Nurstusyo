@@ -2701,5 +2701,20 @@
   "shYeni18": "On-site search (top bar \"Search\" + Ctrl/⌘+K): fiqh, hadith, stories, surahs, supplications, companions, classical works, prophets, sirah, sunnah, manners, vocabulary and Q&A in one box; the index runs on the device with no network request.",
   "shYeni19": "Companions section: detailed lives of 24 companions (71 events) with source references, in its own tab.",
   "shYeni20": "Classical works library (34 works) and the Elifba school (29 letters, initial-medial-final forms, articulation points, voiced reading, letter quiz).",
-  "araCokDil": "English, Arabic, Indonesian and Urdu are searched too"
+  "araCokDil": "English, Arabic, Indonesian and Urdu are searched too",
+  "adkBaslik": "ADMIN PANEL",
+  "adkSifreli": "PASSWORD PROTECTED",
+  "adkOturum": "Session",
+  "adkKapat": "Close",
+  "adkKullanici": "Users & ⚡Credits",
+  "adkDuyuru": "Announcements & Locks",
+  "adkBan": "Ban & Cyber Audit",
+  "adkHatalar": "Error Logs",
+  "adkMenkibeler": "Stories",
+  "adkGeriBildirim": "Feedback",
+  "adkAcilAlarm": "🚨 CRITICAL ERROR ALERT",
+  "adkHataAlarm": "⚠️ ERROR WARNING",
+  "adkHataOzet": "— {a} errors in the last 24 hours ({b} unique)",
+  "adkHataGit": "→ Go to Error Logs",
+  "adkTamam": "Done"
 }

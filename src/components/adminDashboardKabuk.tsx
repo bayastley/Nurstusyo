@@ -101,23 +101,23 @@ export const AdminPanelKabuk: React.FC<{
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-display text-base font-black tracking-wider text-white">
-                  ADMIN YÖNETİM PANELİ
+                  {ttX2610("adkBaslik")}
                 </h3>
                 <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2 py-0.5 text-[8px] font-black text-emerald-300">
-                  ŞİFRELİ KORUMALI
+                  {ttX2610("adkSifreli")}
                 </span>
                 {saglik && <PanelSaglikRozeti saglik={saglik} />}
               </div>
               <p className="text-[10px] text-white/50 mt-0.5">
                 {/* ★ 27.09: e-posta yerine "Admin" — tanıtım videosunda gizlilik */}
-                Oturum: <b style={{ color: "var(--accent-2)" }}>Admin ✔</b>
+                {ttX2610("adkOturum")}: <b style={{ color: "var(--accent-2)" }}>Admin ✔</b>
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="rounded-full bg-white/5 p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
-            aria-label="Kapat"
+            aria-label={ttX2610("adkKapat")}
           >
             <X size={16} />
           </button>
@@ -132,7 +132,7 @@ export const AdminPanelKabuk: React.FC<{
             }`}
             style={activeTab === "users" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <UserCheck size={14} /> Kullanıcı & ⚡Üretim hakkı
+            <UserCheck size={14} /> {ttX2610("adkKullanici")}
             {saglikNokta("users")}
           </button>
           <button
@@ -142,7 +142,7 @@ export const AdminPanelKabuk: React.FC<{
             }`}
             style={activeTab === "broadcast" ? { background: "linear-gradient(135deg,var(--accent-2),var(--accent))" } : undefined}
           >
-            <Lightbulb size={14} /> Duyuru & Kilitlar
+            <Lightbulb size={14} /> {ttX2610("adkDuyuru")}
             {saglikNokta("broadcast")}
           </button>
           <button
@@ -153,7 +153,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "banLogs" ? { background: "linear-gradient(135deg,#f87171,#dc2626)" } : { background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)" }}
           >
             <Lightbulb size={13} className={banLogs.length > 0 ? "animate-pulse text-amber-300" : ""} fill={banLogs.length > 0 ? "currentColor" : "none"} />
-            <span>Ban & Siber Denetim ({bannedCount ?? banLogs.length})</span>
+            <span>{ttX2610("adkBan")} ({bannedCount ?? banLogs.length})</span>
             {saglikNokta("banLogs")}
           </button>
           <button
@@ -164,7 +164,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "errors" ? { background: "linear-gradient(135deg,#fbbf24,#d97706)" } : { background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)" }}
           >
             ⚠️
-            <span>Hata Logları{errorStats ? ` (${errorStats.total24h})` : ""}</span>
+            <span>{ttX2610("adkHatalar")}{errorStats ? ` (${errorStats.total24h})` : ""}</span>
             {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500 animate-ping" />}
             {errorAlarm === "alarm" && <span className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-red-500" />}
             {saglikNokta("errors")}
@@ -198,7 +198,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "menkibeler" ? { background: "linear-gradient(135deg,#38bdf8,#0284c7)" } : { background: "rgba(56,189,248,0.12)", border: "1px solid rgba(56,189,248,0.3)" }}
           >
             📖
-            <span>Menkıbeler</span>
+            <span>{ttX2610("adkMenkibeler")}</span>
           </button>
           <button
             onClick={() => setActiveTab("rapor")}
@@ -232,7 +232,7 @@ export const AdminPanelKabuk: React.FC<{
             style={activeTab === "feedback" ? { background: "linear-gradient(135deg,#34d399,#059669)" } : { background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.3)" }}
           >
             💬
-            <span>Geri Bildirim{feedbackStats ? ` (${feedbackStats.toplam})` : ""}</span>
+            <span>{ttX2610("adkGeriBildirim")}{feedbackStats ? ` (${feedbackStats.toplam})` : ""}</span>
             {saglikNokta("feedback")}
           </button>
         </div>
@@ -243,12 +243,12 @@ export const AdminPanelKabuk: React.FC<{
           {errorAlarm !== "ok" && (
             <div className={`rounded-2xl border px-4 py-3 ${errorAlarm === "alarm" ? "border-red-500/50 bg-red-500/15 animate-pulse" : "border-amber-500/40 bg-amber-500/10"}`}>
               <p className={`text-xs font-black ${errorAlarm === "alarm" ? "text-red-300" : "text-amber-300"}`}>
-                {errorAlarm === "alarm" ? "🚨 ACİL HATA ALARMI" : "⚠️ HATA UYARISI"}
-                {errorStats ? ` — Son 24 saatte ${errorStats.total24h} hata (${errorStats.unique24h} benzersiz)` : ""}
+                {errorAlarm === "alarm" ? ttX2610("adkAcilAlarm") : ttX2610("adkHataAlarm")}
+                {errorStats ? ` ${ttX2610("adkHataOzet").replace("{a}", String(errorStats.total24h)).replace("{b}", String(errorStats.unique24h))}` : ""}
               </p>
               <p className="mt-1 text-[10px] text-white/60">{ttX2610("adkHataUyari")}</p>
               <button onClick={() => setActiveTab("errors")} className="mt-2 rounded-lg bg-white/10 px-3 py-1 text-[10px] font-bold text-white/80 transition hover:bg-white/20">
-                → Hata Logları'na git
+                {ttX2610("adkHataGit")}
               </button>
             </div>
           )}
@@ -262,7 +262,7 @@ export const AdminPanelKabuk: React.FC<{
             onClick={onClose}
             className="rounded-xl bg-white/10 px-4 py-1.5 text-[10px] font-bold text-white hover:bg-white/20 transition"
           >
-            Tamamlandı
+            {ttX2610("adkTamam")}
           </button>
         </div>
       </div>
