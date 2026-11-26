@@ -2835,5 +2835,15 @@
   "akyYuklendi": "Terunggah",
   "akyDosyaNotu": "File yang diunggah hanya untuk Anda · Tidak dibagikan ke pihak ketiga",
   "akyEklendiOnaylandi": "Ditambahkan ✓ Disetujui",
-  "akyStudyoyaArkaPlan": "Jadikan latar studio"
+  "akyStudyoyaArkaPlan": "Jadikan latar studio",
+  "araHadisCevrimici": "koleksi hadis daring",
+  "araHadisBaslik": "🕋 Koleksi hadis — daring",
+  "araHadisAraniyor": "Menelusuri koleksi hadis…",
+  "araHadisYok": "Tidak ada kecocokan di koleksi daring.",
+  "araHadisKapali": "Koleksi hadis tidak dapat dijangkau — hanya catatan perangkat yang ditampilkan.",
+  "araHadisKaynakNot": "Sumber: Sünnetimiz · dorar.net · sunnah.com (bila kunci tersedia). Derajat mengikuti penilaian sumber.",
+  "araDerece_sahih": "sahih",
+  "araDerece_hasan": "hasan",
+  "araDerece_zayif": "daif",
+  "araDerece_bilinmiyor": "tanpa derajat"
 }

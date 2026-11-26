@@ -2835,5 +2835,15 @@
   "akyYuklendi": "Uploaded",
   "akyDosyaNotu": "Uploaded files can only be used by you · Not shared with third parties",
   "akyEklendiOnaylandi": "Added ✓ Approved",
-  "akyStudyoyaArkaPlan": "Set as studio background"
+  "akyStudyoyaArkaPlan": "Set as studio background",
+  "araHadisCevrimici": "hadith corpus online",
+  "araHadisBaslik": "🕋 Hadith corpus — online",
+  "araHadisAraniyor": "Searching the hadith corpus…",
+  "araHadisYok": "No match in the online corpus.",
+  "araHadisKapali": "The hadith corpus is unreachable — showing device records only.",
+  "araHadisKaynakNot": "Sources: Sünnetimiz · dorar.net · sunnah.com (when a key is set). Grades follow the source's own ruling.",
+  "araDerece_sahih": "sahih",
+  "araDerece_hasan": "hasan",
+  "araDerece_zayif": "weak",
+  "araDerece_bilinmiyor": "ungraded"
 }

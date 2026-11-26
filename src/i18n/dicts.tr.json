@@ -2835,5 +2835,15 @@
   "akyYuklendi": "Yüklendi",
   "akyDosyaNotu": "Yüklenen dosyalar sadece sizin tarafınızdan kullanılabilir · Üçüncü kişilerle paylaşılmaz",
   "akyEklendiOnaylandi": "Eklendi ✓ Onaylandı",
-  "akyStudyoyaArkaPlan": "Stüdyoya Arka Plan Yap"
+  "akyStudyoyaArkaPlan": "Stüdyoya Arka Plan Yap",
+  "araHadisCevrimici": "hadis külliyatı çevrimiçi",
+  "araHadisBaslik": "🕋 Hadis külliyatı — çevrimiçi",
+  "araHadisAraniyor": "Hadis külliyatı taranıyor…",
+  "araHadisYok": "Çevrimiçi külliyatta eşleşme yok.",
+  "araHadisKapali": "Hadis külliyatına ulaşılamadı — yalnız cihazdaki kayıtlar gösteriliyor.",
+  "araHadisKaynakNot": "Kaynaklar: Sünnetimiz · dorar.net · sunnah.com (anahtar varsa). Dereceler kaynağın verdiği hükümdür.",
+  "araDerece_sahih": "sahih",
+  "araDerece_hasan": "hasan",
+  "araDerece_zayif": "zayıf",
+  "araDerece_bilinmiyor": "derece yok"
 }

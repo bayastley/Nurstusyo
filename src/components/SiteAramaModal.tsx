@@ -17,6 +17,24 @@ interface Props {
 
 const ONERILER = ["mehir", "teheccüd", "Bedir", "faiz", "hayız", "Âyete'l-Kürsî", "akika", "tövbe"];
 
+/** Çevrimiçi hadis külliyatı sonucu — /api/hadis/ara (Sünnetimiz · dorar.net · sunnah.com) */
+interface CevrimiciHadis {
+  metin: string;
+  kaynak: string;
+  derece: string;
+  kitap: string;
+  dil: string;
+  url?: string;
+}
+
+// ★ 26.11: derece rozetleri — sahih / hasan / zayıf / bilinmiyor
+const DERECE_SINIF: Record<string, string> = {
+  sahih: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
+  hasan: "border-teal-400/40 bg-teal-500/15 text-teal-200",
+  zayif: "border-red-400/40 bg-red-500/15 text-red-200",
+  bilinmiyor: "border-white/20 bg-white/[.07] text-white/55",
+};
+
 /** Sorgu kelimelerini sonuç metninde işaretler (vurgu). */
 function Vurgulu({ metin, sorgu, sinir = 320 }: { metin: string; sorgu: string; sinir?: number }) {
   const kelimeler = sorgu.trim().split(/\s+/).filter((k) => k.length > 1);
@@ -51,6 +69,37 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
 
   const sayilar = useMemo(() => (open ? grupSayilari() : {}), [open]);
   const sonuclar = useMemo(() => siteAra(sorgu, grup), [sorgu, grup]);
+
+  // ★ 26.11 ÇEVRİMİÇİ HADİS: sorgu 3+ harfse külliyattan da ara (Buhârî, Müslim, Tirmizî…)
+  const [hadisler, setHadisler] = useState<CevrimiciHadis[]>([]);
+  const [hadisDurum, setHadisDurum] = useState<"bos" | "yuk" | "ok" | "hata">("bos");
+  const hadisOnbellek = useRef(new Map<string, CevrimiciHadis[]>());
+
+  useEffect(() => {
+    const q = sorgu.trim();
+    if (!open || q.length < 3) { setHadisler([]); setHadisDurum("bos"); return; }
+    const anahtar = q.toLocaleLowerCase("tr");
+    const hazir = hadisOnbellek.current.get(anahtar);
+    if (hazir) { setHadisler(hazir); setHadisDurum(hazir.length ? "ok" : "bos"); return; }
+    const kontrol = new AbortController();
+    setHadisDurum("yuk");
+    const zaman = window.setTimeout(async () => {
+      try {
+        const r = await fetch(`/api/hadis/ara?q=${encodeURIComponent(q)}`, { signal: kontrol.signal });
+        if (!r.ok) throw new Error(String(r.status));
+        const d = (await r.json()) as { sonuclar?: CevrimiciHadis[] };
+        const liste = (d.sonuclar ?? []).slice(0, 8);
+        hadisOnbellek.current.set(anahtar, liste);
+        setHadisler(liste);
+        setHadisDurum(liste.length ? "ok" : "bos");
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+        setHadisler([]);
+        setHadisDurum("hata");
+      }
+    }, 450);
+    return () => { window.clearTimeout(zaman); kontrol.abort(); };
+  }, [sorgu, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -93,7 +142,7 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
 
         {/* Kapsam notu — dürüstlük: cihazda, internetsiz */}
         <div className="flex items-center gap-1.5 border-b border-white/[.06] px-3 py-1.5 text-[8.5px] text-white/35">
-          <WifiOff size={9} /> {t("araCihaz")} · {t("araCokDil")}
+          <WifiOff size={9} /> {t("araCihaz")} · {t("araCokDil")} · {t("araHadisCevrimici")}
           <span className="ml-auto tabular-nums">{sorgu.trim().length >= 2 ? t("araSonuc").replace("{n}", String(sonuclar.length)) : `${sayilar.tumu ?? 0} kayıt`}</span>
         </div>
 
@@ -157,6 +206,43 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
                 </button>
               );
             })
+          )}
+
+          {/* ★ 26.11 ÇEVRİMİÇİ HADİS KÜLLİYATI — Buhârî, Müslim, Tirmizî… dereceli */}
+          {sorgu.trim().length >= 3 && (
+            <div className="mt-2 border-t border-white/[.07] px-1 pt-2">
+              <p className="px-1 text-[8.5px] font-black uppercase tracking-widest text-emerald-300/70">
+                {t("araHadisBaslik")}
+              </p>
+              {hadisDurum === "yuk" && <p className="px-1 py-2 text-[9.5px] text-white/40">{t("araHadisAraniyor")}</p>}
+              {hadisDurum === "hata" && <p className="px-1 py-2 text-[9.5px] text-amber-200/70">{t("araHadisKapali")}</p>}
+              {hadisDurum === "bos" && <p className="px-1 py-2 text-[9.5px] text-white/40">{t("araHadisYok")}</p>}
+              {hadisler.map((h, i) => {
+                const derece = h.derece in DERECE_SINIF ? h.derece : "bilinmiyor";
+                const icerik = (
+                  <>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className={`rounded-full border px-1.5 py-0.5 text-[7.5px] font-black uppercase tracking-wide ${DERECE_SINIF[derece]}`}>
+                        {t(`araDerece_${derece}`)}
+                      </span>
+                      <span className="rounded-full bg-white/[.07] px-1.5 py-0.5 text-[7.5px] font-bold text-white/45">{h.kitap}</span>
+                      <span className="ml-auto text-[7.5px] font-bold text-white/25">{h.dil.toUpperCase()}</span>
+                    </div>
+                    <p className="mt-1 text-[9.5px] leading-relaxed text-white/70" dir={h.dil === "ar" ? "rtl" : undefined}>
+                      <Vurgulu metin={h.metin} sorgu={sorgu} sinir={280} />
+                    </p>
+                    <p className="mt-0.5 text-[8px] font-bold text-emerald-300/50">{h.kaynak}</p>
+                  </>
+                );
+                const sinif = "mb-1 block w-full rounded-xl border border-white/[.07] bg-white/[.02] p-2.5 text-left transition hover:border-white/15 hover:bg-white/[.05]";
+                return h.url ? (
+                  <a key={`${h.kitap}-${i}`} href={h.url} target="_blank" rel="noopener noreferrer" className={sinif}>{icerik}</a>
+                ) : (
+                  <div key={`${h.kitap}-${i}`} className={sinif}>{icerik}</div>
+                );
+              })}
+              <p className="px-1 pb-1 pt-0.5 text-[7.5px] text-white/25">{t("araHadisKaynakNot")}</p>
+            </div>
           )}
         </div>
       </div>

@@ -2835,5 +2835,15 @@
   "akyYuklendi": "تم الرفع",
   "akyDosyaNotu": "الملفات المرفوعة لك وحدك · لا تُشارك مع أطراف ثالثة",
   "akyEklendiOnaylandi": "أُضيف ✓ تمت الموافقة",
-  "akyStudyoyaArkaPlan": "اجعله خلفية الاستوديو"
+  "akyStudyoyaArkaPlan": "اجعله خلفية الاستوديو",
+  "araHadisCevrimici": "موسوعة الحديث عبر الإنترنت",
+  "araHadisBaslik": "🕋 موسوعة الحديث — عبر الإنترنت",
+  "araHadisAraniyor": "جارٍ البحث في موسوعة الحديث…",
+  "araHadisYok": "لا نتائج في الموسوعة عبر الإنترنت.",
+  "araHadisKapali": "تعذّر الوصول إلى موسوعة الحديث — تُعرض سجلات الجهاز فقط.",
+  "araHadisKaynakNot": "المصادر: Sünnetimiz · dorar.net · sunnah.com (عند وجود مفتاح). الدرجات حسب حكم المصدر.",
+  "araDerece_sahih": "صحيح",
+  "araDerece_hasan": "حسن",
+  "araDerece_zayif": "ضعيف",
+  "araDerece_bilinmiyor": "بلا درجة"
 }
