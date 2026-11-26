@@ -518,9 +518,7 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
             <button onClick={() => (paused ? resumeAyah() : pauseAyah())} className="rounded-full bg-white/10 px-4 py-2 text-[11px] font-black text-white/70 backdrop-blur transition hover:bg-white/20">
               {paused ? "▶ Devam" : "⏸ Duraklat"}
             </button>
-            <button onClick={() => setEkransizMod(false)} className="rounded-full bg-amber-500/20 px-4 py-2 text-[11px] font-black text-amber-200 backdrop-blur transition hover:bg-amber-500/30">
-              ✕ Ekrana Dön
-            </button>
+            <button onClick={() => setEkransizMod(false)} className="rounded-full bg-amber-500/20 px-4 py-2 text-[11px] font-black text-amber-200 backdrop-blur transition hover:bg-amber-500/30">{ttX2610("akyEkranaDon")}</button>
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 // ════════════════════════════════════════════════════════
 // PWA KURULUM SİHİRBAZI — yol haritası madde 23
 // "Ana Ekrana Ekle" öğretici banner'ı. Chrome'da beforeinstallprompt
@@ -339,9 +340,7 @@ export const PwaKurulumBanneri: React.FC = () => {
               </button>
               {/* ★ 21.10 TIK-ANI BEKLEME — erken tıklandığında BIP gelene kadarki pencere */}
               {kurBeklers && (
-                <p className="mt-1.5 rounded-xl bg-emerald-400/10 px-3 py-1.5 text-center text-[9px] font-bold text-white/70">
-                  ⏳ Kurulum penceresi hazırlanıyor — tarayıcı izin verir vermez kendiliğinden açılır…
-                </p>
+                <p className="mt-1.5 rounded-xl bg-emerald-400/10 px-3 py-1.5 text-center text-[9px] font-bold text-white/70">{ttX2610("akyKurulumHazir")}</p>
               )}
             </div>
           )

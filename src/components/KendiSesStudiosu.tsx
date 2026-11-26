@@ -1,3 +1,4 @@
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useCallback } from "react";
 import { Play, Pause, SquareStop, Upload, Volume2, Edit3, Video, Sparkles, Languages, Loader2, Lock } from "lucide-react";
 import { SURAHS } from "../data";
@@ -188,7 +189,7 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
           <label className="block text-sm font-medium mb-2">{t("kendiSesSureSec")}</label>
           {renderSureGrid()}
         </div>
-        <div className="text-xs text-slate-500">Toplam 114 sure — tıklayarak seçin.</div>
+        <div className="text-xs text-slate-500">{ttX2610("akySureSecim")}</div>
       </div>
     );
   }
@@ -333,14 +334,14 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
               <Play className="w-4 h-4 text-green-600" />
               <span className="text-sm font-medium">{t("kendiSesDuzelt")}</span>
             </div>
-            <p className="text-xs text-slate-600">Her ayetin başlangıcını milisaniye ile ayarlayın. Yanlış yerden bölünmez.</p>
+            <p className="text-xs text-slate-600">{ttX2610("akyMsAyari")}</p>
           </div>
           <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-purple-600" />
               <span className="text-sm font-medium">{t("kendiSesAtmosferAI")}</span>
             </div>
-            <p className="text-xs text-slate-600">Kelime bazlı atmosfer önerisi — her ayete uygulayabilirsiniz.</p>
+            <p className="text-xs text-slate-600">{ttX2610("akyKelimeAtmosfer")}</p>
           </div>
         </div>
 
@@ -353,7 +354,7 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
                 <th className="p-3 font-medium">Süre (ms)</th>
                 <th className="p-3 font-medium">Oynat</th>
                 <th className="p-3 font-medium">Atmosfer</th>
-                <th className="p-3 font-medium">AI Öner</th>
+                <th className="p-3 font-medium">{ttX2610("akyAiOner")}</th>
               </tr>
             </thead>
             <tbody>
@@ -434,9 +435,7 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
               <button
                 onClick={() => onProduce(aktif.id)}
                 className="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700"
-              >
-                🎬 Stüdyoda Üret
-              </button>
+              >{ttX2610("akyStudyodaUret")}</button>
             )}
             <button
               onClick={() => { setStep("preview"); }}
@@ -525,7 +524,7 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
           <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <Languages className="w-5 h-5 text-amber-600" />
-              <span className="font-medium text-amber-800">Arapça meal görünür</span>
+              <span className="font-medium text-amber-800">{ttX2610("akyArapcaMeal")}</span>
             </div>
             <p className="text-sm text-amber-700">
               Önizlemede her ayetin yanında Arapça meal gösterilir. (Çok dilli destek: tr/en/ar/id/ur)
@@ -537,23 +536,17 @@ export const KendiSesStudiosu: React.FC<KendiSesStudiosuProps> = ({ lang, onChec
           <button
             onClick={() => { setStep("edit"); }}
             className="border border-slate-300 text-slate-700 px-5 py-2 rounded-lg hover:bg-slate-50"
-          >
-            ← Düzenlemeye Dön
-          </button>
+          >{ttX2610("akyDuzenlemeyeDon")}</button>
           {onProduce && aktif && (
             <button
               onClick={() => onProduce(aktif.id)}
               className="bg-green-600 text-white px-5 py-2 rounded-lg font-semibold hover:bg-green-700"
-            >
-              🎬 Stüdyoda Üret
-            </button>
+            >{ttX2610("akyStudyodaUret")}</button>
           )}
           <button
             onClick={() => { setStep("surah"); kaldirAktif(); }}
             className="bg-slate-700 text-white px-6 py-2 rounded-lg font-semibold hover:bg-slate-800"
-          >
-            Yeni Kayıt Başlat
-          </button>
+          >{ttX2610("akyYeniKayit")}</button>
         </div>
       </div>
     );

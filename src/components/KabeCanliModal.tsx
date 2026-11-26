@@ -90,9 +90,7 @@ export const KabeCanliModal: React.FC<{ open: boolean; onClose: () => void; onVi
           <button onClick={() => setKabeTab("live")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "live" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title="Katar resmî Quran TV — HD kesintisiz Kur'an tilaveti (YouTube'suz)">
             📖 KUR'AN TV HD
           </button>
-          <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title={ttX2610("ckTitleNebi")}>
-            🕌 MEDİNE CANLI
-          </button>
+          <button onClick={() => setKabeTab("mekke")} className={`rounded-lg px-3 py-1.5 text-[10px] font-black transition ${kabeTab === "mekke" ? "bg-gold/20 text-gold ring-1 ring-gold/40" : "bg-white/[.04] text-[#8f8870] hover:text-white"}`} title={ttX2610("ckTitleNebi")}>{ttX2610("akyMedineCanli")}</button>
         </div>
         <div ref={wrapRef} className="relative aspect-video w-full bg-black [&:fullscreen]:aspect-auto [&:fullscreen]:h-full [&:fullscreen]:w-full">
           {/* ★ TAM EKRAN BUTONU — sağ üstte, üç kanalda da çalışır */}

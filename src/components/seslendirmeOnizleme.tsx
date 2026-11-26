@@ -37,7 +37,7 @@ export const SeslendirmeOnizleme: React.FC<SeslendirmeOnizlemeProps> = ({
   //   (cdn.nurstudyo.com/videos/{kat}/{pid}.mp4 + posters/{kat}/{pid}.jpg).
   //   Kullanıcı elle görsel seçmemişse (bg=null): parçanın atmosfer kategorisinin
   //   R2 havuzundan PARÇA BAŞINA rastgele klip — parça değişince yenisi gelir,
-  //   aynı parçada stabil kalır (useMemo). Hareketli klip <video>, şablon <img>.
+  //   aynı parçada stabil kalır (useMemo). Hareketli klip <video>{ttX2610("akySablon")}<img>.
   const SES_ARKA_HAVUZ: Clip[] = [
     ...ALL_CLIPS.filter((c) => c.cat !== "yuklenenler"),
     ...QURAN_CLIPS,

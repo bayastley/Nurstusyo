@@ -264,8 +264,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
               <TurIkonu tur={secili.tur} size={14} />
               <span className="truncate text-[10px] font-bold text-white/85">{secili.name}</span>
               <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-500/90 px-2 py-0.5 text-[8px] font-black text-black">
-                <Check size={9} strokeWidth={4} /> Eklendi ✓ Onaylandı
-              </span>
+                <Check size={9} strokeWidth={4} />{ttX2610("akyEklendiOnaylandi")}</span>
             </div>
             <button onClick={() => setSecili(null)} className="shrink-0 text-[9px] font-bold text-white/40 hover:text-white">kapat</button>
           </div>
@@ -282,8 +281,7 @@ export const ZipExplorer: React.FC<{ onClose: () => void; onArkaPlanYap?: (medya
               className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-[10.5px] font-black text-black transition hover:brightness-110"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
             >
-              <FolderUp size={13} /> Stüdyoya Arka Plan Yap
-            </button>
+              <FolderUp size={13} />{ttX2610("akyStudyoyaArkaPlan")}</button>
           )}
         </div>
       )}

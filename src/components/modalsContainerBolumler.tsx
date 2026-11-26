@@ -206,9 +206,7 @@ export function AdminAuthBolum({
             <p className="text-[9px] text-white/40">{ttX2610("mcbKurucuAciklama")}</p>
           </div>
         </div>
-        <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100/80">
-          Önce Google ile admin e-postanızla giriş yapın. Giriş doğrulanınca admin paneli açılır.
-        </div>
+        <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-[10px] leading-relaxed text-amber-100/80">{ttX2610("akyAdminGirisNot")}</div>
         {adminError && <p className="mb-3 text-[10px] text-red-400">{adminError}</p>}
         <button
           onClick={() => {
@@ -219,9 +217,7 @@ export function AdminAuthBolum({
           }}
           className="w-full rounded-xl py-3 text-[11px] font-black uppercase tracking-wider text-black"
           style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
-        >
-          Google ile Admin Girişi Yap
-        </button>
+        >{ttX2610("akyGoogleAdminGiris")}</button>
         <p className="mt-3 text-center text-[8px] text-white/25">Yetkisiz denemeler kaydedilir.</p>
       </div>
     </div>

@@ -1,3 +1,4 @@
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React from "react";
 import { translate } from "../../i18n";
 import { ChevronDown } from "lucide-react";
@@ -39,7 +40,7 @@ export function MezheplerBolumu({ tt }: { tt: (k: string) => string }) {
             </ul>
           </div>
           <div className="mt-3">
-            <p className="text-[9px] font-black uppercase tracking-wider text-white/40">Fıkhihtâ özellikleri</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-white/40">{ttX2610("akyFikhiOzellik")}</p>
             <ul className="mt-1 space-y-1.5">
               {m.ozellikler.map((o, i) => <li key={i} className="text-[10px] leading-relaxed text-white/75">{o}</li>)}
             </ul>

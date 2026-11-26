@@ -51,16 +51,14 @@ export const ArkaPlanGalerisi: React.FC<{
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
               title={tt("akAkilliSecim")}
             >
-              <Wand2 size={11} /> Akıllı Seç
-            </button>
+              <Wand2 size={11} />{ttX2610("akyAkilliSec")}</button>
             <button
               type="button"
               onClick={shuffleBg}
               className="flex items-center gap-1.5 rounded-lg glass-soft px-2.5 py-1.5 text-[9.5px] font-bold text-white/70 transition hover:text-white active:scale-95"
               title={tt("akRastgeleBg")}
             >
-              <Shuffle size={11} style={{ color: "var(--accent)" }} /> Karıştır
-            </button>
+              <Shuffle size={11} style={{ color: "var(--accent)" }} />{ttX2610("akyKaristir")}</button>
           </div>
         </div>
 
@@ -120,9 +118,7 @@ export const ArkaPlanGalerisi: React.FC<{
 
         {visibleCount < filteredBgs.length && (
           <div ref={loadMoreRef} className="flex h-10 items-center justify-center gap-2 text-[10px] font-bold text-white/35">
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-            Daha fazla arka plan yükleniyor…
-          </div>
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />{ttX2610("akyArkaPlanYukleniyor")}</div>
         )}
         {filteredBgs.length === 0 && (
           <p className="py-6 text-center text-[11px] text-white/40">{tt("akBgBulunamadi")}</p>

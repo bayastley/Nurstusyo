@@ -60,9 +60,7 @@ export function AdminBanLogsTab({
                     </span>
                     <div>
                       <h4 className="text-[12px] font-black text-white">Aktif Banlı Kullanıcılar ({bannedUsers.length})</h4>
-                      <p className="text-[9.5px] text-white/50 leading-relaxed">
-                        Sunucudaki canlı ban kayıtları — bu listedeki kullanıcı siteye giremez ve video üretemez.
-                      </p>
+                      <p className="text-[9.5px] text-white/50 leading-relaxed">{ttX2610("akyBanAciklama")}</p>
                     </div>
                   </div>
                   <button

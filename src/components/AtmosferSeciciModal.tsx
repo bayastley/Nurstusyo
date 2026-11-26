@@ -297,9 +297,7 @@ export const AtmosferSeciciModal: React.FC<AtmosferSeciciModalProps> = ({
 
           {visibleCount < filteredClips.length && (
             <div ref={loadMoreRef} className="flex h-10 items-center justify-center gap-2 text-[10px] font-bold text-white/35">
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
-              Daha fazla yükleniyor…
-            </div>
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />{ttX2610("akyDahaFazla")}</div>
           )}
 
           {/* ★ V2 TEASER KALDIRILDI (08.10, kullanıcı emri): kategorilerin altındaki gri

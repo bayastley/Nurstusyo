@@ -293,9 +293,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               onClick={() => kaynakDegistir("arapca")}
               className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "arapca" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
               title={ttX2610("qsMushafTitle")}
-            >
-              Arapça
-            </button>
+            >{ttX2610("akyArapca")}</button>
             <button
               onClick={() => kaynakDegistir("meal")}
               className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "meal" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
@@ -524,8 +522,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               className="flex items-center gap-1 rounded-xl border border-white/10 bg-white/[.04] px-3 py-1.5 text-[10px] font-bold text-[#d8cfae] transition hover:bg-white/10 active:scale-95 disabled:opacity-30 disabled:hover:bg-white/[.04]"
               title={ttX2610("qsOncekiTitle2")}
             >
-              <ChevronLeft size={13} /> Önceki
-            </button>
+              <ChevronLeft size={13} />{ttX2610("akyOnceki2")}</button>
             <input
               type="text"
               inputMode="numeric"

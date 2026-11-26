@@ -1,3 +1,4 @@
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Upload, Play, SquareStop, ChevronDown, Sparkles, X, Video, Clock, CheckCircle, AlertTriangle, Slash, Trash2, FileText, Maximize, Minimize, Volume2, VolumeX, Wand2, Image, Film, Palette, Languages, AudioWaveform } from "lucide-react";
 import { SURAHS } from "../data";
@@ -479,16 +480,14 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                   {yuklemeMesaji}
                 </div>
               )}
-              <p className="text-xs text-slate-500 text-center">
-                ELİT üyelik gerektirir — dosya cihazınızda kalır, sunucuya gitmez.
-              </p>
+              <p className="text-xs text-slate-500 text-center">{ttX2610("akyElitGerekir")}</p>
             </>
           )}
 
           {step === "secim" && selectedFile && (
             <>
               <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700 mb-2">
-                <p className="text-xs text-slate-400 mb-2">Yüklenecek dosya</p>
+                <p className="text-xs text-slate-400 mb-2">{ttX2610("akyYuklenecekDosya")}</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded bg-slate-700 flex items-center justify-center text-xs text-slate-300">
                     <FileText className="w-5 h-5" />
@@ -532,13 +531,11 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     <button
                       onClick={handleTumunuSec}
                       className="text-[10px] text-blue-400 underline hover:text-blue-300"
-                    >
-                      Tümünü Seç
-                    </button>
+                    >{ttX2610("akyTumunuSec")}</button>
                   </div>
 
                   <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-                    <p className="text-xs text-slate-400 mb-2">Ayet sayısı</p>
+                    <p className="text-xs text-slate-400 mb-2">{ttX2610("akyAyetSayisi")}</p>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -562,9 +559,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                   >
                     {yukleniyor ? "Yükleniyor..." : (
                       <>
-                        <Play className="w-4 h-4" />
-                        Sahne Düzenleyicisine Geç
-                      </>
+                        <Play className="w-4 h-4" />{ttX2610("akySahneyeGec")}</>
                     )}
                   </button>
                 </>
@@ -585,8 +580,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     onClick={toggleArabic}
                     className={`p-2 rounded hover:bg-slate-800 border text-sm ${showArabic ? "bg-blue-600/20 text-blue-400 border-blue-500" : "text-slate-400 border-slate-700"}`}
                   >
-                    <Languages className="w-4 h-4" /> Arapça
-                  </button>
+                    <Languages className="w-4 h-4" />{ttX2610("akyArapca")}</button>
                   <button
                     onClick={toggleMeal}
                     className={`p-2 rounded hover:bg-slate-800 border text-sm ${showMeal ? "bg-blue-600/20 text-blue-400 border-blue-500" : "text-slate-400 border-slate-700"}`}
@@ -620,8 +614,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     className="p-2 rounded bg-green-600/20 text-green-400 border border-green-500/50 hover:bg-green-600/30 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Oynatma konumundan ayet ayır"
                   >
-                    <Slash className="w-4 h-4" /> Ayet Ayır
-                  </button>
+                    <Slash className="w-4 h-4" />{ttX2610("akyAyetAyir")}</button>
                   <span className="text-[10px] text-slate-500 ml-2">
                     {isPlaying ? "Durdurup 'Ayet Ayır' basın" : "Oynatın, durduğu yeri bölün"}
                   </span>
@@ -631,8 +624,8 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
               <div className="bg-slate-800/50 rounded-lg border border-slate-700 overflow-hidden max-h-[400px] overflow-y-auto">
                 <div className="bg-slate-800/30 px-3 py-2 border-b border-slate-700 flex text-[10px] text-slate-400">
                   <span className="w-8">Ayet</span>
-                  <span className="w-16">Başlangıç</span>
-                  <span className="w-16">Süre</span>
+                  <span className="w-16">{ttX2610("akyBaslangic")}</span>
+                  <span className="w-16">{ttX2610("akySure")}</span>
                   <span className="w-16">Atmosfer</span>
                   <span className="w-20">AI Video</span>
                   <span className="flex-1">Arapça / Meal</span>
@@ -678,7 +671,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                           <div className="text-xs text-slate-400 italic">{seg.meal}</div>
                         )}
                         {!seg.arabic && !seg.meal && (
-                          <div className="text-xs text-slate-500 italic">Metin yükleniyor...</div>
+                          <div className="text-xs text-slate-500 italic">{ttX2610("akyMetinYukleniyor")}</div>
                         )}
                       </div>
                       <div className="w-10">
@@ -714,9 +707,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
               <div className="flex items-center justify-between pt-2 border-t border-slate-700">
                 <div className="flex items-center gap-2">
                   <label className="flex items-center gap-1 cursor-pointer text-xs text-slate-300">
-                    <input type="checkbox" checked={showArabic} onChange={toggleArabic} className="rounded text-blue-600" />
-                    Arapça
-                  </label>
+                    <input type="checkbox" checked={showArabic} onChange={toggleArabic} className="rounded text-blue-600" />{ttX2610("akyArapca")}</label>
                   <label className="flex items-center gap-1 cursor-pointer text-xs text-slate-300 ml-2">
                     <input type="checkbox" checked={showMeal} onChange={toggleMeal} className="rounded text-blue-600" />
                     Meal
@@ -733,9 +724,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     onClick={handleOnizle}
                     disabled={segments.length === 0}
                     className="px-4 py-2 rounded-lg bg-blue-600 text-white border border-blue-500 hover:bg-blue-500 text-sm font-bold disabled:opacity-50"
-                  >
-                    🎬 Önizle
-                  </button>
+                  >{ttX2610("akyOnizle")}</button>
                 </div>
               </div>
             </>
@@ -753,8 +742,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     onClick={toggleArabic}
                     className={`p-2 rounded hover:bg-slate-800 border text-sm ${showArabic ? "bg-blue-600/20 text-blue-400 border-blue-500" : "text-slate-400 border-slate-700"}`}
                   >
-                    <Languages className="w-4 h-4" /> Arapça
-                  </button>
+                    <Languages className="w-4 h-4" />{ttX2610("akyArapca")}</button>
                   <button
                     onClick={toggleMeal}
                     className={`p-2 rounded hover:bg-slate-800 border text-sm ${showMeal ? "bg-blue-600/20 text-blue-400 border-blue-500" : "text-slate-400 border-slate-700"}`}
@@ -802,14 +790,14 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                     </button>
                   </div>
                   <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                    <span>Başlangıçtan</span>
+                    <span>{ttX2610("akyBaslangictan")}</span>
                     <input
                       type="checkbox"
                       checked={playingSegId === null}
                       onChange={() => setPlayingSegId(playingSegId ? null : segments[0]?.id ?? null)}
                       className="rounded text-blue-600"
                     />
-                    <span>Seçili ayetten</span>
+                    <span>{ttX2610("akySeciliAyetten")}</span>
                   </div>
                 </div>
                 <div className="mt-2 flex gap-2 flex-wrap">
@@ -830,7 +818,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
               </div>
 
               <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700 mb-3">
-                <p className="text-xs text-slate-400 mb-2">Yazı Sanatı</p>
+                <p className="text-xs text-slate-400 mb-2">{ttX2610("akyYaziSanati")}</p>
                 <div className="flex gap-2 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400">Font:</span>
@@ -875,9 +863,7 @@ export const KendiSesPanel: React.FC<KendiSesPanelProps> = ({
                 <button
                   onClick={() => notify("🎬 Sahne üretimi başlatılıyor — her ayete atmosphere eklenecek.")}
                   className="flex-1 py-2 rounded-lg bg-blue-600 text-white border border-blue-500 hover:bg-blue-500 text-sm font-bold"
-                >
-                  🎬 Atmosferle Üret
-                </button>
+                >{ttX2610("akyAtmosferleUret")}</button>
               </div>
             </>
           )}

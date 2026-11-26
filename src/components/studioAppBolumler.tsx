@@ -186,9 +186,7 @@ export function UretimOnayBalonu({
               <button
                 onClick={() => handleGenConfirm(false)}
                 className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-[11px] font-bold text-white/60 transition hover:bg-white/10 hover:text-white"
-              >
-                İptal
-              </button>
+              >{ttX2610("akyIptal")}</button>
               <button
                 onClick={() => handleGenConfirm(true)}
                 className="flex-1 rounded-xl px-4 py-2.5 text-[11px] font-black text-white transition shadow-lg"
@@ -215,12 +213,8 @@ export function BanEngelEkrani({ localBanReason }: { localBanReason: string }) {
             </div>
 
             <div>
-              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-red-300">
-                ERİŞİM SÜRESİZ DONDURULDU
-              </span>
-              <h2 className="font-display text-xl font-black text-white mt-3 tracking-wide">
-                SİSTEM ERİŞİMİNİZ ENGELLENMİŞTİR
-              </h2>
+              <span className="rounded-full bg-red-500/20 border border-red-500/40 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-red-300">{ttX2610("akyErisimDonduruldu")}</span>
+              <h2 className="font-display text-xl font-black text-white mt-3 tracking-wide">{ttX2610("akySistemEngelli")}</h2>
             </div>
 
             <div className="rounded-2xl border border-red-500/30 bg-black/60 p-4 text-left space-y-1.5">
@@ -233,12 +227,9 @@ export function BanEngelEkrani({ localBanReason }: { localBanReason: string }) {
             </div>
 
             <p className="text-[10px] leading-relaxed text-white/45">
-              Hesabınız yasal suç veya platform güvenlik şartlarının ihlali nedeniyle süresiz olarak askıya alınmıştır. Ban itirazları ve yasal talepleriniz için <b className="text-white/80">destek@nurstudyo.com</b> adresiyle iletişime geçebilirsiniz.
-            </p>
+              Hesabınız yasal suç veya platform güvenlik şartlarının ihlali nedeniyle süresiz olarak askıya alınmıştır. Ban itirazları ve yasal talepleriniz için <b className="text-white/80">destek@nurstudyo.com</b>{ttX2610("akyAdresIletisim")}</p>
 
-            <div className="pt-2 text-[9px] font-mono text-white/30 border-t border-white/10">
-              nurstudyo.com · Siber Güvenlik Denetim Protokolü
-            </div>
+            <div className="pt-2 text-[9px] font-mono text-white/30 border-t border-white/10">{ttX2610("akyGuvenlikProtokol")}</div>
           </div>
         </div>
   );

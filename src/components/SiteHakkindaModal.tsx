@@ -112,8 +112,7 @@ export const SiteHakkindaModal: React.FC<SiteHakkindaModalProps> = ({ open, onCl
           </div>
           <div className="flex items-center justify-between gap-2 px-3 py-2">
             <p className="flex items-center gap-1.5 text-[9.5px] font-bold text-white/60">
-              <Clapperboard size={12} className="text-red-400" /> Siteyi 2 dakikada tanı — video rehber
-            </p>
+              <Clapperboard size={12} className="text-red-400" />{ttX2610("akySiteTanit")}</p>
             <a
               href={TANITIM_VIDEO_YOUTUBE.trim()}
               target="_blank"

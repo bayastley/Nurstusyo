@@ -138,8 +138,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
                     className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[10.5px] font-black text-black transition active:scale-95"
                     style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                   >
-                    <span aria-hidden>💎</span> Üyelik Planlarını Gör
-                  </button>
+                    <span aria-hidden>💎</span>{ttX2610("akyPlanlariGor")}</button>
                 )}
                 {m.aksiyon === "cuzdan" && (
                   <button
@@ -148,8 +147,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
                     className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[10.5px] font-black text-black transition active:scale-95"
                     style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
                   >
-                    <span aria-hidden>⚡</span> Cüzdanı Aç — Paketler & Jetonlar
-                  </button>
+                    <span aria-hidden>⚡</span>{ttX2610("akyCuzdanAc")}</button>
                 )}
                 {m.aksiyon === "mail" && (
                   <a
@@ -206,9 +204,7 @@ export const AsistanBaloncugu: React.FC<AsistanBaloncuguProps> = ({ openPremiumU
               className="rounded-xl px-3 py-2 text-[10px] font-black text-black transition active:scale-95"
               style={{ background: "linear-gradient(135deg,var(--accent-2),var(--accent))" }}
               aria-label={ttX2610("asGonder")}
-            >
-              Gönder
-            </button>
+            >{ttX2610("akyGonder")}</button>
           </div>
         </div>
       )}

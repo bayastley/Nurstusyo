@@ -1,3 +1,5 @@
+import { translate } from "../i18n";
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import React, { useState, useCallback, useRef } from "react";
 import { Upload, X, FileAudio, FileImage, FileVideo, Check, AlertTriangle, Trash2 } from "lucide-react";
 
@@ -212,9 +214,7 @@ export const UserUploadPanel: React.FC<UserUploadPanelProps> = ({ onFileUploaded
       {/* Başlık */}
       <div className="flex items-center gap-2">
         <Upload size={14} style={{ color: config.color }} />
-        <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: config.color }}>
-          Özel Materyal Yükleme
-        </span>
+        <span className="text-[11px] font-black uppercase tracking-wider" style={{ color: config.color }}>{ttX2610("akyOzelMateryal")}</span>
       </div>
 
       {/* Tür Seçimi */}
@@ -317,8 +317,7 @@ export const UserUploadPanel: React.FC<UserUploadPanelProps> = ({ onFileUploaded
                   )}
                   {upload.status === "done" && (
                     <span className="text-[8px] text-green-400 flex items-center gap-0.5">
-                      <Check size={8} /> Yüklendi
-                    </span>
+                      <Check size={8} />{ttX2610("akyYuklendi")}</span>
                   )}
                   {upload.status === "error" && (
                     <span className="text-[8px] text-red-400 flex items-center gap-0.5">
@@ -337,9 +336,7 @@ export const UserUploadPanel: React.FC<UserUploadPanelProps> = ({ onFileUploaded
       )}
 
       {/* Bilgi */}
-      <p className="text-[8px] text-white/25 text-center">
-        Yüklenen dosyalar sadece sizin tarafınızdan kullanılabilir · Üçüncü kişilerle paylaşılmaz
-      </p>
+      <p className="text-[8px] text-white/25 text-center">{ttX2610("akyDosyaNotu")}</p>
     </div>
   );
 };

@@ -1,3 +1,5 @@
+import { translate } from "../i18n";
+const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefined" ? (localStorage.getItem("nur_lang") || "tr") : "tr", k);
 import { useEffect, useState } from "react";
 
 // ═══════════════════════════════════════════════════════════
@@ -27,8 +29,6 @@ export default function OfflineBar() {
     <div
       role="status"
       className="fixed inset-x-0 top-0 z-[9999] flex items-center justify-center gap-2 bg-amber-500/90 px-4 py-1.5 text-[11px] font-bold text-black shadow-lg"
-    >
-      📶 Bağlantı yok — işlemler bekletiliyor, bağlantı gelince devam eder
-    </div>
+    >{ttX2610("akyCevrimdisi")}</div>
   );
 }
