@@ -2845,5 +2845,9 @@
   "araDerece_sahih": "sahih",
   "araDerece_hasan": "hasan",
   "araDerece_zayif": "daif",
-  "araDerece_bilinmiyor": "tanpa derajat"
+  "araDerece_bilinmiyor": "tanpa derajat",
+  "araKartBaslik": "Jawaban pertanyaanmu",
+  "araKartHikaye": "Kisah / konteks",
+  "araKartDipnot": "Catatan kaki",
+  "araKartAc": "Buka hadis di koleksi →"
 }

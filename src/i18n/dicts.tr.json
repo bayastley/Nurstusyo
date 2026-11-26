@@ -2845,5 +2845,9 @@
   "araDerece_sahih": "sahih",
   "araDerece_hasan": "hasan",
   "araDerece_zayif": "zayıf",
-  "araDerece_bilinmiyor": "derece yok"
+  "araDerece_bilinmiyor": "derece yok",
+  "araKartBaslik": "Sorunun cevabı",
+  "araKartHikaye": "Hikâyesi / bağlamı",
+  "araKartDipnot": "Dipnot",
+  "araKartAc": "Külliyatta hadisi aç →"
 }

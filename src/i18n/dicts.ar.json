@@ -2845,5 +2845,9 @@
   "araDerece_sahih": "صحيح",
   "araDerece_hasan": "حسن",
   "araDerece_zayif": "ضعيف",
-  "araDerece_bilinmiyor": "بلا درجة"
+  "araDerece_bilinmiyor": "بلا درجة",
+  "araKartBaslik": "جواب سؤالك",
+  "araKartHikaye": "القصة / السياق",
+  "araKartDipnot": "حاشية",
+  "araKartAc": "افتح الحديث في الموسوعة ←"
 }

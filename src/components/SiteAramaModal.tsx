@@ -8,6 +8,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, CornerDownLeft, WifiOff } from "lucide-react";
 import { translate, type Lang } from "../i18n";
 import { ARAMA_GRUPLARI, grupSayilari, siteAra, type AramaGrup } from "../data/siteAramaIndeksi";
+import { soruKartiBul } from "../data/hadisSoruKartlari";
 
 interface Props {
   open: boolean;
@@ -69,6 +70,8 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
 
   const sayilar = useMemo(() => (open ? grupSayilari() : {}), [open]);
   const sonuclar = useMemo(() => siteAra(sorgu, grup), [sorgu, grup]);
+  // ★ 26.11 SORU KARTI: "altın haram mı" gibi sorularda hadis + hikâye + dipnot
+  const kart = useMemo(() => soruKartiBul(sorgu), [sorgu]);
 
   // ★ 26.11 ÇEVRİMİÇİ HADİS: sorgu 3+ harfse külliyattan da ara (Buhârî, Müslim, Tirmizî…)
   const [hadisler, setHadisler] = useState<CevrimiciHadis[]>([]);
@@ -169,6 +172,29 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
 
         {/* Sonuçlar */}
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+          {/* ★ 26.11 SORU KARTI — hadis + hikâyesi + dipnot */}
+          {kart && (
+            <div className="mb-2 rounded-2xl border border-emerald-400/25 bg-emerald-500/[.06] p-2.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[8.5px] font-black uppercase tracking-widest text-emerald-300/80">{t("araKartBaslik")}</span>
+                <span className={`rounded-full border px-1.5 py-0.5 text-[7.5px] font-black uppercase tracking-wide ${DERECE_SINIF[kart.derece in DERECE_SINIF ? kart.derece : "bilinmiyor"]}`}>
+                  {t(`araDerece_${kart.derece in DERECE_SINIF ? kart.derece : "bilinmiyor"}`)}
+                </span>
+                <span className="ml-auto rounded-full bg-white/[.07] px-1.5 py-0.5 text-[7.5px] font-bold text-white/50">{kart.kitap}</span>
+              </div>
+              <p className="mt-1.5 text-[11.5px] leading-relaxed text-white/90">{kart.hadis}</p>
+              <p className="mt-1 text-[8.5px] font-bold text-emerald-300/60">{kart.kaynak}</p>
+              <div className="mt-2 rounded-lg border border-white/10 bg-black/25 p-2">
+                <p className="text-[8px] font-black uppercase tracking-widest text-white/40">{t("araKartHikaye")}</p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-white/70">{kart.hikaye}</p>
+              </div>
+              <div className="mt-1.5 rounded-lg border border-amber-400/20 bg-amber-500/[.07] p-2">
+                <p className="text-[8px] font-black uppercase tracking-widest text-amber-200/70">{t("araKartDipnot")}</p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-amber-100/80">{kart.dipnot}</p>
+              </div>
+              <a href={kart.url} target="_blank" rel="noopener noreferrer" className="mt-1.5 inline-block text-[8.5px] font-bold text-emerald-300/70 underline">{t("araKartAc")}</a>
+            </div>
+          )}
           {sorgu.trim().length < 2 ? (
             <div className="px-2 py-4">
               <p className="text-[10px] font-bold text-white/55">{t("araIpucu")}</p>

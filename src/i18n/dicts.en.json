@@ -2845,5 +2845,9 @@
   "araDerece_sahih": "sahih",
   "araDerece_hasan": "hasan",
   "araDerece_zayif": "weak",
-  "araDerece_bilinmiyor": "ungraded"
+  "araDerece_bilinmiyor": "ungraded",
+  "araKartBaslik": "The answer to your question",
+  "araKartHikaye": "Story / context",
+  "araKartDipnot": "Footnote",
+  "araKartAc": "Open the hadith in the corpus →"
 }

@@ -2845,5 +2845,9 @@
   "araDerece_sahih": "صحیح",
   "araDerece_hasan": "حسن",
   "araDerece_zayif": "ضعیف",
-  "araDerece_bilinmiyor": "درجہ نہیں"
+  "araDerece_bilinmiyor": "درجہ نہیں",
+  "araKartBaslik": "آپ کے سوال کا جواب",
+  "araKartHikaye": "قصہ / پس منظر",
+  "araKartDipnot": "حواشی",
+  "araKartAc": "حدیث کتب میں کھولیں ←"
 }
