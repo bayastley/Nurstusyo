@@ -2849,5 +2849,21 @@
   "araKartBaslik": "Jawaban pertanyaanmu",
   "araKartHikaye": "Kisah / konteks",
   "araKartDipnot": "Catatan kaki",
-  "araKartAc": "Buka hadis di koleksi →"
+  "araKartAc": "Buka hadis di koleksi →",
+  "agmBaslik": "Pusat Kontrol Fitur",
+  "agmAciklama": "Setiap fitur di bawah terhubung ke gerbang nyata. SEMUA: terlihat oleh semua termasuk tamu. PRO / ELITE: hanya tingkat keanggotaan itu yang melihat. TERSEMBUNYI: dihapus sepenuhnya dari antarmuka (tanpa menu, tanpa tombol). Perubahan langsung ditulis ke server — tanpa deploy, tersebar ke semua perangkat dalam sekitar satu menit.",
+  "agmFree": "Semua",
+  "agmPro": "PRO",
+  "agmElit": "ELITE",
+  "agmGizli": "TERSEMBUNYI",
+  "agmHepsiAc": "Buka semua untuk semua",
+  "agmHepsiGizle": "Sembunyikan semua",
+  "agmYenile": "Muat ulang",
+  "agmAra": "Cari fitur (nama, deskripsi, id)",
+  "agmYaziliyor": "Menyimpan…",
+  "agmKaydedildi": "{n} fitur disimpan → {s}",
+  "agmOzellik": "fitur",
+  "agmGizliSayi": "tersembunyi",
+  "agmUyeliSayi": "khusus anggota",
+  "agmYenilendi": "Daftar dimuat ulang dari server"
 }

@@ -2849,5 +2849,21 @@
   "araKartBaslik": "The answer to your question",
   "araKartHikaye": "Story / context",
   "araKartDipnot": "Footnote",
-  "araKartAc": "Open the hadith in the corpus →"
+  "araKartAc": "Open the hadith in the corpus →",
+  "agmBaslik": "Feature Control Center",
+  "agmAciklama": "Every feature below is wired to a real gate. EVERYONE: visible to all, guests included. PRO / ELITE: only that membership tier sees it. HIDDEN: removed from the interface entirely (no menu, no button). Changes are written to the server instantly — no deploy needed, propagated to all devices in about a minute.",
+  "agmFree": "Everyone",
+  "agmPro": "PRO",
+  "agmElit": "ELITE",
+  "agmGizli": "HIDDEN",
+  "agmHepsiAc": "Open all to everyone",
+  "agmHepsiGizle": "Hide all",
+  "agmYenile": "Reload",
+  "agmAra": "Search features (name, description, id)",
+  "agmYaziliyor": "Saving…",
+  "agmKaydedildi": "{n} features saved → {s}",
+  "agmOzellik": "features",
+  "agmGizliSayi": "hidden",
+  "agmUyeliSayi": "members only",
+  "agmYenilendi": "List reloaded from the server"
 }

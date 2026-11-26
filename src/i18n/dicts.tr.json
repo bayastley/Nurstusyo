@@ -2849,5 +2849,21 @@
   "araKartBaslik": "Sorunun cevabı",
   "araKartHikaye": "Hikâyesi / bağlamı",
   "araKartDipnot": "Dipnot",
-  "araKartAc": "Külliyatta hadisi aç →"
+  "araKartAc": "Külliyatta hadisi aç →",
+  "agmBaslik": "Özellik Kontrol Merkezi",
+  "agmAciklama": "Aşağıdaki her özellik gerçekten çalışan bir kapıya bağlıdır. HERKESE AÇIK: misafir dahil herkes görür. PRO / ELİT: yalnız o üyelik seviyesi görür. GİZLİ: arayüzden tamamen kaldırılır (menüde ve butonda yok). Değişiklik anında sunucuya yazılır, deploy gerekmez; tüm cihazlara ~1 dakikada yayılır.",
+  "agmFree": "Herkese",
+  "agmPro": "PRO",
+  "agmElit": "ELİT",
+  "agmGizli": "GİZLİ",
+  "agmHepsiAc": "Hepsini herkese aç",
+  "agmHepsiGizle": "Hepsini gizle",
+  "agmYenile": "Yenile",
+  "agmAra": "Özellik ara (ad, açıklama, kimlik)",
+  "agmYaziliyor": "Yazılıyor…",
+  "agmKaydedildi": "{n} özellik kaydedildi → {s}",
+  "agmOzellik": "özellik",
+  "agmGizliSayi": "gizli",
+  "agmUyeliSayi": "üyelikli",
+  "agmYenilendi": "Liste sunucudan yenilendi"
 }

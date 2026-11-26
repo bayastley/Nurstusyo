@@ -4,6 +4,7 @@ import { Coins, Gem, Shield, ShieldOff, X, Check, ChevronDown, Moon, Search } fr
 import { LANGS, vakitAdi, sureceCevir } from "../i18n";
 import { isAdminEmail, getJetonVault, getPackRights, type Tier } from "../tier";
 import { QiblaCompass } from "./islamicToolsBolumler";
+import { ozellikGorunur } from "../features/ozellikKilit";
 import { TIER_SOZLUK } from "./headerTierSozluk";
 import type { ModalName, User } from "../types";
 import type { HeaderTopBarProps } from "./headerTopBarTypes";
@@ -143,39 +144,39 @@ export const HeaderSeritPillBar: React.FC<HeaderSeritPillBarProps> = ({
                 değil ayrıydı; şimdi Kâbe + İçindekiler komşu.) */}
             {/* ★ KÂBE CANLI (08.10, kullanıcı emri): üst barda tek tık,
                 kırmızı CANLI noktasıyla. Kur'an ekranını açar + window event ile Kâbe yayınını tetikler. */}
-            <button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
+            {ozellikGorunur("hdr:kabe-canli") && (<button data-minitur="kabe-canli" onClick={() => { setModal("quranLearn"); window.dispatchEvent(new Event("nur_kabe_ac")); }} className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-emerald-300 transition hover:scale-105" style={{ boxShadow: "0 0 0 1px rgba(16,185,129,.35)" }} title={t("menuKabeCanli") + t("hbrKabeCanliTitle")}>
               🕋 {t("menuKabeCanli")}
               <span className="relative flex h-2 w-2">
                 <span className="absolute h-full w-full animate-ping rounded-full bg-red-500 opacity-60" />
                 <span className="relative h-2 w-2 rounded-full bg-red-500" />
               </span>
-            </button>
+            </button>)}
             {/* ★ 18.10 (kullanıcı emri): "Kur'an" bölümü ana ekran üst barda — Hafızlık Testi'nin
                 yerine. Tek tık Kur'an ekranını açar (İçindeki öğrenme/test modülleri orada).
                 Hafızlık Testi silinmedi — Kur'an ekranına gömülü, oradan da erişilir. */}
             {/* ★ 25.10 İHTİŞAMLI BAŞLIK (kullanıcı emri): kısa "Kur'an" etiketi
                 "KUR'AN ÖĞRENİYORUM" oldu — display font + altın degrade + yumuşak parıltı.
                 Panele sığmazsa İSLÂMÎ ÖĞRENİYORUM gibi sola doğrı kayar (nur-marquee). */}
-            <button data-minitur="kuran-bolumu" onClick={() => setModal("quranLearn")}
+            {ozellikGorunur("hdr:kuran-bolumu") && (<button data-minitur="kuran-bolumu" onClick={() => setModal("quranLearn")}
               className="glass-soft flex max-w-[215px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}                              title={t("v2KuranOgrenTitle")}>
               📖 <span ref={kuranMarqueeRef} className="nur-marquee notranslate whitespace-nowrap font-display tracking-[.08em] bg-gradient-to-r from-amber-200 via-[color:var(--accent-2)] to-amber-200 bg-clip-text text-transparent drop-shadow-[0_0_7px_rgba(215,170,82,.45)]">{t("v2KuranOgrenEtiket")}</span>
-            </button>
+            </button>)}
             {/* ★ 30.10 KIBLE (kullanıcı emri): Nur Araçlar'dan çıkarıldı, üst barda
                 KUR'AN ÖĞRENİYORUM ↔ İSLÂMÎ ÖĞRENİYORUM ARASINA kendi butonuyla kondu. */}
             {/* ★ 24.11 SİTE ARAMASI (kullanıcı emri): "Google'a ihtiyaç duymasın" —
                 tek kutuda ilmihal, hadis, kıssa, sure, dua, sahabe, siyer araması. */}
-            <button data-minitur="site-arama" onClick={() => setModal("siteArama")}
+            {ozellikGorunur("hdr:site-arama") && (<button data-minitur="site-arama" onClick={() => setModal("siteArama")}
               className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black text-white/80 transition hover:scale-105"
               style={{ boxShadow: "0 0 0 1px rgba(255,255,255,.18)" }} title={`${t("araEtiket")} (Ctrl+K)`}>
               <Search size={11} /> {t("araEtiket")}
-            </button>
-            <button data-minitur="kible" onClick={() => setKibleAcik(true)}
+            </button>)}
+            {ozellikGorunur("hdr:kible") && (<button data-minitur="kible" onClick={() => setKibleAcik(true)}
               className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("itTabQibla")}>
               🧭 {t("itTabQibla")}
-            </button>
+            </button>)}
             {kibleAcik && (
               <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onMouseDown={() => setKibleAcik(false)}>
                 <div className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-b from-gray-900 via-gray-950 to-black p-4 shadow-2xl" onMouseDown={(e) => e.stopPropagation()}>
@@ -192,21 +193,21 @@ export const HeaderSeritPillBar: React.FC<HeaderSeritPillBarProps> = ({
             {/* ★ 25.10 İSLÂMÎ ÖĞRENİYORUM (kullanıcı emri) — eski "Keşfet" üst barda,
                 Kur'an ↔ İçindekiler ARASINA kondu; sol menüden kaldırıldı. Etiket panele
                 sığmazsa sola doğru kayar (marquee) — kelime tamamlanır. */}
-            <button data-minitur="islami-ogreniyorum" onClick={() => setModal("kesfet")}
+            {ozellikGorunur("hdr:islami-ogreniyorum") && (<button data-minitur="islami-ogreniyorum" onClick={() => setModal("kesfet")}
               className="glass-soft flex max-w-[190px] shrink-0 items-center gap-1.5 overflow-hidden rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("v2KesfetTitle")}>
               🧭 <span ref={kesfetMarqueeRef} className="nur-marquee whitespace-nowrap">{t("menuKesfet")}</span>
-            </button>
+            </button>)}
             {/* ★ 16.10 İÇİNDEKİLER — sol menüdeki aynı "siteHakkinda" modalını açan üst-bar butonu.
                 ★ 18.10 (kullanıcı emri): Hafızlık Testi butonu Kâbe-İçindekiler arasına kondu.
                 Modal içeriğine TANITIM bölümü eklendi (R2'den video, SiteHakkindaModal'da). */}
-            <button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
+            {ozellikGorunur("hdr:icindekiler") && (<button data-minitur="icindekiler" onClick={() => setModal("siteHakkinda")}
               className="glass-soft flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black transition hover:scale-105"
               style={{ color: "var(--accent-2)", boxShadow: "0 0 0 1px rgba(215,170,82,.35)" }}
               title={t("v2SiteHakkindaTitle")}>
               📑 {t("icindekilerEtiket")}
-            </button>
+            </button>)}
             {/* ★ SESLENDİRME (14.10) — mockup ai-mockup/ana-ekran-seslendirme.html'den işlenmiş modül:
                 üst barda tek tık → Sesli Meal ekranı. Kırmızı X + dış-tık + Esc ile kapanır.
                 ★ 20.10 GİZLE (YARIN-planı Ö1 deseni, kullanıcı emri): ADMIN hariç herkesten

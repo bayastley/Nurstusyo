@@ -418,6 +418,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         rmCache = null;
         return res.status(200).json({ ok: true, added: ADMIN_FEATURES.length });
       }
+      // ★ 26.11 ÖZELLİK KONTROL MERKEZİ: tek özellik ya da toplu kilit yazımı.
+      //   tier: free | pro | elit | hidden. Katalog kimlikleri (kesfet:hadis,
+      //   hdr:kabe-canli, ayetKartlari…) doğrudan nur_feature_locks'a yazılır;
+      //   arayüz ozellikGorunur() ile aynı satırı okur.
+      if (action === "setLock" || action === "bulkLock") {
+        const admin = session;
+        const tier = sanitize(body.tier, 10);
+        if (!["free", "pro", "elit", "hidden"].includes(tier)) {
+          return res.status(400).json({ ok: false, error: "Geçersiz seviye" });
+        }
+        const ham = action === "bulkLock" && Array.isArray(body.ids) ? body.ids : [body.featureId];
+        const liste = ham.map((x: unknown) => sanitize(String(x ?? ""), 60)).filter(Boolean).slice(0, 80);
+        if (!liste.length) return res.status(400).json({ ok: false, error: "Geçersiz özellik" });
+        for (const featureId of liste) {
+          await db("nur_feature_locks?on_conflict=feature_id", {
+            method: "POST",
+            headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+            body: JSON.stringify({ feature_id: featureId, lock_level: tier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+          });
+        }
+        rmCache = null;
+        return res.status(200).json({ ok: true, count: liste.length, tier });
+      }
       // ★ 10.10: Admin-gizli özelliği aç → hedef tier'a aktifleştir ("yeni gelmiş gibi")
       // ★ 17.10: tier tipine "v3" eklendi — ZIP/KendiSes maddeleri admin V3'e kilitler.
       if (action === "revealFeature") {

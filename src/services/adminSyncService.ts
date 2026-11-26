@@ -25,7 +25,9 @@ export interface BanLog {
   unbanned?: boolean;
 }
 
-export type FeatureLock = "free" | "pro" | "elit" | "v2" | "v3" | "maintenance" | "off";
+// ★ 26.11 "hidden" eklendi: Özellik Kontrol Merkezi'nin "GİZLİ" durumu
+//   (arayüzden tamamen kaldır). Eski değerler aynen korunur.
+export type FeatureLock = "free" | "pro" | "elit" | "v2" | "v3" | "maintenance" | "off" | "hidden";
 
 export interface DynamicModule {
   id: string;

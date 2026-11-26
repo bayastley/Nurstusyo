@@ -51,6 +51,7 @@ import { HadisBolumu, KissaBolumu, SoruBolumu, KelimeBolumu, SureBolumu, Ilmihal
 import { CamiBolumu, KanalRehberiBolumu, AdabBolumu, SunnetBolumu, TecvidBolumu, KitaplikBolumu } from "./kesfetKucukSekmeler";
 import { KesfetImsakiye } from "./kesfetImsakiye";
 import { metniHazirla, arapcaHazirla, levenshtein, kelimeUyar } from "./kesfetArama"; // ★ SRP (09.10): akıllı arama saf yardımcıları kesfetArama.ts'e taşındı
+import { ozellikGorunur, kesfetKilitId } from "../features/ozellikKilit";
 
 // ★ AKILLI SURE ARAMASI — yardımcılar kesfetArama.ts'e taşındı (09.10 parçalama); import en üstte
 
@@ -129,6 +130,17 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
 
   // ★ 02.11 (kullanıcı emri): İslâmi Öğreniyorum ilk tıklamada Hadis Bankası açılsın
   const [sekme, setSekme] = useState<SekmeId>(initialSekme ?? "hadis");
+  // ★ 26.11 ÖZELLİK KİLİDİ: admin panelinden gizlenen/üyelik seviyesine çekilen
+  //   sekmeler listeden düşer; açık sekme gizlenirse ilk görünüre geçilir.
+  const gorunurSekmeler = useMemo(
+    () => SEKMELER.filter((s) => ozellikGorunur(kesfetKilitId(s.id))),
+    // kilit yayını değiştiğinde liste yeniden hesaplansın
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [open, sekme],
+  );
+  React.useEffect(() => {
+    if (!gorunurSekmeler.some((s) => s.id === sekme) && gorunurSekmeler[0]) setSekme(gorunurSekmeler[0].id);
+  }, [gorunurSekmeler, sekme]);
   const [arama, setArama] = useState("");
   // ★ 20.11 DAĞITIM: sekmeler arası ilmihal köprüsü — hangi dersin açılacağı burada tutulur
   const [ilmihalDers, setIlmihalDers] = useState<string>("temizlik");
@@ -414,7 +426,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
       <div className="flex items-start gap-3">
         {/* ── SOL MENÜ (md+): kategoriler dikey, uzun listede kaydırılabilir ── */}
         <aside className="sticky top-0 hidden max-h-[calc(90vh-9rem)] w-[190px] shrink-0 self-start flex-col gap-1 overflow-y-auto overscroll-contain border-r border-white/10 pr-2 scrollbar-thin md:flex">
-          {SEKMELER.map((s) => (
+          {gorunurSekmeler.map((s) => (
             <button
               key={s.id}
               type="button"
@@ -431,7 +443,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
         <div className="min-w-0 flex-1">
           {/* Mobilde sol menü yok — yatay çipler, taşarsa yatay kaydırılabilir */}
           <div className="mb-3 flex max-h-28 flex-wrap gap-1.5 overflow-y-auto overscroll-contain pr-1 scrollbar-thin md:hidden">
-            {SEKMELER.map((s) => (
+            {gorunurSekmeler.map((s) => (
               <button
                 key={s.id}
                 type="button"
