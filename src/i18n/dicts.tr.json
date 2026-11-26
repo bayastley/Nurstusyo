@@ -2696,5 +2696,10 @@
   "shYeni18": "Site içi arama (üst bar \"Ara\" + Ctrl/⌘+K): ilmihal, hadis, kıssa, sure, dua, sahabe, klasik eser, peygamber, siyer, sünnet, edep, kelime ve soru-cevap tek kutuda; indeks cihazda, ağ isteği yok.",
   "shYeni19": "Sahabeler dönemi: 24 sahabenin detaylı hayatı (71 olay), kaynak künyeleriyle; ayrı sekmede.",
   "shYeni20": "Klasik eserler kütüphanesi (34 eser) ve Elifbâ okulu (29 harf, başta-ortada-sonda, mahreç, sesli okuma, harf sınavı).",
-  "araCokDil": "İngilizce, Arapça, Endonezce, Urduca da aranır"
+  "araCokDil": "İngilizce, Arapça, Endonezce, Urduca da aranır",
+  "pmKampanyaNotBaslik": "Kampanya / Hediye Kodu (cihazda not)",
+  "pmKampanyaKod": "Kodu buraya yazın (isteğe bağlı)…",
+  "pmKampanyaKaydet": "Kaydet",
+  "pmKampanyaKaydedildi": "Kod notu bu cihazda saklandı",
+  "pmKampanyaNot": "Bu alan yalnız cihazınızda bir not tutar. Kodlar otomatik doğrulanmaz veya etkinleştirilmez; geçerli kampanya/hediye kodları için resmî duyuruları ve destek kanallarını takip edin."
 }
