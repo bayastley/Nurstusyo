@@ -494,6 +494,11 @@ export const AdminDashboardModal: React.FC<AdminDashboardModalProps> = ({
             />
           )}
 
+          {/* TAB: HAFTANIN VİDEOSU — üye önerileri onay kuyruğu (madde 17) */}
+          {activeTab === "haftaVideo" && (
+            <AdminHaftaVideoTab notify={notify} />
+          )}
+
           {/* TAB: HAFTALIK RAPOR — 7 günlük özet */}
           {activeTab === "rapor" && (
             <AdminHaftalikRaporTab notify={notify} />
