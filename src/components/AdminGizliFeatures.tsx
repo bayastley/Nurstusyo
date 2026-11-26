@@ -71,7 +71,8 @@ export const AdminGizliFeaturesTab: React.FC<Props> = ({ notify }) => {
       });
       const d = (await r.json().catch(() => null)) as { ok?: boolean; error?: string; count?: number } | null;
       if (r.ok && d?.ok) {
-        for (const id of ids) setFeatureLock(id, tier as FeatureLock);
+        // DB "hidden" kabul etmiyor → "off" yazılır; ikisi de arayüzde gizli sayılır.
+        for (const id of ids) setFeatureLock(id, (tier === "hidden" ? "off" : tier) as FeatureLock);
         setDurumlar((cur) => {
           const yeni = { ...cur };
           for (const id of ids) yeni[id] = tier;

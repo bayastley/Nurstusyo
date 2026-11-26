@@ -431,11 +431,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const ham = action === "bulkLock" && Array.isArray(body.ids) ? body.ids : [body.featureId];
         const liste = ham.map((x: unknown) => sanitize(String(x ?? ""), 60)).filter(Boolean).slice(0, 80);
         if (!liste.length) return res.status(400).json({ ok: false, error: "Geçersiz özellik" });
+        // ★ DB kısıtı: nur_feature_locks.lock_level ∈ free|pro|elit|v2|v3|maintenance|off
+        //   → "GİZLİ" istemcide "off" olarak saklanır (ozellikDurumu ikisini de gizli sayar).
+        const dbTier = tier === "hidden" ? "off" : tier;
         for (const featureId of liste) {
           await db("nur_feature_locks?on_conflict=feature_id", {
             method: "POST",
             headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
-            body: JSON.stringify({ feature_id: featureId, lock_level: tier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
+            body: JSON.stringify({ feature_id: featureId, lock_level: dbTier, active: true, updated_by: admin.email, updated_at: new Date().toISOString() }),
           });
         }
         rmCache = null;
