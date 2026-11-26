@@ -28,6 +28,7 @@ interface CevrimiciHadis {
   url?: string;
   ref?: string;
   bab?: string;
+  kitab?: string;
   dereceEtiket?: string;
 }
 
@@ -85,12 +86,15 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
   const [hadisSayfa, setHadisSayfa] = useState(1);
   const [hadisHasMore, setHadisHasMore] = useState(false);
   const [hadisDahaYuk, setHadisDahaYuk] = useState(false);
+  // ★ 26.11: karta tıklayınca altında rivayetin hikâyesi/nasıl söylendiği açılır.
+  const [acikHadis, setAcikHadis] = useState<string | null>(null);
   const hadisOnbellek = useRef(new Map<string, { liste: CevrimiciHadis[]; hasMore: boolean }>());
 
   useEffect(() => {
     const q = sorgu.trim();
     setHadisSayfa(1);
     setHadisHasMore(false);
+    setAcikHadis(null);
     if (!open || q.length < 3) { setHadisler([]); setHadisDurum("bos"); return; }
     const anahtar = q.toLocaleLowerCase("tr");
     const hazir = hadisOnbellek.current.get(anahtar);
@@ -289,37 +293,77 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
               {hadisDurum === "bos" && <p className="px-1 py-2 text-[9.5px] text-white/40">{t("araHadisYok")}</p>}
               {hadisler.map((h, i) => {
                 const derece = h.derece in DERECE_SINIF ? h.derece : "bilinmiyor";
-                const icerik = (
-                  <>
-                    <div className="flex flex-wrap items-center gap-1">
-                      <span className={`rounded-full border px-1.5 py-0.5 text-[7.5px] font-black uppercase tracking-wide ${DERECE_SINIF[derece]}`}>
-                        {t(`araDerece_${derece}`)}
-                      </span>
-                      <span className="rounded-full bg-white/[.07] px-1.5 py-0.5 text-[7.5px] font-bold text-white/45">{h.kitap}</span>
-                      <span className="ml-auto text-[7.5px] font-bold text-white/25">{h.dil.toUpperCase()}</span>
-                    </div>
-                    <p className="mt-1 text-[9.5px] leading-relaxed text-white/70" dir={h.dil === "ar" ? "rtl" : undefined}>
-                      <Vurgulu metin={h.metin} sorgu={sorgu} sinir={280} />
-                    </p>
-                    <p className="mt-0.5 text-[8px] font-bold text-emerald-300/50">{h.kaynak}</p>
-                    {/* Rivayet bağlamı: hadisin külliyattaki kitap/bâb bilgisi — uydurma değil, kaynaktan. */}
-                    {h.bab && (
-                      <p className="mt-1 rounded-md border border-white/[.06] bg-black/20 px-1.5 py-1 text-[8px] text-white/45">
-                        <span className="font-black uppercase tracking-wide text-white/35">{t("araHadisBaglam")}: </span>
-                        {h.bab}
+                const anahtar = h.url || h.ref || h.metin.slice(0, 60);
+                const acik = acikHadis === anahtar;
+                return (
+                  // [content-visibility:auto] — 1000 kartta da kaydırma akıcı kalsın (görünmeyen kart çizilmez).
+                  <div
+                    key={`${h.kitap}-${i}-${anahtar}`}
+                    className={`mb-1 w-full overflow-hidden rounded-xl border text-left transition [content-visibility:auto] [contain-intrinsic-size:auto_110px] ${
+                      acik ? "border-emerald-400/25 bg-emerald-500/[.05]" : "border-white/[.07] bg-white/[.02] hover:border-white/15 hover:bg-white/[.05]"
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setAcikHadis(acik ? null : anahtar)}
+                      aria-expanded={acik}
+                      className="block w-full p-2.5 text-left"
+                    >
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className={`rounded-full border px-1.5 py-0.5 text-[7.5px] font-black uppercase tracking-wide ${DERECE_SINIF[derece]}`}>
+                          {t(`araDerece_${derece}`)}
+                        </span>
+                        <span className="rounded-full bg-white/[.07] px-1.5 py-0.5 text-[7.5px] font-bold text-white/45">{h.kitap}</span>
+                        <span className="ml-auto text-[7.5px] font-bold text-white/25">{acik ? t("araHadisKapat") : t("araHadisHikaye")}</span>
+                      </div>
+                      <p className="mt-1 text-[9.5px] leading-relaxed text-white/70" dir={h.dil === "ar" ? "rtl" : undefined}>
+                        <Vurgulu metin={h.metin} sorgu={sorgu} sinir={acik ? 4000 : 280} />
                       </p>
+                      <p className="mt-0.5 text-[8px] font-bold text-emerald-300/50">{h.kaynak}</p>
+                    </button>
+                    {/* ★ 26.11 HİKÂYESİ: hadis nasıl söylendi — kaynağın kendi kitâb/bâb başlığı,
+                        dereceyi veren merci ve rivayetin senediyle tam metni. Uydurma yok. */}
+                    {acik && (
+                      <div className="border-t border-emerald-400/15 bg-black/20 p-2.5">
+                        <p className="text-[8px] font-black uppercase tracking-widest text-emerald-300/70">{t("araHadisHikaye")}</p>
+                        <p className="mt-0.5 text-[9px] leading-relaxed text-white/55">{t("araHadisHikayeNot")}</p>
+                        <dl className="mt-1.5 space-y-0.5">
+                          {h.kitab && (
+                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
+                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisKitab")}:</dt>
+                              <dd className="text-white/65">{h.kitab}</dd>
+                            </div>
+                          )}
+                          {h.bab && (
+                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
+                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisBaglam")}:</dt>
+                              <dd className="text-white/65">{h.bab}</dd>
+                            </div>
+                          )}
+                          {h.dereceEtiket && (
+                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
+                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisDereceNot")}:</dt>
+                              <dd className="text-white/65">{h.dereceEtiket}</dd>
+                            </div>
+                          )}
+                        </dl>
+                        <p className="mt-2 text-[8px] font-black uppercase tracking-widest text-white/35">{t("araHadisTamMetin")}</p>
+                        <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/80" dir={h.dil === "ar" ? "rtl" : undefined}>
+                          {h.metin}
+                        </p>
+                        {h.url && (
+                          <a
+                            href={h.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1.5 inline-block text-[8.5px] font-bold text-emerald-300/70 underline"
+                          >
+                            {t("araKartAc")}
+                          </a>
+                        )}
+                      </div>
                     )}
-                    {h.dereceEtiket && (
-                      <p className="mt-0.5 text-[7.5px] text-white/30">{t("araHadisDereceNot")}: {h.dereceEtiket}</p>
-                    )}
-                  </>
-                );
-                // [content-visibility:auto] — 1000 kartta da kaydırma akıcı kalsın (görünmeyen kart çizilmez).
-                const sinif = "mb-1 block w-full rounded-xl border border-white/[.07] bg-white/[.02] p-2.5 text-left transition hover:border-white/15 hover:bg-white/[.05] [content-visibility:auto] [contain-intrinsic-size:auto_110px]";
-                return h.url ? (
-                  <a key={`${h.kitap}-${i}`} href={h.url} target="_blank" rel="noopener noreferrer" className={sinif}>{icerik}</a>
-                ) : (
-                  <div key={`${h.kitap}-${i}`} className={sinif}>{icerik}</div>
+                  </div>
                 );
               })}
               {hadisHasMore && (

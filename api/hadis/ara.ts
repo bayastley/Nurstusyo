@@ -82,6 +82,7 @@ interface HadisSonuc {
   url?: string;
   ref?: string;
   bab?: string;
+  kitab?: string;
   dereceEtiket?: string;
 }
 
@@ -235,7 +236,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (yalnizSahih && derece !== "sahih" && derece !== "hasan") continue;
           if (sonuclar.length >= adet) break;
           const bname = h.book?.name || h.book?.slug || "Hadis";
-          const bolum = h.bab?.title || h.kitab?.title || "";
+          const bolum = h.bab?.title || "";
+          // Kitâb (bölüm kitabı) ile bâb ayrı ayrı döner — genişleyen kartta
+          // "hikâyesi / nasıl söylendi" bağlamı bu ikisinden kurulur.
+          const kitabAdi = h.kitab?.title || "";
           ekle({
             metin,
             kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
@@ -245,6 +249,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             url: h.url,
             ref: h.ref,
             bab: bolum,
+            kitab: kitabAdi,
             dereceEtiket: [h.grade?.label, h.grade?.by].filter(Boolean).join(" · "),
           });
         }
