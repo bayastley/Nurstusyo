@@ -31,8 +31,8 @@ interface CevrimiciHadis {
   dereceEtiket?: string;
 }
 
-/** Külliyat sayfası — tek istekte 30, "daha fazla" ile binlerce rivayete inilir. */
-const HADIS_SAYFA_ADEDI = 30;
+/** Külliyat sayfası — tek istekte 1000 rivayet, "daha fazla" ile sonraki 1000'e inilir. */
+const HADIS_SAYFA_ADEDI = 1000;
 
 // ★ 26.11: derece rozetleri — sahih / hasan / zayıf / bilinmiyor
 const DERECE_SINIF: Record<string, string> = {
@@ -314,7 +314,8 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
                     )}
                   </>
                 );
-                const sinif = "mb-1 block w-full rounded-xl border border-white/[.07] bg-white/[.02] p-2.5 text-left transition hover:border-white/15 hover:bg-white/[.05]";
+                // [content-visibility:auto] — 1000 kartta da kaydırma akıcı kalsın (görünmeyen kart çizilmez).
+                const sinif = "mb-1 block w-full rounded-xl border border-white/[.07] bg-white/[.02] p-2.5 text-left transition hover:border-white/15 hover:bg-white/[.05] [content-visibility:auto] [contain-intrinsic-size:auto_110px]";
                 return h.url ? (
                   <a key={`${h.kitap}-${i}`} href={h.url} target="_blank" rel="noopener noreferrer" className={sinif}>{icerik}</a>
                 ) : (

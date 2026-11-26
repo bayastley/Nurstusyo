@@ -116,6 +116,39 @@ function dorarKitap(bilgi: string): string {
   return "Diğer";
 }
 
+// ─── Sünnetimiz külliyat arama — tek külliyat sayfası (pratikte 50 rivayet) ───
+interface SunnetimizKayit {
+  ref?: string;
+  turkish?: string;
+  arabic?: string;
+  grade?: { label?: string; by?: string; tone?: string };
+  book?: { slug?: string; name?: string };
+  kitab?: { title?: string };
+  bab?: { title?: string };
+  url?: string;
+}
+
+interface SunnetimizSayfaCevap {
+  durum: number;
+  results: SunnetimizKayit[];
+  hasMore: boolean;
+}
+
+async function sunnetimizSayfaCek(q: string, kitapQ: string, sayfa: number, cekim: number): Promise<SunnetimizSayfaCevap> {
+  try {
+    const url = `https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=${cekim}&page=${sayfa}`;
+    const r = await fetch(url, {
+      headers: { "User-Agent": DIS_UA, Accept: "application/json" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!r.ok) return { durum: r.status, results: [], hasMore: false };
+    const data = (await r.json()) as { results?: SunnetimizKayit[]; has_more?: boolean };
+    return { durum: 200, results: data.results ?? [], hasMore: Boolean(data.has_more) };
+  } catch {
+    return { durum: 0, results: [], hasMore: false };
+  }
+}
+
 // ─── Dış fetch'ler için uygulama kimliği ───
 // ★ 28.09: dorar.net, Node/curl gibi genel araç UA'larını 403 ile engelliyor
 //   (kanıt: tarayıcı UA ve uygulama UA = 200, node UA = 403). Uygulama
@@ -146,12 +179,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // ★ 26.11: "binlerce sahih hadis" — sayfalama + sahih/hasan süzgeci.
   // Külliyat 34.566 Türkçe hadis (Buhârî 7.583 · Müslim 7.603 · Nesâî 5.765 ·
   // Ebû Dâvûd 5.274 · İbn Mâce 4.343 · Tirmizî 3.998 — Sünnetimiz /books, 26.11.2026).
-  const sayfa = Math.min(Math.max(Number.parseInt(String(req.query.sayfa ?? "1"), 10) || 1, 1), 40);
-  const adet = Math.min(Math.max(Number.parseInt(String(req.query.adet ?? "30"), 10) || 30, 5), 100);
+  // ★ 26.11 (2) kullanıcı emri "1000 yap": tek istekte 1000 rivayete kadar çıkılır.
+  const sayfa = Math.min(Math.max(Number.parseInt(String(req.query.sayfa ?? "1"), 10) || 1, 1), 10);
+  const adet = Math.min(Math.max(Number.parseInt(String(req.query.adet ?? "100"), 10) || 100, 5), 1000);
   const yalnizSahih = String(req.query.sahih ?? "1") !== "0";
 
   const sonuclar: HadisSonuc[] = [];
   const seen = new Set<string>();
+  // Ham (filtre öncesi) rivayet anahtarları — Sünnetimiz sayfa sınırını aşınca aynı
+  // sonuçları tekrar döndürüyor; yeni ham rivayet gelmeyen turda durulur.
+  const hamGorulen = new Set<string>();
   const ekle = (s: HadisSonuc) => {
     const key = s.metin.replace(/\s+/g, " ").trim().slice(0, 120);
     if (!key || seen.has(key)) return;
@@ -164,45 +201,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Seçili rivayetçi/kitap (opsiyonel) — sadece Sünnetimiz'de desteklenen slug'lar
   const kitapParam = String(req.query.kitap ?? req.query.book ?? "").toLocaleLowerCase("tr").replace(/[^a-z,]/g, "");
   const kitaplarSecili = kitapParam.split(",").map((k) => KITAP_SLUG[k.trim()]).filter(Boolean) as string[];
-  const kitapQ = kitaplarSecili.length ? kitaplarSecili.join(",") : "buhari,muslim,ebudavud,tirmizi,nesai,ibnmace";
 
   // ─── 1) Sünnetimiz (anahtarsız, TR+Arapça + derece) — öncelikli ───
+  // ★ 26.11 (2): toplu arama Sünnetimiz'de ~1000 sonuçtan sonra tekrara düşüyor;
+  //   1000 sahih rivayet hedefine varmak için her kitap AYRI sayfalanır (6 kat havuz).
+  const CEKIM = 50; // külliyat sayfa başına pratik üst sınır
+  const kitaplar = kitaplarSecili.length
+    ? kitaplarSecili
+    : ["buhari", "muslim", "ebudavud", "tirmizi", "nesai", "ibnmace"];
+  // Kitap başına tur: 1000 rivayet / (50 × 6 kitap) = 4 tur; süzgeç payıyla 2 katı.
+  const sayfaPerKitap = Math.min(Math.max(Math.ceil(adet / (CEKIM * kitaplar.length)) * 2, 2), 20);
   let sunnetimizHasMore = false;
+  let sunnetimizBitti = false;
+  let sunnetimizOk = false;
   try {
-    const cekim = Math.min(Math.max(adet * 2, 60), 100);
-    const url = `https://sunnetimiz.com/api/v1/search?q=${encodeURIComponent(q)}&book=${encodeURIComponent(kitapQ)}&limit=${cekim}&page=${sayfa}`;
-    const r = await fetch(url, {
-      headers: { "User-Agent": DIS_UA, Accept: "application/json" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (r.ok) {
-      const data = (await r.json()) as { results?: Array<{ ref?: string; turkish?: string; arabic?: string; grade?: { label?: string; by?: string; tone?: string }; book?: { slug?: string; name?: string }; kitab?: { title?: string }; bab?: { title?: string }; url?: string }>; has_more?: boolean; error?: unknown };
-      sunnetimizHasMore = Boolean(data.has_more);
-      for (const h of (data.results ?? [])) {
-        const metin = (h.turkish || h.arabic || "").trim();
-        if (!metin) continue;
-        const derece = sunnetimizDerece(h.grade?.tone || h.grade?.label);
-        // Sahih süzgeci: derecesi belirtilmemiş rivayetleri de dışlar, zayıfı asla göstermez.
-        if (yalnizSahih && derece !== "sahih" && derece !== "hasan") continue;
-        if (sonuclar.length >= adet) break;
-        const bname = h.book?.name || h.book?.slug || "Hadis";
-        const bolum = h.bab?.title || h.kitab?.title || "";
-        ekle({
-          metin,
-          kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
-          derece,
-          kitap: bname,
-          dil: h.turkish ? "tr" : "ar",
-          url: h.url,
-          ref: h.ref,
-          bab: bolum,
-          dereceEtiket: [h.grade?.label, h.grade?.by].filter(Boolean).join(" · "),
-        });
+    const ilkKulliyatSayfasi = (sayfa - 1) * sayfaPerKitap + 1;
+    for (let tur = 0; tur < sayfaPerKitap && sonuclar.length < adet; tur++) {
+      const kulliyatSayfasi = ilkKulliyatSayfasi + tur;
+      const cevaplar = await Promise.all(kitaplar.map((k) => sunnetimizSayfaCek(q, k, kulliyatSayfasi, CEKIM)));
+      let doluSayfa = 0;
+      let yeniHam = 0;
+      for (const cevap of cevaplar) {
+        if (cevap.durum === 200) sunnetimizOk = true;
+        if (cevap.hasMore) sunnetimizHasMore = true;
+        if (cevap.results.length) doluSayfa++;
+        for (const h of cevap.results) {
+          const metin = (h.turkish || h.arabic || "").trim();
+          if (!metin) continue;
+          const hamAnahtar = metin.replace(/\s+/g, " ").slice(0, 120);
+          if (!hamGorulen.has(hamAnahtar)) { hamGorulen.add(hamAnahtar); yeniHam++; }
+          const derece = sunnetimizDerece(h.grade?.tone || h.grade?.label);
+          // Sahih süzgeci: derecesi belirtilmemiş rivayetleri de dışlar, zayıfı asla göstermez.
+          if (yalnizSahih && derece !== "sahih" && derece !== "hasan") continue;
+          if (sonuclar.length >= adet) break;
+          const bname = h.book?.name || h.book?.slug || "Hadis";
+          const bolum = h.bab?.title || h.kitab?.title || "";
+          ekle({
+            metin,
+            kaynak: `${bname}${h.ref ? ` · ${h.ref}` : ""}${bolum ? ` · ${bolum}` : ""} · Sünnetimiz`,
+            derece,
+            kitap: bname,
+            dil: h.turkish ? "tr" : "ar",
+            url: h.url,
+            ref: h.ref,
+            bab: bolum,
+            dereceEtiket: [h.grade?.label, h.grade?.by].filter(Boolean).join(" · "),
+          });
+        }
       }
-      kaynaklar.sunnetimiz = `ok-${sonuclar.length}`;
-    } else {
-      kaynaklar.sunnetimiz = `hata-${r.status}`;
+      // Bu turdaki tüm külliyat sayfaları BOŞ döndüyse külliyat tükenmiştir.
+      // (429/zaman aşımı gibi hatalar "tükendi" sayılmaz — aksi hâlde boş sonuç gösterilir.)
+      const okSayfa = cevaplar.filter((c) => c.durum === 200).length;
+      if (doluSayfa === 0 && okSayfa > 0) { sunnetimizBitti = true; break; }
+      if (doluSayfa === 0) break;
+      // Yeni ham rivayet gelmediyse Sünnetimiz sayfa sınırına gelinmiştir — daha fazla isteyip
+      // aynı rivayetleri tekrar çekmeyiz.
+      if (yeniHam === 0) { sunnetimizBitti = true; break; }
     }
+    if (sunnetimizOk) kaynaklar.sunnetimiz = `ok-${sonuclar.length}`;
+    else kaynaklar.sunnetimiz = "hata";
+    // İstenen adet dolduysa ve külliyat bitmediyse devamı var.
+    if (!sunnetimizBitti && sonuclar.length >= adet) sunnetimizHasMore = true;
+    if (sunnetimizBitti) sunnetimizHasMore = false;
   } catch { kaynaklar.sunnetimiz = "hata"; }
 
   // ─── 2) sunnah.com (API anahtarı varsa) — Buhârî + Müslim ───
