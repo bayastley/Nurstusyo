@@ -72,6 +72,8 @@ type KulliyatTaban = {
   surum: 2;
   slug: string;
   kitaplar: Array<{ no: number; ad: string }>;
+  /** Arapça baskının bölüm adları (eski önbelleklerde yok) */
+  bolumler?: Record<string, string>;
   hadisler: TabanHadis[];
   indirildi: number;
 };
@@ -152,12 +154,16 @@ export async function kulliyatOnbellekte(slug: string, dil: Lang = "tr"): Promis
 const BELLEK = new Map<string, KulliyatVeri>();
 /** Arapça taban */
 const TABAN = new Map<string, KulliyatTaban>();
-/** Çeviri haritaları (slug:edition) */
-const CEVIRI = new Map<string, Record<string, string>>();
+/** Çeviri haritaları + o dilin bölüm (konu) adları (slug:edition) */
+const CEVIRI = new Map<string, CeviriPaket>();
 /** Uçuştaki istekler — aynı dosya iki kez indirilmesin */
 const UCUS = new Map<string, Promise<unknown>>();
 
 type CdnHadis = { hadithnumber?: number; text?: string; reference?: { book?: number; hadith?: number } };
+/** Bir edition dosyasından çıkanlar: rivayetler + bölüm adları */
+type CdnPaket = { hadisler: CdnHadis[]; bolumler: Record<string, string> };
+/** Seçili dilin çevirisi + bölüm adları */
+type CeviriPaket = { harita: Record<string, string>; bolumler: Record<string, string> };
 type SunnetimizKitap = { number: number; title: string };
 
 function tekUcus<T>(anahtar: string, is: () => Promise<T>): Promise<T> {
@@ -199,11 +205,20 @@ function ceviriEdition(slug: string, dil: Lang): string | null {
   return `${ek}-${kod}`;
 }
 
-async function cdnOku(edition: string): Promise<CdnHadis[]> {
+async function cdnOku(edition: string): Promise<CdnPaket> {
   const cevap = await fetch(`${CDN}/${edition}.min.json`, { signal: AbortSignal.timeout(60000) });
   if (!cevap.ok) throw new Error(`Külliyat indirilemedi (${cevap.status})`);
-  const govde = (await cevap.json()) as { hadiths?: CdnHadis[] };
-  return govde.hadiths ?? [];
+  const govde = (await cevap.json()) as {
+    hadiths?: CdnHadis[];
+    metadata?: { sections?: Record<string, string> };
+  };
+  // ★ Bölüm (konu) adları edition'ın kendi dilinde gelir: "Îmân" / "Belief" / "الإيمان"
+  const bolumler: Record<string, string> = {};
+  for (const [no, ad] of Object.entries(govde.metadata?.sections ?? {})) {
+    const temiz = String(ad ?? "").trim();
+    if (temiz) bolumler[no] = temiz;
+  }
+  return { hadisler: govde.hadiths ?? [], bolumler };
 }
 
 function metniTemizle(metin: string | undefined): string {
@@ -229,7 +244,7 @@ function tabanGetir(tanim: KulliyatTanimi, ilerleme?: (y: number | null) => void
     ilerleme?.(90);
 
     const hadisler: TabanHadis[] = [];
-    for (const h of arapca) {
+    for (const h of arapca.hadisler) {
       const ar = metniTemizle(h.text);
       if (ar.length < 3) continue;
       const no = Number(h.hadithnumber ?? h.reference?.hadith ?? 0);
@@ -242,6 +257,7 @@ function tabanGetir(tanim: KulliyatTanimi, ilerleme?: (y: number | null) => void
       surum: 2,
       slug: tanim.slug,
       kitaplar: kitaplarHam.map((k) => ({ no: k.number, ad: k.title })),
+      bolumler: arapca.bolumler,
       hadisler,
       indirildi: Date.now(),
     };
@@ -257,34 +273,41 @@ function ceviriGetir(
   tanim: KulliyatTanimi,
   dil: Lang,
   ilerleme?: (y: number | null) => void,
-): Promise<Record<string, string>> {
+): Promise<CeviriPaket> {
   const edition = ceviriEdition(tanim.slug, dil);
-  if (!edition) return Promise.resolve({});
+  if (!edition) return Promise.resolve({ harita: {}, bolumler: {} });
   const anahtar = `${tanim.slug}:${edition}`;
   const bellekte = CEVIRI.get(anahtar);
   if (bellekte) return Promise.resolve(bellekte);
   return tekUcus(`ceviri:${anahtar}`, async () => {
     const onbellek = await onbellekOku<Record<string, string>>(`ceviri:v2:${anahtar}`);
     if (onbellek && Object.keys(onbellek).length > 0) {
-      CEVIRI.set(anahtar, onbellek);
-      return onbellek;
+      // ★ Bölüm adları ayrı tutulur; eski önbellekte yoksa Türkçe adlara düşülür.
+      const bolumler = (await onbellekOku<Record<string, string>>(`bolum:v2:${anahtar}`)) ?? {};
+      const paket: CeviriPaket = { harita: onbellek, bolumler };
+      CEVIRI.set(anahtar, paket);
+      return paket;
     }
 
     ilerleme?.(10);
     const ham = await cdnOku(edition);
     ilerleme?.(80);
     const harita: Record<string, string> = {};
-    for (const h of ham) {
+    for (const h of ham.hadisler) {
       const metin = metniTemizle(h.text);
       if (metin.length < 3) continue;
       const no = Number(h.hadithnumber ?? h.reference?.hadith ?? 0);
       if (!Number.isFinite(no) || no <= 0) continue;
       harita[String(no)] = metin;
     }
-    CEVIRI.set(anahtar, harita);
+    const paket: CeviriPaket = { harita, bolumler: ham.bolumler };
+    CEVIRI.set(anahtar, paket);
     ilerleme?.(100);
     await onbellekYaz(`ceviri:v2:${anahtar}`, harita);
-    return harita;
+    if (Object.keys(ham.bolumler).length > 0) {
+      await onbellekYaz(`bolum:v2:${anahtar}`, ham.bolumler);
+    }
+    return paket;
   });
 }
 
@@ -308,7 +331,7 @@ export function kulliyatGetir(
 
     ilerleme?.(null);
     const taban = await tabanGetir(tanim, (y) => ilerleme?.(y === null ? null : Math.round(y * 0.55)));
-    const harita = await ceviriGetir(tanim, dil, (y) =>
+    const { harita, bolumler } = await ceviriGetir(tanim, dil, (y) =>
       ilerleme?.(y === null ? null : 55 + Math.round(y * 0.45)),
     );
 
@@ -317,12 +340,23 @@ export function kulliyatGetir(
       ceviri: harita[String(h.no)] ?? "",
     }));
 
+    // ★ Konu (bölüm) adları seçili dilde: TR'de Sünnetimiz'in kısa Türkçe adı,
+    //   diğer dillerde edition'ın kendi bölüm adı; Arapça'da Arapça baskınınki.
+    const yerelBolumler = dil === "ar" ? (taban.bolumler ?? {}) : bolumler;
+    const kitaplar =
+      dil === "tr"
+        ? taban.kitaplar
+        : taban.kitaplar.map((k) => ({
+            no: k.no,
+            ad: yerelBolumler[String(k.no)]?.trim() || k.ad,
+          }));
+
     const veri: KulliyatVeri = {
       surum: 2,
       slug,
       ad: tanim.ad,
       dil,
-      kitaplar: taban.kitaplar,
+      kitaplar,
       hadisler,
       indirildi: Date.now(),
     };

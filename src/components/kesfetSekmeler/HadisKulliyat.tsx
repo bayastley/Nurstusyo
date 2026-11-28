@@ -216,7 +216,9 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
             <>
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
                 <span className="rounded-full bg-white/[.06] px-2 py-0.5 text-[8.5px] font-bold text-white/60">
-                  {veri.ad} · {veri.hadisler.length} {tt("ksSonuc")}
+                  {/* ★ 28.11: süzgeç açıkken "kaç sonuç" doğru yazsın (önce hep toplamı gösteriyordu) */}
+                  {veri.ad} · {suzulmus.length}
+                  {suzulmus.length !== veri.hadisler.length ? ` / ${veri.hadisler.length}` : ""} {tt("ksSonuc")}
                 </span>
                 <label className="flex items-center gap-1 rounded-full bg-white/[.06] px-2 py-0.5">
                   <Search size={9} className="text-white/40" />
