@@ -12,6 +12,9 @@ import { HADIS_GENIS, HADIS_ESKI_CEVRIM } from "./hadisGenis";
 // ★ 02.11 genişleme (kullanıcı emri: "hadisleri çoğalt"): hadisGenisEk.ts 52 kayıtlık ek 5-dil havuz
 import { HADIS_GENIS_EK } from "./hadisGenisEk";
 import type { Lang } from "../i18n/base";
+// ★ 28.11 (kullanıcı: "97 yazıyor, düzelt"): rozetlerdeki sayı artık bankadaki
+// 97 statik hikâye değil, külliyatın GERÇEK rivayet sayısı (hadisKulliyat.ts ile tek kaynak).
+import { KULLIYATLAR } from "./hadisKulliyat";
 
 const _LANG_IDX: Record<string, 0 | 1 | 2 | 3 | 4> = { tr: 0, en: 1, ar: 2, id: 3, ur: 4 };
 export const hadisBankasiGorunum = (lang?: Lang | string | null): HadisKaydi[] => {
@@ -232,7 +235,7 @@ export const HADIS_TEMALARI = [
 /** Hadis derece rozetleri — dürüst ilmî dil: sahih/hasan/zayıf olduğu AÇIKça yazılır */
 export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string; aciklama: string }> = {
   sahih: { label: "Sahih", renk: "emerald", aciklama: "Rivayet zinciri sahih — Buhari/Müslim standardı" },
-  hasan: { label: "Hasan", renk: "sky", aciklama: "Kabul edilmiş, iyi dereceli rivayet" },
+  hasan: { label: "Hasen", renk: "sky", aciklama: "Kabul edilmiş, iyi dereceli rivayet (hasen)" },
   zayif: { label: "Zayıf", renk: "amber", aciklama: "Zayıf rivayet — amelde kullanılabilir, isnadı zayıf" },
 };
 
@@ -243,15 +246,22 @@ export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string;
 export interface RivayetciKaydi { id: string; ad: string; emoji: string; kulliyat: string }
 /** Sahih kabul edilen hadis kitapları (Kütüb-i Sitte + Müsned + Sünen-i Kübrâ) —
  *  kulliyat: hadisçilerin genel kabulüyle kitaptaki rivâyet sayısı (çevrimli değil, bilgi rozeti). */
+/** Külliyattaki gerçek rivayet sayısı (hadisKulliyat.ts) — tek kaynak, sayı uyuşmazlığı olmasın. */
+const kulliyatAdedi = (slug: string): string => {
+  const k = KULLIYATLAR.find((x) => x.slug === slug);
+  return k ? k.adet.toLocaleString("tr-TR") : "";
+};
+
 export const RIVAYETCILER: RivayetciKaydi[] = [
-  { id: "buhari", ad: "Buhârî", emoji: "📗", kulliyat: "≈7.082" },
-  { id: "muslim", ad: "Müslim", emoji: "📘", kulliyat: "≈3.033" },
-  { id: "tirmizi", ad: "Tirmizî", emoji: "📙", kulliyat: "≈3.895" },
-  { id: "ebudavud", ad: "Ebû Dâvûd", emoji: "📕", kulliyat: "≈4.590" },
-  { id: "nesai", ad: "Nesâî", emoji: "📒", kulliyat: "≈5.758" },
-  { id: "ibnmace", ad: "İbn Mâce", emoji: "📓", kulliyat: "≈4.341" },
-  { id: "ahmed", ad: "Ahmed b. Hanbel", emoji: "📗", kulliyat: "≈26.363 (Müsned)" },
-  { id: "beyhaki", ad: "Beyhakî", emoji: "📜", kulliyat: "≈23.000 (Sünen-i Kübrâ)" },
+  { id: "buhari", ad: "Buhârî", emoji: "📗", kulliyat: kulliyatAdedi("buhari") },
+  { id: "muslim", ad: "Müslim", emoji: "📘", kulliyat: kulliyatAdedi("muslim") },
+  { id: "tirmizi", ad: "Tirmizî", emoji: "📙", kulliyat: kulliyatAdedi("tirmizi") },
+  { id: "ebudavud", ad: "Ebû Dâvûd", emoji: "📕", kulliyat: kulliyatAdedi("ebudavud") },
+  { id: "nesai", ad: "Nesâî", emoji: "📒", kulliyat: kulliyatAdedi("nesai") },
+  { id: "ibnmace", ad: "İbn Mâce", emoji: "📓", kulliyat: kulliyatAdedi("ibnmace") },
+  // Aşağıdaki ikisi henüz külliyat tarayıcısına bağlı değil → sayı yaklaşık olarak yazılır.
+  { id: "ahmed", ad: "Ahmed b. Hanbel", emoji: "📗", kulliyat: "≈26.363" },
+  { id: "beyhaki", ad: "Beyhakî", emoji: "📜", kulliyat: "≈23.000" },
 ];
 
 /** Kaynak metninden rivayetçi adı çıkarır: "Buhari, Edeb, 30" → "Buhârî"

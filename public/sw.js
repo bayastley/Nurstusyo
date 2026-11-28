@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════
 
 // ★ Her deployda bu sürümü 1 artır — önbellek eski sürümde takılı kalmasın
-const CACHE = "nurstudyo-v12"; // ★ 24.11: v11→v12 — sahabeler ansiklopedisi eklendi; eski kabuk cache'i (bayat json) temizlensin
+const CACHE = "nurstudyo-v13"; // ★ 27.11: v12→v13 — kıssa/hadis yanıtları çevrimdışı önbelleğe alınıyor
 // ★ SES CACHE'İ SÜRÜMSÜZ (29.09 düzeltme): adına ASLA sürüm ekleme! Dinlenen ayet
 //   sesleri (çevrimdışı tilavet) kullanıcının cihazında BİRİKİR; ad sürümlü olsaydı
 //   her kabuk sürüm artışında activate temizliği indirilen sesleri silerdi.
@@ -109,6 +109,27 @@ self.addEventListener("fetch", (event) => {
     }
     return; // diğer çapraz kaynaklar geçer
   }
+  // ★ 27.11 ÇEVRİMDIŞI ÖĞRENME: "İslâmî Öğreniyorum" içeriği internet olmadan da açılsın.
+  //   Kıssa kasası + hadis arama yanıtları ağ öncelikli; başarılı yanıt saklanır,
+  //   çevrimdışıyken son kayıt (yoksa boş liste) döner — bölüm çökmez.
+  if (url.pathname === "/api/kissalar" || url.pathname.startsWith("/api/hadis/ara")) {
+    event.respondWith(
+      fetch(event.request).then((res) => {
+        if (res.ok) {
+          const kopya = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(event.request, kopya));
+        }
+        return res;
+      }).catch(() =>
+        caches.match(event.request).then((hit) => hit || new Response(
+          JSON.stringify({ ok: false, cevrimdisi: true, kissalar: [], sonuclar: [] }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        ))
+      )
+    );
+    return;
+  }
+
   if (url.pathname.startsWith("/api/")) return;
 
   /** En eskilerini sil — depo şişmesin */

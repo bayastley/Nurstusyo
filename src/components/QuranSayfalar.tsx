@@ -43,6 +43,65 @@ interface MealSayfaVeri {
   ayatlar: Array<{ sureId: number; ayetId: number; numara: string; meal: string; sureAdi: string; sureInfo: string }>;
 }
 
+// ★ 27.11 TECVİD RENKLİ SAYFA — /api/quran/tecvid-sayfa yanıtı
+interface TecvidSayfaVeri {
+  ok: true;
+  sayfa: number;
+  kaynak: { metin: string; meal: string };
+  ayatlar: Array<{ sureId: number; ayetId: number; numara: string; arapca: string; meal: string }>;
+}
+
+/** Tecvid kuralı → renk (klasik renkli mushaf düzeni) */
+const TECVID_RENK: Record<string, string> = {
+  madda_normal: "#c62828",
+  madda_permissible: "#c62828",
+  madda_necessary: "#c62828",
+  madda_obligatory: "#c62828",
+  ghunnah: "#2e7d32",
+  ikhafa: "#1565c0",
+  ikhafa_shafawi: "#1565c0",
+  idgham_ghunnah: "#6a1b9a",
+  idgham_wo_ghunnah: "#6a1b9a",
+  idgham_shafawi: "#6a1b9a",
+  iqlab: "#ef6c00",
+  qalaqah: "#ad1457",
+  ham_wasl: "#9a927f",
+  laam_shamsiyah: "#9a927f",
+  slnt: "#9a927f",
+};
+
+/** Renk açıklaması — sayfada geçen kurallar gösterilir */
+const TECVID_ETIKETLER: Array<{ anahtar: string[]; ad: string; renk: string }> = [
+  { anahtar: ["madda_normal", "madda_permissible", "madda_necessary", "madda_obligatory"], ad: "med", renk: "#c62828" },
+  { anahtar: ["ghunnah"], ad: "gunne", renk: "#2e7d32" },
+  { anahtar: ["ikhafa", "ikhafa_shafawi"], ad: "ihfâ", renk: "#1565c0" },
+  { anahtar: ["idgham_ghunnah", "idgham_wo_ghunnah", "idgham_shafawi"], ad: "idğâm", renk: "#6a1b9a" },
+  { anahtar: ["iqlab"], ad: "iklâb", renk: "#ef6c00" },
+  { anahtar: ["qalaqah"], ad: "kalkale", renk: "#ad1457" },
+];
+
+const TECVID_ETIKET = /<tajweed class=([a-z_]+)>([\s\S]*?)<\/tajweed>/g;
+
+/** <tajweed> etiketlerini React parçalarına çevirir (dangerouslySetInnerHTML YOK) */
+function tecvidParcala(metin: string, anahtarOn: string): React.ReactNode[] {
+  const parcalar: React.ReactNode[] = [];
+  let son = 0;
+  let sira = 0;
+  let m: RegExpExecArray | null;
+  TECVID_ETIKET.lastIndex = 0;
+  while ((m = TECVID_ETIKET.exec(metin)) !== null) {
+    if (m.index > son) parcalar.push(metin.slice(son, m.index).replace(/<[^>]*>/g, ""));
+    parcalar.push(
+      <span key={`${anahtarOn}-${sira++}`} style={{ color: TECVID_RENK[m[1]] ?? "inherit" }}>
+        {m[2].replace(/<[^>]*>/g, "")}
+      </span>
+    );
+    son = m.index + m[0].length;
+  }
+  if (son < metin.length) parcalar.push(metin.slice(son).replace(/<[^>]*>/g, ""));
+  return parcalar;
+}
+
 export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   // ★ LAZY BAŞLANGIÇ (02.10): LS mount anında SENKRON okunur — StrictMode çift-effect
   //   veya "open=true ile mount" durumunda boş başlangıç değeri kaydı EZEMEZ (idempotent).
@@ -71,6 +130,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
   const [mealDurum, setMealDurum] = useState<"bosta" | "yukleniyor" | "hazir" | "hata">("bosta");
   const [mealYeniden, setMealYeniden] = useState(0); // "Tekrar dene" tetikleyicisi
   const mealCacheRef = useRef<Map<number, MealSayfaVeri>>(new Map());
+  // ★ 27.11: renkli tecvid + meal sayfası
+  const [tecvidVeri, setTecvidVeri] = useState<TecvidSayfaVeri | null>(null);
+  const [tecvidDurum, setTecvidDurum] = useState<"bosta" | "yukleniyor" | "hazir" | "hata">("bosta");
+  const [tecvidYeniden, setTecvidYeniden] = useState(0);
+  const tecvidCacheRef = useRef<Map<number, TecvidSayfaVeri>>(new Map());
   // ★ 03.10 (kullanıcı emri 3: "tam ekranda da yarım ekranda da ekran tam olsun"):
   //   zoom=1 artık sabit piksel DEĞİL — sayfanın tamamının sahne alanına SIĞMASI.
   //   Yarım ekran → sayfa küçülür ama TAMAMI görünür; aşağı kaydırma gerekmez.
@@ -95,6 +159,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
     setYukleniyor(true);
     setMealVeri(null);
     setMealDurum("bosta");
+    setTecvidVeri(null);
+    setTecvidDurum("bosta");
     // ★ 03.10: dokunmatik cihazda hover olmaz → oklar kalıcı görünür
     try { setOkDonme(window.matchMedia("(hover: none)").matches); } catch { setOkDonme(false); }
     cevrimdisiSay();
@@ -140,6 +206,46 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
       .catch(() => { if (!iptal) setMealDurum("hata"); });
     return () => { iptal = true; };
   }, [open, kaynak, sayfa, mealYeniden]);
+
+  // ★ 27.11 TECVİD RENKLİ SAYFA: /api/quran/tecvid-sayfa (Uthmânî tecvid + Diyanet meali)
+  useEffect(() => {
+    if (!open || kaynak !== "tecvid") { setTecvidDurum("bosta"); setTecvidVeri(null); return; }
+    const vardi = tecvidCacheRef.current.get(sayfa);
+    if (vardi) { setTecvidVeri(vardi); setTecvidDurum("hazir"); return; }
+    let iptal = false;
+    setTecvidDurum("yukleniyor");
+    setTecvidVeri(null);
+    fetch(`/api/quran/tecvid-sayfa?sayfa=${sayfa}`)
+      .then((r) => r.json())
+      .then((d: TecvidSayfaVeri | { ok?: false } | null) => {
+        if (iptal) return;
+        if (d && d.ok) {
+          const veri = d as TecvidSayfaVeri;
+          tecvidCacheRef.current.set(sayfa, veri);
+          setTecvidVeri(veri);
+          setTecvidDurum("hazir");
+        } else setTecvidDurum("hata");
+      })
+      .catch(() => { if (!iptal) setTecvidDurum("hata"); });
+    return () => { iptal = true; };
+  }, [open, kaynak, sayfa, tecvidYeniden]);
+
+  // ★ 27.11 HIZ: komşu sayfaları önden çek — sayfa geçişi beklemesin
+  useEffect(() => {
+    if (!open || kaynak !== "tecvid") return;
+    let iptal = false;
+    const onYukle = (n: number) => {
+      if (n < 1 || n > SAYFA_SAYISI || tecvidCacheRef.current.has(n)) return;
+      fetch(`/api/quran/tecvid-sayfa?sayfa=${n}`)
+        .then((r) => r.json())
+        .then((d: TecvidSayfaVeri | { ok?: false } | null) => {
+          if (!iptal && d && d.ok) tecvidCacheRef.current.set(n, d as TecvidSayfaVeri);
+        })
+        .catch(() => undefined);
+    };
+    const zaman = window.setTimeout(() => { onYukle(sayfa + 1); onYukle(sayfa - 1); }, 500);
+    return () => { iptal = true; window.clearTimeout(zaman); };
+  }, [open, kaynak, sayfa]);
 
   // Hatim kaydı her değişimde diske yazılır
   useEffect(() => { if (open) hatimKaydet(hatim); }, [hatim, open]);
@@ -295,6 +401,11 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               title={ttX2610("qsMushafTitle")}
             >{ttX2610("akyArapca")}</button>
             <button
+              onClick={() => kaynakDegistir("tecvid")}
+              className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "tecvid" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
+              title={ttX2610("qsTecvidTitle")}
+            >{ttX2610("qsTecvid")}</button>
+            <button
               onClick={() => kaynakDegistir("meal")}
               className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition active:scale-95 ${kaynak === "meal" ? "bg-gold text-slate-950 shadow-[0_0_10px_rgba(215,170,82,.35)]" : "text-[#b8b093] hover:text-white"}`}
               title={ttX2610("qsMealTitle")}
@@ -347,17 +458,96 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
         {/* ── SAYFA SAHNESİ — çift tık zoom · hover oklar · kenar tıklama ──
             ★ 03.10: oklar + kenar şeritleri wrapper'da (scroll dışı) — zoom'da
             kaybolmazlar, her zaman görünür alanda sabit dururlar. */}
-        <div className="relative min-h-0 flex-1">
+        {/* ★ 27.11: hover dinleyicileri SARMA katmanında — ok/şerit üzerine geçince
+            "mouseleave" olup oklar kaybolmuyordu. Artık sahne bütünü sayılıyor. */}
+        <div
+          className="relative min-h-0 flex-1"
+          onMouseEnter={() => setOkGorunur(true)}
+          onMouseLeave={() => setOkGorunur(false)}
+        >
         <div
           ref={sahneRef}
           onDoubleClick={() => setZoom((z) => (z >= 1.9 ? 1 : 2))}
-          onMouseEnter={() => setOkGorunur(true)}
-          onMouseLeave={() => setOkGorunur(false)}
           className="absolute inset-0 overflow-auto bg-[#12161a] p-3 scrollbar-thin"
           title={ttX2610("qsZoomTitle")}
         >
           <div className="flex min-h-full min-w-full items-center justify-center">
-            {kaynak === "meal" ? (
+            {kaynak === "tecvid" ? (
+              /* ★ 27.11 RENKLİ TECVİD + MEAL: klasik renkli mushaf — renkli harfler + altında meal */
+              <div
+                className="mx-auto select-none rounded-md bg-[#fdfaf2] px-4 py-6 text-[#241f14] shadow-[0_10px_44px_rgba(0,0,0,.65)] sm:px-8 sm:py-8"
+                style={{ width: `${Math.round(760 * zoom)}px`, maxWidth: "calc(100% - 96px)" }}
+              >
+                {tecvidDurum === "yukleniyor" && (
+                  <div className="flex items-center justify-center gap-2 py-20 text-[13px] font-bold text-[#8a6d1f]">
+                    <Loader2 size={15} className="animate-spin" /> {ttX2610("qsTecvidYukleniyor")}
+                  </div>
+                )}
+                {tecvidDurum === "hata" && (
+                  <div className="flex flex-col items-center gap-3 py-16 text-center">
+                    <span className="text-3xl">📡</span>
+                    <p className="max-w-xs text-[13px] font-semibold text-[#6b5d3f]">{ttX2610("qsTecvidHata")}</p>
+                    <button
+                      onClick={() => { tecvidCacheRef.current.delete(sayfa); setTecvidYeniden((n) => n + 1); }}
+                      className="flex items-center gap-1.5 rounded-xl bg-[#c9a227] px-3.5 py-1.5 text-[11px] font-black text-[#2b2416] transition hover:brightness-110 active:scale-95"
+                    >
+                      <RotateCcw size={12} /> {ttX2610("qsTekrarDene")}
+                    </button>
+                  </div>
+                )}
+                {tecvidDurum === "hazir" && tecvidVeri && (
+                  <>
+                    <div className="mb-4 border-b border-[#c9a227]/40 pb-3 text-center">
+                      <div className="text-[15px] font-black text-[#8a6d1f]">{sureAdi || "—"} Suresi · Sayfa {sayfa}</div>
+                      <div className="mt-0.5 text-[10px] font-semibold text-[#8b7b52]">Cüz {cuz} · {ttX2610("qsTecvidAltBaslik")}</div>
+                    </div>
+                    {tecvidVeri.ayatlar.map((a, i) => (
+                      <div key={`${a.sureId}-${a.ayetId}`} className="mb-2.5 border-b border-[#c9a227]/15 pb-2.5 last:mb-0 last:border-0">
+                        {(i === 0 || tecvidVeri.ayatlar[i - 1].sureId !== a.sureId) && (
+                          <div className="mb-2 text-center text-[12px] font-black text-[#8a6d1f]">
+                            — {SURAHS_DATA[a.sureId - 1]?.name ?? ""} Suresi —
+                          </div>
+                        )}
+                        <p
+                          dir="rtl"
+                          lang="ar"
+                          className="font-arabic text-right leading-[2.15]"
+                          style={{ fontSize: `${Math.round(25 * zoom)}px` }}
+                        >
+                          {tecvidParcala(a.arapca, `${sayfa}-${i}`)}
+                          <span
+                            className="mx-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#c9a227]/70 bg-[#f3e8c8] align-middle font-sans font-black text-[#8a6d1f]"
+                            style={{ fontSize: `${Math.max(8, Math.round(10 * zoom))}px` }}
+                          >
+                            {a.numara}
+                          </span>
+                        </p>
+                        {a.meal && (
+                          <p
+                            className="mt-1 pl-1 text-left leading-[1.75] text-[#4a4130]"
+                            style={{ fontSize: `${Math.max(10.5, Math.round(12.5 * zoom))}px` }}
+                          >
+                            {a.meal}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                    <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[#c9a227]/30 pt-2.5 text-[9.5px] font-semibold text-[#6b5d3f]">
+                      <span className="text-[#8a6d1f]">{ttX2610("qsTecvidRenkler")}:</span>
+                      {TECVID_ETIKETLER.filter((e) => tecvidVeri.ayatlar.some((a) => e.anahtar.some((k) => a.arapca.includes(`class=${k}>`)))).map((e) => (
+                        <span key={e.ad} className="inline-flex items-center gap-1">
+                          <span className="h-2 w-2 rounded-full" style={{ background: e.renk }} />
+                          {e.ad}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-center text-[9px] font-semibold text-[#a99c78]">
+                      📖 {tecvidVeri.kaynak.metin} · {tecvidVeri.kaynak.meal}
+                    </p>
+                  </>
+                )}
+              </div>
+            ) : kaynak === "meal" ? (
               /* ★ MEAL SAYFASI (03.10): Diyanet mealı — beyaz kâğıt görünümü, zoom fontu büyütür */
               <div
                 className="mx-auto max-w-[92vw] select-none rounded-md bg-[#fdfaf2] px-5 py-7 text-[#2b2416] shadow-[0_10px_44px_rgba(0,0,0,.65)] sm:px-9 sm:py-9"
@@ -428,7 +618,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                   if (kaynakIdx < kaynaklar.length - 1) setKaynakIdx((i) => i + 1);
                   else setHata(true);
                 }}
-                alt={`Kur'an sayfa ${sayfa} — Kral Fahd Mushafı (Hafs)`}
+                alt={`Kur'an sayfa ${sayfa} — Medine Mushafı (Hafs)`}
                 draggable={false}
                 className="mx-auto block select-none rounded-[3px] shadow-[0_10px_40px_rgba(0,0,0,.55)]"
                 style={{
@@ -438,9 +628,13 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                   height: gorselH ? `${gorselH}px` : "auto",
                   width: gorselG ? `${gorselG}px` : "auto",
                   maxWidth: "none",
-                  background: rasterMi ? "#efe4c8" : undefined,
-                  // ★ 16.11: gece/göz yormayan yumuşak sıcak mushaf tonu (göz almaz krem)
-                  filter: rasterMi ? "sepia(.18) saturate(1.18) brightness(.955) contrast(.985) hue-rotate(-2deg)" : undefined,
+                  // ★ 27.11 OKUNAKLILIK: yedek kaynaklar (Quran-PNG / SVG) ŞEFFAF zeminlidir —
+                  //   arkasındaki koyu sahne sayfanın içinden görünüp yazıyı hayaletleştiriyordu.
+                  //   Her kaynakta opak kâğıt zemini garanti edilir; Diyanet sayfası zaten opak.
+                  backgroundColor: "#fdfaf0",
+                  backgroundImage: "none",
+                  // ★ 27.11: sepia/bulanık ton yerine NETLİK — yazı koyu, kâğıt temiz kalır
+                  filter: rasterMi ? "contrast(1.06) saturate(1.04)" : "contrast(1.22)",
                 }}
               />
             ) : (
@@ -456,7 +650,8 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
               </div>
             )}
           </div>
-          {yukleniyor && !hata && (
+          {/* ★ 27.11: yükleme rozeti yalnız görsel modda — metin modunda kendi rozeti var */}
+          {yukleniyor && !hata && kaynak === "arapca" && (
             <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
               <div className="flex items-center gap-2 rounded-full bg-black/60 px-4 py-2 text-[11px] font-bold text-gold">
                 <Loader2 size={14} className="animate-spin" /> {ttX2610("qsSayfaYukleniyor")}
@@ -493,7 +688,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 onClick={() => setSayfa((s) => Math.max(1, s - 1))}
                 disabled={sayfa <= 1}
                 aria-label={ttX2610("qsOncekiAria")}
-                className={`absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                className={`absolute left-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "opacity-75"}`}
                 title={ttX2610("qsOncekiTitle2")}
               >
                 <ChevronLeft size={22} strokeWidth={2.6} />
@@ -502,7 +697,7 @@ export const QuranSayfalar: React.FC<Props> = ({ open, onClose }) => {
                 onClick={() => setSayfa((s) => Math.min(SAYFA_SAYISI, s + 1))}
                 disabled={sayfa >= SAYFA_SAYISI}
                 aria-label={ttX2610("qsSonrakiSayfa")}
-                className={`absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                className={`absolute right-3 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/55 text-[#e8dfc0] shadow-[0_4px_18px_rgba(0,0,0,.5)] backdrop-blur-sm transition-all duration-300 hover:scale-110 hover:border-gold/50 hover:bg-black/75 hover:text-gold active:scale-95 disabled:pointer-events-none disabled:opacity-0 ${okGorunur || okDonme ? "opacity-100" : "opacity-75"}`}
                 title={ttX2610("qsSonrakiSayfa")}
               >
                 <ChevronRight size={22} strokeWidth={2.6} />

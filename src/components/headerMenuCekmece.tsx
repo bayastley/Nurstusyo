@@ -206,6 +206,13 @@ export const HeaderMenuCekmece: React.FC<HeaderMenuCekmeceProps> = ({
                       <span>{t("menuKuranOgrenDinle")}</span>
                     </button>
 
+                    {/* ★ 27.11 (kullanıcı emri): İSLÂMÎ ÖĞRENİYORUM — Kur'an Öğreniyorum'un
+                        hemen ALTINA. Üst bardaki 🧭 düğmesiyle aynı ekranı (Keşfet) açar. */}
+                    <button onClick={() => { setModal?.("kesfet"); setMenuOpen(false); }} className="flex min-h-[42px] w-full items-center gap-3 px-4 py-2.5 text-left text-[11px] text-white/65 transition hover:bg-white/5 hover:text-white" title={t("v2KesfetTitle")}>
+                      <span className="text-base">🧭</span>
+                      <span className="truncate">{t("menuKesfet")}</span>
+                    </button>
+
                     {/* ★ 18.10 HAFIZLIK menü girişi buradaydı — QuranLearnModal 3. sekmesine
                         göçürüldü (aynı dosyada alttaki Kur'an girişinin yorumu). */}
 

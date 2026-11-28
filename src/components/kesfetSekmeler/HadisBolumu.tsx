@@ -1,6 +1,6 @@
 import React from "react";
-import { translate } from "../../i18n";
-import { ChevronDown } from "lucide-react";
+import { translate, type Lang } from "../../i18n";
+import { ChevronDown, Search, X } from "lucide-react";
 import { HADIS_TEMALARI, HADIS_DERECE_ETIKETI, RIVAYETCILER, kaynaktanRivayetci } from "../../data/hadisData";
 import { KELIME_KARTLARI, type KelimeKart } from "../../data/kelimeData";
 import { SURAHS } from "../../data/surahs";
@@ -11,55 +11,74 @@ import { ESMA_HUSNA, ESMA_KAYNAK_NOTU, type Esma } from "../../data/esmaHusna";
 import { KISSA_UZUN } from "../../data/kissaUzun";
 import { MEZHEPLER, type MezhepKaydi } from "../../data/mezheplerData";
 import { dereceSinif } from "./derece";
+import { hadisHikayesi } from "../../data/hadisHikaye";
+import { HadisKulliyat } from "./HadisKulliyat";
+
+// ── 28.11 KATEGORİ ARAMA ───────────────────────────────────────────────────
+// ★ Kullanıcı emri: kategori butonlarında da arama olsun; "polıs" yazan
+//   "Polis"i bulsun. Kural: harf aksanı/şapka farkı önemsiz (ş=s, ı=i, â=a),
+//   Arapça hareke silinir, kısa yazım hatası (1-2 harf) tolere edilir.
+const harfSadelestir = (s: string): string =>
+  s
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f\u0610-\u061a\u064b-\u065f\u0670]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** İki kelime arasındaki düzenleme (Levenshtein) mesafesi — küçük yazım hatası için. */
+function duzenlemeMesafesi(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let onceki = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const simdiki: number[] = [i];
+    for (let j = 1; j <= b.length; j++) {
+      simdiki[j] = Math.min(
+        onceki[j] + 1,
+        simdiki[j - 1] + 1,
+        onceki[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+    onceki = simdiki;
+  }
+  return onceki[b.length];
+}
+
+/** Etiket, normalize edilmiş sorguyla eşleşiyor mu? (tam, önek veya 1-2 harf hata) */
+function kategoriEslesiyor(etiket: string, sorgu: string): boolean {
+  if (!sorgu) return true;
+  const hedef = harfSadelestir(etiket);
+  if (hedef.includes(sorgu)) return true;
+  const kelimeler = hedef.split(" ").filter(Boolean);
+  return sorgu
+    .split(" ")
+    .filter(Boolean)
+    .every((q) => {
+      const tolerans = q.length <= 3 ? 0 : q.length <= 6 ? 1 : 2;
+      return kelimeler.some((k) => {
+        if (q.length >= 2 && k.length >= 2 && (k.startsWith(q) || q.startsWith(k))) return true;
+        return tolerans > 0 && duzenlemeMesafesi(k, q) <= tolerans;
+      });
+    });
+}
 
 // ── HİKÂYESİ / NASIL SÖYLENDİ ──────────────────────────────────────────────
-// Karttaki künye ("Buhari, Merda, 1") kaynağın kendi kitâb/bâb bilgisidir; bâb
-// başlığı hadisin hangi konu üzerine söylendiğini gösterir. Uydurma hikâye
-// yazılmaz — yalnız kaynağın verdiği künye, derece ve râvi gösterilir.
-const KITAB_ADI: Record<string, string> = {
-  merda: "Hastalıklar", edeb: "Edeb (güzel ahlâk)", ezan: "Ezan", savm: "Oruç",
-  iman: "İman", tevhid: "Tevhid", zikir: "Zikir", birr: "İyilik ve akrabalık",
-  ilim: "İlim", daavat: "Dualar", salat: "Namaz", menakib: "Menkıbeler",
-  etime: "Yemekler", suab: "Şuabu'l-Îmân", müsned: "Müsned", cihad: "Cihad",
-  zekat: "Zekât", taharet: "Temizlik", nikah: "Nikâh", talak: "Talâk",
-  fiten: "Fitneler", rikak: "Rikâk (zühd)", tefsir: "Tefsir", cenaiz: "Cenazeler",
-  hac: "Hac", buyu: "Alışveriş", ferâiz: "Miras", hudud: "Hudûd", eyman: "Yeminler",
-  libas: "Giyim", esribe: "İçecekler", tib: "Tıp", rüya: "Rüyalar",
-  fezail: "Faziletler", itisam: "Sünnete bağlılık", megazi: "Gazveler",
-};
-
-const _sade = (s: string): string =>
-  (s || "")
-    .toLocaleLowerCase("tr")
-    .replace(/[âÂ]/g, "a").replace(/[îÎ]/g, "i").replace(/[ûÛ]/g, "u")
-    .replace(/[İIı]/g, "i").replace(/[şŞ]/g, "s").replace(/[ğĞ]/g, "g")
-    .replace(/[çÇ]/g, "c").replace(/[öÖ]/g, "o").replace(/[üÜ]/g, "u")
-    .replace(/[^a-z0-9]/g, "");
-
-/** "Buhari, Merda, 1" → { muhaddis: "Buhari", kitab: "Merda", bab: "1" } */
-function kunyeParcala(kaynak: string): { muhaddis: string; kitab: string; bab: string } | null {
-  const temiz = (kaynak || "").replace(/\(me[âa]l\)/gi, "").replace(/\s+/g, " ").trim();
-  const parcalar = temiz.split(",").map((p) => p.trim()).filter(Boolean);
-  if (parcalar.length < 2) return null;
-  return { muhaddis: parcalar[0], kitab: parcalar[1], bab: parcalar.slice(2).join(", ") };
-}
-
-function BaglamSatiri({ etiket, deger }: { etiket: string; deger: string }) {
-  if (!deger) return null;
-  return (
-    <div className="flex gap-1 text-[9.5px] leading-relaxed">
-      <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{etiket}</dt>
-      <dd className="text-white/65">{deger}</dd>
-    </div>
-  );
-}
+// ★ 27.11 (kullanıcı emri): panel artık KÜNYE ETİKETİ dökmez. Hadisin
+// söylenmesine yol açan GERÇEK olay `data/hadisHikaye.ts`ten gelir; kaydı
+// olmayan rivayette tek cümlelik dürüst not gösterilir. Uydurma yok.
 
 export function HadisBolumu({
   tt, hadisTema, setHadisTema, hadisTemaAdi, filtreliHadisler,
   kuliyatYukleniyor, kuliyatSonuc, kuliyatOffline, dereceAdi,
-  rivayetci, setRivayetci, rivayetciSayilari, arama,
+  rivayetci, setRivayetci, rivayetciSayilari, arama, dil,
 }: {
   tt: (k: string) => string;
+  /** ★ 27.11: külliyat çevirisinin dili (Arapça metin sabit) */
+  dil?: Lang;
   hadisTema: string;
   setHadisTema: (id: string) => void;
   hadisTemaAdi: (id: string) => string;
@@ -75,6 +94,13 @@ export function HadisBolumu({
 }) {
   // ★ 26.11: karta tıklayınca ALTINDA hikâyesi (kaynağın kitâb/bâb/derece bağlamı) açılır.
   const [acikKart, setAcikKart] = React.useState<string | null>(null);
+  // ★ 28.11: kategori arama — yazım/aksan farkı tolere edilir, "Tümü" hep durur.
+  const [kategoriAra, setKategoriAra] = React.useState("");
+  const kategoriSorgu = harfSadelestir(kategoriAra);
+  const gorunenTemalar = HADIS_TEMALARI.filter(
+    (t) => t.id === "tumu" || kategoriEslesiyor(hadisTemaAdi(t.id), kategoriSorgu),
+  );
+  const kategoriEslesen = gorunenTemalar.filter((t) => t.id !== "tumu").length;
   return (
     <>
       {/* ★ 02.11 RİVAYET EDENLER (kullanıcı emri): derece kısmında artık Buhâri/Müslim/Tirmizî
@@ -92,11 +118,11 @@ export function HadisBolumu({
           </button>
           {RIVAYETCILER.map((r) => (
             <button key={r.id} type="button" data-hadis-rivayetci={r.id}
-              title={`${r.ad} — ${tt("ksKulliyatToplam")}: ${r.kulliyat}`}
+              title={`${r.ad} — ${tt("ksKulliyatToplam")}: ${r.kulliyat} · ${tt("ksBankadaN")}: ${rivayetciSayilari[r.id] ?? 0}`}
               onClick={() => setRivayetci(r.id)}
               className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${rivayetci === r.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
               style={rivayetci === r.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
-              {r.emoji} {r.ad} · {tt("ksBankadaN")} {rivayetciSayilari[r.id] ?? 0}
+              {r.emoji} {r.ad} · {tt("ksKulliyatteN")} {r.kulliyat}
             </button>
           ))}
         </div>
@@ -120,22 +146,48 @@ export function HadisBolumu({
       {arama && kuliyatYukleniyor && (
         <p className="mb-2 text-[10px] text-white/35">{tt("ksKulliyatTaranıyor")}</p>
       )}
+      <div className="mb-2 flex items-center gap-2 rounded-full border border-white/10 bg-white/[.03] px-2.5 py-1.5 focus-within:border-emerald-400/40">
+        <Search size={12} className="shrink-0 text-white/35" />
+        <input
+          type="text"
+          value={kategoriAra}
+          onChange={(e) => setKategoriAra(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            const tek = gorunenTemalar.filter((t) => t.id !== "tumu");
+            if (tek.length === 1) setHadisTema(tek[0].id);
+          }}
+          placeholder={tt("ksKategoriAra")}
+          aria-label={tt("ksKategoriAra")}
+          className="min-w-0 flex-1 bg-transparent text-[10px] text-white/85 outline-none placeholder:text-white/30"
+        />
+        {kategoriAra ? (
+          <button type="button" onClick={() => setKategoriAra("")} aria-label={tt("ksHadisKapat")} className="shrink-0 text-white/40 hover:text-white">
+            <X size={12} />
+          </button>
+        ) : null}
+        {kategoriSorgu ? (
+          <span className="shrink-0 text-[8px] font-bold text-emerald-300/70">{kategoriEslesen} {tt("ksSonuc")}</span>
+        ) : null}
+      </div>
       <div className="mb-3 flex flex-wrap gap-1.5">
-        {HADIS_TEMALARI.map((t) => (
+        {gorunenTemalar.map((t) => (
           <button key={t.id} type="button" onClick={() => setHadisTema(t.id)}
             className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${hadisTema === t.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
             style={hadisTema === t.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
             {t.emoji} {hadisTemaAdi(t.id)}
           </button>
         ))}
+        {kategoriSorgu && kategoriEslesen === 0 && (
+          <p className="px-1 py-1 text-[9.5px] text-white/45">{tt("ksKategoriYok")}</p>
+        )}
       </div>
       <div className="space-y-2">
         {filtreliHadisler.map((h, i) => {
           const dr = h.derece ? HADIS_DERECE_ETIKETI[h.derece] : null;
           const anahtar = `y-${i}-${h.metin.slice(0, 24)}`;
           const acik = acikKart === anahtar;
-          const kunye = kunyeParcala(h.kaynak);
-          const kitabAdi = kunye ? KITAB_ADI[_sade(kunye.kitab)] ?? kunye.kitab : "";
+          const hikaye = hadisHikayesi(h.kaynak);
           return (
           <div key={anahtar} className={`rounded-xl border p-3 transition ${acik ? "border-emerald-400/25 bg-emerald-500/[.05]" : "border-white/10 bg-white/[.03]"}`}>
             <button type="button" onClick={() => setAcikKart(acik ? null : anahtar)} aria-expanded={acik} className="block w-full text-left">
@@ -153,15 +205,16 @@ export function HadisBolumu({
             {acik && (
               <div className="mt-2 rounded-lg border border-emerald-400/20 bg-black/25 p-2.5">
                 <p className="text-[8.5px] font-black uppercase tracking-widest text-emerald-300/70">{tt("ksHadisHikaye")}</p>
-                <p className="mt-0.5 text-[9px] leading-relaxed text-white/50">{tt("ksHadisHikayeNot")}</p>
-                <dl className="mt-1.5 space-y-0.5">
-                  <BaglamSatiri etiket={tt("ksHadisKitab")} deger={kitabAdi} />
-                  <BaglamSatiri etiket={tt("ksHadisBab")} deger={kunye?.bab ?? ""} />
-                  <BaglamSatiri etiket={tt("ksRivayetciler")} deger={kunye?.muhaddis ?? kaynaktanRivayetci(h.kaynak)} />
-                  <BaglamSatiri etiket={tt("ksHadisKonu")} deger={hadisTemaAdi(h.tema)} />
-                  <BaglamSatiri etiket={tt("ksDereceLejand")} deger={dr ? `${dereceAdi(h.derece)} — ${dr.aciklama}` : ""} />
-                  <BaglamSatiri etiket={tt("ksKaynakEtiket")} deger={h.kaynak} />
-                </dl>
+                {hikaye ? (
+                  <>
+                    {hikaye.olay.split("\n\n").map((paragraf, j) => (
+                      <p key={j} className="mt-1.5 text-[10px] leading-relaxed text-white/75">{paragraf}</p>
+                    ))}
+                    <p className="mt-2 text-[8.5px] font-bold text-emerald-300/60">📖 {hikaye.kaynak}</p>
+                  </>
+                ) : (
+                  <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">{tt("ksHadisHikayeNot")}</p>
+                )}
               </div>
             )}
           </div>
@@ -201,12 +254,18 @@ export function HadisBolumu({
             {acik && (
               <div className="mt-2 rounded-lg border border-amber-400/20 bg-black/25 p-2.5">
                 <p className="text-[8.5px] font-black uppercase tracking-widest text-amber-200/70">{tt("ksHadisHikaye")}</p>
-                <p className="mt-0.5 text-[9px] leading-relaxed text-white/50">{tt("ksHadisHikayeNot")}</p>
-                <dl className="mt-1.5 space-y-0.5">
-                  <BaglamSatiri etiket={tt("ksHadisKitab")} deger={h.kitab ?? ""} />
-                  <BaglamSatiri etiket={tt("ksHadisBab")} deger={h.bab ?? ""} />
-                  <BaglamSatiri etiket={tt("ksDereceLejand")} deger={h.dereceEtiket ?? (dereceAdi(h.derece) || h.kaynak)} />
-                </dl>
+                {(() => {
+                  const hikaye = hadisHikayesi(h.kaynak);
+                  if (!hikaye) return <p className="mt-1 text-[9.5px] leading-relaxed text-white/55">{tt("ksHadisHikayeNot")}</p>;
+                  return (
+                    <>
+                      {hikaye.olay.split("\n\n").map((paragraf, j) => (
+                        <p key={j} className="mt-1.5 text-[10px] leading-relaxed text-white/75">{paragraf}</p>
+                      ))}
+                      <p className="mt-2 text-[8.5px] font-bold text-amber-200/60">📖 {hikaye.kaynak}</p>
+                    </>
+                  );
+                })()}
                 {h.url && (
                   <a href={h.url} target="_blank" rel="noreferrer" className="mt-1.5 inline-block text-[8.5px] font-bold text-amber-200/70 underline">
                     {h.kaynak} →
@@ -218,6 +277,8 @@ export function HadisBolumu({
           );
         })}
       </div>
+      {/* ★ 27.11 (kullanıcı emri): tam külliyat tarayıcısı — Buhârî 7.589, Müslim 7.603… */}
+      <HadisKulliyat tt={tt} dil={dil ?? "tr"} />
     </>
   );
 }

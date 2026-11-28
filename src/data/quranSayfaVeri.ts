@@ -16,7 +16,9 @@ export const SAYFA_SAYISI = 604;
 //   3-4) SVG zinciri — vektör yedek
 const SVG_SURUM = "v1.1.1";
 const GORSEL_KAYNAKLARI: Array<{ ad: string; url: (n: number) => string }> = [
-  { ad: "diyanet", url: (n) => `https://kuran.diyanet.gov.tr/mushaf/data/pages/2X/${String(n - 1).padStart(3, "0")}.png` },
+  // ★ 27.11: Diyanet görselleri TARAYICIDAN yüklenmiyordu (curl 200, Chromium hata)
+  //   → kendi API proxymiz üzerinden same-origin servis edilir; CDN'de 1 yıl cache.
+  { ad: "diyanet-proxy", url: (n) => `/api/quran/sayfa-gorsel?sayfa=${n}` },
   { ad: "quran-png", url: (n) => `https://cdn.jsdelivr.net/gh/GovarJabbar/Quran-PNG@master/${String(n).padStart(3, "0")}.png` },
   { ad: "svg-cdn", url: (n) => `https://cdn.quran.ws/svg/pages/${SVG_SURUM}/hafs-kfqc/${String(n).padStart(3, "0")}.svg` },
   { ad: "svg-jsdelivr", url: (n) => `https://cdn.jsdelivr.net/gh/quran-ws/quran-svg@main/mushafs/hafs/kfqc/svg/${String(n).padStart(3, "0")}.svg` },
@@ -28,8 +30,9 @@ export const sayfaGorselKaynaklari = (sayfa: number): string[] => {
   return GORSEL_KAYNAKLARI.map((k) => k.url(n));
 };
 
-/** Gerçek raster PNG mi (SVG değil)? — <img> boyutlandırma ve render ipuçları için */
-export const sayfaRasterMi = (kaynak: string): boolean => kaynak.endsWith(".png");
+/** Gerçek raster PNG mi (SVG değil)? — <img> boyutlandırma ve render ipuçları için
+ *  ★ 27.11: proxy yolu da raster PNG servis eder (uzantısız) → SVG olmayan = raster */
+export const sayfaRasterMi = (kaynak: string): boolean => !kaynak.endsWith(".svg");
 
 // ★ CÜZ BAŞLANGIÇ SAYFALARI — standart Medine mushafı cüz sınırları (cüz 1 → sayfa 1 …)
 export const CUZ_BASLANGIC_SAYFA = [
@@ -81,11 +84,15 @@ export const aktifSureNo = (sayfa: number): number => {
 export const LS_SON_SAYFA = "nur_kuran_sayfa";       // son okunan sayfa (sayı)
 export const LS_HATIM = "nur_kuran_hatim";           // { okunan: number[], tamamlanan: number }
 
-// ★ 03.10: görünüm kaynağı — "arapca" (Diyanet beyaz mushaf sayfası) | "meal" (Diyanet mealı)
-export type MushafKaynak = "arapca" | "meal";
+// ★ 03.10: görünüm kaynağı — "arapca" (Diyanet beyaz mushaf sayfası)
+// ★ 27.11: "tecvid" — renkli tecvid harfleri + altında Diyanet meali
+export type MushafKaynak = "arapca" | "tecvid" | "meal";
 export const LS_KAYNAK = "nur_kuran_kaynak";
 export const kaynakYukle = (): MushafKaynak => {
-  try { return localStorage.getItem(LS_KAYNAK) === "meal" ? "meal" : "arapca"; } catch { return "arapca"; }
+  try {
+    const k = localStorage.getItem(LS_KAYNAK);
+    return k === "meal" || k === "tecvid" ? k : "arapca";
+  } catch { return "arapca"; }
 };
 export const kaynakKaydet = (kaynak: MushafKaynak): void => {
   try { localStorage.setItem(LS_KAYNAK, kaynak); } catch { /* yut */ }

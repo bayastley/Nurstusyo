@@ -489,6 +489,7 @@ export const KesfetModal: React.FC<KesfetModalProps> = ({ open, onClose, initial
           dereceAdi={dereceAdi}
           rivayetci={rivayetci} setRivayetci={setRivayetci} rivayetciSayilari={rivayetciSayilari}
           arama={q}
+          dil={lang}
         />
       )}
 

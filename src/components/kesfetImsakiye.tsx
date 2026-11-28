@@ -42,10 +42,29 @@ export const KesfetImsakiye: React.FC<{ tt: (k: string) => string; lang?: string
 
   React.useEffect(() => {
     let live = true;
+    /** ★ 27.11 ÇEVRİMDIŞI: son başarılı aylık takvim cihazda saklanır —
+     *  internet yokken imsakiye yine açılır (Diyanet method=13 verisi). */
+    const anahtar = (y: number, m: number) => `nur_imsakiye:${sehir.toLocaleLowerCase("tr")}:${y}-${m}`;
+    const onbellekOku = (y: number, m: number): any[] => {
+      try {
+        const ham = localStorage.getItem(anahtar(y, m));
+        const veri = ham ? JSON.parse(ham) : null;
+        return Array.isArray(veri) ? veri : [];
+      } catch { return []; }
+    };
+    const onbellekYaz = (y: number, m: number, veri: any[]) => {
+      try { localStorage.setItem(anahtar(y, m), JSON.stringify(veri)); } catch { /* kota dolu — önbelleksiz devam */ }
+    };
     const ayCek = async (y: number, m: number): Promise<any[]> => {
-      const r = await fetch(`https://api.aladhan.com/v1/calendarByCity?city=${encodeURIComponent(sehir)}&country=Turkey&method=13&month=${m}&year=${y}`);
-      const j = await r.json();
-      return Array.isArray(j?.data) ? j.data : [];
+      try {
+        const r = await fetch(`https://api.aladhan.com/v1/calendarByCity?city=${encodeURIComponent(sehir)}&country=Turkey&method=13&month=${m}&year=${y}`);
+        const j = await r.json();
+        const veri = Array.isArray(j?.data) ? j.data : [];
+        if (veri.length > 0) onbellekYaz(y, m, veri);
+        return veri.length > 0 ? veri : onbellekOku(y, m);
+      } catch {
+        return onbellekOku(y, m);
+      }
     };
     (async () => {
       try {

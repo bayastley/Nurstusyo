@@ -9,6 +9,7 @@ import { Search, X, CornerDownLeft, WifiOff } from "lucide-react";
 import { translate, type Lang } from "../i18n";
 import { ARAMA_GRUPLARI, grupSayilari, siteAra, type AramaGrup } from "../data/siteAramaIndeksi";
 import { soruKartiBul } from "../data/hadisSoruKartlari";
+import { hadisHikayesi } from "../data/hadisHikaye";
 
 interface Props {
   open: boolean;
@@ -326,27 +327,19 @@ export const SiteAramaModal: React.FC<Props> = ({ open, onClose, lang = "tr" }) 
                     {acik && (
                       <div className="border-t border-emerald-400/15 bg-black/20 p-2.5">
                         <p className="text-[8px] font-black uppercase tracking-widest text-emerald-300/70">{t("araHadisHikaye")}</p>
-                        <p className="mt-0.5 text-[9px] leading-relaxed text-white/55">{t("araHadisHikayeNot")}</p>
-                        <dl className="mt-1.5 space-y-0.5">
-                          {h.kitab && (
-                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
-                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisKitab")}:</dt>
-                              <dd className="text-white/65">{h.kitab}</dd>
-                            </div>
-                          )}
-                          {h.bab && (
-                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
-                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisBaglam")}:</dt>
-                              <dd className="text-white/65">{h.bab}</dd>
-                            </div>
-                          )}
-                          {h.dereceEtiket && (
-                            <div className="flex gap-1 text-[8.5px] leading-relaxed">
-                              <dt className="shrink-0 font-black uppercase tracking-wide text-white/35">{t("araHadisDereceNot")}:</dt>
-                              <dd className="text-white/65">{h.dereceEtiket}</dd>
-                            </div>
-                          )}
-                        </dl>
+                        {/* ★ 27.11 (kullanıcı emri): künye etiketi yerine GERÇEK olay. */}
+                        {(() => {
+                          const hikaye = hadisHikayesi(h.kaynak);
+                          if (!hikaye) return <p className="mt-0.5 text-[9px] leading-relaxed text-white/55">{t("araHadisHikayeNot")}</p>;
+                          return (
+                            <>
+                              {hikaye.olay.split("\n\n").map((paragraf, j) => (
+                                <p key={j} className="mt-1 text-[9.5px] leading-relaxed text-white/75">{paragraf}</p>
+                              ))}
+                              <p className="mt-1.5 text-[8px] font-bold text-emerald-300/60">📖 {hikaye.kaynak}</p>
+                            </>
+                          );
+                        })()}
                         <p className="mt-2 text-[8px] font-black uppercase tracking-widest text-white/35">{t("araHadisTamMetin")}</p>
                         <p className="mt-0.5 text-[9.5px] leading-relaxed text-white/80" dir={h.dil === "ar" ? "rtl" : undefined}>
                           {h.metin}
