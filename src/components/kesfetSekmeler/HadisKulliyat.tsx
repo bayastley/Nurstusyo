@@ -11,6 +11,7 @@ import {
   type KulliyatVeri,
   type KulliyatTanimi,
 } from "../../data/hadisKulliyat";
+import { harfSadelestir, kategoriEslesiyor } from "../../data/hadisArama";
 
 // ═══════════════════════════════════════════════════════════════
 // HADİS KÜLLİYATI — gerçek metinler (Sünnetimiz + açık CDN)
@@ -33,6 +34,10 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
   const [hata, setHata] = React.useState("");
   const [arama, setArama] = React.useState("");
   const [kitap, setKitap] = React.useState(0);
+  // ★ 28.11 (kullanıcı emri: "yüzlerce konu var") — külliyatın kendi konu
+  //   başlıkları (kitap/bâb adları) aranabilir pil olarak listelenir.
+  const [konuAra, setKonuAra] = React.useState("");
+  const [konuLimit, setKonuLimit] = React.useState(24);
   const [adet, setAdet] = React.useState(SAYFA_ADIM);
   /** Cihazda (IndexedDB) hazır külliyatlar — düğmede ✓ rozeti */
   const [cihazda, setCihazda] = React.useState<Record<string, boolean>>({});
@@ -47,6 +52,8 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
       setVeri(null);
       setArama("");
       setKitap(0);
+      setKonuAra("");
+      setKonuLimit(24);
       setAdet(SAYFA_ADIM);
       setYukleniyor(true);
       setYuzde(null);
@@ -121,6 +128,19 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
       return `${h.ar} ${h.ceviri}`.toLocaleLowerCase("tr").includes(q);
     });
   }, [veri, arama, kitap]);
+
+  // ★ Konu pilleri: yüklenen kitabın gerçek bölüm adları + her birindeki rivayet sayısı
+  const konuSorgu = harfSadelestir(konuAra);
+  const kitapSayilari = React.useMemo(() => {
+    const harita: Record<number, number> = {};
+    for (const h of veri?.hadisler ?? []) harita[h.kitap] = (harita[h.kitap] ?? 0) + 1;
+    return harita;
+  }, [veri]);
+  const gorunenKitaplar = React.useMemo(
+    () => (veri?.kitaplar ?? []).filter((k) => kategoriEslesiyor(k.ad, konuSorgu)),
+    [veri, konuSorgu],
+  );
+  const gorunenKitapDilimi = gorunenKitaplar.slice(0, konuLimit);
 
   const gosterilen = suzulmus.slice(0, adet);
   const toplamYazi = KULLIYAT_TOPLAM.toLocaleString("tr-TR");
@@ -207,17 +227,61 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
                     className="w-[110px] bg-transparent text-[9px] text-white/80 outline-none placeholder:text-white/30"
                   />
                 </label>
-                <select
-                  value={kitap}
-                  onChange={(e) => { setKitap(Number(e.target.value)); setAdet(SAYFA_ADIM); }}
-                  className="rounded-full bg-black/40 px-2 py-0.5 text-[8.5px] text-white/70 outline-none"
-                  aria-label={tt("ksKulliyatKitap")}
-                >
-                  <option value={0}>{tt("ksKulliyatTumu")}</option>
-                  {veri.kitaplar.map((k) => (
-                    <option key={k.no} value={k.no}>{k.ad}</option>
+              </div>
+
+              {/* ★ 28.11 (kullanıcı emri): "yüzlerce konu var" — külliyatın gerçek
+                  konu başlıkları pil olarak; yazım hatası tolere edilir. */}
+              <div className="mt-2 rounded-lg border border-white/[.08] bg-black/20 p-2">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-[8.5px] font-black uppercase tracking-wide text-sky-200/60">
+                    🗂️ {veri.kitaplar.length} {tt("ksKonuSayisi")}
+                  </span>
+                  <label className="ml-auto flex items-center gap-1 rounded-full bg-white/[.06] px-2 py-0.5">
+                    <Search size={9} className="text-white/40" />
+                    <input
+                      value={konuAra}
+                      onChange={(e) => { setKonuAra(e.target.value); setKonuLimit(24); }}
+                      placeholder={tt("ksKonuAra")}
+                      aria-label={tt("ksKonuAra")}
+                      className="w-[120px] bg-transparent text-[9px] text-white/80 outline-none placeholder:text-white/30"
+                    />
+                  </label>
+                </div>
+                <div className="mt-1.5 flex max-h-[128px] flex-wrap gap-1 overflow-y-auto pr-1">
+                  <button
+                    type="button"
+                    onClick={() => { setKitap(0); setAdet(SAYFA_ADIM); }}
+                    className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${kitap === 0 ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                    style={kitap === 0 ? { background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)" } : undefined}
+                  >
+                    ✦ {tt("ksKulliyatTumu")}
+                  </button>
+                  {gorunenKitapDilimi.map((k) => (
+                    <button
+                      key={k.no}
+                      type="button"
+                      onClick={() => { setKitap(k.no); setAdet(SAYFA_ADIM); }}
+                      title={`${k.ad} · ${kitapSayilari[k.no] ?? 0}`}
+                      className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${kitap === k.no ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
+                      style={kitap === k.no ? { background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)" } : undefined}
+                    >
+                      {k.ad}
+                      <span className="ml-1 text-[7.5px] opacity-70">{kitapSayilari[k.no] ?? 0}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
+                {gorunenKitaplar.length > gorunenKitapDilimi.length && (
+                  <button
+                    type="button"
+                    onClick={() => setKonuLimit((l) => l + 60)}
+                    className="mt-1.5 text-[8.5px] font-bold text-sky-200/70 underline"
+                  >
+                    +{gorunenKitaplar.length - gorunenKitapDilimi.length} {tt("ksKonuSayisi")}
+                  </button>
+                )}
+                {gorunenKitaplar.length === 0 && (
+                  <p className="mt-1.5 text-[9px] text-white/40">{tt("ksKonuYok")}</p>
+                )}
               </div>
 
               <div className="mt-2 space-y-1.5">
