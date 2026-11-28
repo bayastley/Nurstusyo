@@ -26,7 +26,7 @@ const ttX2610 = (k: string): string => translate(typeof localStorage !== "undefi
 // Ses: everyayah.com (ayet bazlı, 30 kari) + audio.qurancdn.com (kelime)
 // ══════════════════════════════════════════════════════════════
 
-type Mode = "learn" | "listen" | "test" | null;
+type Mode = "learn" | "listen" | "test" | "tecvid" | null;
 
 interface Ayah { n: number; ar: string; tr: string; juz: number; page: number; }
 // ★ TAM SURE DESTEĞİ: `full` alanındaki kâriler mp3quran.net'ten SURE BAŞINA TEK DOSYA
@@ -44,6 +44,9 @@ import { OgrenModu, DinleModu } from "./quranLearnEkranlar";
 // ★ 18.10 (kullanıcı emri): Hafızlık Testi 3. sekme — menü girişi kaldırıldı, bu modalın içine göçürüldü
 import { HafizlikTestiModal } from "./HafizlikTestiModal";
 import { KelimeQuiziModal } from "./KelimeQuiziModal"; // ★ 02.11: üst bardaki kelime quizi düğmesi
+// ★ 28.11 (kullanıcı emri: "tecvid kur'an öğreniyoruma koysana kur'anla ilgili o"):
+//   Tecvid rehberi artık Kur'an Öğreniyorum içinde de sekme — gösterim Keşfet ile aynı bileşen.
+import { TecvidBolumu } from "./kesfetKucukSekmeler";
 
 interface Props { open: boolean; onClose: () => void; initialMode?: Exclude<Mode, null>; lang?: Lang; user?: { email?: string } | null; tier?: string; tierAtLeast?: (a: any, b: any) => boolean; isMasterSurum?: boolean; }
 
@@ -155,6 +158,8 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
   const [kabeLive, setKabeLive] = useState(false); // ★ Kâbe canlı yayın modalı (gövde KabeCanliModal'da — SRP 01.10)
   const [sayfalarAcik, setSayfalarAcik] = useState(false); // ★ Kur'an Sayfaları (mushaf) — gövde QuranSayfalar.tsx
   const [kelimeQuiziAcik, setKelimeQuiziAcik] = useState(false); // ★ 02.11: kelime quizi (üst bar düğmesi)
+  // ★ 28.11: Kur'an Öğreniyorum > Tecvid sekmesi araması
+  const [tecvidQ, setTecvidQ] = useState("");
   // ★ HEADER KÖPRÜSÜ (02.10): üst bardaki 🕋 Kâbe pill'i ve menü öğesi bu modalın state'ine
   //   doğrudan dokunamaz — window event ile açar. Bileşen kapalıyken de mount'ta kalır
   //   (ModalsContainer hep render eder) → dinleyici uygulama açılışından beri yaşar;
@@ -536,6 +541,10 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
             <button onClick={() => { setMode("listen"); setListenSurah(surahNo); stopAudio(); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "listen" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`}>
               <Headphones size={13} /> {ttQL("qoDinle")}
             </button>
+            {/* ★ 28.11: Tecvid — Kur'an ile ilgili olduğu için burada; kurallar Keşfet ile aynı veri */}
+            <button onClick={() => { stopAudio(); setMode("tecvid"); }} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold transition ${mode === "tecvid" ? "bg-gold text-slate-950" : "text-[#a8a184] hover:text-[#f5dda6]"}`} title={ttQL("ktTecvidMetin")}>
+              🎓 {ttQL("ksTecvidRehberi")}
+            </button>
           </div>
           {/* ★ KÂBE CANLI: üst barda — her iki modda da görünür, canlı yayın noktasıyla */}
           {/* ★ KÂBE CANLI: üst barda — ★ 18.10 admin-gizli kilidi (QK_kabe): kapalıyken buton YOK */}
@@ -696,6 +705,30 @@ const QuranLearnModal: React.FC<Props> = ({ open, onClose, initialMode, lang, us
           son QURAN sekmesine (öğren/dinle) geri götürür. */}
       {mode === "test" && (
         <HafizlikTestiModal embedded open onClose={() => setMode(sonQuranMod)} lang={lang} />
+      )}
+      {/* ══════════ TECVİD — 28.11: Kur'an Öğreniyorum içinde kural listesi ══════════ */}
+      {mode === "tecvid" && (
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-2 flex items-center gap-2 rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 focus-within:border-gold/40">
+              <Search size={12} className="shrink-0 text-white/35" />
+              <input
+                type="text"
+                value={tecvidQ}
+                onChange={(e) => setTecvidQ(e.target.value)}
+                placeholder={ttQL("ktAra")}
+                aria-label={ttQL("ktAra")}
+                className="min-w-0 flex-1 bg-transparent text-[11px] text-white/85 outline-none placeholder:text-white/30"
+              />
+              {tecvidQ ? (
+                <button type="button" onClick={() => setTecvidQ("")} aria-label={ttQL("aramayiTemizle")} className="shrink-0 text-white/40 hover:text-white">
+                  <X size={12} />
+                </button>
+              ) : null}
+            </div>
+            <TecvidBolumu tt={ttQL} q={tecvidQ.trim().toLocaleLowerCase("tr")} />
+          </div>
+        </div>
       )}
       {/* ══════════ KÂBE CANLI YAYIN — SRP 01.10: KabeCanliModal.tsx */}
       <KabeCanliModal open={kabeLive} onClose={() => setKabeLive(false)} onVideoEl={(el) => { kabeVideoRef.current = el; }} />

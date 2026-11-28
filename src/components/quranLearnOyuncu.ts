@@ -9,7 +9,8 @@ import { useQuranSes } from "../hooks/useQuranSes";
 import { SURAHS_DATA, weightedWordIndex, type Reciter, type SurahInfo } from "./quranLearnVeri";
 import { WBW_TR, wbwNormIdx, ensureWbwLoaded } from "./quranLearnSozluk";
 
-export type QklMode = "learn" | "listen" | "test" | null;
+// ★ 28.11: "tecvid" sekmesi eklendi (Kur'an Öğreniyorum içinde kural listesi)
+export type QklMode = "learn" | "listen" | "test" | "tecvid" | null;
 interface QklAyah { n: number; ar: string; tr: string; juz: number; page: number; }
 interface QklWord { i: number; ar: string; tr: string; translit: string; audio: string; }
 
@@ -262,7 +263,8 @@ export function useQuranOyuncu(p: QklOyuncuParam) {
   //   bileşende kalan: liste mod bayrakları, audioRef init'i, radyo/kâbe UI'sı.
   const [paused, setPaused] = useState(false); // learn modu kullanıyor; hook listen paused'i aynı state'e bağlar
   const ses = useQuranSes({
-    open, mode: mode === "test" ? null : mode, kabeLive, audioRef, stopAudio,
+    // ★ 28.11: test ve tecvid sekmeleri ses motorunu kullanmaz → null
+    open, mode: mode === "test" || mode === "tecvid" ? null : mode, kabeLive, audioRef, stopAudio,
     fullSurahMode, wholeQuran, wholeIdx, setWholeIdx,
     nextSurahAuto, setIsPlaying, listenReciter, karisikHoca, speed,
     paused, setPaused,
