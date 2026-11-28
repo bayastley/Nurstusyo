@@ -67,15 +67,15 @@ export function HadisBolumu({
           </button>
           {RIVAYETCILER.map((r) => (
             <button key={r.id} type="button" data-hadis-rivayetci={r.id}
-              title={`${r.ad} — ${tt("ksKulliyatToplam")}: ${r.kulliyat} · ${tt("ksBankadaN")}: ${rivayetciSayilari[r.id] ?? 0}`}
+              title={`${tt(r.adAnahtar)} — ${tt("ksKulliyatToplam")}: ${r.kulliyat} · ${tt("ksBankadaN")}: ${rivayetciSayilari[r.id] ?? 0}`}
               onClick={() => setRivayetci(r.id)}
               className={`rounded-full px-2.5 py-1 text-[9px] font-bold transition ${rivayetci === r.id ? "text-black" : "glass-soft text-white/55 hover:text-white"}`}
               style={rivayetci === r.id ? { background: "linear-gradient(135deg,#6ee7b7,#10b981)" } : undefined}>
-              {r.emoji} {r.ad} · {tt("ksKulliyatteN")} {r.kulliyat}
+              {r.emoji} {tt(r.adAnahtar)} · {tt("ksKulliyatteN")} {r.kulliyat}
             </button>
           ))}
         </div>
-        <p className="mt-1 text-[7.5px] text-white/30">{tt("ksKulliyatToplam")}: {RIVAYETCILER.map((r) => `${r.ad} ${r.kulliyat}`).join(" · ")}</p>
+        <p className="mt-1 text-[7.5px] text-white/30">{tt("ksKulliyatToplam")}: {RIVAYETCILER.map((r) => `${tt(r.adAnahtar)} ${r.kulliyat}`).join(" · ")}</p>
       </div>
 
       {/* derece lejandı — yalnız sahih/hasen (kaynaklı) */}
@@ -144,7 +144,7 @@ export function HadisBolumu({
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <p className="text-[9px] font-bold" style={{ color: "var(--accent)" }}>{tt("ksKaynakEtiket")} {h.kaynak}</p>
                 {dr ? (<span title={`${dereceAdi(h.derece)} — ${dr.aciklama}`} className={`rounded-full px-1.5 py-0.5 text-[8.5px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece)}</span>) : null}
-                <span title={tt("ksRivayetciler")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/60">{kaynaktanRivayetci(h.kaynak)}</span>
+                <span title={tt("ksRivayetciler")} className="rounded-full bg-white/[.06] px-1.5 py-0.5 text-[8.5px] font-bold text-white/60">{kaynaktanRivayetci(h.kaynak, tt)}</span>
                 <span className="ml-auto flex items-center gap-0.5 text-[8px] font-bold text-emerald-300/60">
                   {acik ? tt("ksHadisKapat") : tt("ksHadisHikaye")}
                   <ChevronDown size={10} className={acik ? "rotate-180 transition" : "transition"} />
@@ -190,7 +190,7 @@ export function HadisBolumu({
                 <p className={`text-[10.5px] leading-relaxed ${h.dil === "ar" ? "text-right font-arabic text-[13px]" : "text-white/80"}`} dir={h.dil === "ar" ? "rtl" : undefined}>
                   {h.metin}
                 </p>
-                <span title={dereceAdi(h.derece) || h.kaynak} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece) || kaynaktanRivayetci(h.kaynak) || ""}</span>
+                <span title={dereceAdi(h.derece) || h.kaynak} className={`shrink-0 rounded-full px-2 py-0.5 text-[8px] font-black ${dereceSinif(h.derece)}`}>{dereceAdi(h.derece) || kaynaktanRivayetci(h.kaynak, tt) || ""}</span>
               </div>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <p className="text-[8.5px] text-white/40">— {h.kaynak}</p>

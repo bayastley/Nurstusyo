@@ -12,13 +12,15 @@
 //   IndexedDB'de saklanır, sonraki açılışta internet gerekmez.
 // ═══════════════════════════════════════════════════════════════
 
-import type { Lang } from "../i18n";
+import { translate, type Lang } from "../i18n";
 
 export type KulliyatTanimi = {
   /** Sünnetimiz + bizim kısa ad (slug) */
   slug: string;
   /** jsDelivr edition adı (Türkçe olan) — Arapça adı bundan türetilir */
   edition: string;
+  /** i18n anahtarı — kitap adı 5 dilde buradan gelir (ad = TR yedeği) */
+  adAnahtar: string;
   ad: string;
   emoji: string;
   /** Külliyattaki hadis sayısı (Sünnetimiz /api/v1/books raporu, 26.11.2026) */
@@ -30,15 +32,15 @@ export type KulliyatTanimi = {
 };
 
 export const KULLIYATLAR: KulliyatTanimi[] = [
-  { slug: "buhari", edition: "tur-bukhari", ad: "Sahih-i Buhârî", emoji: "📗", adet: 7583, mb: 20 },
-  { slug: "muslim", edition: "tur-muslim", ad: "Sahih-i Müslim", emoji: "📘", adet: 7603, mb: 15 },
-  { slug: "ebudavud", edition: "tur-abudawud", ad: "Sünen-i Ebû Dâvûd", emoji: "📕", adet: 5274, mb: 11 },
-  { slug: "tirmizi", edition: "tur-tirmidhi", ad: "Sünen-i Tirmizî", emoji: "📙", adet: 3998, mb: 10 },
-  { slug: "nesai", edition: "tur-nasai", ad: "Sünen-i Nesâî", emoji: "📒", adet: 5765, mb: 8 },
-  { slug: "ibnmace", edition: "tur-ibnmajah", ad: "Sünen-i İbn Mâce", emoji: "📓", adet: 4343, mb: 9 },
+  { slug: "buhari", edition: "tur-bukhari", adAnahtar: "ksKulliyatAd_buhari", ad: "Sahih-i Buhârî", emoji: "📗", adet: 7583, mb: 20 },
+  { slug: "muslim", edition: "tur-muslim", adAnahtar: "ksKulliyatAd_muslim", ad: "Sahih-i Müslim", emoji: "📘", adet: 7603, mb: 15 },
+  { slug: "ebudavud", edition: "tur-abudawud", adAnahtar: "ksKulliyatAd_ebudavud", ad: "Sünen-i Ebû Dâvûd", emoji: "📕", adet: 5274, mb: 11 },
+  { slug: "tirmizi", edition: "tur-tirmidhi", adAnahtar: "ksKulliyatAd_tirmizi", ad: "Sünen-i Tirmizî", emoji: "📙", adet: 3998, mb: 10 },
+  { slug: "nesai", edition: "tur-nasai", adAnahtar: "ksKulliyatAd_nesai", ad: "Sünen-i Nesâî", emoji: "📒", adet: 5765, mb: 8 },
+  { slug: "ibnmace", edition: "tur-ibnmajah", adAnahtar: "ksKulliyatAd_ibnmace", ad: "Sünen-i İbn Mâce", emoji: "📓", adet: 4343, mb: 9 },
   // ★ 27.11: Kütüb-i Tis'a + meşhur seçkiler.
-  { slug: "malik", edition: "tur-malik", ad: "Muvatta' (İmâm Mâlik)", emoji: "📔", adet: 1838, mb: 3 },
-  { slug: "nevevi", edition: "tur-nawawi", ad: "Nevevî — Kırk Hadis", emoji: "📜", adet: 42, mb: 1, kitapSlug: "kirkhadis" },
+  { slug: "malik", edition: "tur-malik", adAnahtar: "ksKulliyatAd_malik", ad: "Muvatta' (İmâm Mâlik)", emoji: "📔", adet: 1838, mb: 3 },
+  { slug: "nevevi", edition: "tur-nawawi", adAnahtar: "ksKulliyatAd_nevevi", ad: "Nevevî — Kırk Hadis", emoji: "📜", adet: 42, mb: 1, kitapSlug: "kirkhadis" },
 ];
 
 /** Bütün külliyatlardaki rivayet sayısı toplamı (ara yüz başlığı için) */
@@ -354,7 +356,8 @@ export function kulliyatGetir(
     const veri: KulliyatVeri = {
       surum: 2,
       slug,
-      ad: tanim.ad,
+      // ★ 28.11: külliyat adı da seçili dilde (8 kitap × 5 dil sözlükte)
+      ad: translate(dil, tanim.adAnahtar),
       dil,
       kitaplar,
       hadisler,

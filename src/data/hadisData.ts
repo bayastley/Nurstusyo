@@ -243,7 +243,7 @@ export const HADIS_DERECE_ETIKETI: Record<string, { label: string; renk: string;
 // sahih kabul edilen kişileri koy: Buhâri, Tirmizî gibi; her birinde buton olsun, hadis
 // bankasında o rivâyettekilerden seçebilsin; her birine arama da kalsın; kaynak sayısı
 // açık yazılsın ki kişi kitaba tıklayınca kaynak sormasın") ═══
-export interface RivayetciKaydi { id: string; ad: string; emoji: string; kulliyat: string }
+export interface RivayetciKaydi { id: string; ad: string; /** i18n anahtarı — ad 5 dilde buradan gelir (ad = TR yedeği) */ adAnahtar: string; emoji: string; kulliyat: string }
 /** Sahih kabul edilen hadis kitapları (Kütüb-i Sitte + Müsned + Sünen-i Kübrâ) —
  *  kulliyat: hadisçilerin genel kabulüyle kitaptaki rivâyet sayısı (çevrimli değil, bilgi rozeti). */
 /** Külliyattaki gerçek rivayet sayısı (hadisKulliyat.ts) — tek kaynak, sayı uyuşmazlığı olmasın. */
@@ -253,15 +253,15 @@ const kulliyatAdedi = (slug: string): string => {
 };
 
 export const RIVAYETCILER: RivayetciKaydi[] = [
-  { id: "buhari", ad: "Buhârî", emoji: "📗", kulliyat: kulliyatAdedi("buhari") },
-  { id: "muslim", ad: "Müslim", emoji: "📘", kulliyat: kulliyatAdedi("muslim") },
-  { id: "tirmizi", ad: "Tirmizî", emoji: "📙", kulliyat: kulliyatAdedi("tirmizi") },
-  { id: "ebudavud", ad: "Ebû Dâvûd", emoji: "📕", kulliyat: kulliyatAdedi("ebudavud") },
-  { id: "nesai", ad: "Nesâî", emoji: "📒", kulliyat: kulliyatAdedi("nesai") },
-  { id: "ibnmace", ad: "İbn Mâce", emoji: "📓", kulliyat: kulliyatAdedi("ibnmace") },
+  { id: "buhari", ad: "Buhârî", adAnahtar: "ksRavi_buhari", emoji: "📗", kulliyat: kulliyatAdedi("buhari") },
+  { id: "muslim", ad: "Müslim", adAnahtar: "ksRavi_muslim", emoji: "📘", kulliyat: kulliyatAdedi("muslim") },
+  { id: "tirmizi", ad: "Tirmizî", adAnahtar: "ksRavi_tirmizi", emoji: "📙", kulliyat: kulliyatAdedi("tirmizi") },
+  { id: "ebudavud", ad: "Ebû Dâvûd", adAnahtar: "ksRavi_ebudavud", emoji: "📕", kulliyat: kulliyatAdedi("ebudavud") },
+  { id: "nesai", ad: "Nesâî", adAnahtar: "ksRavi_nesai", emoji: "📒", kulliyat: kulliyatAdedi("nesai") },
+  { id: "ibnmace", ad: "İbn Mâce", adAnahtar: "ksRavi_ibnmace", emoji: "📓", kulliyat: kulliyatAdedi("ibnmace") },
   // Aşağıdaki ikisi henüz külliyat tarayıcısına bağlı değil → sayı yaklaşık olarak yazılır.
-  { id: "ahmed", ad: "Ahmed b. Hanbel", emoji: "📗", kulliyat: "≈26.363" },
-  { id: "beyhaki", ad: "Beyhakî", emoji: "📜", kulliyat: "≈23.000" },
+  { id: "ahmed", ad: "Ahmed b. Hanbel", adAnahtar: "ksRavi_ahmed", emoji: "📗", kulliyat: "≈26.363" },
+  { id: "beyhaki", ad: "Beyhakî", adAnahtar: "ksRavi_beyhaki", emoji: "📜", kulliyat: "≈23.000" },
 ];
 
 /** Kaynak metninden rivayetçi adı çıkarır: "Buhari, Edeb, 30" → "Buhârî"
@@ -277,23 +277,32 @@ const _sade = (s: string): string =>
     .replace(/[şŞ]/g, "s").replace(/[ğĞ]/g, "g").replace(/[çÇ]/g, "c")
     .replace(/[öÖ]/g, "o").replace(/[üÜ]/g, "u");
 
-export const kaynaktanRivayetci = (kaynak: string): string => {
+/** Rivayetçi kimliği → Türkçe yedek ad (tt yoksa kullanılır) */
+const RAVI_ADLARI: Record<string, string> = {
+  buhari: "Buhârî", muslim: "Müslim", tirmizi: "Tirmizî", ebudavud: "Ebû Dâvûd",
+  nesai: "Nesâî", ibnmace: "İbn Mâce", ahmed: "Ahmed b. Hanbel", beyhaki: "Beyhakî",
+  taberani: "Taberânî", kuran: "Kur'an",
+};
+
+export const kaynaktanRivayetci = (kaynak: string, tt?: (k: string) => string): string => {
   const ilkin = (kaynak || "").split("/")[0].trim();
   const birinci = _sade(ilkin.split(",")[0].trim());
   const harita: Array<[RegExp, string]> = [
-    [/^buhar/i, "Buhârî"],
-    [/^m[üu]slim/i, "Müslim"],
-    [/^tirmiz/i, "Tirmizî"],
-    [/^eb[ûu] d[âa]v/i, "Ebû Dâvûd"],
-    [/^nesa/i, "Nesâî"],
-    [/^i[bn\. ]*m[âa]ce/i, "İbn Mâce"],
-    [/^ahmed/i, "Ahmed b. Hanbel"],
-    [/^beyhak/i, "Beyhakî"],
-    [/^taberan/i, "Taberânî"],
+    [/^buhar/i, "buhari"],
+    [/^m[üu]slim/i, "muslim"],
+    [/^tirmiz/i, "tirmizi"],
+    [/^eb[ûu] d[âa]v/i, "ebudavud"],
+    [/^nesa/i, "nesai"],
+    [/^i[bn\. ]*m[âa]ce/i, "ibnmace"],
+    [/^ahmed/i, "ahmed"],
+    [/^beyhak/i, "beyhaki"],
+    [/^taberan/i, "taberani"],
   ];
-  for (const [p, ad] of harita) if (p.test(birinci)) return ad;
+  // ★ 28.11: ad artık seçili dilde — tt verilirse sözlükten okunur
+  const ad = (id: string): string => (tt ? tt(`ksRavi_${id}`) : RAVI_ADLARI[id] ?? id);
+  for (const [p, id] of harita) if (p.test(birinci)) return ad(id);
   // Ayet kaynaklıysa "Kur'an" göster
-  if (/\d+:\d+|Sure/i.test(ilkin) && !birinci.includes(",")) return "Kur'an";
+  if (/\d+:\d+|Sure/i.test(ilkin) && !birinci.includes(",")) return ad("kuran");
   return birinci.slice(0, 24) || "—";
 };
 

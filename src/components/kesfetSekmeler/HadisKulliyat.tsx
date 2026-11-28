@@ -12,6 +12,7 @@ import {
   type KulliyatTanimi,
 } from "../../data/hadisKulliyat";
 import { harfSadelestir, kategoriEslesiyor } from "../../data/hadisArama";
+import { kulliyatHikayesi } from "../../data/hadisKulliyatHikaye";
 
 // ═══════════════════════════════════════════════════════════════
 // HADİS KÜLLİYATI — gerçek metinler (Sünnetimiz + açık CDN)
@@ -39,6 +40,8 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
   const [konuAra, setKonuAra] = React.useState("");
   const [konuLimit, setKonuLimit] = React.useState(24);
   const [adet, setAdet] = React.useState(SAYFA_ADIM);
+  /** Açık hikâye paneli — `${kitap}-${hadis no}` */
+  const [acikHikaye, setAcikHikaye] = React.useState<string | null>(null);
   /** Cihazda (IndexedDB) hazır külliyatlar — düğmede ✓ rozeti */
   const [cihazda, setCihazda] = React.useState<Record<string, boolean>>({});
   /** Seçili külliyat — dil değişince aynı külliyatı yeni dilde yüklemek için */
@@ -55,6 +58,7 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
       setKonuAra("");
       setKonuLimit(24);
       setAdet(SAYFA_ADIM);
+      setAcikHikaye(null);
       setYukleniyor(true);
       setYuzde(null);
       try {
@@ -179,7 +183,7 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
                 }`}
                 style={secili?.slug === k.slug ? { background: "linear-gradient(135deg,#7dd3fc,#0ea5e9)" } : undefined}
               >
-                {k.emoji} {k.ad}
+                {k.emoji} {tt(k.adAnahtar)}
                 <span className="ml-1 text-[7.5px] opacity-70">{k.adet}</span>
                 {cihazda[k.slug] && (
                   <span className="ml-1 text-[7.5px] font-black" title={tt("ksKulliyatCihazda")}>
@@ -192,7 +196,7 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
 
           {yukleniyor && (
             <p className="mt-2 text-[9.5px] text-sky-200/80">
-              {tt("ksKulliyatYukleniyor")} {secili ? `· ${secili.ad} (~${secili.mb} MB)` : ""}
+              {tt("ksKulliyatYukleniyor")} {secili ? `· ${tt(secili.adAnahtar)} (~${secili.mb} MB)` : ""}
               {yuzde !== null ? ` · %${yuzde}` : ""}
             </p>
           )}
@@ -289,6 +293,9 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
               <div className="mt-2 space-y-1.5">
                 {gosterilen.map((h) => {
                   const kAd = kitapAdi(veri, h.kitap);
+                  const anahtar = `${h.kitap}-${h.no}`;
+                  const hikayeAcik = acikHikaye === anahtar;
+                  const hikaye = kulliyatHikayesi(veri.slug, h.no);
                   return (
                     <div key={`${h.kitap}-${h.no}`} className="rounded-lg border border-white/10 bg-black/25 p-2.5">
                       {/* ★ ARAPÇA METİN — her zaman sabit, asıl rivayet */}
@@ -313,15 +320,47 @@ export function HadisKulliyat({ tt, dil }: { tt: (k: string) => string; dil: Lan
                           {veri.ad} · {h.no}
                           {kAd ? ` · ${kAd}` : ""}
                         </span>
+                        {/* ★ 28.11: bankadaki gibi "Hikâyesi" — yalnız kaynağı
+                            doğrulanmış sebeb-i vürûd kaydı olan rivayetlerde. */}
+                        <button
+                          type="button"
+                          onClick={() => setAcikHikaye(hikayeAcik ? null : anahtar)}
+                          aria-expanded={hikayeAcik}
+                          className="ml-auto flex items-center gap-0.5 text-[8px] font-bold text-sky-300/70"
+                        >
+                          {hikayeAcik ? tt("ksHadisKapat") : tt("ksHadisHikaye")}
+                          <ChevronDown size={10} className={hikayeAcik ? "rotate-180 transition" : "transition"} />
+                        </button>
                         <a
                           href={hadisBaglantisi(veri.slug, h.no)}
                           target="_blank"
                           rel="noreferrer"
-                          className="ml-auto text-[8px] font-bold text-sky-300/70 underline"
+                          className="text-[8px] font-bold text-sky-300/70 underline"
                         >
                           {tt("ksKulliyatKaynak")} →
                         </a>
                       </div>
+                      {hikayeAcik && (
+                        <div className="mt-1.5 rounded-lg border border-sky-400/20 bg-black/25 p-2">
+                          <p className="text-[8px] font-black uppercase tracking-widest text-sky-200/60">
+                            {tt("ksHadisHikaye")}
+                          </p>
+                          {hikaye ? (
+                            <>
+                              {hikaye.olay.split("\n\n").map((paragraf, j) => (
+                                <p key={j} className="mt-1 text-[9.5px] leading-relaxed text-white/70">
+                                  {paragraf}
+                                </p>
+                              ))}
+                              <p className="mt-1.5 text-[8px] font-bold text-sky-200/60">📖 {hikaye.kaynak}</p>
+                            </>
+                          ) : (
+                            <p className="mt-1 text-[9px] leading-relaxed text-white/50">
+                              {tt("ksHadisHikayeNot")}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
